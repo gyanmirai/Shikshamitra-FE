@@ -20,6 +20,7 @@ import {
   Button,
   Drawer,
   Divider,
+  Tooltip,
   MenuItem,
   Typography,
   IconButton,
@@ -28,9 +29,9 @@ import {
 import {
   AdmissionInquiryStage,
   AdmissionCrmLeadPriority,
-  AdmissionCrmRecommendedAction,
-  AdmissionCrmWorkspaceSection,
   useGetAdmissionCrmLeadQuery,
+  AdmissionCrmWorkspaceSection,
+  AdmissionCrmRecommendedAction,
   AdmissionCrmGeneratedDocumentType,
   useGetAdmissionCrmPipelineStagesQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
@@ -161,6 +162,15 @@ const workSectionTabs: Record<AdmissionCrmWorkspaceSection, ApplicantDrawerTab> 
   [AdmissionCrmWorkspaceSection.Governance]: 'governance',
 };
 
+const disabledTabCopy: Record<ApplicantDrawerTab, string> = {
+  overview: '',
+  exam: 'Schedule an entrance exam first.',
+  registration: 'Issue registration first, or enable registration before exam for this cycle.',
+  offer: 'Complete eligibility and registration review before working on offers.',
+  activation: 'Approve an offer before activating admission.',
+  governance: 'Open governance checks after registration details are available.',
+};
+
 function ApplicantWorkspaceDrawerContent({
   leadId,
   academicYearId,
@@ -190,40 +200,64 @@ function ApplicantWorkspaceDrawerContent({
     lead && currentStage?.slaTargetHours
       ? dayjs(lead.lastActivityTime).add(currentStage.slaTargetHours, 'hour')
       : null;
-  const availableSections = useMemo(() => {
-    if (context === 'my-work') {
-      const recommendedTab = workItem ? workSectionTabs[workItem.recommendedSection] : 'overview';
-      return sections.filter((section) => section.value === 'overview' || section.value === recommendedTab);
-    }
-    if (!lead) return sections.filter((section) => section.value === 'overview');
-    return sections.filter((section) => {
-      if (section.value === 'overview') return true;
-      if (section.value === initialTab) return true;
-      if (section.value === 'exam') return pipelineExamStages.has(lead.stage);
-      if (section.value === 'registration') {
-        return Boolean(
-          allowRegistrationBeforeExam ||
-          lead.registrationFormIssuedAt ||
-          lead.registrationFormNumber ||
-          lead.stage === AdmissionInquiryStage.Eligible ||
-          lead.stage === AdmissionInquiryStage.Waitlisted
-        );
-      }
-      return false;
-    });
-  }, [allowRegistrationBeforeExam, context, initialTab, lead, workItem]);
-  const selectedSection =
-    availableSections.find((section) => section.value === tab) || availableSections[0];
+  const tabAvailability = useMemo(() => {
+    const recommendedTab = workItem ? workSectionTabs[workItem.recommendedSection] : null;
+    return sections.reduce<Record<ApplicantDrawerTab, { disabled: boolean; reason: string }>>(
+      (acc, section) => {
+        let disabled = !lead && section.value !== 'overview';
+        let reason = disabled ? 'Load an applicant before opening this workspace section.' : '';
+
+        if (lead) {
+          if (
+            context === 'my-work' &&
+            recommendedTab &&
+            section.value !== 'overview' &&
+            section.value !== recommendedTab
+          ) {
+            disabled = true;
+            reason = 'This work item recommends a different applicant workspace section.';
+          } else if (section.value === 'exam') {
+            disabled = !pipelineExamStages.has(lead.stage);
+            reason = disabled ? disabledTabCopy.exam : '';
+          } else if (section.value === 'registration') {
+            disabled = !(
+              allowRegistrationBeforeExam ||
+              lead.registrationFormIssuedAt ||
+              lead.registrationFormNumber ||
+              lead.stage === AdmissionInquiryStage.Eligible ||
+              lead.stage === AdmissionInquiryStage.Waitlisted
+            );
+            reason = disabled ? disabledTabCopy.registration : '';
+          } else if (section.value === 'offer') {
+            disabled = ![
+              AdmissionInquiryStage.Eligible,
+              AdmissionInquiryStage.Waitlisted,
+              AdmissionInquiryStage.Rejected,
+            ].includes(lead.stage);
+            reason = disabled ? disabledTabCopy.offer : '';
+          } else if (section.value === 'activation') {
+            disabled = !lead.registrationFormNumber;
+            reason = disabled ? disabledTabCopy.activation : '';
+          } else if (section.value === 'governance') {
+            disabled = !lead.registrationFormNumber;
+            reason = disabled ? disabledTabCopy.governance : '';
+          }
+        }
+
+        acc[section.value] = { disabled, reason };
+        return acc;
+      },
+      {} as Record<ApplicantDrawerTab, { disabled: boolean; reason: string }>
+    );
+  }, [allowRegistrationBeforeExam, context, lead, workItem]);
+  const selectedSection = sections.find((section) => section.value === tab) || sections[0];
+  const selectedDisabledReason = tabAvailability[tab]?.reason;
 
   useEffect(() => setTab(initialTab), [initialTab, leadId]);
-  useEffect(() => {
-    if (!lead || availableSections.some((section) => section.value === tab)) return;
-    setTab('overview');
-    onTabChange?.('overview');
-  }, [availableSections, lead, onTabChange, tab]);
 
   const changeTab = (nextTab: ApplicantDrawerTab) => {
     if (nextTab === tab) return;
+    if (tabAvailability[nextTab]?.disabled) return;
     requestTransition(() => {
       setTab(nextTab);
       onTabChange?.(nextTab);
@@ -307,16 +341,30 @@ function ApplicantWorkspaceDrawerContent({
 
         {context === 'my-work' && workItem ? (
           <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 1.25, flexShrink: 0, bgcolor: 'action.hover' }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1.25}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              gap={1.25}
+            >
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="overline" color="text.secondary">Current work</Typography>
+                <Typography variant="overline" color="text.secondary">
+                  Current work
+                </Typography>
                 <Typography variant="subtitle2">{workItem.title}</Typography>
-                {workItem.details ? <Typography variant="body2" color="text.secondary">{workItem.details}</Typography> : null}
+                {workItem.details ? (
+                  <Typography variant="body2" color="text.secondary">
+                    {workItem.details}
+                  </Typography>
+                ) : null}
                 <Typography variant="caption" color="text.secondary">
                   {joinEnrollmentMetadata(
-                    workItem.dueAt ? `Due ${formatEnrollmentDate(workItem.dueAt, true)}` : 'No due date',
+                    workItem.dueAt
+                      ? `Due ${formatEnrollmentDate(workItem.dueAt, true)}`
+                      : 'No due date',
                     `Priority ${workPriorityLabels[workItem.priority]}`,
-                    workItem.assignedDisplayName ? `Assigned to ${workItem.assignedDisplayName}` : undefined
+                    workItem.assignedDisplayName
+                      ? `Assigned to ${workItem.assignedDisplayName}`
+                      : undefined
                   )}
                 </Typography>
               </Box>
@@ -356,10 +404,12 @@ function ApplicantWorkspaceDrawerContent({
               MenuListProps={{ 'aria-label': 'Applicant workspace sections' }}
               slotProps={{ paper: { sx: { width: 'calc(100vw - 24px)', maxWidth: 420 } } }}
             >
-              {availableSections.map((section) => (
+              {sections.map((section) => (
                 <MenuItem
                   key={section.value}
                   selected={section.value === tab}
+                  disabled={tabAvailability[section.value]?.disabled}
+                  title={tabAvailability[section.value]?.reason}
                   onClick={() => {
                     setSectionMenuAnchor(null);
                     changeTab(section.value);
@@ -384,15 +434,29 @@ function ApplicantWorkspaceDrawerContent({
               tab: { px: 1.25, minHeight: 40 },
             }}
           >
-            {availableSections.map((section) => (
-              <Tab
-                key={section.value}
-                value={section.value}
-                icon={<Iconify icon={section.icon} width={18} />}
-                iconPosition="start"
-                label={section.label}
-              />
-            ))}
+            {sections.map((section) => {
+              const disabled = tabAvailability[section.value]?.disabled;
+              const reason = tabAvailability[section.value]?.reason || section.label;
+              return (
+                <Tab
+                  key={section.value}
+                  value={section.value}
+                  disabled={disabled}
+                  title={reason}
+                  icon={<Iconify icon={section.icon} width={18} />}
+                  iconPosition="start"
+                  label={
+                    disabled ? (
+                      <Tooltip title={reason}>
+                        <span>{section.label}</span>
+                      </Tooltip>
+                    ) : (
+                      section.label
+                    )
+                  }
+                />
+              );
+            })}
           </CustomTabs>
         )}
         <Divider />
@@ -424,7 +488,13 @@ function ApplicantWorkspaceDrawerContent({
             </Alert>
           ) : null}
 
-          {lead && tab === 'overview' ? (
+          {lead && selectedDisabledReason ? (
+            <Alert severity="info" sx={{ mb: 1.5 }}>
+              {selectedDisabledReason}
+            </Alert>
+          ) : null}
+
+          {lead && tab === 'overview' && !selectedDisabledReason ? (
             <ApplicantWorkspaceOverview
               lead={lead}
               academicYearId={academicYearId}
@@ -434,7 +504,7 @@ function ApplicantWorkspaceDrawerContent({
             />
           ) : null}
 
-          {leadId && academicYearId && tab === 'exam' ? (
+          {leadId && academicYearId && tab === 'exam' && !selectedDisabledReason ? (
             <Stack spacing={2}>
               <ApplicantExamSummary leadId={leadId} academicYearId={academicYearId} />
               <GeneratedDocumentOperations
@@ -445,7 +515,7 @@ function ApplicantWorkspaceDrawerContent({
               />
             </Stack>
           ) : null}
-          {leadId && academicYearId && tab === 'registration' ? (
+          {leadId && academicYearId && tab === 'registration' && !selectedDisabledReason ? (
             <Stack spacing={2}>
               <ApplicantRegistrationOperations
                 leadId={leadId}
@@ -462,7 +532,7 @@ function ApplicantWorkspaceDrawerContent({
               />
             </Stack>
           ) : null}
-          {leadId && academicYearId && tab === 'offer' ? (
+          {leadId && academicYearId && tab === 'offer' && !selectedDisabledReason ? (
             <Stack spacing={2}>
               <ApplicantFinalAdmissionOperations leadId={leadId} academicYearId={academicYearId} />
               <ApplicantFinancialReadiness leadId={leadId} academicYearId={academicYearId} />
@@ -474,7 +544,7 @@ function ApplicantWorkspaceDrawerContent({
               />
             </Stack>
           ) : null}
-          {leadId && academicYearId && tab === 'activation' ? (
+          {leadId && academicYearId && tab === 'activation' && !selectedDisabledReason ? (
             <Stack spacing={2}>
               <ApplicantFinancialReadiness leadId={leadId} academicYearId={academicYearId} />
               <ApplicantActivationOperations leadId={leadId} academicYearId={academicYearId} />
@@ -486,7 +556,7 @@ function ApplicantWorkspaceDrawerContent({
               />
             </Stack>
           ) : null}
-          {leadId && academicYearId && tab === 'governance' ? (
+          {leadId && academicYearId && tab === 'governance' && !selectedDisabledReason ? (
             <Stack spacing={2}>
               <ApplicantRouteOperations leadId={leadId} academicYearId={academicYearId} />
               <ApplicantPolicyReadiness leadId={leadId} academicYearId={academicYearId} />

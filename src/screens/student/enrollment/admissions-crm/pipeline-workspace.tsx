@@ -238,6 +238,16 @@ const isExamAlreadyScheduled = (lead: AdmissionCrmLeadDto) =>
     AdmissionInquiryStage.Rejected,
   ].includes(lead.stage);
 
+const protectedBulkStages = new Set([
+  AdmissionInquiryStage.ExamReady,
+  AdmissionInquiryStage.ExamScheduled,
+  AdmissionInquiryStage.ExamCompleted,
+  AdmissionInquiryStage.Eligible,
+  AdmissionInquiryStage.Waitlisted,
+  AdmissionInquiryStage.Rejected,
+  AdmissionInquiryStage.Archived,
+]);
+
 type LeadCardProps = {
   lead: AdmissionCrmLeadDto;
   ownerName: string;
@@ -393,6 +403,7 @@ export function PipelineWorkspace() {
   );
   const [bulkStage, setBulkStage] = useState(AdmissionInquiryStage.FollowUp);
   const [bulkReason, setBulkReason] = useState('');
+  const [overrideProtectedStages, setOverrideProtectedStages] = useState(false);
 
   useEffect(() => {
     if ((state.view || 'list') === 'list') {
@@ -490,6 +501,7 @@ export function PipelineWorkspace() {
   const registrationRequiredBeforeExam = Boolean(
     cycleConfigurationQuery.data?.registrationFormRequiredBeforeExam
   );
+  const entranceExamRequired = cycleConfigurationQuery.data?.entranceExamRequired !== false;
 
   const [createLead, createLeadState] = useCreateAdmissionCrmLeadMutation();
   const [previewDuplicates, previewDuplicatesState] =
@@ -561,6 +573,11 @@ export function PipelineWorkspace() {
     [ownerStaffQuery.data, rowStaffQuery.data]
   );
   const selectedLeadSet = useMemo(() => new Set(selectedLeadIds), [selectedLeadIds]);
+  const protectedSelectedLeads = useMemo(
+    () =>
+      leads.filter((lead) => selectedLeadSet.has(lead.id) && protectedBulkStages.has(lead.stage)),
+    [leads, selectedLeadSet]
+  );
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   const ownerName = useCallback(
     (lead: AdmissionCrmLeadDto) =>
@@ -880,6 +897,7 @@ export function PipelineWorkspace() {
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           const canSchedule =
+            entranceExamRequired &&
             hasGrantedPermission(permissions, actionPermissions.scheduleExam) &&
             isExamReady(lead) &&
             !isExamAlreadyScheduled(lead) &&
@@ -931,6 +949,7 @@ export function PipelineWorkspace() {
       ownerFilterOptions,
       ownerName,
       permissions,
+      entranceExamRequired,
       registrationRequiredBeforeExam,
       selectedLeadIds.length,
       selectedLeadSet,
@@ -1046,12 +1065,23 @@ export function PipelineWorkspace() {
       }
       if (bulkAction === 'stage') {
         if (!bulkReason.trim()) throw new Error('Reason is required.');
-        await bulkChangeStages({
+        if (protectedSelectedLeads.length && !overrideProtectedStages) {
+          throw new Error('Remove protected applicants or choose override with a reason.');
+        }
+        const result = await bulkChangeStages({
           academicYearId,
           leadIds: selectedLeadIds,
           stage: bulkStage,
           reason: bulkReason.trim(),
+          overrideProtectedStages,
         }).unwrap();
+        if (result.failedCount > 0) {
+          shikshaMitraToast.warning({
+            message: `${result.succeededCount} stage changes completed; ${result.failedCount} failed.`,
+          });
+        } else {
+          shikshaMitraToast.success({ message: 'Bulk stage change completed.' });
+        }
       }
       if (bulkAction === 'archive') {
         if (!bulkReason.trim()) throw new Error('Reason is required.');
@@ -1064,8 +1094,11 @@ export function PipelineWorkspace() {
       setBulkAction(null);
       setBulkReason('');
       setBulkTitle('');
+      setOverrideProtectedStages(false);
       setSelectedLeadIds([]);
-      shikshaMitraToast.success({ message: 'Bulk action completed.' });
+      if (bulkAction !== 'stage') {
+        shikshaMitraToast.success({ message: 'Bulk action completed.' });
+      }
     } catch (error) {
       shikshaMitraToast.error({
         message: error instanceof Error ? error.message : 'The bulk action could not be completed.',
@@ -1093,6 +1126,7 @@ export function PipelineWorkspace() {
       selected={selectedLeadSet.has(lead.id)}
       showSelection={state.view === 'list'}
       canScheduleExam={
+        entranceExamRequired &&
         can(actionPermissions.scheduleExam) &&
         !isExamAlreadyScheduled(lead) &&
         (!registrationRequiredBeforeExam || isRegistrationIssued(lead))
@@ -1777,21 +1811,41 @@ export function PipelineWorkspace() {
               </>
             )}
             {bulkAction === 'stage' && (
-              <FormControl fullWidth>
-                <InputLabel id="pipeline-bulk-stage-label">Stage</InputLabel>
-                <Select
-                  labelId="pipeline-bulk-stage-label"
-                  label="Stage"
-                  value={bulkStage}
-                  onChange={(event) => setBulkStage(Number(event.target.value))}
-                >
-                  {stages.map((stageItem) => (
-                    <MenuItem key={stageItem.id} value={stageItem.systemStage}>
-                      {stageItem.stageName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <>
+                <FormControl fullWidth>
+                  <InputLabel id="pipeline-bulk-stage-label">Stage</InputLabel>
+                  <Select
+                    labelId="pipeline-bulk-stage-label"
+                    label="Stage"
+                    value={bulkStage}
+                    onChange={(event) => setBulkStage(Number(event.target.value))}
+                  >
+                    {stages.map((stageItem) => (
+                      <MenuItem key={stageItem.id} value={stageItem.systemStage}>
+                        {stageItem.stageName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                {protectedSelectedLeads.length ? (
+                  <Alert severity={overrideProtectedStages ? 'warning' : 'error'}>
+                    {protectedSelectedLeads.length} selected applicant
+                    {protectedSelectedLeads.length === 1 ? '' : 's'} are in protected workflow
+                    stages. Remove them before applying, or choose override with an audit reason.
+                  </Alert>
+                ) : null}
+                {protectedSelectedLeads.length ? (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={overrideProtectedStages}
+                        onChange={(event) => setOverrideProtectedStages(event.target.checked)}
+                      />
+                    }
+                    label="Override protected stage guardrails"
+                  />
+                ) : null}
+              </>
             )}
             {(bulkAction === 'stage' || bulkAction === 'archive') && (
               <TextField
@@ -1809,6 +1863,11 @@ export function PipelineWorkspace() {
           <Button onClick={() => setBulkAction(null)}>Cancel</Button>
           <LoadingButton
             variant="contained"
+            disabled={
+              bulkAction === 'stage' &&
+              protectedSelectedLeads.length > 0 &&
+              !overrideProtectedStages
+            }
             loading={
               bulkAssignOwnersState.isLoading ||
               bulkCreateTasksState.isLoading ||

@@ -6,6 +6,55 @@ import type {
 
 import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+const optionFieldTypes = new Set([
+  AdmissionCrmFormFieldType.Select,
+  AdmissionCrmFormFieldType.MultiSelect,
+]);
+
+const systemFieldTypeRules: Record<string, AdmissionCrmFormFieldType[]> = {
+  dateOfBirth: [AdmissionCrmFormFieldType.Date],
+  primaryContactNo: [AdmissionCrmFormFieldType.Phone, AdmissionCrmFormFieldType.Text],
+  email: [AdmissionCrmFormFieldType.Email, AdmissionCrmFormFieldType.Text],
+};
+
+const fieldKeyPattern = /^[a-z][a-zA-Z0-9_]*$/;
+
+export const registrationFieldNeedsOptions = (fieldType: AdmissionCrmFormFieldType) =>
+  optionFieldTypes.has(fieldType);
+
+export const normalizeRegistrationFieldForType = (
+  field: AdmissionCrmRegistrationFieldDto,
+  fieldType: AdmissionCrmFormFieldType
+): AdmissionCrmRegistrationFieldDto => {
+  const needsOptions = registrationFieldNeedsOptions(fieldType);
+  const systemTypes = field.systemField ? systemFieldTypeRules[field.systemField] : null;
+  return {
+    ...field,
+    fieldType,
+    systemField: systemTypes && !systemTypes.includes(fieldType) ? null : field.systemField,
+    options: needsOptions ? field.options : [],
+    minimumLength:
+      fieldType === AdmissionCrmFormFieldType.Text ||
+      fieldType === AdmissionCrmFormFieldType.TextArea
+        ? field.minimumLength
+        : null,
+    maximumLength:
+      fieldType === AdmissionCrmFormFieldType.Text ||
+      fieldType === AdmissionCrmFormFieldType.TextArea
+        ? field.maximumLength
+        : null,
+    minimumValue: fieldType === AdmissionCrmFormFieldType.Number ? field.minimumValue : null,
+    maximumValue: fieldType === AdmissionCrmFormFieldType.Number ? field.maximumValue : null,
+    validationPattern:
+      fieldType === AdmissionCrmFormFieldType.Text ||
+      fieldType === AdmissionCrmFormFieldType.TextArea ||
+      fieldType === AdmissionCrmFormFieldType.Email ||
+      fieldType === AdmissionCrmFormFieldType.Phone
+        ? field.validationPattern
+        : null,
+  };
+};
+
 export const createRegistrationField = (): AdmissionCrmRegistrationFieldDto => ({
   key: '',
   label: '',
@@ -194,8 +243,25 @@ export const validateRegistrationTemplateStep = (
     section.fields.forEach((field) => {
       const fieldKey = field.key.trim().toLowerCase();
       if (!fieldKey || !field.label.trim()) errors.push('Every field needs a key and label.');
+      if (fieldKey && !fieldKeyPattern.test(field.key.trim())) {
+        errors.push(
+          `Field key "${field.key}" must start with a letter and use letters, numbers, or underscore.`
+        );
+      }
       if (fieldKeys.has(fieldKey)) errors.push(`Field key "${field.key}" is duplicated.`);
       fieldKeys.add(fieldKey);
+      if (registrationFieldNeedsOptions(field.fieldType) && !field.options.filter(Boolean).length) {
+        errors.push(`Field "${field.label || field.key}" needs at least one option.`);
+      }
+      if (!registrationFieldNeedsOptions(field.fieldType) && field.options.filter(Boolean).length) {
+        errors.push(
+          `Field "${field.label || field.key}" has options but its type does not use options.`
+        );
+      }
+      const allowedTypes = field.systemField ? systemFieldTypeRules[field.systemField] : null;
+      if (allowedTypes && !allowedTypes.includes(field.fieldType)) {
+        errors.push(`Field "${field.label || field.key}" type does not match its system mapping.`);
+      }
       if (
         field.minimumLength != null &&
         field.maximumLength != null &&

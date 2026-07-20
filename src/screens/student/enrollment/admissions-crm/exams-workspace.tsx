@@ -43,6 +43,7 @@ import {
   useGetAdmissionCrmEntranceExamsQuery,
   useUploadAdmissionCrmExamResultMutation,
   useDecideAdmissionCrmEligibilityMutation,
+  useGetAdmissionCrmCycleConfigurationQuery,
   useGetAdmissionCrmEligibilityHandoffQuery,
   useMarkAdmissionCrmExamAttendanceMutation,
   useBulkUploadAdmissionCrmExamResultsMutation,
@@ -240,6 +241,11 @@ export function ExamsWorkspace() {
     { examRecordId: handoffExamId },
     { skip: !handoffExamId }
   );
+  const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId }
+  );
+  const entranceExamRequired = cycleConfigurationQuery.data?.entranceExamRequired !== false;
 
   useEffect(() => {
     if (!selectedExam) return;
@@ -579,7 +585,14 @@ export function ExamsWorkspace() {
         description="Process attendance, results, merit, and eligibility decisions from one queue."
       />
 
-      {selectedExamIds.length > 0 ? (
+      {!entranceExamRequired ? (
+        <Alert severity="info">
+          Entrance exams are disabled for this admissions cycle. Applicants follow the exam-waived
+          registration and admission readiness path.
+        </Alert>
+      ) : null}
+
+      {entranceExamRequired && selectedExamIds.length > 0 ? (
         <Paper variant="outlined" role="region" aria-label="Bulk exam actions" sx={{ p: 1 }}>
           <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
             <Chip color="primary" label={`${selectedExamIds.length} selected`} />
@@ -615,12 +628,12 @@ export function ExamsWorkspace() {
         </Paper>
       ) : null}
 
-      {examsQuery.isError ? (
+      {entranceExamRequired && examsQuery.isError ? (
         <EnrollmentWorkspaceErrorState
           message="Entrance exams are unavailable."
           onRetry={() => examsQuery.refetch()}
         />
-      ) : (
+      ) : entranceExamRequired ? (
         <CustomizableTable
           tableId="student-enrollment-entrance-exams"
           tableTitle="Entrance Exams"
@@ -684,7 +697,7 @@ export function ExamsWorkspace() {
           wrapperProps={{ sx: enrollmentTableWrapperSx }}
           tableContainerProps={{ sx: enrollmentTableContainerSx }}
         />
-      )}
+      ) : null}
 
       <Dialog open={bulkMarksOpen} onClose={() => setBulkMarksOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Give Marks</DialogTitle>

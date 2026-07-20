@@ -8,12 +8,15 @@ import { LoadingButton } from 'src/components/loading-button';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 import {
   Box,
+  Step,
   Alert,
   Stack,
   Paper,
   Button,
   Dialog,
+  Stepper,
   MenuItem,
+  StepLabel,
   TextField,
   Typography,
   DialogTitle,
@@ -86,6 +89,8 @@ const readError = (error: unknown) => {
   return 'The registration could not be created.';
 };
 
+const steps = ['Applicant identity', 'Academic target', 'Registration form', 'Duplicate review'];
+
 export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
   const {
     academicYearId,
@@ -96,6 +101,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     academicMediumName,
   } = useEnrollmentWorkspace();
   const [form, setForm] = useState<FormState>(initialForm);
+  const [activeStep, setActiveStep] = useState(0);
   const [duplicateReviewed, setDuplicateReviewed] = useState(false);
   const [duplicateCount, setDuplicateCount] = useState(0);
 
@@ -167,6 +173,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
 
   const reset = () => {
     setForm(initialForm());
+    setActiveStep(0);
     setDuplicateReviewed(false);
     setDuplicateCount(0);
   };
@@ -257,6 +264,32 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     (value): value is AdmissionCrmRouteType => typeof value === 'number'
   );
 
+  const validateStep = (step: number) => {
+    if (step === 0) {
+      if (!form.firstName.trim()) return 'Student first name is required.';
+      if (!form.primaryContactNo.trim() && !form.email.trim()) {
+        return 'Contact number or email is required.';
+      }
+    }
+    if (step === 1 && !form.targetStandardId) return 'Target class is required.';
+    if (step === 2) {
+      if (!form.registrationTemplateId) return 'Registration template is required.';
+      if (!form.formNumberSeriesId && !form.manualFormNumber.trim()) {
+        return 'Select a form number series or enter the paper form number.';
+      }
+    }
+    return null;
+  };
+
+  const nextStep = () => {
+    const message = validateStep(activeStep);
+    if (message) {
+      shikshaMitraToast.error({ message });
+      return;
+    }
+    setActiveStep((current) => Math.min(current + 1, steps.length - 1));
+  };
+
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="md">
       <DialogTitle>Create direct registration</DialogTitle>
@@ -292,204 +325,263 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
             </Stack>
           </Paper>
 
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-              gap: 1,
-            }}
-          >
-            <TextField
-              required
-              label="First name"
-              value={form.firstName}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, firstName: event.target.value }))
-              }
-            />
-            <TextField
-              label="Middle name"
-              value={form.middleName}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, middleName: event.target.value }))
-              }
-            />
-            <TextField
-              label="Last name"
-              value={form.lastName}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, lastName: event.target.value }))
-              }
-            />
-            <TextField
-              type="date"
-              label="Date of birth"
-              value={form.dateOfBirth}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, dateOfBirth: event.target.value }))
-              }
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
-            <TextField
-              label="Parent or guardian"
-              value={form.parentGuardianName}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, parentGuardianName: event.target.value }))
-              }
-            />
-            <TextField
-              type="tel"
-              label="Contact number"
-              value={form.primaryContactNo}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, primaryContactNo: event.target.value }))
-              }
-            />
-            <TextField
-              type="email"
-              label="Email"
-              value={form.email}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, email: event.target.value }))
-              }
-            />
-            <TextField
-              required
-              select
-              label="Medium stage"
-              value={form.mediumStageId}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  mediumStageId: event.target.value,
-                  targetStandardId: '',
-                }))
-              }
+          <Stepper activeStep={activeStep} alternativeLabel>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
+          {activeStep === 0 ? (
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                gap: 1,
+              }}
             >
-              {mediumStages.map((stage) => (
-                <MenuItem key={stage.id} value={stage.id}>
-                  {stage.stageName || stage.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              required
-              select
-              label="Target class"
-              value={form.targetStandardId}
-              disabled={!form.mediumStageId}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, targetStandardId: event.target.value }))
-              }
+              <TextField
+                required
+                label="First name"
+                value={form.firstName}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, firstName: event.target.value }))
+                }
+              />
+              <TextField
+                label="Middle name"
+                value={form.middleName}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, middleName: event.target.value }))
+                }
+              />
+              <TextField
+                label="Last name"
+                value={form.lastName}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, lastName: event.target.value }))
+                }
+              />
+              <TextField
+                type="date"
+                label="Date of birth"
+                value={form.dateOfBirth}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, dateOfBirth: event.target.value }))
+                }
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Parent or guardian"
+                value={form.parentGuardianName}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, parentGuardianName: event.target.value }))
+                }
+              />
+              <TextField
+                type="tel"
+                label="Contact number"
+                value={form.primaryContactNo}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, primaryContactNo: event.target.value }))
+                }
+              />
+              <TextField
+                type="email"
+                label="Email"
+                value={form.email}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, email: event.target.value }))
+                }
+              />
+            </Box>
+          ) : null}
+
+          {activeStep === 1 ? (
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                gap: 1,
+              }}
             >
-              {standards.map((standard) => (
-                <MenuItem key={standard.id} value={standard.id}>
-                  {standard.name}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              required
-              select
-              label="Admission pathway"
-              value={form.intendedRouteType}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  intendedRouteType: Number(event.target.value),
-                }))
-              }
-            >
-              {routeTypes.map((route) => (
-                <MenuItem key={route} value={route}>
-                  {routeLabel(route)}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              required
-              select
-              label="Registration template"
-              value={form.registrationTemplateId}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, registrationTemplateId: event.target.value }))
-              }
-            >
-              {(templatesQuery.data?.items || []).map((template) => (
-                <MenuItem key={template.id} value={template.id}>
-                  {template.name} - v{template.version}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              label="Form number series"
-              value={form.formNumberSeriesId}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  formNumberSeriesId: event.target.value,
-                  manualFormNumber: event.target.value ? '' : current.manualFormNumber,
-                }))
-              }
-            >
-              <MenuItem value="">Use paper form number</MenuItem>
-              {(seriesQuery.data?.items || [])
-                .filter((item) => item.isActive)
-                .map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name} - {item.nextPreview}
+              <TextField
+                required
+                select
+                label="Medium stage"
+                value={form.mediumStageId}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    mediumStageId: event.target.value,
+                    targetStandardId: '',
+                  }))
+                }
+              >
+                {mediumStages.map((stage) => (
+                  <MenuItem key={stage.id} value={stage.id}>
+                    {stage.stageName || stage.label}
                   </MenuItem>
                 ))}
-            </TextField>
-            <TextField
-              label="Paper form number"
-              value={form.manualFormNumber}
-              disabled={Boolean(form.formNumberSeriesId)}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  manualFormNumber: event.target.value.toUpperCase(),
-                }))
-              }
-            />
-          </Box>
-          <TextField
-            label="Staff notes"
-            value={form.notes}
-            onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-            multiline
-            minRows={2}
-          />
-          {duplicateCount ? (
-            <Alert severity="warning">
-              {duplicateCount} likely duplicate applicant record{duplicateCount === 1 ? '' : 's'}{' '}
-              found.
-            </Alert>
+              </TextField>
+            </Box>
           ) : null}
-          {duplicateCount ? (
-            <TextField
-              required
-              label="Reason to continue"
-              value={form.duplicateContinueReason}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, duplicateContinueReason: event.target.value }))
-              }
-              multiline
-              minRows={2}
-            />
+
+          {activeStep === 2 ? (
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                gap: 1,
+              }}
+            >
+              <TextField
+                required
+                select
+                label="Target class"
+                value={form.targetStandardId}
+                disabled={!form.mediumStageId}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, targetStandardId: event.target.value }))
+                }
+              >
+                {standards.map((standard) => (
+                  <MenuItem key={standard.id} value={standard.id}>
+                    {standard.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                required
+                select
+                label="Admission pathway"
+                value={form.intendedRouteType}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    intendedRouteType: Number(event.target.value),
+                  }))
+                }
+              >
+                {routeTypes.map((route) => (
+                  <MenuItem key={route} value={route}>
+                    {routeLabel(route)}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                required
+                select
+                label="Registration template"
+                value={form.registrationTemplateId}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, registrationTemplateId: event.target.value }))
+                }
+              >
+                {(templatesQuery.data?.items || []).map((template) => (
+                  <MenuItem key={template.id} value={template.id}>
+                    {template.name} - v{template.version}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label="Form number series"
+                value={form.formNumberSeriesId}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    formNumberSeriesId: event.target.value,
+                    manualFormNumber: event.target.value ? '' : current.manualFormNumber,
+                  }))
+                }
+              >
+                <MenuItem value="">Use paper form number</MenuItem>
+                {(seriesQuery.data?.items || [])
+                  .filter((item) => item.isActive)
+                  .map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.name} - {item.nextPreview}
+                    </MenuItem>
+                  ))}
+              </TextField>
+              <TextField
+                label="Paper form number"
+                value={form.manualFormNumber}
+                disabled={Boolean(form.formNumberSeriesId)}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    manualFormNumber: event.target.value.toUpperCase(),
+                  }))
+                }
+              />
+            </Box>
+          ) : null}
+
+          {activeStep === 3 ? (
+            <Stack spacing={1.25}>
+              <Alert severity="info">
+                Confirm this direct registration is operationally valid. It bypasses inquiry and
+                entrance exam only; document, payment, offer, and admission readiness checks still
+                apply.
+              </Alert>
+              <TextField
+                label="Staff notes"
+                value={form.notes}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, notes: event.target.value }))
+                }
+                multiline
+                minRows={2}
+              />
+              {duplicateReviewed && duplicateCount === 0 ? (
+                <Alert severity="success">No likely duplicate applicant records found.</Alert>
+              ) : null}
+              {duplicateCount ? (
+                <Alert severity="warning">
+                  {duplicateCount} likely duplicate applicant record
+                  {duplicateCount === 1 ? '' : 's'} found.
+                </Alert>
+              ) : null}
+              {duplicateCount ? (
+                <TextField
+                  required
+                  label="Reason to continue"
+                  value={form.duplicateContinueReason}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      duplicateContinueReason: event.target.value,
+                    }))
+                  }
+                  multiline
+                  minRows={2}
+                />
+              ) : null}
+            </Stack>
           ) : null}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>Cancel</Button>
-        <LoadingButton
-          variant="contained"
-          loading={previewState.isLoading || createState.isLoading}
-          onClick={submit}
-        >
-          {duplicateReviewed && duplicateCount ? 'Create Anyway' : 'Create and Enter Paper Form'}
-        </LoadingButton>
+        <Button disabled={activeStep === 0} onClick={() => setActiveStep((current) => current - 1)}>
+          Back
+        </Button>
+        {activeStep < steps.length - 1 ? (
+          <Button variant="contained" onClick={nextStep}>
+            Next
+          </Button>
+        ) : (
+          <LoadingButton
+            variant="contained"
+            loading={previewState.isLoading || createState.isLoading}
+            onClick={submit}
+          >
+            {duplicateReviewed && duplicateCount ? 'Create Anyway' : 'Create and Enter Paper Form'}
+          </LoadingButton>
+        )}
       </DialogActions>
     </Dialog>
   );

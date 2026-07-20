@@ -935,6 +935,12 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmCycleConfiguration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmCycleConfiguration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmPipelineStages).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmPipelineStage).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.lockAdmissionCrmJourney).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.unlockAdmissionCrmJourney).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmInquirySource).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmInquirySource).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.setAdmissionCrmInquirySourceStatus).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmFormTemplates).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmFormTemplate).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmFormTemplate).toBeTruthy();
