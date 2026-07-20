@@ -11,6 +11,7 @@ import TodayRounded from '@mui/icons-material/TodayRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoadingButton } from 'src/components/loading-button';
+import TaskAltRounded from '@mui/icons-material/TaskAltRounded';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import WarningAmberRounded from '@mui/icons-material/WarningAmberRounded';
@@ -72,12 +73,49 @@ const actionLabels: Record<AdmissionCrmRecommendedAction, string> = {
 };
 
 const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
-  [AdmissionCrmLeadPriority.None]: 'Not set',
+  [AdmissionCrmLeadPriority.None]: 'No priority',
   [AdmissionCrmLeadPriority.Hot]: 'Hot',
   [AdmissionCrmLeadPriority.Warm]: 'Warm',
   [AdmissionCrmLeadPriority.Cold]: 'Cold',
   [AdmissionCrmLeadPriority.Low]: 'Low',
 };
+
+const priorityDotColors: Record<AdmissionCrmLeadPriority, string> = {
+  [AdmissionCrmLeadPriority.None]: 'transparent',
+  [AdmissionCrmLeadPriority.Hot]: 'error.main',
+  [AdmissionCrmLeadPriority.Warm]: 'warning.main',
+  [AdmissionCrmLeadPriority.Cold]: 'info.main',
+  [AdmissionCrmLeadPriority.Low]: 'text.disabled',
+};
+
+function PriorityIndicator({ priority }: { priority: AdmissionCrmLeadPriority }) {
+  const isUnprioritized = priority === AdmissionCrmLeadPriority.None;
+
+  return (
+    <Stack direction="row" spacing={0.75} alignItems="center">
+      <Box
+        aria-hidden="true"
+        sx={{
+          width: 8,
+          height: 8,
+          flexShrink: 0,
+          borderRadius: '50%',
+          bgcolor: priorityDotColors[priority],
+          ...(isUnprioritized
+            ? { border: '1.5px solid', borderColor: 'text.disabled' }
+            : undefined),
+        }}
+      />
+      <Typography
+        variant="caption"
+        color={isUnprioritized ? 'text.secondary' : 'text.primary'}
+        sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}
+      >
+        {priorityLabels[priority]}
+      </Typography>
+    </Stack>
+  );
+}
 
 const urgencyLabels: Record<AdmissionCrmWorkUrgency, string> = {
   [AdmissionCrmWorkUrgency.Normal]: 'Normal',
@@ -410,9 +448,7 @@ export function EnrollmentOverviewWorkspace() {
         enumOptions: Object.values(AdmissionCrmLeadPriority)
           .filter((value): value is number => typeof value === 'number')
           .map((value) => ({ label: priorityLabels[value as AdmissionCrmLeadPriority], value })),
-        render: (value) => (
-          <Chip size="small" label={priorityLabels[value as AdmissionCrmLeadPriority]} />
-        ),
+        render: (value) => <PriorityIndicator priority={value as AdmissionCrmLeadPriority} />,
       },
       {
         id: 'assignedDisplayName',
@@ -436,14 +472,19 @@ export function EnrollmentOverviewWorkspace() {
         excludeFromExport: true,
         render: (_value, row) => {
           const item = row as AdmissionCrmMyWorkItemDto;
+          const isCompletionAction =
+            item.recommendedAction === AdmissionCrmRecommendedAction.CompleteTask;
           return (
             <Button
               size="small"
-              variant="contained"
+              variant="outlined"
+              color={isCompletionAction ? 'success' : 'primary'}
+              startIcon={isCompletionAction ? <TaskAltRounded aria-hidden="true" /> : undefined}
               onClick={(event) => {
                 event.stopPropagation();
                 openItem(item);
               }}
+              sx={{ whiteSpace: 'nowrap' }}
             >
               {actionLabels[item.recommendedAction]}
             </Button>
