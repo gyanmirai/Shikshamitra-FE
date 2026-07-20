@@ -6,6 +6,7 @@ import type {
   AdmissionCrmPipelineStageDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { useGetAdmissionCrmLeadsQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
@@ -14,11 +15,15 @@ import {
   Paper,
   Stack,
   Button,
+  Tooltip,
   Skeleton,
   Typography,
+  IconButton,
   LinearProgress,
   CircularProgress,
 } from '@mui/material';
+
+import { getAdmissionCrmStageTooltipLines } from './admissions-crm-utils';
 
 const PAGE_SIZE = 25;
 
@@ -93,6 +98,15 @@ export function PipelineStageColumn({
   const configuredColor = /^#[0-9a-f]{6}$/i.test(stage.colorHex || '')
     ? stage.colorHex || undefined
     : undefined;
+  const tooltipTitle = (
+    <Stack spacing={0.25}>
+      {getAdmissionCrmStageTooltipLines(stage).map((line) => (
+        <Typography key={line} variant="caption" color="inherit">
+          {line}
+        </Typography>
+      ))}
+    </Stack>
+  );
 
   return (
     <Paper
@@ -114,14 +128,21 @@ export function PipelineStageColumn({
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-        <Chip
-          size="small"
-          variant="outlined"
-          label={stage.stageName}
-          sx={
-            configuredColor ? { borderColor: configuredColor, color: configuredColor } : undefined
-          }
-        />
+        <Stack direction="row" alignItems="center" gap={0.5} sx={{ minWidth: 0 }}>
+          <Chip
+            size="small"
+            variant="outlined"
+            label={stage.stageName}
+            sx={
+              configuredColor ? { borderColor: configuredColor, color: configuredColor } : undefined
+            }
+          />
+          <Tooltip title={tooltipTitle} arrow>
+            <IconButton size="small" aria-label={`${stage.stageName} stage details`}>
+              <InfoOutlined fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
         <Typography variant="caption" color="text.secondary">
           {shouldLoad ? (
             (data?.totalCount ?? 0)

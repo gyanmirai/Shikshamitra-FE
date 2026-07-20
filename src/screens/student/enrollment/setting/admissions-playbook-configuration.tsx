@@ -317,7 +317,9 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
     try {
       await createPlaybook({
         academicYearId,
-        body: createQuickSetup(quickSetupName.trim(), quickSetupKind, quickSetupHallTicket),
+        body: prepareAdmissionPlaybookPayload(
+          createQuickSetup(quickSetupName.trim(), quickSetupKind, quickSetupHallTicket)
+        ),
       }).unwrap();
       setQuickSetupOpen(false);
       shikshaMitraToast.success({

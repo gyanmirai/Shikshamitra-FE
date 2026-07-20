@@ -1522,6 +1522,12 @@ const AdmissionsCrmConfiguration = ({
     admissionsCrmConfigurationDialog.onTrue();
   };
 
+  const handleOpenCreateTemplate = () => {
+    setEditingTemplateId(null);
+    setTemplateForm(createDefaultTemplateForm());
+    admissionsCrmConfigurationDialog.onTrue();
+  };
+
   const handleMessageTemplateChange = (
     field: keyof MessageTemplateForm,
     value: string | AdmissionCrmMessageChannel
@@ -4001,9 +4007,19 @@ const AdmissionsCrmConfiguration = ({
               <Typography component="h2" variant="subtitle1">
                 Form Templates
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {templates?.totalCount || 0} templates
-              </Typography>
+              <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                <Typography variant="caption" color="text.secondary">
+                  {templates?.totalCount || 0} templates
+                </Typography>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={isCreatingTemplate || isUpdatingTemplate}
+                  onClick={handleOpenCreateTemplate}
+                >
+                  Create Custom Inquiry Form
+                </Button>
+              </Stack>
             </Stack>
             <Divider />
             <Box

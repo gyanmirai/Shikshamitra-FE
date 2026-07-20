@@ -1,19 +1,23 @@
 'use client';
 
-import { useState } from 'react';
 import { Save, Send } from '@mui/icons-material';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import {
   Box,
   Chip,
+  Step,
   Alert,
   Stack,
+  Button,
   Select,
+  Stepper,
   Divider,
   MenuItem,
   Checkbox,
   TextField,
+  StepLabel,
   Typography,
   InputLabel,
   FormControl,
@@ -87,11 +91,29 @@ export default function PublicRegistration({
 }: Props) {
   const copy = publicAdmissionsActionCopy[language];
   const [responses, setResponses] = useState<Record<string, unknown>>(application.responses || {});
+  const [activeStep, setActiveStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fields = application.sections.flatMap((section) => section.fields);
+  const visibleSections = useMemo(
+    () => application.sections.filter((section) => section.parentVisible),
+    [application.sections]
+  );
+  const activeSection =
+    visibleSections[Math.min(activeStep, Math.max(visibleSections.length - 1, 0))];
   const isExpired = new Date(application.linkExpiresAt) <= new Date();
   const canEdit = editableStatuses.has(application.status) && !isExpired;
+
+  useEffect(() => {
+    setResponses(application.responses || {});
+    setActiveStep(0);
+  }, [application.id, application.responses]);
+
+  useEffect(() => {
+    if (activeStep >= visibleSections.length) {
+      setActiveStep(Math.max(visibleSections.length - 1, 0));
+    }
+  }, [activeStep, visibleSections.length]);
 
   const updateValue = (key: string, value: unknown) => {
     setResponses((current) => ({ ...current, [key]: value }));
@@ -165,108 +187,136 @@ export default function PublicRegistration({
         </Alert>
       ) : null}
 
-      {application.sections
-        .filter((section) => section.parentVisible)
-        .map((section) => (
-          <Stack key={section.key} spacing={1.25} sx={{ pt: 1 }}>
-            <Box>
-              <Typography variant="subtitle2">{section.title}</Typography>
-              {section.description ? (
-                <Typography variant="caption" color="text.secondary">
-                  {section.description}
-                </Typography>
-              ) : null}
-            </Box>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-                gap: 1.5,
-              }}
-            >
-              {section.fields
-                .filter((field) =>
-                  isPublicRegistrationFieldVisible(field, fields, responses, application.prefill)
-                )
-                .map((field) => {
-                  const value = getPublicRegistrationValue(field, responses, application.prefill);
-                  const editable = canEdit && field.parentEditable;
-                  const error = application.correctionFieldKeys.includes(field.key);
-                  if (field.fieldType === 8) {
-                    return (
-                      <FormControlLabel
-                        key={field.key}
-                        control={
-                          <Checkbox
-                            checked={Boolean(value)}
-                            disabled={!editable}
-                            onChange={(event) => updateValue(field.key, event.target.checked)}
-                          />
-                        }
-                        label={`${field.label}${field.required ? ' *' : ''}`}
-                      />
-                    );
-                  }
-                  if (field.fieldType === 6 || field.fieldType === 7) {
-                    return (
-                      <FormControl key={field.key} size="small" error={error}>
-                        <InputLabel>{field.label}</InputLabel>
-                        <Select
-                          label={field.label}
-                          multiple={field.fieldType === 7}
-                          value={
-                            field.fieldType === 7
-                              ? Array.isArray(value)
-                                ? value
-                                : []
-                              : String(value ?? '')
-                          }
-                          disabled={!editable}
-                          onChange={(event) => updateValue(field.key, event.target.value)}
-                        >
-                          {field.options.map((option) => (
-                            <MenuItem key={option} value={option}>
-                              {option}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    );
-                  }
+      {visibleSections.length > 1 ? (
+        <Stepper activeStep={activeStep} alternativeLabel sx={{ overflowX: 'auto', pb: 1 }}>
+          {visibleSections.map((section) => (
+            <Step key={section.key}>
+              <StepLabel>{section.title}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+      ) : null}
+
+      {activeSection ? (
+        <Stack key={activeSection.key} spacing={1.25} sx={{ pt: 1 }}>
+          <Box>
+            <Typography variant="subtitle2">{activeSection.title}</Typography>
+            {activeSection.description ? (
+              <Typography variant="caption" color="text.secondary">
+                {activeSection.description}
+              </Typography>
+            ) : null}
+          </Box>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+              gap: 1.5,
+            }}
+          >
+            {activeSection.fields
+              .filter((field) =>
+                isPublicRegistrationFieldVisible(field, fields, responses, application.prefill)
+              )
+              .map((field) => {
+                const value = getPublicRegistrationValue(field, responses, application.prefill);
+                const editable = canEdit && field.parentEditable;
+                const error = application.correctionFieldKeys.includes(field.key);
+                if (field.fieldType === 8) {
                   return (
-                    <TextField
+                    <FormControlLabel
                       key={field.key}
-                      size="small"
-                      type={
-                        field.fieldType === 2
-                          ? 'number'
-                          : field.fieldType === 3
-                            ? 'date'
-                            : field.fieldType === 4
-                              ? 'email'
-                              : field.fieldType === 5
-                                ? 'tel'
-                                : 'text'
+                      control={
+                        <Checkbox
+                          checked={Boolean(value)}
+                          disabled={!editable}
+                          onChange={(event) => updateValue(field.key, event.target.checked)}
+                        />
                       }
-                      multiline={field.fieldType === 1}
-                      minRows={field.fieldType === 1 ? 3 : undefined}
-                      label={field.label}
-                      required={field.required}
-                      value={String(value ?? '')}
-                      disabled={!editable}
-                      error={error}
-                      helperText={error ? copy.correctionRequested : field.helpText}
-                      InputLabelProps={field.fieldType === 3 ? { shrink: true } : undefined}
-                      onChange={(event) => updateValue(field.key, event.target.value)}
+                      label={`${field.label}${field.required ? ' *' : ''}`}
                     />
                   );
-                })}
-            </Box>
-          </Stack>
-        ))}
+                }
+                if (field.fieldType === 6 || field.fieldType === 7) {
+                  return (
+                    <FormControl key={field.key} size="small" error={error}>
+                      <InputLabel>{field.label}</InputLabel>
+                      <Select
+                        label={field.label}
+                        multiple={field.fieldType === 7}
+                        value={
+                          field.fieldType === 7
+                            ? Array.isArray(value)
+                              ? value
+                              : []
+                            : String(value ?? '')
+                        }
+                        disabled={!editable}
+                        onChange={(event) => updateValue(field.key, event.target.value)}
+                      >
+                        {field.options.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  );
+                }
+                return (
+                  <TextField
+                    key={field.key}
+                    size="small"
+                    type={
+                      field.fieldType === 2
+                        ? 'number'
+                        : field.fieldType === 3
+                          ? 'date'
+                          : field.fieldType === 4
+                            ? 'email'
+                            : field.fieldType === 5
+                              ? 'tel'
+                              : 'text'
+                    }
+                    multiline={field.fieldType === 1}
+                    minRows={field.fieldType === 1 ? 3 : undefined}
+                    label={field.label}
+                    required={field.required}
+                    value={String(value ?? '')}
+                    disabled={!editable}
+                    error={error}
+                    helperText={error ? copy.correctionRequested : field.helpText}
+                    InputLabelProps={field.fieldType === 3 ? { shrink: true } : undefined}
+                    onChange={(event) => updateValue(field.key, event.target.value)}
+                  />
+                );
+              })}
+          </Box>
+        </Stack>
+      ) : null}
 
       {canEdit ? (
-        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} flexWrap="wrap">
+          {visibleSections.length > 1 ? (
+            <>
+              <Button
+                variant="text"
+                disabled={activeStep === 0}
+                onClick={() => setActiveStep((current) => Math.max(current - 1, 0))}
+              >
+                {copy.back}
+              </Button>
+              <Button
+                variant="text"
+                disabled={activeStep >= visibleSections.length - 1}
+                onClick={() =>
+                  setActiveStep((current) => Math.min(current + 1, visibleSections.length - 1))
+                }
+              >
+                {copy.next}
+              </Button>
+            </>
+          ) : null}
           <LoadingButton
             variant="outlined"
             startIcon={<Save />}

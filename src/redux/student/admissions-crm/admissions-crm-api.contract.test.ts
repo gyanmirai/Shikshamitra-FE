@@ -18,6 +18,7 @@ import {
   AdmissionCrmTimelineEventType,
   AdmissionCrmRegistrationStatus,
   AdmissionCrmExamReadinessField,
+  buildAdmissionCrmMyWorkRequest,
   AdmissionCrmAutomationRunStatus,
   AdmissionCrmLeadRoutingStrategy,
   AdmissionCrmOperationsQueueType,
@@ -49,7 +50,6 @@ import {
   buildPreviewAdmissionCrmExamResultRequest,
   buildAdmissionCrmActivationPreviewRequest,
   buildAdmissionCrmEnrollmentOverviewRequest,
-  buildAdmissionCrmMyWorkRequest,
   buildChangeAdmissionCrmLeadPriorityRequest,
   buildMergeAdmissionCrmDuplicateLeadRequest,
   buildAssignAdmissionCrmSpecialRouteRequest,
@@ -969,6 +969,7 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmEligibilityHandoff).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmAnalyticsSummary).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.scheduleAdmissionCrmEntranceExam).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.bulkUploadAdmissionCrmExamResults).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.issueAdmissionCrmRegistrationForm).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getCurrentAdmissionCrmRegistrationByLead).toBeTruthy();
     expect(
