@@ -514,17 +514,22 @@ export const SubstitutionActiveFilters = ({
           size="small"
           onDelete={() => handleRemoveFilter(af.key)}
           sx={{
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-            color: 'primary.dark',
-            borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
+            bgcolor: (theme) => alpha(theme.palette.info.main, 0.12),
+            color: 'info.main',
+            borderColor: (theme) => alpha(theme.palette.info.main, 0.28),
             borderStyle: 'solid',
             borderWidth: 1,
             fontSize: 12,
             fontWeight: 'fontWeightMedium',
+            maxWidth: 260,
+            '& .MuiChip-label': {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            },
             '& .MuiChip-deleteIcon': {
-              color: 'primary.main',
+              color: 'info.main',
               '&:hover': {
-                color: 'primary.dark',
+                color: 'info.dark',
               },
             },
           }}

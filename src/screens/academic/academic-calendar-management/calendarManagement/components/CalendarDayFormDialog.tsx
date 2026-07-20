@@ -138,9 +138,9 @@ const CalendarDayFormDialog = ({
   const isPtm = dayTypeNum === DayType.PTM;
 
   const title = editData
-    ? `Edit Marker for ${dayjs(editData.date).format('DD MMM YYYY')}`
+    ? `Edit Marker for ${dayjs(editData.date).format('DD-MM-YYYY')}`
     : prefillDate
-      ? `Add Marker for ${dayjs(prefillDate).format('DD MMM YYYY')}`
+      ? `Add Marker for ${dayjs(prefillDate).format('DD-MM-YYYY')}`
       : 'Add Calendar Day';
 
   const handleDelete = async () => {
@@ -155,358 +155,365 @@ const CalendarDayFormDialog = ({
       <CustomDialog open={open} handleClose={onClose} title={title} maxWidth="sm">
         <DialogScrollContent>
           <Grid container spacing={1}>
-          {/* Day Type */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl
-              fullWidth
-              size="small"
-              error={formik.touched.dayType && Boolean(formik.errors.dayType)}
-            >
-              <InputLabel>Day Type *</InputLabel>
-              <Select
-                label="Day Type *"
-                name="dayType"
-                value={formik.values.dayType}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                renderValue={(selected) => {
-                  const opt = DAY_TYPE_OPTIONS.find((o) => o.value === selected);
-                  if (!opt) return '';
-                  const color = DAY_TYPE_COLORS[selected as DayType] ?? '#9e9e9e';
-                  const icon = DAY_TYPE_ICONS[selected as DayType] ?? 'mdi:calendar-outline';
-                  return (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon={icon} width={16} sx={{ color }} />
-                      <Typography variant="body2" fontWeight={600}>
-                        {opt.label}
-                      </Typography>
-                    </Box>
-                  );
-                }}
-              >
-                {DAY_TYPE_OPTIONS.filter(
-                  (o) => o.value !== DayType.WorkingDay && o.value !== DayType.EmergencyClosure
-                ).map((opt) => {
-                  const color = DAY_TYPE_COLORS[opt.value as DayType] ?? '#9e9e9e';
-                  const icon = DAY_TYPE_ICONS[opt.value as DayType] ?? 'mdi:calendar-outline';
-                  return (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Iconify icon={icon} width={18} sx={{ color }} />
-                        <Typography variant="body2">{opt.label}</Typography>
-                      </Box>
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-              {formik.touched.dayType && formik.errors.dayType && (
-                <FormHelperText>{formik.errors.dayType as string}</FormHelperText>
-              )}
-            </FormControl>
-          </Grid>
-
-          {/* Date Picker */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <DatePicker
-              label={isVacation ? 'Start Date *' : 'Date *'}
-              value={formik.values.date ? dayjs(formik.values.date) : null}
-              blockedDayTypes={[]}
-              onChange={(val) => formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  size: 'small',
-                  error: formik.touched.date && Boolean(formik.errors.date),
-                  helperText: formik.touched.date && (formik.errors.date as string),
-                },
-              }}
-            />
-          </Grid>
-
-          {/* Holiday Category — only for Holiday */}
-          {isHoliday && (
+            {/* Day Type */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl
                 fullWidth
                 size="small"
-                error={formik.touched.holidayCategory && Boolean(formik.errors.holidayCategory)}
+                error={formik.touched.dayType && Boolean(formik.errors.dayType)}
               >
-                <InputLabel>Holiday Category *</InputLabel>
+                <InputLabel>Day Type *</InputLabel>
                 <Select
-                  label="Holiday Category *"
-                  name="holidayCategory"
-                  value={formik.values.holidayCategory}
+                  label="Day Type *"
+                  name="dayType"
+                  value={formik.values.dayType}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  renderValue={(selected) => {
+                    const opt = DAY_TYPE_OPTIONS.find((o) => o.value === selected);
+                    if (!opt) return '';
+                    const color = DAY_TYPE_COLORS[selected as DayType] ?? '#9e9e9e';
+                    const icon = DAY_TYPE_ICONS[selected as DayType] ?? 'mdi:calendar-outline';
+                    return (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Iconify icon={icon} width={16} sx={{ color }} />
+                        <Typography variant="body2" fontWeight={600}>
+                          {opt.label}
+                        </Typography>
+                      </Box>
+                    );
+                  }}
                 >
-                  {HOLIDAY_CATEGORY_OPTIONS.map((opt) => (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </MenuItem>
-                  ))}
+                  {DAY_TYPE_OPTIONS.filter(
+                    (o) => o.value !== DayType.WorkingDay && o.value !== DayType.EmergencyClosure
+                  ).map((opt) => {
+                    const color = DAY_TYPE_COLORS[opt.value as DayType] ?? '#9e9e9e';
+                    const icon = DAY_TYPE_ICONS[opt.value as DayType] ?? 'mdi:calendar-outline';
+                    return (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Iconify icon={icon} width={18} sx={{ color }} />
+                          <Typography variant="body2">{opt.label}</Typography>
+                        </Box>
+                      </MenuItem>
+                    );
+                  })}
                 </Select>
-                {formik.touched.holidayCategory && formik.errors.holidayCategory && (
-                  <FormHelperText>{formik.errors.holidayCategory as string}</FormHelperText>
+                {formik.touched.dayType && formik.errors.dayType && (
+                  <FormHelperText>{formik.errors.dayType as string}</FormHelperText>
                 )}
               </FormControl>
             </Grid>
-          )}
 
-          {/* End Date — only for Vacation */}
-          {isVacation && (
+            {/* Date Picker */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <DatePicker
-                label="End Date *"
-                value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
-                minDate={formik.values.date ? dayjs(formik.values.date) : undefined}
+                label={isVacation ? 'Start Date *' : 'Date *'}
+                format="DD-MM-YYYY"
+                value={formik.values.date ? dayjs(formik.values.date) : null}
                 blockedDayTypes={[]}
-                onChange={(val) => formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
+                onChange={(val) =>
+                  formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
+                }
                 slotProps={{
                   textField: {
                     fullWidth: true,
                     size: 'small',
-                    error: formik.touched.endDate && Boolean(formik.errors.endDate),
-                    helperText: formik.touched.endDate && (formik.errors.endDate as string),
+                    error: formik.touched.date && Boolean(formik.errors.date),
+                    helperText: formik.touched.date && (formik.errors.date as string),
                   },
                 }}
               />
             </Grid>
-          )}
 
-          {/* Start / End Time — only for HalfDay */}
-          {isHalfDay && (
-            <>
+            {/* Holiday Category — only for Holiday */}
+            {isHoliday && (
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TimePicker
-                  label="Start Time *"
-                  value={
-                    formik.values.startTime ? dayjs(`2000-01-01T${formik.values.startTime}`) : null
-                  }
+                <FormControl
+                  fullWidth
+                  size="small"
+                  error={formik.touched.holidayCategory && Boolean(formik.errors.holidayCategory)}
+                >
+                  <InputLabel>Holiday Category *</InputLabel>
+                  <Select
+                    label="Holiday Category *"
+                    name="holidayCategory"
+                    value={formik.values.holidayCategory}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  >
+                    {HOLIDAY_CATEGORY_OPTIONS.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.holidayCategory && formik.errors.holidayCategory && (
+                    <FormHelperText>{formik.errors.holidayCategory as string}</FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+            )}
+
+            {/* End Date — only for Vacation */}
+            {isVacation && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <DatePicker
+                  label="End Date *"
+                  format="DD-MM-YYYY"
+                  value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
+                  minDate={formik.values.date ? dayjs(formik.values.date) : undefined}
+                  blockedDayTypes={[]}
                   onChange={(val) =>
-                    formik.setFieldValue('startTime', val ? val.format('HH:mm:ss') : '')
+                    formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
                   }
                   slotProps={{
                     textField: {
                       fullWidth: true,
                       size: 'small',
-                      error: formik.touched.startTime && Boolean(formik.errors.startTime),
-                      helperText: formik.touched.startTime && (formik.errors.startTime as string),
+                      error: formik.touched.endDate && Boolean(formik.errors.endDate),
+                      helperText: formik.touched.endDate && (formik.errors.endDate as string),
                     },
                   }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TimePicker
-                  label="End Time *"
-                  value={
-                    formik.values.endTime ? dayjs(`2000-01-01T${formik.values.endTime}`) : null
-                  }
-                  onChange={(val) =>
-                    formik.setFieldValue('endTime', val ? val.format('HH:mm:ss') : '')
-                  }
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.endTime && Boolean(formik.errors.endTime),
-                      helperText: formik.touched.endTime && (formik.errors.endTime as string),
-                    },
-                  }}
-                />
-              </Grid>
-            </>
-          )}
+            )}
 
-          {/* Title */}
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Title *"
-              name="title"
-              value={formik.values.title}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.title && Boolean(formik.errors.title)}
-              helperText={formik.touched.title && formik.errors.title}
-              placeholder="e.g. Independence Day, Diwali Break, Sports Day..."
-            />
-          </Grid>
+            {/* Start / End Time — only for HalfDay */}
+            {isHalfDay && (
+              <>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TimePicker
+                    label="Start Time *"
+                    value={
+                      formik.values.startTime
+                        ? dayjs(`2000-01-01T${formik.values.startTime}`)
+                        : null
+                    }
+                    onChange={(val) =>
+                      formik.setFieldValue('startTime', val ? val.format('HH:mm:ss') : '')
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: formik.touched.startTime && Boolean(formik.errors.startTime),
+                        helperText: formik.touched.startTime && (formik.errors.startTime as string),
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TimePicker
+                    label="End Time *"
+                    value={
+                      formik.values.endTime ? dayjs(`2000-01-01T${formik.values.endTime}`) : null
+                    }
+                    onChange={(val) =>
+                      formik.setFieldValue('endTime', val ? val.format('HH:mm:ss') : '')
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: formik.touched.endTime && Boolean(formik.errors.endTime),
+                        helperText: formik.touched.endTime && (formik.errors.endTime as string),
+                      },
+                    }}
+                  />
+                </Grid>
+              </>
+            )}
 
-          {/* Description */}
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-              label="Description"
-              name="description"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-              placeholder="Optional details or notes..."
-            />
-          </Grid>
-
-          {/* Scope Card block */}
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                backgroundColor: alpha(theme.palette.primary.main, 0.01),
-              }}
-            >
-              <Typography
-                variant="subtitle2"
-                fontWeight={800}
-                sx={{
-                  mb: 1.5,
-                  color: 'primary.main',
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                }}
-              >
-                Scope & Visibility
-              </Typography>
-              <Stack spacing={1}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      size="small"
-                      checked={formik.values.appliesToAll}
-                      onChange={(e) => {
-                        formik.setFieldValue('appliesToAll', e.target.checked);
-                        if (e.target.checked) {
-                          formik.setFieldValue('standardIds', []);
-                          formik.setFieldValue('divisionId', '');
-                        }
-                      }}
-                    />
-                  }
-                  label={
-                    <Box>
-                      <Typography variant="body2" fontWeight={600}>
-                        Applies to all classes & divisions
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Toggle off to restrict this marker to specific classes or a section
-                      </Typography>
-                    </Box>
-                  }
-                />
-
-                 {!formik.values.appliesToAll && (
-                  <Grid container spacing={1} sx={{ pt: 1 }}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <FormControl
-                        fullWidth
-                        size="small"
-                        error={formik.touched.standardIds && Boolean(formik.errors.standardIds)}
-                      >
-                        <InputLabel>Class *</InputLabel>
-                        <Select
-                          multiple
-                          label="Class *"
-                          name="standardIds"
-                          value={formik.values.standardIds}
-                          onChange={(e) => {
-                            const {value} = e.target;
-                            const selected =
-                              typeof value === 'string' ? value.split(',') : value;
-                            formik.setFieldValue('standardIds', selected);
-                            if (selected.length !== 1) {
-                              formik.setFieldValue('divisionId', '');
-                            }
-                          }}
-                          renderValue={(selected) =>
-                            (selected as string[])
-                              .map((id) => standards.find((s) => s.id === id)?.name ?? id)
-                              .join(', ')
-                          }
-                        >
-                          {standards.map((s) => (
-                            <MenuItem key={s.id} value={s.id}>
-                              <Checkbox
-                                size="small"
-                                checked={formik.values.standardIds.includes(s.id)}
-                              />
-                              {s.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                        {formik.touched.standardIds && formik.errors.standardIds && (
-                          <FormHelperText>{formik.errors.standardIds as string}</FormHelperText>
-                        )}
-                      </FormControl>
-                    </Grid>
-                    {formik.values.standardIds.length === 1 && (
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <FormControl fullWidth size="small">
-                          <InputLabel>Division (optional)</InputLabel>
-                          <Select
-                            label="Division (optional)"
-                            name="divisionId"
-                            value={formik.values.divisionId}
-                            onChange={formik.handleChange}
-                            displayEmpty
-                            renderValue={(selected) => {
-                              if (!selected) return 'All Divisions';
-                              const selectedDivision = standards
-                                .find((s) => s.id === formik.values.standardIds[0])
-                                ?.divisions?.find((d: any) => d.id === selected);
-                              return selectedDivision?.name ?? String(selected);
-                            }}
-                          >
-                            <MenuItem value="">All Divisions</MenuItem>
-                            {(
-                              standards.find((s) => s.id === formik.values.standardIds[0])
-                                ?.divisions || []
-                            ).map((d: any) => (
-                              <MenuItem key={d.id} value={d.id}>
-                                {d.name}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    )}
-                  </Grid>
-                )}
-              </Stack>
-            </Box>
-          </Grid>
-
-          {/* Change Reason — required if published */}
-          {isPublished && (
+            {/* Title */}
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 size="small"
-                label="Change Reason *"
-                name="changeReason"
-                value={formik.values.changeReason}
+                label="Title *"
+                name="title"
+                value={formik.values.title}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.changeReason && Boolean(formik.errors.changeReason)}
-                helperText={
-                  formik.touched.changeReason
-                    ? (formik.errors.changeReason as string)
-                    : 'Required because calendar is already published'
-                }
-                multiline
-                rows={3}
-                placeholder="Reason for adding/modifying this calendar day..."
-                sx={{
-                  '& .MuiInputBase-root': {
-                    backgroundColor: alpha(theme.palette.error.main, 0.01),
-                  },
-                }}
+                error={formik.touched.title && Boolean(formik.errors.title)}
+                helperText={formik.touched.title && formik.errors.title}
+                placeholder="e.g. Independence Day, Diwali Break, Sports Day..."
               />
             </Grid>
-          )}
+
+            {/* Description */}
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                size="small"
+                multiline
+                rows={2}
+                label="Description"
+                name="description"
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                placeholder="Optional details or notes..."
+              />
+            </Grid>
+
+            {/* Scope Card block */}
+            <Grid size={{ xs: 12 }}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.01),
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  fontWeight={800}
+                  sx={{
+                    mb: 1.5,
+                    color: 'primary.main',
+                    fontSize: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  Scope & Visibility
+                </Typography>
+                <Stack spacing={1}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={formik.values.appliesToAll}
+                        onChange={(e) => {
+                          formik.setFieldValue('appliesToAll', e.target.checked);
+                          if (e.target.checked) {
+                            formik.setFieldValue('standardIds', []);
+                            formik.setFieldValue('divisionId', '');
+                          }
+                        }}
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>
+                          Applies to all classes & divisions
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Toggle off to restrict this marker to specific classes or a section
+                        </Typography>
+                      </Box>
+                    }
+                  />
+
+                  {!formik.values.appliesToAll && (
+                    <Grid container spacing={1} sx={{ pt: 1 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FormControl
+                          fullWidth
+                          size="small"
+                          error={formik.touched.standardIds && Boolean(formik.errors.standardIds)}
+                        >
+                          <InputLabel>Class *</InputLabel>
+                          <Select
+                            multiple
+                            label="Class *"
+                            name="standardIds"
+                            value={formik.values.standardIds}
+                            onChange={(e) => {
+                              const { value } = e.target;
+                              const selected = typeof value === 'string' ? value.split(',') : value;
+                              formik.setFieldValue('standardIds', selected);
+                              if (selected.length !== 1) {
+                                formik.setFieldValue('divisionId', '');
+                              }
+                            }}
+                            renderValue={(selected) =>
+                              (selected as string[])
+                                .map((id) => standards.find((s) => s.id === id)?.name ?? id)
+                                .join(', ')
+                            }
+                          >
+                            {standards.map((s) => (
+                              <MenuItem key={s.id} value={s.id}>
+                                <Checkbox
+                                  size="small"
+                                  checked={formik.values.standardIds.includes(s.id)}
+                                />
+                                {s.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          {formik.touched.standardIds && formik.errors.standardIds && (
+                            <FormHelperText>{formik.errors.standardIds as string}</FormHelperText>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      {formik.values.standardIds.length === 1 && (
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Division (optional)</InputLabel>
+                            <Select
+                              label="Division (optional)"
+                              name="divisionId"
+                              value={formik.values.divisionId}
+                              onChange={formik.handleChange}
+                              displayEmpty
+                              renderValue={(selected) => {
+                                if (!selected) return 'All Divisions';
+                                const selectedDivision = standards
+                                  .find((s) => s.id === formik.values.standardIds[0])
+                                  ?.divisions?.find((d: any) => d.id === selected);
+                                return selectedDivision?.name ?? String(selected);
+                              }}
+                            >
+                              <MenuItem value="">All Divisions</MenuItem>
+                              {(
+                                standards.find((s) => s.id === formik.values.standardIds[0])
+                                  ?.divisions || []
+                              ).map((d: any) => (
+                                <MenuItem key={d.id} value={d.id}>
+                                  {d.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                      )}
+                    </Grid>
+                  )}
+                </Stack>
+              </Box>
+            </Grid>
+
+            {/* Change Reason — required if published */}
+            {isPublished && (
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Change Reason *"
+                  name="changeReason"
+                  value={formik.values.changeReason}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.changeReason && Boolean(formik.errors.changeReason)}
+                  helperText={
+                    formik.touched.changeReason
+                      ? (formik.errors.changeReason as string)
+                      : 'Required because calendar is already published'
+                  }
+                  multiline
+                  rows={3}
+                  placeholder="Reason for adding/modifying this calendar day..."
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      backgroundColor: alpha(theme.palette.error.main, 0.01),
+                    },
+                  }}
+                />
+              </Grid>
+            )}
           </Grid>
         </DialogScrollContent>
 

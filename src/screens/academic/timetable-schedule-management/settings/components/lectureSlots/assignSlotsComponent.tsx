@@ -14,6 +14,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Button, Typography } from '@mui/material';
@@ -28,13 +29,19 @@ interface AssignSlotsProps {
   sourceClassName?: string;
 }
 
-const hasClassShift = (standard: Standards) =>
-  Boolean(standard.shiftId && standard.shift?.startTime && standard.shift?.endTime);
+const hasClassShift = (standard: Standards) => Boolean(standard.shiftId);
 
 const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsProps) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const { data: classesByMedium } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassByMediumQuery,
+    params: medium?.id,
+    options: { skip: !medium?.id },
+  });
 
   // Fetch all existing lecture slots to know which classes are already configured
   const { data: allSlotsData } = useQueryAndMutation({
@@ -51,10 +58,11 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
 
   // Update classes when organization changes
   useEffect(() => {
-    const allClasses =
+    const latestClasses = Array.isArray(classesByMedium) ? classesByMedium : [];
+    const fallbackClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-    setAllClass(allClasses);
-  }, [medium]);
+    setAllClass(latestClasses.length > 0 ? latestClasses : fallbackClasses);
+  }, [classesByMedium, medium]);
 
   // StandardIds that already have a lecture slot configured — these should be disabled in the dropdown
   const configuredStandardIds: string[] = (allSlotsData?.items ?? []).map(
@@ -270,11 +278,7 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
                 />
               </ShakingTextField>
               {missingShiftStandardIds.length > 0 && (
-                <Typography
-                  variant="caption"
-                  color="warning.main"
-                  sx={{ mt: 1, display: 'block' }}
-                >
+                <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
                   Classes without a school shift are disabled. First assign the school shift to the
                   class, then assign lecture slots.
                 </Typography>

@@ -16,6 +16,7 @@ import type {
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
@@ -838,9 +839,7 @@ const SubstitutionManagementScreen = () => {
   const metadataTeachers = createMetadata?.teachers ?? [];
   const metadataRooms = createMetadata?.rooms ?? [];
   const academicStandards =
-    medium?.educationMediumStages?.flatMap(
-      (stage: Organization) => stage?.standards || []
-    ) || [];
+    medium?.educationMediumStages?.flatMap((stage: Organization) => stage?.standards || []) || [];
   const selectedAcademicStandard = academicStandards.find(
     (item) => item.id === substitutionForm.standardId
   );
@@ -850,17 +849,16 @@ const SubstitutionManagementScreen = () => {
         value: item.id,
         label: item.name,
       }));
-  const divisionSelectOptions: SelectOption[] =
-    selectedAcademicStandard?.divisions?.length
-      ? selectedAcademicStandard.divisions.map((item) => ({ value: item.id, label: item.name }))
-      : metadataDivisions.length > 0
-        ? uniqueLookupOptions(metadataDivisions)
-            .filter(
-              (item) =>
-                !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-            )
-            .map((item) => ({ value: item.id, label: item.name }))
-        : [];
+  const divisionSelectOptions: SelectOption[] = selectedAcademicStandard?.divisions?.length
+    ? selectedAcademicStandard.divisions.map((item) => ({ value: item.id, label: item.name }))
+    : metadataDivisions.length > 0
+      ? uniqueLookupOptions(metadataDivisions)
+          .filter(
+            (item) =>
+              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+          )
+          .map((item) => ({ value: item.id, label: item.name }))
+      : [];
   const subjectSelectOptions: SelectOption[] =
     metadataSubjects.length > 0
       ? metadataSubjects
@@ -2368,7 +2366,14 @@ const SubstitutionManagementScreen = () => {
 
         {/* Active Chips Row (under the borderBottom divider, inside the Card) */}
         {activeTab === 'board' && getActiveFilters(filters).length > 0 && (
-          <Box sx={{ px: 2, py: 1.25, bgcolor: 'background.neutral' }}>
+          <Box
+            sx={{
+              px: 2,
+              py: 1.25,
+              bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.72),
+              borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+            }}
+          >
             <SubstitutionActiveFilters
               filters={filters}
               onChange={(patch) => setFilters((current) => ({ ...current, ...patch }))}
@@ -3583,11 +3588,7 @@ const SubstitutionManagementScreen = () => {
                           variant={isSelected ? 'contained' : 'outlined'}
                           color={isSelected ? 'error' : 'primary'}
                           startIcon={
-                            isSelected ? (
-                              <CloseIcon fontSize="small" />
-                            ) : (
-                              <Add fontSize="small" />
-                            )
+                            isSelected ? <CloseIcon fontSize="small" /> : <Add fontSize="small" />
                           }
                           disabled={!isSelected && teacher.conflictSeverity === 'Hard Block'}
                           onClick={() =>
@@ -3742,7 +3743,12 @@ const SubstitutionManagementScreen = () => {
         </DialogScrollContent>
         <Divider />
         <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
-          <Button size="small" variant="outlined" startIcon={<CloseIcon />} onClick={handleCloseCreateDialog}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<CloseIcon />}
+            onClick={handleCloseCreateDialog}
+          >
             Cancel
           </Button>
           <Button
@@ -3806,7 +3812,15 @@ const SubstitutionManagementScreen = () => {
                     cursor: teacher.hasConflict ? 'not-allowed' : 'pointer',
                     border: (theme) =>
                       `1px solid ${selected ? theme.palette.primary.main : theme.palette.divider}`,
-                    bgcolor: selected ? 'primary.lighter' : 'background.paper',
+                    bgcolor: (theme) =>
+                      selected
+                        ? alpha(
+                            theme.palette.primary.main,
+                            theme.palette.mode === 'dark' ? 0.22 : 0.1
+                          )
+                        : 'background.paper',
+                    boxShadow: selected ? 'inset 3px 0 0 currentColor' : 'none',
+                    color: selected ? 'primary.main' : 'text.primary',
                     opacity: teacher.hasConflict ? 0.55 : 1,
                   }}
                 >
@@ -4146,7 +4160,12 @@ const SubstitutionManagementScreen = () => {
           >
             Cancel
           </Button>
-          <Button size="small" variant="contained" startIcon={<Send />} onClick={handleMarkUnavailable}>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Send />}
+            onClick={handleMarkUnavailable}
+          >
             Save and Notify
           </Button>
         </Stack>

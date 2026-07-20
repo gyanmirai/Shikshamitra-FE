@@ -178,8 +178,9 @@ const ExamTypeSettings = () => {
         sx={{
           display: 'grid',
           gridTemplateColumns: {
-            xs: 'repeat(2, minmax(0, 1fr))',
-            md: 'repeat(4, minmax(0, 1fr))',
+            xs: 'repeat(1, minmax(0, 1fr))',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(auto-fit, minmax(170px, 1fr))',
           },
           gap: 1,
           mb: 2,
@@ -197,7 +198,15 @@ const ExamTypeSettings = () => {
             sx={{
               p: 1.25,
               borderRadius: 1,
-              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.04)
+                  : theme.palette.background.paper,
+              borderColor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.12)
+                  : theme.palette.divider,
+              minWidth: 0,
             }}
           >
             <Stack spacing={1}>

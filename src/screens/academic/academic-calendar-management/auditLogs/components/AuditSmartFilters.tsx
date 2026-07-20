@@ -119,9 +119,9 @@ const AuditSmartFilters = ({
         backgroundColor: 'background.paper',
       }}
     >
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1.25} alignItems="center">
         {/* Search */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <TextField
             inputRef={searchRef}
             fullWidth
@@ -148,9 +148,9 @@ const AuditSmartFilters = ({
         </Grid>
 
         {/* Action */}
-        <Grid size={{ xs: 6, md: 2 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Action</InputLabel>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <FormControl fullWidth size="small" sx={{ minWidth: 180 }}>
+            <InputLabel shrink>Action</InputLabel>
             <Select
               label="Action"
               displayEmpty
@@ -174,13 +174,18 @@ const AuditSmartFilters = ({
         </Grid>
 
         {/* More Filters + Reset */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Stack
             direction="row"
             gap={1}
             justifyContent="flex-end"
             alignItems="center"
             flexWrap="wrap"
+            sx={{
+              '& .MuiButton-root': {
+                whiteSpace: 'nowrap',
+              },
+            }}
           >
             <Button
               size="small"
