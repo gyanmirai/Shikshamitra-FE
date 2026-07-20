@@ -18,6 +18,7 @@ import {
   AdmissionCrmTimelineEventType,
   AdmissionCrmRegistrationStatus,
   AdmissionCrmExamReadinessField,
+  buildAdmissionCrmMyWorkRequest,
   AdmissionCrmAutomationRunStatus,
   AdmissionCrmLeadRoutingStrategy,
   AdmissionCrmOperationsQueueType,
@@ -49,7 +50,6 @@ import {
   buildPreviewAdmissionCrmExamResultRequest,
   buildAdmissionCrmActivationPreviewRequest,
   buildAdmissionCrmEnrollmentOverviewRequest,
-  buildAdmissionCrmMyWorkRequest,
   buildChangeAdmissionCrmLeadPriorityRequest,
   buildMergeAdmissionCrmDuplicateLeadRequest,
   buildAssignAdmissionCrmSpecialRouteRequest,
@@ -935,6 +935,12 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmCycleConfiguration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmCycleConfiguration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmPipelineStages).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmPipelineStage).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.lockAdmissionCrmJourney).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.unlockAdmissionCrmJourney).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmInquirySource).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmInquirySource).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.setAdmissionCrmInquirySourceStatus).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmFormTemplates).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmFormTemplate).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmFormTemplate).toBeTruthy();
@@ -969,6 +975,7 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmEligibilityHandoff).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmAnalyticsSummary).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.scheduleAdmissionCrmEntranceExam).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.bulkUploadAdmissionCrmExamResults).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.issueAdmissionCrmRegistrationForm).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getCurrentAdmissionCrmRegistrationByLead).toBeTruthy();
     expect(

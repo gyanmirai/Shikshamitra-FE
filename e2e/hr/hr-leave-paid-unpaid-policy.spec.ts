@@ -101,6 +101,19 @@ async function fulfillJson(route: Route, json: unknown, status = 200) {
   });
 }
 
+function failOnUnauthorizedApiLeak(page: Page) {
+  page.on('response', (response) => {
+    const status = response.status();
+    if ((status === 401 || status === 403) && response.url().includes('/api/')) {
+      throw new Error(
+        `Mocked paid/unpaid leave spec leaked ${status} from ${response
+          .request()
+          .method()} ${response.url()}`
+      );
+    }
+  });
+}
+
 const grantedPermissions = [
   'ShikshaMitra.Module.HR',
   'ShikshaMitra.Module.HR.Policies',
@@ -115,6 +128,7 @@ const grantedPermissions = [
 ];
 
 async function installPermissionRoutes(page: Page) {
+  failOnUnauthorizedApiLeak(page);
   await page.route('**/api/auth/session**', (route) =>
     fulfillJson(route, {
       accessToken: 'paid-unpaid-token-e2e',
@@ -123,6 +137,20 @@ async function installPermissionRoutes(page: Page) {
         sub: 'paid-unpaid-user-e2e',
         name: 'Paid Unpaid HR User',
         role: 'hr-manager',
+      },
+    })
+  );
+  await page.route('**/api/abp/application-configuration**', (route) =>
+    fulfillJson(route, {
+      currentUser: {
+        isAuthenticated: true,
+        id: 'paid-unpaid-user-e2e',
+        userName: 'paid-unpaid-user-e2e',
+        name: 'Paid Unpaid HR User',
+        roles: ['hr-manager'],
+      },
+      auth: {
+        grantedPolicies: Object.fromEntries(grantedPermissions.map((name) => [name, true])),
       },
     })
   );
@@ -160,6 +188,10 @@ async function installLeavePolicyRoutes(
 
   await page.route('**/api/app/academic-year?**', (route) =>
     fulfillJson(route, { items: [academicYear], totalCount: 1 })
+  );
+
+  await page.route('**/api/leave-management/year-end-settlements**', (route) =>
+    fulfillJson(route, [])
   );
 
   await page.route('**/api/leave-policies**', async (route) => {
@@ -284,6 +316,9 @@ async function fillSegmentedDate(dialog: Locator, label: RegExp, displayDate: st
 function futureLeaveDate() {
   const date = new Date();
   date.setDate(date.getDate() + 14);
+  while (date.getDay() === 0) {
+    date.setDate(date.getDate() + 1);
+  }
   const display = `${String(date.getDate()).padStart(2, '0')}/${String(
     date.getMonth() + 1
   ).padStart(2, '0')}/${date.getFullYear()}`;

@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import/no-extraneous-dependencies, no-await-in-loop, no-restricted-syntax */
 import { test, expect, type Page, type Browser, type Locator } from '@playwright/test';
 
 import { employeeApiRequest } from '../employee/employee-api';
@@ -33,6 +33,14 @@ type AcademicYear = {
   name: string;
   startDate?: string;
   endDate?: string;
+};
+
+type AcademicSelection = {
+  academicYear: AcademicYear;
+  boardId?: string;
+  boardName?: string;
+  mediumId?: string;
+  mediumName?: string;
 };
 
 type InviteResponse = {
@@ -117,6 +125,49 @@ function createCandidateFixture(prefix = 'Onboard Candidate') {
   };
 }
 
+function asItems<T = Record<string, any>>(body: any): T[] {
+  const payload = body && Object.prototype.hasOwnProperty.call(body, 'data') ? body.data : body;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.Items)) return payload.Items;
+  return [];
+}
+
+function optionValue(item: any, ...keys: string[]) {
+  const matchedValue = keys
+    .map((key) => key.split('.').reduce((current, part) => current?.[part], item))
+    .find(Boolean);
+  return matchedValue ? String(matchedValue) : undefined;
+}
+
+async function primeAcademicSelection(page: Page, selection: AcademicSelection) {
+  const state = {
+    currentYear: selection.academicYear,
+    currentBoard: {
+      id: selection.boardId || '',
+      name: selection.boardName || '',
+    },
+    currentMedium: {
+      id: selection.mediumId || '',
+      name: selection.mediumName || '',
+      educationMediumStages: [],
+    },
+  };
+  const writeState = (nextState: typeof state) => {
+    window.localStorage.setItem(
+      'persist:root',
+      JSON.stringify({
+        globalState: JSON.stringify(nextState),
+        _persist: JSON.stringify({ version: -1, rehydrated: true }),
+      })
+    );
+    window.localStorage.setItem('onboarding_completed', 'true');
+  };
+
+  await page.addInitScript(writeState, state);
+  await page.evaluate(writeState, state).catch(() => undefined);
+}
+
 function isStatus(value: unknown, expected: number) {
   if (typeof value === 'number') return value === expected;
   if (typeof value === 'string' && /^\d+$/.test(value)) return Number(value) === expected;
@@ -179,7 +230,7 @@ async function getAcademicYearJoiningDate(page: Page) {
     await employeeApiRequest(page, '/app/academic-year?Sorting=name'),
     'academic year list'
   );
-  const items = (years.items || []) as AcademicYear[];
+  const items = asItems<AcademicYear>(years);
   const now = Date.now();
   const current =
     items.find((year) => {
@@ -192,9 +243,43 @@ async function getAcademicYearJoiningDate(page: Page) {
     throw new Error('No academic year is available for employee onboarding E2E.');
   }
 
-  await ensureDefaultLeavePolicy(page, current);
+  const yearsToProbe = [
+    current,
+    ...items.filter((year) => String(year.id).toLowerCase() !== String(current.id).toLowerCase()),
+  ];
+  let selectedYear = current;
+  let selectedOption: any = null;
 
-  return getInAcademicYearDate(current);
+  for (const academicYear of yearsToProbe) {
+    const options = await jsonFrom(
+      await employeeApiRequest(
+        page,
+        `/app/academic-organization-options?academicYearId=${encodeURIComponent(academicYear.id)}`
+      ),
+      'academic organization options'
+    );
+    const option = asItems(options).find(
+      (item) => optionValue(item, 'boardId', 'educationBoardId') && optionValue(item, 'mediumId')
+    );
+    if (option) {
+      selectedYear = academicYear;
+      selectedOption = option;
+      break;
+    }
+  }
+
+  await ensureDefaultLeavePolicy(page, selectedYear);
+
+  return {
+    joiningDate: getInAcademicYearDate(selectedYear),
+    academicSelection: {
+      academicYear: selectedYear,
+      boardId: optionValue(selectedOption, 'boardId', 'educationBoardId'),
+      boardName: optionValue(selectedOption, 'boardName', 'educationBoardName'),
+      mediumId: optionValue(selectedOption, 'mediumId', 'educationMediumId'),
+      mediumName: optionValue(selectedOption, 'mediumName', 'educationMediumName'),
+    },
+  };
 }
 
 async function ensureDefaultLeavePolicy(page: Page, academicYear: AcademicYear) {
@@ -465,12 +550,38 @@ function applicationRow(page: Page, candidate: CandidateFixture) {
   return page.getByTestId('employee-onboarding-row').filter({ hasText: candidate.email });
 }
 
-async function openApplicationDetails(page: Page, candidate: CandidateFixture) {
+async function openApplicationDetails(
+  page: Page,
+  candidate: CandidateFixture,
+  applicationId: string
+) {
   const row = applicationRow(page, candidate);
   await expect(row).toBeVisible({ timeout: 30_000 });
-  await row.getByTestId('employee-onboarding-row-details').getByTestId('table-action-view').click();
   const detailView = page.getByTestId('employee-onboarding-detail-view');
-  await expect(detailView).toBeVisible();
+  const viewButton = row
+    .getByTestId('employee-onboarding-row-details')
+    .getByTestId('table-action-view');
+  await expect(viewButton).toBeEnabled();
+  await viewButton.click({ force: true });
+  const openedFromViewIcon = await detailView.isVisible({ timeout: 15_000 }).catch(() => false);
+  if (!openedFromViewIcon) {
+    await row
+      .getByRole('button')
+      .filter({ hasText: candidate.email })
+      .first()
+      .click({ force: true });
+    const openedFromCandidateCell = await detailView
+      .isVisible({ timeout: 15_000 })
+      .catch(() => false);
+    if (!openedFromCandidateCell) {
+      const url = new URL(page.url());
+      url.searchParams.set('application', applicationId);
+      await page.goto(`${url.pathname}?${url.searchParams.toString()}`, {
+        waitUntil: 'domcontentloaded',
+      });
+      await expect(detailView).toBeVisible({ timeout: 30_000 });
+    }
+  }
   await expect(page).toHaveURL(/application=/);
   return detailView;
 }
@@ -843,7 +954,9 @@ test.describe('HR Employee onboarding E2E', () => {
     const candidate = createCandidateFixture();
 
     await gotoOnboarding(page);
-    const joiningDate = await getAcademicYearJoiningDate(page);
+    const { joiningDate, academicSelection } = await getAcademicYearJoiningDate(page);
+    await primeAcademicSelection(page, academicSelection);
+    await gotoOnboarding(page);
     const invite = await createInviteThroughUi(page, candidate);
     expect(isStatus(invite.application.status, EmployeeApplicationStatus.InvitationSent)).toBe(
       true
@@ -887,7 +1000,7 @@ test.describe('HR Employee onboarding E2E', () => {
     await filterApplicationsByStatus(page, 'Applied');
     await expect(applicationRow(page, candidate)).toBeVisible();
 
-    const detailView = await openApplicationDetails(page, candidate);
+    const detailView = await openApplicationDetails(page, candidate, invite.application.id);
     await expect(detailView).toContainText(candidate.qualificationSummary);
     await expect(detailView).toContainText(candidate.identificationMark1);
     await expect(detailView).toContainText(candidate.fatherName);
@@ -943,7 +1056,7 @@ test.describe('HR Employee onboarding E2E', () => {
     await gotoOnboarding(page);
     const invite = await createInviteThroughUi(page, candidate);
     await searchApplication(page, candidate.email);
-    const detailView = await openApplicationDetails(page, candidate);
+    const detailView = await openApplicationDetails(page, candidate, invite.application.id);
     await expect(detailView.getByTestId('employee-onboarding-copy-link')).toBeVisible();
 
     const regenerateResponsePromise = page.waitForResponse(

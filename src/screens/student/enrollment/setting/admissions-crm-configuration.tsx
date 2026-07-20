@@ -65,17 +65,23 @@ import {
   AdmissionCrmExamReadinessField,
   AdmissionCrmLeadRoutingStrategy,
   AdmissionCrmMessageTemplateStatus,
+  useLockAdmissionCrmJourneyMutation,
   useGetAdmissionCrmFormTemplatesQuery,
+  useUnlockAdmissionCrmJourneyMutation,
   useGetAdmissionCrmPipelineStagesQuery,
   useGetAdmissionCrmInquirySourcesQuery,
   useGetAdmissionCrmMessageTemplatesQuery,
   useCreateAdmissionCrmFormTemplateMutation,
   useGetAdmissionCrmCycleConfigurationQuery,
   useUpdateAdmissionCrmFormTemplateMutation,
+  useCreateAdmissionCrmInquirySourceMutation,
   useUpdateAdmissionCrmPipelineStageMutation,
+  useCreateAdmissionCrmPipelineStageMutation,
+  useUpdateAdmissionCrmInquirySourceMutation,
   useCreateAdmissionCrmMessageTemplateMutation,
   useGetAdmissionCrmCommunicationProvidersQuery,
   usePreviewAdmissionCrmMessageTemplateMutation,
+  useSetAdmissionCrmInquirySourceStatusMutation,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   useUpdateAdmissionCrmFormTemplateStatusMutation,
   useUpdateAdmissionCrmCommunicationProviderMutation,
@@ -165,6 +171,8 @@ const slaWorkingDayOptions = [
 ];
 
 const createEmptyPipelineStageForm = (): PipelineStageForm => ({
+  stageKey: '',
+  baseSystemStage: AdmissionInquiryStage.FollowUp,
   stageName: '',
   displayOrder: 0,
   isEnabled: true,
@@ -177,6 +185,8 @@ const createEmptyPipelineStageForm = (): PipelineStageForm => ({
 const buildPipelineStageFormFromStage = (
   stage: AdmissionCrmPipelineStageDto
 ): PipelineStageForm => ({
+  stageKey: stage.stageKey || stage.systemStage.toString(),
+  baseSystemStage: stage.baseSystemStage ?? stage.systemStage,
   stageName: stage.stageName,
   displayOrder: stage.displayOrder,
   isEnabled: stage.isEnabled,
@@ -289,6 +299,7 @@ const defaultCycleForm: CycleForm = {
   cycleName: '',
   isActive: true,
   registrationFormRequiredBeforeExam: false,
+  entranceExamRequired: true,
   staleAfterDays: 30,
   archiveAfterDays: 60,
   defaultLeadSlaHours: 24,
@@ -309,6 +320,10 @@ const defaultCycleForm: CycleForm = {
   journeyRules: [],
   applicantChecklist: [],
   channelSettings: buildDefaultChannelSettings(),
+  journeyLocked: false,
+  journeyLockedAt: null,
+  journeyLockedByUserId: null,
+  journeyLockReason: null,
   notes: '',
 };
 
@@ -559,6 +574,7 @@ const buildCycleFormFromConfiguration = (
   cycleName: configuration.cycleName,
   isActive: configuration.isActive,
   registrationFormRequiredBeforeExam: configuration.registrationFormRequiredBeforeExam,
+  entranceExamRequired: configuration.entranceExamRequired ?? true,
   staleAfterDays: configuration.staleAfterDays,
   archiveAfterDays: configuration.archiveAfterDays,
   defaultLeadSlaHours: configuration.defaultLeadSlaHours,
@@ -583,6 +599,10 @@ const buildCycleFormFromConfiguration = (
   journeyRules: configuration.journeyRules ?? [],
   applicantChecklist: configuration.applicantChecklist ?? [],
   channelSettings: mergeChannelSettings(configuration.channelSettings),
+  journeyLocked: configuration.journeyLocked ?? false,
+  journeyLockedAt: configuration.journeyLockedAt ?? null,
+  journeyLockedByUserId: configuration.journeyLockedByUserId ?? null,
+  journeyLockReason: configuration.journeyLockReason ?? null,
   notes: configuration.notes || '',
 });
 
@@ -616,6 +636,21 @@ const AdmissionsCrmConfiguration = ({
   const lastProviderBaselineRef = useRef<string | null>(null);
   const [staffSearch, setStaffSearch] = useState('');
   const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
+  const [customStageOpen, setCustomStageOpen] = useState(false);
+  const [customStageForm, setCustomStageForm] = useState<PipelineStageForm>(() =>
+    createEmptyPipelineStageForm()
+  );
+  const [journeyLockReason, setJourneyLockReason] = useState('');
+  const [inquirySourceOpen, setInquirySourceOpen] = useState(false);
+  const [editingInquirySourceId, setEditingInquirySourceId] = useState<string | null>(null);
+  const [inquirySourceForm, setInquirySourceForm] = useState({
+    code: '',
+    displayName: '',
+    description: '',
+    allowedChannels: inquiryChannelOptions,
+    displayOrder: 100,
+    isRoutingEligible: true,
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
@@ -760,6 +795,16 @@ const AdmissionsCrmConfiguration = ({
     useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation();
   const [updatePipelineStage, { isLoading: isUpdatingPipelineStage }] =
     useUpdateAdmissionCrmPipelineStageMutation();
+  const [createPipelineStage, { isLoading: isCreatingPipelineStage }] =
+    useCreateAdmissionCrmPipelineStageMutation();
+  const [lockJourney, { isLoading: isLockingJourney }] = useLockAdmissionCrmJourneyMutation();
+  const [unlockJourney, { isLoading: isUnlockingJourney }] = useUnlockAdmissionCrmJourneyMutation();
+  const [createInquirySource, { isLoading: isCreatingInquirySource }] =
+    useCreateAdmissionCrmInquirySourceMutation();
+  const [updateInquirySource, { isLoading: isUpdatingInquirySource }] =
+    useUpdateAdmissionCrmInquirySourceMutation();
+  const [setInquirySourceStatus, { isLoading: isUpdatingInquirySourceStatus }] =
+    useSetAdmissionCrmInquirySourceStatusMutation();
   const [createMessageTemplate, { isLoading: isCreatingMessageTemplate }] =
     useCreateAdmissionCrmMessageTemplateMutation();
   const [updateMessageTemplateStatus, { isLoading: isUpdatingMessageTemplateStatus }] =
@@ -1144,6 +1189,7 @@ const AdmissionsCrmConfiguration = ({
     cycleName: cycleForm.cycleName,
     isActive: cycleForm.isActive,
     registrationFormRequiredBeforeExam: cycleForm.registrationFormRequiredBeforeExam,
+    entranceExamRequired: cycleForm.entranceExamRequired,
     staleAfterDays: cycleForm.staleAfterDays,
     archiveAfterDays: cycleForm.archiveAfterDays,
     defaultLeadSlaHours: cycleForm.defaultLeadSlaHours,
@@ -1493,20 +1539,169 @@ const AdmissionsCrmConfiguration = ({
     try {
       await updatePipelineStage({
         stageId,
-        body: {
-          stageName: stageForm.stageName,
-          displayOrder: stageForm.displayOrder,
-          isEnabled: stageForm.isEnabled,
-          colorHex,
-          slaTargetHours,
-          ownerResponsibility: stageForm.ownerResponsibility.trim(),
-          allowedNextStages: stageForm.allowedNextStages,
-        },
+        body: cycleForm.journeyLocked
+          ? {
+              stageName: stageForm.stageName,
+              colorHex,
+              slaTargetHours,
+              ownerResponsibility: stageForm.ownerResponsibility.trim(),
+            }
+          : {
+              stageName: stageForm.stageName,
+              displayOrder: stageForm.displayOrder,
+              isEnabled: stageForm.isEnabled,
+              colorHex,
+              slaTargetHours,
+              ownerResponsibility: stageForm.ownerResponsibility.trim(),
+              allowedNextStages: stageForm.allowedNextStages,
+            },
       }).unwrap();
       shikshaMitraToast.success({ message: 'Pipeline stage updated.' });
     } catch (error) {
       const message = getSettingsErrorMessage(error, 'Unable to update pipeline stage.');
       shikshaMitraToast.error({ message });
+    }
+  };
+
+  const validateStageForm = (stageForm: PipelineStageForm) => {
+    const stageKey = stageForm.stageKey.trim().toUpperCase();
+    if (!stageKey) return 'Stage key is required.';
+    if (!/^[A-Z0-9_-]+$/.test(stageKey)) {
+      return 'Stage key can use letters, numbers, hyphen, and underscore only.';
+    }
+    if (!stageForm.stageName.trim()) return 'Stage name is required.';
+    if (stages.some((stage) => stage.stageKey?.toUpperCase() === stageKey)) {
+      return 'Stage key already exists.';
+    }
+    return null;
+  };
+
+  const handleCreateCustomStage = async () => {
+    if (!academicYearId) return;
+    const validationMessage = validateStageForm(customStageForm);
+    if (validationMessage) {
+      shikshaMitraToast.error({ message: validationMessage });
+      return;
+    }
+
+    const slaTargetHours =
+      customStageForm.slaTargetHours.trim() === '' ? 0 : Number(customStageForm.slaTargetHours);
+    try {
+      await createPipelineStage({
+        academicYearId,
+        body: {
+          stageKey: customStageForm.stageKey.trim().toUpperCase(),
+          baseSystemStage: customStageForm.baseSystemStage,
+          systemStage: customStageForm.baseSystemStage,
+          stageName: customStageForm.stageName.trim(),
+          displayOrder: Number(customStageForm.displayOrder) || 0,
+          isEnabled: customStageForm.isEnabled,
+          colorHex: customStageForm.colorHex.trim(),
+          slaTargetHours,
+          ownerResponsibility: customStageForm.ownerResponsibility.trim(),
+          allowedNextStages: customStageForm.allowedNextStages,
+        },
+      }).unwrap();
+      setCustomStageOpen(false);
+      setCustomStageForm(createEmptyPipelineStageForm());
+      shikshaMitraToast.success({ message: 'Custom stage added.' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getSettingsErrorMessage(error, 'Unable to add custom stage.'),
+      });
+    }
+  };
+
+  const handleToggleJourneyLock = async (lock: boolean) => {
+    if (!academicYearId) return;
+    if (!lock && !journeyLockReason.trim()) {
+      shikshaMitraToast.error({ message: 'Enter a reason before unlocking the journey.' });
+      return;
+    }
+
+    try {
+      const action = lock ? lockJourney : unlockJourney;
+      await action({
+        academicYearId,
+        body: { reason: journeyLockReason.trim() || undefined },
+      }).unwrap();
+      setJourneyLockReason('');
+      shikshaMitraToast.success({ message: lock ? 'Journey locked.' : 'Journey unlocked.' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getSettingsErrorMessage(
+          error,
+          lock ? 'Unable to lock journey.' : 'Unable to unlock journey.'
+        ),
+      });
+    }
+  };
+
+  const openInquirySourceDialog = (sourceId?: string) => {
+    const source = sourceId ? inquirySources?.items.find((item) => item.id === sourceId) : null;
+    setEditingInquirySourceId(source?.id ?? null);
+    setInquirySourceForm(
+      source
+        ? {
+            code: source.code,
+            displayName: source.displayName,
+            description: source.description || '',
+            allowedChannels: source.allowedChannels,
+            displayOrder: source.displayOrder,
+            isRoutingEligible: source.isRoutingEligible,
+          }
+        : {
+            code: '',
+            displayName: '',
+            description: '',
+            allowedChannels: inquiryChannelOptions,
+            displayOrder: ((inquirySources?.items.length ?? 0) + 1) * 10,
+            isRoutingEligible: true,
+          }
+    );
+    setInquirySourceOpen(true);
+  };
+
+  const handleSaveInquirySource = async () => {
+    if (!academicYearId) return;
+    const code = inquirySourceForm.code.trim().toUpperCase();
+    if (!/^[A-Z0-9_-]+$/.test(code)) {
+      shikshaMitraToast.error({
+        message: 'Source code can use letters, numbers, hyphen, and underscore only.',
+      });
+      return;
+    }
+    if (!inquirySourceForm.displayName.trim()) {
+      shikshaMitraToast.error({ message: 'Display name is required.' });
+      return;
+    }
+    if (!inquirySourceForm.allowedChannels.length) {
+      shikshaMitraToast.error({ message: 'Select at least one allowed channel.' });
+      return;
+    }
+
+    const body = {
+      ...inquirySourceForm,
+      code,
+      displayName: inquirySourceForm.displayName.trim(),
+      description: inquirySourceForm.description.trim() || null,
+      displayOrder: Number(inquirySourceForm.displayOrder) || 0,
+    };
+
+    try {
+      if (editingInquirySourceId) {
+        await updateInquirySource({ sourceId: editingInquirySourceId, body }).unwrap();
+      } else {
+        await createInquirySource({ academicYearId, body }).unwrap();
+      }
+      setInquirySourceOpen(false);
+      shikshaMitraToast.success({
+        message: editingInquirySourceId ? 'Inquiry source updated.' : 'Inquiry source added.',
+      });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getSettingsErrorMessage(error, 'Unable to save inquiry source.'),
+      });
     }
   };
 
@@ -1519,6 +1714,12 @@ const AdmissionsCrmConfiguration = ({
   const handleOpenEditTemplate = (template: AdmissionCrmFormTemplateDto) => {
     setEditingTemplateId(template.id);
     setTemplateForm(buildTemplateFormFromTemplate(template));
+    admissionsCrmConfigurationDialog.onTrue();
+  };
+
+  const handleOpenCreateTemplate = () => {
+    setEditingTemplateId(null);
+    setTemplateForm(createDefaultTemplateForm());
     admissionsCrmConfigurationDialog.onTrue();
   };
 
@@ -2516,7 +2717,27 @@ const AdmissionsCrmConfiguration = ({
                       }
                       label="Registration before exam"
                     />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={cycleForm.entranceExamRequired}
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onChange={(event) =>
+                            handleCycleChange('entranceExamRequired', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Entrance exam required"
+                    />
                   </Stack>
+                  {!cycleForm.entranceExamRequired && (
+                    <Alert severity="warning" sx={{ mt: 1 }}>
+                      Exam scheduling is disabled for this cycle. Applicants use the exam-waived
+                      registration and admission readiness path.
+                    </Alert>
+                  )}
                 </AccordionDetails>
               </Accordion>
               <Accordion disableGutters variant="outlined">
@@ -2723,6 +2944,64 @@ const AdmissionsCrmConfiguration = ({
                   acknowledgement.
                 </Typography>
               </Box>
+              <Divider />
+              <Stack spacing={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  gap={1}
+                >
+                  <Box>
+                    <Typography variant="subtitle2">Inquiry Sources</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Maintain school-specific sources used by channel defaults and lead routing.
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Add />}
+                    disabled={!academicYearId}
+                    onClick={() => openInquirySourceDialog()}
+                  >
+                    Add Custom Inquiry Source
+                  </Button>
+                </Stack>
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  {(inquirySources?.items ?? []).map((source) => (
+                    <Chip
+                      key={source.id}
+                      size="small"
+                      label={`${source.displayName}${source.isActive ? '' : ' (inactive)'}`}
+                      color={source.isActive ? 'default' : 'warning'}
+                      variant="outlined"
+                      onClick={() => openInquirySourceDialog(source.id)}
+                      onDelete={() =>
+                        setInquirySourceStatus({
+                          sourceId: source.id,
+                          body: {
+                            isActive: !source.isActive,
+                            reason: source.isActive
+                              ? 'Disabled from admissions settings.'
+                              : undefined,
+                          },
+                        })
+                      }
+                      deleteIcon={
+                        <Typography component="span" variant="caption">
+                          {source.isActive ? 'Disable' : 'Enable'}
+                        </Typography>
+                      }
+                    />
+                  ))}
+                  {!inquirySources?.items?.length && (
+                    <Typography variant="body2" color="text.secondary">
+                      No inquiry sources configured.
+                    </Typography>
+                  )}
+                </Stack>
+              </Stack>
               <Divider />
               <Box sx={{ display: 'grid', gap: 1 }}>
                 {channelSettings.map((setting) => {
@@ -2939,6 +3218,40 @@ const AdmissionsCrmConfiguration = ({
                 presentation and permitted staff transitions; they do not replace those operational
                 actions.
               </Alert>
+              {cycleForm.journeyLocked && (
+                <Alert severity="warning">
+                  Journey structure is locked. Metadata such as owner responsibility and SLA can be
+                  maintained, but stage order, enabled state, and next-stage rules are protected.
+                  {cycleForm.journeyLockReason ? ` Reason: ${cycleForm.journeyLockReason}` : ''}
+                </Alert>
+              )}
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems={{ sm: 'center' }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Add />}
+                  disabled={!academicYearId || cycleForm.journeyLocked}
+                  onClick={() => setCustomStageOpen(true)}
+                >
+                  Add Custom Stage
+                </Button>
+                <TextField
+                  size="small"
+                  label={cycleForm.journeyLocked ? 'Unlock reason' : 'Lock reason'}
+                  value={journeyLockReason}
+                  onChange={(event) => setJourneyLockReason(event.target.value)}
+                  sx={{ minWidth: { sm: 280 } }}
+                />
+                <LoadingButton
+                  size="small"
+                  variant={cycleForm.journeyLocked ? 'contained' : 'outlined'}
+                  loading={isLockingJourney || isUnlockingJourney}
+                  disabled={!academicYearId}
+                  onClick={() => handleToggleJourneyLock(!cycleForm.journeyLocked)}
+                >
+                  {cycleForm.journeyLocked ? 'Unlock Journey' : 'Lock Journey'}
+                </LoadingButton>
+              </Stack>
               <Divider />
               <Box sx={{ display: 'grid', gap: 1 }}>
                 {stages.map((stage) => {
@@ -3048,7 +3361,7 @@ const AdmissionsCrmConfiguration = ({
                               type="number"
                               label="Display order"
                               value={stageForm.displayOrder}
-                              disabled={isUpdatingPipelineStage}
+                              disabled={isUpdatingPipelineStage || cycleForm.journeyLocked}
                               onChange={(event) =>
                                 handleStageChange(
                                   stage.id,
@@ -3101,7 +3414,10 @@ const AdmissionsCrmConfiguration = ({
                               }
                             />
                           </Box>
-                          <FormControl size="small" disabled={isUpdatingPipelineStage}>
+                          <FormControl
+                            size="small"
+                            disabled={isUpdatingPipelineStage || cycleForm.journeyLocked}
+                          >
                             <InputLabel id={`allowed-next-stages-${stage.id}`}>
                               Staff can move applicants to
                             </InputLabel>
@@ -3157,7 +3473,7 @@ const AdmissionsCrmConfiguration = ({
                               control={
                                 <Switch
                                   checked={stageForm.isEnabled}
-                                  disabled={isUpdatingPipelineStage}
+                                  disabled={isUpdatingPipelineStage || cycleForm.journeyLocked}
                                   onChange={(event) =>
                                     handleStageChange(stage.id, 'isEnabled', event.target.checked)
                                   }
@@ -4001,9 +4317,19 @@ const AdmissionsCrmConfiguration = ({
               <Typography component="h2" variant="subtitle1">
                 Form Templates
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {templates?.totalCount || 0} templates
-              </Typography>
+              <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                <Typography variant="caption" color="text.secondary">
+                  {templates?.totalCount || 0} templates
+                </Typography>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={isCreatingTemplate || isUpdatingTemplate}
+                  onClick={handleOpenCreateTemplate}
+                >
+                  Create Custom Inquiry Form
+                </Button>
+              </Stack>
             </Stack>
             <Divider />
             <Box
@@ -5200,6 +5526,216 @@ const AdmissionsCrmConfiguration = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseMessagePreview}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={customStageOpen}
+        onClose={() => setCustomStageOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Add Custom Stage</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.25} sx={{ pt: 1 }}>
+            <TextField
+              required
+              label="Stage key"
+              value={customStageForm.stageKey}
+              onChange={(event) =>
+                setCustomStageForm((prev) => ({ ...prev, stageKey: event.target.value }))
+              }
+              helperText="Stable code used by workflow automation, for example DOCUMENT_REVIEW."
+            />
+            <TextField
+              required
+              label="Stage name"
+              value={customStageForm.stageName}
+              onChange={(event) =>
+                setCustomStageForm((prev) => ({ ...prev, stageName: event.target.value }))
+              }
+            />
+            <FormControl size="small">
+              <InputLabel>Reporting category</InputLabel>
+              <Select
+                label="Reporting category"
+                value={customStageForm.baseSystemStage}
+                onChange={(event) =>
+                  setCustomStageForm((prev) => ({
+                    ...prev,
+                    baseSystemStage: Number(event.target.value) as AdmissionInquiryStage,
+                  }))
+                }
+              >
+                {pipelineStageOptions.map((stage) => (
+                  <MenuItem key={stage} value={stage}>
+                    {getAdmissionCrmStageLabel(stage)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <TextField
+                size="small"
+                type="number"
+                label="Display order"
+                value={customStageForm.displayOrder}
+                onChange={(event) =>
+                  setCustomStageForm((prev) => ({
+                    ...prev,
+                    displayOrder: Number(event.target.value),
+                  }))
+                }
+              />
+              <TextField
+                size="small"
+                label="Color hex"
+                value={customStageForm.colorHex}
+                onChange={(event) =>
+                  setCustomStageForm((prev) => ({ ...prev, colorHex: event.target.value }))
+                }
+              />
+              <TextField
+                size="small"
+                type="number"
+                label="SLA hours"
+                value={customStageForm.slaTargetHours}
+                onChange={(event) =>
+                  setCustomStageForm((prev) => ({ ...prev, slaTargetHours: event.target.value }))
+                }
+              />
+            </Stack>
+            <TextField
+              label="Typical owner and responsibility"
+              value={customStageForm.ownerResponsibility}
+              onChange={(event) =>
+                setCustomStageForm((prev) => ({
+                  ...prev,
+                  ownerResponsibility: event.target.value,
+                }))
+              }
+              multiline
+              minRows={2}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCustomStageOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={isCreatingPipelineStage}
+            onClick={handleCreateCustomStage}
+          >
+            Add Stage
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={inquirySourceOpen}
+        onClose={() => setInquirySourceOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          {editingInquirySourceId ? 'Edit Inquiry Source' : 'Add Custom Inquiry Source'}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.25} sx={{ pt: 1 }}>
+            <TextField
+              required
+              label="Code"
+              value={inquirySourceForm.code}
+              onChange={(event) =>
+                setInquirySourceForm((prev) => ({ ...prev, code: event.target.value }))
+              }
+            />
+            <TextField
+              required
+              label="Display name"
+              value={inquirySourceForm.displayName}
+              onChange={(event) =>
+                setInquirySourceForm((prev) => ({ ...prev, displayName: event.target.value }))
+              }
+            />
+            <TextField
+              label="Description"
+              value={inquirySourceForm.description}
+              onChange={(event) =>
+                setInquirySourceForm((prev) => ({ ...prev, description: event.target.value }))
+              }
+              multiline
+              minRows={2}
+            />
+            <FormControl size="small">
+              <InputLabel>Allowed channels</InputLabel>
+              <Select
+                multiple
+                label="Allowed channels"
+                value={inquirySourceForm.allowedChannels}
+                renderValue={(selected) =>
+                  selected.map((channel) => getAdmissionCrmChannelLabel(channel)).join(', ')
+                }
+                onChange={(event) => {
+                  const { value } = event.target;
+                  setInquirySourceForm((prev) => ({
+                    ...prev,
+                    allowedChannels: Array.isArray(value)
+                      ? (value.map(Number) as AdmissionInquiryChannel[])
+                      : (String(value)
+                          .split(',')
+                          .filter(Boolean)
+                          .map(Number) as AdmissionInquiryChannel[]),
+                  }));
+                }}
+              >
+                {inquiryChannelOptions.map((channel) => (
+                  <MenuItem key={channel} value={channel}>
+                    <Checkbox checked={inquirySourceForm.allowedChannels.includes(channel)} />
+                    {getAdmissionCrmChannelLabel(channel)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems={{ sm: 'center' }}>
+              <TextField
+                size="small"
+                type="number"
+                label="Display order"
+                value={inquirySourceForm.displayOrder}
+                onChange={(event) =>
+                  setInquirySourceForm((prev) => ({
+                    ...prev,
+                    displayOrder: Number(event.target.value),
+                  }))
+                }
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={inquirySourceForm.isRoutingEligible}
+                    onChange={(event) =>
+                      setInquirySourceForm((prev) => ({
+                        ...prev,
+                        isRoutingEligible: event.target.checked,
+                      }))
+                    }
+                  />
+                }
+                label="Routing eligible"
+              />
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInquirySourceOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={isCreatingInquirySource || isUpdatingInquirySource}
+            onClick={handleSaveInquirySource}
+          >
+            Save Source
+          </LoadingButton>
         </DialogActions>
       </Dialog>
     </Box>

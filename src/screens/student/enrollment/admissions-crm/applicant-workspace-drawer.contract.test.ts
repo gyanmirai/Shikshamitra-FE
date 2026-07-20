@@ -42,7 +42,7 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
     expect(overview).toContain('const savePriority = async');
     expect(overview).toContain('debouncedOwnerSearch');
     expect(overview).toContain('debouncedTaskSearch');
-    expect(overview).toContain('{ skip: !ownerEditorOpen }');
+    expect(overview).toContain('{ skip: !ownerEditorOpen && !lead.ownerUserId }');
     expect(overview).toContain('{ skip: !taskFormOpen }');
   });
 
@@ -64,7 +64,7 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
     const queueColumns = read('operations-queue-columns.tsx');
 
     expect(pipeline).toContain("openApplicant(lead.id, 'overview')");
-    expect(exams).toContain("openApplicant(exam.leadId, 'exam')");
+    expect(exams).toContain('setSelectedExam(exam)');
     expect(exams).toContain("openApplicant(exam.leadId, 'registration')");
     expect(queueColumns).toContain('openApplicant(item.leadId, applicantTab)');
   });
@@ -72,6 +72,7 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
   it('keeps the pipeline focused on the applicant current stage', () => {
     const pipeline = read('pipeline-workspace.tsx');
     const drawer = read('applicant-workspace-drawer.tsx');
+    const context = read('enrollment-workspace-context.tsx');
 
     expect(pipeline).toContain('context="pipeline"');
     expect(pipeline).toContain("label: 'Registration'");
@@ -79,12 +80,19 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
     expect(pipeline).toContain('lead.registrationFormNumber');
     expect(pipeline).toContain("openApplicant(lead.id, 'registration')");
     expect(pipeline).toContain('allowRegistrationBeforeExam={registrationRequiredBeforeExam}');
-    expect(pipeline).toContain('!registrationRequiredBeforeExam || isRegistrationIssued(lead)');
+    expect(pipeline).toContain('lead.stage === AdmissionInquiryStage.NewInquiry');
+    expect(pipeline).toContain('lead.stage === AdmissionInquiryStage.FollowUp');
+    expect(pipeline).toContain('!isExamAlreadyScheduled(lead)');
+    expect(pipeline).toContain('flexShrink: 0');
     expect(pipeline).not.toContain('<DialogTitle>Issue Registration Form</DialogTitle>');
     expect(drawer).toContain('pipelineExamStages.has(lead.stage)');
     expect(drawer).toContain("if (section.value === 'overview') return true");
     expect(drawer).toContain("if (section.value === 'registration')");
     expect(drawer).toContain('return false;');
+    expect(context).toContain(
+      'const currentState = parseEnrollmentWorkspaceState(current, defaults)'
+    );
+    expect(context).toContain('...currentState');
   });
 
   it('keeps generated documents in their owning workflow', () => {

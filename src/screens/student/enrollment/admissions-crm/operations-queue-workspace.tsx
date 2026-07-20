@@ -825,7 +825,13 @@ export function OperationsQueueWorkspace({
 
   if (!academicYearId) {
     return (
-      <Alert severity="info">Select an academic year to open this Enrollment workspace.</Alert>
+      <Stack
+        spacing={1.5}
+        sx={showOperationsUtilities ? { minWidth: 0 } : enrollmentWorkspaceRootSx}
+      >
+        <EnrollmentWorkspaceHeader title={title} description={description} />
+        <Alert severity="info">Select an academic year to open this Enrollment workspace.</Alert>
+      </Stack>
     );
   }
 

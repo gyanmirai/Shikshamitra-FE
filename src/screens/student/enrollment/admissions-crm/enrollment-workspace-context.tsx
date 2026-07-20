@@ -114,6 +114,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     const legacy = !hasWorkspaceState
       ? migrateLegacyWorkspaceFilters(sessionStorage.getItem(legacyKey))
       : {};
+    const currentState = parseEnrollmentWorkspaceState(current, defaults);
     const cycle = current.get('cycle') || (currentYear?.id as string | undefined);
     const board = current.get('board') || (currentBoard?.id as string | undefined);
     const medium = current.get('medium') || (currentMedium?.id as string | undefined);
@@ -121,12 +122,28 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     sessionStorage.removeItem(legacyKey);
     if (!cycle && !Object.keys(legacy).length && current.size === 0) return;
 
-    const next = { ...defaults, ...legacy, ...state, cycle, board, medium, page: state.page || 1 };
+    const next = {
+      ...defaults,
+      ...legacy,
+      ...currentState,
+      cycle,
+      board,
+      medium,
+      page: currentState.page || 1,
+    };
     const canonical = serializeEnrollmentWorkspaceState(next as EnrollmentWorkspaceState);
     if (!areSearchParamsEquivalent(canonical, current)) {
       navigate(next as EnrollmentWorkspaceState, 'replace');
     }
-  }, [currentBoard?.id, currentMedium?.id, currentYear?.id, defaults, navigate, searchParams, state, workspace]);
+  }, [
+    currentBoard?.id,
+    currentMedium?.id,
+    currentYear?.id,
+    defaults,
+    navigate,
+    searchParams,
+    workspace,
+  ]);
 
   const openApplicant = useCallback(
     (leadId: string, tab: EnrollmentApplicantTab = 'overview') => {

@@ -557,7 +557,15 @@ export function EnrollmentOverviewWorkspace() {
   );
 
   if (!academicYearId)
-    return <Alert severity="info">Select an academic year to open My Work.</Alert>;
+    return (
+      <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
+        <EnrollmentWorkspaceHeader
+          title="My Admissions Work"
+          description="Urgent actions and handoff blockers for the selected admission cycle."
+        />
+        <Alert severity="info">Select an academic year to open My Work.</Alert>
+      </Stack>
+    );
 
   return (
     <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>

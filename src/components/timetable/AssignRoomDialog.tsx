@@ -146,9 +146,11 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
       date: queryDate,
       startTime: formatTime(currentSlot.startTime),
       endTime: formatTime(currentSlot.endTime),
+      standardId,
+      divisionId,
       includeOccupied: true,
     };
-  }, [open, currentSlot, queryDate]);
+  }, [open, currentSlot, queryDate, standardId, divisionId]);
 
   const { data: availableRoomsData } = useQueryAndMutation({
     type: 'query',
@@ -211,13 +213,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
   const handleSave = async () => {
     if (!open) return;
 
-    // Validate: each subject must have a room selected
     const newErrors: Record<string, string> = {};
-    splitSubjects.forEach((sub) => {
-      if (!selectedIds[sub.subjectId]) {
-        newErrors[sub.subjectId] = 'Room is required';
-      }
-    });
 
     // Validate: prevent same room assigned to multiple subjects at same time
     // (multiple classes cannot use the same room simultaneously)
@@ -336,12 +332,11 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
                   isOptionEqualToValue={(option, value) => option?.id === value?.id}
                   onChange={(_, value) => {
                     handleChange(sub.subjectId, value);
-                    if (value)
-                      setErrors((prev) => {
-                        const e = { ...prev };
-                        delete e[sub.subjectId];
-                        return e;
-                      });
+                    setErrors((prev) => {
+                      const e = { ...prev };
+                      delete e[sub.subjectId];
+                      return e;
+                    });
                   }}
                   renderInput={(params) => (
                     <CustomTooltip title="Building-Floor-Room" arrow placement="top-start">

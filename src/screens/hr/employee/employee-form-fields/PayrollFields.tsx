@@ -1,7 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { useEffect, useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -1007,7 +1007,6 @@ const RenderPayrollFields = (props: any) => {
               disabled={!isEditable.value}
               label="Account Number *"
               name="accountNumber"
-              type="number"
               value={values.accountNumber || ''}
               onChange={(e) => {
                 const { value } = e.target;
@@ -1020,7 +1019,8 @@ const RenderPayrollFields = (props: any) => {
                 formik.handleBlur(e);
               }}
               inputProps={{
-                min: 0,
+                inputMode: 'numeric',
+                pattern: '[0-9]*',
               }}
               error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
               helperText={formik.touched.accountNumber && formik.errors.accountNumber}

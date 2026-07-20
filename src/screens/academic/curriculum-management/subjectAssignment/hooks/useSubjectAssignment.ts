@@ -40,7 +40,7 @@ export function useSubjectAssignment() {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { standardId: classId, ...query },
+    params: { standardId: classId, ...query, status: 'all' },
     options: { skip: !classId },
   });
 

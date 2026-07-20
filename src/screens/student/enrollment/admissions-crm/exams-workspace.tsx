@@ -43,8 +43,10 @@ import {
   useGetAdmissionCrmEntranceExamsQuery,
   useUploadAdmissionCrmExamResultMutation,
   useDecideAdmissionCrmEligibilityMutation,
+  useGetAdmissionCrmCycleConfigurationQuery,
   useGetAdmissionCrmEligibilityHandoffQuery,
   useMarkAdmissionCrmExamAttendanceMutation,
+  useBulkUploadAdmissionCrmExamResultsMutation,
   useBulkMarkAdmissionCrmExamAttendanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -177,8 +179,8 @@ const ExamRowActions = memo(
       <ThreeDotsActions
         placement="right-top"
         showViewIcon
-        viewLabel="Open Applicant"
-        handleViewClick={() => openApplicant(exam.leadId, 'exam')}
+        viewLabel="Open Exam"
+        handleViewClick={() => setSelectedExam(exam)}
         showEditIcon
         editLabel="Manage Exam"
         handleEditClick={() => setSelectedExam(exam)}
@@ -198,6 +200,7 @@ export function ExamsWorkspace() {
   const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
   const [selectedExamIds, setSelectedExamIds] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
+  const [bulkMarksOpen, setBulkMarksOpen] = useState(false);
   const [handoffExamId, setHandoffExamId] = useState('');
   const [attendance, setAttendance] = useState(AdmissionCrmExamAttendanceStatus.NotMarked);
   const [totalMarks, setTotalMarks] = useState('100');
@@ -208,6 +211,10 @@ export function ExamsWorkspace() {
   const [decisionReason, setDecisionReason] = useState('');
   const [overrideDecision, setOverrideDecision] = useState(false);
   const [overrideReason, setOverrideReason] = useState('');
+  const [bulkTotalMarks, setBulkTotalMarks] = useState('100');
+  const [bulkPassingMarks, setBulkPassingMarks] = useState('40');
+  const [bulkObtainedMarks, setBulkObtainedMarks] = useState('');
+  const [bulkMeritRank, setBulkMeritRank] = useState('');
 
   const examsQuery = useGetAdmissionCrmEntranceExamsQuery(
     {
@@ -227,12 +234,18 @@ export function ExamsWorkspace() {
   );
   const [markAttendance, markAttendanceState] = useMarkAdmissionCrmExamAttendanceMutation();
   const [bulkMarkAttendance, bulkAttendanceState] = useBulkMarkAdmissionCrmExamAttendanceMutation();
+  const [bulkUploadResults, bulkResultsState] = useBulkUploadAdmissionCrmExamResultsMutation();
   const [uploadResult, uploadResultState] = useUploadAdmissionCrmExamResultMutation();
   const [decideEligibility, decideEligibilityState] = useDecideAdmissionCrmEligibilityMutation();
   const handoffQuery = useGetAdmissionCrmEligibilityHandoffQuery(
     { examRecordId: handoffExamId },
     { skip: !handoffExamId }
   );
+  const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId }
+  );
+  const entranceExamRequired = cycleConfigurationQuery.data?.entranceExamRequired !== false;
 
   useEffect(() => {
     if (!selectedExam) return;
@@ -332,6 +345,38 @@ export function ExamsWorkspace() {
       });
     } catch {
       shikshaMitraToast.error({ message: 'The selected exam attendance could not be updated.' });
+    }
+  };
+
+  const uploadSelectedResults = async () => {
+    if (!academicYearId || selectedExamIds.length === 0) return;
+    try {
+      const result = await bulkUploadResults({
+        academicYearId,
+        examRecordIds: selectedExamIds,
+        totalMarks: Number(bulkTotalMarks),
+        passingMarks: Number(bulkPassingMarks),
+        obtainedMarks: Number(bulkObtainedMarks),
+        meritRank: bulkMeritRank ? Number(bulkMeritRank) : undefined,
+      }).unwrap();
+      if (result.failedCount > 0) {
+        setSelectedExamIds(
+          result.items.filter((item) => !item.success).map((item) => item.entityId)
+        );
+        shikshaMitraToast.error({
+          message: `${result.succeededCount} updated; ${result.failedCount} failed and remain selected.`,
+        });
+        return;
+      }
+      setBulkMarksOpen(false);
+      setBulkObtainedMarks('');
+      setBulkMeritRank('');
+      setSelectedExamIds([]);
+      shikshaMitraToast.success({
+        message: `${result.succeededCount} exam result${result.succeededCount === 1 ? '' : 's'} recorded.`,
+      });
+    } catch {
+      shikshaMitraToast.error({ message: 'The selected exam results could not be recorded.' });
     }
   };
 
@@ -522,7 +567,15 @@ export function ExamsWorkspace() {
   );
 
   if (!academicYearId) {
-    return <Alert severity="info">Select an academic year to open Entrance Exams.</Alert>;
+    return (
+      <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
+        <EnrollmentWorkspaceHeader
+          title="Entrance Exams"
+          description="Process attendance, results, merit, and eligibility decisions from one queue."
+        />
+        <Alert severity="info">Select an academic year to open Entrance Exams.</Alert>
+      </Stack>
+    );
   }
 
   return (
@@ -532,7 +585,14 @@ export function ExamsWorkspace() {
         description="Process attendance, results, merit, and eligibility decisions from one queue."
       />
 
-      {selectedExamIds.length > 0 ? (
+      {!entranceExamRequired ? (
+        <Alert severity="info">
+          Entrance exams are disabled for this admissions cycle. Applicants follow the exam-waived
+          registration and admission readiness path.
+        </Alert>
+      ) : null}
+
+      {entranceExamRequired && selectedExamIds.length > 0 ? (
         <Paper variant="outlined" role="region" aria-label="Bulk exam actions" sx={{ p: 1 }}>
           <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
             <Chip color="primary" label={`${selectedExamIds.length} selected`} />
@@ -556,6 +616,9 @@ export function ExamsWorkspace() {
                 >
                   Mark absent
                 </LoadingButton>
+                <Button size="small" onClick={() => setBulkMarksOpen(true)}>
+                  Give Marks
+                </Button>
               </>
             ) : null}
             <Button size="small" color="inherit" onClick={() => setSelectedExamIds([])}>
@@ -565,12 +628,12 @@ export function ExamsWorkspace() {
         </Paper>
       ) : null}
 
-      {examsQuery.isError ? (
+      {entranceExamRequired && examsQuery.isError ? (
         <EnrollmentWorkspaceErrorState
           message="Entrance exams are unavailable."
           onRetry={() => examsQuery.refetch()}
         />
-      ) : (
+      ) : entranceExamRequired ? (
         <CustomizableTable
           tableId="student-enrollment-entrance-exams"
           tableTitle="Entrance Exams"
@@ -634,7 +697,54 @@ export function ExamsWorkspace() {
           wrapperProps={{ sx: enrollmentTableWrapperSx }}
           tableContainerProps={{ sx: enrollmentTableContainerSx }}
         />
-      )}
+      ) : null}
+
+      <Dialog open={bulkMarksOpen} onClose={() => setBulkMarksOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Give Marks</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.25} sx={{ pt: 1 }}>
+            <Alert severity="info">
+              Apply the same marks to {selectedExamIds.length} selected exam
+              {selectedExamIds.length === 1 ? '' : 's'}.
+            </Alert>
+            <TextField
+              label="Total marks"
+              type="number"
+              value={bulkTotalMarks}
+              onChange={(event) => setBulkTotalMarks(event.target.value)}
+            />
+            <TextField
+              label="Passing marks"
+              type="number"
+              value={bulkPassingMarks}
+              onChange={(event) => setBulkPassingMarks(event.target.value)}
+            />
+            <TextField
+              label="Obtained marks"
+              type="number"
+              value={bulkObtainedMarks}
+              onChange={(event) => setBulkObtainedMarks(event.target.value)}
+            />
+            <TextField
+              label="Merit rank"
+              type="number"
+              value={bulkMeritRank}
+              onChange={(event) => setBulkMeritRank(event.target.value)}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkMarksOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={bulkResultsState.isLoading}
+            disabled={!bulkTotalMarks || !bulkPassingMarks || !bulkObtainedMarks}
+            onClick={uploadSelectedResults}
+          >
+            Save Marks
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={Boolean(selectedExam)}

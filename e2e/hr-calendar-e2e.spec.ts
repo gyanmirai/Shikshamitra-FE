@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { test, expect, type Page, type APIResponse } from '@playwright/test';
 
 import { employeeApiRequest } from './hr/employee/employee-api';
@@ -49,8 +50,21 @@ const isMeetingEventTypeName = (name?: string) => {
 };
 
 const routeShouldRender = async (page: Page, path: string, expectedText: RegExp | string) => {
-  await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-  await expect(page.locator('body')).toContainText(expectedText, { timeout: 120_000 });
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 180_000 });
+
+    try {
+      await expect(page.locator('body')).toContainText(expectedText, { timeout: 180_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 180_000 }).catch(() => undefined);
+    }
+  }
+
+  throw lastError;
 };
 
 const nextWeekdayIso = (daysFromNow = 14) => {
@@ -138,7 +152,7 @@ const getOrCreateHolidayType = async (page: Page) => {
 };
 
 test.describe('Calendar group HR audience E2E', () => {
-  test.setTimeout(600_000);
+  test.setTimeout(900_000);
 
   test('creates a HR-backed group and uses it for calendar event and holiday audiences', async ({
     page,

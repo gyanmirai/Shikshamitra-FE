@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import AddRounded from '@mui/icons-material/AddRounded';
 import { shikshaMitraToast } from 'src/components/toast';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import EventRounded from '@mui/icons-material/EventRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
@@ -33,10 +34,12 @@ import {
   Dialog,
   Select,
   Switch,
+  Tooltip,
   Checkbox,
   MenuItem,
   MenuList,
   TextField,
+  IconButton,
   Typography,
   InputLabel,
   DialogTitle,
@@ -78,6 +81,7 @@ import {
   getAdmissionCrmLeadName,
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
+  getAdmissionCrmStageTooltipLines,
 } from './admissions-crm-utils';
 import {
   enrollmentActionsColumn,
@@ -216,12 +220,33 @@ const canOpenRegistration = (lead: AdmissionCrmLeadDto, registrationRequiredBefo
     registrationRequiredBeforeExam ||
     lead.registrationFormNumber ||
     lead.registrationFormIssuedAt ||
+    lead.stage === AdmissionInquiryStage.NewInquiry ||
+    lead.stage === AdmissionInquiryStage.FollowUp ||
     lead.stage === AdmissionInquiryStage.Eligible ||
     lead.stage === AdmissionInquiryStage.Waitlisted
   );
 
 const isRegistrationIssued = (lead: AdmissionCrmLeadDto) =>
   Boolean(lead.registrationFormNumber || lead.registrationFormIssuedAt);
+
+const isExamAlreadyScheduled = (lead: AdmissionCrmLeadDto) =>
+  [
+    AdmissionInquiryStage.ExamScheduled,
+    AdmissionInquiryStage.ExamCompleted,
+    AdmissionInquiryStage.Eligible,
+    AdmissionInquiryStage.Waitlisted,
+    AdmissionInquiryStage.Rejected,
+  ].includes(lead.stage);
+
+const protectedBulkStages = new Set([
+  AdmissionInquiryStage.ExamReady,
+  AdmissionInquiryStage.ExamScheduled,
+  AdmissionInquiryStage.ExamCompleted,
+  AdmissionInquiryStage.Eligible,
+  AdmissionInquiryStage.Waitlisted,
+  AdmissionInquiryStage.Rejected,
+  AdmissionInquiryStage.Archived,
+]);
 
 type LeadCardProps = {
   lead: AdmissionCrmLeadDto;
@@ -249,7 +274,7 @@ function PipelineLeadCard({
   onOpenRegistration,
 }: LeadCardProps) {
   return (
-    <Card variant="outlined" sx={{ p: 1.25, borderRadius: 1, minWidth: 0 }}>
+    <Card variant="outlined" sx={{ p: 1.25, borderRadius: 1, minWidth: 0, flexShrink: 0 }}>
       <Stack spacing={1}>
         <Stack direction="row" gap={1} justifyContent="space-between" alignItems="flex-start">
           <Box sx={{ minWidth: 0 }}>
@@ -308,6 +333,11 @@ function PipelineLeadCard({
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
           {lead.admissionIntent}
         </Typography>
+        {canManageRegistration && !lead.ownerUserId && !lead.archivedAt ? (
+          <Alert severity="warning" sx={{ py: 0.25 }}>
+            Registration can continue, but no owner is assigned for follow-up.
+          </Alert>
+        ) : null}
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
           <Typography variant="caption" color="text.secondary">
             {dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}
@@ -373,6 +403,7 @@ export function PipelineWorkspace() {
   );
   const [bulkStage, setBulkStage] = useState(AdmissionInquiryStage.FollowUp);
   const [bulkReason, setBulkReason] = useState('');
+  const [overrideProtectedStages, setOverrideProtectedStages] = useState(false);
 
   useEffect(() => {
     if ((state.view || 'list') === 'list') {
@@ -470,6 +501,7 @@ export function PipelineWorkspace() {
   const registrationRequiredBeforeExam = Boolean(
     cycleConfigurationQuery.data?.registrationFormRequiredBeforeExam
   );
+  const entranceExamRequired = cycleConfigurationQuery.data?.entranceExamRequired !== false;
 
   const [createLead, createLeadState] = useCreateAdmissionCrmLeadMutation();
   const [previewDuplicates, previewDuplicatesState] =
@@ -541,6 +573,11 @@ export function PipelineWorkspace() {
     [ownerStaffQuery.data, rowStaffQuery.data]
   );
   const selectedLeadSet = useMemo(() => new Set(selectedLeadIds), [selectedLeadIds]);
+  const protectedSelectedLeads = useMemo(
+    () =>
+      leads.filter((lead) => selectedLeadSet.has(lead.id) && protectedBulkStages.has(lead.stage)),
+    [leads, selectedLeadSet]
+  );
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   const ownerName = useCallback(
     (lead: AdmissionCrmLeadDto) =>
@@ -721,7 +758,31 @@ export function PipelineWorkspace() {
           value: stage.systemStage,
           label: stage.stageName,
         })),
-        render: (value) => <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />,
+        render: (value) => {
+          const stage = stages.find((item) => item.systemStage === value);
+          if (!stage) return <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />;
+          return (
+            <Stack direction="row" alignItems="center" gap={0.5}>
+              <AdmissionCrmStageChip stage={stage.systemStage} />
+              <Tooltip
+                arrow
+                title={
+                  <Stack spacing={0.25}>
+                    {getAdmissionCrmStageTooltipLines(stage).map((line) => (
+                      <Typography key={line} variant="caption" color="inherit">
+                        {line}
+                      </Typography>
+                    ))}
+                  </Stack>
+                }
+              >
+                <IconButton size="small" aria-label={`${stage.stageName} stage details`}>
+                  <InfoOutlined fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          );
+        },
       },
       {
         id: 'registrationFormNumber',
@@ -836,8 +897,10 @@ export function PipelineWorkspace() {
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           const canSchedule =
+            entranceExamRequired &&
             hasGrantedPermission(permissions, actionPermissions.scheduleExam) &&
             isExamReady(lead) &&
+            !isExamAlreadyScheduled(lead) &&
             (!registrationRequiredBeforeExam || isRegistrationIssued(lead));
           const canManageRegistration =
             hasGrantedPermission(permissions, actionPermissions.issueRegistrationForm) &&
@@ -886,6 +949,7 @@ export function PipelineWorkspace() {
       ownerFilterOptions,
       ownerName,
       permissions,
+      entranceExamRequired,
       registrationRequiredBeforeExam,
       selectedLeadIds.length,
       selectedLeadSet,
@@ -1001,12 +1065,23 @@ export function PipelineWorkspace() {
       }
       if (bulkAction === 'stage') {
         if (!bulkReason.trim()) throw new Error('Reason is required.');
-        await bulkChangeStages({
+        if (protectedSelectedLeads.length && !overrideProtectedStages) {
+          throw new Error('Remove protected applicants or choose override with a reason.');
+        }
+        const result = await bulkChangeStages({
           academicYearId,
           leadIds: selectedLeadIds,
           stage: bulkStage,
           reason: bulkReason.trim(),
+          overrideProtectedStages,
         }).unwrap();
+        if (result.failedCount > 0) {
+          shikshaMitraToast.warning({
+            message: `${result.succeededCount} stage changes completed; ${result.failedCount} failed.`,
+          });
+        } else {
+          shikshaMitraToast.success({ message: 'Bulk stage change completed.' });
+        }
       }
       if (bulkAction === 'archive') {
         if (!bulkReason.trim()) throw new Error('Reason is required.');
@@ -1019,8 +1094,11 @@ export function PipelineWorkspace() {
       setBulkAction(null);
       setBulkReason('');
       setBulkTitle('');
+      setOverrideProtectedStages(false);
       setSelectedLeadIds([]);
-      shikshaMitraToast.success({ message: 'Bulk action completed.' });
+      if (bulkAction !== 'stage') {
+        shikshaMitraToast.success({ message: 'Bulk action completed.' });
+      }
     } catch (error) {
       shikshaMitraToast.error({
         message: error instanceof Error ? error.message : 'The bulk action could not be completed.',
@@ -1029,7 +1107,15 @@ export function PipelineWorkspace() {
   };
 
   if (!academicYearId) {
-    return <Alert severity="info">Select an academic year to open the Admissions Pipeline.</Alert>;
+    return (
+      <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
+        <EnrollmentWorkspaceHeader
+          title="Admissions Pipeline"
+          description="Capture, qualify, assign, and progress inquiries through exam readiness."
+        />
+        <Alert severity="info">Select an academic year to open the Admissions Pipeline.</Alert>
+      </Stack>
+    );
   }
 
   const renderLeadCard = (lead: AdmissionCrmLeadDto) => (
@@ -1040,7 +1126,9 @@ export function PipelineWorkspace() {
       selected={selectedLeadSet.has(lead.id)}
       showSelection={state.view === 'list'}
       canScheduleExam={
+        entranceExamRequired &&
         can(actionPermissions.scheduleExam) &&
+        !isExamAlreadyScheduled(lead) &&
         (!registrationRequiredBeforeExam || isRegistrationIssued(lead))
       }
       canManageRegistration={
@@ -1723,21 +1811,41 @@ export function PipelineWorkspace() {
               </>
             )}
             {bulkAction === 'stage' && (
-              <FormControl fullWidth>
-                <InputLabel id="pipeline-bulk-stage-label">Stage</InputLabel>
-                <Select
-                  labelId="pipeline-bulk-stage-label"
-                  label="Stage"
-                  value={bulkStage}
-                  onChange={(event) => setBulkStage(Number(event.target.value))}
-                >
-                  {stages.map((stageItem) => (
-                    <MenuItem key={stageItem.id} value={stageItem.systemStage}>
-                      {stageItem.stageName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <>
+                <FormControl fullWidth>
+                  <InputLabel id="pipeline-bulk-stage-label">Stage</InputLabel>
+                  <Select
+                    labelId="pipeline-bulk-stage-label"
+                    label="Stage"
+                    value={bulkStage}
+                    onChange={(event) => setBulkStage(Number(event.target.value))}
+                  >
+                    {stages.map((stageItem) => (
+                      <MenuItem key={stageItem.id} value={stageItem.systemStage}>
+                        {stageItem.stageName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                {protectedSelectedLeads.length ? (
+                  <Alert severity={overrideProtectedStages ? 'warning' : 'error'}>
+                    {protectedSelectedLeads.length} selected applicant
+                    {protectedSelectedLeads.length === 1 ? '' : 's'} are in protected workflow
+                    stages. Remove them before applying, or choose override with an audit reason.
+                  </Alert>
+                ) : null}
+                {protectedSelectedLeads.length ? (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={overrideProtectedStages}
+                        onChange={(event) => setOverrideProtectedStages(event.target.checked)}
+                      />
+                    }
+                    label="Override protected stage guardrails"
+                  />
+                ) : null}
+              </>
             )}
             {(bulkAction === 'stage' || bulkAction === 'archive') && (
               <TextField
@@ -1755,6 +1863,11 @@ export function PipelineWorkspace() {
           <Button onClick={() => setBulkAction(null)}>Cancel</Button>
           <LoadingButton
             variant="contained"
+            disabled={
+              bulkAction === 'stage' &&
+              protectedSelectedLeads.length > 0 &&
+              !overrideProtectedStages
+            }
             loading={
               bulkAssignOwnersState.isLoading ||
               bulkCreateTasksState.isLoading ||

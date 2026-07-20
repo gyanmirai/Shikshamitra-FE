@@ -12,7 +12,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         params: {
           page,
           pageSize,
-          ...(status === 'all' ? {} : { status }),
+          ...(status === 'all' ? { includeArchived: true } : { status }),
         },
       }),
       providesTags: [academicType.subjectAssignment],

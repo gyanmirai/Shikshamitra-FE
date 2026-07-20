@@ -13,6 +13,7 @@ export function ExamSettingsRoute() {
     <EnrollmentSettingsPage
       title="Exam & Eligibility"
       description="Choose whether applicants need an exam, how results are decided, and whether the school issues hall tickets."
+      fillAvailableHeight
     >
       <ExamRegistrationHandoffGuidance />
       {academicYearId ? (
