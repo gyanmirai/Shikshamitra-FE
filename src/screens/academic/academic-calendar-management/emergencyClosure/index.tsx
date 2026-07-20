@@ -61,11 +61,18 @@ const emergencyClosureSchema = Yup.object().shape({
   startDate: Yup.mixed().required('Start date is required'),
   endDate: Yup.mixed()
     .required('End date is required')
-    .test('not-before-start', 'End date cannot be before start date', function validateEndDate(value) {
-      const { startDate } = this.parent;
-      if (!startDate || !value) return true;
-      return dayjs(value as string).isSame(dayjs(startDate as string), 'day') || dayjs(value as string).isAfter(dayjs(startDate as string), 'day');
-    }),
+    .test(
+      'not-before-start',
+      'End date cannot be before start date',
+      function validateEndDate(value) {
+        const { startDate } = this.parent;
+        if (!startDate || !value) return true;
+        return (
+          dayjs(value as string).isSame(dayjs(startDate as string), 'day') ||
+          dayjs(value as string).isAfter(dayjs(startDate as string), 'day')
+        );
+      }
+    ),
   startTime: Yup.string().when('hasTimeRange', {
     is: true,
     then: (schema) => schema.required('Start time is required'),
@@ -75,11 +82,15 @@ const emergencyClosureSchema = Yup.object().shape({
     then: (schema) =>
       schema
         .required('End time is required')
-        .test('after-start-time', 'End time must be after start time', function validateEndTime(value) {
-          const { startTime } = this.parent;
-          if (!startTime || !value) return true;
-          return value > startTime;
-        }),
+        .test(
+          'after-start-time',
+          'End time must be after start time',
+          function validateEndTime(value) {
+            const { startTime } = this.parent;
+            if (!startTime || !value) return true;
+            return value > startTime;
+          }
+        ),
   }),
   title: Yup.string().min(3, 'Title must be at least 3 characters').required('Title is required'),
   description: Yup.string().required('Reason/description is required'),
@@ -264,7 +275,10 @@ const EmergencyClosureScreen = () => {
       label: 'Title',
       filterType: 'string',
       isFilter: true,
-      minWidth: 280,
+      width: '34%',
+      minWidth: 320,
+      maxWidth: 420,
+      cellSx: { maxWidth: 420 },
       render: (value, row) => (
         <Stack spacing={0.5} sx={{ minWidth: 0 }}>
           <Typography variant="body2" fontWeight={700} noWrap>
@@ -286,16 +300,22 @@ const EmergencyClosureScreen = () => {
       label: 'Closure Date',
       filterType: 'date',
       isFilter: true,
+      width: 150,
       minWidth: 150,
       render: (value) => dayjs(value).format('DD MMM YYYY'),
     },
     {
       id: 'timeRange',
       label: 'Time',
-      minWidth: 130,
+      width: 120,
+      minWidth: 120,
       isSort: false,
+      isFilter: false,
       render: (_, row) => (
-        <Typography variant="caption" color={row.startTime && row.endTime ? 'text.primary' : 'text.secondary'}>
+        <Typography
+          variant="caption"
+          color={row.startTime && row.endTime ? 'text.primary' : 'text.secondary'}
+        >
           {formatTimeRange(row)}
         </Typography>
       ),
@@ -305,7 +325,10 @@ const EmergencyClosureScreen = () => {
       label: 'Scope',
       filterType: 'string',
       isFilter: true,
-      minWidth: 160,
+      width: 170,
+      minWidth: 170,
+      maxWidth: 190,
+      cellSx: { maxWidth: 190 },
       render: (_, row) => getScopeLabel(row),
     },
     {
@@ -319,7 +342,9 @@ const EmergencyClosureScreen = () => {
       isFilter: true,
       align: 'center',
       sticky: true,
-      minWidth: 130,
+      stickyPosition: 'right',
+      width: 128,
+      minWidth: 128,
       render: (value) => (
         <Label color={statusColor[Number(value)] ?? 'default'}>
           {CALENDAR_DAY_STATUS_LABELS[Number(value) as CalendarDayStatus] ?? 'Unknown'}
@@ -331,9 +356,12 @@ const EmergencyClosureScreen = () => {
       label: 'Actions',
       align: 'center',
       sticky: true,
-      minWidth: 120,
+      stickyPosition: 'right',
+      width: 116,
+      minWidth: 116,
       isSort: false,
       isFilter: false,
+      excludeFromExport: true,
       render: (_, row) => (
         <Stack direction="row" justifyContent="center" gap={0.5}>
           <Tooltip title="View details">
@@ -403,6 +431,14 @@ const EmergencyClosureScreen = () => {
         isShowedDense={false}
         columns={columns}
         data={tableData}
+        tableContainerProps={{
+          sx: {
+            '& table': {
+              tableLayout: 'fixed',
+              minWidth: 1004,
+            },
+          },
+        }}
         noDataText={
           <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
             <Box
@@ -453,7 +489,10 @@ const EmergencyClosureScreen = () => {
                   const nextValue = val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null;
                   formik.setFieldValue('date', nextValue);
                   formik.setFieldValue('startDate', nextValue);
-                  if (!formik.values.endDate || (nextValue && dayjs(formik.values.endDate).isBefore(val, 'day'))) {
+                  if (
+                    !formik.values.endDate ||
+                    (nextValue && dayjs(formik.values.endDate).isBefore(val, 'day'))
+                  ) {
                     formik.setFieldValue('endDate', nextValue);
                   }
                 }}
@@ -751,7 +790,7 @@ const EmergencyClosureScreen = () => {
         open={viewDialog.value}
         handleClose={viewDialog.onFalse}
         title={
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
             <Box
               sx={{
                 width: 32,
@@ -759,13 +798,16 @@ const EmergencyClosureScreen = () => {
                 borderRadius: 1,
                 display: 'grid',
                 placeItems: 'center',
-                color: 'error.main',
-                bgcolor: alpha(theme.palette.error.main, 0.1),
+                color: 'info.main',
+                bgcolor: alpha(theme.palette.info.main, 0.12),
+                flexShrink: 0,
               }}
             >
               <Iconify icon="mdi:information-outline" width={18} />
             </Box>
-            <span>Emergency Closure Details</span>
+            <Typography component="span" variant="h6" sx={{ minWidth: 0 }}>
+              Emergency Closure Details
+            </Typography>
           </Stack>
         }
         maxWidth="sm"
@@ -780,18 +822,31 @@ const EmergencyClosureScreen = () => {
                   borderRadius: 1,
                   bgcolor: alpha(theme.palette.error.main, 0.04),
                   borderColor: alpha(theme.palette.error.main, 0.18),
+                  boxShadow: `inset 3px 0 0 ${theme.palette.error.main}`,
                 }}
               >
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', sm: 'flex-start' }}
+                  gap={1}
+                >
                   <Stack spacing={0.5} sx={{ minWidth: 0 }}>
                     <Typography variant="caption" color="text.secondary">
                       Closure title
                     </Typography>
-                    <Typography variant="subtitle1" fontWeight={700}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={700}
+                      sx={{ wordBreak: 'break-word' }}
+                    >
                       {viewingClosure.title}
                     </Typography>
                   </Stack>
-                  <Label color={statusColor[Number(viewingClosure.status)] ?? 'default'}>
+                  <Label
+                    color={statusColor[Number(viewingClosure.status)] ?? 'default'}
+                    sx={{ flexShrink: 0 }}
+                  >
                     {CALENDAR_DAY_STATUS_LABELS[
                       Number(viewingClosure.status) as CalendarDayStatus
                     ] ?? 'Unknown'}
@@ -816,9 +871,23 @@ const EmergencyClosureScreen = () => {
                     label: 'Time',
                     value: formatTimeRange(viewingClosure),
                   },
+                  {
+                    icon: 'mdi:radar',
+                    label: 'Impact Scan',
+                    value:
+                      viewingClosure.autoScanImpacts === false ? 'Manual review' : 'Auto-scan on',
+                  },
                 ].map((item) => (
-                  <Grid key={item.label} size={{ xs: 12, sm: 4 }}>
-                    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1, height: '100%' }}>
+                  <Grid key={item.label} size={{ xs: 12, sm: 6 }}>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 1,
+                        height: '100%',
+                        bgcolor: alpha(theme.palette.background.neutral, 0.45),
+                      }}
+                    >
                       <Stack direction="row" spacing={1} alignItems="flex-start">
                         <Box
                           sx={{
@@ -827,8 +896,8 @@ const EmergencyClosureScreen = () => {
                             borderRadius: 1,
                             display: 'grid',
                             placeItems: 'center',
-                            color: 'text.secondary',
-                            bgcolor: alpha(theme.palette.grey[500], 0.12),
+                            color: 'info.main',
+                            bgcolor: alpha(theme.palette.info.main, 0.1),
                             flexShrink: 0,
                           }}
                         >
@@ -838,7 +907,11 @@ const EmergencyClosureScreen = () => {
                           <Typography variant="caption" color="text.secondary">
                             {item.label}
                           </Typography>
-                          <Typography variant="body2" fontWeight={700}>
+                          <Typography
+                            variant="body2"
+                            fontWeight={700}
+                            sx={{ wordBreak: 'break-word' }}
+                          >
                             {item.value}
                           </Typography>
                         </Box>
@@ -848,7 +921,14 @@ const EmergencyClosureScreen = () => {
                 ))}
               </Grid>
 
-              <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1,
+                  bgcolor: alpha(theme.palette.background.neutral, 0.45),
+                }}
+              >
                 <Stack spacing={0.75}>
                   <Typography variant="caption" color="text.secondary">
                     Reason / Description
@@ -861,17 +941,24 @@ const EmergencyClosureScreen = () => {
 
               <Divider />
 
-              <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1,
+                  bgcolor: alpha(theme.palette.background.neutral, 0.45),
+                }}
+              >
                 <Typography variant="caption" color="text.secondary" display="block" mb={1}>
                   Notified Audiences
                 </Typography>
                 <Stack direction="row" gap={0.75} flexWrap="wrap">
                   {[
-                    ['notifyTeachers', 'Teachers'],
-                    ['notifyParents', 'Parents'],
-                    ['notifyStudents', 'Students'],
-                    ['notifyStaff', 'Staff'],
-                  ].map(([key, label]) => {
+                    ['notifyTeachers', 'Teachers', 'mdi:account-tie-outline'],
+                    ['notifyParents', 'Parents', 'mdi:account-heart-outline'],
+                    ['notifyStudents', 'Students', 'mdi:school-outline'],
+                    ['notifyStaff', 'Staff', 'mdi:account-wrench-outline'],
+                  ].map(([key, label, icon]) => {
                     const isNotified = Boolean(viewingClosure[key]);
                     return (
                       <Label
@@ -880,12 +967,23 @@ const EmergencyClosureScreen = () => {
                         color={isNotified ? 'success' : 'default'}
                         startIcon={
                           <Iconify
-                            icon={isNotified ? 'mdi:check-circle-outline' : 'mdi:minus-circle-outline'}
+                            icon={
+                              isNotified ? 'mdi:check-circle-outline' : 'mdi:minus-circle-outline'
+                            }
                             width={14}
                           />
                         }
+                        sx={{
+                          px: 1,
+                          '& .MuiChip-label': {
+                            px: 0.5,
+                          },
+                        }}
                       >
-                        {label}
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Iconify icon={icon} width={14} />
+                          <span>{label}</span>
+                        </Stack>
                       </Label>
                     );
                   })}

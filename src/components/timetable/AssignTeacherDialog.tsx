@@ -259,13 +259,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   const handleSave = async () => {
     if (!open) return;
 
-    // Validate: each subject must have a teacher selected
     const newErrors: Record<string, string> = {};
-    splitSubjects.forEach((sub) => {
-      if (!selectedIds[sub.subjectId]) {
-        newErrors[sub.subjectId] = 'Teacher is required';
-      }
-    });
 
     // Validate: prevent same teacher assigned to multiple subjects at same time
     // (teacher cannot be in two different rooms simultaneously)
@@ -367,12 +361,11 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
                   subjectAssignmentId={sub.subjectAssignmentId ?? ''}
                   onChange={(subjectId, value) => {
                     handleChange(subjectId, value);
-                    if (value)
-                      setErrors((prev) => {
-                        const e = { ...prev };
-                        delete e[subjectId];
-                        return e;
-                      });
+                    setErrors((prev) => {
+                      const e = { ...prev };
+                      delete e[subjectId];
+                      return e;
+                    });
                   }}
                   error={errors[sub.subjectId]}
                 />

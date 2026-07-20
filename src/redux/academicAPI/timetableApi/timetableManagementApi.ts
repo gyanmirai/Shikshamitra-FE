@@ -46,7 +46,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
         endTime: string;
         subjectType: number;
         electiveGroupId?: string | null;
-        subjects: { subjectId: string; teacherId: string }[];
+        subjects: { subjectId: string; teacherId: string | null }[];
       }) => ({
         url: 'academics/timetable/assign-teachers',
         method: 'POST',
@@ -64,7 +64,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
         endTime: string;
         subjectType: number;
         electiveGroupId?: string | null;
-        subjects: { subjectId: string; roomId: string }[];
+        subjects: { subjectId: string; roomId: string | null }[];
       }) => ({
         url: 'academics/timetable/assign-rooms',
         method: 'POST',

@@ -156,6 +156,19 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   });
 
   const totalMarks = Number(formik.values.totalMarks) || 25;
+  const submittedFileUrl = data?.submittedDocumentUrl;
+  const submittedFileName =
+    data?.originalFileName || submittedFileUrl?.split('/').pop() || 'Submitted document';
+  const submittedFileType = submittedFileName.includes('.')
+    ? submittedFileName.split('.').pop() || 'file'
+    : 'file';
+  const submittedDocument: IDocument = {
+    ...document,
+    name: submittedFileName,
+    type: submittedFileType,
+    url: submittedFileUrl || '',
+    size: '',
+  };
 
   const quickScores = [
     { label: `Full Marks (${totalMarks})`, key: 'full', value: totalMarks },
@@ -315,65 +328,81 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                     </Typography>
                   </Box>
                   <Box sx={{ p: 2 }}>
-                    <Card
-                      variant="outlined"
-                      sx={{
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 1,
-                        transition: (theme) => theme.transitions.create('background-color'),
-                        '&:hover': { bgcolor: 'action.hover' },
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                        {getFileIconByType(document.type ?? 'txt', 36)}
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography variant="body2" fontWeight={600} noWrap>
-                            {document.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.disabled">
-                            {document.size}
-                            {document.type ? ` • ${document.type.toUpperCase()} Document` : ''}
-                          </Typography>
+                    {submittedFileUrl ? (
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          p: 1.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 1,
+                          transition: (theme) => theme.transitions.create('background-color'),
+                          '&:hover': { bgcolor: 'action.hover' },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                          {getFileIconByType(submittedDocument.name, 36)}
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="body2" fontWeight={600} noWrap>
+                              {submittedDocument.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.disabled">
+                              Submitted file
+                              {submittedDocument.type
+                                ? ` - ${submittedDocument.type.toUpperCase()} Document`
+                                : ''}
+                            </Typography>
+                          </Box>
                         </Box>
+                        <Stack direction="row" spacing={1} flexShrink={0}>
+                          <Tooltip title="Preview">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDownload(submittedDocument)}
+                              sx={{
+                                color: 'text.secondary',
+                                '&:hover': {
+                                  color: 'primary.main',
+                                  bgcolor: (theme) =>
+                                    varAlpha(theme.palette.primary.mainChannel, 0.1),
+                                },
+                              }}
+                            >
+                              <Iconify icon={GlobalIcons.eye} width={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Download">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDownload(submittedDocument)}
+                              sx={{
+                                color: 'text.secondary',
+                                '&:hover': {
+                                  color: 'success.main',
+                                  bgcolor: (theme) =>
+                                    varAlpha(theme.palette.success.mainChannel, 0.1),
+                                },
+                              }}
+                            >
+                              <Iconify icon={GlobalIcons.download} width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </Card>
+                    ) : (
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: 1,
+                          border: (theme) => `1px dashed ${theme.palette.divider}`,
+                          color: 'text.secondary',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <Typography variant="body2">No file submitted yet.</Typography>
                       </Box>
-                      <Stack direction="row" spacing={1} flexShrink={0}>
-                        <Tooltip title="Preview">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDownload(document)}
-                            sx={{
-                              color: 'text.secondary',
-                              '&:hover': {
-                                color: 'primary.main',
-                                bgcolor: (theme) =>
-                                  varAlpha(theme.palette.primary.mainChannel, 0.1),
-                              },
-                            }}
-                          >
-                            <Iconify icon={GlobalIcons.eye} width={18} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Download">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDownload(document)}
-                            sx={{
-                              color: 'text.secondary',
-                              '&:hover': {
-                                color: 'success.main',
-                                bgcolor: (theme) =>
-                                  varAlpha(theme.palette.success.mainChannel, 0.1),
-                              },
-                            }}
-                          >
-                            <Iconify icon={GlobalIcons.download} width={18} />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    </Card>
+                    )}
                   </Box>
                 </Card>
               </Grid>
