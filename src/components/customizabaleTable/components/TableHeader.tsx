@@ -132,11 +132,12 @@ export const TableHeader = React.memo(
                   >
                     <Box
                       // fontSize="14px"
+                      className="customizable-table-header-content"
                       display="block"
                       textAlign={column.align}
                       gap={1}
                       minWidth={0}
-                      overflow="hidden"
+                      overflow={column.renderColumn ? 'visible' : 'hidden'}
                       textOverflow="ellipsis"
                       width={!column?.renderColumn ? 'auto' : 'inherit'}
                       component="span"

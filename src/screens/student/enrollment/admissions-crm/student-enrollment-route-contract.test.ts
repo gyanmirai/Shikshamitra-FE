@@ -250,6 +250,10 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(sources.join('\n')).toContain('enrollmentActionsColumn');
     expect(sources[0]).toContain("stickyPosition: 'left'");
     expect(sources[0]).toContain('actionLabels[item.recommendedAction]');
+    expect(sources[0]).toContain('<PriorityIndicator');
+    expect(sources[0]).toContain('variant="outlined"');
+    expect(sources[0]).toContain("color={isCompletionAction ? 'success' : 'primary'}");
+    expect(sources[0]).toContain('<TaskAltRounded aria-hidden="true" />');
     expect(
       fs.existsSync(
         path.join(
