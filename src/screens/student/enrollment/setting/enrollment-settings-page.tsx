@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { useTheme } from '@mui/material/styles';
 import { RouterLink } from 'src/routes/components';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { studentPaths } from 'src/constants/student-menu';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
 import { Box, Tab, Tabs, Step, Stack, Stepper, StepButton, Typography } from '@mui/material';
 
@@ -18,6 +20,7 @@ type SettingsPageProps = {
   title: string;
   description: string;
   children: ReactNode;
+  fillAvailableHeight?: boolean;
 };
 
 type SettingsPanelOption = {
@@ -32,16 +35,39 @@ type SettingsPanelTabsProps = {
   options: SettingsPanelOption[];
 };
 
-export function EnrollmentSettingsPage({ title, description, children }: SettingsPageProps) {
+export function EnrollmentSettingsPage({
+  title,
+  description,
+  children,
+  fillAvailableHeight = false,
+}: SettingsPageProps) {
+  const { state } = useEnrollmentWorkspace();
+  const cycleQuery = state.cycle ? `?cycle=${encodeURIComponent(state.cycle)}` : '';
+
   return (
-    <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+    <Stack
+      spacing={1.5}
+      sx={{
+        minWidth: 0,
+        minHeight: fillAvailableHeight ? 0 : undefined,
+        flex: fillAvailableHeight ? 1 : undefined,
+      }}
+    >
       <Box component="header">
-        <Typography component="h1" variant="h5" sx={{ textWrap: 'balance' }}>
-          {title}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, textWrap: 'pretty' }}>
-          {description}
-        </Typography>
+        <CustomBreadcrumbs
+          heading={title}
+          description={description}
+          links={[
+            { name: 'Student', href: studentPaths.dashboard },
+            {
+              name: 'Student Enrollment',
+              href: `${studentPaths.enrollment.overview}${cycleQuery}`,
+            },
+            { name: 'Settings', href: `${studentPaths.enrollment.settings}${cycleQuery}` },
+            { name: title },
+          ]}
+          sx={{ px: 0, minHeight: 48 }}
+        />
       </Box>
       {children}
     </Stack>

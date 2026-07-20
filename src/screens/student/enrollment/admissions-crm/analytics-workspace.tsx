@@ -106,7 +106,15 @@ export function AnalyticsWorkspace() {
   }, [from, state.from, state.to, to, updateState]);
 
   if (!academicYearId) {
-    return <Alert severity="info">Select an academic year to open Enrollment Analytics.</Alert>;
+    return (
+      <Stack spacing={1.5}>
+        <EnrollmentWorkspaceHeader
+          title="Enrollment Analytics"
+          description="Auditable demand, conversion, exam, registration, offer, and activation performance."
+        />
+        <Alert severity="info">Select an academic year to open Enrollment Analytics.</Alert>
+      </Stack>
+    );
   }
 
   const metrics = analytics

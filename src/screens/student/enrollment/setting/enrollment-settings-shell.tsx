@@ -89,6 +89,10 @@ export function EnrollmentSettingsShell({ children }: { children: ReactNode }) {
     <>
       <Box
         sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
           '& .MuiChip-colorPrimary': {
             bgcolor: 'transparent',
             color: 'text.primary',

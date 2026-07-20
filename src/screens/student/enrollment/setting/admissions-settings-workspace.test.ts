@@ -129,6 +129,47 @@ describe('Enrollment settings route contracts', () => {
     expect(settingsPage).toContain('href={getPanelHref(option.value)}');
   });
 
+  it('uses the project breadcrumb header and lets the exam setup table fill the workspace', () => {
+    const settingsPage = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-settings-page.tsx'
+    );
+    const settingsShell = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-settings-shell.tsx'
+    );
+    const examRoute = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'exam-settings-route.tsx'
+    );
+    const playbooks = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-playbook-configuration.tsx'
+    );
+
+    expect(settingsPage).toContain('<CustomBreadcrumbs');
+    expect(settingsPage).toContain("{ name: 'Settings', href:");
+    expect(settingsShell).toContain("flexDirection: 'column'");
+    expect(examRoute).toContain('fillAvailableHeight');
+    expect(playbooks).toContain('wrapperProps={{ sx: { minHeight: 320 } }}');
+  });
+
   it('keeps skipped settings queries referentially stable', () => {
     const configuration = read(
       'src',

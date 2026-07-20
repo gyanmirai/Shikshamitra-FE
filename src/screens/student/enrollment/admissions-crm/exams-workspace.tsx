@@ -415,7 +415,15 @@ export function ExamsWorkspace() {
   );
 
   if (!academicYearId) {
-    return <Alert severity="info">Select an academic year to open Entrance Exams.</Alert>;
+    return (
+      <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
+        <EnrollmentWorkspaceHeader
+          title="Entrance Exams"
+          description="Process attendance, results, merit, and eligibility decisions from one queue."
+        />
+        <Alert severity="info">Select an academic year to open Entrance Exams.</Alert>
+      </Stack>
+    );
   }
 
   return (

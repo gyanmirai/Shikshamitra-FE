@@ -804,10 +804,25 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/entrance-exams/?\\?cycle=${academicYearId}`)
     );
+    const examSettingsHeader = page.locator('header').filter({ hasText: 'Exam & Eligibility' });
+    await expect(
+      examSettingsHeader.getByRole('heading', { name: 'Exam & Eligibility' })
+    ).toBeVisible();
+    await expect(examSettingsHeader.getByRole('link', { name: 'Settings' })).toHaveAttribute(
+      'href',
+      new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
+    );
     await expect(page.getByRole('table', { name: 'customizable table' })).toBeVisible();
     await expect(page.getByPlaceholder('Search...')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Columns' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Export' })).toBeVisible();
+
+    const admissionSetupsTable = page.getByTestId('student-enrollment-admissions-playbooks');
+    const tableBox = await admissionSetupsTable.boundingBox();
+    const viewport = page.viewportSize();
+    expect(tableBox).not.toBeNull();
+    expect(viewport).not.toBeNull();
+    expect(viewport!.height - (tableBox!.y + tableBox!.height)).toBeLessThanOrEqual(32);
 
     await page.getByRole('button', { name: 'Quick setup' }).click();
     const quickSetupDialog = page.getByRole('dialog', { name: 'Quick admission setup' });

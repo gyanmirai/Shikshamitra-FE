@@ -591,8 +591,8 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
   );
 
   return (
-    <Box>
-      <Stack spacing={1.25}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <Stack spacing={1.25} sx={{ flex: 1, minHeight: 0 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
           <Box>
             <Typography variant="subtitle1">Admission setups</Typography>
@@ -636,7 +636,8 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
           isLoading={isFetching}
           defaultRowsPerPage={10}
           noDataText="No admission setup yet. Use Quick setup for the common school workflow."
-          tableContainerProps={{ sx: { minHeight: 320 } }}
+          wrapperProps={{ sx: { minHeight: 320 } }}
+          tableContainerProps={{ sx: { minHeight: 0 } }}
         />
       </Stack>
 
