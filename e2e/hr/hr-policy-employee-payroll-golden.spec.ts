@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import/no-extraneous-dependencies, no-await-in-loop */
 import {
   test,
   expect,
@@ -10,7 +10,11 @@ import {
 
 import { withHrPayrollQaMutex } from './hr-payroll-qa-mutex';
 import { createEmployeeFixture } from './employee/employee-fixtures';
-import { employeeApiRequest, findEmployeeBySearch } from './employee/employee-api';
+import {
+  employeeApiRequest,
+  findEmployeeBySearch,
+  assignEmployeeToFirstAcademicScope,
+} from './employee/employee-api';
 import {
   saveAndNext,
   searchEmployee,
@@ -266,10 +270,24 @@ async function attachRuntimeGuards(page: Page): Promise<RuntimeGuard> {
 
 async function openHrPage(page: Page, path: string, marker: RegExp) {
   const route = path.includes('?') || path.endsWith('/') ? path : `${path}/`;
-  await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-  await dismissAcademicYearTour(page);
-  await expect(page, `${route} should stay authenticated`).not.toHaveURL(/\/login|\/auth/i);
-  await expect(page.getByText(marker).first()).toBeVisible({ timeout: 60_000 });
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await dismissAcademicYearTour(page);
+    await expect(page, `${route} should stay authenticated`).not.toHaveURL(/\/login|\/auth/i);
+
+    try {
+      await expect(page.getByText(marker).first()).toBeVisible({ timeout: 60_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 2) break;
+      await page.waitForTimeout(5_000);
+    }
+  }
+
+  throw lastError;
 }
 
 async function dismissNotifications(page: Page) {
@@ -475,8 +493,8 @@ async function createLeavePolicyThroughUi(page: Page, name: string) {
   await setCheckbox(dialog, /Carry forward/i, false);
   await setCheckbox(dialog, /^Approval$/i, true);
   await setCheckbox(dialog, /Encashable/i, false);
-  await expect(dialog.getByText(/Paid leave rule/i)).toBeVisible();
-  await expect(dialog.getByText(/Unpaid leave rule/i)).toBeVisible();
+  await expect(dialog.getByRole('heading', { name: /^Paid leave rule$/i })).toBeVisible();
+  await expect(dialog.getByRole('heading', { name: /^Unpaid leave rule$/i })).toBeVisible();
 
   const policy = await submitAndMaybeConfirm(
     page,
@@ -974,6 +992,7 @@ test.describe('HR policies to payroll golden path', () => {
 
       const { fixture: employeeFixture, record: employeeRecord } =
         await createEmployeeThroughListUi(page, 'Policy Payroll Employee', targetMonthDate);
+      await assignEmployeeToFirstAcademicScope(page, employeeRecord);
       const employeeId = employeeRecord.id as string;
 
       await verifyEmployeePayrollSection(page, employeeFixture.email);

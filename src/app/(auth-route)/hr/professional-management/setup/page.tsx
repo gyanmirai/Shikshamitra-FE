@@ -1,16 +1,7 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
 const ProfessionalManagementSetupPage = () => {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace('/hr/professional-management/settings/setup');
-  }, [router]);
-
-  return null;
+  redirect('/hr/professional-management/settings/setup');
 };
 
 export default ProfessionalManagementSetupPage;

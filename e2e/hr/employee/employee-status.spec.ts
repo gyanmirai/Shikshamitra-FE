@@ -8,6 +8,7 @@ import {
   updateEmployeeStatus,
   assignReportingManager,
   createEmployeeFromExistingDefaults,
+  assignEmployeeToFirstAcademicScope,
 } from './employee-api';
 
 test.describe('HR Employee status', () => {
@@ -21,16 +22,17 @@ test.describe('HR Employee status', () => {
   test('changes status through UI and validates required remarks', async ({ page }) => {
     await gotoEmployeeList(page);
     const employee = await createEmployeeFromExistingDefaults(page, createEmployeeFixture());
+    await assignEmployeeToFirstAcademicScope(page, employee);
     await searchEmployee(page, employee.email);
     await openFirstRowAction(page, 'Change Status');
 
     await expect(page.getByTestId(testIds.statusDialog)).toBeVisible();
     await openStatusDropdown(page);
     await page.getByRole('option', { name: /Left/i }).click();
-    await page.getByTestId(testIds.statusUpdateButton).click();
-    await expect(page.getByText(/remarks|required/i)).toBeVisible();
+    await expect(page.getByTestId(testIds.statusUpdateButton)).toBeDisabled();
 
     await page.getByLabel(/Remarks/i).fill(`E2E status update ${Date.now()}`);
+    await expect(page.getByTestId(testIds.statusUpdateButton)).toBeEnabled();
     await page.getByTestId(testIds.statusUpdateButton).click();
     await expect(page.getByTestId(testIds.statusDialog)).toBeHidden({ timeout: 20_000 });
   });
@@ -40,6 +42,7 @@ test.describe('HR Employee status', () => {
   }) => {
     await gotoEmployeeList(page);
     const employee = await createEmployeeFromExistingDefaults(page, createEmployeeFixture());
+    await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id;
     expect(employeeId).toBeTruthy();
 
@@ -49,10 +52,10 @@ test.describe('HR Employee status', () => {
       2,
       `E2E left transition ${Date.now()}`
     );
-    expect(leftResponse.ok()).toBeTruthy();
+    expect(leftResponse.ok(), await leftResponse.text()).toBeTruthy();
 
     const sameStatusResponse = await updateEmployeeStatus(page, employeeId!, 2, 'Idempotent check');
-    expect(sameStatusResponse.ok()).toBeTruthy();
+    expect(sameStatusResponse.ok(), await sameStatusResponse.text()).toBeTruthy();
 
     const activeResponse = await updateEmployeeStatus(page, employeeId!, 0);
     expect(activeResponse.status()).toBe(400);
@@ -78,9 +81,12 @@ test.describe('HR Employee status', () => {
     expect(manager.id).toBeTruthy();
     expect(reportee.id).toBeTruthy();
     expect(newManager.id).toBeTruthy();
+    await assignEmployeeToFirstAcademicScope(page, manager);
+    await assignEmployeeToFirstAcademicScope(page, reportee);
+    await assignEmployeeToFirstAcademicScope(page, newManager);
 
     const assignResponse = await assignReportingManager(page, reportee.id!, manager.id!);
-    expect(assignResponse.ok()).toBeTruthy();
+    expect(assignResponse.ok(), await assignResponse.text()).toBeTruthy();
 
     let statusUpdateRequests = 0;
     page.on('request', (request) => {
@@ -121,7 +127,7 @@ test.describe('HR Employee status', () => {
     await expect(page.getByTestId(testIds.statusDialog)).toBeHidden();
 
     const reassignResponse = await assignReportingManager(page, reportee.id!, newManager.id!);
-    expect(reassignResponse.ok()).toBeTruthy();
+    expect(reassignResponse.ok(), await reassignResponse.text()).toBeTruthy();
 
     await openFirstRowAction(page, 'Change Status');
     await expect(page.getByTestId(testIds.statusDialog)).toBeVisible();
@@ -142,6 +148,7 @@ test.describe('HR Employee status', () => {
       createEmployeeFixture('Status Check Failure')
     );
     expect(employee.id).toBeTruthy();
+    await assignEmployeeToFirstAcademicScope(page, employee);
 
     let statusUpdateRequests = 0;
     page.on('request', (request) => {

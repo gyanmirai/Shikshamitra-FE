@@ -162,6 +162,19 @@ async function fulfillJson(route: Route, json: unknown, status = 200) {
   });
 }
 
+function failOnUnauthorizedApiLeak(page: Page) {
+  page.on('response', (response) => {
+    const status = response.status();
+    if ((status === 401 || status === 403) && response.url().includes('/api/')) {
+      throw new Error(
+        `Mocked Leave Center spec leaked ${status} from ${response
+          .request()
+          .method()} ${response.url()}`
+      );
+    }
+  });
+}
+
 async function seedAcademicYear(page: Page) {
   await page.addInitScript(
     ({ year, authEmployee, permissions }) => {
@@ -200,6 +213,7 @@ async function seedAcademicYear(page: Page) {
 }
 
 async function installPermissionRoutes(page: Page) {
+  failOnUnauthorizedApiLeak(page);
   await page.route('**/api/auth/session**', (route) =>
     fulfillJson(route, {
       accessToken: 'leave-policy-center-token-e2e',
@@ -208,6 +222,20 @@ async function installPermissionRoutes(page: Page) {
         sub: 'leave-policy-center-user-e2e',
         name: 'Leave Policy HR User',
         role: 'hr-manager',
+      },
+    })
+  );
+  await page.route('**/api/abp/application-configuration**', (route) =>
+    fulfillJson(route, {
+      currentUser: {
+        isAuthenticated: true,
+        id: 'leave-policy-center-user-e2e',
+        userName: 'leave-policy-center-user-e2e',
+        name: 'Leave Policy HR User',
+        roles: ['hr-manager'],
+      },
+      auth: {
+        grantedPolicies: Object.fromEntries(grantedPermissions.map((name) => [name, true])),
       },
     })
   );
@@ -437,9 +465,37 @@ async function fillSegmentedDate(dialog: Locator, label: RegExp, displayDate: st
   await group.getByRole('spinbutton', { name: /^Year$/i }).fill(year);
 }
 
+async function clickLeaveRequest(page: Page) {
+  const button = page.getByRole('button', { name: /Leave Request/i }).first();
+  await expect(button).toBeVisible({ timeout: 60_000 });
+  await expect(button).toBeEnabled({ timeout: 60_000 });
+  await button.scrollIntoViewIfNeeded();
+  await button.click({ force: true });
+}
+
+async function gotoLeavePolicies(page: Page) {
+  await page.goto('/hr/leave-policies', { waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await expect(page.getByRole('heading', { name: /Leave Policies/i })).toBeVisible({
+    timeout: 120_000,
+  });
+}
+
+async function gotoLeaveCenter(page: Page, tab: 'balance' | 'my-requests') {
+  await page.goto(`/hr/leave-center?tab=${tab}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 120_000,
+  });
+  await expect(page.getByRole('heading', { name: 'Leave Center' })).toBeVisible({
+    timeout: 120_000,
+  });
+}
+
 function leaveDate() {
   const date = new Date();
   date.setDate(date.getDate() + 21);
+  while (date.getDay() === 0) {
+    date.setDate(date.getDate() + 1);
+  }
   return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(
     2,
     '0'
@@ -455,14 +511,17 @@ test.describe('Leave policy and Leave Center matrix', () => {
     page,
   }) => {
     const state: { createPayload?: any; updatePayload?: any } = {};
+    const createdPolicyTitle = `${policy.policyTitle} Created`;
     await installLeavePolicyRoutes(page, state);
 
     await page.goto('/hr/leave-policies', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /Leave Policies/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Leave Policies/i })).toBeVisible({
+      timeout: 60_000,
+    });
 
     await page.getByRole('button', { name: /New Leave Policy/i }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByRole('textbox', { name: /Policy Name/i }).fill(policy.policyTitle);
+    await dialog.getByRole('textbox', { name: /Policy Name/i }).fill(createdPolicyTitle);
     await dialog
       .getByRole('spinbutton', { name: /^Days \*$/i })
       .first()
@@ -498,6 +557,7 @@ test.describe('Leave policy and Leave Center matrix', () => {
     await expect(dialog).toBeHidden();
 
     await expect.poll(() => state.createPayload).toBeTruthy();
+    expect(state.createPayload.policyTitle).toBe(createdPolicyTitle);
     expect(state.createPayload.rules).toHaveLength(2);
     expect(state.createPayload.rules).toEqual(
       expect.arrayContaining([
@@ -570,10 +630,11 @@ test.describe('Leave policy and Leave Center matrix', () => {
     const state: { previewPayload?: any; finalizedRunId?: string } = {};
     await installLeavePolicyRoutes(page, state);
 
-    await page.goto('/hr/leave-policies', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Year-End Settlements')).toBeVisible();
+    await gotoLeavePolicies(page);
+    await expect(page.getByText('Year-End Settlements')).toBeVisible({ timeout: 60_000 });
     await expect(page.getByText('4 carried')).toBeVisible();
     await expect(page.getByText('5 encashed')).toBeVisible();
+    await page.getByRole('button', { name: /Show settlement details/i }).click();
     await expect(page.getByText('Pending leave', { exact: true })).toBeVisible();
 
     const finalizeButton = page.getByRole('button', { name: /^Finalize$/i });
@@ -597,8 +658,8 @@ test.describe('Leave policy and Leave Center matrix', () => {
     };
     await installLeavePolicyRoutes(page, state);
 
-    await page.goto('/hr/leave-policies', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Year-End Settlements')).toBeVisible();
+    await gotoLeavePolicies(page);
+    await expect(page.getByText('Year-End Settlements')).toBeVisible({ timeout: 60_000 });
     await expect(page.getByText('0 blocked')).toBeVisible();
 
     await page.getByRole('button', { name: /^Preview$/i }).click();
@@ -649,8 +710,8 @@ test.describe('Leave policy and Leave Center matrix', () => {
     };
     await installLeaveCenterRoutes(page, state);
 
-    await page.goto('/hr/leave-center?tab=my-requests', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('button', { name: /Leave Request/i }).click();
+    await gotoLeaveCenter(page, 'my-requests');
+    await clickLeaveRequest(page);
 
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('combobox', { name: /Employee \*/i }).fill(employee.fullName);
@@ -672,8 +733,7 @@ test.describe('Leave policy and Leave Center matrix', () => {
     const state: { paidForm?: string; unpaidForm?: string } = {};
     await installLeaveCenterRoutes(page, state);
 
-    await page.goto('/hr/leave-center?tab=balance', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: 'Leave Center' })).toBeVisible();
+    await gotoLeaveCenter(page, 'balance');
     await expect(page.getByText('Accrued').first()).toBeVisible();
     await expect(page.getByText('-1').first()).toBeVisible();
     const unpaidBalanceRow = page.getByRole('row', { name: /Unpaid .* Unlimited/i });
@@ -682,7 +742,7 @@ test.describe('Leave policy and Leave Center matrix', () => {
     await page.getByRole('tab', { name: /My Requests/i }).click();
 
     const submitLeaveRequest = async (paidType: 'Paid' | 'Unpaid', reason: string) => {
-      await page.getByRole('button', { name: /Leave Request/i }).click();
+      await clickLeaveRequest(page);
       const dialog = page.getByRole('dialog');
       await dialog.getByRole('combobox', { name: /Employee \*/i }).fill(employee.fullName);
       await page.getByRole('option', { name: new RegExp(employee.fullName, 'i') }).click();

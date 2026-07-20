@@ -12,6 +12,12 @@ import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
+  useGetLeaveYearEndSettlementsQuery,
+  useGetLeaveYearEndSettlementByIdQuery,
+  usePreviewLeaveYearEndSettlementMutation,
+  useFinalizeLeaveYearEndSettlementMutation,
+} from 'src/redux/hr/leaveApi';
+import {
   Box,
   Card,
   Chip,
@@ -20,21 +26,15 @@ import {
   Table,
   Divider,
   TableRow,
+  Collapse,
   TableBody,
   TableCell,
   TableHead,
   Typography,
+  IconButton,
   TableContainer,
   CircularProgress,
-  Collapse,
-  IconButton,
 } from '@mui/material';
-import {
-  useGetLeaveYearEndSettlementsQuery,
-  useGetLeaveYearEndSettlementByIdQuery,
-  usePreviewLeaveYearEndSettlementMutation,
-  useFinalizeLeaveYearEndSettlementMutation,
-} from 'src/redux/hr/leaveApi';
 
 const ISSUE_LABELS: Record<string, string> = {
   pending_leave: 'Pending leave',
@@ -207,12 +207,14 @@ export function LeaveYearEndSettlementsPanel() {
             >
               Finalize
             </LoadingButton>
-            <IconButton size="small" onClick={() => setExpanded(!expanded)}>
+            <IconButton
+              size="small"
+              aria-label={expanded ? 'Hide settlement details' : 'Show settlement details'}
+              onClick={() => setExpanded(!expanded)}
+            >
               <Iconify
                 icon={
-                  expanded
-                    ? 'solar:alt-arrow-up-bold-duotone'
-                    : 'solar:alt-arrow-down-bold-duotone'
+                  expanded ? 'solar:alt-arrow-up-bold-duotone' : 'solar:alt-arrow-down-bold-duotone'
                 }
               />
             </IconButton>
@@ -232,7 +234,13 @@ export function LeaveYearEndSettlementsPanel() {
             ) : (
               <>
                 {runs.length > 1 ? (
-                  <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: 1.25 }}>
+                  <Stack
+                    direction="row"
+                    spacing={0.75}
+                    flexWrap="wrap"
+                    useFlexGap
+                    sx={{ mb: 1.25 }}
+                  >
                     {runs.map((run) => (
                       <Chip
                         key={run.id}
@@ -287,21 +295,35 @@ export function LeaveYearEndSettlementsPanel() {
                               </TableCell>
                               <TableCell align="right">{formatDays(item.accruedDays)}</TableCell>
                               <TableCell align="right">{formatDays(item.carryInDays)}</TableCell>
-                              <TableCell align="right">{formatDays(item.approvedUsedDays)}</TableCell>
+                              <TableCell align="right">
+                                {formatDays(item.approvedUsedDays)}
+                              </TableCell>
                               <TableCell align="right">{formatDays(item.pendingDays)}</TableCell>
                               <TableCell align="right">{formatDays(item.unusedDays)}</TableCell>
                               <TableCell align="right">{formatDays(item.carriedDays)}</TableCell>
                               <TableCell align="right">{formatDays(item.encashedDays)}</TableCell>
-                              <TableCell align="right">{formatCurrency(item.amount || 0)}</TableCell>
+                              <TableCell align="right">
+                                {formatCurrency(item.amount || 0)}
+                              </TableCell>
                               <TableCell sx={{ minWidth: 170 }}>
                                 {issueLabels.length ? (
                                   <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
                                     {issueLabels.map((label) => (
-                                      <Chip key={label} size="small" label={label} color="warning" />
+                                      <Chip
+                                        key={label}
+                                        size="small"
+                                        label={label}
+                                        color="warning"
+                                      />
                                     ))}
                                   </Stack>
                                 ) : (
-                                  <Chip size="small" label="Clear" color="success" variant="outlined" />
+                                  <Chip
+                                    size="small"
+                                    label="Clear"
+                                    color="success"
+                                    variant="outlined"
+                                  />
                                 )}
                               </TableCell>
                             </TableRow>

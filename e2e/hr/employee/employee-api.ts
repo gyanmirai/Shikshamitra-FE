@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop, no-restricted-syntax */
 import type { Page, APIResponse } from '@playwright/test';
 
 import type { EmployeeFixture } from './employee-fixtures';
@@ -70,6 +71,7 @@ export async function employeeApiRequest(
 ): Promise<APIResponse> {
   const token = await getAccessToken(page);
   const { body, ...requestInit } = init;
+  const isMultipartBody = body instanceof FormData;
   const requestHeaders =
     init.headers instanceof Headers
       ? Object.fromEntries(init.headers.entries())
@@ -79,12 +81,12 @@ export async function employeeApiRequest(
 
   return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
     ...requestInit,
-    ...(body ? { data: body } : {}),
+    ...(body !== undefined ? (isMultipartBody ? { multipart: body } : { data: body }) : {}),
     headers: {
       accept: 'application/json',
       __tenant: process.env.E2E_TENANT || 'DDVS',
       Authorization: `Bearer ${token}`,
-      ...(init.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(isMultipartBody ? {} : { 'Content-Type': 'application/json' }),
       ...requestHeaders,
     },
   });
@@ -104,7 +106,214 @@ export async function findEmployeeBySearch(page: Page, search: string) {
   return body?.items?.[0] ?? null;
 }
 
+function asItems<T = Record<string, any>>(body: any): T[] {
+  const payload = body && Object.prototype.hasOwnProperty.call(body, 'data') ? body.data : body;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.Items)) return payload.Items;
+  return [];
+}
+
+async function getJson<T = any>(page: Page, path: string): Promise<T> {
+  const response = await employeeApiRequest(page, path);
+  if (!response.ok()) {
+    throw new Error(`GET ${path} failed: ${response.status()} ${await response.text()}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+function toAcademicYear(item: any) {
+  return item?.academicYear || item?.AcademicYear || item;
+}
+
+async function academicYears(page: Page) {
+  const body = await getJson<any>(page, '/app/academic-year?Sorting=name');
+  const years = asItems<any>(body)
+    .map(toAcademicYear)
+    .filter((year) => year?.id);
+
+  if (!years.length) {
+    throw new Error('Unable to resolve academic years for employee scope setup.');
+  }
+
+  return years;
+}
+
+function pickCurrentAcademicYear(years: any[]) {
+  const today = new Date();
+  const current =
+    years.find((year) => {
+      const start = year.startDate ? new Date(year.startDate) : null;
+      const end = year.endDate ? new Date(year.endDate) : null;
+      return start && end && start <= today && today <= end;
+    }) || years[0];
+
+  if (!current?.id) {
+    throw new Error('Unable to resolve current academic year for employee scope setup.');
+  }
+
+  return current;
+}
+
+function boardMatchesAcademicYear(board: any, academicYearId: string) {
+  const boardAcademicYearId =
+    board?.academicYearId ||
+    board?.academicYear?.id ||
+    board?.AcademicYearId ||
+    board?.AcademicYear?.Id;
+  return (
+    !boardAcademicYearId ||
+    String(boardAcademicYearId).toLowerCase() === academicYearId.toLowerCase()
+  );
+}
+
+function uniqueById(items: any[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const id = String(item?.id || '').toLowerCase();
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
+function optionValue(item: any, ...keys: string[]) {
+  const matchedValue = keys
+    .map((key) => key.split('.').reduce((current, part) => current?.[part], item))
+    .find(Boolean);
+  return matchedValue ? String(matchedValue) : undefined;
+}
+
+async function firstMediumScopeFromOrganizationOptions(page: Page, academicYearId: string) {
+  const body = await getJson<any>(
+    page,
+    `/app/academic-organization-options?academicYearId=${academicYearId}`
+  );
+  const items = asItems<any>(body);
+  const option = items.find(
+    (item) =>
+      optionValue(item, 'mediumId', 'academicMediumId', 'educationMediumId', 'medium.id') &&
+      optionValue(item, 'boardId', 'academicBoardId', 'educationBoardId', 'board.id')
+  );
+  const boardId = optionValue(option, 'boardId', 'academicBoardId', 'educationBoardId', 'board.id');
+  const mediumId = optionValue(
+    option,
+    'mediumId',
+    'academicMediumId',
+    'educationMediumId',
+    'medium.id'
+  );
+
+  return boardId && mediumId ? { boardId, mediumId } : null;
+}
+
+async function firstMediumScope(page: Page, academicYearId: string) {
+  const optionsScope = await firstMediumScopeFromOrganizationOptions(page, academicYearId);
+  if (optionsScope) {
+    return optionsScope;
+  }
+
+  const [boardsBody, mediumsBody] = await Promise.all([
+    getJson<any>(page, '/app/education-board'),
+    getJson<any>(page, '/app/education-medium'),
+  ]);
+  const boards = asItems<any>(boardsBody);
+  const nestedMediums = boards.flatMap((board) =>
+    asItems<any>(board.educationMediums || board.EducationMediums || []).map((medium) => ({
+      ...medium,
+      educationBoardId: medium.educationBoardId || medium.EducationBoardId || board.id,
+    }))
+  );
+  const mediums = uniqueById([...asItems<any>(mediumsBody), ...nestedMediums]);
+  const boardsById = new Map(boards.map((board) => [String(board.id).toLowerCase(), board]));
+  const medium = mediums.find((candidate) => {
+    const board = boardsById.get(
+      String(candidate.educationBoardId || candidate.EducationBoardId || '').toLowerCase()
+    );
+    return candidate.id && boardMatchesAcademicYear(board, academicYearId);
+  });
+
+  if (!medium?.id) {
+    throw new Error('Unable to resolve an academic medium for employee scope setup.');
+  }
+
+  const board = boardsById.get(
+    String(medium.educationBoardId || medium.EducationBoardId || '').toLowerCase()
+  );
+  const boardId = board?.id || medium.educationBoardId || medium.EducationBoardId;
+  if (!boardId) {
+    throw new Error('Unable to resolve an academic board for employee scope setup.');
+  }
+
+  return {
+    boardId,
+    mediumId: medium.id,
+  };
+}
+
+export async function assignEmployeeToFirstAcademicScope(page: Page, employee: any) {
+  const userId = employee?.userId || employee?.UserId || employee?.identityUserId || employee?.id;
+  if (!userId) {
+    throw new Error('Created employee did not expose a userId for employee scope setup.');
+  }
+
+  const years = await academicYears(page);
+  const currentYear = pickCurrentAcademicYear(years);
+  const yearsToProbe = [
+    currentYear,
+    ...years.filter(
+      (year) => String(year.id).toLowerCase() !== String(currentYear.id).toLowerCase()
+    ),
+  ];
+  let academicYear = currentYear;
+  let scope: { boardId: string; mediumId: string } | null = null;
+  let lastScopeError: unknown;
+
+  for (const candidateYear of yearsToProbe) {
+    try {
+      scope = await firstMediumScope(page, candidateYear.id);
+      academicYear = candidateYear;
+      break;
+    } catch (error) {
+      lastScopeError = error;
+    }
+  }
+
+  if (!scope) {
+    throw lastScopeError instanceof Error
+      ? lastScopeError
+      : new Error('Unable to resolve an academic medium for employee scope setup.');
+  }
+  const response = await employeeApiRequest(page, '/app/user-scope/bulk-assign', {
+    method: 'POST',
+    body: JSON.stringify({
+      academicYearId: academicYear.id,
+      userIds: [userId],
+      scopes: [
+        {
+          educationBoardId: scope.boardId,
+          educationMediumId: scope.mediumId,
+        },
+      ],
+      clearExisting: false,
+      description: `E2E employee scope setup ${Date.now()}`,
+    }),
+  });
+
+  if (!response.ok()) {
+    throw new Error(`Employee scope setup failed: ${response.status()} ${await response.text()}`);
+  }
+
+  return {
+    userId,
+    academicYearId: academicYear.id,
+    ...scope,
+  };
+}
+
 type EmployeeDefaultOverrides = {
+  dateOfBirth?: string;
   dateOfJoining?: string;
   roleId?: string;
   shiftId?: string;
@@ -185,7 +394,7 @@ export async function createEmployeeFromExistingDefaults(
         middleName: evaluatedFixture.middleName,
         lastName: evaluatedFixture.lastName,
         shortName: evaluatedFixture.firstName.slice(0, 20),
-        dob: '1990-01-01',
+        dob: evaluatedOverrides.dateOfBirth ?? '1990-01-01',
         familyCaste: evaluatedFixture.familyCaste,
         casteType: defaults.casteType ?? 0,
         gender: defaults.gender ?? 1,

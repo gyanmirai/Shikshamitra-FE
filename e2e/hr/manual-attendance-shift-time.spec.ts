@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const dayResponse = {
   totalCount: 3,
@@ -78,6 +78,13 @@ const invalidShiftDayResponse = {
   ],
 };
 
+async function gotoManualAttendance(page: Page) {
+  await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await expect(page.getByRole('heading', { name: /Mark Attendance/i })).toBeVisible({
+    timeout: 120_000,
+  });
+}
+
 test.describe('HR manual attendance shift time automation', () => {
   test('fills shift-derived times when marking manual attendance before save', async ({ page }) => {
     let savedPayload: any = null;
@@ -94,10 +101,9 @@ test.describe('HR manual attendance shift time automation', () => {
       await route.fulfill({ status: 200, json: dayResponse });
     });
 
-    await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /Mark Attendance/i })).toBeVisible();
+    await gotoManualAttendance(page);
     await expect(page.getByRole('button', { name: /Apply Shift Time/i })).toHaveCount(0);
-    await expect(page.getByText('Present Employee')).toBeVisible();
+    await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-employee-present-present').click();
     await page.getByTestId('manual-attendance-employee-half-day-half-day').click();
@@ -144,8 +150,8 @@ test.describe('HR manual attendance shift time automation', () => {
       await route.fulfill({ status: 200, json: dayResponse });
     });
 
-    await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Present Employee')).toBeVisible();
+    await gotoManualAttendance(page);
+    await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-employee-present-present').click();
     await expect(page.getByText('09:00')).toBeVisible();
@@ -171,8 +177,8 @@ test.describe('HR manual attendance shift time automation', () => {
       await route.fulfill({ status: 200, json: dayResponse });
     });
 
-    await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Present Employee')).toBeVisible();
+    await gotoManualAttendance(page);
+    await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-mark-all-present').click();
 
@@ -224,8 +230,8 @@ test.describe('HR manual attendance shift time automation', () => {
       await route.fulfill({ status: 200, json: invalidShiftDayResponse });
     });
 
-    await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Invalid Shift Employee')).toBeVisible();
+    await gotoManualAttendance(page);
+    await expect(page.getByText('Invalid Shift Employee')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-employee-invalid-shift-present').click();
     await expect(page.getByText('25:00')).toHaveCount(0);

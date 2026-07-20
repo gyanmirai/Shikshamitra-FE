@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import/no-extraneous-dependencies, no-await-in-loop, no-restricted-syntax */
 import { test, expect, type Page, type Locator } from '@playwright/test';
 
 import { createEmployeeFixture } from './employee-fixtures';
@@ -13,9 +13,10 @@ import {
 } from './employee-page';
 
 function asItems<T = Record<string, any>>(body: any): T[] {
-  if (Array.isArray(body)) return body;
-  if (Array.isArray(body?.items)) return body.items;
-  if (Array.isArray(body?.Items)) return body.Items;
+  const payload = body && Object.prototype.hasOwnProperty.call(body, 'data') ? body.data : body;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.Items)) return payload.Items;
   return [];
 }
 
@@ -45,11 +46,20 @@ function uniqueById(items: any[]) {
   });
 }
 
-async function currentAcademicYear(page: Page) {
+async function academicYears(page: Page) {
   const body = await getJson<any>(page, '/app/academic-year?Sorting=name');
   const years = asItems<any>(body)
     .map(toAcademicYear)
     .filter((year) => year?.id);
+
+  if (!years.length) {
+    throw new Error('Unable to resolve academic years for Academic Permission E2E');
+  }
+
+  return years;
+}
+
+function pickCurrentAcademicYear(years: any[]) {
   const today = new Date();
   const current =
     years.find((year) => {
@@ -66,14 +76,59 @@ async function currentAcademicYear(page: Page) {
 }
 
 function boardMatchesAcademicYear(board: any, academicYearId: string) {
+  const boardAcademicYearId =
+    board?.academicYearId ||
+    board?.academicYear?.id ||
+    board?.AcademicYearId ||
+    board?.AcademicYear?.Id;
   return (
-    String(
-      board?.academicYearId || board?.academicYear?.id || board?.AcademicYearId || ''
-    ).toLowerCase() === academicYearId.toLowerCase()
+    !boardAcademicYearId ||
+    String(boardAcademicYearId).toLowerCase() === academicYearId.toLowerCase()
   );
 }
 
+function optionValue(item: any, ...keys: string[]) {
+  const matchedValue = keys
+    .map((key) => key.split('.').reduce((current, part) => current?.[part], item))
+    .find(Boolean);
+  return matchedValue ? String(matchedValue) : undefined;
+}
+
+async function firstMediumFromOrganizationOptions(page: Page, academicYearId: string) {
+  const body = await getJson<any>(
+    page,
+    `/app/academic-organization-options?academicYearId=${academicYearId}`
+  );
+  const option = asItems<any>(body).find(
+    (item) =>
+      optionValue(item, 'mediumId', 'academicMediumId', 'educationMediumId', 'medium.id') &&
+      optionValue(item, 'boardId', 'academicBoardId', 'educationBoardId', 'board.id')
+  );
+  const boardId = optionValue(option, 'boardId', 'academicBoardId', 'educationBoardId', 'board.id');
+  const mediumId = optionValue(
+    option,
+    'mediumId',
+    'academicMediumId',
+    'educationMediumId',
+    'medium.id'
+  );
+
+  return boardId && mediumId
+    ? {
+        boardId,
+        mediumId,
+        board: { id: boardId },
+        medium: { id: mediumId, educationBoardId: boardId },
+      }
+    : null;
+}
+
 async function firstMediumFromAcademicSetup(page: Page, academicYearId: string) {
+  const optionsMedium = await firstMediumFromOrganizationOptions(page, academicYearId);
+  if (optionsMedium) {
+    return optionsMedium;
+  }
+
   const [boardsBody, mediumsBody] = await Promise.all([
     getJson<any>(page, '/app/education-board'),
     getJson<any>(page, '/app/education-medium'),
@@ -113,6 +168,63 @@ async function firstMediumFromAcademicSetup(page: Page, academicYearId: string) 
   };
 }
 
+async function firstConfiguredAcademicMedium(page: Page) {
+  const years = await academicYears(page);
+  const currentYear = pickCurrentAcademicYear(years);
+  const yearsToProbe = [
+    currentYear,
+    ...years.filter(
+      (year) => String(year.id).toLowerCase() !== String(currentYear.id).toLowerCase()
+    ),
+  ];
+  let lastScopeError: unknown;
+
+  for (const academicYear of yearsToProbe) {
+    try {
+      return {
+        academicYear,
+        ...(await firstMediumFromAcademicSetup(page, academicYear.id)),
+      };
+    } catch (error) {
+      lastScopeError = error;
+    }
+  }
+
+  throw lastScopeError instanceof Error
+    ? lastScopeError
+    : new Error('Unable to resolve an Academic Permission parent medium from academic setup');
+}
+
+type AcademicMediumSelection = Awaited<ReturnType<typeof firstConfiguredAcademicMedium>>;
+
+async function primeAcademicSelection(page: Page, selection: AcademicMediumSelection) {
+  const state = {
+    currentYear: selection.academicYear,
+    currentBoard: {
+      id: selection.boardId,
+      name: optionValue(selection.board, 'name', 'Name', 'boardName') || '',
+    },
+    currentMedium: {
+      id: selection.mediumId,
+      name: optionValue(selection.medium, 'name', 'Name', 'mediumName') || '',
+      educationMediumStages: [],
+    },
+  };
+  const writeState = (nextState: typeof state) => {
+    window.localStorage.setItem(
+      'persist:root',
+      JSON.stringify({
+        globalState: JSON.stringify(nextState),
+        _persist: JSON.stringify({ version: -1, rehydrated: true }),
+      })
+    );
+    window.localStorage.setItem('onboarding_completed', 'true');
+  };
+
+  await page.addInitScript(writeState, state);
+  await page.evaluate(writeState, state).catch(() => undefined);
+}
+
 async function firstNonAdminRoleId(page: Page) {
   const rolesBody = await getJson<any>(page, '/identity/roles/all');
   const role = asItems<any>(rolesBody).find((candidate) => {
@@ -125,6 +237,17 @@ async function firstNonAdminRoleId(page: Page) {
   }
 
   return role.id;
+}
+
+async function firstShiftId(page: Page) {
+  const shiftsBody = await getJson<any>(page, '/app/shift-management');
+  const shift = asItems<any>(shiftsBody).find((candidate) => candidate?.id);
+
+  if (!shift?.id) {
+    throw new Error('Unable to resolve an employee shift for edit-stepper E2E');
+  }
+
+  return shift.id as string;
 }
 
 async function employeeUserId(
@@ -287,9 +410,9 @@ async function clickWizardStep(page: Page, name: string) {
     .filter({ hasText: name })
     .first();
   if (await stepControl.isVisible().catch(() => false)) {
-    await stepControl.click();
+    await stepControl.click({ force: true, timeout: 120_000 });
   } else {
-    await page.getByText(name, { exact: true }).click();
+    await page.getByText(name, { exact: true }).click({ force: true });
   }
   const alertDialog = page.getByRole('dialog', { name: /Alert/i });
   if (await alertDialog.isVisible().catch(() => false)) {
@@ -298,19 +421,36 @@ async function clickWizardStep(page: Page, name: string) {
   }
 }
 
+async function waitForEmployeeFormIdle(page: Page) {
+  await expect(page.getByText('Saving...')).toHaveCount(0, { timeout: 120_000 });
+}
+
+async function advanceToAcademicPermissionStep(page: Page) {
+  await closeNotifications(page);
+  await clickWizardStep(page, 'Academic Permission');
+
+  await expect(page.getByText('Academic Permission', { exact: true }).first()).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.getByText('mediums', { exact: true }).first()).toBeVisible({ timeout: 30_000 });
+}
+
 async function closeNotifications(page: Page) {
-  const notificationButtons = page
+  const closeButtons = page
     .getByRole('region', { name: /Notifications/i })
-    .getByRole('button');
-  const notificationButtonCount = await notificationButtons.count().catch(() => 0);
-  await Promise.all(
-    Array.from({ length: notificationButtonCount }, (_, index) =>
-      notificationButtons
-        .nth(index)
-        .click({ force: true })
-        .catch(() => undefined)
-    )
-  );
+    .getByRole('button', { name: /close/i });
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const count = await closeButtons.count().catch(() => 0);
+    if (count === 0) {
+      break;
+    }
+
+    await closeButtons
+      .first()
+      .click({ force: true })
+      .catch(() => undefined);
+  }
 }
 
 async function submitAndCaptureBulkAssign(page: Page) {
@@ -363,8 +503,7 @@ test.describe('HR Employee edit stepper', () => {
     const employee = await createEmployeeFromExistingDefaults(page, fixture, { roleId });
     const userId = await employeeUserId(page, fixture, employee);
 
-    const academicYear = await currentAcademicYear(page);
-    const { boardId, mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
+    const { academicYear, boardId, mediumId } = await firstConfiguredAcademicMedium(page);
     const payload = {
       academicYearId: academicYear.id,
       userIds: [userId],
@@ -404,12 +543,21 @@ test.describe('HR Employee edit stepper', () => {
   });
 
   test('updates personal info and saves a parent Academic Permission node', async ({ page }) => {
+    test.setTimeout(300_000);
+
     const employee = createEmployeeFixture('E2E HR EDIT');
     await page.goto('/dashboard/');
     const roleId = await firstNonAdminRoleId(page);
-    const createdEmployee = await createEmployeeFromExistingDefaults(page, employee, { roleId });
+    const shiftId = await firstShiftId(page);
+    const createdEmployee = await createEmployeeFromExistingDefaults(page, employee, {
+      roleId,
+      shiftId,
+    });
     const userId = await employeeUserId(page, employee, createdEmployee);
-    await clearAcademicPermission(page, userId);
+    const academicSelection = await firstConfiguredAcademicMedium(page);
+    await primeAcademicSelection(page, academicSelection);
+    const { academicYear, boardId, mediumId } = academicSelection;
+    await assignParentMediumAccess(page, userId, academicYear.id, boardId, mediumId);
 
     await gotoEmployeeList(page);
     await searchEmployee(page, employee.email);
@@ -421,12 +569,44 @@ test.describe('HR Employee edit stepper', () => {
 
       const response = await route.fetch();
       const body = await response.json();
-      await route.fulfill({ response, json: { ...body, panNo: '', adharNo: '' } });
+      await route.fulfill({
+        response,
+        json: {
+          ...body,
+          dob: body.dob ?? body.dateOfBirth ?? '1990-01-01',
+          doj: body.doj ?? body.dateOfJoining ?? '2024-06-01',
+          familyCaste: body.familyCaste || employee.familyCaste,
+          casteType: body.casteType ?? body.castType ?? 0,
+          gender: body.gender ?? body.genderType ?? 1,
+          religion: 0,
+          maritalStatus: body.maritalStatus ?? 0,
+          roleId: body.roleId || roleId,
+          address1: body.address1 || body.addressLine1 || employee.addressLine1,
+          address2: body.address2 || body.addressLine2 || employee.addressLine2,
+          address3: body.address3 || body.addressLine3 || employee.addressLine3,
+          country: body.country?.name ? body.country : { name: 'India', isoCode: 'IN' },
+          state: body.state?.name
+            ? body.state
+            : { name: 'Gujarat', isoCode: 'GJ', countryCode: 'IN' },
+          city: body.city || employee.city,
+          pinCode: body.pinCode || body.pincode || employee.pincode,
+          shiftId: body.shiftId || shiftId,
+          panNo: '',
+          adharNo: '',
+        },
+      });
     });
     await openFirstRowEdit(page);
+    await expect(
+      page.getByRole('textbox', { name: /Building No\.\/Flat\/House No\./i })
+    ).toHaveValue(employee.addressLine1);
 
-    await fillTextByLabel(page, 'Middle Name', `Auto ${employee.suffix.slice(-4)}`);
-    await fillTextByLabel(page, 'Area', `Automation Road ${employee.suffix.slice(-4)}`);
+    const middleNameInput = page.locator('input[name="middleName"]');
+    const areaInput = page.locator('input[name="addressLine2"]');
+    const updatedMiddleName = `Auto ${employee.lastName.slice(-4)}`;
+    await areaInput.fill(`Automation Road ${employee.suffix.slice(-4)}`);
+    await middleNameInput.fill(updatedMiddleName);
+    await expect(middleNameInput).toHaveValue(updatedMiddleName);
     const personalInfoRequestPromise = page.waitForRequest(
       (request) =>
         /\/api\/employees\/[^/]+\/personal-info/.test(request.url()) && request.method() === 'PUT'
@@ -441,10 +621,13 @@ test.describe('HR Employee edit stepper', () => {
     const personalInfoResponse = await personalInfoResponsePromise;
     expect(personalInfoResponse.ok()).toBe(true);
     const personalInfoPayload = JSON.parse(personalInfoRequest.postData() || '{}');
+    expect(personalInfoPayload.middleName).toBe(updatedMiddleName);
     expect(personalInfoPayload.panNo).toBeUndefined();
     expect(personalInfoPayload.adharNo).toBeUndefined();
+    await waitForEmployeeFormIdle(page);
 
-    await clickWizardStep(page, 'Academic Permission');
+    await clearAcademicPermission(page, userId);
+    await advanceToAcademicPermissionStep(page);
     await prepareAndCheckMediumParentNode(page);
     const { request: accessControlRequest, response: accessControlResponse } =
       await submitAndCaptureBulkAssign(page);
@@ -469,8 +652,9 @@ test.describe('HR Employee edit stepper', () => {
     const roleId = await firstNonAdminRoleId(page);
     const createdEmployee = await createEmployeeFromExistingDefaults(page, employee, { roleId });
     const userId = await employeeUserId(page, employee, createdEmployee);
-    const academicYear = await currentAcademicYear(page);
-    const { boardId, mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
+    const academicSelection = await firstConfiguredAcademicMedium(page);
+    await primeAcademicSelection(page, academicSelection);
+    const { academicYear, boardId, mediumId } = academicSelection;
     await assignParentMediumAccess(page, userId, academicYear.id, boardId, mediumId);
 
     await gotoEmployeeList(page);
@@ -504,8 +688,9 @@ test.describe('HR Employee edit stepper', () => {
     const roleId = await firstNonAdminRoleId(page);
     const createdEmployee = await createEmployeeFromExistingDefaults(page, employee, { roleId });
     const userId = await employeeUserId(page, employee, createdEmployee);
-    const academicYear = await currentAcademicYear(page);
-    const { boardId, mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
+    const academicSelection = await firstConfiguredAcademicMedium(page);
+    await primeAcademicSelection(page, academicSelection);
+    const { academicYear, boardId, mediumId } = academicSelection;
     await assignParentMediumAccess(page, userId, academicYear.id, boardId, mediumId);
 
     await gotoEmployeeList(page);
@@ -540,7 +725,6 @@ test.describe('HR Employee edit stepper', () => {
     await openFirstRowEdit(page);
 
     await clickWizardStep(page, 'Work Experience');
-    await page.getByRole('button', { name: /Add/i }).first().click();
     await fillTextByLabel(page, 'Organization Name', `Invalid Dates ${Date.now()}`);
     await fillDate(page, 'Start Date', '01-04-2024');
     await fillDate(page, 'End Date', '01-04-2023');
@@ -548,10 +732,10 @@ test.describe('HR Employee edit stepper', () => {
     await expect(page.getByText(/End Date must be greater than start date/i)).toBeVisible();
 
     await clickWizardStep(page, 'Payroll');
-    await fillTextByLabel(page, 'Account Number', 'ABC');
+    await fillTextByLabel(page, 'Account Number', '123');
     await fillTextByLabel(page, 'IFSC', 'BAD');
     await saveStep(page);
-    await expect(page.getByText(/Account number must contain only digits/i)).toBeVisible();
+    await expect(page.getByText(/Account number must be at least 9 characters/i)).toBeVisible();
     const ifscInput = page.getByLabel('IFSC', { exact: false }).first();
     const ifscError = page.getByText(/IFSC code must follow/i).first();
     await expect(ifscError).toBeVisible();

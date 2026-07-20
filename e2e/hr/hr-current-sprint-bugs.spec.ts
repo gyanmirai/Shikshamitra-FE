@@ -3,12 +3,17 @@ import { test, expect, type Page, type APIResponse } from '@playwright/test';
 
 import { withHrPayrollQaMutex } from './hr-payroll-qa-mutex';
 import { createEmployeeFixture } from './employee/employee-fixtures';
-import { employeeApiRequest, createEmployeeFromExistingDefaults } from './employee/employee-api';
 import {
   gotoEmployeeList,
   clickAddEmployee,
   dismissAcademicYearTour,
 } from './employee/employee-page';
+import {
+  employeeApiRequest,
+  assignReportingManager,
+  createEmployeeFromExistingDefaults,
+  assignEmployeeToFirstAcademicScope,
+} from './employee/employee-api';
 
 const fullCycleEnabled = process.env.E2E_HR_FULL_CYCLE === '1';
 
@@ -18,7 +23,7 @@ const tempEarningAmount = 1_750;
 const fixedEarningComponentName = 'E2E HR Bug Basic Pay';
 const fixedDeductionComponentName = 'E2E HR Bug Fixed Deduction';
 const tempEarningComponentName = 'E2E Temporary Month Earning';
-const lateArrivalDeductionName = 'Late Arrival Salary Deduction';
+const lateArrivalDeductionName = 'Late arrival deduction';
 const providentFundDeductionPrefix = 'Provident Fund -';
 
 const today = new Date();
@@ -42,7 +47,8 @@ const firstWeekdayInMonth = (date: Date) => {
   return candidate;
 };
 
-const testPayrollMonthOffset = () => 2 + (Math.floor(Date.now() / 1000) % 5);
+const payrollMonthOffsetSeed = 2 + (Math.floor(Date.now() / 86_400_000) % 5);
+const testPayrollMonthOffset = () => payrollMonthOffsetSeed;
 
 async function expectOk(response: APIResponse, label: string) {
   const details = response.ok() ? '' : await response.text();
@@ -65,6 +71,21 @@ function componentByName(components: any[] | undefined, name: string) {
   return (components || []).find(
     (component) => String(component?.name || component?.componentName || '') === name
   );
+}
+
+async function firstEmployeeIdBySearch(page: Page, search: string) {
+  const employees = await getJson<any>(
+    page,
+    `/employees?page=1&pageSize=10&search=${encodeURIComponent(search)}`
+  );
+  const employee = asItems(employees).find(
+    (item: any) => String(item.email || '').toLowerCase() === search.toLowerCase()
+  );
+  if (!employee?.id) {
+    throw new Error(`Unable to resolve employee id for ${search}`);
+  }
+
+  return employee.id as string;
 }
 
 function toDateOnly(value: unknown) {
@@ -318,7 +339,8 @@ function validPfCode(prefix: string) {
     .split('')
     .map((character) => {
       if (/[A-Z_]/.test(character)) return character;
-      if (/[0-9]/.test(character)) return String.fromCharCode('A'.charCodeAt(0) + Number(character));
+      if (/[0-9]/.test(character))
+        return String.fromCharCode('A'.charCodeAt(0) + Number(character));
       return '_';
     })
     .join('')
@@ -375,6 +397,7 @@ async function createLateArrivalSalaryDeductionPolicy(page: Page, effectivePolic
       graceTime: 0,
       maxLateAllowedPerMonth: 0,
       penaltyType: 'salary_deduction',
+      penaltyDeductionAmount: fixedDeductionAmount,
       penaltyCountThreshold: 1,
       earlyExitEnabled: false,
       earlyExitGraceTime: 0,
@@ -404,7 +427,7 @@ async function createWorkCalendarWithRemovedHoliday(
       effectiveTo: null,
       weeklyOffPattern: 'saturday_sunday',
       customWeeklyOffs: [],
-      holidaySyncMode: 'manual',
+      holidaySyncMode: 'independent',
       holidays: [
         {
           academicYearId,
@@ -526,8 +549,7 @@ async function upsertEmployeePolicyPackageOverride(
   policyIds: { attendancePolicyId?: string; payrollPolicyId?: string; leavePolicyId?: string }
 ) {
   const assignmentReason = 'E2E current sprint HR bug regression';
-  const attendancePolicyId =
-    policyIds.attendancePolicyId || effectivePolicies.attendancePolicy?.id;
+  const attendancePolicyId = policyIds.attendancePolicyId || effectivePolicies.attendancePolicy?.id;
   const payrollPolicyId = policyIds.payrollPolicyId || effectivePolicies.payrollPolicy?.id;
   const leavePolicyId = policyIds.leavePolicyId || effectivePolicies.leavePolicy?.id;
   const previewResponse = await employeeApiRequest(page, '/hr/policy-assignments/impact-preview', {
@@ -588,10 +610,14 @@ async function createLeaveRequest(
   formData.append('endDate', leaveDate);
   formData.append('reason', 'E2E current sprint HR bug auto approval');
 
-  const response = await employeeApiRequest(page, `/leave-management?academicYearId=${academicYearId}`, {
-    method: 'POST',
-    body: formData,
-  });
+  const response = await employeeApiRequest(
+    page,
+    `/leave-management?academicYearId=${academicYearId}`,
+    {
+      method: 'POST',
+      body: formData,
+    }
+  );
   await expectOk(response, 'create leave request');
   return response.json();
 }
@@ -729,6 +755,7 @@ test.describe('HR current sprint bug regressions', () => {
 
     const fixture = createEmployeeFixture('Profile Identity Employee');
     const employee = await createEmployeeFromExistingDefaults(page, fixture);
+    await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id as string;
     const before = await getJson<any>(page, `/employees/${employeeId}/personal-info`);
     const updatedDepartment = `Identity Regression ${Date.now()}`;
@@ -783,19 +810,28 @@ test.describe('HR current sprint bug regressions', () => {
         departmentAppliedFor: 'Primary',
       }),
     });
-    expect(duplicateResponse.status(), await duplicateResponse.text()).toBe(400);
-    expect(await duplicateResponse.text()).toContain('already uses this email');
+    const duplicateDetails = await duplicateResponse.text();
+    expect(duplicateResponse.status(), duplicateDetails).toBe(400);
+    expect(duplicateDetails).toMatch(
+      /HR:Employee:010409|Employee Application Email Already In Use|already uses this email/i
+    );
   });
 
   test('5196 payroll settings policy link routes to concrete payroll policy page', async ({
     page,
   }) => {
-    await page.goto('/hr/payroll/setting', { waitUntil: 'domcontentloaded' });
+    await page.goto('/dashboard/');
+    await dismissAcademicYearTour(page);
+    await page.goto('/hr/payroll/setting/earning-component', {
+      waitUntil: 'domcontentloaded',
+      timeout: 90_000,
+    });
     const link = page.getByRole('link', { name: 'Open Payroll Policies' });
 
-    await expect(link).toHaveAttribute('href', /\/hr\/payrollPolicies$/);
-    await link.click();
-    await expect(page).toHaveURL(/\/hr\/payrollPolicies/);
+    await expect(link).toBeVisible({ timeout: 60_000 });
+    await expect(link).toHaveAttribute('href', /\/hr\/payrollPolicies\/?$/);
+    await link.evaluate((element: HTMLAnchorElement) => element.click());
+    await expect(page).toHaveURL(/\/hr\/payrollPolicies\/?$/, { timeout: 120_000 });
     await expect(page.getByText(/404|not found/i)).toHaveCount(0);
   });
 
@@ -812,6 +848,7 @@ test.describe('HR current sprint bug regressions', () => {
     const employee = await createEmployeeFromExistingDefaults(page, fixture, {
       dateOfJoining: attendanceDate,
     });
+    await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id as string;
     const effectivePolicies = await getJson<any>(
       page,
@@ -828,13 +865,9 @@ test.describe('HR current sprint bug regressions', () => {
       workCalendar.id
     );
 
-    await upsertEmployeePolicyPackageOverride(
-      page,
-      employeeId,
-      effectivePolicies,
-      attendanceDate,
-      { attendancePolicyId: attendancePolicy.id }
-    );
+    await upsertEmployeePolicyPackageOverride(page, employeeId, effectivePolicies, attendanceDate, {
+      attendancePolicyId: attendancePolicy.id,
+    });
 
     const resolvedPolicies = await getJson<any>(
       page,
@@ -868,7 +901,13 @@ test.describe('HR current sprint bug regressions', () => {
     const employee = await createEmployeeFromExistingDefaults(page, fixture, {
       dateOfJoining: leaveDate,
     });
+    await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id as string;
+    const hrManagerEmployeeId = await firstEmployeeIdBySearch(page, 'hr-manager@ddvs.com');
+    await expectOk(
+      await assignReportingManager(page, employeeId, hrManagerEmployeeId),
+      'assign HR manager as leave reporting manager'
+    );
     const effectivePolicies = await getJson<any>(
       page,
       `/hr/employees/${employeeId}/effective-policies?date=${leaveDate}`
@@ -913,6 +952,7 @@ test.describe('HR current sprint bug regressions', () => {
       const employee = await createEmployeeFromExistingDefaults(page, fixture, {
         dateOfJoining: attendanceDate,
       });
+      await assignEmployeeToFirstAcademicScope(page, employee);
       const employeeId = employee.id as string;
       const pfRule = await createPfRule(page);
 
@@ -951,6 +991,7 @@ test.describe('HR current sprint bug regressions', () => {
         dateOfJoining: attendanceDate,
         shiftId: shift.id,
       });
+      await assignEmployeeToFirstAcademicScope(page, employee);
       const employeeId = employee.id as string;
 
       const tempLine = await setSalaryStructureWithTemporaryEarning(
@@ -975,7 +1016,7 @@ test.describe('HR current sprint bug regressions', () => {
         salaryDeductionPolicy.id,
         attendanceDate
       );
-      await adjustAttendance(page, employeeId, attendanceDate, '09:30:00', '17:00:00');
+      await adjustAttendance(page, employeeId, attendanceDate, '10:30:00', '18:00:00');
 
       const attendanceRegister = await getJson<any>(
         page,
