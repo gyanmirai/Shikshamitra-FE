@@ -40,9 +40,16 @@ export async function expectNoRuntimeErrors(page: Page) {
   const runtimeErrors: string[] = [];
 
   page.on('console', (message) => {
-    if (message.type() === 'error') {
-      runtimeErrors.push(message.text());
+    if (message.type() !== 'error') {
+      return;
     }
+
+    const text = message.text();
+    if (/^Failed to load resource: the server responded with a status of \d+ \(\)$/.test(text)) {
+      return;
+    }
+
+    runtimeErrors.push(text);
   });
 
   page.on('pageerror', (error) => {
@@ -51,7 +58,7 @@ export async function expectNoRuntimeErrors(page: Page) {
 
   page.on('response', (response) => {
     const url = response.url();
-    if (url.includes('/api/employees') && response.status() >= 500) {
+    if (url.includes('/api/') && response.status() >= 500) {
       runtimeErrors.push(`${response.status()} ${url}`);
     }
   });

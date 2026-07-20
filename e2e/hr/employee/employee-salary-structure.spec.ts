@@ -12,8 +12,12 @@ test.describe('HR Employee salary structure', () => {
     await openFirstRowAction(page, 'Salary Structure');
 
     await expect(page.getByTestId(testIds.salaryDialog)).toBeVisible();
-    await expect(page.getByText(/Earning Components/i)).toBeVisible();
-    await expect(page.getByText(/Deduction Components/i)).toBeVisible();
+    await expect(
+      page.getByTestId(testIds.salaryDialog).getByText(/^Earning Components$/)
+    ).toBeVisible();
+    await expect(
+      page.getByTestId(testIds.salaryDialog).getByText(/^Deduction Components$/)
+    ).toBeVisible();
 
     const amountField = page.getByLabel(/Amount/i).first();
     if (await amountField.isVisible()) {

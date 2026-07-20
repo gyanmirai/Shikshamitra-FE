@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { ReligionType } from 'src/enums/religion';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -15,6 +14,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -94,6 +94,19 @@ const toProfilePhotoValue = (value?: string | null) => {
   return convertBase64Format(value);
 };
 
+const toReligionValue = (value?: IPersonalInformationResponse['religion']) => {
+  if (typeof value === 'number') return value;
+  const normalized = String(value || '').trim();
+  if (!normalized) return '';
+  const enumValue = ReligionType[normalized as keyof typeof ReligionType];
+  if (typeof enumValue === 'number') return enumValue;
+  const labelValue = ReligionTypeArray.find(
+    (option) => option.label.toLowerCase() === normalized.toLowerCase()
+  )?.value;
+  if (typeof labelValue === 'number') return labelValue;
+  return normalized.toLowerCase() === 'hindu' ? ReligionType.Hinduism : '';
+};
+
 export const personalInformationInitialValues = (
   editData?: Partial<IPersonalInformationResponse>
 ) => ({
@@ -108,11 +121,7 @@ export const personalInformationInitialValues = (
   familyCast: editData ? editData.familyCaste : '',
   castType: editData ? editData.casteType : '',
   gender: editData?.gender ?? '',
-  religion: editData
-    ? typeof editData.religion === 'number'
-      ? editData.religion
-      : (ReligionType[editData.religion as keyof typeof ReligionType] ?? '')
-    : '',
+  religion: editData ? toReligionValue(editData.religion) : '',
   maritalStatus: editData
     ? typeof editData.maritalStatus === 'number'
       ? editData.maritalStatus
