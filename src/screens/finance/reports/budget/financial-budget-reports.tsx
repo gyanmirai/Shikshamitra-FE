@@ -227,7 +227,7 @@ const FinancialBudgetReports = () => {
         tableId="budget-overview-table"
       />
 
-      <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
+      <Box py="15px" gap={1} display="flex" justifyContent="flex-end">
         {/* <Button variant="contained" size="small">
         Export to PDF
     </Button>

@@ -109,41 +109,45 @@ export const validationSchema = Yup.object().shape({
       }
       return true;
     })
-    .test('no-gaps', 'Grade ranges must cover all marks from 0 to Total Marks with no gaps', function (gradingScale) {
-      if (!gradingScale || gradingScale.length === 0) return true;
-      const totalMarksVal = Number(this.parent.totalMarks);
-      if (Number.isNaN(totalMarksVal) || totalMarksVal <= 0) return true;
+    .test(
+      'no-gaps',
+      'Grade ranges must cover all marks from 0 to Total Marks with no gaps',
+      function (gradingScale) {
+        if (!gradingScale || gradingScale.length === 0) return true;
+        const totalMarksVal = Number(this.parent.totalMarks);
+        if (Number.isNaN(totalMarksVal) || totalMarksVal <= 0) return true;
 
-      const sorted = [...gradingScale]
-        .filter(item => item.minMarks !== undefined && item.minMarks !== '' && item.maxMarks !== undefined && item.maxMarks !== '')
-        .map(item => ({ min: Number(item.minMarks), max: Number(item.maxMarks) }))
-        .sort((a, b) => a.min - b.min);
+        const sorted = [...gradingScale]
+          .filter((item) => item.minMarks !== undefined && item.maxMarks !== undefined)
+          .map((item) => ({ min: Number(item.minMarks), max: Number(item.maxMarks) }))
+          .sort((a, b) => a.min - b.min);
 
-      if (sorted.length === 0) return true;
+        if (sorted.length === 0) return true;
 
-      if (sorted[0].min !== 0) {
-        return this.createError({
-          path: 'gradingScale',
-          message: 'The grading scale ranges must start from 0 marks.',
-        });
-      }
-
-      for (let i = 0; i < sorted.length - 1; i += 1) {
-        if (sorted[i + 1].min > sorted[i].max + 1) {
+        if (sorted[0].min !== 0) {
           return this.createError({
             path: 'gradingScale',
-            message: `Gap detected between marks ${sorted[i].max} and ${sorted[i + 1].min}.`,
+            message: 'The grading scale ranges must start from 0 marks.',
           });
         }
-      }
 
-      if (sorted[sorted.length - 1].max !== totalMarksVal) {
-        return this.createError({
-          path: 'gradingScale',
-          message: `The grading scale ranges must cover up to the Total Marks (${totalMarksVal}).`,
-        });
-      }
+        for (let i = 0; i < sorted.length - 1; i += 1) {
+          if (sorted[i + 1].min > sorted[i].max + 1) {
+            return this.createError({
+              path: 'gradingScale',
+              message: `Gap detected between marks ${sorted[i].max} and ${sorted[i + 1].min}.`,
+            });
+          }
+        }
 
-      return true;
-    }),
+        if (sorted[sorted.length - 1].max !== totalMarksVal) {
+          return this.createError({
+            path: 'gradingScale',
+            message: `The grading scale ranges must cover up to the Total Marks (${totalMarksVal}).`,
+          });
+        }
+
+        return true;
+      }
+    ),
 });

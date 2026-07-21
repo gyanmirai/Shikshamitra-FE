@@ -51,7 +51,7 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit}>
-        <Box display="flex" flexDirection="column" gap={2}>
+        <Box display="flex" flexDirection="column" gap={1}>
           <Scrollbar sx={{ p: 2, maxHeight: '70vh', overflowY: 'auto' }}>
             <Grid container spacing={2}>
               {/* Hostel Name */}
@@ -273,7 +273,7 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
 
               {/* Action Checkboxes */}
               <Grid size={{ xs: 12 }}>
-                <Box display="flex" flexDirection="row" gap={2}>
+                <Box display="flex" flexDirection="row" gap={1}>
                   {['Warning', 'Parent Meeting', 'Fine', 'Suspension', 'Community Service'].map(
                     (label) => (
                       <FormControlLabel
@@ -307,7 +307,7 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                 <Typography variant="h6">Send Notification</Typography>
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <Box display="flex" flexDirection="row" gap={2}>
+                <Box display="flex" flexDirection="row" gap={1}>
                   {['Student', 'Parent', 'Warden'].map((label) => (
                     <FormControlLabel
                       key={label}

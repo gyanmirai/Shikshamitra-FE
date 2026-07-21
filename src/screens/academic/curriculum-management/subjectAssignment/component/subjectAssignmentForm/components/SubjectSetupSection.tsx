@@ -35,7 +35,7 @@ export const SubjectSetupSection: React.FC<SubjectSetupSectionProps> = ({
   onChange,
   formik,
 }) => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     <Grid size={{ xs: 12, md: 4 }}>
       <ShakingTextField error={!!getError('subjectCode')}>
         <TextField

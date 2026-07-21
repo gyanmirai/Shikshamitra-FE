@@ -37,7 +37,7 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
           defaultMarks?: number;
           defaultDueDays?: number;
           evaluationRequired?: boolean;
-          defaultEvaluationMethod?: number;
+          defaultEvaluationMethod?: number | null;
           status?: number;
         };
         academicMediumId: string;

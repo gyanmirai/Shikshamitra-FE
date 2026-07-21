@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';

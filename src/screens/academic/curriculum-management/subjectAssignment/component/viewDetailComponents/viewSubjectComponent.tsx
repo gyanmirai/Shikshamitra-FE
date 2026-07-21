@@ -83,7 +83,7 @@ export const ViewSubject = ({ subject, classId, classes }: IViewSubjectProps) =>
   }
 
   return (
-    <Grid container spacing={2} sx={{ height: '100%' }}>
+    <Grid container spacing={1} sx={{ height: '100%' }}>
       <Grid size={{ xs: 12, md: 3 }} sx={{ height: '100%' }}>
         <SubjectSidebar
           subjectAssignmentData={subjectAssignmentData}

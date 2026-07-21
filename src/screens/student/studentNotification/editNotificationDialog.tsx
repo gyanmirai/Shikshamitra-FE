@@ -70,7 +70,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
             },
           }}
         >
-          <Box display="flex" gap={2} alignItems="center" justifyContent="space-between">
+          <Box display="flex" gap={1} alignItems="center" justifyContent="space-between">
             <Box display="flex" flexDirection="column" mt={1}>
               <Typography variant="body2" color="text.secondary">
                 Event Name
@@ -118,7 +118,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
                     label={`Notification For ${recipient.name}`}
                   />
                 </Box>
-                <Box display="flex" gap={2} mt={2} mb={2}>
+                <Box display="flex" gap={1} mt={2} mb={2}>
                   <CustomSelect
                     label="Communication Channels"
                     options={CHANNEL_OPTIONS}

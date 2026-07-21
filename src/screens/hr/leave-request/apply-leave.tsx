@@ -415,7 +415,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               onBack={viewCalendarView.onFalse}
             />
           )}
-          <Box display="flex" flexDirection="column" gap={2}>
+          <Box display="flex" flexDirection="column" gap={1}>
             <LeaveCalender />
           </Box>
         </>

@@ -84,6 +84,7 @@ describe('admissions playbook configuration utilities', () => {
         code: 'EXAM',
         name: 'Assessment',
         durationMinutes: 60,
+        hallTicketEnabled: false,
         components: [
           {
             code: 'MATH',

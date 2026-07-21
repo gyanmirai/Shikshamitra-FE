@@ -2,11 +2,14 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
 import { Upload } from 'src/components/upload';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
   Grid,
@@ -22,8 +25,34 @@ import {
 
 const GroupMessage = (props: TabComponentType) => {
   const [group, setGroup] = React.useState('entireSchool');
+  const [attachments, setAttachments] = React.useState<(File | string)[]>([]);
+  const [uploadFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
   const handleGroupChange = (ev: any) => {
     setGroup(ev.target.value);
+  };
+
+  const handleUpload = async () => {
+    const files = attachments.filter((file): file is File => file instanceof File);
+    if (files.length === 0) return;
+
+    try {
+      const uploaded = await Promise.all(
+        files.map(async (file) => {
+          const formData = new FormData();
+          formData.append('File', file);
+          const response = await uploadFile(formData).unwrap();
+          return response.data || '';
+        })
+      );
+      setAttachments(uploaded.filter(Boolean));
+      shikshaMitraToast.success({ message: 'Attachment uploaded successfully.' });
+    } catch (error) {
+      console.error('Message attachment upload failed', error);
+      shikshaMitraToast.error({ message: 'Attachment upload failed.' });
+    }
   };
 
   const dummyData = [
@@ -63,10 +92,18 @@ const GroupMessage = (props: TabComponentType) => {
         </Typography>
       </Box>
 
-      <Grid container spacing={2} style={{ padding: 20 }}>
+      <Grid container spacing={1} style={{ padding: 20 }}>
         <Grid size={{ xs: 12 }}>
           <Typography variant="h6">Message Editor</Typography>
-          <Upload />
+          <Upload
+            value={attachments}
+            onDrop={(acceptedFiles) =>
+              setAttachments((current) => [...current, ...acceptedFiles])
+            }
+            onRemove={(file) => setAttachments((current) => current.filter((item) => item !== file))}
+            onRemoveAll={() => setAttachments([])}
+            onUpload={handleUpload}
+          />
         </Grid>
 
         <Grid size={{ xs: 12 }}>

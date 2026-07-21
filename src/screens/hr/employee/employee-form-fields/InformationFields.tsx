@@ -155,7 +155,7 @@ const OtpInputField: React.FC<{
       pasteTransformer={pasteTransformer}
       containerClassName=""
       render={({ slots }) => (
-        <Box display="flex" gap={0.75} alignItems="center" flexWrap="nowrap">
+        <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
           {slots.map((slot, i) => (
             <React.Fragment key={i}>
               <OtpSlot {...slot} error={error} disabled={disabled} />

@@ -4,7 +4,12 @@ import { test, expect, type Page, type APIResponse } from '@playwright/test';
 import { withHrPayrollQaMutex } from './hr-payroll-qa-mutex';
 import { dismissAcademicYearTour } from './employee/employee-page';
 import { createEmployeeFixture } from './employee/employee-fixtures';
-import { employeeApiRequest, createEmployeeFromExistingDefaults } from './employee/employee-api';
+import {
+  employeeApiRequest,
+  assignReportingManager,
+  createEmployeeFromExistingDefaults,
+  assignEmployeeToFirstAcademicScope,
+} from './employee/employee-api';
 
 const fullCycleEnabled = process.env.E2E_HR_FULL_CYCLE === '1';
 const grossEarningAmount = 30_000;
@@ -76,13 +81,28 @@ async function getJson<T = any>(
   return jsonFrom<T>(await employeeApiRequest(page, path, init), `GET ${path}`);
 }
 
+async function firstEmployeeIdBySearch(page: Page, search: string) {
+  const employees = await getJson<any>(
+    page,
+    `/employees?page=1&pageSize=10&search=${encodeURIComponent(search)}`
+  );
+  const employee = asItems(employees).find(
+    (item: any) => String(item.email || '').toLowerCase() === search.toLowerCase()
+  );
+  if (!employee?.id) {
+    throw new Error(`Unable to resolve employee id for ${search}`);
+  }
+
+  return employee.id as string;
+}
+
 function rangeOverlaps(aStart: string, aEnd: string, bStart: string, bEnd: string) {
   return aStart <= bEnd && bStart <= aEnd;
 }
 
 function firstNonSunday(date: Date) {
   const candidate = new Date(date);
-  while (candidate.getDay() === 0) {
+  while ([0, 6].includes(candidate.getDay())) {
     candidate.setDate(candidate.getDate() + 1);
   }
   return candidate;
@@ -92,7 +112,7 @@ async function createAcademicYear(page: Page, name: string, startDate: string, e
   return jsonFrom<AcademicYear>(
     await employeeApiRequest(page, '/app/academic-year', {
       method: 'POST',
-      body: JSON.stringify({ name, startDate, endDate }),
+      body: JSON.stringify({ name, startYear: startDate, endYear: endDate }),
     }),
     `create academic year ${name}`
   );
@@ -105,7 +125,7 @@ async function createIsolatedYearPair(page: Page, stamp: string): Promise<YearPa
     .map((item: any) => item.academicYear || item)
     .filter((year: AcademicYear) => year.startDate && year.endDate);
 
-  const candidate = Array.from({ length: 7 }, (_, index) => 2010 + index * 2).find((year) => {
+  const candidate = Array.from({ length: 10 }, (_, index) => 1990 + index * 2).find((year) => {
     const sourceStart = `${year}-06-01`;
     const targetEnd = `${year + 2}-05-31`;
     return !existingYears.some((existing) =>
@@ -148,7 +168,7 @@ async function createWorkCalendar(page: Page, academicYear: AcademicYear, name: 
         effectiveTo: academicYear.endDate,
         weeklyOffPattern: 'saturday_sunday',
         customWeeklyOffs: [],
-        holidaySyncMode: 'manual',
+        holidaySyncMode: 'independent',
         holidays: [],
       }),
     }),
@@ -170,7 +190,7 @@ async function createAttendancePolicy(
         workCalendarPolicyId: calendarId,
         name,
         status: 'active',
-        isDefault: false,
+        isDefault: true,
         captureMode: 'integrated',
         fullDayThresholdPercentage: 75,
         halfDayThresholdPercentage: 50,
@@ -208,7 +228,7 @@ async function createPayrollPolicy(
         workCalendarPolicyId: calendarId,
         name,
         status: 'active',
-        isDefault: false,
+        isDefault: true,
         dayCalculationType: 'manual-days',
         manualDays: 30,
         manualMonthDays: [],
@@ -308,24 +328,17 @@ async function upsertEmployeePolicyOverride(
   const preview = await jsonFrom<any>(
     await employeeApiRequest(page, '/hr/policy-assignments/impact-preview', {
       method: 'POST',
-      body: JSON.stringify({ action: 'employee-override-upsert', assignment }),
+      body: JSON.stringify({ action: 'create', assignment }),
     }),
     `preview employee override for ${academicYear.name || academicYear.id}`
   );
   expect(preview?.blockingWarnings ?? [], 'employee override blocking warnings').toEqual([]);
 
   return jsonFrom<any>(
-    await employeeApiRequest(page, '/hr/policy-assignments/direct-employee-override', {
+    await employeeApiRequest(page, '/hr/policy-assignments', {
       method: 'POST',
       body: JSON.stringify({
-        employeeId,
-        academicYearId: academicYear.id,
-        payrollPolicyId: policies.payroll.id,
-        attendancePolicyId: policies.attendance.id,
-        leavePolicyId: policies.leave.id,
-        effectiveFrom: academicYear.startDate,
-        effectiveTo: null,
-        assignmentReason: reason,
+        ...assignment,
         confirmationToken: preview?.confirmationToken ?? null,
       }),
     }),
@@ -480,6 +493,23 @@ async function createApprovedPaidLeave(
   );
 }
 
+async function adjustPayrollAttendance(page: Page, employeeId: string, attendanceDate: string) {
+  await expectOk(
+    await employeeApiRequest(page, '/hr/attendance/register/adjust', {
+      method: 'POST',
+      body: JSON.stringify({
+        employeeId,
+        attendanceDate,
+        statusWire: 'PRESENT',
+        inTime: '09:00:00',
+        outTime: '17:00:00',
+        reason: 'E2E year-end settlement payroll attendance',
+      }),
+    }),
+    'adjust target payroll attendance'
+  );
+}
+
 async function getPayrollRunRow(page: Page, employeeId: string, month: string) {
   const response = await employeeApiRequest(
     page,
@@ -496,6 +526,14 @@ async function getPayrollRunRow(page: Page, employeeId: string, month: string) {
 function findLeaveEncashmentLine(rowOrSlip: any) {
   return asItems(rowOrSlip?.earningComponents || rowOrSlip?.earnings).find((item: any) =>
     String(item.name || item.componentName || item.earningComponentName || '')
+      .toLowerCase()
+      .includes('leave encashment')
+  );
+}
+
+function findLeaveEncashmentAdjustment(row: any) {
+  return asItems(row?.payrollAdjustments || row?.adjustments).find((item: any) =>
+    String(item.name || '')
       .toLowerCase()
       .includes('leave encashment')
   );
@@ -565,12 +603,18 @@ test.describe('leave year-end settlement full cycle', () => {
         encashmentAllowed: false,
       });
 
-      const { fixture, record } = await createEmployeeFromExistingDefaults(
-        page,
-        createEmployeeFixture('LPYE Employee'),
-        { dateOfJoining: yyyyMmDd(new Date(source.startDate)) }
+      const fixture = createEmployeeFixture('LPYE Employee');
+      const employee = await createEmployeeFromExistingDefaults(page, fixture, {
+        dateOfBirth: '1965-01-01',
+        dateOfJoining: yyyyMmDd(new Date(source.startDate)),
+      });
+      await assignEmployeeToFirstAcademicScope(page, employee);
+      const employeeId = employee.id as string;
+      const hrManagerEmployeeId = await firstEmployeeIdBySearch(page, 'hr-manager@ddvs.com');
+      await expectOk(
+        await assignReportingManager(page, employeeId, hrManagerEmployeeId),
+        'assign HR manager as leave reporting manager'
       );
-      const employeeId = record.id as string;
       await setEmployeeSalaryStructure(page, employeeId, fixture.fullName);
 
       await upsertEmployeePolicyOverride(
@@ -615,6 +659,7 @@ test.describe('leave year-end settlement full cycle', () => {
       const unrelatedIssueFreeItems = asItems(preview.items).filter(
         (entry: any) =>
           entry.employeeId !== employeeId &&
+          !String(entry.employeeName || '').startsWith('LPYE Employee') &&
           String(entry.status).toLowerCase() === 'draft' &&
           asItems(entry.issueCodes).length === 0
       );
@@ -653,6 +698,11 @@ test.describe('leave year-end settlement full cycle', () => {
         2
       );
 
+      const payrollAttendanceDate = yyyyMmDd(
+        firstNonSunday(new Date(`${payrollMonthKey}-03T00:00:00`))
+      );
+      await adjustPayrollAttendance(page, employeeId, payrollAttendanceDate);
+
       const previewRow = await getPayrollRunRow(page, employeeId, payrollMonthKey);
       const encashmentLine = findLeaveEncashmentLine(previewRow);
       expect(encashmentLine, 'payroll preview contains leave encashment').toBeTruthy();
@@ -660,10 +710,15 @@ test.describe('leave year-end settlement full cycle', () => {
         7000,
         2
       );
+      const previewAdjustment = findLeaveEncashmentAdjustment(previewRow);
+      expect(previewAdjustment, 'payroll preview exposes leave encashment adjustment').toBeTruthy();
       expect(
-        Boolean(encashmentLine?.isSystemGenerated),
+        Boolean(previewAdjustment?.isSystemGenerated),
         'preview adjustment is read-only source row'
       ).toBe(true);
+      expect(previewAdjustment?.sourceType, 'preview adjustment source type').toBe(
+        'leave_year_end_encashment'
+      );
 
       await expectOk(
         await employeeApiRequest(page, '/payroll/run/reviews', {

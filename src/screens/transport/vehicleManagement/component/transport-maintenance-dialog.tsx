@@ -60,7 +60,7 @@ const TransportMaintenanceDialog: React.FC<ITransportAddNewMaintenanceDialogProp
     >
       <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral', height: '500px' }}>
         <form onSubmit={formik.handleSubmit}>
-          <Box pt="10px" display="flex" flexDirection="column" gap={3}>
+          <Box pt="10px" display="flex" flexDirection="column" gap={1}>
             <Grid container spacing={2}>
               <Grid size={6}>
                 <DatePicker

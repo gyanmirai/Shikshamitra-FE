@@ -40,7 +40,7 @@ const TransportDriverDetailsDialog: React.FC<TransportDriverDetailsDialogProps> 
           display="flex"
           flexDirection="row"
           alignItems="center"
-          gap={2}
+          gap={1}
           mb={2}
           sx={{
             borderBottom: '1px solid #ddd',

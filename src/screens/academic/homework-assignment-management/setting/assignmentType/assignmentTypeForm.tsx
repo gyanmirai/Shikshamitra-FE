@@ -143,7 +143,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       {/* <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}> */}
       <DialogScrollContent>
-        <Stack spacing={3} sx={{ pt: 1 }}>
+        <Stack spacing={1} sx={{ pt: 1 }}>
           <ShakingTextField
             error={
               !!(formik.touched.assignmentTypeName && formik.errors.assignmentTypeName) || false
@@ -185,7 +185,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({
             helperText={formik.touched.description && formik.errors.description}
           />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <TextField
               fullWidth
               select
@@ -226,7 +226,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({
             </TextField>
           </Stack>
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <TextField
               fullWidth
               type="number"

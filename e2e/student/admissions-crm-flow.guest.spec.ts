@@ -5,6 +5,12 @@ import AxeBuilder from '@axe-core/playwright';
 import { type Server, createServer } from 'node:http';
 import { test, expect, type Page, type Locator } from '@playwright/test';
 
+import {
+  admissionCrmScaleTotal,
+  buildAdmissionCrmScaleStaff,
+  buildAdmissionCrmScaleLeadPage,
+} from './fixtures/admission-crm-scale';
+
 const studentCrmE2EEnabled = process.env.E2E_STUDENT_CRM === '1';
 const tenantCode = () => process.env.E2E_TENANT || 'DDVS';
 const password = () => process.env.E2E_PASSWORD || 'Temp@123';
@@ -17,6 +23,27 @@ const counselorEmail = () =>
   process.env.E2E_STUDENT_CRM_COUNSELOR_EMAIL || 'admissions-counselor@ddvs.com';
 const approverEmail = () =>
   process.env.E2E_STUDENT_CRM_APPROVER_EMAIL || 'admissions-approver@ddvs.com';
+const enrollmentWorkspaceRoutes = [
+  '/student/enrollment/pipeline',
+  '/student/enrollment/exams',
+  '/student/enrollment/registrations',
+  '/student/enrollment/offers-seats',
+  '/student/enrollment/activation',
+  '/student/enrollment/operations',
+  '/student/enrollment/analytics',
+] as const;
+const enrollmentSettingsRoutes = [
+  '/student/enrollment/settings/journey',
+  '/student/enrollment/settings/inquiry-capture',
+  '/student/enrollment/settings/routing-scoring',
+  '/student/enrollment/settings/entrance-exams',
+  '/student/enrollment/settings/registration-documents',
+  '/student/enrollment/settings/offers-seats',
+  '/student/enrollment/settings/activation',
+  '/student/enrollment/settings/governance',
+  '/student/enrollment/settings/communications',
+  '/student/enrollment/settings/automation',
+] as const;
 let otpWebhookServer: Server;
 let otpWebhookUrl = '';
 let capturedOtp = '';
@@ -177,6 +204,12 @@ async function resolveAcademicYearId(page: Page) {
   return academicYearId as string;
 }
 
+const workspaceUrl = (path: string, academicYearId: string) => {
+  const url = new URL(path, 'http://student-enrollment.local');
+  url.searchParams.set('cycle', academicYearId);
+  return `${url.pathname}${url.search}`;
+};
+
 const uniqueToken = (prefix: string) =>
   `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
@@ -204,6 +237,61 @@ async function createCrmLead(page: Page, academicYearId: string, phone: string, 
   );
   await expectOk(response, 'create CRM lead');
   return response.json();
+}
+
+async function createPublishedRegistrationTemplate(
+  page: Page,
+  academicYearId: string,
+  desiredClass: string,
+  name: string
+) {
+  const createResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/configuration/registration-templates`,
+    {
+      method: 'POST',
+      body: {
+        name,
+        isFallback: false,
+        applicability: { desiredClass },
+        sections: [
+          {
+            key: 'student',
+            title: 'Student details',
+            displayOrder: 10,
+            parentVisible: true,
+            fields: [
+              {
+                key: 'studentFirstName',
+                label: 'Student first name',
+                fieldType: 0,
+                systemField: 'firstName',
+                required: true,
+                parentEditable: false,
+                displayOrder: 10,
+                options: [],
+              },
+            ],
+          },
+        ],
+        linkExpiryDays: 14,
+        allowPartialSave: true,
+        feeRequired: false,
+        feeAmount: 0,
+      },
+    }
+  );
+  await expectOk(createResponse, 'create registration template for UI issuance');
+  const template = await createResponse.json();
+  await expectOk(
+    await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/configuration/registration-templates/${template.id}/publish`,
+      { method: 'POST' }
+    ),
+    'publish registration template for UI issuance'
+  );
+  return template;
 }
 
 async function getAvailableEntranceExamSlot(page: Page, academicYearId: string) {
@@ -284,9 +372,10 @@ async function getCrmExamRecord(page: Page, academicYearId: string, examRecordId
 async function openExamRowInWorkspace(
   page: Page,
   applicantName: string,
-  slotName: string
+  slotName: string,
+  academicYearId: string
 ): Promise<Locator> {
-  const response = await page.goto('/student/enrollment/exams', {
+  const response = await page.goto(workspaceUrl('/student/enrollment/exams', academicYearId), {
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   });
@@ -296,6 +385,18 @@ async function openExamRowInWorkspace(
     timeout: 30_000,
   });
 
+  const filteredExamsResponse = page.waitForResponse((candidate) => {
+    if (candidate.request().method() !== 'GET') return false;
+    const url = new URL(candidate.url());
+    return (
+      /\/student-enrollment\/admissions-crm\/[^/]+\/exams$/.test(url.pathname) &&
+      url.searchParams.get('filterText') === applicantName
+    );
+  });
+  await page.getByRole('textbox', { name: 'Search entrance exams' }).fill(applicantName);
+  await expectOk(await filteredExamsResponse, 'filter CRM entrance exams');
+  await expect(page.getByText(/1[–-]1 of 1/)).toBeVisible({ timeout: 15_000 });
+
   const examRow = page.getByRole('row', {
     name: new RegExp(`${escapeRegExp(applicantName)}.*${escapeRegExp(slotName)}`, 'i'),
   });
@@ -303,11 +404,18 @@ async function openExamRowInWorkspace(
   return examRow;
 }
 
-async function openLeadCardInWorkspace(page: Page, leadName: string): Promise<Locator> {
-  const response = await page.goto('/student/enrollment/pipeline?view=board', {
-    waitUntil: 'domcontentloaded',
-    timeout: 60_000,
-  });
+async function openLeadCardInWorkspace(
+  page: Page,
+  leadName: string,
+  academicYearId: string
+): Promise<Locator> {
+  const response = await page.goto(
+    workspaceUrl('/student/enrollment/pipeline?view=board', academicYearId),
+    {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    }
+  );
   expect(response?.status(), 'GET /student/enrollment/pipeline').toBeLessThan(400);
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 15_000 });
   await expect(page.getByRole('heading', { name: /Admissions (CRM|Pipeline)/i })).toBeVisible({
@@ -489,22 +597,19 @@ test.describe('Student admissions CRM E2E', () => {
   test('Enrollment workspaces have no serious or critical automated accessibility violations', async ({
     page,
   }) => {
-    test.setTimeout(240_000);
+    test.setTimeout(480_000);
     await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
 
     // The same authenticated page is intentionally validated one route at a time.
     // eslint-disable-next-line no-restricted-syntax
-    for (const route of [
-      '/student/enrollment/pipeline',
-      '/student/enrollment/exams',
-      '/student/enrollment/registrations',
-      '/student/enrollment/offers-seats',
-      '/student/enrollment/activation',
-      '/student/enrollment/operations',
-      '/student/enrollment/analytics',
-      '/student/enrollment/settings',
-    ]) {
-      await page.goto(route, { waitUntil: 'networkidle', timeout: 60_000 });
+    for (const route of [...enrollmentWorkspaceRoutes, ...enrollmentSettingsRoutes]) {
+      const response = await page.goto(workspaceUrl(route, academicYearId), {
+        waitUntil: 'networkidle',
+        timeout: 60_000,
+      });
+      expect(response?.status(), route).toBeLessThan(400);
+      await expect(page.getByRole('heading', { name: 'Sorry, page not found!' })).toHaveCount(0);
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
       const releaseBlockingViolations = results.violations.filter((violation) =>
         ['serious', 'critical'].includes(violation.impact || '')
@@ -513,11 +618,12 @@ test.describe('Student admissions CRM E2E', () => {
     }
   });
 
-  test('Enrollment pipeline remains usable at release viewports', async ({ page }) => {
-    test.setTimeout(180_000);
+  test('Enrollment workspaces remain usable at release viewports', async ({ page }) => {
+    test.setTimeout(600_000);
     await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
 
-    // Viewport changes and navigations must remain serial on the same authenticated page.
+    // Viewport changes and navigations remain serial on the same authenticated page.
     // eslint-disable-next-line no-restricted-syntax
     for (const viewport of [
       { width: 1440, height: 900 },
@@ -526,22 +632,89 @@ test.describe('Student admissions CRM E2E', () => {
       { width: 390, height: 844 },
     ]) {
       await page.setViewportSize(viewport);
-      await page.goto('/student/enrollment/pipeline', {
-        waitUntil: 'networkidle',
-        timeout: 60_000,
-      });
-      await expect(page.getByRole('heading', { name: 'Admissions Pipeline' })).toBeVisible();
+      // eslint-disable-next-line no-restricted-syntax
+      for (const route of enrollmentWorkspaceRoutes) {
+        await page.goto(workspaceUrl(route, academicYearId), {
+          waitUntil: 'networkidle',
+          timeout: 60_000,
+        });
+        await expect(page.locator('#student-enrollment-content')).toBeVisible();
 
-      const widths = await page.evaluate(() => ({
-        viewport: window.innerWidth,
-        document: document.documentElement.scrollWidth,
-        body: document.body.scrollWidth,
-      }));
-      expect(
-        Math.max(widths.document, widths.body),
-        `${viewport.width}x${viewport.height} document overflow`
-      ).toBeLessThanOrEqual(widths.viewport + 1);
+        const widths = await page.evaluate(() => ({
+          viewport: window.innerWidth,
+          document: document.documentElement.scrollWidth,
+          body: document.body.scrollWidth,
+        }));
+        expect(
+          Math.max(widths.document, widths.body),
+          `${route} at ${viewport.width}x${viewport.height} document overflow`
+        ).toBeLessThanOrEqual(widths.viewport + 1);
+      }
     }
+  });
+
+  test('Enrollment remains bounded with a deterministic 25,000-lead fixture', async ({ page }) => {
+    test.setTimeout(180_000);
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const leadRequests: URL[] = [];
+    const staffRequests: URL[] = [];
+
+    await page.route(
+      /\/api\/student-enrollment\/admissions-crm\/[^/]+\/leads(?:\?.*)?$/,
+      async (route) => {
+        const url = new URL(route.request().url());
+        const maxResultCount = Number(url.searchParams.get('maxResultCount') || 50);
+        const skipCount = Number(url.searchParams.get('skipCount') || 0);
+        const stage = Number(url.searchParams.get('stage') || 0);
+        leadRequests.push(url);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(
+            buildAdmissionCrmScaleLeadPage({
+              academicYearId,
+              skipCount,
+              maxResultCount,
+              stage,
+            })
+          ),
+        });
+      }
+    );
+    await page.route(
+      /\/api\/student-enrollment\/admissions-crm\/workspace\/staff(?:\?.*)?$/,
+      async (route) => {
+        const url = new URL(route.request().url());
+        const maximum = Number(url.searchParams.get('maxResultCount') || 25);
+        staffRequests.push(url);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(buildAdmissionCrmScaleStaff(maximum)),
+        });
+      }
+    );
+
+    await page.goto(`/student/enrollment/pipeline?cycle=${academicYearId}&view=list`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await expect(page.getByText(new RegExp(`of ${admissionCrmScaleTotal}`, 'i'))).toBeVisible();
+    await expect(page.getByTestId('student-enrollment-pipeline-row')).toHaveCount(50);
+
+    await page.getByRole('button', { name: 'Board view' }).click();
+    await expect.poll(() => leadRequests.some((url) => url.searchParams.has('stage'))).toBe(true);
+
+    expect(leadRequests.length).toBeGreaterThan(1);
+    leadRequests.forEach((url) => {
+      const maximum = Number(url.searchParams.get('maxResultCount'));
+      expect(maximum).toBeLessThanOrEqual(url.searchParams.has('stage') ? 25 : 50);
+    });
+    expect(staffRequests.length).toBeGreaterThan(0);
+    staffRequests.forEach((url) => {
+      expect(Number(url.searchParams.get('maxResultCount'))).toBeLessThanOrEqual(25);
+    });
   });
 
   test('workspace URLs preserve operational state without exposing applicant search text', async ({
@@ -575,7 +748,7 @@ test.describe('Student admissions CRM E2E', () => {
       timeout: 60_000,
     });
     await expect(page).toHaveURL(
-      new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
+      new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
     );
 
     await page.goto('/student/enrollment/pipeline?stage=999&page=-2', {
@@ -595,43 +768,74 @@ test.describe('Student admissions CRM E2E', () => {
       timeout: 60_000,
     });
     await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
+    );
+    await expect(page.getByRole('heading', { name: 'Enrollment Setup Center' })).toBeVisible();
+    await page.locator('a[href^="/student/enrollment/settings/journey"]').first().click();
+    await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
     );
-    await expect(page.getByRole('heading', { name: 'Journey & Cycles' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Admission Journey' })).toBeVisible();
     await expect(page.getByText('Enrollment settings categories')).toHaveCount(0);
 
     const cycleName = page.getByRole('textbox', { name: 'Cycle name' });
     await expect(cycleName).not.toHaveValue('');
     const originalCycleName = await cycleName.inputValue();
     await cycleName.fill(`${originalCycleName} unsaved`);
-    await page.getByRole('tab', { name: 'Pipeline Stages' }).click();
+    await page.getByRole('tab', { name: /Applicant Stages/ }).click();
     await expect(page.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
     await page.getByRole('button', { name: 'Discard & Continue' }).click();
     await expect(page).toHaveURL(/panel=pipeline/);
-    await page.getByRole('tab', { name: 'Cycle & Readiness' }).click();
+    await page.getByRole('tab', { name: /Admission Cycle/ }).click();
     await expect(page.getByRole('textbox', { name: 'Cycle name' })).toHaveValue(originalCycleName);
 
-    const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Capture' });
+    const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Forms & Sources' });
     await expect(inquiryCaptureLink).toHaveAttribute('href', new RegExp(`cycle=${academicYearId}`));
     await inquiryCaptureLink.click();
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/inquiry-capture/?\\?cycle=${academicYearId}`)
     );
 
-    await page.getByRole('tab', { name: 'Form Templates' }).click();
+    await page.getByRole('link', { name: /^Inquiry Forms Build and/ }).click();
     await expect(page).toHaveURL(/panel=forms/);
     await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Entrance Exams' }).last().click();
+    await page.getByRole('link', { name: 'Exam & Eligibility' }).last().click();
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/entrance-exams/?\\?cycle=${academicYearId}`)
+    );
+    const examSettingsHeader = page.locator('header').filter({ hasText: 'Exam & Eligibility' });
+    await expect(
+      examSettingsHeader.getByRole('heading', { name: 'Exam & Eligibility' })
+    ).toBeVisible();
+    await expect(examSettingsHeader.getByRole('link', { name: 'Settings' })).toHaveAttribute(
+      'href',
+      new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
     );
     await expect(page.getByRole('table', { name: 'customizable table' })).toBeVisible();
     await expect(page.getByPlaceholder('Search...')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Columns' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Export' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'New Playbook' }).click();
+    const admissionSetupsTable = page.getByTestId('student-enrollment-admissions-playbooks');
+    const tableBox = await admissionSetupsTable.boundingBox();
+    const viewport = page.viewportSize();
+    expect(tableBox).not.toBeNull();
+    expect(viewport).not.toBeNull();
+    expect(viewport!.height - (tableBox!.y + tableBox!.height)).toBeLessThanOrEqual(32);
+
+    await page.getByRole('button', { name: 'Quick setup' }).click();
+    const quickSetupDialog = page.getByRole('dialog', { name: 'Quick admission setup' });
+    await expect(quickSetupDialog).toBeVisible();
+    await expect(quickSetupDialog.getByLabel('Assessment process')).toHaveText(
+      'Written entrance exam'
+    );
+    await expect(
+      quickSetupDialog.getByRole('switch', { name: 'Generate hall tickets for this exam' })
+    ).not.toBeChecked();
+    await quickSetupDialog.getByRole('button', { name: 'Cancel' }).click();
+
+    await page.getByRole('button', { name: 'Advanced setup' }).click();
     await expect(page.getByRole('dialog', { name: 'New Admissions Playbook' })).toBeVisible();
     await expect(page.getByText('General', { exact: true })).toBeVisible();
     await expect(page.getByText('Slots & Rules', { exact: true })).toBeVisible();
@@ -728,7 +932,7 @@ test.describe('Student admissions CRM E2E', () => {
     expect(duplicateLead?.likelyDuplicateCount).toBeGreaterThan(0);
     expect(duplicateLead?.duplicateContinueReason).toContain('Parent called again');
 
-    const response = await page.goto('/student/enrollment/pipeline', {
+    const response = await page.goto(workspaceUrl('/student/enrollment/pipeline', academicYearId), {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
@@ -754,6 +958,33 @@ test.describe('Student admissions CRM E2E', () => {
 
     const academicYearId = await resolveAcademicYearId(page);
     const template = await createPublicInquiryTemplate(page, academicYearId);
+
+    const inquiryPage = await page.context().newPage();
+    try {
+      await inquiryPage.setViewportSize({ width: 390, height: 844 });
+      await inquiryPage.goto(`/student/admissions/inquiry/${tenantId}/${template.id}`, {
+        waitUntil: 'networkidle',
+        timeout: 60_000,
+      });
+      await expect(inquiryPage.getByRole('heading', { name: template.templateName })).toBeVisible();
+      const accessibility = await new AxeBuilder({ page: inquiryPage })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze();
+      expect(
+        accessibility.violations.filter((violation) =>
+          ['serious', 'critical'].includes(violation.impact || '')
+        ),
+        'public inquiry accessibility'
+      ).toEqual([]);
+      const widths = await inquiryPage.evaluate(() => ({
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+      }));
+      expect(Math.max(widths.document, widths.body)).toBeLessThanOrEqual(widths.viewport + 1);
+    } finally {
+      await inquiryPage.close();
+    }
 
     const formResponse = await publicApiRequest(
       page,
@@ -826,7 +1057,7 @@ test.describe('Student admissions CRM E2E', () => {
     expect(scheduled?.attendanceStatus).toBe(0);
 
     const slotName = scheduled.slotNameSnapshot || slot.slotName;
-    const examRow = await openExamRowInWorkspace(page, lead.firstName, slotName);
+    const examRow = await openExamRowInWorkspace(page, lead.firstName, slotName, academicYearId);
     await examRow.getByRole('button', { name: /Manage/i }).click();
     const examDialog = page.getByRole('dialog', { name: /Manage Entrance Exam/i });
     await expect(examDialog).toBeVisible({ timeout: 15_000 });
@@ -882,7 +1113,12 @@ test.describe('Student admissions CRM E2E', () => {
 
     await examDialog.getByRole('button', { name: 'Close' }).click({ force: true });
 
-    const persistedExamRow = await openExamRowInWorkspace(page, lead.firstName, slotName);
+    const persistedExamRow = await openExamRowInWorkspace(
+      page,
+      lead.firstName,
+      slotName,
+      academicYearId
+    );
     await expect(persistedExamRow).toContainText('82/100');
     await persistedExamRow.getByRole('button', { name: 'More actions' }).click();
     await page.getByRole('menuitem', { name: 'Eligibility Handoff' }).click();
@@ -939,9 +1175,17 @@ test.describe('Student admissions CRM E2E', () => {
     const academicYearId = await resolveAcademicYearId(page);
     const originalCycle = await getCrmCycleConfiguration(page, academicYearId);
     await updateCrmCycleRegistrationGate(page, academicYearId, originalCycle, true);
+    let registrationTemplate: { id: string } | undefined;
 
     try {
       const lead = await createCrmLead(page, academicYearId, uniquePhone(), 'FormGate');
+      const registrationTemplateName = uniqueToken('Playwright exam gate ');
+      registrationTemplate = await createPublishedRegistrationTemplate(
+        page,
+        academicYearId,
+        'Grade 1',
+        registrationTemplateName
+      );
       const slot = await getAvailableEntranceExamSlot(page, academicYearId);
 
       const blockedSchedule = await crmApiRequest(
@@ -959,29 +1203,31 @@ test.describe('Student admissions CRM E2E', () => {
         'AdmissionCrm:RegistrationFormRequiredBeforeExam'
       );
 
-      const leadCard = await openLeadCardInWorkspace(page, lead.firstName);
-      await expect(leadCard.getByText('Form pending')).toBeVisible();
-      await leadCard.getByRole('button', { name: /Issue Form/i }).click();
-
-      const formNumber = `E2E-${uniqueToken('').toUpperCase()}`;
-      const formDialog = page.getByRole('dialog', { name: /Issue Registration Form/i });
-      await expect(formDialog).toBeVisible({ timeout: 15_000 });
-      await formDialog.getByLabel('Form number').fill(formNumber);
-      await formDialog.getByLabel('Amount').fill('250');
-      await formDialog.getByRole('button', { name: /^Issue Form$/i }).click();
+      const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
+      await expect(leadCard.getByText('Registration not issued')).toBeVisible();
+      await leadCard.getByRole('button', { name: 'Registration' }).click();
+      await expect(page.getByText('Registration has not been issued')).toBeVisible();
+      await page.getByRole('button', { name: 'Issue registration' }).click();
+      await page.getByLabel('Registration template').click();
+      await page.getByRole('option', { name: `${registrationTemplateName} - v1` }).click();
+      await page.getByRole('button', { name: 'Issue', exact: true }).click();
 
       await expect
         .poll(async () => (await getCrmLead(page, lead.id)).registrationFormNumber, {
           timeout: 30_000,
           message: 'Registration form issue should persist.',
         })
-        .toBe(formNumber);
+        .not.toBeFalsy();
+      const issuedLead = await getCrmLead(page, lead.id);
+      expect(issuedLead.registrationFormNumber).toBeTruthy();
+      const issuedFormNumber = String(issuedLead.registrationFormNumber);
+      await expect(leadCard.getByText(new RegExp(escapeRegExp(issuedFormNumber)))).toBeVisible();
 
       const timeline = await getCrmTimeline(page, lead.id);
       expect(
         timeline?.items?.some(
           (item: { eventType?: number; details?: string }) =>
-            item.eventType === 20 && item.details?.includes(formNumber)
+            item.eventType === 20 && item.details?.includes(issuedFormNumber)
         ),
         'Registration form issue should be recorded in the CRM timeline.'
       ).toBe(true);
@@ -999,6 +1245,13 @@ test.describe('Student admissions CRM E2E', () => {
       expect(scheduled?.leadId).toBe(lead.id);
       expect(scheduled?.entranceExamSlotId).toBe(slot.id);
     } finally {
+      if (registrationTemplate?.id) {
+        await crmApiRequest(
+          page,
+          `/student-enrollment/admissions-crm/configuration/registration-templates/${registrationTemplate.id}/retire`,
+          { method: 'POST' }
+        );
+      }
       await updateCrmCycleRegistrationGate(
         page,
         academicYearId,
@@ -1216,6 +1469,24 @@ test.describe('Student admissions CRM E2E', () => {
       expect(accessSessionToken).toBeTruthy();
 
       await expect(parentPage.getByText('Registration Form')).toBeVisible();
+      await parentPage.setViewportSize({ width: 390, height: 844 });
+      const parentAccessibility = await new AxeBuilder({ page: parentPage })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze();
+      expect(
+        parentAccessibility.violations.filter((violation) =>
+          ['serious', 'critical'].includes(violation.impact || '')
+        ),
+        'public status accessibility'
+      ).toEqual([]);
+      const parentWidths = await parentPage.evaluate(() => ({
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+      }));
+      expect(Math.max(parentWidths.document, parentWidths.body)).toBeLessThanOrEqual(
+        parentWidths.viewport + 1
+      );
       await parentPage.getByLabel('Parent occupation').fill('Engineer');
       await parentPage.getByRole('button', { name: 'Save Progress' }).click();
       await expect(parentPage.getByText('Progress saved.')).toBeVisible({ timeout: 15_000 });
@@ -1236,7 +1507,7 @@ test.describe('Student admissions CRM E2E', () => {
         timeout: 20_000,
       });
 
-      const leadCard = await openLeadCardInWorkspace(page, lead.firstName);
+      const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await leadCard.getByRole('button', { name: 'Manage' }).click();
       const operationsDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
       await operationsDialog.getByRole('tab', { name: 'Registration' }).click();
@@ -1272,7 +1543,7 @@ test.describe('Student admissions CRM E2E', () => {
         .getByRole('button', { name: 'Close applicant workspace' })
         .click({ force: true });
       await page.reload({ waitUntil: 'domcontentloaded' });
-      const refreshedLeadCard = await openLeadCardInWorkspace(page, lead.firstName);
+      const refreshedLeadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
       const refreshedDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
       await refreshedDialog.getByRole('tab', { name: 'Registration' }).click();

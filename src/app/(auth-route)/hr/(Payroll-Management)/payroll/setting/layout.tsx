@@ -1,8 +1,7 @@
 'use client';
 
 import { Box, Alert, Button } from '@mui/material';
-import { RouterLink } from 'src/routes/components';
-import { hrPermissions } from 'src/constants/hr-menus';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 const PayrollSettingLayout = ({ children }: { children: React.ReactNode }) => (
@@ -12,12 +11,7 @@ const PayrollSettingLayout = ({ children }: { children: React.ReactNode }) => (
         severity="info"
         sx={{ mb: 2, flexShrink: 0 }}
         action={
-          <Button
-            size="small"
-            color="inherit"
-            component={RouterLink}
-            href="/hr/policies?tab=payroll"
-          >
+          <Button size="small" color="inherit" href={hrPaths.policies.payroll}>
             Open Payroll Policies
           </Button>
         }

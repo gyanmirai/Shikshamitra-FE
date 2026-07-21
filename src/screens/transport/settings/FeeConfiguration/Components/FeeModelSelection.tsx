@@ -68,7 +68,7 @@ const FeeModelSelection: React.FC<FeeModelSelectionProps> = ({ formik, setSelect
       </Typography>
 
       <RadioGroup value={selectedModel}>
-        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} mt={1}>
+        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1} mt={1}>
           {models.map((model) => (
             <Box
               key={model.value}

@@ -5,8 +5,9 @@ import { Box, Button, Switch, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const Integrations = () => (
-  <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+  <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Integrations"
       description="Manage integrations for the learning management system."
       links={[

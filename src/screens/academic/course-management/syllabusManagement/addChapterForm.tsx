@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -256,7 +256,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     try {
       const uploadPromises = newFiles.map(async (file) => {
         const formData = new FormData();
-        formData.append('FileName', file.name);
         formData.append('File', file);
         const response = await uploadCurriculumFile(formData).unwrap();
         return { data: response.data, name: file.name };
@@ -287,7 +286,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Box display="flex" flexDirection="column" gap={1} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             {/* ── Context Header ───────────────────────────────────── */}
             <Paper
@@ -300,7 +299,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 border: (t) => `1px solid rgba(${t.vars.palette.primary.mainChannel} / 0.18)`,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 2,
+                gap: 1,
                 flexWrap: 'wrap',
               }}
             >
@@ -361,7 +360,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               </Stack>
               <Divider sx={{ mb: 2 }} />
 
-              <Grid container spacing={3}>
+              <Grid container spacing={1}>
                 {/* Chapter Number */}
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
@@ -436,6 +435,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       label="Chapter Start Date *"
                       format="DD/MM/YYYY"
                       value={formik.values.startDate}
+                      standardId={classId}
                       disablePast
                       onChange={(newValue) => {
                         formik.setFieldValue('startDate', newValue);
@@ -465,6 +465,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       label="Chapter End Date *"
                       format="DD/MM/YYYY"
                       disablePast
+                      standardId={classId}
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       value={formik.values.endDate}
@@ -520,7 +521,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               <Collapse in={additionalFields.value}>
                 <Divider sx={{ my: 2 }} />
 
-                <Grid container spacing={3} sx={{ mb: 3 }}>
+                <Grid container spacing={1} sx={{ mb: 3 }}>
                   {[
                     { name: 'unitName', label: 'Unit', placeholder: 'Unit 1' },
                     { name: 'termName', label: 'Term', placeholder: 'Term 1' },
@@ -633,7 +634,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     },
                   }}
                 />
-                <Grid container spacing={3} sx={{ mt: 3 }}>
+                <Grid container spacing={1} sx={{ mt: 3 }}>
                   {[
                     ['teacherNotes', 'Teacher Notes'],
                     ['studentSummary', 'Student Summary'],
@@ -764,7 +765,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     />
                   </Grid>
                   <Grid size={{ xs: 12 }}>
-                    <Stack direction="row" gap={3} flexWrap="wrap">
+                    <Stack direction="row" gap={1} flexWrap="wrap">
                       <FormControlLabel
                         control={
                           <Checkbox

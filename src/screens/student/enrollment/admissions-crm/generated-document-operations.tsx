@@ -1,19 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Download, Visibility, Description } from '@mui/icons-material';
-import { Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
+import { Chip, Alert, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmGeneratedDocumentType,
   useIssueAdmissionCrmGeneratedDocumentMutation,
   useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   usePreviewAdmissionCrmGeneratedDocumentMutation,
+  useGetAdmissionCrmGeneratedDocumentAvailabilityQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { ApplicantSection } from './applicant-workspace-primitives';
 
 type Props = {
   leadId: string;
+  allowedDocumentTypes?: readonly AdmissionCrmGeneratedDocumentType[];
+  title?: string;
+  description?: string;
 };
 
 const documentTypeLabels: Record<AdmissionCrmGeneratedDocumentType, string> = {
@@ -59,15 +65,59 @@ const openPdf = (content: string, fileName: string, download: boolean) => {
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 };
 
-export function GeneratedDocumentOperations({ leadId }: Props) {
+export function GeneratedDocumentOperations({
+  leadId,
+  allowedDocumentTypes,
+  title = 'Generated documents',
+  description = 'Preview and issue applicant-safe documents with an audited history.',
+}: Props) {
+  const configuredDocumentTypes = useMemo(
+    () => (allowedDocumentTypes?.length ? [...allowedDocumentTypes] : documentTypes),
+    [allowedDocumentTypes]
+  );
+  const availabilityQuery = useGetAdmissionCrmGeneratedDocumentAvailabilityQuery({ leadId });
+  const availableDocumentTypes = useMemo(
+    () =>
+      configuredDocumentTypes.filter(
+        (type) =>
+          !availabilityQuery.data ||
+          availabilityQuery.data.some((item) => item.documentType === type && item.isAvailable)
+      ),
+    [availabilityQuery.data, configuredDocumentTypes]
+  );
+  const unavailableDocuments = useMemo(
+    () =>
+      (availabilityQuery.data || []).filter(
+        (item) => configuredDocumentTypes.includes(item.documentType) && !item.isAvailable
+      ),
+    [availabilityQuery.data, configuredDocumentTypes]
+  );
   const [documentType, setDocumentType] = useState<AdmissionCrmGeneratedDocumentType>(
-    AdmissionCrmGeneratedDocumentType.HallTicket
+    configuredDocumentTypes[0]
   );
   const [language, setLanguage] = useState('en');
   const [reason, setReason] = useState('');
+  const [editorOpen, setEditorOpen] = useState(false);
   const [preview, previewState] = usePreviewAdmissionCrmGeneratedDocumentMutation();
   const [issue, issueState] = useIssueAdmissionCrmGeneratedDocumentMutation();
   const historyQuery = useGetAdmissionCrmGeneratedDocumentHistoryQuery({ leadId });
+  const visibleHistory = useMemo(
+    () =>
+      (historyQuery.data || []).filter((item) =>
+        configuredDocumentTypes.includes(item.documentType)
+      ),
+    [configuredDocumentTypes, historyQuery.data]
+  );
+
+  useEffect(() => {
+    if (availableDocumentTypes.length > 0 && !availableDocumentTypes.includes(documentType)) {
+      setDocumentType(availableDocumentTypes[0]);
+    }
+  }, [availableDocumentTypes, documentType]);
+
+  useEffect(() => {
+    if (availabilityQuery.data && availableDocumentTypes.length === 0) setEditorOpen(false);
+  }, [availabilityQuery.data, availableDocumentTypes.length]);
 
   const runPreview = async () => {
     try {
@@ -88,6 +138,7 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
       }).unwrap();
       openPdf(result.content, result.fileName, true);
       setReason('');
+      setEditorOpen(false);
       shikshaMitraToast.success({ message: `${result.documentTypeName} issued.` });
     } catch (error) {
       shikshaMitraToast.error({ message: readError(error, 'Unable to issue the document.') });
@@ -95,84 +146,108 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+    <ApplicantSection
+      title={title}
+      description={description}
+      action={
+        <Button
+          size="small"
+          variant={editorOpen ? 'text' : 'outlined'}
+          startIcon={<Description />}
+          disabled={availabilityQuery.isFetching || availableDocumentTypes.length === 0}
+          onClick={() => setEditorOpen((current) => !current)}
+        >
+          {editorOpen ? 'Close' : 'Generate document'}
+        </Button>
+      }
+    >
       <Stack spacing={1.25}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-          <Typography variant="subtitle2">Generated documents</Typography>
-          <Chip size="small" label="CRM-owned" color="primary" variant="outlined" />
-        </Stack>
-        <Alert severity="info">
-          Preview or issue applicant-safe hall tickets, acknowledgements, offers, admission letters,
-          correction notices, and cancellation letters. Issuing creates an audited timeline event.
-        </Alert>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Document"
-            value={documentType}
-            onChange={(event) =>
-              setDocumentType(Number(event.target.value) as AdmissionCrmGeneratedDocumentType)
-            }
-          >
-            {documentTypes.map((type) => (
-              <MenuItem key={type} value={type}>
-                {documentTypeLabels[type]}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Language"
-            value={language}
-            onChange={(event) => setLanguage(event.target.value)}
-          >
-            <MenuItem value="en">English</MenuItem>
-            <MenuItem value="gu">Gujarati</MenuItem>
-            <MenuItem value="hi">Hindi</MenuItem>
-          </TextField>
-          <TextField
-            fullWidth
-            size="small"
-            label="Issue reason"
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            placeholder="Required for a correction or override"
-          />
-        </Stack>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <LoadingButton
-            variant="outlined"
-            startIcon={<Visibility />}
-            loading={previewState.isLoading}
-            onClick={runPreview}
-          >
-            Preview
-          </LoadingButton>
-          <LoadingButton
-            variant="contained"
-            startIcon={<Description />}
-            loading={issueState.isLoading}
-            onClick={runIssue}
-          >
-            Issue document
-          </LoadingButton>
-        </Stack>
+        <Chip
+          size="small"
+          label="CRM-owned"
+          color="primary"
+          variant="outlined"
+          sx={{ alignSelf: 'flex-start' }}
+        />
+        {availableDocumentTypes.length === 0
+          ? unavailableDocuments.map((item) => (
+              <Alert key={item.documentType} severity="info">
+                {item.message}
+              </Alert>
+            ))
+          : null}
+        {editorOpen ? (
+          <>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Document"
+                value={documentType}
+                onChange={(event) =>
+                  setDocumentType(Number(event.target.value) as AdmissionCrmGeneratedDocumentType)
+                }
+              >
+                {availableDocumentTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {documentTypeLabels[type]}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Language"
+                value={language}
+                onChange={(event) => setLanguage(event.target.value)}
+              >
+                <MenuItem value="en">English</MenuItem>
+                <MenuItem value="gu">Gujarati</MenuItem>
+                <MenuItem value="hi">Hindi</MenuItem>
+              </TextField>
+              <TextField
+                fullWidth
+                size="small"
+                label="Issue reason"
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder="Required for a correction or override"
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <LoadingButton
+                variant="outlined"
+                startIcon={<Visibility />}
+                loading={previewState.isLoading}
+                onClick={runPreview}
+              >
+                Preview
+              </LoadingButton>
+              <LoadingButton
+                variant="contained"
+                startIcon={<Description />}
+                loading={issueState.isLoading}
+                onClick={runIssue}
+              >
+                Issue document
+              </LoadingButton>
+            </Stack>
+          </>
+        ) : null}
         {historyQuery.isFetching ? (
           <Typography variant="caption">{'Loading issue history\u2026'}</Typography>
         ) : null}
         {historyQuery.isError ? (
           <Alert severity="warning">Document history is temporarily unavailable.</Alert>
         ) : null}
-        {(historyQuery.data || []).length > 0 ? (
+        {visibleHistory.length > 0 ? (
           <Stack spacing={0.75}>
             <Typography variant="caption" color="text.secondary">
               Issue history
             </Typography>
-            {(historyQuery.data || []).map((item) => (
+            {visibleHistory.map((item) => (
               <Stack
                 key={item.timelineEventId}
                 direction={{ xs: 'column', sm: 'row' }}
@@ -194,6 +269,6 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
           </Stack>
         ) : null}
       </Stack>
-    </Paper>
+    </ApplicantSection>
   );
 }

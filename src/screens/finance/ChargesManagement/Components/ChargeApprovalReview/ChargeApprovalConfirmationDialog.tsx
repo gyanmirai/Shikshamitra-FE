@@ -168,7 +168,7 @@ const ChargeApprovalConfirmationDialog: React.FC<IChargeApprovalConfirmationDial
           <Divider sx={{ my: 2 }} />
 
           {/* Action Buttons */}
-          <Box display="flex" alignItems="center" justifyContent="flex-end" gap={1.5}>
+          <Box display="flex" alignItems="center" justifyContent="flex-end" gap={1}>
             <Button
               variant="outlined"
               color="inherit"

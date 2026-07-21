@@ -242,7 +242,7 @@ function StatCard({
         boxShadow: 'none',
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" alignItems="center" spacing={1}>
         <Box
           sx={{
             width: 34,
@@ -683,7 +683,7 @@ export default function QuestionPaperScreen() {
         width: 160,
         align: 'right' as const,
         render: (_: any, row: any) => (
-          <Stack direction="row" spacing={0.25} justifyContent="flex-end">
+          <Stack direction="row" spacing={1} justifyContent="flex-end">
             <Tooltip title="Blueprint & Builder">
               <IconButton
                 size="small"
@@ -751,6 +751,7 @@ export default function QuestionPaperScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Question Papers"
         description="Create papers, validate blueprints, generate from approved bank questions and publish securely."
         links={[
@@ -852,7 +853,7 @@ export default function QuestionPaperScreen() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 2,
+                gap: 1,
                 bgcolor: 'background.paper',
               }}
             >
@@ -860,7 +861,7 @@ export default function QuestionPaperScreen() {
                 <Typography variant="subtitle1" fontWeight={700} noWrap>
                   {selectedPaper.paperTitle}
                 </Typography>
-                <Stack direction="row" spacing={0.75} mt={0.5} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" useFlexGap>
                   <Chip
                     size="small"
                     label={`${selectedPaper.totalMarks} marks`}
@@ -911,7 +912,7 @@ export default function QuestionPaperScreen() {
                 <Grid container spacing={1}>
                   {/* Blueprint Panel */}
                   <Grid size={{ xs: 12, md: 5 }}>
-                    <Stack spacing={2}>
+                    <Stack spacing={1}>
                       {/* Chapter Weightage */}
                       <Card sx={{ p: 2.5, borderRadius: 2 }}>
                         <Stack
@@ -1386,7 +1387,7 @@ export default function QuestionPaperScreen() {
                                           </Typography>
                                           <Stack
                                             direction="row"
-                                            spacing={0.5}
+                                            spacing={1}
                                             mt={0.5}
                                             flexWrap="wrap"
                                           >
@@ -1578,7 +1579,7 @@ export default function QuestionPaperScreen() {
           style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
         >
           <DialogScrollContent>
-            <Grid container spacing={2.5}>
+            <Grid container spacing={1}>
               {/* Paper Identity */}
               <Grid size={12}>
                 <Typography variant="overline" color="text.disabled" letterSpacing={1}>

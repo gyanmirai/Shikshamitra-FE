@@ -20,7 +20,7 @@ const Settings = (props: TabComponentType) => (
     <Typography variant="h6" mt={2}>
       Notification Section
     </Typography>
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="h6">Set Reminders</Typography>

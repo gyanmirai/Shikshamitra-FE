@@ -97,7 +97,7 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
         <Divider />
         <Stack spacing={2} sx={{ p: 2.5 }}>
           {versionHistoryLoading || versionCompareLoading ? <LinearProgress /> : null}
-          <Box gap={0.5} display="flex" alignItems="center">
+          <Box gap={1} display="flex" alignItems="center">
             <Typography variant="subtitle1">{versionTarget?.policyName}</Typography>
             <InfoTooltipIcon title="Version history includes all published versions. Draft versions are not included." />
           </Box>

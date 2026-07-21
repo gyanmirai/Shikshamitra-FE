@@ -185,7 +185,6 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         url: `/academic/curriculum/teacher-diaries/${diaryId}/evidence`,
         method: 'POST',
         body,
-        headers: { 'Content-Type': 'multipart/form-data' },
       }),
       invalidatesTags: [academicType.diaryEvidence, academicType.teacherDiary],
     }),

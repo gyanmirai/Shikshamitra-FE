@@ -142,7 +142,7 @@ function MeetingItem({ meeting, index }: { meeting: Meeting; index: number }) {
             />
           </Stack>
 
-          <Stack direction="row" flexWrap="wrap" gap={1.5} mt={0.5}>
+          <Stack direction="row" flexWrap="wrap" gap={1} mt={0.5}>
             <Stack direction="row" alignItems="center" spacing={0.5}>
               <Iconify
                 icon="solar:clock-circle-outline"

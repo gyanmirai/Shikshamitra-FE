@@ -7,7 +7,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
+import { AcademicDatePicker } from 'src/components/academic-date-picker';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { Add, EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import {
@@ -60,8 +60,6 @@ const RoomAvailabilityScreen = () => {
   const [filters, setFilters] = useState<RoomAvailabilityFilters>(
     DEFAULT_ROOM_AVAILABILITY_FILTERS
   );
-  const [startDate, setStartDate] = useState<any>(dayjs(DEFAULT_ROOM_AVAILABILITY_FILTERS.date));
-  const [endDate, setEndDate] = useState<any>(dayjs(DEFAULT_ROOM_AVAILABILITY_FILTERS.date));
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [detailRoom, setDetailRoom] = useState<RoomAvailabilityItem | null>(null);
   const [isDetailOpen, setDetailOpen] = useState(false);
@@ -208,9 +206,10 @@ const RoomAvailabilityScreen = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 4 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 4 }}>
       {/* ── Breadcrumbs & Header ─────────────────────────── */}
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Room Availability"
         description="Find free rooms, inspect conflicts, reserve rooms, and review room usage."
         links={[
@@ -271,7 +270,7 @@ const RoomAvailabilityScreen = () => {
             <Tab
               value="reservations"
               label={
-                <Stack direction="row" alignItems="center" spacing={0.5}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <span>Reservations</span>
                 </Stack>
               }
@@ -281,7 +280,7 @@ const RoomAvailabilityScreen = () => {
             <Tab
               value="approvals"
               label={
-                <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <CheckCircle fontSize="small" />
                   <span>Approvals</span>
                   {pendingCount > 0 && (
@@ -299,18 +298,16 @@ const RoomAvailabilityScreen = () => {
 
           {/* Right side: View Switcher & Filters — only for availability tab */}
           {activeTab === 'availability' && (
-            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 1 }}>
-              <CustomDateRangePicker
-                label="Select Date Range"
-                value={[startDate, endDate]}
-                dateFormat="DD/MM/YYYY"
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+              <AcademicDatePicker
+                label="Date"
+                value={dayjs(filters.date)}
                 onChange={(value) => {
-                  setStartDate(value[0]);
-                  setEndDate(value[1]);
-                  if (value[0]) {
-                    patchFilters({ date: value[0].format('YYYY-MM-DD') });
+                  if (value) {
+                    patchFilters({ date: value.format('YYYY-MM-DD') });
                   }
                 }}
+                slotProps={{ textField: { size: 'small', sx: { minWidth: 150 } } }}
               />
 
               <CustomSelect

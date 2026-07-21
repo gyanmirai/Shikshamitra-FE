@@ -130,7 +130,7 @@ export default function FeeRefundDetailsForm({
           }}
         >
           {/* Card header */}
-          <Box display="flex" alignItems="center" gap={1.5} mb={2.5}>
+          <Box display="flex" alignItems="center" gap={1} mb={2.5}>
             <Box>
               <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.2 }}>
                 Refund Payment Details

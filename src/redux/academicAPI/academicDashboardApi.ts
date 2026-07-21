@@ -2,6 +2,39 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from './academicApi';
 
+type AcademicDashboardReadinessItem = {
+  key: string;
+  title: string;
+  status: 'complete' | 'partial' | 'missing' | string;
+  severity: 'success' | 'critical' | 'warning' | 'info' | string;
+  completedCount: number;
+  totalCount: number;
+  missingCount: number;
+  description: string;
+  actionLabel: string;
+  actionHref: string;
+};
+
+type AcademicDashboardActionCenterItem = {
+  id: string;
+  title: string;
+  summary: string;
+  severity: 'critical' | 'warning' | 'info' | string;
+  source: string;
+  count: number;
+  actionLabel: string;
+  actionHref: string;
+};
+
+type AcademicDashboardDataHealthItem = {
+  key: string;
+  title: string;
+  status: 'healthy' | 'needsAttention' | string;
+  severity: 'success' | 'warning' | 'critical' | 'info' | string;
+  detail: string;
+  actionHref: string;
+};
+
 export type AdminAcademicDashboardData = {
   curriculumCompletion: number;
   totalStudents: number;
@@ -45,6 +78,9 @@ export type AdminAcademicDashboardData = {
     progress: number;
     icon: string;
   }>;
+  readinessItems?: AcademicDashboardReadinessItem[];
+  actionCenterItems?: AcademicDashboardActionCenterItem[];
+  dataHealthItems?: AcademicDashboardDataHealthItem[];
   subjectPassFailChart: {
     subjectNames: string[];
     passCounts: number[];
@@ -82,6 +118,9 @@ export type PrincipalAcademicDashboardData = {
     actionLabel: string;
     actionHref?: string;
   }>;
+  readinessItems?: AcademicDashboardReadinessItem[];
+  actionCenterItems?: AcademicDashboardActionCenterItem[];
+  dataHealthItems?: AcademicDashboardDataHealthItem[];
   chapterCompletionChart: {
     standardNames: string[];
     completionPercentages: number[];
@@ -139,6 +178,9 @@ export type TeacherAcademicDashboardData = {
     actionLabel: string;
     actionHref?: string;
   }>;
+  readinessItems?: AcademicDashboardReadinessItem[];
+  actionCenterItems?: AcademicDashboardActionCenterItem[];
+  dataHealthItems?: AcademicDashboardDataHealthItem[];
   todaySchedule: Array<{
     id: string;
     time: string;
@@ -700,6 +742,9 @@ const mockTeacherData: TeacherAcademicDashboardData = {
   },
 };
 
+const useAcademicDashboardMockFallback =
+  process.env.NEXT_PUBLIC_USE_ACADEMIC_DASHBOARD_MOCKS === 'true';
+
 export const academicDashboardApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getAdminAcademicDashboard: builder.query<AdminAcademicDashboardData, void>({
@@ -709,7 +754,9 @@ export const academicDashboardApi = academicApi.injectEndpoints({
           method: 'GET',
         });
         if (result.error) {
-          return { data: mockAdminData };
+          return useAcademicDashboardMockFallback
+            ? { data: mockAdminData }
+            : { error: result.error };
         }
         return { data: result.data as AdminAcademicDashboardData };
       },
@@ -723,7 +770,9 @@ export const academicDashboardApi = academicApi.injectEndpoints({
           method: 'GET',
         });
         if (result.error) {
-          return { data: mockPrincipalData };
+          return useAcademicDashboardMockFallback
+            ? { data: mockPrincipalData }
+            : { error: result.error };
         }
         return { data: result.data as PrincipalAcademicDashboardData };
       },
@@ -737,7 +786,9 @@ export const academicDashboardApi = academicApi.injectEndpoints({
           method: 'GET',
         });
         if (result.error) {
-          return { data: mockTeacherData };
+          return useAcademicDashboardMockFallback
+            ? { data: mockTeacherData }
+            : { error: result.error };
         }
         return { data: result.data as TeacherAcademicDashboardData };
       },
@@ -751,8 +802,7 @@ export const academicDashboardApi = academicApi.injectEndpoints({
           method: 'POST',
         });
         if (result.error) {
-          // Resolve mock success
-          return { data: undefined };
+          return { error: result.error };
         }
         return { data: result.data as void };
       },
@@ -769,8 +819,7 @@ export const academicDashboardApi = academicApi.injectEndpoints({
           method: 'GET',
         });
         if (result.error) {
-          // fallback to mock
-          return { data: { passed: 45, failed: 35 } };
+          return { error: result.error };
         }
         return { data: result.data as { passed: number; failed: number } };
       },
@@ -792,19 +841,7 @@ export const academicDashboardApi = academicApi.injectEndpoints({
           method: 'GET',
         });
         if (result.error) {
-          // fallback to mock
-          return {
-            data: {
-              subjects: [
-                { subjectName: 'Math', completedChapters: 12, pendingChapters: 3 },
-                { subjectName: 'Science', completedChapters: 10, pendingChapters: 5 },
-                { subjectName: 'English', completedChapters: 13, pendingChapters: 2 },
-                { subjectName: 'History', completedChapters: 11, pendingChapters: 4 },
-                { subjectName: 'Geography', completedChapters: 9, pendingChapters: 6 },
-                { subjectName: 'Physics', completedChapters: 14, pendingChapters: 1 },
-              ],
-            },
-          };
+          return { error: result.error };
         }
         return {
           data: result.data as {

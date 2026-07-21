@@ -13,7 +13,7 @@ export function Snackbar() {
     <Portal>
       <StyledToaster
         expand
-        gap={12}
+        gap={1}
         closeButton
         offset={16}
         duration={4000}

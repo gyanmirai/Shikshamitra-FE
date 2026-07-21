@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import _ from 'lodash';
 import { useTheme } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -92,6 +92,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   });
 
   const { page, rowsPerPage, searchTerm, filters, sorts, columnVisibility, dense } = tableConfig;
+  const onServerSearchRef = useRef(onServerSearch);
+
+  useEffect(() => {
+    onServerSearchRef.current = onServerSearch;
+  }, [onServerSearch]);
 
   const { filteredData, sortedData, paginatedData } = useTableData({
     data,
@@ -224,14 +229,14 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   // Re-implement debounce effect for server search
   useEffect(() => {
-    if (serverSideSearch && onServerSearch) {
+    if (serverSideSearch && onServerSearchRef.current) {
       const handler = setTimeout(() => {
-        onServerSearch(searchTerm);
+        onServerSearchRef.current?.(searchTerm);
       }, 500);
       return () => clearTimeout(handler);
     }
     return () => {};
-  }, [searchTerm, serverSideSearch, onServerSearch]);
+  }, [searchTerm, serverSideSearch]);
 
   const handleColumnVisibilityChange = useCallback(
     (columnId: string, isVisible: boolean) => {

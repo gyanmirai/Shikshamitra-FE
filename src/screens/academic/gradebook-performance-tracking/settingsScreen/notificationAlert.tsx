@@ -3,7 +3,7 @@ import CustomSelect from 'src/components/custom-select';
 import { Box, Card, Grid, Button, Checkbox, TextField, Typography } from '@mui/material';
 
 const NotificationAlert = () => (
-  <Grid container spacing={2}>
+  <Grid container spacing={1}>
     <Grid size={{ xs: 12 }}>
       <Typography variant="h6" my={1}>
         Notifications & Alerts

@@ -36,7 +36,7 @@ const AuditApprovalTrail = ({ steps }: Props) => {
         const color = meta.colorKey;
         const isLast = i === steps.length - 1;
         return (
-          <Box key={`${step.step}-${i}`} sx={{ display: 'flex', gap: 1.5 }}>
+          <Box key={`${step.step}-${i}`} sx={{ display: 'flex', gap: 1 }}>
             {/* Dot + connector */}
             <Stack alignItems="center">
               <Box
@@ -84,7 +84,7 @@ const AuditApprovalTrail = ({ steps }: Props) => {
                 {step.step}
               </Typography>
               {(step.actor || step.timestamp) && (
-                <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
+                <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
                   {step.actor && (
                     <Typography variant="caption" color="text.secondary">
                       by{' '}
@@ -95,7 +95,7 @@ const AuditApprovalTrail = ({ steps }: Props) => {
                     </Typography>
                   )}
                   {step.timestamp && (
-                    <Stack direction="row" alignItems="center" gap={0.5}>
+                    <Stack direction="row" alignItems="center" gap={1}>
                       <Iconify
                         icon="mdi:clock-time-four-outline"
                         width={11}

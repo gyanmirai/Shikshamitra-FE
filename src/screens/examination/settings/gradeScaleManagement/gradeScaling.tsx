@@ -92,7 +92,10 @@ const GradingScale = () => {
 
   const scalesList = gradeScalings?.data || [];
   const totalScales = scalesList.length;
-  const activeScales = scalesList.filter((s: any) => s.status === 0 || s.status === 'Active' || s.status === 2 || s.status === 'SystemDefault').length;
+  const activeScales = scalesList.filter(
+    (s: any) =>
+      s.status === 0 || s.status === 'Active' || s.status === 2 || s.status === 'SystemDefault'
+  ).length;
   const usedScales = scalesList.filter((s: any) => s.usageCount > 0).length;
   const unusedScales = scalesList.filter((s: any) => !s.usageCount || s.usageCount === 0).length;
   const defaultScale = scalesList.find((s: any) => s.isDefault)?.name || 'None';
@@ -157,9 +160,9 @@ const GradingScale = () => {
         sx={{
           display: 'grid',
           gridTemplateColumns: {
-            xs: 'repeat(2, minmax(0, 1fr))',
-            md: 'repeat(3, minmax(0, 1fr))',
-            lg: 'repeat(5, minmax(0, 1fr))',
+            xs: 'repeat(1, minmax(0, 1fr))',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(auto-fit, minmax(160px, 1fr))',
           },
           gap: 1,
           mb: 2,
@@ -178,10 +181,18 @@ const GradingScale = () => {
             sx={{
               p: 1.25,
               borderRadius: 1,
-              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.04)
+                  : theme.palette.background.paper,
+              borderColor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.12)
+                  : theme.palette.divider,
+              minWidth: 0,
             }}
           >
-            <Stack spacing={0.5}>
+            <Stack spacing={1}>
               <Typography variant="caption" color="text.secondary">
                 {card.label}
               </Typography>
@@ -220,7 +231,12 @@ const GradingScale = () => {
         columns={[
           { id: 'name', label: 'Grade Scale Title' },
           { id: 'totalMarks', label: 'Total Marks', filterType: 'number' },
-          { id: 'passMarks', label: 'Pass Marks', filterType: 'number', render: (val) => val ?? '-' },
+          {
+            id: 'passMarks',
+            label: 'Pass Marks',
+            filterType: 'number',
+            render: (val) => val ?? '-',
+          },
           {
             id: 'gradeRange',
             label: 'Grade Range',
@@ -233,7 +249,7 @@ const GradingScale = () => {
               const highGrade = sorted[0]?.grade || '';
               const lowGrade = sorted[sorted.length - 1]?.grade || '';
               return highGrade && lowGrade ? `${highGrade} to ${lowGrade}` : '-';
-            }
+            },
           },
           {
             id: 'status',
@@ -241,13 +257,13 @@ const GradingScale = () => {
             render: (value, row: any) => {
               const { label, color } = getStatusLabel(row.status);
               return <Label color={color as any}>{label}</Label>;
-            }
+            },
           },
           {
             id: 'usageCount',
             label: 'Usage Count',
             filterType: 'number',
-            render: (val) => `${val || 0} exams`
+            render: (val) => `${val || 0} exams`,
           },
           {
             id: 'actions',

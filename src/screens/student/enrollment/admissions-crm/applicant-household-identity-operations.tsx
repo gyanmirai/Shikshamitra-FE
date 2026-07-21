@@ -8,15 +8,12 @@ import {
   Box,
   Chip,
   Alert,
-  Paper,
   Stack,
   Divider,
-  Checkbox,
   MenuItem,
   TextField,
   Typography,
   LinearProgress,
-  FormControlLabel,
 } from '@mui/material';
 import {
   AdmissionCrmConsentStatus,
@@ -38,6 +35,8 @@ import {
   useOverrideAdmissionCrmIdentityReadinessMutation,
   useCreateAdmissionCrmHouseholdIdentityProfileMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { ApplicantSwitchRow, ApplicantInlineNotice } from './applicant-workspace-primitives';
 
 type Props = { leadId: string };
 
@@ -149,15 +148,15 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
 
   if (!profile) {
     return (
-      <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+      <Box component="section">
         <Stack spacing={1.25}>
-          <Stack direction="row" gap={0.75} alignItems="center">
+          <Stack direction="row" gap={1} alignItems="center">
             <Badge fontSize="small" />
             <Typography variant="subtitle2">Household and identity</Typography>
           </Stack>
-          <Alert severity="info">
+          <ApplicantInlineNotice>
             Resolve the applicant into a reusable household before final activation.
-          </Alert>
+          </ApplicantInlineNotice>
           <TextField
             select
             size="small"
@@ -283,12 +282,12 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
             Resolve household
           </LoadingButton>
         </Stack>
-      </Paper>
+      </Box>
     );
   }
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+    <Box component="section">
       <Stack spacing={1.25}>
         <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} justifyContent="space-between">
           <Box>
@@ -309,7 +308,7 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
             label={readinessLabels[profile.status]}
           />
         </Stack>
-        <Stack direction="row" gap={0.75} flexWrap="wrap">
+        <Stack direction="row" gap={1} flexWrap="wrap">
           <Chip
             size="small"
             color={profile.accountableContactReady ? 'success' : 'warning'}
@@ -498,60 +497,38 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
             ))}
           </TextField>
         </Stack>
-        <Stack direction="row" gap={0.5} flexWrap="wrap">
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={isPrimary}
-                onChange={(event) => setIsPrimary(event.target.checked)}
-              />
-            }
-            label="Primary contact"
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+            columnGap: 2,
+          }}
+        >
+          <ApplicantSwitchRow label="Primary contact" checked={isPrimary} onChange={setIsPrimary} />
+          <ApplicantSwitchRow
+            label="Emergency contact"
+            checked={isEmergency}
+            onChange={setIsEmergency}
           />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={isEmergency}
-                onChange={(event) => setIsEmergency(event.target.checked)}
-              />
-            }
-            label="Emergency"
+          <ApplicantSwitchRow
+            label="Accountable guardian"
+            checked={isAccountable}
+            onChange={setIsAccountable}
           />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={isAccountable}
-                onChange={(event) => setIsAccountable(event.target.checked)}
-              />
-            }
-            label="Accountable"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={hasFeeResponsibility}
-                onChange={(event) => setHasFeeResponsibility(event.target.checked)}
-              />
-            }
+          <ApplicantSwitchRow
             label="Fee responsibility"
+            checked={hasFeeResponsibility}
+            onChange={setHasFeeResponsibility}
           />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={hasPickupAuthorization}
-                onChange={(event) => setHasPickupAuthorization(event.target.checked)}
-              />
-            }
-            label="Pickup"
+          <ApplicantSwitchRow
+            label="Pickup authorization"
+            checked={hasPickupAuthorization}
+            onChange={setHasPickupAuthorization}
           />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={hasPortalAccess}
-                onChange={(event) => setHasPortalAccess(event.target.checked)}
-              />
-            }
+          <ApplicantSwitchRow
             label="Portal access"
+            checked={hasPortalAccess}
+            onChange={setHasPortalAccess}
           />
           <LoadingButton
             variant="outlined"
@@ -588,14 +565,14 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
           >
             Add guardian
           </LoadingButton>
-        </Stack>
+        </Box>
         {profile.guardians.map((guardian) => (
           <Stack
             key={guardian.id}
             spacing={0.75}
             sx={{ py: 0.75, borderTop: '1px solid', borderColor: 'divider' }}
           >
-            <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
+            <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
               <Typography variant="body2">
                 {[guardian.guardian.firstName, guardian.guardian.lastName]
                   .filter(Boolean)
@@ -727,6 +704,6 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
           </LoadingButton>
         </Stack>
       </Stack>
-    </Paper>
+    </Box>
   );
 }

@@ -37,7 +37,7 @@ describe('Enrollment settings route contracts', () => {
     ).toBe(true);
   });
 
-  it('keeps the root settings URL and redirects it to Journey', () => {
+  it('keeps the root settings URL as the Enrollment Setup Center', () => {
     const source = read(
       'src',
       'app',
@@ -47,8 +47,8 @@ describe('Enrollment settings route contracts', () => {
       'settings',
       'page.tsx'
     );
-    expect(source).toContain('redirect(');
-    expect(source).toContain('settingsSections.journey');
+    expect(source).toContain('EnrollmentSetupCenter');
+    expect(source).not.toContain('redirect(');
   });
 
   it('protects dirty settings across domain-sidebar navigation and browser exit', () => {
@@ -95,9 +95,10 @@ describe('Enrollment settings route contracts', () => {
 
     expect(shell).not.toContain('Enrollment settings categories');
     expect(shell).not.toContain('<Drawer');
-    expect(menu).toContain("title: 'Journey & Cycles'");
+    expect(menu).toContain("title: 'Admission Journey'");
+    expect(menu).toContain("title: 'Exam & Eligibility'");
     expect(menu).toContain('studentPaths.enrollment.settingsSections.automation');
-    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(17);
+    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(19);
   });
 
   it('uses URL-backed panels to progressively disclose dense settings', () => {
@@ -121,8 +122,52 @@ describe('Enrollment settings route contracts', () => {
     expect(state).toContain("searchParams.get('panel')");
     expect(state).toContain("set('panel', state.settingsPanel)");
     expect(settingsPage).toContain('EnrollmentSettingsPanelTabs');
+    expect(settingsPage).toContain('EnrollmentSettingsSetupSteps');
+    expect(settingsPage).toContain('<Stepper');
+    expect(settingsPage).toContain('<StepButton');
     expect(settingsPage).toContain('component={RouterLink}');
     expect(settingsPage).toContain('href={getPanelHref(option.value)}');
+  });
+
+  it('uses the project breadcrumb header and lets the exam setup table fill the workspace', () => {
+    const settingsPage = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-settings-page.tsx'
+    );
+    const settingsShell = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-settings-shell.tsx'
+    );
+    const examRoute = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'exam-settings-route.tsx'
+    );
+    const playbooks = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-playbook-configuration.tsx'
+    );
+
+    expect(settingsPage).toContain('<CustomBreadcrumbs');
+    expect(settingsPage).toContain("{ name: 'Settings', href:");
+    expect(settingsShell).toContain("flexDirection: 'column'");
+    expect(examRoute).toContain('fillAvailableHeight');
+    expect(playbooks).toContain('wrapperProps={{ sx: { minHeight: 320 } }}');
   });
 
   it('keeps skipped settings queries referentially stable', () => {
@@ -171,7 +216,63 @@ describe('Enrollment settings route contracts', () => {
     expect(`${playbooks}${registrations}${documents}`).not.toContain('onEditMouseDown');
     expect(playbooks).toContain("label: 'Scope'");
     expect(registrations).toContain("label: 'Registration Fee'");
-    expect(registrations).toContain("label: 'Issue Trigger'");
+    expect(registrations).toContain("label: 'Issue Method'");
+  });
+
+  it('offers a concise school-first exam setup while retaining advanced rules', () => {
+    const playbooks = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-playbook-configuration.tsx'
+    );
+    const route = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'exam-settings-route.tsx'
+    );
+
+    expect(playbooks).toContain('Quick admission setup');
+    expect(playbooks).toContain('Written entrance exam');
+    expect(playbooks).toContain('Student interaction only');
+    expect(playbooks).toContain('No entrance assessment');
+    expect(playbooks).toContain('Generate hall tickets for this exam');
+    expect(playbooks).toContain('Advanced setup');
+    expect(playbooks).toContain('hallTicketEnabled: false');
+    expect(route).toContain('whether the school issues hall tickets');
+  });
+
+  it('explains operational handoffs and progressively discloses applicant stage editing', () => {
+    const guidance = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admission-journey-guidance.tsx'
+    );
+    const configuration = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-crm-configuration.tsx'
+    );
+
+    expect(guidance).toContain('Applicant journey');
+    expect(guidance).toContain('gridTemplateColumns');
+    expect(guidance).toContain('Automatic stage');
+    expect(guidance).toContain('Ready to Invite');
+    expect(configuration).toContain('Applicant Stages');
+    expect(configuration).toContain('<Accordion');
+    expect(configuration).toContain('Staff can move applicants to');
+    expect(configuration).not.toContain('Pipeline Stages');
   });
 
   it('protects every exposed draft editor and uses staff selectors for delegation', () => {

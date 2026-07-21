@@ -30,7 +30,7 @@ const HostelPaymentMethodDialog = (props: TabComponentType) => {
       onSubmit={formik.handleSubmit}
       style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
     >
-      <Box p={2} display="flex" flexDirection="column" gap={3} flexGrow={1}>
+      <Box p={2} display="flex" flexDirection="column" gap={1} flexGrow={1}>
         <Grid container spacing={2}>
           <Grid size={12}>
             <ShakingTextField
@@ -52,7 +52,7 @@ const HostelPaymentMethodDialog = (props: TabComponentType) => {
         </Grid>
       </Box>
 
-      <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
+      <Box display="flex" justifyContent="flex-end" gap={1} p={2}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={() => {}}

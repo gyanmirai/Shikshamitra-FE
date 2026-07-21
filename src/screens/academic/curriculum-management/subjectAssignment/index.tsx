@@ -14,6 +14,7 @@ import SubjectBreadcrumbs from './component/SubjectBreadcrumbs';
 import SubjectDeleteDialog from './component/SubjectDeleteDialog';
 import SubjectPublishDialog from './component/SubjectPublishDialog';
 import SubjectArchiveDialog from './component/SubjectArchiveDialog';
+import SubjectRestoreDialog from './component/SubjectRestoreDialog';
 import { useSubjectAssignment } from './hooks/useSubjectAssignment';
 import { ViewSubject } from './component/viewDetailComponents/viewSubjectComponent';
 import SubjectAssignmentForm from './component/subjectAssignmentForm/subjectAssignmentForm';
@@ -28,6 +29,7 @@ const Subject = () => {
     isDeleteLoading,
     isPublishLoading,
     isArchiveLoading,
+    isRestoreLoading,
     isTableLoading,
     isFetching,
     subjectTableData,
@@ -37,6 +39,7 @@ const Subject = () => {
     deleteConfirmDialog,
     confirmPublishDialog,
     archiveConfirmDialog,
+    restoreConfirmDialog,
     showSubjectDialog,
     handleClose,
     handleViewSubject,
@@ -44,7 +47,9 @@ const Subject = () => {
     handleRequestDelete,
     handleRequestToggleStatus,
     handleRequestArchive,
+    handleRequestRestore,
     handleConfirmArchive,
+    handleConfirmRestore,
     handleCloseDialog,
     handleConfirmDelete,
     handleConfirmPublish,
@@ -119,6 +124,7 @@ const Subject = () => {
               onEdit={handleEditSubject}
               onDelete={handleRequestDelete}
               onArchive={handleRequestArchive}
+              onRestore={handleRequestRestore}
               onToggleStatus={handleRequestToggleStatus}
               query={query}
               setQuery={setQuery}
@@ -156,6 +162,16 @@ const Subject = () => {
           selectedSubject={selectedSubject}
           onClose={handleCloseDialog}
           onConfirm={handleConfirmArchive}
+        />
+      )}
+
+      {restoreConfirmDialog.value && canAdd && (
+        <SubjectRestoreDialog
+          open={restoreConfirmDialog.value}
+          isLoading={isRestoreLoading}
+          selectedSubject={selectedSubject}
+          onClose={handleCloseDialog}
+          onConfirm={handleConfirmRestore}
         />
       )}
 

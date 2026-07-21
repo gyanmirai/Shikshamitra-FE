@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { Description } from '@mui/icons-material';
 import CustomSelect from 'src/components/custom-select';
@@ -16,7 +16,7 @@ const DownloadReportsSection = () => (
     </Box>
 
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      <Grid container spacing={3} alignItems="flex-end">
+      <Grid container spacing={1} alignItems="flex-end">
         <Grid size={{ xs: 12, sm: 3 }}>
           <CustomSelect
             options={[]}
@@ -52,7 +52,7 @@ const DownloadReportsSection = () => (
         </Grid>
       </Grid>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 1 }}>
         <Button variant="contained" color="primary" startIcon={<Description />}>
           Download as PDF
         </Button>

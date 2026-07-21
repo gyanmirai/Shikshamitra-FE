@@ -37,7 +37,7 @@ const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => {
 
   return (
     <Box p={2}>
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         {documents.map((docPath, index: number) => {
           const doc = {
             name: getFileNameFromUrl(docPath),

@@ -295,6 +295,7 @@ export default function AdmissionsFinancialConfiguration() {
                   <span>
                     <IconButton
                       size="small"
+                      aria-label={`Remove fee component ${component.name || index + 1}`}
                       disabled={components.length === 1}
                       onClick={() =>
                         setComponents((items) =>
@@ -425,7 +426,7 @@ export default function AdmissionsFinancialConfiguration() {
                   {policy.components.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}
                 </Typography>
               </Box>
-              <Stack direction="row" gap={0.75} alignItems="center">
+              <Stack direction="row" gap={1} alignItems="center">
                 <Chip
                   size="small"
                   label={statusLabels[policy.status]}

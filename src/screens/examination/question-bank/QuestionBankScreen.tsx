@@ -220,7 +220,7 @@ function StatCard({
         boxShadow: 'none',
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Stack direction="row" alignItems="center" spacing={1}>
         <Box
           sx={{
             width: 34,
@@ -262,7 +262,7 @@ function QuestionFormFields({
   const showOptions = [1, 2, 3].includes(formik.values.questionType);
 
   return (
-    <Grid container spacing={2.5}>
+    <Grid container spacing={1}>
       <Grid size={12}>
         <Typography variant="overline" color="text.disabled" letterSpacing={1}>
           Classification
@@ -432,14 +432,14 @@ function QuestionFormFields({
           >
             Answer Options
           </Typography>
-          <Stack spacing={1.5}>
+          <Stack spacing={1}>
             {formik.values.options.map((option: any, index: number) => (
               <Box
                 key={index}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.5,
+                  gap: 1,
                   p: 1.5,
                   borderRadius: 1.5,
                   border: '1px solid',
@@ -917,7 +917,7 @@ export default function QuestionBankScreen() {
               {row.questionText}
             </Typography>
             {!!row.tags?.length && (
-              <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {row.tags.map((tag: string) => (
                   <Chip key={tag} size="small" label={tag} variant="soft" />
                 ))}
@@ -1007,7 +1007,7 @@ export default function QuestionBankScreen() {
         width: 220,
         align: 'right' as const,
         render: (_: any, row: any) => (
-          <Stack direction="row" spacing={0.25} justifyContent="flex-end">
+          <Stack direction="row" spacing={1} justifyContent="flex-end">
             <Tooltip title="Submit for Review">
               <span>
                 <IconButton
@@ -1108,6 +1108,7 @@ export default function QuestionBankScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Question Bank"
         description="Create, review, approve, tag and reuse questions for assessment workflows."
         links={[

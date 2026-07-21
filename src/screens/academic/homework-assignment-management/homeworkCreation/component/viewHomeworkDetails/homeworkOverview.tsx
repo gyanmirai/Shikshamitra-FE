@@ -113,7 +113,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
               </Box>
 
               {/* Type & Submit Via chips */}
-              <Box sx={{ display: 'flex', gap: 1.5, mb: 2.5, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2.5, flexWrap: 'wrap' }}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -312,7 +312,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
                     Created By
                   </Typography>
                   {typeof homework?.createdBy === 'string' ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar sx={{ width: 36, height: 36 }}>
                         {(homework.createdBy as unknown as string)?.[0]?.toUpperCase()}
                       </Avatar>
@@ -321,7 +321,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
                       </Typography>
                     </Box>
                   ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <TeacherHoverProfile
                         avatarComp={
                           <Badge

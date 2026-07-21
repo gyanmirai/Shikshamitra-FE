@@ -1,52 +1,83 @@
+import type { LearningResourceDto } from 'src/redux/academicAPI/CurriculumManagementApi/LearningResourcesApi/learning-resources-api';
+
+import React from 'react';
 import { Icon } from '@iconify/react';
-import React, { useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { PDFViewer } from '@react-pdf/renderer';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { Scrollbar } from 'src/components/scrollbar';
-import { FileThumbnail } from 'src/components/file-thumbnail';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
-import { Box, Card, Button, IconButton, Typography } from '@mui/material';
-import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
-
-import { dummyData } from './treeData';
-
-import type { IChapter, ISubject } from '../type';
+import { Box, Card, Chip, Stack, Button, IconButton, Typography } from '@mui/material';
 
 interface HierarchyTreeProps {
-  onEdit: (doc: File) => void;
+  resources: LearningResourceDto[];
+  isLoading?: boolean;
+  onEdit: (resource: LearningResourceDto) => void;
+  onArchive: (resource: LearningResourceDto) => void;
+  onPublish: (resource: LearningResourceDto) => void;
 }
 
-const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
+type ResourceGroup = Record<string, Record<string, Record<string, LearningResourceDto[]>>>;
+
+const statusLabel: Record<number, string> = {
+  0: 'Draft',
+  1: 'Submitted',
+  2: 'Published',
+  3: 'Rejected',
+  4: 'Archived',
+};
+
+const HierarchyTree: React.FC<HierarchyTreeProps> = ({
+  resources,
+  isLoading,
+  onEdit,
+  onArchive,
+  onPublish,
+}) => {
   const deleteDocumentDialog = useBoolean();
-  const [selectedClassId, setSelectedClassId] = React.useState<string | null>(null);
-  const [selectedDocument, setSelectedDocument] = React.useState<File | null>(null);
+  const [pendingArchive, setPendingArchive] = React.useState<LearningResourceDto | null>(null);
+  const [selectedResource, setSelectedResource] = React.useState<LearningResourceDto | null>(null);
 
-  useEffect(() => {
-    if (!selectedClassId && dummyData.length > 0) {
-      setSelectedClassId(dummyData[0].id);
-    }
-  }, [selectedClassId]);
+  const groupedResources = resources.reduce<ResourceGroup>((acc, resource) => {
+    const standard = resource.standardName || 'Class';
+    const subject = resource.subjectName || 'Subject';
+    const chapter = resource.chapterName || 'General';
+    acc[standard] ??= {};
+    acc[standard][subject] ??= {};
+    acc[standard][subject][chapter] ??= [];
+    acc[standard][subject][chapter].push(resource);
+    return acc;
+  }, {});
 
-  const renderDocuments = (docs: File[], parentId: string) =>
-    docs.map((doc, idx) => (
+  const renderDocuments = (docs: LearningResourceDto[], parentId: string) =>
+    docs.map((doc) => (
       <TreeItem
-        key={`${parentId}-doc-${idx}`}
-        itemId={`${parentId}-doc-${idx}`}
+        key={doc.id}
+        itemId={`${parentId}-doc-${doc.id}`}
         onClick={(e) => {
           e.stopPropagation();
-          setSelectedDocument(doc);
+          setSelectedResource(doc);
         }}
         label={
           <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
             <Box display="flex" alignItems="center" gap={1}>
-              <FileThumbnail file={doc} sx={{ height: '18px' }} />
-              <Typography variant="body2">{doc.name}</Typography>
+              <Iconify icon="solar:document-text-bold" width={18} />
+              <Typography variant="body2">{doc.resourceTitle}</Typography>
             </Box>
             <Box display="flex" alignItems="center" justifyContent="flex-end" gap={1}>
+              {doc.status !== 2 && (
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPublish(doc);
+                  }}
+                >
+                  <Iconify icon="solar:upload-square-bold" width={18} />
+                </IconButton>
+              )}
               <IconButton
                 size="small"
                 onClick={(e) => {
@@ -61,6 +92,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
+                  setPendingArchive(doc);
                   deleteDocumentDialog.onTrue();
                 }}
               >
@@ -76,40 +108,39 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
       />
     ));
 
-  const renderChapters = (chapters: IChapter[], parentId: string) =>
-    chapters.map((chapter) => (
+  const renderChapters = (chapters: Record<string, LearningResourceDto[]>, parentId: string) =>
+    Object.entries(chapters).map(([chapterName, docs]) => (
       <TreeItem
-        key={chapter.id}
-        itemId={`${parentId}-chapter-${chapter.id}`}
+        key={chapterName}
+        itemId={`${parentId}-chapter-${chapterName}`}
         label={
           <Box display="flex" alignItems="center" gap={1}>
             <Iconify icon="mdi:folder" width={18} sx={{ color: 'orange', cursor: 'pointer' }} />
-            <Typography variant="body2">{chapter.name}</Typography>
+            <Typography variant="body2">{chapterName}</Typography>
           </Box>
         }
       >
-        {renderDocuments(chapter.documents, `${parentId}-chapter-${chapter.id}`)}
+        {renderDocuments(docs, `${parentId}-chapter-${chapterName}`)}
       </TreeItem>
     ));
 
-  const renderSubjects = (subjects: ISubject[], classId: string) =>
-    subjects.map((subject) => (
+  const renderSubjects = (
+    subjects: Record<string, Record<string, LearningResourceDto[]>>,
+    className: string
+  ) =>
+    Object.entries(subjects).map(([subjectName, chapters]) => (
       <TreeItem
-        key={subject.id}
-        itemId={`${classId}-subject-${subject.id}`}
+        key={subjectName}
+        itemId={`${className}-subject-${subjectName}`}
         label={
           <Box display="flex" alignItems="center" gap={1}>
             <Iconify icon="mdi:folder" width={18} sx={{ color: 'orange', cursor: 'pointer' }} />
-            <Typography variant="body2">{subject.name}</Typography>
+            <Typography variant="body2">{subjectName}</Typography>
           </Box>
         }
-        onClick={(e) => {
-          setSelectedDocument(null);
-        }}
+        onClick={() => setSelectedResource(null)}
       >
-        {subject.chapters && renderChapters(subject.chapters, `${classId}-subject-${subject.id}`)}
-        {subject.documents &&
-          renderDocuments(subject.documents, `${classId}-subject-${subject.id}`)}
+        {renderChapters(chapters, `${className}-subject-${subjectName}`)}
       </TreeItem>
     ));
 
@@ -127,20 +158,18 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
       >
         <Scrollbar sx={{ flex: 1 }}>
           <SimpleTreeView
-            defaultExpandedItems={[dummyData[0].id]}
-            onItemClick={(event, itemId) => {
-              setSelectedDocument(null);
-            }}
+            defaultExpandedItems={Object.keys(groupedResources).slice(0, 1)}
+            onItemClick={() => setSelectedResource(null)}
             slots={{
               collapseIcon: () => <Icon icon="mdi:chevron-down" width={20} />,
               expandIcon: () => <Icon icon="mdi:chevron-right" width={20} />,
             }}
             sx={{ p: 2 }}
           >
-            {dummyData.map((classItem) => (
+            {Object.entries(groupedResources).map(([className, subjects]) => (
               <TreeItem
-                key={classItem.id}
-                itemId={classItem.id}
+                key={className}
+                itemId={className}
                 label={
                   <Box display="flex" alignItems="center" gap={1}>
                     <Iconify
@@ -148,13 +177,18 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
                       width={18}
                       sx={{ color: 'orange', cursor: 'pointer' }}
                     />
-                    <Typography variant="subtitle1">{classItem.name}</Typography>
+                    <Typography variant="subtitle1">{className}</Typography>
                   </Box>
                 }
               >
-                {renderSubjects(classItem.subjects, classItem.id)}
+                {renderSubjects(subjects, className)}
               </TreeItem>
             ))}
+            {!isLoading && resources.length === 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+                No learning resources found.
+              </Typography>
+            )}
           </SimpleTreeView>
         </Scrollbar>
       </Card>
@@ -162,12 +196,39 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
       {/* Right Content Card */}
       <Card sx={{ width: '70%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Scrollbar sx={{ flex: 1, p: 2 }}>
-          {selectedDocument ? (
-            <Box height="100%">
-              <PDFViewer width="100%" height="100%">
-                <CertificateDocument />
-              </PDFViewer>
-            </Box>
+          {selectedResource ? (
+            <Stack spacing={1}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography variant="h6">{selectedResource.resourceTitle}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedResource.standardName} / {selectedResource.subjectName} /{' '}
+                    {selectedResource.chapterName}
+                  </Typography>
+                </Box>
+                <Chip
+                  size="small"
+                  label={statusLabel[selectedResource.status] || 'Unknown'}
+                  color={selectedResource.status === 2 ? 'success' : 'default'}
+                />
+              </Stack>
+              <Card variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
+                <Typography variant="body2">
+                  <strong>File:</strong> {selectedResource.fileName}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Type:</strong> {selectedResource.resourceType}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Visibility:</strong> {selectedResource.visibility}
+                </Typography>
+                {selectedResource.topic && (
+                  <Typography variant="body2">
+                    <strong>Topic:</strong> {selectedResource.topic}
+                  </Typography>
+                )}
+              </Card>
+            </Stack>
           ) : (
             <Box
               display="flex"
@@ -188,7 +249,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
                   opacity: 0.6,
                 }}
               >
-                No Preview Available
+                Select a resource to view details
               </Typography>
             </Box>
           )}
@@ -206,9 +267,15 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
-            onClick={() => {}}
+            onClick={() => {
+              if (pendingArchive) {
+                onArchive(pendingArchive);
+              }
+              setPendingArchive(null);
+              deleteDocumentDialog.onFalse();
+            }}
           >
-            Yes
+            Archive
           </Button>
         }
       />

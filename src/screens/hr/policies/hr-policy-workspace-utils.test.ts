@@ -27,7 +27,7 @@ describe('HR policy workspace date-only academic year handling', () => {
     effectiveTo: academicYearEnd,
     weeklyOffPattern: 'saturday_sunday',
     customWeeklyOffs: [],
-    holidaySyncMode: 'manual',
+    holidaySyncMode: 'snapshot',
     holidays: [],
     version: 1,
     ...overrides,

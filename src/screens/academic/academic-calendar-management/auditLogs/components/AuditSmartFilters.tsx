@@ -119,9 +119,9 @@ const AuditSmartFilters = ({
         backgroundColor: 'background.paper',
       }}
     >
-      <Grid container spacing={1.5} alignItems="center">
+      <Grid container spacing={1.25} alignItems="center">
         {/* Search */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <TextField
             inputRef={searchRef}
             fullWidth
@@ -142,23 +142,27 @@ const AuditSmartFilters = ({
                     <Iconify icon="mdi:close" width={16} />
                   </IconButton>
                 </InputAdornment>
-              ) : (
-                <InputAdornment position="end">
-                  <Chip label="/" size="small" sx={{ height: 18, fontSize: 10 }} />
-                </InputAdornment>
-              ),
+              ) : null,
             }}
           />
         </Grid>
 
         {/* Action */}
-        <Grid size={{ xs: 6, md: 2 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Action</InputLabel>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <FormControl fullWidth size="small" sx={{ minWidth: 180 }}>
+            <InputLabel shrink>Action</InputLabel>
             <Select
               label="Action"
+              displayEmpty
               value={filters.action}
               onChange={(e) => set('action', e.target.value)}
+              renderValue={(selected) => {
+                if (!selected) {
+                  return 'All Actions';
+                }
+
+                return CALENDAR_AUDIT_ACTION_LABELS[Number(selected) as CalendarAuditAction];
+              }}
             >
               {ACTION_OPTIONS.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
@@ -170,13 +174,18 @@ const AuditSmartFilters = ({
         </Grid>
 
         {/* More Filters + Reset */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Stack
             direction="row"
             gap={1}
             justifyContent="flex-end"
             alignItems="center"
             flexWrap="wrap"
+            sx={{
+              '& .MuiButton-root': {
+                whiteSpace: 'nowrap',
+              },
+            }}
           >
             <Button
               size="small"
@@ -251,7 +260,7 @@ const AuditSmartFilters = ({
 
       {/* Active filter chips */}
       {hasAnyFilter && (
-        <Stack direction="row" gap={0.75} flexWrap="wrap" sx={{ mt: 1.5 }}>
+        <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1.5 }}>
           {filters.search && (
             <Chip
               size="small"
@@ -280,7 +289,7 @@ const AuditSmartFilters = ({
         hasForm={false}
       >
         <DialogScrollContent>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Date Range</InputLabel>
@@ -473,7 +482,7 @@ const AuditSmartFilters = ({
                       .join(', ')}
                   </Typography>
                 </Box>
-                <Stack direction="row" gap={0.5}>
+                <Stack direction="row" gap={1}>
                   <IconButton
                     size="small"
                     color="primary"

@@ -4,7 +4,7 @@ import { useMemo, useCallback } from 'react';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
-import { parseTableDate, parseFormattedNumber } from '../utils';
+import { parseTableDate, getColumnDisplayText, parseFormattedNumber } from '../utils';
 
 import type { IData, IColumn, IParams } from '../types';
 
@@ -41,6 +41,7 @@ export const useTableData = ({
       return Object.values(filtersByColumn).every((columnFilters) =>
         columnFilters.some((filter) => {
           const value = _.get(row, filter.column, '');
+          const column = columns.find((col) => col.id === filter.column);
           const valueAsNumber = !Number.isNaN(Number(value)) ? Number(value) : value; // fixed isNumber check
           const filterValueAsNumber = !Number.isNaN(Number(filter.value))
             ? Number(filter.value)
@@ -91,7 +92,10 @@ export const useTableData = ({
             const formattedTimeNoZero =
               isISO && d.isValid() ? d.format('h:mm A').toLowerCase() : '';
 
-            const safeValue = (value ?? '').toString().toLowerCase();
+            // Compare against what the user actually sees (the rendered cell text),
+            // falling back to the raw value when there's no render function.
+            const displayValue = getColumnDisplayText(row, column);
+            const safeValue = (displayValue || value || '').toString().toLowerCase();
             const safeFilterValue = (filter.value ?? '').toString().toLowerCase();
             switch (filter.type) {
               case 'contains':
@@ -138,33 +142,39 @@ export const useTableData = ({
         })
       );
     },
-    [filters]
+    [filters, columns]
   );
 
   const filteredData = useMemo(() => {
     if (serverSideFilter) {
       return data;
     }
+    const lowerSearchTerm = searchTerm.toLowerCase();
     return data.filter((row) => {
-      const searchMatch = Object.entries(row).some(([key]) => {
-        if (!columnVisibility[key]) return false;
-        const colId = columns.find((col) => col.id === key)?.id;
-        if (!colId) return false;
-        const val = _.get(row, colId);
-        if (val === undefined || val === null) return false;
+      const searchMatch = columns.some((column) => {
+        if (!columnVisibility[column.id]) return false;
 
-        const rawValStr = val.toString().toLowerCase();
-        const d = dayjs(val);
-        const isISO = typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val);
+        // Match against the rendered cell text first (what the user actually sees),
+        // then fall back to raw-value/date-formatted matching for coverage.
+        const displayText = getColumnDisplayText(row, column).toLowerCase();
+        if (displayText.includes(lowerSearchTerm)) return true;
+
+        const rawVal = _.get(row, column.id);
+        if (rawVal === undefined || rawVal === null) return false;
+
+        const rawValStr = rawVal.toString().toLowerCase();
+        const d = dayjs(rawVal);
+        const isISO =
+          typeof rawVal === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(rawVal);
         if (isISO && d.isValid()) {
           return (
-            rawValStr.includes(searchTerm.toLowerCase()) ||
-            d.format('DD-MM-YYYY').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            d.format('hh:mm A').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            d.format('h:mm A').toLowerCase().includes(searchTerm.toLowerCase())
+            rawValStr.includes(lowerSearchTerm) ||
+            d.format('DD-MM-YYYY').toLowerCase().includes(lowerSearchTerm) ||
+            d.format('hh:mm A').toLowerCase().includes(lowerSearchTerm) ||
+            d.format('h:mm A').toLowerCase().includes(lowerSearchTerm)
           );
         }
-        return rawValStr.includes(searchTerm.toLowerCase());
+        return rawValStr.includes(lowerSearchTerm);
       });
 
       return searchMatch && applyFilter(row);

@@ -76,7 +76,7 @@ const StudentAttendanceDashboardScreen = () => {
               School Attendance : {schoolAttendance}%
             </Label>
           </Box>{' '}
-          <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
+          <Box display="flex" gap={1} flexWrap="wrap" mt={2}>
             {attendanceClassSummary.length === 0 && (
               <Typography variant="body2" color="text.secondary">
                 No attendance summary found.
@@ -133,7 +133,7 @@ const ClassCard = ({ classItem, setSelectedDivision }: any) => (
         {classItem.percentage}%
       </Label>
     </Box>
-    <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
+    <Box display="flex" gap={1} flexWrap="wrap" mt={2}>
       {classItem.divisions.map((item: any) => (
         <RenderDivision
           key={item.divisionId || item.name}
@@ -312,7 +312,7 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
 
       <Grid size={{ xs: 9 }} height="100%">
         <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={1}>
             <DatePicker
               value={startDate}
               onChange={(value) => setStartDate(value)}

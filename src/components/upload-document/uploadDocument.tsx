@@ -64,6 +64,7 @@ const UploadDocument = ({
                         size: file.size,
                         type: file.type,
                         base64: reader.result,
+                        file,
                       });
                     };
                   })

@@ -163,13 +163,13 @@ const AddProcurementRequestForm: React.FC<IAddProcurementRequestFormProps> = ({
         </Scrollbar>
         <DialogActions>
           {fromTeacher && (
-            <Box display="flex" gap={2} width="100%" flexDirection="row" justifyContent="flex-end">
+            <Box display="flex" gap={1} width="100%" flexDirection="row" justifyContent="flex-end">
               <CancelButton onClick={onClose} />
               <SubmitButton onClick={() => {}} />
             </Box>
           )}
           {!fromTeacher && (
-            <Box display="flex" gap={2} width="100%" flexDirection="row" justifyContent="flex-end">
+            <Box display="flex" gap={1} width="100%" flexDirection="row" justifyContent="flex-end">
               <Button
                 color="error"
                 startIcon={<Iconify icon={GlobalIcons.cancel} />}

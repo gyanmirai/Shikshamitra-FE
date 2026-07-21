@@ -25,7 +25,7 @@ const ResourceAllocationScreen = () => {
           />
         </Box>
 
-        <Box display="flex" flexDirection="row" gap={2} alignItems="center" pb="15px">
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center" pb="15px">
           <Button
             onClick={() => {
               allocationResourceDialog.onTrue();

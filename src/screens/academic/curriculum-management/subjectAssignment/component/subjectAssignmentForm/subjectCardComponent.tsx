@@ -110,7 +110,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             '& .MuiAccordionSummary-content': { alignItems: 'center', display: 'flex', gap: 1 },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
             <SubjectColorIndicator color={subject?.subjectColor} />
             <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
               {subject.subjectName || 'Untitled Subject'}
@@ -163,7 +163,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
 
         <AccordionDetails sx={{ p: 3, bgcolor: 'background.paper' }}>
           <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Typography
                 variant="overline"
                 sx={{
@@ -208,7 +208,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           </Box>
 
           <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Typography
                 variant="overline"
                 sx={{
@@ -226,7 +226,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           </Box>
 
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Typography
                 variant="overline"
                 sx={{

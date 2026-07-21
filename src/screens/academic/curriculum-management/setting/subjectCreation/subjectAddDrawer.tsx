@@ -4,6 +4,7 @@ import React from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import {
@@ -35,6 +36,9 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
     removeRow,
     getDuplicateError,
     resetAndClose,
+    requestClose,
+    confirmCloseOpen,
+    setConfirmCloseOpen,
     handleSave,
   } = useSubjectAddDrawer({ onClose });
 
@@ -42,7 +46,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
     <Drawer
       anchor="right"
       open={open}
-      onClose={resetAndClose}
+      onClose={requestClose}
       PaperProps={{
         sx: { width: { xs: '100%', sm: 440 }, display: 'flex', flexDirection: 'column' },
       }}
@@ -77,7 +81,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
             sx={{ height: 20, fontSize: '11px', fontWeight: 700 }}
           />
         </Box>
-        <IconButton size="small" onClick={resetAndClose} disabled={isSaving}>
+        <IconButton size="small" onClick={requestClose} disabled={isSaving}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -90,7 +94,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           py: 2,
           display: 'flex',
           flexDirection: 'column',
-          gap: 2,
+          gap: 1,
         }}
       >
         {rows.map((row, index) => {
@@ -99,6 +103,18 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           const nameError = nameEmpty ? 'Subject name is required' : dupError;
           const colorError = showErrors && !row.color;
 
+          let sortOrderError = null;
+          if (showErrors && row.sortOrder !== '') {
+            const num = Number(row.sortOrder);
+            if (Number.isNaN(num) || !Number.isInteger(num)) {
+              sortOrderError = 'Must be an integer';
+            } else if (num < 1) {
+              sortOrderError = 'Must be at least 1';
+            } else if (num > 999999) {
+              sortOrderError = 'Max 999999';
+            }
+          }
+
           return (
             <Box
               key={row.tempId}
@@ -106,7 +122,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 p: 2,
                 borderRadius: 1.5,
                 border: '1px solid',
-                borderColor: nameError || colorError ? 'error.light' : 'divider',
+                borderColor: nameError || colorError || sortOrderError ? 'error.light' : 'divider',
                 bgcolor: 'background.paper',
                 transition: 'border-color 0.2s',
               }}
@@ -172,7 +188,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                  gap: 1.25,
+                  gap: 1,
                   mb: 1.5,
                 }}
               >
@@ -206,7 +222,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' },
-                  gap: 1.25,
+                  gap: 1,
                   mb: 1.5,
                 }}
               >
@@ -251,7 +267,9 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                   label="Sort Order"
                   value={row.sortOrder}
                   disabled={isSaving}
-                  inputProps={{ min: 0 }}
+                  inputProps={{ min: 1, max: 999999 }}
+                  error={Boolean(sortOrderError)}
+                  helperText={sortOrderError || ' '}
                   onChange={(e) => updateRow(row.tempId, 'sortOrder', e.target.value)}
                 />
               </Box>
@@ -319,12 +337,12 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           px: 2.5,
           py: 1.75,
           display: 'flex',
-          gap: 1.5,
+          gap: 1,
           justifyContent: 'flex-end',
           flexShrink: 0,
         }}
       >
-        <Button variant="outlined" size="small" onClick={resetAndClose} disabled={isSaving}>
+        <Button variant="outlined" size="small" onClick={requestClose} disabled={isSaving}>
           Cancel
         </Button>
         <LoadingButton
@@ -337,6 +355,19 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           Save{rows.length > 1 ? ` (${rows.length})` : ''}
         </LoadingButton>
       </Box>
+
+      <ConfirmDialog
+        open={confirmCloseOpen}
+        onClose={() => setConfirmCloseOpen(false)}
+        icon="warning"
+        title="Unsaved Changes"
+        content="You have unsaved subject details. Closing now will discard them. Do you want to continue?"
+        action={
+          <Button variant="contained" color="warning" onClick={resetAndClose}>
+            Discard and Close
+          </Button>
+        }
+      />
     </Drawer>
   );
 };

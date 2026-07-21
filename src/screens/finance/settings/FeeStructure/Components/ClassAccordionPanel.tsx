@@ -150,7 +150,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
             <Box
               display="flex"
               alignItems="center"
-              gap={1.5}
+              gap={1}
               sx={{ px: 2, py: 1.25, bgcolor: 'action.hover' }}
             >
               <Skeleton variant="rounded" width={28} height={28} />

@@ -11,8 +11,9 @@ import { Box, Grid, Card, Button, Switch, Typography } from '@mui/material';
 const CourseManagementSetting = () => {
   const [isCourseVisible, setIsCourseVisible] = useState(false);
   return (
-    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Course Management"
         description="Manage your course settings for the learning management system."
         links={[
@@ -22,12 +23,12 @@ const CourseManagementSetting = () => {
           { name: 'Course Management' },
         ]}
       />
-      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
+      <Box display="flex" gap={1} alignItems="center" justifyContent="flex-end">
         <Button variant="contained" size="small">
           Manage Archieved Courses
         </Button>
       </Box>
-      <Grid container spacing={4}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ typography: 'subtitle1' }}>Template</Box>
@@ -103,7 +104,7 @@ const CourseManagementSetting = () => {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, marginTop: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Switch
                 checked={isCourseVisible}

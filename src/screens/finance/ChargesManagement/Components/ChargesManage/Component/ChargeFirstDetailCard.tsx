@@ -38,7 +38,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
           <Grid container spacing={2}>
             {/* Left Column - Basic Details */}
             <Grid size={{ xs: 12 }}>
-              <Box display="flex" gap={7}>
+              <Box display="flex" gap={1}>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
                     Category
@@ -90,7 +90,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
 
             {/* Right Column - Description and Additional Notes */}
             <Grid size={{ xs: 12 }}>
-              <Box display="flex" flexDirection="column" gap={2}>
+              <Box display="flex" flexDirection="column" gap={1}>
                 {/* Purpose/Description Section */}
                 <Box>
                   <Typography variant="body2" color="text.secondary">

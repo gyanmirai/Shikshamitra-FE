@@ -9,7 +9,7 @@ const Setting = () => (
     <Typography variant="h4" my={2}>
       Grading Scales
     </Typography>
-    <Box display="flex" gap={2}>
+    <Box display="flex" gap={1}>
       <CustomSelect
         options={[]}
         label="Percentage"
@@ -45,7 +45,7 @@ const Setting = () => (
     <Typography variant="h4" my={2}>
       Feedback Templates Section
     </Typography>
-    <Box display="flex" gap={2} flexWrap="wrap">
+    <Box display="flex" gap={1} flexWrap="wrap">
       <Card sx={{ maxWidth: '300px', width: '100%' }}>
         <CardHeader title="Excellent Performance" />
         <CardContent>

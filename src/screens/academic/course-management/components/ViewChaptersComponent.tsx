@@ -28,9 +28,9 @@ const ViewChaptersComponent: React.FC<ViewChaptersComponentProps> = ({
   }, [chapterData, selectedCourse, division]);
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} marginBottom={2}>
+    <Box display="flex" flexDirection="column" gap={1} marginBottom={2}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           <CustomSelect
             label="Division"
             disabled={!selectedCourse?.className}

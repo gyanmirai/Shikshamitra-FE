@@ -80,6 +80,16 @@ export const getAdmissionCrmLeadName = (lead: AdmissionCrmLeadDto) => {
 export const getAdmissionCrmStageLabel = (stage: AdmissionInquiryStage) =>
   admissionCrmStageLabels[stage] ?? 'Unknown';
 
+export const getAdmissionCrmStageTooltipLines = (stage: AdmissionCrmPipelineStageDto) => [
+  `Owner: ${stage.ownerResponsibility?.trim() || 'Not configured'}`,
+  `SLA: ${stage.slaTargetHours ? `${stage.slaTargetHours}h` : 'Not configured'}`,
+  `Next: ${
+    stage.allowedNextStages.length
+      ? stage.allowedNextStages.map(getAdmissionCrmStageLabel).join(', ')
+      : 'No configured next stage'
+  }`,
+];
+
 export const getAdmissionCrmChannelLabel = (channel: AdmissionInquiryChannel) =>
   admissionCrmChannelLabels[channel] ?? 'Unknown';
 

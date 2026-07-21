@@ -31,10 +31,10 @@ export const AddCategory: React.FC<IAddCategoryProps> = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box display="flex" flexDirection="column" gap={2}>
+      <Box display="flex" flexDirection="column" gap={1}>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               <Grid size={12}>
                 <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
                   <TextField

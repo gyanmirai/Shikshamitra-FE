@@ -30,7 +30,7 @@ export function AcademicCommandHeader({
       direction={{ xs: 'column', lg: 'row' }}
       alignItems={{ xs: 'stretch', lg: 'flex-start' }}
       justifyContent="space-between"
-      spacing={1.5}
+      spacing={1}
     >
       <Box>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
@@ -45,7 +45,7 @@ export function AcademicCommandHeader({
         </Typography>
       </Box>
 
-      <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" justifyContent="flex-end">
+      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
         <Button
           size="small"
           variant="outlined"

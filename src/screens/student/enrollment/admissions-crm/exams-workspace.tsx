@@ -1,16 +1,20 @@
 'use client';
 
+import type { ComponentProps } from 'react';
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { memo, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Chip,
@@ -21,6 +25,7 @@ import {
   Dialog,
   Switch,
   Divider,
+  Checkbox,
   MenuItem,
   MenuList,
   TextField,
@@ -38,14 +43,27 @@ import {
   useGetAdmissionCrmEntranceExamsQuery,
   useUploadAdmissionCrmExamResultMutation,
   useDecideAdmissionCrmEligibilityMutation,
+  useGetAdmissionCrmCycleConfigurationQuery,
   useGetAdmissionCrmEligibilityHandoffQuery,
   useMarkAdmissionCrmExamAttendanceMutation,
+  useBulkUploadAdmissionCrmExamResultsMutation,
+  useBulkMarkAdmissionCrmExamAttendanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
+import {
+  enrollmentActionsColumn,
+  enrollmentTableWrapperSx,
+  enrollmentWorkspaceRootSx,
+  EnrollmentTableEmptyState,
+  enrollmentTableContainerSx,
+  EnrollmentWorkspaceErrorState,
+} from './workspace-table-patterns';
+
+import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
 const pageSize = 50;
 const attendanceLabels: Record<AdmissionCrmExamAttendanceStatus, string> = {
@@ -95,11 +113,94 @@ const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   return filter ? Number(filter.value) : undefined;
 };
 
+const getLatestStringFilter = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  return filter?.value ? String(filter.value) : undefined;
+};
+
+const getDateFilterBounds = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  if (!filter || typeof filter.value !== 'string') return {};
+  const [day, month, year] = filter.value.split('-').map(Number);
+  if (!day || !month || !year) return {};
+  const value = new Date(Date.UTC(year, month - 1, day));
+  if (filter.type === 'after') {
+    value.setUTCDate(value.getUTCDate() + 1);
+    return { from: value.toISOString() };
+  }
+  if (filter.type === 'before') {
+    value.setUTCDate(value.getUTCDate() - 1);
+    return { until: value.toISOString() };
+  }
+  const iso = value.toISOString();
+  return { from: iso, until: iso };
+};
+
+type ExamRowActionsProps = {
+  exam: AdmissionCrmEntranceExamDto;
+  openApplicant: (leadId: string, tab?: ApplicantDrawerTab) => void;
+  setSelectedExam: (exam: AdmissionCrmEntranceExamDto) => void;
+  setHandoffExamId: (examId: string) => void;
+};
+
+type ThreeDotsActionRenderer = NonNullable<ComponentProps<typeof ThreeDotsActions>['actions']>;
+
+const ExamRowActions = memo(
+  ({ exam, openApplicant, setSelectedExam, setHandoffExamId }: ExamRowActionsProps) => {
+    const renderActions = useCallback<ThreeDotsActionRenderer>(
+      ({ popover }) => (
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              popover.onClose();
+              setHandoffExamId(exam.id);
+            }}
+          >
+            <Iconify icon="mdi:account-arrow-right-outline" />
+            Eligibility Handoff
+          </MenuItem>
+          {exam.eligibilityDecision === AdmissionCrmEligibilityDecision.Eligible ? (
+            <MenuItem
+              onClick={() => {
+                popover.onClose();
+                openApplicant(exam.leadId, 'registration');
+              }}
+            >
+              <Iconify icon="mdi:file-document-edit-outline" />
+              Open Registration
+            </MenuItem>
+          ) : null}
+        </MenuList>
+      ),
+      [exam, openApplicant, setHandoffExamId]
+    );
+
+    return (
+      <ThreeDotsActions
+        placement="right-top"
+        showViewIcon
+        viewLabel="Open Exam"
+        handleViewClick={() => setSelectedExam(exam)}
+        showEditIcon
+        editLabel="Manage Exam"
+        handleEditClick={() => setSelectedExam(exam)}
+        onEditMouseDown={() => setSelectedExam(exam)}
+        actions={renderActions}
+      />
+    );
+  }
+);
+
 export function ExamsWorkspace() {
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
   const { academicYearId, state, updateState, openApplicant, closeApplicant } =
     useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
+  const [search, setSearch] = useState('');
+  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
+  const [selectedExamIds, setSelectedExamIds] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
+  const [bulkMarksOpen, setBulkMarksOpen] = useState(false);
   const [handoffExamId, setHandoffExamId] = useState('');
   const [attendance, setAttendance] = useState(AdmissionCrmExamAttendanceStatus.NotMarked);
   const [totalMarks, setTotalMarks] = useState('100');
@@ -110,26 +211,41 @@ export function ExamsWorkspace() {
   const [decisionReason, setDecisionReason] = useState('');
   const [overrideDecision, setOverrideDecision] = useState(false);
   const [overrideReason, setOverrideReason] = useState('');
+  const [bulkTotalMarks, setBulkTotalMarks] = useState('100');
+  const [bulkPassingMarks, setBulkPassingMarks] = useState('40');
+  const [bulkObtainedMarks, setBulkObtainedMarks] = useState('');
+  const [bulkMeritRank, setBulkMeritRank] = useState('');
 
   const examsQuery = useGetAdmissionCrmEntranceExamsQuery(
     {
       academicYearId: academicYearId || '',
+      filterText: search.trim() || undefined,
+      applicantSearch: getLatestStringFilter(columnFilters, 'applicantName'),
+      examStartFrom: getDateFilterBounds(columnFilters, 'examStartTime').from,
+      examStartUntil: getDateFilterBounds(columnFilters, 'examStartTime').until,
       attendanceStatus: state.attendance,
       examStatus: state.examStatus,
       eligibilityDecision: state.eligibility,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
-      sorting: 'ExamStartTime ASC',
+      sorting: state.sorting || 'ExamStartTime ASC',
     },
     { skip: !academicYearId }
   );
   const [markAttendance, markAttendanceState] = useMarkAdmissionCrmExamAttendanceMutation();
+  const [bulkMarkAttendance, bulkAttendanceState] = useBulkMarkAdmissionCrmExamAttendanceMutation();
+  const [bulkUploadResults, bulkResultsState] = useBulkUploadAdmissionCrmExamResultsMutation();
   const [uploadResult, uploadResultState] = useUploadAdmissionCrmExamResultMutation();
   const [decideEligibility, decideEligibilityState] = useDecideAdmissionCrmEligibilityMutation();
   const handoffQuery = useGetAdmissionCrmEligibilityHandoffQuery(
     { examRecordId: handoffExamId },
     { skip: !handoffExamId }
   );
+  const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId }
+  );
+  const entranceExamRequired = cycleConfigurationQuery.data?.entranceExamRequired !== false;
 
   useEffect(() => {
     if (!selectedExam) return;
@@ -143,6 +259,10 @@ export function ExamsWorkspace() {
     setOverrideDecision(false);
     setOverrideReason('');
   }, [selectedExam]);
+
+  useEffect(() => {
+    setSelectedExamIds([]);
+  }, [state.page, state.attendance, state.examStatus, state.eligibility]);
 
   const run = async (action: () => Promise<unknown>, message: string) => {
     try {
@@ -199,18 +319,123 @@ export function ExamsWorkspace() {
     [state.attendance, state.eligibility, state.examStatus]
   );
 
+  const exams = useMemo(() => examsQuery.data?.items || [], [examsQuery.data?.items]);
+  const selectedExamSet = useMemo(() => new Set(selectedExamIds), [selectedExamIds]);
+
+  const markSelectedAttendance = async (value: AdmissionCrmExamAttendanceStatus) => {
+    if (!academicYearId || selectedExamIds.length === 0) return;
+    try {
+      const result = await bulkMarkAttendance({
+        academicYearId,
+        examRecordIds: selectedExamIds,
+        attendanceStatus: value,
+      }).unwrap();
+      if (result.failedCount > 0) {
+        setSelectedExamIds(
+          result.items.filter((item) => !item.success).map((item) => item.entityId)
+        );
+        shikshaMitraToast.error({
+          message: `${result.succeededCount} updated; ${result.failedCount} failed and remain selected.`,
+        });
+        return;
+      }
+      setSelectedExamIds([]);
+      shikshaMitraToast.success({
+        message: `${result.succeededCount} exam attendance record${result.succeededCount === 1 ? '' : 's'} updated.`,
+      });
+    } catch {
+      shikshaMitraToast.error({ message: 'The selected exam attendance could not be updated.' });
+    }
+  };
+
+  const uploadSelectedResults = async () => {
+    if (!academicYearId || selectedExamIds.length === 0) return;
+    try {
+      const result = await bulkUploadResults({
+        academicYearId,
+        examRecordIds: selectedExamIds,
+        totalMarks: Number(bulkTotalMarks),
+        passingMarks: Number(bulkPassingMarks),
+        obtainedMarks: Number(bulkObtainedMarks),
+        meritRank: bulkMeritRank ? Number(bulkMeritRank) : undefined,
+      }).unwrap();
+      if (result.failedCount > 0) {
+        setSelectedExamIds(
+          result.items.filter((item) => !item.success).map((item) => item.entityId)
+        );
+        shikshaMitraToast.error({
+          message: `${result.succeededCount} updated; ${result.failedCount} failed and remain selected.`,
+        });
+        return;
+      }
+      setBulkMarksOpen(false);
+      setBulkObtainedMarks('');
+      setBulkMeritRank('');
+      setSelectedExamIds([]);
+      shikshaMitraToast.success({
+        message: `${result.succeededCount} exam result${result.succeededCount === 1 ? '' : 's'} recorded.`,
+      });
+    } catch {
+      shikshaMitraToast.error({ message: 'The selected exam results could not be recorded.' });
+    }
+  };
+
   const columns = useMemo<IColumn[]>(
     () => [
       {
+        id: 'selection',
+        label: '',
+        width: 56,
+        minWidth: 56,
+        maxWidth: 56,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        excludeFromExport: true,
+        renderColumn: () => (
+          <Checkbox
+            size="small"
+            checked={exams.length > 0 && exams.every((exam) => selectedExamSet.has(exam.id))}
+            indeterminate={
+              selectedExamIds.length > 0 && !exams.every((exam) => selectedExamSet.has(exam.id))
+            }
+            onChange={(_event, checked) =>
+              setSelectedExamIds(checked ? exams.map((exam) => exam.id) : [])
+            }
+            inputProps={{ 'aria-label': 'Select visible entrance exams' }}
+          />
+        ),
+        render: (_value, row) => {
+          const exam = row as AdmissionCrmEntranceExamDto;
+          return (
+            <Checkbox
+              size="small"
+              checked={selectedExamSet.has(exam.id)}
+              onClick={(event) => event.stopPropagation()}
+              onChange={() =>
+                setSelectedExamIds((current) =>
+                  current.includes(exam.id)
+                    ? current.filter((id) => id !== exam.id)
+                    : [...current, exam.id]
+                )
+              }
+              inputProps={{ 'aria-label': `Select ${exam.applicantName}` }}
+            />
+          );
+        },
+      },
+      {
         id: 'applicantName',
+        originalId: 'ApplicantName',
         label: 'Applicant',
         width: 190,
         minWidth: 180,
         sticky: true,
         stickyPosition: 'left',
         stickyOnMobile: false,
-        isSort: false,
-        isFilter: false,
+        filterType: 'string',
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
           return (
@@ -227,19 +452,24 @@ export function ExamsWorkspace() {
       },
       {
         id: 'examStartTime',
-        label: 'Schedule',
-        width: 165,
-        minWidth: 160,
-        isSort: false,
-        isFilter: false,
+        label: 'Exam schedule',
+        width: 190,
+        minWidth: 180,
+        filterType: 'date',
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
           return (
-            <Stack spacing={0.25}>
-              <Typography variant="body2">{dateTimeFormatter.format(new Date(value))}</Typography>
-              <Typography variant="caption" color="text.primary">
-                Room {exam.examRoomNo}
-              </Typography>
+            <Stack spacing={0.5}>
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                <Iconify icon="solar:clock-circle-bold-duotone" width={18} aria-hidden="true" />
+                <Typography variant="body2">{dateTimeFormatter.format(new Date(value))}</Typography>
+              </Stack>
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                <Iconify icon="solar:door-2-bold-duotone" width={18} aria-hidden="true" />
+                <Typography variant="caption" color="text.primary">
+                  Room {exam.examRoomNo}
+                </Typography>
+              </Stack>
             </Stack>
           );
         },
@@ -254,7 +484,6 @@ export function ExamsWorkspace() {
           value: Number(value),
           label,
         })),
-        isSort: false,
         render: (value) => (
           <Label
             color={attendanceColors[value as AdmissionCrmExamAttendanceStatus]}
@@ -274,7 +503,6 @@ export function ExamsWorkspace() {
           value: Number(value),
           label,
         })),
-        isSort: false,
         render: (value) => (
           <Label color={resultColors[value as EntranceExamStatusEnum]} sx={accessibleStatusSx}>
             {resultLabels[value as EntranceExamStatusEnum]}
@@ -286,24 +514,27 @@ export function ExamsWorkspace() {
         label: 'Marks',
         width: 80,
         minWidth: 75,
-        isSort: false,
         isFilter: false,
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
-          return value != null && exam.totalMarks != null ? `${value}/${exam.totalMarks}` : '—';
+          return value != null && exam.totalMarks != null ? `${value}/${exam.totalMarks}` : '-';
         },
       },
       {
         id: 'eligibilityDecision',
-        label: 'Eligibility',
-        width: 120,
-        minWidth: 115,
+        label: 'Admission status',
+        width: 150,
+        minWidth: 145,
+        sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
+        headerSx: { px: 1.5 },
+        cellSx: { px: 1.5 },
         filterType: 'enum',
         enumOptions: Object.entries(admissionCrmEligibilityLabels).map(([value, label]) => ({
           value: Number(value),
           label,
         })),
-        isSort: false,
         render: (value) => (
           <Label
             color={eligibilityColors[value as AdmissionCrmEligibilityDecision]}
@@ -316,93 +547,133 @@ export function ExamsWorkspace() {
       {
         id: 'actions',
         label: 'Actions',
-        width: 88,
-        minWidth: 88,
-        sticky: true,
-        stickyPosition: 'right',
-        stickyOnMobile: false,
+        ...enrollmentActionsColumn,
         isSort: false,
         isFilter: false,
-        headerSx: { px: 1.5 },
-        cellSx: { px: 1.5 },
         render: (_value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
           return (
-            <ThreeDotsActions
-              placement="right-top"
-              showViewIcon
-              viewLabel="Open Applicant"
-              handleViewClick={() => openApplicant(exam.leadId)}
-              showEditIcon
-              editLabel="Manage Exam"
-              handleEditClick={() => setSelectedExam(exam)}
-              onEditMouseDown={() => setSelectedExam(exam)}
-              actions={({ popover }) => (
-                <MenuList>
-                  <MenuItem
-                    onMouseDown={() => {
-                      popover.onClose();
-                      setHandoffExamId(exam.id);
-                    }}
-                    onClick={() => {
-                      popover.onClose();
-                      setHandoffExamId(exam.id);
-                    }}
-                  >
-                    <Iconify icon="mdi:account-arrow-right-outline" />
-                    Eligibility Handoff
-                  </MenuItem>
-                </MenuList>
-              )}
+            <ExamRowActions
+              exam={exam}
+              openApplicant={openApplicant}
+              setSelectedExam={setSelectedExam}
+              setHandoffExamId={setHandoffExamId}
             />
           );
         },
       },
     ],
-    [openApplicant]
+    [exams, openApplicant, selectedExamIds.length, selectedExamSet]
   );
 
   if (!academicYearId) {
-    return <Alert severity="info">Select an academic year to open Entrance Exams.</Alert>;
+    return (
+      <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
+        <EnrollmentWorkspaceHeader
+          title="Entrance Exams"
+          description="Process attendance, results, merit, and eligibility decisions from one queue."
+        />
+        <Alert severity="info">Select an academic year to open Entrance Exams.</Alert>
+      </Stack>
+    );
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="Entrance Exams"
         description="Process attendance, results, merit, and eligibility decisions from one queue."
       />
 
-      {examsQuery.isError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" color="inherit" onClick={() => examsQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          Entrance exams are unavailable.
+      {!entranceExamRequired ? (
+        <Alert severity="info">
+          Entrance exams are disabled for this admissions cycle. Applicants follow the exam-waived
+          registration and admission readiness path.
         </Alert>
-      ) : (
+      ) : null}
+
+      {entranceExamRequired && selectedExamIds.length > 0 ? (
+        <Paper variant="outlined" role="region" aria-label="Bulk exam actions" sx={{ p: 1 }}>
+          <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+            <Chip color="primary" label={`${selectedExamIds.length} selected`} />
+            {hasGrantedPermission(
+              permissions,
+              'Students.Enrollment.AdmissionsCrm.BulkOperations'
+            ) ? (
+              <>
+                <LoadingButton
+                  size="small"
+                  loading={bulkAttendanceState.isLoading}
+                  onClick={() => markSelectedAttendance(AdmissionCrmExamAttendanceStatus.Present)}
+                >
+                  Mark present
+                </LoadingButton>
+                <LoadingButton
+                  size="small"
+                  color="warning"
+                  loading={bulkAttendanceState.isLoading}
+                  onClick={() => markSelectedAttendance(AdmissionCrmExamAttendanceStatus.Absent)}
+                >
+                  Mark absent
+                </LoadingButton>
+                <Button size="small" onClick={() => setBulkMarksOpen(true)}>
+                  Give Marks
+                </Button>
+              </>
+            ) : null}
+            <Button size="small" color="inherit" onClick={() => setSelectedExamIds([])}>
+              Clear selection
+            </Button>
+          </Stack>
+        </Paper>
+      ) : null}
+
+      {entranceExamRequired && examsQuery.isError ? (
+        <EnrollmentWorkspaceErrorState
+          message="Entrance exams are unavailable."
+          onRetry={() => examsQuery.refetch()}
+        />
+      ) : entranceExamRequired ? (
         <CustomizableTable
           tableId="student-enrollment-entrance-exams"
           tableTitle="Entrance Exams"
           columns={columns}
-          data={examsQuery.data?.items || []}
+          data={exams}
           isLoading={examsQuery.isLoading}
-          isSearch={false}
           serverSide
           serverSidePagination
+          serverSideSearch
+          serverSideSort
           serverSideFilter
-          filters={tableFilters}
+          defaultSearchTerm={search}
+          searchFieldProps={{
+            placeholder: 'Search applicant or exam slot',
+            inputProps: { 'aria-label': 'Search entrance exams' },
+          }}
+          filters={[...tableFilters, ...columnFilters]}
           totalCount={examsQuery.data?.totalCount || 0}
           page={page}
           rowsPerPage={pageSize}
           defaultRowsPerPage={pageSize}
           rowsPerPageOptions={[pageSize]}
+          onServerSearch={(value) => {
+            setSearch(value);
+            updateState({ page: 1 }, 'replace');
+          }}
           onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
-          onServerFilter={(filters) =>
+          onServerSort={(_column, sorts) => {
+            const sort = sorts[0];
+            updateState(
+              {
+                sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : undefined,
+                page: 1,
+              },
+              'push'
+            );
+          }}
+          onServerFilter={(filters) => {
+            const stateColumns = new Set(['attendanceStatus', 'examStatus', 'eligibilityDecision']);
+            setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
             updateState(
               {
                 attendance: getLatestEnumFilter(filters, 'attendanceStatus'),
@@ -411,23 +682,69 @@ export function ExamsWorkspace() {
                 page: 1,
               },
               'push'
-            )
-          }
+            );
+          }}
           noDataText={
-            <Stack spacing={0.5} alignItems="center">
-              <Typography variant="subtitle2">No matching exams</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Change the column filters or schedule an exam from Pipeline.
-              </Typography>
-            </Stack>
+            <EnrollmentTableEmptyState
+              title="No matching exams"
+              description="Change the column filters or schedule an exam from Pipeline."
+            />
           }
           rowProps={(row) => ({
             'data-testid': 'student-enrollment-exam-row',
             'data-exam-id': row.id,
           })}
-          tableContainerProps={{ sx: { minHeight: 360 } }}
+          wrapperProps={{ sx: enrollmentTableWrapperSx }}
+          tableContainerProps={{ sx: enrollmentTableContainerSx }}
         />
-      )}
+      ) : null}
+
+      <Dialog open={bulkMarksOpen} onClose={() => setBulkMarksOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Give Marks</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.25} sx={{ pt: 1 }}>
+            <Alert severity="info">
+              Apply the same marks to {selectedExamIds.length} selected exam
+              {selectedExamIds.length === 1 ? '' : 's'}.
+            </Alert>
+            <TextField
+              label="Total marks"
+              type="number"
+              value={bulkTotalMarks}
+              onChange={(event) => setBulkTotalMarks(event.target.value)}
+            />
+            <TextField
+              label="Passing marks"
+              type="number"
+              value={bulkPassingMarks}
+              onChange={(event) => setBulkPassingMarks(event.target.value)}
+            />
+            <TextField
+              label="Obtained marks"
+              type="number"
+              value={bulkObtainedMarks}
+              onChange={(event) => setBulkObtainedMarks(event.target.value)}
+            />
+            <TextField
+              label="Merit rank"
+              type="number"
+              value={bulkMeritRank}
+              onChange={(event) => setBulkMeritRank(event.target.value)}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkMarksOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={bulkResultsState.isLoading}
+            disabled={!bulkTotalMarks || !bulkPassingMarks || !bulkObtainedMarks}
+            onClick={uploadSelectedResults}
+          >
+            Save Marks
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={Boolean(selectedExam)}
@@ -448,7 +765,7 @@ export function ExamsWorkspace() {
               <Typography variant="subtitle2" gutterBottom>
                 Attendance
               </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                 <TextField
                   select
                   fullWidth
@@ -486,7 +803,7 @@ export function ExamsWorkspace() {
               <Typography variant="subtitle2" gutterBottom>
                 Marks & Merit
               </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                 <TextField
                   label="Total marks"
                   type="number"
@@ -680,6 +997,17 @@ export function ExamsWorkspace() {
           </Stack>
         </DialogContent>
         <DialogActions>
+          {handoffQuery.data?.eligibilityDecision === AdmissionCrmEligibilityDecision.Eligible ? (
+            <Button
+              variant="contained"
+              onClick={() => {
+                openApplicant(handoffQuery.data!.leadId, 'registration');
+                setHandoffExamId('');
+              }}
+            >
+              Continue to Registration
+            </Button>
+          ) : null}
           <Button onClick={() => setHandoffExamId('')}>Close</Button>
         </DialogActions>
       </Dialog>
@@ -687,7 +1015,8 @@ export function ExamsWorkspace() {
       <ApplicantWorkspaceDrawer
         leadId={state.applicant}
         academicYearId={academicYearId}
-        initialTab="overview"
+        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || 'exam'}
+        onTabChange={(nextTab) => updateState({ applicantTab: nextTab }, 'replace')}
         onClose={closeApplicant}
       />
     </Stack>

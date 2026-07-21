@@ -81,7 +81,7 @@ export function StudentAcademicSummaryCards({
   ];
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', xl: 'repeat(6, 1fr)' }, gap: 1.5 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', xl: 'repeat(6, 1fr)' }, gap: 1 }}>
       {cards.map((card) => {
         const active = activeFilter === card.key;
 

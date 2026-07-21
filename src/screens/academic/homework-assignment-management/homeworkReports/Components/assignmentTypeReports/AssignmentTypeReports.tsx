@@ -9,7 +9,7 @@ import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -497,7 +497,7 @@ const AssignmentManagementReports = ({
       <Card>
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               {showField('organization') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
@@ -775,7 +775,7 @@ const AssignmentManagementReports = ({
                 </Grid>
               )}
 
-              <Grid size={12} display="flex" justifyContent="flex-end" gap={1.5}>
+              <Grid size={12} display="flex" justifyContent="flex-end" gap={1}>
                 <Button
                   startIcon={<Iconify icon="mdi:eye-outline" />}
                   type="submit"

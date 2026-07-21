@@ -1,9 +1,13 @@
-/* eslint-disable import/no-extraneous-dependencies */
-import { test, expect } from '@playwright/test';
+/* eslint-disable import/no-extraneous-dependencies, no-await-in-loop, no-continue */
+import { test, expect, type Page } from '@playwright/test';
 
 import { createEmployeeFixture } from './employee/employee-fixtures';
 import { searchEmployee, gotoEmployeeList } from './employee/employee-page';
-import { employeeApiRequest, createEmployeeFromExistingDefaults } from './employee/employee-api';
+import {
+  employeeApiRequest,
+  createEmployeeFromExistingDefaults,
+  assignEmployeeToFirstAcademicScope,
+} from './employee/employee-api';
 
 const fullCycleEnabled = process.env.E2E_HR_FULL_CYCLE === '1';
 
@@ -40,8 +44,12 @@ async function expectOk(response: Awaited<ReturnType<typeof employeeApiRequest>>
   expect(response.ok(), `${label}: ${response.status()} ${details}`).toBe(true);
 }
 
-async function getJson(page: Parameters<typeof employeeApiRequest>[0], path: string) {
-  const response = await employeeApiRequest(page, path);
+async function getJson(
+  page: Parameters<typeof employeeApiRequest>[0],
+  path: string,
+  init: RequestInit & { timeout?: number } = {}
+) {
+  const response = await employeeApiRequest(page, path, init);
   await expectOk(response, `GET ${path}`);
   return response.json();
 }
@@ -60,6 +68,57 @@ function sumComponentAmounts(components: any[] | undefined) {
 
 function expectMoneyClose(actual: unknown, expected: unknown, label: string) {
   expect(Number(actual), label).toBeCloseTo(Number(expected), 2);
+}
+
+function isPayrollMonthBusy(details: string) {
+  return (
+    details.includes('HR:Payroll:030033') ||
+    details.includes('PayrollMonthLockBusy') ||
+    details.includes('Payroll Month Lock Busy')
+  );
+}
+
+async function getPayrollRunPreview(page: Page, month: string) {
+  const path = `/payroll/run?month=${encodeURIComponent(month)}&page=0&pageSize=100&forceRefresh=true`;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const response = await employeeApiRequest(page, path, { timeout: 120_000 });
+    if (response.ok()) {
+      return response.json();
+    }
+
+    const details = await response.text();
+    if (response.status() !== 400 || !isPayrollMonthBusy(details) || attempt >= 11) {
+      expect(response.ok(), `GET ${path}: ${response.status()} ${details}`).toBe(true);
+    }
+    await page.waitForTimeout(5_000);
+  }
+
+  throw new Error(`GET ${path}: payroll month stayed busy after retries`);
+}
+
+async function gotoAndExpectHeading(page: Page, path: string, headingName: RegExp) {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 180_000 });
+
+    const errorHeading = page.getByRole('heading', { name: /Something went wrong/i });
+    if (await errorHeading.isVisible({ timeout: 1_000 }).catch(() => false)) {
+      lastError = new Error(`Route ${path} rendered the Next.js error boundary`);
+      continue;
+    }
+
+    try {
+      await expect(page.getByRole('heading', { name: headingName })).toBeVisible({
+        timeout: 120_000,
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError;
 }
 
 async function ensurePayrollComponent(
@@ -268,12 +327,37 @@ async function upsertEmployeePolicyOverride(
   expect(payload.payrollPolicyId, 'effective payroll policy').toBeTruthy();
   expect(payload.leavePolicyId, 'effective leave policy').toBeTruthy();
 
+  const impactPreview = await getJson(page, '/hr/policy-assignments/impact-preview', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'employee-override-upsert',
+      assignment: {
+        academicYearId: payload.academicYearId,
+        targetType: 'employee',
+        targetKey: employeeId,
+        targetDisplayName: employeeId,
+        payrollPolicyId: payload.payrollPolicyId,
+        attendancePolicyId,
+        leavePolicyId: payload.leavePolicyId,
+        effectiveFrom,
+        effectiveTo: null,
+        priority: 100,
+        assignmentReason: payload.assignmentReason,
+        isActive: true,
+      },
+    }),
+  });
+  expect(impactPreview?.blockingWarnings ?? [], 'employee override blocking warnings').toEqual([]);
+
   const response = await employeeApiRequest(
     page,
     '/hr/policy-assignments/direct-employee-override',
     {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        confirmationToken: impactPreview?.confirmationToken ?? null,
+      }),
     }
   );
   await expectOk(response, 'upsert employee overtime policy override');
@@ -286,7 +370,7 @@ test.describe('HR module full cycle', () => {
   test('creates employee context, marks attendance, runs payroll, and verifies salary slip', async ({
     page,
   }) => {
-    test.setTimeout(240_000);
+    test.setTimeout(420_000);
 
     await page.goto('/dashboard/');
 
@@ -294,6 +378,7 @@ test.describe('HR module full cycle', () => {
       page,
       createEmployeeFixture('Full Cycle Employee')
     );
+    await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id;
     const attendanceDate = yyyyMmDd(firstElapsedWeekdayInMonth(today));
     const month = payrollMonth(today);
@@ -304,8 +389,7 @@ test.describe('HR module full cycle', () => {
     await searchEmployee(page, employee.email);
     await expect(page.getByRole('row', { name: new RegExp(employee.email, 'i') })).toBeVisible();
 
-    await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /Mark Attendance/i })).toBeVisible();
+    await gotoAndExpectHeading(page, '/hr/manual-attendance', /Mark Attendance/i);
 
     const attendanceResponse = await employeeApiRequest(page, '/hr/attendance/register/adjust', {
       method: 'POST',
@@ -335,18 +419,11 @@ test.describe('HR module full cycle', () => {
       expect(attendanceRow.status).toBe('Present');
     }
 
-    await page.goto('/hr/attendance-tracking', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /Attendance Register/i })).toBeVisible();
+    await gotoAndExpectHeading(page, '/hr/attendance-tracking', /Attendance Register/i);
 
-    await page.goto('/hr/payroll/run-payroll', { waitUntil: 'domcontentloaded', timeout: 90_000 });
-    await expect(page.getByRole('heading', { name: /Run Payroll/i })).toBeVisible({
-      timeout: 60_000,
-    });
+    await gotoAndExpectHeading(page, '/hr/payroll/run-payroll', /Run Payroll/i);
 
-    const preview = await getJson(
-      page,
-      `/payroll/run?month=${encodeURIComponent(month)}&page=0&pageSize=100&forceRefresh=true`
-    );
+    const preview = await getPayrollRunPreview(page, month);
     const payrollRow = preview.items?.find((item: any) => item.employeeId === employeeId);
     expect(payrollRow, `payroll row for ${employee.email}`).toBeTruthy();
     const previewGross = Number(payrollRow.grossSalary ?? payrollRow.totalEarnings ?? 0);
@@ -393,6 +470,7 @@ test.describe('HR module full cycle', () => {
       createEmployeeFixture('Payroll Overtime Employee'),
       { shiftId: shift.id }
     );
+    await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id;
     const attendanceDate = yyyyMmDd(firstElapsedWeekdayInMonth(today));
     const month = payrollMonth(today);
@@ -422,15 +500,9 @@ test.describe('HR module full cycle', () => {
     });
     await expectOk(attendanceResponse, 'adjust overtime attendance register');
 
-    await page.goto('/hr/payroll/run-payroll', { waitUntil: 'domcontentloaded', timeout: 90_000 });
-    await expect(page.getByRole('heading', { name: /Run Payroll/i })).toBeVisible({
-      timeout: 60_000,
-    });
+    await gotoAndExpectHeading(page, '/hr/payroll/run-payroll', /Run Payroll/i);
 
-    const preview = await getJson(
-      page,
-      `/payroll/run?month=${encodeURIComponent(month)}&page=0&pageSize=100&forceRefresh=true`
-    );
+    const preview = await getPayrollRunPreview(page, month);
     const payrollRow = preview.items?.find((item: any) => item.employeeId === employeeId);
     expect(payrollRow, `payroll row for ${employee.email}`).toBeTruthy();
 

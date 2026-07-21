@@ -39,7 +39,7 @@ export const LearningContentSection: React.FC<LearningContentSectionProps> = ({
   ];
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       {sections.map((section) => (
         <Grid key={section.field} size={{ xs: 12 }}>
           <Box sx={{ mb: 0.5, display: 'flex', alignItems: 'baseline', gap: 1 }}>

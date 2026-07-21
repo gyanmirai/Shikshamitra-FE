@@ -11,7 +11,7 @@ const NotificationSetting = () => (
   <>
     <Card sx={{ p: 2, mt: 1 }}>
       <Typography variant="h6">Notifications</Typography>
-      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch />
           <Typography>New Resources</Typography>

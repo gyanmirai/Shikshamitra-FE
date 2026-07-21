@@ -30,7 +30,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Box display="flex" flexDirection="column" gap={1} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={2}>
               {/* Resource Name */}

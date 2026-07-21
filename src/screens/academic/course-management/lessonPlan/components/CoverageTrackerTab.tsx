@@ -46,12 +46,12 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
   const totalCritical = coverageData.filter((r) => r.status === 'Critical').length;
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       {/* Summary cards */}
       <Box
         sx={{
           display: 'grid',
-          gap: 2,
+          gap: 1,
           gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
         }}
       >
@@ -76,7 +76,7 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
           },
         ].map((item) => (
           <Card key={item.label}>
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box
                 sx={{
                   width: 40,
@@ -107,7 +107,7 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
           Subject-wise Coverage Overview
         </Typography>
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           {subjectSummary.map((item) => {
             const cfg = statusConfig[item.status as keyof typeof statusConfig];
             return (
@@ -130,7 +130,7 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
                       {cfg.label}
                     </Label>
                   </Stack>
-                  <Stack direction="row" spacing={2}>
+                  <Stack direction="row" spacing={1}>
                     <Typography variant="caption" color="text.secondary">
                       Planned: {item.avgPlanned}%
                     </Typography>
@@ -200,7 +200,7 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
             filterType: 'number' as const,
             minWidth: 110,
             render: (v: any) => (
-              <Stack spacing={0.25}>
+              <Stack spacing={1}>
                 <Typography variant="body2">{v}%</Typography>
                 <LinearProgress
                   variant="determinate"
@@ -216,7 +216,7 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
             filterType: 'number' as const,
             minWidth: 110,
             render: (v: any) => (
-              <Stack spacing={0.25}>
+              <Stack spacing={1}>
                 <Typography variant="body2">{v}%</Typography>
                 <LinearProgress
                   variant="determinate"

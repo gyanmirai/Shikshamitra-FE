@@ -5,8 +5,8 @@ import type { AdmissionCrmRouteImpactPreviewDto } from 'src/redux/student/admiss
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
+import { Chip, Alert, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import { Gavel, Route, Preview, FactCheck, ReportProblem } from '@mui/icons-material';
-import { Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmRouteType,
   AdmissionCrmRouteAppealStatus,
@@ -21,6 +21,8 @@ import {
   useRequestAdmissionCrmRouteAppealMutation,
   usePreviewAdmissionCrmRouteAssignmentMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { ApplicantInlineNotice } from './applicant-workspace-primitives';
 
 type Props = { leadId: string; academicYearId: string };
 const routeNames = Object.entries(AdmissionCrmRouteType).filter(([key]) =>
@@ -130,7 +132,7 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
       current ? 'Admission route changed with preserved history.' : 'Admission route assigned.'
     );
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+    <Stack component="section" sx={{ py: 0.5 }}>
       <Stack spacing={1.25}>
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="subtitle2">Admission route</Typography>
@@ -267,11 +269,17 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
             {current ? 'Confirm route change' : 'Assign route'}
           </LoadingButton>
         </Stack>
-        {impactPreview && (
-          <Alert severity={impactPreview.hasBlockingImpact ? 'warning' : 'info'}>
-            {impactPreview.impacts.map((x) => `${x.area}: ${x.impact}`).join(' ')}
-          </Alert>
-        )}
+        {impactPreview ? (
+          impactPreview.hasBlockingImpact ? (
+            <Alert severity="warning">
+              {impactPreview.impacts.map((x) => `${x.area}: ${x.impact}`).join(' ')}
+            </Alert>
+          ) : (
+            <ApplicantInlineNotice>
+              {impactPreview.impacts.map((x) => `${x.area}: ${x.impact}`).join(' ')}
+            </ApplicantInlineNotice>
+          )
+        ) : null}
         {current && current.status < 2 && (
           <Stack direction="row" gap={1}>
             <LoadingButton
@@ -407,11 +415,11 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
           </Stack>
         )}
         {(history.data || []).length > 1 && (
-          <Alert severity="info">
+          <ApplicantInlineNotice>
             {history.data!.length} route versions are retained in the applicant history.
-          </Alert>
+          </ApplicantInlineNotice>
         )}
       </Stack>
-    </Paper>
+    </Stack>
   );
 }

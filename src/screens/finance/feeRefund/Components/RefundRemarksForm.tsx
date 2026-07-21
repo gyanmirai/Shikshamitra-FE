@@ -42,9 +42,9 @@ const RemarksFormSkeleton = () => (
         </Box>
       </Stack>
       <Divider sx={{ mb: 2 }} />
-      <Box display="flex" flexWrap="wrap" gap={3}>
+      <Box display="flex" flexWrap="wrap" gap={1}>
         {Array.from({ length: 8 }).map((_, i) => (
-          <Box key={i} display="flex" alignItems="flex-start" gap={1.5} sx={{ flex: '1 1 200px' }}>
+          <Box key={i} display="flex" alignItems="flex-start" gap={1} sx={{ flex: '1 1 200px' }}>
             <Skeleton variant="rounded" width={36} height={36} />
             <Box sx={{ flex: 1 }}>
               <Skeleton variant="text" width="60%" height={12} />

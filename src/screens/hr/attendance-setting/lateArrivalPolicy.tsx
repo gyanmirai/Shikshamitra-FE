@@ -219,7 +219,7 @@ const LateArrivalPolicyForm = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={() => {}}>
           <Scrollbar sx={{ p: 2, height: '200px', bgcolor: 'background.neutral' }}>
@@ -281,7 +281,7 @@ const LateArrivalPolicyForm = ({
 };
 
 const AssignEmployeeForm = () => (
-  <Box display="flex" flexDirection="column" gap={2}>
+  <Box display="flex" flexDirection="column" gap={1}>
     <form onSubmit={() => {}}>
       <Scrollbar sx={{ p: 2, height: '150px', bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>

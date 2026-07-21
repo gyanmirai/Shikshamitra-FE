@@ -7,6 +7,7 @@ const read = (...segments: string[]) =>
 
 describe('Student Enrollment workspace route contracts', () => {
   it.each([
+    ['overview', 'EnrollmentOverviewWorkspace'],
     ['pipeline', 'AdmissionsPipelineWorkspace'],
     ['exams', 'AdmissionsExamsWorkspace'],
     ['registrations', 'AdmissionsRegistrationsWorkspace'],
@@ -31,7 +32,10 @@ describe('Student Enrollment workspace route contracts', () => {
     [
       'PipelineWorkspace',
       'ExamsWorkspace',
-      'OperationsQueueWorkspace',
+      'RegistrationsWorkspace',
+      'OffersWorkspace',
+      'ActivationWorkspace',
+      'OperationsWorkspace',
       'AnalyticsWorkspace',
     ].forEach((workspace) => expect(source).toContain(workspace));
     expect(source).not.toContain('StudentAdmissionsCrmScreen');
@@ -48,6 +52,11 @@ describe('Student Enrollment workspace route contracts', () => {
         )
       )
     ).toBe(false);
+  });
+
+  it('redirects the Enrollment root to the role-focused overview', () => {
+    const source = read('src', 'app', '(auth-route)', 'student', 'enrollment', 'page.tsx');
+    expect(source).toContain("redirect('/student/enrollment/overview')");
   });
 
   it('keeps bounded server pagination and debounced staff search in owning workspaces', () => {
@@ -79,14 +88,96 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(pipeline).toContain('const pageSize = 50');
     expect(operations).toContain('const pageSize = 50');
     expect(pipeline).toContain('setDebouncedStaffSearch');
-    expect(operations).toContain('setDebouncedStaffSearch');
+    expect(operations).toContain('setDebouncedOwnerSearch');
+    expect(operations).toContain('setDebouncedAssigneeSearch');
     expect(board).toContain('const PAGE_SIZE = 25');
     expect(board).toContain('Load more');
     expect(board).toContain('IntersectionObserver');
     expect(board).toContain('!academicYearId || !shouldLoad');
   });
 
-  it('keeps free-text applicant searches out of URL state', () => {
+  it('uses configurable employee-backed owners and employee task assignees', () => {
+    const pipeline = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-workspace.tsx'
+    );
+    const overview = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'applicant-workspace-overview.tsx'
+    );
+    const settings = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-crm-configuration.tsx'
+    );
+
+    expect(pipeline).toContain('ownerOnly: true');
+    expect(overview).toContain('ownerOnly: true');
+    expect(settings).toContain('label="Pipeline owners"');
+    expect(settings).toContain('ownerOnly: true');
+    expect(settings).toContain('Only active HR employees with Enrollment CRM access');
+  });
+
+  it('filters pipeline owners through the shared table instead of a separate list filter', () => {
+    const pipeline = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-workspace.tsx'
+    );
+
+    expect(pipeline).not.toContain('label="Pipeline owner"');
+    expect(pipeline).toContain("column: 'ownerUserId'");
+    expect(pipeline).toContain("owner: getLatestStringFilter(filters, 'ownerUserId')");
+    expect(pipeline).toContain('enumOptions: ownerFilterOptions');
+  });
+
+  it('keeps the Enrollment navigation and registration title concise', () => {
+    const menu = read('src', 'constants', 'student-menu.ts');
+    const registration = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'registrations-workspace.tsx'
+    );
+
+    expect(menu).toContain("title: 'Registration'");
+    expect(menu).not.toContain("title: 'Registrations & Documents'");
+    expect(registration).toContain('title="Registration"');
+  });
+
+  it('pins the entrance exam admission status beside the actions column', () => {
+    const exams = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'exams-workspace.tsx'
+    );
+
+    expect(exams).toContain("label: 'Admission status'");
+    expect(exams).toContain("stickyPosition: 'right'");
+    expect(exams).toContain('icon="solar:clock-circle-bold-duotone"');
+    expect(exams).toContain('icon="solar:door-2-bold-duotone"');
+  });
+
+  it('keeps My Work search and filters shareable in URL state', () => {
     const state = read(
       'src',
       'screens',
@@ -95,9 +186,25 @@ describe('Student Enrollment workspace route contracts', () => {
       'admissions-crm',
       'enrollment-workspace-state.ts'
     );
-    expect(state).not.toContain("set('search'");
+    expect(state).toContain("set('search'");
+    expect(state).toContain("set('workType'");
+    expect(state).toContain("set('urgency'");
     expect(state).not.toContain("set('phone'");
     expect(state).not.toContain("set('email'");
+  });
+
+  it('renders legacy or unknown admission pathway values without crashing Pipeline', () => {
+    const pipeline = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-workspace.tsx'
+    );
+
+    expect(pipeline).toContain("typeof value === 'string' && /^\\d+$/.test(value)");
+    expect(pipeline).toContain("|| 'Unknown pathway'");
   });
 
   it('uses the global vertical menu without rendering duplicate workspace navigation', () => {
@@ -123,6 +230,7 @@ describe('Student Enrollment workspace route contracts', () => {
 
   it('uses the shared project table and action patterns throughout Enrollment', () => {
     const tableFiles = [
+      'overview-workspace.tsx',
       'pipeline-workspace.tsx',
       'exams-workspace.tsx',
       'operations-queue-workspace.tsx',
@@ -139,6 +247,13 @@ describe('Student Enrollment workspace route contracts', () => {
       expect(source).not.toContain('enrollment-table-styles');
     });
     expect(sources.join('\n')).toContain('ThreeDotsActions');
+    expect(sources.join('\n')).toContain('enrollmentActionsColumn');
+    expect(sources[0]).toContain("stickyPosition: 'left'");
+    expect(sources[0]).toContain('actionLabels[item.recommendedAction]');
+    expect(sources[0]).toContain('<PriorityIndicator');
+    expect(sources[0]).toContain('variant="outlined"');
+    expect(sources[0]).toContain("color={isCompletionAction ? 'success' : 'primary'}");
+    expect(sources[0]).toContain('<TaskAltRounded aria-hidden="true" />');
     expect(
       fs.existsSync(
         path.join(
@@ -152,6 +267,67 @@ describe('Student Enrollment workspace route contracts', () => {
         )
       )
     ).toBe(false);
+  });
+
+  it('keeps shared table sort indicators decorative instead of unnamed buttons', () => {
+    const tableHeader = read(
+      'src',
+      'components',
+      'customizabaleTable',
+      'components',
+      'TableHeader.tsx'
+    );
+
+    expect(tableHeader).not.toContain('<IconButton');
+    expect(tableHeader).toContain('aria-hidden="true"');
+  });
+
+  it('keeps every paginated Enrollment workspace server-filtered and server-sorted', () => {
+    const paginatedTableFiles = [
+      'overview-workspace.tsx',
+      'pipeline-workspace.tsx',
+      'exams-workspace.tsx',
+      'operations-queue-workspace.tsx',
+    ];
+
+    paginatedTableFiles.forEach((file) => {
+      const source = read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file);
+      expect(source, file).toContain('serverSideFilter');
+      expect(source, file).toContain('onServerFilter');
+      expect(source, file).toContain('serverSideSort');
+      expect(source, file).toContain('onServerSort');
+    });
+
+    const analytics = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'analytics-workspace.tsx'
+    );
+    const rteImport = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'rte-allotment-import.tsx'
+    );
+    expect(analytics).not.toContain('isFilter={false}');
+    expect(rteImport).not.toContain('isFilter={false}');
+  });
+
+  it('keeps the simulated scale contract paginated instead of materializing 25,000 leads', () => {
+    const fixture = read('e2e', 'student', 'fixtures', 'admission-crm-scale.ts');
+    const browserFlow = read('e2e', 'student', 'admissions-crm-flow.guest.spec.ts');
+
+    expect(fixture).toContain('admissionCrmScaleTotal = 25_000');
+    expect(fixture).toContain('length: maxResultCount');
+    expect(fixture).not.toContain('length: admissionCrmScaleTotal');
+    expect(browserFlow).toContain('toHaveCount(50)');
+    expect(browserFlow).toContain("has('stage') ? 25 : 50");
+    expect(browserFlow).toContain('toBeLessThanOrEqual(25)');
   });
 
   it('does not expose raw staff identifiers or editable provider JSON in ordinary UI', () => {

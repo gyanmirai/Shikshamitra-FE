@@ -313,7 +313,7 @@ export default function AdmissionsNumberSeriesConfiguration() {
                   Range starts {item.startingSequence}; next {item.nextPreview}
                 </Typography>
               </Box>
-              <Stack direction="row" gap={0.75}>
+              <Stack direction="row" gap={1}>
                 <Chip
                   size="small"
                   label={labels[item.status]}
@@ -365,7 +365,7 @@ export default function AdmissionsNumberSeriesConfiguration() {
             </Alert>
           )}
           {governance.data && (
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
+            <Stack direction="row" gap={1} flexWrap="wrap">
               <Chip size="small" label={`Allocated ${governance.data.allocatedCount}`} />
               <Chip size="small" label={`Committed ${governance.data.committedCount}`} />
               <Chip size="small" label={`Manual ${governance.data.manualCount}`} />

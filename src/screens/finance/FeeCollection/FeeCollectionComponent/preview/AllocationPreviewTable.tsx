@@ -224,7 +224,7 @@ const MonthGroupBlock = ({ group }: { group: MonthAllocationGroup }) => {
       <Box
         display="flex"
         alignItems="center"
-        gap={1.5}
+        gap={1}
         px={2}
         py={1.25}
         sx={{
@@ -343,7 +343,7 @@ const ChargesSection = ({ rows }: { rows: AllocatedChargeRow[] }) => {
       <Box
         display="flex"
         alignItems="center"
-        gap={1.5}
+        gap={1}
         px={2}
         py={1.25}
         sx={{

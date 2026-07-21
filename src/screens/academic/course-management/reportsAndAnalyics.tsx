@@ -6,7 +6,7 @@ import React from 'react';
 import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -44,6 +44,7 @@ const Reports = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Reports"
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
@@ -62,7 +63,7 @@ const Reports = (props: TabComponentType) => {
           <Card>
             <Form>
               <Box sx={{ p: 2 }}>
-                <Grid container spacing={2}>
+                <Grid container spacing={1}>
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                       <CustomSelect

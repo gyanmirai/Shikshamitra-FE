@@ -6,12 +6,11 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import { alpha } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Grid, Button, Typography, Paper, Stack } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -21,6 +20,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
 import {
@@ -45,7 +45,17 @@ const ExamTypeSettings = () => {
   // Dialog state for managing the create/edit exam type form.
   // const dialog = useBoolean();
   // State for storing and managing the exam type table data.
-  const [examTypeTable, setExamTypeTable] = useState<IExamType[]>(examTypeTableData);
+  const [examTypeTable, setExamTypeTable] = useState<IExamType[]>(
+    examTypeTableData.map((item) => ({
+      ...item,
+      id: String(item.id),
+      status: item.status === 'Publish' ? 0 : 1,
+      includedInResult: true,
+      marksEntryRequired: true,
+      gradeScaleRequired: true,
+      allowPracticalOral: false,
+    }))
+  );
   const addExamTypeDialog = useBoolean(false);
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
@@ -91,7 +101,10 @@ const ExamTypeSettings = () => {
   // Statistics calculations
   const examTypeList = examTypeData?.items || [];
   const totalTypes = examTypeList.length;
-  const activeTypes = examTypeList.filter((t: any) => t.status === 0 || t.status === 'Active' || t.status === 2 || t.status === 'SystemDefault').length;
+  const activeTypes = examTypeList.filter(
+    (t: any) =>
+      t.status === 0 || t.status === 'Active' || t.status === 2 || t.status === 'SystemDefault'
+  ).length;
   const usedTypes = examTypeList.filter((t: any) => t.usageCount > 0).length;
   const includedInResult = examTypeList.filter((t: any) => t.includedInResult).length;
 
@@ -165,8 +178,9 @@ const ExamTypeSettings = () => {
         sx={{
           display: 'grid',
           gridTemplateColumns: {
-            xs: 'repeat(2, minmax(0, 1fr))',
-            md: 'repeat(4, minmax(0, 1fr))',
+            xs: 'repeat(1, minmax(0, 1fr))',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(auto-fit, minmax(170px, 1fr))',
           },
           gap: 1,
           mb: 2,
@@ -184,10 +198,18 @@ const ExamTypeSettings = () => {
             sx={{
               p: 1.25,
               borderRadius: 1,
-              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.04)
+                  : theme.palette.background.paper,
+              borderColor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.12)
+                  : theme.palette.divider,
+              minWidth: 0,
             }}
           >
-            <Stack spacing={0.5}>
+            <Stack spacing={1}>
               <Typography variant="caption" color="text.secondary">
                 {card.label}
               </Typography>
@@ -227,18 +249,42 @@ const ExamTypeSettings = () => {
           { id: 'examType', label: 'Exam Types' },
           { id: 'description', label: 'Description' },
           { id: 'category', label: 'Category', render: (val) => val || '-' },
-          { id: 'defaultTotalMarks', label: 'Default Marks', filterType: 'number', render: (val) => val ?? '-' },
-          { id: 'defaultWeightage', label: 'Weightage', filterType: 'number', render: (val) => val !== null && val !== undefined ? `${val}%` : '-' },
-          { id: 'includedInResult', label: 'Result Impact', render: (val) => val ? <Label color="success">Included</Label> : <Label color="default">Optional</Label> },
+          {
+            id: 'defaultTotalMarks',
+            label: 'Default Marks',
+            filterType: 'number',
+            render: (val) => val ?? '-',
+          },
+          {
+            id: 'defaultWeightage',
+            label: 'Weightage',
+            filterType: 'number',
+            render: (val) => (val !== null && val !== undefined ? `${val}%` : '-'),
+          },
+          {
+            id: 'includedInResult',
+            label: 'Result Impact',
+            render: (val) =>
+              val ? (
+                <Label color="success">Included</Label>
+              ) : (
+                <Label color="default">Optional</Label>
+              ),
+          },
           {
             id: 'status',
             label: 'Status',
             render: (value, row: any) => {
               const { label, color } = getStatusLabel(row.status);
               return <Label color={color as any}>{label}</Label>;
-            }
+            },
           },
-          { id: 'usageCount', label: 'Usage Count', filterType: 'number', render: (val) => `${val || 0} exams` },
+          {
+            id: 'usageCount',
+            label: 'Usage Count',
+            filterType: 'number',
+            render: (val) => `${val || 0} exams`,
+          },
           {
             id: 'actions',
             label: 'Actions',

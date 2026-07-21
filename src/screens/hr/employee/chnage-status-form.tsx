@@ -69,6 +69,7 @@ const ChangeStatusForm = ({
     effectiveDate: Dayjs | null;
     remarks: string;
   }>({
+    validateOnMount: true,
     initialValues: {
       status: { label: EmployeeStatusType[status || 0], value: status, description: '' },
       effectiveDate: status === EmployeeStatusType.Active ? null : defaultEffectiveDate,
@@ -163,46 +164,59 @@ const ChangeStatusForm = ({
             options={options}
             value={formik.values.status}
             onChange={(_, newValue) => {
-              formik.setFieldValue('status', newValue);
-              if (newValue.value === EmployeeStatusType.Active) {
-                formik.setFieldValue('effectiveDate', null);
-              } else if (!formik.values.effectiveDate) {
-                formik.setFieldValue('effectiveDate', defaultEffectiveDate);
+              if (!newValue) {
+                return;
               }
+
+              formik.setValues(
+                {
+                  ...formik.values,
+                  status: newValue,
+                  effectiveDate:
+                    newValue.value === EmployeeStatusType.Active
+                      ? null
+                      : formik.values.effectiveDate || defaultEffectiveDate,
+                },
+                true
+              );
             }}
             size="small"
             disableClearable
             getOptionLabel={(option) => String(option.label)}
-            renderOption={(props, option) => (
-              <Box
-                component="li"
-                {...props}
-                sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}
-              >
-                {option.label}
-                <Box sx={{ marginLeft: 'auto' }}>
-                  <CustomTooltip title={option.description} placement="right">
-                    <IconButton
-                      size="small"
-                      sx={{
-                        color:
-                          option.value === EmployeeStatusType.Active
-                            ? theme.vars.palette.success.main
-                            : option.value === EmployeeStatusType.Inactive
-                              ? theme.palette.error.main
-                              : option.value === EmployeeStatusType.Left
-                                ? theme.vars.palette.info.main
-                                : option.value === EmployeeStatusType.Retired
-                                  ? theme.vars.palette.grey[500]
-                                  : theme.vars.palette.grey[500],
-                      }}
-                    >
-                      <Iconify icon="mdi:information" width={20} />
-                    </IconButton>
-                  </CustomTooltip>
+            renderOption={(props, option) => {
+              const { key, ...optionProps } = props as typeof props & { key: React.Key };
+              return (
+                <Box
+                  component="li"
+                  key={key}
+                  {...optionProps}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}
+                >
+                  {option.label}
+                  <Box sx={{ marginLeft: 'auto' }}>
+                    <CustomTooltip title={option.description} placement="right">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color:
+                            option.value === EmployeeStatusType.Active
+                              ? theme.vars.palette.success.main
+                              : option.value === EmployeeStatusType.Inactive
+                                ? theme.palette.error.main
+                                : option.value === EmployeeStatusType.Left
+                                  ? theme.vars.palette.info.main
+                                  : option.value === EmployeeStatusType.Retired
+                                    ? theme.vars.palette.grey[500]
+                                    : theme.vars.palette.grey[500],
+                        }}
+                      >
+                        <Iconify icon="mdi:information" width={20} />
+                      </IconButton>
+                    </CustomTooltip>
+                  </Box>
                 </Box>
-              </Box>
-            )}
+              );
+            }}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -264,7 +278,7 @@ const ChangeStatusForm = ({
           data-testid="hr-employee-status-update-button"
           startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
           loading={isLoading}
-          disabled={disableStatusUpdate}
+          disabled={disableStatusUpdate || !formik.isValid}
           variant="contained"
           type="submit"
           size="small"

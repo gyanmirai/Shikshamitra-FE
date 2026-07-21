@@ -179,10 +179,13 @@ test.describe('Student admissions CRM read-only preflight', () => {
       await expectOk(await crmApiRequest(page, path), label);
     }
 
-    const response = await page.goto('/student/enrollment/pipeline', {
-      waitUntil: 'domcontentloaded',
-      timeout: 60_000,
-    });
+    const response = await page.goto(
+      `/student/enrollment/pipeline?cycle=${encodeURIComponent(academicYearId)}`,
+      {
+        waitUntil: 'domcontentloaded',
+        timeout: 60_000,
+      }
+    );
     expect(response?.status(), 'GET /student/enrollment/pipeline').toBeLessThan(400);
     await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 15_000 });
     await expect(page.getByRole('heading', { name: /Admissions (CRM|Pipeline)/i })).toBeVisible({

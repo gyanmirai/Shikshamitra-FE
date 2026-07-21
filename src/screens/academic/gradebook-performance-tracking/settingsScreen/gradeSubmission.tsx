@@ -7,7 +7,7 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';

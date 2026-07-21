@@ -190,7 +190,7 @@ const GuardRosterScreen = () => {
   }, []);
   return (
     <>
-      <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="40px">
+      <Box display="flex" alignItems="center" flexDirection="row" gap={1} py="40px">
         <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             disabled

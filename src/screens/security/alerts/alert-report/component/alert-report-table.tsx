@@ -16,7 +16,7 @@ import {
 
 const AlertReportTable = () => (
   <>
-    <Box display="flex" alignItems="center" flexDirection="row" gap={2} pb="30px">
+    <Box display="flex" alignItems="center" flexDirection="row" gap={1} pb="30px">
       <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="To Date"

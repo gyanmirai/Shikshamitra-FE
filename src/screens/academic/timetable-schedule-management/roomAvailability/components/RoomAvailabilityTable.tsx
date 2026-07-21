@@ -24,7 +24,7 @@ interface RoomAvailabilityTableProps {
 }
 
 const FacilityIcons = ({ facilities }: { facilities: string[] }) => (
-  <Stack direction="row" spacing={0.5} flexWrap="wrap">
+  <Stack direction="row" spacing={1} flexWrap="wrap">
     {facilities.slice(0, 4).map((f) => {
       const { label, icon } = resolveFacility(f);
       return (
@@ -116,7 +116,7 @@ export const RoomAvailabilityTable = ({
         filterType: 'number',
         minWidth: 100,
         render: (v) => (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             <Iconify icon="mdi:seat" width={14} color="text.secondary" />
             <Typography variant="body2">{v}</Typography>
           </Stack>
@@ -137,7 +137,7 @@ export const RoomAvailabilityTable = ({
         sticky: true,
         stickyPosition: 'right',
         render: (_v, row) => (
-          <Stack direction="row" spacing={0.5} justifyContent="center">
+          <Stack direction="row" spacing={1} justifyContent="center">
             <Tooltip title="View Room Details">
               <IconButton size="small" onClick={() => onViewRoom?.(row.roomId)}>
                 <Iconify icon={GlobalIcons.eye} width={18} />

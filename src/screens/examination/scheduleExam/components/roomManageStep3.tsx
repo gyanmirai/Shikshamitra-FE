@@ -39,7 +39,7 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
   const theme = useTheme();
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {/* Modernized Switch Section with hover animation */}
       <Paper
         role="button"
@@ -54,7 +54,7 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
           border: `1px solid ${theme.palette.divider}`,
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          gap: 1,
           cursor: 'pointer',
           transformOrigin: 'left center',
           transition: 'background-color 0.3s ease, border-color 0.3s ease',
@@ -112,7 +112,7 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
             animate="show"
             exit="exit"
           >
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               {(formik.values.subjects ?? []).flatMap((subject: any) => {
                 // Elective groups: render a card per individual subject
                 if (subject.electiveGroupId && subject.subjects?.length) {

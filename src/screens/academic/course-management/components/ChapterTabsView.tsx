@@ -67,7 +67,7 @@ const ChapterTabsView: React.FC<ChapterTabsViewProps> = ({ chapters }) => {
       <Box sx={{ marginTop: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           <ChapterProgressBar chapter={chapter} />
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box display="flex" alignItems="center" gap={1}>
             <Button variant="contained" startIcon={<Add />} onClick={() => {}}>
               Add New Content
             </Button>

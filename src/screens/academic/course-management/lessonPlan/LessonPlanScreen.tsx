@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -65,9 +65,7 @@ import {
   chapterOptions,
   subjectOptions,
   divisionOptions,
-  initialLessonPlans,
   initialHealthScore,
-  initialDiaryEntries,
 } from './lessonPlanData';
 
 import type { DiaryFormState } from './components/SubmitDiaryModal';
@@ -285,22 +283,22 @@ const LessonPlanScreen = () => {
   const isSavingDiary = isCreatingDiary || isUpdatingDiary;
 
   const lessonPlans = useMemo<LessonPlanRow[]>(() => {
-    if (!lessonPlanList) return initialLessonPlans;
+    if (!lessonPlanList) return [];
     return (
       (lessonPlanList as any).items?.map((p: any) => ({
         id: p.id,
         academicYear: p.academicYear || '2026-27',
-        teacherName: p.teacherName || 'Rohit Mehta',
+        teacherName: p.teacherName || '',
         teacherId: p.teacherId,
         standardId: p.standardId,
         classId: p.standardId,
-        className: p.standardName || '7',
+        className: p.standardName || '',
         divisionId: p.divisionId,
-        divisionName: p.divisionName || 'A',
+        divisionName: p.divisionName || '',
         subjectId: p.subjectId,
-        subjectName: p.subjectName || 'Mathematics',
+        subjectName: p.subjectName || '',
         chapterId: p.chapterId,
-        chapterName: p.chapterName || 'Fractions',
+        chapterName: p.chapterName || '',
         plannedDate: p.plannedDate ? dayjs(p.plannedDate).format('YYYY-MM-DD') : todayIso,
         periodId: p.timetableSlotId || 'Manual',
         period: (() => {
@@ -341,7 +339,7 @@ const LessonPlanScreen = () => {
   }, [lessonPlanList]);
 
   const diaryEntries = useMemo<TeacherDiaryRow[]>(() => {
-    if (!teacherDiaryList) return initialDiaryEntries;
+    if (!teacherDiaryList) return [];
     return (
       (teacherDiaryList as any).items?.map((d: any) => {
         const diaryStatus = toDiaryStatus(d.diaryStatus ?? d.status);
@@ -738,10 +736,10 @@ const LessonPlanScreen = () => {
 
         const planDetailsPayload = {
           chapterId: form.chapterId,
-          topic: form.topic,
-          learningObjective: form.learningObjective,
+          topic: form.topic.trim(),
+          learningObjective: form.learningObjective.trim(),
           teachingMethod: form.teachingMethod,
-          resourcesRequired: form.resourcesRequired,
+          resourcesRequired: form.resourcesRequired.trim(),
           plannedCompletionPercentage: form.plannedCompletionPercentage,
         };
 
@@ -1010,7 +1008,7 @@ const LessonPlanScreen = () => {
       isFilter: false,
       render: (v: string, row: any) =>
         v ? (
-          <Stack direction="row" spacing={0.75} alignItems="flex-start">
+          <Stack direction="row" spacing={1} alignItems="flex-start">
             <Iconify
               icon="mdi:information-outline"
               width={16}
@@ -1033,7 +1031,7 @@ const LessonPlanScreen = () => {
       filterType: 'number' as const,
       minWidth: 100,
       render: (v: number) => (
-        <Stack spacing={0.25}>
+        <Stack spacing={1}>
           <Typography variant="body2">{v}%</Typography>
           <LinearProgress variant="determinate" value={v} sx={{ height: 4, borderRadius: 1 }} />
         </Stack>
@@ -1045,7 +1043,7 @@ const LessonPlanScreen = () => {
       filterType: 'number' as const,
       minWidth: 100,
       render: (v: number) => (
-        <Stack spacing={0.25}>
+        <Stack spacing={1}>
           <Typography variant="body2">{v}%</Typography>
           <LinearProgress
             variant="determinate"
@@ -1200,8 +1198,9 @@ const LessonPlanScreen = () => {
   });
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Lesson Plan / Teacher Diary"
         description="Plan lessons, record daily teaching evidence, review diary submissions, and track syllabus progress in one place."
         links={[
@@ -1227,7 +1226,6 @@ const LessonPlanScreen = () => {
       <TeachingKpiCards
         lessonPlans={lessonPlans}
         diaryEntries={diaryEntries}
-        healthScore={healthScore}
         onCardClick={(key) => {
           if (key === 'pending_approvals') setActiveTab('reviewQueue');
           else if (key === 'missed_lessons') {
@@ -1288,13 +1286,13 @@ const LessonPlanScreen = () => {
               id: plan.id || plan.Id,
               academicYear: plan.academicYear || '2026-27',
               teacherId: plan.teacherId || '',
-              teacherName: plan.teacherName || 'Rohit Mehta',
+              teacherName: plan.teacherName || '',
               classId: plan.standardId || '',
-              className: plan.standardName || '7',
+              className: plan.standardName || '',
               divisionId: plan.divisionId || '',
-              divisionName: plan.divisionName || 'A',
+              divisionName: plan.divisionName || '',
               subjectId: plan.subjectId || '',
-              subjectName: plan.subjectName || 'Mathematics',
+              subjectName: plan.subjectName || '',
               chapterId: plan.chapterId || '',
               chapterName: plan.chapterName || '',
               plannedDate: plan.plannedDate || todayIso,
@@ -1348,11 +1346,6 @@ const LessonPlanScreen = () => {
           onMarkMissed={(plan) => {
             shikshaMitraToast.info({ message: `Mark missed for ${plan.topic} is not wired yet.` });
           }}
-          onCreateFromTimetable={(date) =>
-            shikshaMitraToast.info({
-              message: `Timetable sync for ${date.format('DD MMM')} coming soon.`,
-            })
-          }
           onCopyPreviousWeek={() =>
             shikshaMitraToast.info({ message: 'Previous week lessons copied as draft.' })
           }
@@ -1374,6 +1367,7 @@ const LessonPlanScreen = () => {
           lessonPlans={lessonPlans}
           diaryEntries={diaryEntries}
           canReviewSubmissions={canReviewSubmissions}
+          currentTeacherId={currentTeacherOption?.value}
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
@@ -1429,7 +1423,7 @@ const LessonPlanScreen = () => {
         handleClose={closeHomeworkFromPlan}
       >
         <DialogScrollContent sx={{ bgcolor: 'background.neutral', pb: 2 }}>
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {homeworkError && (
               <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
                 {homeworkError}
@@ -1445,7 +1439,7 @@ const LessonPlanScreen = () => {
                   border: (theme) => `1px solid ${theme.palette.divider}`,
                 }}
               >
-                <Stack spacing={0.5}>
+                <Stack spacing={1}>
                   <Typography variant="subtitle2">{homeworkPlan.topic}</Typography>
                   <Typography variant="caption" color="text.secondary">
                     {homeworkPlan.className}-{homeworkPlan.divisionName} /{' '}
@@ -1516,7 +1510,7 @@ const LessonPlanScreen = () => {
               formControlProps={{ fullWidth: true }}
             />
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <DateTimePicker
                 label="Publish Date *"
                 value={homeworkForm.publishAt}

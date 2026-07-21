@@ -81,6 +81,8 @@ type Props = {
   academicYearId?: string;
 };
 
+type QuickSetupKind = 'exam' | 'interaction' | 'no-exam';
+
 const statusLabel: Record<AdmissionCrmPlaybookStatus, string> = {
   [AdmissionCrmPlaybookStatus.Draft]: 'Draft',
   [AdmissionCrmPlaybookStatus.Published]: 'Published',
@@ -163,6 +165,7 @@ const createExam = (): AdmissionCrmExamDefinitionDto => ({
   code: '',
   name: '',
   durationMinutes: 60,
+  hallTicketEnabled: false,
   components: [
     {
       code: '',
@@ -210,6 +213,60 @@ const createAssignmentRule = (): AdmissionCrmSlotAssignmentRuleDto => ({
   isActive: true,
 });
 
+const createQuickSetup = (
+  name: string,
+  kind: QuickSetupKind,
+  hallTicketEnabled: boolean
+): AdmissionCrmPlaybookUpsertDto => {
+  const setup = createDefaultAdmissionPlaybook();
+  setup.name = name;
+  setup.isFallback = true;
+  if (kind === 'no-exam') {
+    setup.registrationPath = AdmissionCrmRegistrationPath.ExamWaived;
+    setup.stages = [
+      {
+        code: 'APPLICATION_REVIEW',
+        displayName: 'Application review',
+        reportingMilestone: AdmissionInquiryStage.FollowUp,
+        order: 10,
+        isRequired: true,
+        isParentVisible: true,
+        slaHours: 24,
+        allowedNextStageCodes: ['ADMISSION_READY'],
+      },
+      {
+        code: 'ADMISSION_READY',
+        displayName: 'Admission ready',
+        reportingMilestone: AdmissionInquiryStage.Eligible,
+        order: 20,
+        isRequired: true,
+        isParentVisible: true,
+        slaHours: null,
+        allowedNextStageCodes: [],
+      },
+    ];
+    return setup;
+  }
+
+  const exam = createExam();
+  exam.code = kind === 'interaction' ? 'STUDENT_INTERACTION' : 'ENTRANCE_EXAM';
+  exam.name = kind === 'interaction' ? 'Student interaction' : 'Entrance exam';
+  exam.hallTicketEnabled = kind === 'exam' && hallTicketEnabled;
+  exam.components = [
+    {
+      ...exam.components[0],
+      code: kind === 'interaction' ? 'INTERACTION' : 'ASSESSMENT',
+      name: kind === 'interaction' ? 'Student interaction' : 'Assessment',
+      componentType:
+        kind === 'interaction'
+          ? AdmissionCrmAssessmentComponentType.Interaction
+          : AdmissionCrmAssessmentComponentType.WrittenTest,
+    },
+  ];
+  setup.examDefinitions = [exam];
+  return setup;
+};
+
 const errorMessage = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
     const { data } = error as { data?: { detail?: string; errorCode?: string } };
@@ -222,6 +279,10 @@ const editorSteps = ['General', 'Stages', 'Rounds & Seats', 'Exams', 'Slots & Ru
 
 const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
   const [editorOpen, setEditorOpen] = useState(false);
+  const [quickSetupOpen, setQuickSetupOpen] = useState(false);
+  const [quickSetupKind, setQuickSetupKind] = useState<QuickSetupKind>('exam');
+  const [quickSetupName, setQuickSetupName] = useState('Standard admissions');
+  const [quickSetupHallTicket, setQuickSetupHallTicket] = useState(false);
   const [editorTab, setEditorTab] = useState(0);
   const [editing, setEditing] = useState<AdmissionCrmPlaybookDto | null>(null);
   const [operationsPlaybook, setOperationsPlaybook] = useState<AdmissionCrmPlaybookDto | null>(
@@ -249,6 +310,24 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
     setForm(createDefaultAdmissionPlaybook());
     setEditorTab(0);
     setEditorOpen(true);
+  };
+
+  const handleQuickSetup = async () => {
+    if (!academicYearId || !quickSetupName.trim()) return;
+    try {
+      await createPlaybook({
+        academicYearId,
+        body: prepareAdmissionPlaybookPayload(
+          createQuickSetup(quickSetupName.trim(), quickSetupKind, quickSetupHallTicket)
+        ),
+      }).unwrap();
+      setQuickSetupOpen(false);
+      shikshaMitraToast.success({
+        message: 'Admission setup draft created. Review and publish it when ready.',
+      });
+    } catch (error) {
+      shikshaMitraToast.error({ message: errorMessage(error) });
+    }
   };
 
   const openEditor = useCallback((playbook: AdmissionCrmPlaybookDto) => {
@@ -514,24 +593,29 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
   );
 
   return (
-    <Box>
-      <Stack spacing={1.25}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <Stack spacing={1.25} sx={{ flex: 1, minHeight: 0 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
           <Box>
-            <Typography variant="subtitle1">Admissions Playbooks</Typography>
+            <Typography variant="subtitle1">Admission setups</Typography>
             <Typography variant="caption" color="text.secondary">
-              {data?.totalCount || 0} policy versions
+              {data?.totalCount || 0} configured versions
             </Typography>
           </Box>
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Add />}
-            disabled={!academicYearId}
-            onClick={openNew}
-          >
-            New Playbook
-          </Button>
+          <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Add />}
+              disabled={!academicYearId}
+              onClick={() => setQuickSetupOpen(true)}
+            >
+              Quick setup
+            </Button>
+            <Button size="small" variant="outlined" disabled={!academicYearId} onClick={openNew}>
+              Advanced setup
+            </Button>
+          </Stack>
         </Stack>
         {isFetching ? <LinearProgress /> : <Divider />}
         {playbooksQuery.isError ? (
@@ -553,10 +637,74 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
           data={data?.items || []}
           isLoading={isFetching}
           defaultRowsPerPage={10}
-          noDataText="No admissions playbooks configured. Create one to define the admission journey."
-          tableContainerProps={{ sx: { minHeight: 320 } }}
+          noDataText="No admission setup yet. Use Quick setup for the common school workflow."
+          wrapperProps={{ sx: { minHeight: 320 } }}
+          tableContainerProps={{ sx: { minHeight: 0 } }}
         />
       </Stack>
+
+      <Dialog
+        open={quickSetupOpen}
+        onClose={() => setQuickSetupOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Quick admission setup</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Alert severity="info">
+              This creates a safe draft with the usual school defaults. Advanced rules remain
+              available later.
+            </Alert>
+            <TextField
+              autoFocus
+              fullWidth
+              size="small"
+              label="Setup name"
+              value={quickSetupName}
+              onChange={(event) => setQuickSetupName(event.target.value)}
+            />
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Assessment process"
+              value={quickSetupKind}
+              onChange={(event) => setQuickSetupKind(event.target.value as QuickSetupKind)}
+            >
+              <MenuItem value="exam">Written entrance exam</MenuItem>
+              <MenuItem value="interaction">Student interaction only</MenuItem>
+              <MenuItem value="no-exam">No entrance assessment</MenuItem>
+            </TextField>
+            {quickSetupKind === 'exam' ? (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={quickSetupHallTicket}
+                    onChange={(event) => setQuickSetupHallTicket(event.target.checked)}
+                  />
+                }
+                label="Generate hall tickets for this exam"
+              />
+            ) : null}
+            <Typography variant="body2" color="text.secondary">
+              Exam dates and capacity are added later from slot operations. Registration, offers,
+              and activation keep their own settings.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setQuickSetupOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={createState.isLoading}
+            disabled={!quickSetupName.trim()}
+            onClick={handleQuickSetup}
+          >
+            Create draft
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={editorOpen} onClose={() => setEditorOpen(false)} fullWidth maxWidth="lg">
         <DialogTitle>
@@ -1151,6 +1299,18 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
                         onChange={(event) =>
                           updateExam(examIndex, { durationMinutes: Number(event.target.value) })
                         }
+                      />
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={exam.hallTicketEnabled}
+                            disabled={readOnly}
+                            onChange={(event) =>
+                              updateExam(examIndex, { hallTicketEnabled: event.target.checked })
+                            }
+                          />
+                        }
+                        label="Hall ticket"
                       />
                       <IconButton
                         aria-label="Remove exam"

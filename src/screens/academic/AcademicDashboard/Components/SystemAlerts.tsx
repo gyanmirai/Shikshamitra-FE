@@ -106,7 +106,7 @@ export default function SystemAlerts() {
               key={alert.id}
               direction="row"
               alignItems="flex-start"
-              spacing={1.5}
+              spacing={1}
               sx={{
                 p: 1.5,
                 borderRadius: 1.5,

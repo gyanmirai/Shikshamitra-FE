@@ -15,7 +15,7 @@ const LearningResourceCard: React.FC<ILearningResourceCardProps> = ({
   <Card sx={{ width: 344, borderRadius: 4, boxShadow: 3 }}>
     <CardContent>
       {/* Top PDF icon and title */}
-      <Box display="flex" alignItems="center" gap={2}>
+      <Box display="flex" alignItems="center" gap={1}>
         <Iconify icon="mdi:file-pdf-box" width={40} height={40} color="#f44336" />
         <Typography variant="h6" fontWeight="bold">
           {resourceTitle}
@@ -25,7 +25,7 @@ const LearningResourceCard: React.FC<ILearningResourceCardProps> = ({
       <Divider sx={{ my: 1.5 }} />
 
       {/* Resource details */}
-      <Box display="flex" gap={2} color="gray">
+      <Box display="flex" gap={1} color="gray">
         <Box display="flex" flexDirection="column" justifyContent="space-between" gap={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <Iconify icon="mdi:chart-box-outline" />
@@ -52,7 +52,7 @@ const LearningResourceCard: React.FC<ILearningResourceCardProps> = ({
       <Divider sx={{ my: 1.5 }} />
 
       {/* Action buttons */}
-      <Stack direction="row" spacing={2} justifyContent="right">
+      <Stack direction="row" spacing={1} justifyContent="right">
         <Button variant="outlined" size="small" startIcon={<Iconify icon={GlobalIcons.download} />}>
           Download
         </Button>

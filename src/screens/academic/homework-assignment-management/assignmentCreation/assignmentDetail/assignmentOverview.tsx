@@ -45,7 +45,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
 
   return (
     <Box sx={{ height: '100%' }}>
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 8 }}>
           <Card
             sx={{
@@ -292,7 +292,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                     Created By
                   </Typography>
                   {typeof assignment?.createdBy === 'string' ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar sx={{ width: 36, height: 36 }}>
                         {(assignment.createdBy as unknown as string)?.[0]?.toUpperCase()}
                       </Avatar>
@@ -301,7 +301,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                       </Typography>
                     </Box>
                   ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <TeacherHoverProfile
                         avatarComp={
                           <Badge

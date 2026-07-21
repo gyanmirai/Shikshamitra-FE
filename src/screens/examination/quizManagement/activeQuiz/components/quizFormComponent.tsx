@@ -8,7 +8,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -94,8 +94,8 @@ const QuizInformation = ({ formik }: any) => {
   // Handle changes in division selection
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Grid container spacing={3}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={!!(formik.touched.quizStartDateTime && formik.errors.quizStartDateTime)}
@@ -107,6 +107,10 @@ const QuizInformation = ({ formik }: any) => {
               onChange={(value) => formik.setFieldValue('quizStartDateTime', value)}
               minDate={dayjs(currentYear?.startDate)}
               maxDate={dayjs(currentYear?.endDate)}
+              academicYearId={currentYear?.id}
+              standardId={formik.values.className || null}
+              divisionId={(formik.values.division || []).find((id: string) => id !== 'all') || null}
+              validationType="ExamSchedule"
               disablePast
               slotProps={{
                 textField: {
@@ -131,6 +135,10 @@ const QuizInformation = ({ formik }: any) => {
               onChange={(value) => formik.setFieldValue('quizEndDateTime', value)}
               minDate={dayjs(currentYear?.startDate)}
               maxDate={dayjs(currentYear?.endDate)}
+              academicYearId={currentYear?.id}
+              standardId={formik.values.className || null}
+              divisionId={(formik.values.division || []).find((id: string) => id !== 'all') || null}
+              validationType="ExamSchedule"
               disablePast
               slotProps={{
                 textField: {
@@ -729,9 +737,9 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
 
   return (
     <BackPopUpChecked initialValues={initial} currentValues={formState}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '200x' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '200x' }}>
         <Scrollbar sx={{ p: 2, height: '400px' }}>
-          <Grid container spacing={3}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={!!errors.questionType}>
                 <CustomSelect
@@ -802,7 +810,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
 
             {formState.questionType === 'Multiple Choice' && (
               <Grid size={{ xs: 12 }}>
-                <Grid container spacing={2}>
+                <Grid container spacing={1}>
                   {formState.options.map((opt: any, i: any) => (
                     <Grid size={{ xs: 12 }} key={i}>
                       <Box sx={{ display: 'flex', gap: 1 }}>
@@ -888,7 +896,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
             label="Required"
           />
 
-          <Stack direction="row" spacing={2}>
+          <Stack direction="row" spacing={1}>
             {onCancel && (
               <Button
                 variant="outlined"
@@ -977,7 +985,7 @@ const QuizBuilder = ({ formik }: any) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
+    <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
       {formik.errors.questions && (
         <Typography variant="body2" color="error">
           {' '}
@@ -985,7 +993,7 @@ const QuizBuilder = ({ formik }: any) => {
         </Typography>
       )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           <FormControlLabel
             value="generate"
             control={

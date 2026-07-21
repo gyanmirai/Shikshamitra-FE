@@ -1,23 +1,28 @@
 import { it, expect, describe } from 'vitest';
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
   createRegistrationTemplate,
   validateRegistrationTemplate,
   normalizeRegistrationTemplate,
+  createBlankRegistrationTemplate,
   validateRegistrationTemplateStep,
+  normalizeRegistrationFieldForType,
   findRegistrationTemplateValidationIssue,
 } from './admissions-registration-configuration-utils';
 
 describe('admissions registration configuration', () => {
   it('creates a structured starter template', () => {
     const template = createRegistrationTemplate();
-    expect(template.sections).toHaveLength(1);
-    expect(template.sections[0].fields).toHaveLength(1);
+    expect(template.name).toBe('Standard School Registration');
+    expect(template.sections).toHaveLength(4);
+    expect(template.sections.flatMap((section) => section.fields)).toHaveLength(16);
+    expect(validateRegistrationTemplate(template)).toEqual([]);
     expect(template.allowPartialSave).toBe(true);
   });
 
   it('validates the current guided-editor step before advancing', () => {
-    const template = createRegistrationTemplate();
+    const template = createBlankRegistrationTemplate();
     expect(validateRegistrationTemplateStep(template, 0)).toContain('Template name is required.');
     expect(findRegistrationTemplateValidationIssue(template)?.step).toBe(0);
 
@@ -59,5 +64,40 @@ describe('admissions registration configuration', () => {
     expect(normalized.applicability.campus).toBe('Main');
     expect(normalized.sections[0].displayOrder).toBe(10);
     expect(normalized.sections[0].fields[0].key).toBe('firstName');
+  });
+
+  it('resets incompatible field options and validation settings when type changes', () => {
+    const field = createRegistrationTemplate().sections[0].fields[0];
+    const normalized = normalizeRegistrationFieldForType(
+      {
+        ...field,
+        fieldType: AdmissionCrmFormFieldType.Select,
+        options: ['A', 'B'],
+        minimumValue: 1,
+        maximumValue: 10,
+      },
+      AdmissionCrmFormFieldType.Number
+    );
+
+    expect(normalized.fieldType).toBe(AdmissionCrmFormFieldType.Number);
+    expect(normalized.options).toEqual([]);
+    expect(normalized.minimumValue).toBe(1);
+    expect(normalized.maximumValue).toBe(10);
+    expect(normalized.minimumLength).toBeNull();
+    expect(normalized.maximumLength).toBeNull();
+  });
+
+  it('validates invalid field keys, option mismatches, and system mapping type mismatches', () => {
+    const template = createRegistrationTemplate();
+    const field = template.sections[0].fields[0];
+    field.key = '1 invalid';
+    field.fieldType = AdmissionCrmFormFieldType.Email;
+    field.systemField = 'dateOfBirth';
+    field.options = ['unused'];
+
+    const errors = validateRegistrationTemplate(template);
+    expect(errors.some((error) => error.includes('must start with a letter'))).toBe(true);
+    expect(errors.some((error) => error.includes('does not use options'))).toBe(true);
+    expect(errors.some((error) => error.includes('type does not match'))).toBe(true);
   });
 });

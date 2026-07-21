@@ -101,7 +101,7 @@ const CounterModeLayout = ({
             bgcolor: (t) => alpha(t.palette.primary.main, 0.04),
           }}
         >
-          <Box display="flex" alignItems="center" gap={1.5}>
+          <Box display="flex" alignItems="center" gap={1}>
             <Iconify icon="solar:cash-out-bold" width={22} sx={{ color: 'primary.main' }} />
             <Typography variant="h6" fontWeight={800}>
               Counter Mode

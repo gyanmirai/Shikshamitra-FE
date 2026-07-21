@@ -3,6 +3,8 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState } from 'react';
@@ -31,6 +33,9 @@ import {
 import CalendarYearView from './components/CalendarYearView';
 import CalendarMonthView from './components/CalendarMonthView';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
@@ -67,6 +72,27 @@ const addDateRangeToSet = (dateSet: Set<string>, startDate?: string, endDate?: s
     cursor = cursor.add(1, 'day');
   }
 };
+
+const expandCalendarDayRanges = (days: any[]) =>
+  days.flatMap((day) => {
+    let cursor = dayjs(day.date).startOf('day');
+    let end = dayjs(day.endDate || day.date).startOf('day');
+
+    if (!cursor.isValid()) return [];
+    if (!end.isValid() || end.isBefore(cursor, 'day')) end = cursor;
+
+    const expandedDays: any[] = [];
+    while (cursor.isBefore(end, 'day') || cursor.isSame(end, 'day')) {
+      expandedDays.push({
+        ...day,
+        date: cursor.format('YYYY-MM-DDTHH:mm:ssZ'),
+        rangeStartDate: day.date,
+        rangeEndDate: day.endDate,
+      });
+      cursor = cursor.add(1, 'day');
+    }
+    return expandedDays;
+  });
 
 const calculateCalendarSummary = (
   days: any[],
@@ -166,6 +192,7 @@ const CalendarManagement = () => {
   const [selectedDayDate, setSelectedDayDate] = useState<string>('');
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [filterStandardId, setFilterStandardId] = useState<string>('all');
+  const [activeDayType, setActiveDayType] = useState<DayType | null>(null);
 
   // Auto-creation lock ref
   const autoCreatingRef = React.useRef(false);
@@ -215,6 +242,11 @@ const CalendarManagement = () => {
     if (filterStandardId === 'all') return calendarDays;
     return calendarDays.filter((d) => d.appliesToAll || d.standardId === filterStandardId);
   }, [calendarDays, filterStandardId]);
+
+  const visibleCalendarDays = useMemo(
+    () => expandCalendarDayRanges(filteredCalendarDays),
+    [filteredCalendarDays]
+  );
 
   const calendarStartDate = selectedCalendar?.startDate || currentBoard?.startDate || '';
   const calendarEndDate = selectedCalendar?.endDate || currentBoard?.endDate || '';
@@ -334,9 +366,19 @@ const CalendarManagement = () => {
   const selectedDayEditData = useMemo(() => {
     if (!selectedDayDate) return undefined;
     const key = dayjs(selectedDayDate).format('YYYY-MM-DD');
-    const markers = filteredCalendarDays.filter(
-      (d) => d.status === CalendarDayStatus.Active && dayjs(d.date).format('YYYY-MM-DD') === key
-    );
+    const markers = filteredCalendarDays.filter((d) => {
+      const start = dayjs(d.date).startOf('day');
+      const end = dayjs(d.endDate || d.date).startOf('day');
+      const selected = dayjs(key).startOf('day');
+      const isActive = !d.status || Number(d.status) === CalendarDayStatus.Active;
+
+      return (
+        isActive &&
+        start.isValid() &&
+        selected.isSameOrAfter(start, 'day') &&
+        selected.isSameOrBefore(end.isValid() ? end : start, 'day')
+      );
+    });
     if (markers.length === 0) return undefined;
     const first = markers[0];
     const group = markers.filter((m) => m.title === first.title && m.dayType === first.dayType);
@@ -351,6 +393,7 @@ const CalendarManagement = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
       {/* Breadcrumbs */}
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Calendar Management"
         description="Build and manage academic calendars — set holidays, vacations, events, and day markers."
         links={[
@@ -381,12 +424,12 @@ const CalendarManagement = () => {
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             alignItems={{ sm: 'center' }}
-            gap={2.5}
+            gap={1}
             flexWrap="wrap"
           >
             {/* Static Selected Calendar Indicator */}
             {selectedCalendar ? (
-              <Stack direction="row" alignItems="center" gap={1.5}>
+              <Stack direction="row" alignItems="center" gap={1}>
                 <Avatar
                   sx={{
                     width: 36,
@@ -398,14 +441,14 @@ const CalendarManagement = () => {
                 >
                   <Iconify icon="mdi:calendar-month-outline" width={18} sx={{ color: '#fff' }} />
                 </Avatar>
-                <Stack spacing={0.1}>
+                <Stack spacing={1}>
                   <Typography variant="caption" color="text.secondary" fontWeight={500}>
                     Selected Calendar
                   </Typography>
                   <Typography variant="subtitle2" fontWeight={700}>
                     {selectedCalendar.name}
                   </Typography>
-                  <Stack direction="row" alignItems="center" gap={0.5}>
+                  <Stack direction="row" alignItems="center" gap={1}>
                     <Iconify icon="mdi:calendar-range-outline" width={15} color="text.secondary" />
                     <Typography variant="caption" color="text.secondary" fontWeight={500}>
                       {dayjs(calendarStartDate).format('DD MMM YYYY')} –{' '}
@@ -415,7 +458,7 @@ const CalendarManagement = () => {
                 </Stack>
               </Stack>
             ) : (
-              <Stack direction="row" alignItems="center" gap={1.5}>
+              <Stack direction="row" alignItems="center" gap={1}>
                 <Avatar
                   sx={{
                     width: 36,
@@ -435,7 +478,7 @@ const CalendarManagement = () => {
 
             {/* Stats */}
             {selectedCalendar && (
-              <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
+              <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
                 <Box
                   sx={{
                     display: 'flex',
@@ -502,7 +545,7 @@ const CalendarManagement = () => {
       </Paper>
 
       {/* Class Filter + Tabs */}
-      <Stack direction="row" alignItems="center" gap={1.5}>
+      <Stack direction="row" alignItems="center" gap={1}>
         <CustomSelect
           label="Class"
           options={classFilterOptions}
@@ -522,7 +565,7 @@ const CalendarManagement = () => {
           <CustomTabs
             value={searchParams.tab}
             onChange={(_, val) => setParam('tab', val)}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
           >
             {TABS.map((tab) => (
               <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
@@ -542,11 +585,13 @@ const CalendarManagement = () => {
               </Paper>
             ) : (
               <CalendarYearView
-                calendarDays={filteredCalendarDays}
+                calendarDays={visibleCalendarDays}
                 calendarStartDate={calendarStartDate}
                 calendarEndDate={calendarEndDate}
                 isLoading={daysLoading}
                 onDayClick={handleDayClick}
+                activeDayType={activeDayType}
+                onToggleDayType={(type) => setActiveDayType((prev) => (prev === type ? null : type))}
               />
             )}
           </>
@@ -561,7 +606,7 @@ const CalendarManagement = () => {
               </Paper>
             ) : (
               <CalendarMonthView
-                calendarDays={filteredCalendarDays}
+                calendarDays={visibleCalendarDays}
                 currentMonth={currentMonth}
                 onMonthChange={setCurrentMonth}
                 onDayClick={handleDayClick}

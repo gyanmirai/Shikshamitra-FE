@@ -74,18 +74,18 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
     <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
       <Box p={3} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <Scrollbar sx={{ p: 2, height: '100%' }}>
-          <Box display="flex" gap={2} alignItems="center">
-            <Box display="flex" flexDirection="row" gap={2} mt={1}>
+          <Box display="flex" gap={1} alignItems="center">
+            <Box display="flex" flexDirection="row" gap={1} mt={1}>
               <Typography fontWeight="bold">Event Name:</Typography>
               <Typography>{notification?.event}</Typography>
             </Box>
-            <Box display="flex" flexDirection="row" gap={2} mt={1}>
+            <Box display="flex" flexDirection="row" gap={1} mt={1}>
               <Typography fontWeight="bold">Trigger Condition:</Typography>
               <Typography>{notification?.triggerCondition}</Typography>
             </Box>
           </Box>
 
-          <Box display="flex" flexWrap="wrap" gap={4}>
+          <Box display="flex" flexWrap="wrap" gap={1}>
             {notification?.recipient.map((recipient) => (
               <Box
                 key={recipient.name}
@@ -97,7 +97,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
               >
                 <Grid size={{ xl: 6 }}>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box display="flex" gap={2} alignItems="center">
+                    <Box display="flex" gap={1} alignItems="center">
                       <Typography variant="subtitle1">
                         {recipient.name.charAt(0).toUpperCase() + recipient.name.slice(1)}{' '}
                         Notification
@@ -119,7 +119,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
 
                     {/* <Button  startIcon={<Iconify icon="solar:trash-bin-trash-bold" />} color="error" onClick={() => removeRecipient(recipient.name)} /> */}
                   </Box>
-                  <Box display="flex" gap={2} mt={2} mb={2}>
+                  <Box display="flex" gap={1} mt={2} mb={2}>
                     <CustomSelect
                       label="Select Communication Channels"
                       options={CHANNEL_OPTIONS}

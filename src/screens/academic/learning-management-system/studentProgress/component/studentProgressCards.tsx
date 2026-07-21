@@ -5,7 +5,7 @@ import { Iconify } from 'src/components/iconify';
 import { Box, Card, Grid, Typography } from '@mui/material';
 
 const StudentProgressCards = () => (
-  <Grid container spacing={2} mt={2}>
+  <Grid container spacing={1} mt={2}>
     <Grid size={{ xs: 12, md: 4 }}>
       <Card
         sx={{

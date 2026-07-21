@@ -246,7 +246,7 @@ const SubjectPassFailChart = ({ chartData }: { chartData?: PassFailChartData }) 
               sx={{
                 display: 'grid',
                 gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-                gap: 1.5,
+                gap: 1,
               }}
             >
               <Box sx={metricCardSx}>

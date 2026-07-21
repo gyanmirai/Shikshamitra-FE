@@ -29,6 +29,14 @@ export const timetableManagementApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.timetableManagement],
     }),
 
+    validateTimetable: builder.mutation({
+      query: ({ standardId, divisionId, body }) => ({
+        url: `academics/timetable/by-standard/${standardId}/division/${divisionId}/validate`,
+        method: 'POST',
+        body,
+      }),
+    }),
+
     assignTeachers: builder.mutation({
       query: (body: {
         standardId: string;
@@ -38,7 +46,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
         endTime: string;
         subjectType: number;
         electiveGroupId?: string | null;
-        subjects: { subjectId: string; teacherId: string }[];
+        subjects: { subjectId: string; teacherId: string | null }[];
       }) => ({
         url: 'academics/timetable/assign-teachers',
         method: 'POST',
@@ -56,7 +64,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
         endTime: string;
         subjectType: number;
         electiveGroupId?: string | null;
-        subjects: { subjectId: string; roomId: string }[];
+        subjects: { subjectId: string; roomId: string | null }[];
       }) => ({
         url: 'academics/timetable/assign-rooms',
         method: 'POST',
@@ -72,6 +80,7 @@ export const {
   useGetTimetableManagementByStandardQuery,
   useGetTimetableByStandardDivisionQuery,
   useCreateTimetableMutation,
+  useValidateTimetableMutation,
   useAssignTeachersMutation,
   useAssignRoomsMutation,
 } = timetableManagementApi;

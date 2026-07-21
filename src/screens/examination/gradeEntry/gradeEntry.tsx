@@ -71,7 +71,12 @@ import { GradeEntryReviewDialog } from './components/GradeEntryReviewDialog';
 import { ImportMarksPreviewDialog } from './components/ImportMarksPreviewDialog';
 
 import type { TabComponentType } from '../../hr/leave-request';
-import type { IExamMarkItem, IExamAnalyticsStats, IStudentExamGradeEntry, IExamMarksWorkflowFlags } from './type';
+import type {
+  IExamMarkItem,
+  IExamAnalyticsStats,
+  IStudentExamGradeEntry,
+  IExamMarksWorkflowFlags,
+} from './type';
 
 const GradeEntry = (props: TabComponentType) => {
   const dialog = useBoolean();
@@ -91,7 +96,10 @@ const GradeEntry = (props: TabComponentType) => {
 
   // States for changes protection
   const [isDirty, setIsDirty] = useState(false);
-  const [pendingFilterSwitch, setPendingFilterSwitch] = useState<{ type: 'class' | 'division' | 'subject' | 'exam'; value: any } | null>(null);
+  const [pendingFilterSwitch, setPendingFilterSwitch] = useState<{
+    type: 'class' | 'division' | 'subject' | 'exam';
+    value: any;
+  } | null>(null);
 
   // Autosave State
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
@@ -348,17 +356,23 @@ const GradeEntry = (props: TabComponentType) => {
 
   const handleBulkMarkAttendance = async (attendance: number) => {
     queueBulkEdit('attendance', attendance);
-    shikshaMitraToast.success({ message: `Marked ${selectedStudents.length} students locally. Click Save Draft to save.` });
+    shikshaMitraToast.success({
+      message: `Marked ${selectedStudents.length} students locally. Click Save Draft to save.`,
+    });
   };
 
   const handleBulkApplyMarks = async (marks: number | string) => {
     queueBulkEdit('marks', marks);
-    shikshaMitraToast.success({ message: `Applied marks ${marks} locally. Click Save Draft to save.` });
+    shikshaMitraToast.success({
+      message: `Applied marks ${marks} locally. Click Save Draft to save.`,
+    });
   };
 
   const handleBulkApplyRemark = async (remark: string) => {
     queueBulkEdit('remark', remark);
-    shikshaMitraToast.success({ message: `Applied custom remark locally. Click Save Draft to save.` });
+    shikshaMitraToast.success({
+      message: `Applied custom remark locally. Click Save Draft to save.`,
+    });
   };
 
   const handleBulkClearMarks = async () => {
@@ -369,28 +383,43 @@ const GradeEntry = (props: TabComponentType) => {
   // CSV/Spreadsheet Template Export/Import
   const handleExportTemplate = () => {
     try {
-      const headers = ['Roll Number', 'Student Name', 'Attendance (Present/Absent/MedicalLeave/Exempted)', 'Obtained Marks', 'Remarks'];
+      const headers = [
+        'Roll Number',
+        'Student Name',
+        'Attendance (Present/Absent/MedicalLeave/Exempted)',
+        'Obtained Marks',
+        'Remarks',
+      ];
       const csvRows = [headers.join(',')];
 
       tableRows.forEach((row) => {
-        const attLabel = row.attendanceStatus === 1 ? 'Absent' 
-                       : row.attendanceStatus === 2 ? 'MedicalLeave' 
-                       : row.attendanceStatus === 3 ? 'Exempted' 
-                       : 'Present';
-        csvRows.push([
-          `"${row.rollNo || ''}"`,
-          `"${row.studentName}"`,
-          `"${attLabel}"`,
-          row.marks !== null ? row.marks : '',
-          `"${row.feedback || ''}"`,
-        ].join(','));
+        const attLabel =
+          row.attendanceStatus === 1
+            ? 'Absent'
+            : row.attendanceStatus === 2
+              ? 'MedicalLeave'
+              : row.attendanceStatus === 3
+                ? 'Exempted'
+                : 'Present';
+        csvRows.push(
+          [
+            `"${row.rollNo || ''}"`,
+            `"${row.studentName}"`,
+            `"${attLabel}"`,
+            row.marks !== null ? row.marks : '',
+            `"${row.feedback || ''}"`,
+          ].join(',')
+        );
       });
 
       const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `Grade_Entry_${subjectOptions.find(s=>s.id===subject)?.name || 'Template'}.csv`);
+      link.setAttribute(
+        'download',
+        `Grade_Entry_${subjectOptions.find((s) => s.id === subject)?.name || 'Template'}.csv`
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -407,7 +436,9 @@ const GradeEntry = (props: TabComponentType) => {
         body: { subjectId: subject, divisionId: division, rows: importedRows },
       }).unwrap();
       importMarksDialog.onFalse();
-      shikshaMitraToast.success({ message: `Successfully imported ${importedRows.length} student records.` });
+      shikshaMitraToast.success({
+        message: `Successfully imported ${importedRows.length} student records.`,
+      });
     } catch (e) {
       console.error(e);
     }
@@ -425,7 +456,11 @@ const GradeEntry = (props: TabComponentType) => {
 
   const handleFinalSubmit = async () => {
     try {
-      await submitMarksForVerification({ examId, divisionId: division, subjectId: subject }).unwrap();
+      await submitMarksForVerification({
+        examId,
+        divisionId: division,
+        subjectId: subject,
+      }).unwrap();
       reviewDialog.onFalse();
       setWorkflowStatus(GradeEntryWorkflowStatus.Submitted);
       shikshaMitraToast.success({ message: 'Marks successfully submitted for verification.' });
@@ -454,7 +489,7 @@ const GradeEntry = (props: TabComponentType) => {
         studentId: row.studentId,
         attendanceStatus: row.attendanceStatus ?? 0,
         obtainedMarks: (row.attendanceStatus ?? 0) === 0 ? row.marks : null,
-        feedback: (row.attendanceStatus ?? 0) === 0 ? row.feedback ?? '' : '',
+        feedback: (row.attendanceStatus ?? 0) === 0 ? (row.feedback ?? '') : '',
       })),
     []
   );
@@ -586,6 +621,7 @@ const GradeEntry = (props: TabComponentType) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Grade Entry"
           description="Enter and manage student examination marks and grades"
           links={[
@@ -594,7 +630,7 @@ const GradeEntry = (props: TabComponentType) => {
             { name: 'Grade Entry' },
           ]}
           action={
-            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap alignItems="center">
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
               {/* Keyboard helper shortcut button */}
               <Tooltip title="Keyboard Shortcut Help">
                 <IconButton size="small" color="primary" onClick={keyboardHelpDialog.onTrue}>
@@ -613,16 +649,28 @@ const GradeEntry = (props: TabComponentType) => {
               {/* Autosave feedback badge */}
               {saveState !== 'idle' && (
                 <Label
-                  color={saveState === 'saving' ? 'warning' : saveState === 'saved' ? 'success' : 'error'}
+                  color={
+                    saveState === 'saving' ? 'warning' : saveState === 'saved' ? 'success' : 'error'
+                  }
                   variant="soft"
                   sx={{ py: 1.5, px: 2, mr: 1 }}
                 >
                   <Iconify
-                    icon={saveState === 'saving' ? 'solar:diskette-bold' : saveState === 'saved' ? 'solar:check-circle-bold' : 'solar:close-circle-bold'}
+                    icon={
+                      saveState === 'saving'
+                        ? 'solar:diskette-bold'
+                        : saveState === 'saved'
+                          ? 'solar:check-circle-bold'
+                          : 'solar:close-circle-bold'
+                    }
                     width={16}
                     sx={{ mr: 0.5 }}
                   />
-                  {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved just now' : 'Save failed'}
+                  {saveState === 'saving'
+                    ? 'Saving...'
+                    : saveState === 'saved'
+                      ? 'Saved just now'
+                      : 'Save failed'}
                 </Label>
               )}
 
@@ -639,19 +687,21 @@ const GradeEntry = (props: TabComponentType) => {
                 </LoadingButton>
               )}
 
-              {examId && (workflowStatus === GradeEntryWorkflowStatus.Draft || workflowStatus === GradeEntryWorkflowStatus.ChangesRequested) && (
-                <LoadingButton
-                  variant="contained"
-                  size="small"
-                  color="primary"
-                  loading={isSubmitLoading}
-                  disabled={!allMarksAssigned}
-                  startIcon={<Iconify icon="solar:plain-bold" />}
-                  onClick={handleTriggerReview}
-                >
-                  Review & Submit
-                </LoadingButton>
-              )}
+              {examId &&
+                (workflowStatus === GradeEntryWorkflowStatus.Draft ||
+                  workflowStatus === GradeEntryWorkflowStatus.ChangesRequested) && (
+                  <LoadingButton
+                    variant="contained"
+                    size="small"
+                    color="primary"
+                    loading={isSubmitLoading}
+                    disabled={!allMarksAssigned}
+                    startIcon={<Iconify icon="solar:plain-bold" />}
+                    onClick={handleTriggerReview}
+                  >
+                    Review & Submit
+                  </LoadingButton>
+                )}
 
               {examId && workflowStatus === GradeEntryWorkflowStatus.Submitted && (
                 <>
@@ -721,7 +771,7 @@ const GradeEntry = (props: TabComponentType) => {
               bgcolor: 'background.paper',
               boxShadow: 'var(--shadows-3)',
               p: 1,
-              gap: 2,
+              gap: 1,
               mb: 1,
             }}
           >
@@ -825,7 +875,7 @@ const GradeEntry = (props: TabComponentType) => {
                   },
                 }}
               >
-                <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
                   <Typography
                     variant="overline"
                     sx={{
@@ -862,7 +912,7 @@ const GradeEntry = (props: TabComponentType) => {
                       value: `Pending Publish: ${targetSummaryData?.pendingPublishedCount ?? 0} Subj`,
                     },
                   ].map((info) => (
-                    <Stack key={info.value} direction="row" alignItems="center" spacing={0.5}>
+                    <Stack key={info.value} direction="row" alignItems="center" spacing={1}>
                       <Iconify icon={info.icon} width={14} sx={{ color: 'text.disabled' }} />
                       <Typography variant="caption" color="text.secondary" noWrap>
                         {info.value}
@@ -870,7 +920,7 @@ const GradeEntry = (props: TabComponentType) => {
                     </Stack>
                   ))}
                 </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ ml: 'auto' }}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 'auto' }}>
                   <Label
                     color={GradeEntryWorkflowStatusColor[workflowStatus] as any}
                     variant="soft"
@@ -891,9 +941,9 @@ const GradeEntry = (props: TabComponentType) => {
 
               <Collapse in={summaryOpen}>
                 <Box sx={{ p: 2 }}>
-                  <Grid container spacing={2}>
+                  <Grid container spacing={1}>
                     <Grid size={{ xs: 12, md: 8 }}>
-                      <Grid container spacing={1.25}>
+                      <Grid container spacing={1}>
                         {(analyticsStats
                           ? [
                               {
@@ -948,7 +998,7 @@ const GradeEntry = (props: TabComponentType) => {
                           ) : (
                             <Grid size={{ xs: 6, sm: 4 }} key={stat.label}>
                               <Stack
-                                spacing={0.5}
+                                spacing={1}
                                 sx={{
                                   p: 1.1,
                                   borderRadius: 2,
@@ -967,7 +1017,7 @@ const GradeEntry = (props: TabComponentType) => {
                                   },
                                 }}
                               >
-                                <Stack direction="row" alignItems="center" spacing={0.75}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
                                   <Box
                                     sx={{
                                       width: 22,
@@ -985,7 +1035,11 @@ const GradeEntry = (props: TabComponentType) => {
                                         ),
                                     }}
                                   >
-                                    <Iconify icon={stat.icon} width={13} sx={{ color: stat.color }} />
+                                    <Iconify
+                                      icon={stat.icon}
+                                      width={13}
+                                      sx={{ color: stat.color }}
+                                    />
                                   </Box>
                                   <Typography
                                     variant="caption"
@@ -1021,9 +1075,9 @@ const GradeEntry = (props: TabComponentType) => {
                       }}
                     >
                       {analyticsStats ? (
-                        <Stack spacing={1.25} height="100%">
-                          <Stack spacing={0.5}>
-                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Stack spacing={1} height="100%">
+                          <Stack spacing={1}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
                               <Box
                                 sx={{
                                   height: 8,
@@ -1045,7 +1099,7 @@ const GradeEntry = (props: TabComponentType) => {
                               )}
                             </Stack>
                             <Stack direction="row" justifyContent="space-between">
-                              <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <Stack direction="row" alignItems="center" spacing={1}>
                                 <Box
                                   sx={{
                                     width: 7,
@@ -1066,7 +1120,7 @@ const GradeEntry = (props: TabComponentType) => {
                                   </Typography>
                                 </Typography>
                               </Stack>
-                              <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <Stack direction="row" alignItems="center" spacing={1}>
                                 <Box
                                   sx={{
                                     width: 7,
@@ -1090,7 +1144,7 @@ const GradeEntry = (props: TabComponentType) => {
                             </Stack>
                           </Stack>
                           <Divider sx={{ borderStyle: 'dashed' }} />
-                          <Stack spacing={0.75}>
+                          <Stack spacing={1}>
                             <Typography
                               variant="overline"
                               sx={{
@@ -1108,7 +1162,7 @@ const GradeEntry = (props: TabComponentType) => {
                               />
                               Result Readiness
                             </Typography>
-                            <Grid container spacing={0.6}>
+                            <Grid container spacing={1}>
                               {[
                                 { label: 'All Students Graded', done: allMarksAssigned },
                                 {
@@ -1130,7 +1184,7 @@ const GradeEntry = (props: TabComponentType) => {
                                   <Stack
                                     direction="row"
                                     alignItems="center"
-                                    spacing={0.6}
+                                    spacing={1}
                                     sx={{
                                       py: 0.4,
                                       px: 0.75,
@@ -1168,7 +1222,7 @@ const GradeEntry = (props: TabComponentType) => {
                           </Stack>
                         </Stack>
                       ) : (
-                        <Stack spacing={1.5} height="100%">
+                        <Stack spacing={1} height="100%">
                           {[...Array(3)].map((_, i) => (
                             <Skeleton
                               key={i}
@@ -1243,7 +1297,7 @@ const GradeEntry = (props: TabComponentType) => {
               boxShadow: 'var(--shadows-2)',
             }}
           >
-            <Stack spacing={2} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
+            <Stack spacing={1} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
               <Box
                 sx={{
                   width: 72,
@@ -1257,7 +1311,7 @@ const GradeEntry = (props: TabComponentType) => {
               >
                 <Iconify icon="solar:clipboard-list-bold" width={36} />
               </Box>
-              <Stack spacing={0.75}>
+              <Stack spacing={1}>
                 <Typography variant="h6">Please select an exam</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Choose an exam title from the filters above to view students and start entering
@@ -1318,7 +1372,9 @@ const GradeEntry = (props: TabComponentType) => {
           onFix={(studentId) => {
             reviewDialog.onFalse();
             setTimeout(() => {
-              const el = document.querySelector(`input[data-student-id="${studentId}"][data-col-type="marks"]`) as HTMLInputElement;
+              const el = document.querySelector(
+                `input[data-student-id="${studentId}"][data-col-type="marks"]`
+              ) as HTMLInputElement;
               el?.focus();
               el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 300);
@@ -1329,10 +1385,15 @@ const GradeEntry = (props: TabComponentType) => {
         />
 
         {/* Keyboard Shortcuts Dialog */}
-        <Dialog open={keyboardHelpDialog.value} onClose={keyboardHelpDialog.onFalse} maxWidth="xs" fullWidth>
+        <Dialog
+          open={keyboardHelpDialog.value}
+          onClose={keyboardHelpDialog.onFalse}
+          maxWidth="xs"
+          fullWidth
+        >
           <DialogTitle>Keyboard Cell Navigation Shortcuts</DialogTitle>
           <DialogContent dividers>
-            <List size="small">
+            <List>
               {[
                 { key: 'Enter / ArrowDown', desc: 'Save and move to next student cell' },
                 { key: 'ArrowUp', desc: 'Move to previous student cell' },
@@ -1343,7 +1404,15 @@ const GradeEntry = (props: TabComponentType) => {
               ].map((shortcut) => (
                 <ListItem key={shortcut.key} sx={{ py: 0.75 }}>
                   <ListItemText
-                    primary={<Chip label={shortcut.key} size="small" variant="soft" color="primary" sx={{ fontWeight: 700 }} />}
+                    primary={
+                      <Chip
+                        label={shortcut.key}
+                        size="small"
+                        variant="soft"
+                        color="primary"
+                        sx={{ fontWeight: 700 }}
+                      />
+                    }
                     secondary={shortcut.desc}
                     secondaryTypographyProps={{ variant: 'caption', sx: { mt: 0.5 } }}
                   />
@@ -1359,17 +1428,32 @@ const GradeEntry = (props: TabComponentType) => {
         </Dialog>
 
         {/* Audit Logs Dialog */}
-        <Dialog open={auditLogsDialog.value} onClose={auditLogsDialog.onFalse} maxWidth="sm" fullWidth>
+        <Dialog
+          open={auditLogsDialog.value}
+          onClose={auditLogsDialog.onFalse}
+          maxWidth="sm"
+          fullWidth
+        >
           <DialogTitle>Marks Revision Audit Logs</DialogTitle>
           <DialogContent dividers>
             <List>
               {resolvedAuditLogs.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ p: 2, textAlign: 'center' }}
+                >
                   No historical revision records found.
                 </Typography>
               ) : (
                 resolvedAuditLogs.map((log: any, idx: number) => (
-                  <ListItem key={idx} sx={{ borderBottom: '1px solid divider', '&:last-child': { borderBottom: 'none' } }}>
+                  <ListItem
+                    key={idx}
+                    sx={{
+                      borderBottom: '1px solid divider',
+                      '&:last-child': { borderBottom: 'none' },
+                    }}
+                  >
                     <ListItemText
                       primary={log.action}
                       secondary={
@@ -1378,7 +1462,12 @@ const GradeEntry = (props: TabComponentType) => {
                             By {log.changedBy}
                           </Typography>
                           {` — ${log.details}`}
-                          <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
+                          <Typography
+                            variant="caption"
+                            display="block"
+                            color="text.secondary"
+                            sx={{ mt: 0.5 }}
+                          >
                             {new Date(log.timestamp).toLocaleString()}
                           </Typography>
                         </>
@@ -1397,7 +1486,12 @@ const GradeEntry = (props: TabComponentType) => {
         </Dialog>
 
         {/* Request Changes Note Dialog */}
-        <Dialog open={requestChangesDialog.value} onClose={requestChangesDialog.onFalse} maxWidth="xs" fullWidth>
+        <Dialog
+          open={requestChangesDialog.value}
+          onClose={requestChangesDialog.onFalse}
+          maxWidth="xs"
+          fullWidth
+        >
           <DialogTitle>Request Grade Corrections</DialogTitle>
           <DialogContent dividers>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -1434,7 +1528,8 @@ const GradeEntry = (props: TabComponentType) => {
           <DialogTitle>Unlock Published Marks</DialogTitle>
           <DialogContent dividers>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Are you sure you want to unlock published marks? Provide an unlock reason for audit trail:
+              Are you sure you want to unlock published marks? Provide an unlock reason for audit
+              trail:
             </Typography>
             <TextField
               id="unlock-reason-input"

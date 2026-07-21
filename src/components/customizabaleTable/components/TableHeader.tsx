@@ -1,7 +1,7 @@
 import React from 'react';
 import { keyframes } from '@emotion/react';
 import { useTheme } from '@mui/material/styles';
-import { Box, TableRow, TableHead, TableCell, IconButton } from '@mui/material';
+import { Box, TableRow, TableHead, TableCell } from '@mui/material';
 import {
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
@@ -132,11 +132,12 @@ export const TableHeader = React.memo(
                   >
                     <Box
                       // fontSize="14px"
+                      className="customizable-table-header-content"
                       display="block"
                       textAlign={column.align}
                       gap={1}
                       minWidth={0}
-                      overflow="hidden"
+                      overflow={column.renderColumn ? 'visible' : 'hidden'}
                       textOverflow="ellipsis"
                       width={!column?.renderColumn ? 'auto' : 'inherit'}
                       component="span"
@@ -166,11 +167,13 @@ export const TableHeader = React.memo(
                               {sorts.findIndex((sort) => sort.column === column.id) + 1}
                             </Box>
                           )}
-                          <IconButton
-                            size="small"
+                          <Box
+                            component="span"
+                            aria-hidden="true"
                             sx={{
                               opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
                               p: 0.25,
+                              display: 'inline-flex',
                             }}
                           >
                             {sorts.find((sort) => sort.column === column.id)?.direction ===
@@ -179,7 +182,7 @@ export const TableHeader = React.memo(
                             ) : (
                               <ArrowDownwardIcon fontSize="inherit" />
                             )}
-                          </IconButton>
+                          </Box>
                         </Box>
                       )}
                       {column.isFilter && (

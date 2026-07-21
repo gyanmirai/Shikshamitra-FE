@@ -51,6 +51,7 @@ const HomeworkAssignmentReports = ({ addReportDialog }: { addReportDialog: any }
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Reports"
         description="Generate and export homework, assignment, and analytics reports."
         links={[

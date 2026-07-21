@@ -50,7 +50,7 @@ const FeeCollectionFormSkeleton = (): React.ReactElement => {
               border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
             }}
           >
-            <Box display="flex" alignItems="center" gap={1.5}>
+            <Box display="flex" alignItems="center" gap={1}>
               <Skeleton variant="circular" width={44} height={44} />
               <Box flex={1}>
                 <Skeleton variant="text" width={160} height={20} />

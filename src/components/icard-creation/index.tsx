@@ -355,7 +355,7 @@ const StudentIDCardCreator = ({
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box display="flex" justifyContent="flex-end" gap={2} alignItems="center" mb={2}>
+      <Box display="flex" justifyContent="flex-end" gap={1} alignItems="center" mb={2}>
         <Button startIcon={<Add />} variant="contained" onClick={() => setOpenFieldDialog(true)}>
           Add Field
         </Button>

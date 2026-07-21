@@ -21,9 +21,9 @@ interface GenericListProps {
 const GenericList = ({ title, subheader, list }: GenericListProps) => (
   <Card sx={{ height: '100%' }}>
     <CardHeader title={title} subheader={subheader} />
-    <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 1 }}>
       {list.map((item) => (
-        <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {item.avatarUrl ? (
             <Avatar src={item.avatarUrl} alt={item.title} />
           ) : (

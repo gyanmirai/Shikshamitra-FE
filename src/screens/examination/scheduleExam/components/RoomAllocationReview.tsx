@@ -22,7 +22,7 @@ interface InfoItemProps {
 }
 
 const InfoItem = ({ icon, label, value }: InfoItemProps) => (
-  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
     <Box
       sx={{
         width: 40,
@@ -120,7 +120,7 @@ const RoomAllocationReview = ({
           p: 2,
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          gap: 1,
           bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
           borderBottom: (theme) => `1px dashed ${varAlpha(theme.palette.grey['500Channel'], 0.2)}`,
         }}
@@ -174,7 +174,7 @@ const RoomAllocationReview = ({
 
       {/* Body */}
       <Box sx={{ p: 3 }}>
-        <Grid container spacing={3}>
+        <Grid container spacing={1}>
           {Object.entries(roomDetails as IRoomDetails).map(
             ([subjectId, divisionMap], index, arr) => {
               const subjectInfo = formik.values.subjects.find((s) => s.subjectId === subjectId);
@@ -197,7 +197,7 @@ const RoomAllocationReview = ({
                       {subjectName}
                     </Typography>
 
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1}>
                       {Object.entries(divisionMap).map(([divisionName, divisionData]) => {
                         if (!divisionData.roomIds || divisionData.roomIds.length === 0) return null;
 
@@ -211,11 +211,11 @@ const RoomAllocationReview = ({
                               icon={<ClassOutlined />}
                               label={`Division ${divisionLabel}`}
                               value={
-                                <Box display="flex" flexWrap="wrap" gap={0.5}>
+                                <Box display="flex" flexWrap="wrap" gap={1}>
                                   {divisionData.roomIds.map((roomId: string) => (
                                     <Chip
                                       key={roomId}
-                                      label={roomLabelById.get(roomId) ?? roomId}
+                                      label={String(roomLabelById.get(roomId) ?? roomId)}
                                       size="small"
                                       variant="outlined"
                                       icon={<MeetingRoom style={{ fontSize: '1rem' }} />}

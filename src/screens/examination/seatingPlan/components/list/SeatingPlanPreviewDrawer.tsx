@@ -16,7 +16,7 @@ export default function SeatingPlanPreviewDrawer({ row, onClose, onPrimaryAction
   return (
     <Drawer anchor="right" open={!!row} onClose={onClose} PaperProps={{ sx: { width: 380, p: 2.5 } }}>
       {row && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Box>
               <Typography variant="h6">{row.examName}</Typography>
@@ -48,7 +48,7 @@ export default function SeatingPlanPreviewDrawer({ row, onClose, onPrimaryAction
             />
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 3 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Box>
               <Typography variant="caption" color="text.secondary">
                 Pending

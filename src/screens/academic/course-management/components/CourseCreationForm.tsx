@@ -6,7 +6,9 @@ import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
+import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import type { CourseData, CourseCreationFormProps } from '../type';
@@ -20,6 +22,10 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
+  });
+  const [uploadFile, { isLoading: isUploading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
   });
 
   const formik = useFormik<CourseData>({
@@ -41,10 +47,10 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
@@ -113,7 +119,21 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
 
             <Grid size={{ xs: 12 }}>
               <UploadBox
-                onDrop={() => {}}
+                onDrop={async (acceptedFiles: File[]) => {
+                  const file = acceptedFiles[0];
+                  if (!file) return;
+
+                  try {
+                    const formData = new FormData();
+                    formData.append('File', file);
+                    const response = await uploadFile(formData).unwrap();
+                    formik.setFieldValue('resource', response.data || '');
+                    shikshaMitraToast.success({ message: 'Document uploaded successfully.' });
+                  } catch (error) {
+                    console.error('Course document upload failed', error);
+                    shikshaMitraToast.error({ message: 'Document upload failed.' });
+                  }
+                }}
                 placeholder={
                   <Box
                     sx={{
@@ -176,7 +196,7 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
 
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button startIcon={<Create />} type="submit" variant="contained">
+          <Button startIcon={<Create />} type="submit" variant="contained" disabled={isUploading}>
             {isEdit ? 'Update' : 'Create'} Course
           </Button>
         </DialogActions>

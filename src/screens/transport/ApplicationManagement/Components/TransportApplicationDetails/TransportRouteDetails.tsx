@@ -145,7 +145,7 @@ const TransportApplicationRouteDetail = ({
                             )}
                           </Stack>
 
-                          <Box display="flex" alignItems="center" gap={1.5}>
+                          <Box display="flex" alignItems="center" gap={1}>
                             <Avatar
                               sx={{
                                 width: 40,
@@ -170,7 +170,7 @@ const TransportApplicationRouteDetail = ({
                                 color="text.secondary"
                                 display="flex"
                                 alignItems="center"
-                                gap={0.5}
+                                gap={1}
                               >
                                 <Iconify icon="solar:users-group-rounded-bold" width={14} />
                                 {route.students}/{route.capacity} Verified

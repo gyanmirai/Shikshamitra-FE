@@ -5,7 +5,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { useState, useEffect, useCallback } from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -147,6 +147,7 @@ export const SmartRoomReservationDrawer = ({
   const [validationError, setValidationError] = useState('');
 
   const suggestions = useRoomSuggestions();
+  const { suggest } = suggestions;
   const createReservation = useCreateRoomReservation();
 
   const patchRequirements = useCallback((patch: Partial<ReservationRequirements>) => {
@@ -162,7 +163,7 @@ export const SmartRoomReservationDrawer = ({
           selectedRoomId: prefilledRoom.roomId,
         };
         setRequirements(reqs);
-        suggestions.suggest(reqs);
+        suggest(reqs);
         setSearched(true);
       } else {
         setRequirements({ ...defaultRequirements });
@@ -170,7 +171,7 @@ export const SmartRoomReservationDrawer = ({
       }
       setValidationError('');
     }
-  }, [open, prefilledRoom]);
+  }, [open, prefilledRoom, suggest]);
 
   const validateForm = (): boolean => {
     if (!requirements.reservationType) {
@@ -293,7 +294,7 @@ export const SmartRoomReservationDrawer = ({
             `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={2}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Box
             sx={{
               width: 44,
@@ -342,12 +343,12 @@ export const SmartRoomReservationDrawer = ({
           </Alert>
         )}
 
-        <Stack 
-          direction={{ xs: 'column', md: 'row' }} 
-          spacing={3} 
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={1}
           sx={{ height: '100%', alignItems: 'stretch', overflow: 'hidden' }}
         >
-          
+
           {/* Left Column: Form Fields (No scrolling on column container) */}
           <Box sx={{
             flex: 1,
@@ -359,8 +360,8 @@ export const SmartRoomReservationDrawer = ({
 
             {/* Scrollable Fields */}
             <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
-              <Stack spacing={2.5}>
-                <Stack direction="row" alignItems="center" spacing={1.25}>
+              <Stack spacing={1}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <StepBadge number={1} />
                   <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                     Booking Requirements
@@ -368,7 +369,7 @@ export const SmartRoomReservationDrawer = ({
                 </Stack>
 
                 <Stack
-                  spacing={2.5}
+                  spacing={1}
                   sx={{
                     p: 2.5,
                     borderRadius: 2,
@@ -377,7 +378,7 @@ export const SmartRoomReservationDrawer = ({
                     bgcolor: 'background.paper',
                   }}
                 >
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <CustomSelect
                     label="Reservation Type *"
                     options={RESERVATION_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
@@ -411,7 +412,7 @@ export const SmartRoomReservationDrawer = ({
                   slotProps={{ textField: { size: 'small', fullWidth: true } }}
                 />
 
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <TextField
                     size="small"
                     label="Start Time *"
@@ -460,7 +461,7 @@ export const SmartRoomReservationDrawer = ({
 
                 {requirements.isRecurring && (
                   <Stack
-                    spacing={2}
+                    spacing={1}
                     sx={{
                       p: 2,
                       bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
@@ -473,7 +474,7 @@ export const SmartRoomReservationDrawer = ({
                       Recurring Configuration
                     </Typography>
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <CustomSelect
                         label="Repeat Pattern"
                         options={[
@@ -490,7 +491,7 @@ export const SmartRoomReservationDrawer = ({
                           });
                         }}
                       />
-                      
+
                       <DatePicker
                         label="Repeat Until *"
                         format="DD/MM/YYYY"
@@ -549,7 +550,7 @@ export const SmartRoomReservationDrawer = ({
                       </Stack>
                     )}
 
-                    <Stack direction="row" flexWrap="wrap" gap={2}>
+                    <Stack direction="row" flexWrap="wrap" gap={1}>
                       <FormControlLabel
                         control={
                           <Switch
@@ -650,9 +651,9 @@ export const SmartRoomReservationDrawer = ({
             flexDirection: 'column',
             height: '100%'
           }}>
-            <Stack spacing={2.5} sx={{ height: '100%' }}>
+            <Stack spacing={1} sx={{ height: '100%' }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Stack direction="row" alignItems="center" spacing={1.25}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <StepBadge number={2} />
                   <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                     Available Rooms
@@ -733,7 +734,7 @@ export const SmartRoomReservationDrawer = ({
                       sx={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                        gap: 2,
+                        gap: 1,
                         alignItems: 'start',
                       }}
                     >
@@ -759,7 +760,7 @@ export const SmartRoomReservationDrawer = ({
                               bgcolor: 'background.paper',
                               display: 'flex',
                               flexDirection: 'column',
-                              gap: 1.5,
+                              gap: 1,
                               boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)',
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -769,7 +770,7 @@ export const SmartRoomReservationDrawer = ({
                             }}
                           >
                             <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                              <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Stack direction="row" spacing={1} alignItems="center">
                                 <MatchScoreRing score={room.matchScore} />
                                 <Box>
                                   <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: 16 }}>
@@ -798,7 +799,7 @@ export const SmartRoomReservationDrawer = ({
 
                             {/* Badges */}
                             {room.badges.length > 0 && (
-                              <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                              <Stack direction="row" flexWrap="wrap" gap={1}>
                                 {room.badges.map((badge) => (
                                   <Chip
                                     key={badge}
@@ -816,7 +817,7 @@ export const SmartRoomReservationDrawer = ({
 
                             {/* Facilities */}
                             {room.facilities.length > 0 && (
-                              <Stack direction="row" flexWrap="wrap" gap={0.75} alignItems="center">
+                              <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
                                 {room.facilities.slice(0, 5).map((f) => {
                                   const { label, icon } = resolveFacility(f);
                                   return (
@@ -824,7 +825,7 @@ export const SmartRoomReservationDrawer = ({
                                       key={f}
                                       direction="row"
                                       alignItems="center"
-                                      spacing={0.5}
+                                      spacing={1}
                                       sx={{
                                         px: 1,
                                         py: 0.4,

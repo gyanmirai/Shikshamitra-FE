@@ -280,7 +280,7 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
         }}
       >
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-          <Stack direction="row" spacing={1.5} alignItems="flex-start">
+          <Stack direction="row" spacing={1} alignItems="flex-start">
             <Box
               sx={{
                 width: 36,
@@ -326,7 +326,7 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
       )}
 
       <Box sx={{ flex: 1, overflow: 'auto', p: 2.5 }}>
-        <Stack spacing={2.5}>
+        <Stack spacing={1}>
           {/* Action selector */}
           <Typography variant="subtitle2" color="text.secondary">
             Select AI Action
@@ -449,7 +449,7 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
                   AI is generating your content…
                 </Typography>
               </Stack>
-              <Stack spacing={0.75}>
+              <Stack spacing={1}>
                 <Skeleton variant="text" width="90%" />
                 <Skeleton variant="text" width="75%" />
                 <Skeleton variant="text" width="82%" />
@@ -467,7 +467,7 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
                   <Iconify icon="mdi:auto-fix" width={16} sx={{ color: 'secondary.main' }} />
                   <Typography variant="subtitle2">AI Response</Typography>
                 </Stack>
-                <Stack direction="row" spacing={0.75} alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center">
                   <Label
                     color="secondary"
                     variant="soft"
@@ -559,7 +559,7 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
 
       <Divider />
       <Box sx={{ p: 2 }}>
-        <Stack direction="row" spacing={0.75} justifyContent="center" alignItems="center">
+        <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
           <Iconify icon="mdi:shield-alert-outline" width={14} sx={{ color: 'text.disabled' }} />
           <Typography variant="caption" color="text.disabled" textAlign="center">
             AI content requires human review before submission. Always verify accuracy.

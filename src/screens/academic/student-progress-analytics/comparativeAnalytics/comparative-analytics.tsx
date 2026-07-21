@@ -52,6 +52,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Comparative Analytics"
         links={[
           { name: 'Academics' },
@@ -59,7 +60,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
           { name: 'Comparative Analytics' },
         ]}
       />
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <SubjectPerformanceComparison />
         <ClassComparison />
         <StudentVsClass />

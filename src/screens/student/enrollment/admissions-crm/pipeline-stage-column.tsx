@@ -6,6 +6,7 @@ import type {
   AdmissionCrmPipelineStageDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { useGetAdmissionCrmLeadsQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
@@ -14,10 +15,15 @@ import {
   Paper,
   Stack,
   Button,
+  Tooltip,
   Skeleton,
   Typography,
+  IconButton,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material';
+
+import { getAdmissionCrmStageTooltipLines } from './admissions-crm-utils';
 
 const PAGE_SIZE = 25;
 
@@ -92,6 +98,15 @@ export function PipelineStageColumn({
   const configuredColor = /^#[0-9a-f]{6}$/i.test(stage.colorHex || '')
     ? stage.colorHex || undefined
     : undefined;
+  const tooltipTitle = (
+    <Stack spacing={0.25}>
+      {getAdmissionCrmStageTooltipLines(stage).map((line) => (
+        <Typography key={line} variant="caption" color="inherit">
+          {line}
+        </Typography>
+      ))}
+    </Stack>
+  );
 
   return (
     <Paper
@@ -103,21 +118,37 @@ export function PipelineStageColumn({
         width: { xs: '100%', lg: 300 },
         minWidth: { xs: 0, lg: 300 },
         flex: { lg: '0 0 300px' },
+        height: { xs: 'auto', lg: '100%' },
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         bgcolor: 'background.neutral',
         borderTop: configuredColor ? `3px solid ${configuredColor}` : undefined,
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-        <Chip
-          size="small"
-          variant="outlined"
-          label={stage.stageName}
-          sx={
-            configuredColor ? { borderColor: configuredColor, color: configuredColor } : undefined
-          }
-        />
+        <Stack direction="row" alignItems="center" gap={0.5} sx={{ minWidth: 0 }}>
+          <Chip
+            size="small"
+            variant="outlined"
+            label={stage.stageName}
+            sx={
+              configuredColor ? { borderColor: configuredColor, color: configuredColor } : undefined
+            }
+          />
+          <Tooltip title={tooltipTitle} arrow>
+            <IconButton size="small" aria-label={`${stage.stageName} stage details`}>
+              <InfoOutlined fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
         <Typography variant="caption" color="text.secondary">
-          {shouldLoad ? (data?.totalCount ?? 0) : '…'}
+          {shouldLoad ? (
+            (data?.totalCount ?? 0)
+          ) : (
+            <Skeleton component="span" width={24} aria-label="Lead count loading" />
+          )}
         </Typography>
       </Stack>
       {!shouldLoad && (
@@ -139,7 +170,15 @@ export function PipelineStageColumn({
           Stage unavailable
         </Alert>
       ) : shouldLoad ? (
-        <Stack spacing={1}>
+        <Stack
+          spacing={1}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: { xs: 'visible', lg: 'auto' },
+            pr: { lg: 0.5 },
+          }}
+        >
           {visibleLeads.length
             ? visibleLeads.map(renderLead)
             : !isFetching && (
@@ -153,7 +192,11 @@ export function PipelineStageColumn({
               onClick={() => setPage((current) => current + 1)}
               disabled={isFetching}
             >
-              {isFetching ? 'Loading\u2026' : 'Load more'}
+              {isFetching ? (
+                <CircularProgress size={16} aria-label="Loading more leads" />
+              ) : (
+                'Load more'
+              )}
             </Button>
           )}
         </Stack>

@@ -3,8 +3,13 @@
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import AdmissionsCrmConfiguration from './admissions-crm-configuration';
+import { AdmissionJourneyOverview } from './admission-journey-guidance';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
-import { EnrollmentSettingsPage, EnrollmentSettingsPanelTabs } from './enrollment-settings-page';
+import {
+  EnrollmentSettingsPage,
+  EnrollmentSettingsPanelTabs,
+  EnrollmentSettingsSetupSteps,
+} from './enrollment-settings-page';
 
 import type { EnrollmentSettingsPanel } from '../admissions-crm/enrollment-workspace-state';
 import type { AdmissionsCrmConfigurationFocusSection } from './admissions-crm-configuration';
@@ -13,49 +18,70 @@ type SectionDefinition = {
   title: string;
   description: string;
   defaultPanel?: EnrollmentSettingsPanel;
-  panels?: Array<{ value: EnrollmentSettingsPanel; label: string }>;
+  panelNavigation?: 'tabs' | 'steps';
+  panels?: Array<{ value: EnrollmentSettingsPanel; label: string; description?: string }>;
 };
 
 const sectionDefinitions: Record<AdmissionsCrmConfigurationFocusSection, SectionDefinition> = {
   journey: {
-    title: 'Journey & Cycles',
+    title: 'Admission Journey',
     description:
-      'Define admission cycles, readiness requirements, pipeline stages, and service levels.',
+      'Set the admission calendar, service targets, applicant stages, and team handoffs.',
     defaultPanel: 'cycle',
+    panelNavigation: 'tabs',
     panels: [
-      { value: 'cycle', label: 'Cycle & Readiness' },
-      { value: 'pipeline', label: 'Pipeline Stages' },
+      {
+        value: 'cycle',
+        label: 'Admission Cycle',
+        description: 'Calendar, service levels, exam readiness, and inactivity rules.',
+      },
+      {
+        value: 'pipeline',
+        label: 'Applicant Stages',
+        description: 'Visible stage names, ownership, allowed next steps, and targets.',
+      },
     ],
   },
   capture: {
-    title: 'Inquiry Capture',
-    description: 'Control inquiry channels, source defaults, consent, and public form templates.',
+    title: 'Inquiry Forms & Sources',
+    description: 'Choose where inquiries arrive and what information each intake form collects.',
     defaultPanel: 'capture',
+    panelNavigation: 'steps',
     panels: [
-      { value: 'capture', label: 'Channels & Sources' },
-      { value: 'forms', label: 'Form Templates' },
+      {
+        value: 'capture',
+        label: 'Intake Sources',
+        description: 'Enable channels, sources, consent, and acknowledgement defaults.',
+      },
+      {
+        value: 'forms',
+        label: 'Inquiry Forms',
+        description: 'Build and publish the forms used by staff and families.',
+      },
     ],
   },
   routing: {
-    title: 'Routing & Scoring',
+    title: 'Assignment & Priority',
     description: 'Prioritize inquiries and assign them to the right admissions staff.',
     defaultPanel: 'scoring',
+    panelNavigation: 'tabs',
     panels: [
-      { value: 'scoring', label: 'Lead Scoring' },
-      { value: 'routing', label: 'Assignment Rules' },
+      { value: 'scoring', label: 'Priority Rules' },
+      { value: 'routing', label: 'Staff Assignment' },
     ],
   },
   communications: {
-    title: 'Communications',
+    title: 'Messages & Delivery',
     description: 'Manage approved message content and the supported manual or webhook adapters.',
     defaultPanel: 'templates',
+    panelNavigation: 'tabs',
     panels: [
-      { value: 'templates', label: 'Message Templates' },
-      { value: 'providers', label: 'Provider Setup' },
+      { value: 'templates', label: 'Message Content' },
+      { value: 'providers', label: 'Delivery Setup' },
     ],
   },
   automation: {
-    title: 'Automation',
+    title: 'Follow-up Automation',
     description: 'Configure follow-up, stale, archive, and internal journey rules.',
   },
 };
@@ -75,12 +101,21 @@ export function CoreSettingsRoute({
 
   return (
     <EnrollmentSettingsPage title={definition.title} description={definition.description}>
+      {section === 'journey' ? <AdmissionJourneyOverview /> : null}
       {definition.panels && focusPanel ? (
-        <EnrollmentSettingsPanelTabs
-          label={`${definition.title} settings`}
-          value={focusPanel}
-          options={definition.panels}
-        />
+        definition.panelNavigation === 'steps' ? (
+          <EnrollmentSettingsSetupSteps
+            label={`${definition.title} setup sequence`}
+            value={focusPanel}
+            options={definition.panels}
+          />
+        ) : (
+          <EnrollmentSettingsPanelTabs
+            label={`${definition.title} settings`}
+            value={focusPanel}
+            options={definition.panels}
+          />
+        )
       ) : null}
       <AdmissionsCrmConfiguration
         academicYearId={academicYearId}

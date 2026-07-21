@@ -6,7 +6,7 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useMemo, useEffect, useContext, useCallback, createContext } from 'react';
+import { useRef, useMemo, useEffect, useContext, useCallback, createContext } from 'react';
 
 import {
   getWorkspaceFromPathname,
@@ -20,6 +20,7 @@ import {
 import type {
   EnrollmentPersona,
   EnrollmentWorkspace,
+  EnrollmentApplicantTab,
   EnrollmentWorkspaceState,
   EnrollmentWorkspaceStatePatch,
 } from './enrollment-workspace-state';
@@ -37,10 +38,15 @@ type EnrollmentWorkspaceContextValue = {
   workspace: EnrollmentWorkspace;
   persona: EnrollmentPersona;
   academicYearId?: string;
+  academicYearName?: string;
+  academicBoardId?: string;
+  academicBoardName?: string;
+  academicMediumId?: string;
+  academicMediumName?: string;
   currentUserId?: string;
   state: EnrollmentWorkspaceState;
   updateState: (patch: EnrollmentWorkspaceStatePatch, mode?: 'push' | 'replace') => void;
-  openApplicant: (leadId: string) => void;
+  openApplicant: (leadId: string, tab?: EnrollmentApplicantTab) => void;
   closeApplicant: () => void;
 };
 
@@ -60,8 +66,11 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { currentYear } = useSelector((root: RootState) => root.globalState);
+  const { currentYear, currentBoard, currentMedium } = useSelector(
+    (root: RootState) => root.globalState
+  );
   const { permissions, user } = useSelector((root: RootState) => root.auth);
+  const applicantOriginRef = useRef<HTMLElement | null>(null);
   const workspace = getWorkspaceFromPathname(pathname);
   const persona = resolvePersona(permissions);
   const defaults = useMemo(
@@ -105,30 +114,82 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     const legacy = !hasWorkspaceState
       ? migrateLegacyWorkspaceFilters(sessionStorage.getItem(legacyKey))
       : {};
+    const currentState = parseEnrollmentWorkspaceState(current, defaults);
     const cycle = current.get('cycle') || (currentYear?.id as string | undefined);
+    const board = current.get('board') || (currentBoard?.id as string | undefined);
+    const medium = current.get('medium') || (currentMedium?.id as string | undefined);
 
     sessionStorage.removeItem(legacyKey);
-    if (!cycle && !Object.keys(legacy).length) return;
+    if (!cycle && !Object.keys(legacy).length && current.size === 0) return;
 
-    const next = { ...defaults, ...legacy, ...state, cycle, page: state.page || 1 };
+    const next = {
+      ...defaults,
+      ...legacy,
+      ...currentState,
+      cycle,
+      board,
+      medium,
+      page: currentState.page || 1,
+    };
     const canonical = serializeEnrollmentWorkspaceState(next as EnrollmentWorkspaceState);
     if (!areSearchParamsEquivalent(canonical, current)) {
       navigate(next as EnrollmentWorkspaceState, 'replace');
     }
-  }, [currentYear?.id, defaults, navigate, searchParams, state, workspace]);
+  }, [
+    currentBoard?.id,
+    currentMedium?.id,
+    currentYear?.id,
+    defaults,
+    navigate,
+    searchParams,
+    workspace,
+  ]);
+
+  const openApplicant = useCallback(
+    (leadId: string, tab: EnrollmentApplicantTab = 'overview') => {
+      applicantOriginRef.current = document.activeElement as HTMLElement | null;
+      updateState({ applicant: leadId, applicantTab: tab }, 'push');
+    },
+    [updateState]
+  );
+
+  const closeApplicant = useCallback(() => {
+    updateState({ applicant: undefined, applicantTab: undefined }, 'replace');
+    window.setTimeout(() => applicantOriginRef.current?.focus(), 0);
+  }, [updateState]);
 
   const value = useMemo<EnrollmentWorkspaceContextValue>(
     () => ({
       workspace,
       persona,
       academicYearId: state.cycle || (currentYear?.id as string | undefined),
+      academicYearName: currentYear?.name as string | undefined,
+      academicBoardId: state.board || (currentBoard?.id as string | undefined),
+      academicBoardName: currentBoard?.name as string | undefined,
+      academicMediumId: state.medium || (currentMedium?.id as string | undefined),
+      academicMediumName: currentMedium?.name as string | undefined,
       currentUserId: user?.sub || user?.id,
       state,
       updateState,
-      openApplicant: (leadId) => updateState({ applicant: leadId }, 'push'),
-      closeApplicant: () => updateState({ applicant: undefined }, 'replace'),
+      openApplicant,
+      closeApplicant,
     }),
-    [currentYear?.id, persona, state, updateState, user?.id, user?.sub, workspace]
+    [
+      closeApplicant,
+      currentBoard?.id,
+      currentBoard?.name,
+      currentMedium?.id,
+      currentMedium?.name,
+      currentYear?.id,
+      currentYear?.name,
+      openApplicant,
+      persona,
+      state,
+      updateState,
+      user?.id,
+      user?.sub,
+      workspace,
+    ]
   );
 
   return (

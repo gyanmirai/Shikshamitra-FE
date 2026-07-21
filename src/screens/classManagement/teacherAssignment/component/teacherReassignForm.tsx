@@ -30,7 +30,7 @@ const TeacherReassign: React.FC<ITeacherReassignProps> = ({ selectedTeacher, onS
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box display="flex" flexDirection="column" gap={2}>
+      <Box display="flex" flexDirection="column" gap={1}>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100px' }}>
             <Grid container spacing={2}>

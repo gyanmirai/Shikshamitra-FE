@@ -393,7 +393,7 @@ const UsageRow = ({
         '&:last-of-type': { borderBottom: 'none' },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box
           sx={{
             width: 32,

@@ -4,7 +4,7 @@ import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { varAlpha } from 'src/theme/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -62,6 +62,7 @@ const ClassProgress = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Class Progress"
         links={[
           { name: 'Academics' },
@@ -69,7 +70,7 @@ const ClassProgress = (props: TabComponentType) => {
           { name: 'Class Progress' },
         ]}
       />
-      <Grid container spacing={3}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12 }}>
           <CustomSelect
             label="Class"
@@ -123,7 +124,7 @@ const ClassProgress = (props: TabComponentType) => {
         </Grid>
 
         <Grid size={{ xs: 12 }}>
-          <Grid container spacing={3}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{

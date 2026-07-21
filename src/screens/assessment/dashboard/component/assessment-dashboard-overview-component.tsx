@@ -115,7 +115,7 @@ const AssessmentDashboardOverviewComponent = () => {
         </Grid>
       </Grid>
 
-      <Box display="flex" flexDirection="row" gap={3} sx={{ pt: '20px', pb: '20px' }}>
+      <Box display="flex" flexDirection="row" gap={1} sx={{ pt: '20px', pb: '20px' }}>
         <CustomSelect
           label="Class"
           options={[]}

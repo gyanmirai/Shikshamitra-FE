@@ -203,7 +203,7 @@ const StudentTransportScreen = () => {
 
   return (
     <>
-      <Box gap={3} py="15px" display="flex" flexDirection="row" justifyContent="flex-end">
+      <Box gap={1} py="15px" display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialogForBulkEdit.onTrue} variant="contained" size="small">
           Bulk Assign
         </Button>
@@ -216,7 +216,7 @@ const StudentTransportScreen = () => {
           Student Assignment List
         </Typography>
       </Box> */}
-      <Box display="flex" alignItems="center" gap={3}>
+      <Box display="flex" alignItems="center" gap={1}>
         {/* <CustomSelect
           isSearch
             label="Route"

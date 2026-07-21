@@ -42,7 +42,7 @@ const LibraryAddCategoryDialog: React.FC<IAddCategoryDialogProps> = ({ open, onC
     >
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
-          <Box display="flex" flexDirection="column" gap={2}>
+          <Box display="flex" flexDirection="column" gap={1}>
             <ShakingTextField
               error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
             >

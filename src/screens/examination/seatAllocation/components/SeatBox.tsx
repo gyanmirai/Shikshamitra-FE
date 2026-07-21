@@ -167,7 +167,7 @@ const SeatBox = ({
 
         {seat.isAssigned && (
           <Box sx={{ width: '100%', px: 1.5, pt: 1 }}>
-            <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
               <Typography
                 variant="subtitle2"
                 noWrap

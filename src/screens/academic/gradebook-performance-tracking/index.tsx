@@ -58,6 +58,7 @@ const GradeBookPerformanceTrackingScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Grade Book Performance Tracking"
         links={[
           { name: 'Academic And Assessment' },

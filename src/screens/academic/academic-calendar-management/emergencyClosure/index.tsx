@@ -10,7 +10,7 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -58,7 +58,40 @@ const statusColor: Record<number, 'success' | 'warning' | 'default'> = {
 };
 
 const emergencyClosureSchema = Yup.object().shape({
-  date: Yup.mixed().required('Closure date is required'),
+  startDate: Yup.mixed().required('Start date is required'),
+  endDate: Yup.mixed()
+    .required('End date is required')
+    .test(
+      'not-before-start',
+      'End date cannot be before start date',
+      function validateEndDate(value) {
+        const { startDate } = this.parent;
+        if (!startDate || !value) return true;
+        return (
+          dayjs(value as string).isSame(dayjs(startDate as string), 'day') ||
+          dayjs(value as string).isAfter(dayjs(startDate as string), 'day')
+        );
+      }
+    ),
+  startTime: Yup.string().when('hasTimeRange', {
+    is: true,
+    then: (schema) => schema.required('Start time is required'),
+  }),
+  endTime: Yup.string().when('hasTimeRange', {
+    is: true,
+    then: (schema) =>
+      schema
+        .required('End time is required')
+        .test(
+          'after-start-time',
+          'End time must be after start time',
+          function validateEndTime(value) {
+            const { startTime } = this.parent;
+            if (!startTime || !value) return true;
+            return value > startTime;
+          }
+        ),
+  }),
   title: Yup.string().min(3, 'Title must be at least 3 characters').required('Title is required'),
   description: Yup.string().required('Reason/description is required'),
   standardIds: Yup.array().when('appliesToAll', {
@@ -107,6 +140,11 @@ const EmergencyClosureScreen = () => {
   const formik = useFormik({
     initialValues: {
       date: null as string | null,
+      startDate: null as string | null,
+      endDate: null as string | null,
+      hasTimeRange: false,
+      startTime: '',
+      endTime: '',
       title: '',
       description: '',
       appliesToAll: true,
@@ -119,11 +157,22 @@ const EmergencyClosureScreen = () => {
     },
     validationSchema: emergencyClosureSchema,
     onSubmit: async (values, helpers) => {
+      const formattedStartDate = values.startDate
+        ? dayjs(values.startDate).format('YYYY-MM-DDTHH:mm:ssZ')
+        : null;
+      const formattedEndDate = values.endDate
+        ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ssZ')
+        : formattedStartDate;
       const payload = {
         ...values,
-        date: values.date ? dayjs(values.date).format('YYYY-MM-DDTHH:mm:ssZ') : null,
+        date: formattedStartDate,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        startTime: values.hasTimeRange ? values.startTime : null,
+        endTime: values.hasTimeRange ? values.endTime : null,
         standardIds: values.appliesToAll ? [] : values.standardIds,
         divisionIds: [],
+        autoScanImpacts: Boolean(values.autoScanImpacts),
       };
 
       try {
@@ -156,6 +205,16 @@ const EmergencyClosureScreen = () => {
     return standard?.name ?? 'Selected classes';
   };
 
+  const formatTimeInput = (value?: string | null) => {
+    if (!value) return '';
+    return value.slice(0, 5);
+  };
+
+  const formatTimeRange = (row: any) => {
+    if (!row.startTime || !row.endTime) return 'Full day';
+    return `${formatTimeInput(row.startTime)} - ${formatTimeInput(row.endTime)}`;
+  };
+
   const closeAddDialog = () => {
     addDialog.onFalse();
     formik.resetForm();
@@ -174,8 +233,14 @@ const EmergencyClosureScreen = () => {
 
   const handleEditClick = (row: any) => {
     setEditingClosureId(row.id);
+    const hasTimeRange = Boolean(row.startTime && row.endTime);
     formik.setValues({
       date: row.date ?? null,
+      startDate: row.date ?? null,
+      endDate: row.date ?? null,
+      hasTimeRange,
+      startTime: hasTimeRange ? formatTimeInput(row.startTime) : '',
+      endTime: hasTimeRange ? formatTimeInput(row.endTime) : '',
       title: row.title ?? '',
       description: row.description ?? '',
       appliesToAll: Boolean(row.appliesToAll),
@@ -206,26 +271,53 @@ const EmergencyClosureScreen = () => {
 
   const columns: IColumn[] = [
     {
-      id: 'date',
-      label: 'Closure Date',
-      filterType: 'date',
-      isFilter: true,
-      render: (value) => dayjs(value).format('DD MMM YYYY'),
-    },
-    {
       id: 'title',
       label: 'Title',
       filterType: 'string',
       isFilter: true,
+      width: '34%',
+      minWidth: 320,
+      maxWidth: 420,
+      cellSx: { maxWidth: 420 },
       render: (value, row) => (
-        <Stack spacing={0.3}>
-          <Typography variant="body2" fontWeight={700}>
+        <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+          <Typography variant="body2" fontWeight={700} noWrap>
             {value}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            noWrap
+            sx={{ display: 'block', maxWidth: 360 }}
+          >
             {row.description || 'No reason provided'}
           </Typography>
         </Stack>
+      ),
+    },
+    {
+      id: 'date',
+      label: 'Closure Date',
+      filterType: 'date',
+      isFilter: true,
+      width: 150,
+      minWidth: 150,
+      render: (value) => dayjs(value).format('DD MMM YYYY'),
+    },
+    {
+      id: 'timeRange',
+      label: 'Time',
+      width: 120,
+      minWidth: 120,
+      isSort: false,
+      isFilter: false,
+      render: (_, row) => (
+        <Typography
+          variant="caption"
+          color={row.startTime && row.endTime ? 'text.primary' : 'text.secondary'}
+        >
+          {formatTimeRange(row)}
+        </Typography>
       ),
     },
     {
@@ -233,6 +325,10 @@ const EmergencyClosureScreen = () => {
       label: 'Scope',
       filterType: 'string',
       isFilter: true,
+      width: 170,
+      minWidth: 170,
+      maxWidth: 190,
+      cellSx: { maxWidth: 190 },
       render: (_, row) => getScopeLabel(row),
     },
     {
@@ -244,6 +340,11 @@ const EmergencyClosureScreen = () => {
         value: Number(value),
       })),
       isFilter: true,
+      align: 'center',
+      sticky: true,
+      stickyPosition: 'right',
+      width: 128,
+      minWidth: 128,
       render: (value) => (
         <Label color={statusColor[Number(value)] ?? 'default'}>
           {CALENDAR_DAY_STATUS_LABELS[Number(value) as CalendarDayStatus] ?? 'Unknown'}
@@ -253,9 +354,16 @@ const EmergencyClosureScreen = () => {
     {
       id: 'actions',
       label: 'Actions',
-      align: 'right',
+      align: 'center',
+      sticky: true,
+      stickyPosition: 'right',
+      width: 116,
+      minWidth: 116,
+      isSort: false,
+      isFilter: false,
+      excludeFromExport: true,
       render: (_, row) => (
-        <Stack direction="row" justifyContent="flex-end" gap={0.5}>
+        <Stack direction="row" justifyContent="center" gap={0.5}>
           <Tooltip title="View details">
             <IconButton size="small" onClick={() => handleViewClick(row)}>
               <Iconify icon="mdi:eye-outline" width={18} />
@@ -281,8 +389,9 @@ const EmergencyClosureScreen = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Emergency Closure"
         description="Review declared emergency closures and add a new closure when school operations need to pause."
         links={[
@@ -322,8 +431,16 @@ const EmergencyClosureScreen = () => {
         isShowedDense={false}
         columns={columns}
         data={tableData}
+        tableContainerProps={{
+          sx: {
+            '& table': {
+              tableLayout: 'fixed',
+              minWidth: 1004,
+            },
+          },
+        }}
         noDataText={
-          <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
+          <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
             <Box
               sx={{
                 width: 64,
@@ -348,12 +465,12 @@ const EmergencyClosureScreen = () => {
         open={addDialog.value}
         handleClose={closeAddDialog}
         title={
-          <Stack direction="row" alignItems="center" gap={0.75}>
+          <Stack direction="row" alignItems="center" gap={1}>
             <span>{editingClosureId ? 'Edit Emergency Closure' : 'Declare Emergency Closure'}</span>
             <CustomTooltip
               arrow
               placement="right"
-              title="Declaring a closure marks the selected date as an emergency non-working day, notifies the selected audiences, and (if auto-scan is on) flags academic activities affected on that date."
+              title="Declaring a closure marks the selected date range as emergency non-working time, notifies the selected audiences, and flags affected academic activities when auto-scan is on."
             >
               <Iconify icon="lucide:info" width={16} sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -362,27 +479,57 @@ const EmergencyClosureScreen = () => {
         maxWidth="md"
       >
         <DialogScrollContent>
-          <Grid container spacing={2.5}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DatePicker
-                label="Closure Date *"
-                value={formik.values.date ? dayjs(formik.values.date) : null}
-                onChange={(val) =>
-                  formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
-                }
+                label="Start Date *"
+                value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
+                blockedDayTypes={[]}
+                onChange={(val) => {
+                  const nextValue = val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null;
+                  formik.setFieldValue('date', nextValue);
+                  formik.setFieldValue('startDate', nextValue);
+                  if (
+                    !formik.values.endDate ||
+                    (nextValue && dayjs(formik.values.endDate).isBefore(val, 'day'))
+                  ) {
+                    formik.setFieldValue('endDate', nextValue);
+                  }
+                }}
                 disablePast
                 slotProps={{
                   textField: {
                     fullWidth: true,
                     size: 'small',
-                    error: formik.touched.date && Boolean(formik.errors.date),
-                    helperText: formik.touched.date && (formik.errors.date as string),
+                    error: formik.touched.startDate && Boolean(formik.errors.startDate),
+                    helperText: formik.touched.startDate && (formik.errors.startDate as string),
                   },
                 }}
               />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
+              <DatePicker
+                label="End Date *"
+                value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
+                blockedDayTypes={[]}
+                onChange={(val) =>
+                  formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
+                }
+                disablePast
+                minDate={formik.values.startDate ? dayjs(formik.values.startDate) : undefined}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.endDate && Boolean(formik.errors.endDate),
+                    helperText: formik.touched.endDate && (formik.errors.endDate as string),
+                  },
+                }}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -410,6 +557,74 @@ const EmergencyClosureScreen = () => {
                 error={formik.touched.description && Boolean(formik.errors.description)}
                 helperText={formik.touched.description && formik.errors.description}
               />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Stack spacing={1.5}>
+                  <FormControlLabel
+                    sx={{ m: 0 }}
+                    control={
+                      <Switch
+                        checked={formik.values.hasTimeRange}
+                        onChange={(e) => {
+                          formik.setFieldValue('hasTimeRange', e.target.checked);
+                          if (!e.target.checked) {
+                            formik.setFieldValue('startTime', '');
+                            formik.setFieldValue('endTime', '');
+                          }
+                        }}
+                        color="warning"
+                      />
+                    }
+                    label={
+                      <Box ml={1}>
+                        <Typography variant="body2" fontWeight={700}>
+                          Partial-day closure
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Turn on when school is closed only for selected hours.
+                        </Typography>
+                      </Box>
+                    }
+                  />
+
+                  {formik.values.hasTimeRange && (
+                    <Grid container spacing={1}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          type="time"
+                          label="Start Time *"
+                          name="startTime"
+                          value={formik.values.startTime}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched.startTime && Boolean(formik.errors.startTime)}
+                          helperText={formik.touched.startTime && formik.errors.startTime}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          type="time"
+                          label="End Time *"
+                          name="endTime"
+                          value={formik.values.endTime}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched.endTime && Boolean(formik.errors.endTime)}
+                          helperText={formik.touched.endTime && formik.errors.endTime}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </Grid>
+                    </Grid>
+                  )}
+                </Stack>
+              </Paper>
             </Grid>
 
             <Grid size={{ xs: 12 }}>
@@ -574,78 +789,206 @@ const EmergencyClosureScreen = () => {
       <CustomDialog
         open={viewDialog.value}
         handleClose={viewDialog.onFalse}
-        title="Emergency Closure Details"
+        title={
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1,
+                display: 'grid',
+                placeItems: 'center',
+                color: 'info.main',
+                bgcolor: alpha(theme.palette.info.main, 0.12),
+                flexShrink: 0,
+              }}
+            >
+              <Iconify icon="mdi:information-outline" width={18} />
+            </Box>
+            <Typography component="span" variant="h6" sx={{ minWidth: 0 }}>
+              Emergency Closure Details
+            </Typography>
+          </Stack>
+        }
         maxWidth="sm"
       >
         <DialogScrollContent>
           {viewingClosure && (
-            <Stack spacing={2}>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Title
-                  </Typography>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    {viewingClosure.title}
-                  </Typography>
-                </Box>
-                <Label color={statusColor[Number(viewingClosure.status)] ?? 'default'}>
-                  {CALENDAR_DAY_STATUS_LABELS[Number(viewingClosure.status) as CalendarDayStatus] ??
-                    'Unknown'}
-                </Label>
-              </Stack>
+            <Stack spacing={1.5}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  borderRadius: 1,
+                  bgcolor: alpha(theme.palette.error.main, 0.04),
+                  borderColor: alpha(theme.palette.error.main, 0.18),
+                  boxShadow: `inset 3px 0 0 ${theme.palette.error.main}`,
+                }}
+              >
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', sm: 'flex-start' }}
+                  gap={1}
+                >
+                  <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Closure title
+                    </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={700}
+                      sx={{ wordBreak: 'break-word' }}
+                    >
+                      {viewingClosure.title}
+                    </Typography>
+                  </Stack>
+                  <Label
+                    color={statusColor[Number(viewingClosure.status)] ?? 'default'}
+                    sx={{ flexShrink: 0 }}
+                  >
+                    {CALENDAR_DAY_STATUS_LABELS[
+                      Number(viewingClosure.status) as CalendarDayStatus
+                    ] ?? 'Unknown'}
+                  </Label>
+                </Stack>
+              </Paper>
 
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Closure Date
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {dayjs(viewingClosure.date).format('DD MMM YYYY')}
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Scope
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {getScopeLabel(viewingClosure)}
-                  </Typography>
-                </Grid>
+              <Grid container spacing={1}>
+                {[
+                  {
+                    icon: 'mdi:calendar-alert-outline',
+                    label: 'Closure Date',
+                    value: dayjs(viewingClosure.date).format('DD MMM YYYY'),
+                  },
+                  {
+                    icon: 'mdi:account-school-outline',
+                    label: 'Scope',
+                    value: getScopeLabel(viewingClosure),
+                  },
+                  {
+                    icon: 'mdi:clock-time-four-outline',
+                    label: 'Time',
+                    value: formatTimeRange(viewingClosure),
+                  },
+                  {
+                    icon: 'mdi:radar',
+                    label: 'Impact Scan',
+                    value:
+                      viewingClosure.autoScanImpacts === false ? 'Manual review' : 'Auto-scan on',
+                  },
+                ].map((item) => (
+                  <Grid key={item.label} size={{ xs: 12, sm: 6 }}>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 1,
+                        height: '100%',
+                        bgcolor: alpha(theme.palette.background.neutral, 0.45),
+                      }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="flex-start">
+                        <Box
+                          sx={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 1,
+                            display: 'grid',
+                            placeItems: 'center',
+                            color: 'info.main',
+                            bgcolor: alpha(theme.palette.info.main, 0.1),
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Iconify icon={item.icon} width={16} />
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            {item.label}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={700}
+                            sx={{ wordBreak: 'break-word' }}
+                          >
+                            {item.value}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                ))}
               </Grid>
 
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Reason / Description
-                </Typography>
-                <Typography variant="body2">
-                  {viewingClosure.description || 'No reason provided'}
-                </Typography>
-              </Box>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1,
+                  bgcolor: alpha(theme.palette.background.neutral, 0.45),
+                }}
+              >
+                <Stack spacing={0.75}>
+                  <Typography variant="caption" color="text.secondary">
+                    Reason / Description
+                  </Typography>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {viewingClosure.description || 'No reason provided'}
+                  </Typography>
+                </Stack>
+              </Paper>
 
               <Divider />
 
-              <Box>
-                <Typography variant="caption" color="text.secondary" display="block" mb={0.75}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1,
+                  bgcolor: alpha(theme.palette.background.neutral, 0.45),
+                }}
+              >
+                <Typography variant="caption" color="text.secondary" display="block" mb={1}>
                   Notified Audiences
                 </Typography>
-                <Stack direction="row" gap={1} flexWrap="wrap">
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
                   {[
-                    ['notifyTeachers', 'Teachers'],
-                    ['notifyParents', 'Parents'],
-                    ['notifyStudents', 'Students'],
-                    ['notifyStaff', 'Staff'],
-                  ].map(([key, label]) => (
-                    <Label
-                      key={key}
-                      variant={viewingClosure[key] ? 'filled' : 'outlined'}
-                      color={viewingClosure[key] ? 'primary' : 'default'}
-                    >
-                      {label}
-                    </Label>
-                  ))}
+                    ['notifyTeachers', 'Teachers', 'mdi:account-tie-outline'],
+                    ['notifyParents', 'Parents', 'mdi:account-heart-outline'],
+                    ['notifyStudents', 'Students', 'mdi:school-outline'],
+                    ['notifyStaff', 'Staff', 'mdi:account-wrench-outline'],
+                  ].map(([key, label, icon]) => {
+                    const isNotified = Boolean(viewingClosure[key]);
+                    return (
+                      <Label
+                        key={key}
+                        variant="soft"
+                        color={isNotified ? 'success' : 'default'}
+                        startIcon={
+                          <Iconify
+                            icon={
+                              isNotified ? 'mdi:check-circle-outline' : 'mdi:minus-circle-outline'
+                            }
+                            width={14}
+                          />
+                        }
+                        sx={{
+                          px: 1,
+                          '& .MuiChip-label': {
+                            px: 0.5,
+                          },
+                        }}
+                      >
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Iconify icon={icon} width={14} />
+                          <span>{label}</span>
+                        </Stack>
+                      </Label>
+                    );
+                  })}
                 </Stack>
-              </Box>
+              </Paper>
             </Stack>
           )}
         </DialogScrollContent>

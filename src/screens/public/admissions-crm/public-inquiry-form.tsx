@@ -48,6 +48,11 @@ type ApplicantLanguage = 'en' | 'gu' | 'hi';
 
 const uiText: Record<ApplicantLanguage, Record<string, string>> = {
   en: {
+    startTitle: 'Start Your Admission Inquiry',
+    unavailableTitle: 'Admission Inquiry Unavailable',
+    receivedTitle: 'Inquiry Received',
+    description: 'Share the available details and the admission team will follow up.',
+    retry: 'Retry',
     language: 'Language',
     loading: 'Loading inquiry form',
     unavailable: 'Inquiry form is unavailable.',
@@ -61,6 +66,11 @@ const uiText: Record<ApplicantLanguage, Record<string, string>> = {
     required: 'is required.',
   },
   gu: {
+    startTitle: 'પ્રવેશ પૂછપરછ શરૂ કરો',
+    unavailableTitle: 'પ્રવેશ પૂછપરછ ઉપલબ્ધ નથી',
+    receivedTitle: 'પૂછપરછ મળી ગઈ',
+    description: 'ઉપલબ્ધ વિગતો આપો અને પ્રવેશ ટીમ તમારો સંપર્ક કરશે.',
+    retry: 'ફરી પ્રયત્ન કરો',
     language: 'ભાષા',
     loading: 'પૂછપરછ ફોર્મ લોડ થઈ રહ્યું છે',
     unavailable: 'પૂછપરછ ફોર્મ ઉપલબ્ધ નથી.',
@@ -74,6 +84,11 @@ const uiText: Record<ApplicantLanguage, Record<string, string>> = {
     required: 'જરૂરી છે.',
   },
   hi: {
+    startTitle: 'प्रवेश पूछताछ शुरू करें',
+    unavailableTitle: 'प्रवेश पूछताछ उपलब्ध नहीं है',
+    receivedTitle: 'पूछताछ प्राप्त हुई',
+    description: 'उपलब्ध विवरण साझा करें और प्रवेश टीम आपसे संपर्क करेगी।',
+    retry: 'पुनः प्रयास करें',
     language: 'भाषा',
     loading: 'पूछताछ फ़ॉर्म लोड हो रहा है',
     unavailable: 'पूछताछ फ़ॉर्म उपलब्ध नहीं है।',
@@ -426,7 +441,7 @@ export default function PublicAdmissionInquiryFormScreen({
 
   if (isLoading) {
     return (
-      <PublicAdmissionsShell title="Start Your Admission Inquiry">
+      <PublicAdmissionsShell title={text.startTitle} language={language}>
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Stack spacing={2}>
             <Typography variant="h6">{text.loading}</Typography>
@@ -439,14 +454,14 @@ export default function PublicAdmissionInquiryFormScreen({
 
   if (loadError || !form) {
     return (
-      <PublicAdmissionsShell title="Admission Inquiry Unavailable">
+      <PublicAdmissionsShell title={text.unavailableTitle} language={language}>
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Alert
             severity="error"
             role="alert"
             action={
               <Button color="inherit" size="small" onClick={() => setReloadKey((key) => key + 1)}>
-                Retry
+                {text.retry}
               </Button>
             }
           >
@@ -459,7 +474,7 @@ export default function PublicAdmissionInquiryFormScreen({
 
   if (result) {
     return (
-      <PublicAdmissionsShell title="Inquiry Received">
+      <PublicAdmissionsShell title={text.receivedTitle} language={language}>
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Stack spacing={2}>
             <Alert severity="success" role="status">
@@ -477,9 +492,8 @@ export default function PublicAdmissionInquiryFormScreen({
   return (
     <PublicAdmissionsShell
       title={form.templateName}
-      description={
-        form.description || 'Share the available details and the admission team will follow up.'
-      }
+      description={form.description || text.description}
+      language={language}
     >
       <Paper
         component="form"

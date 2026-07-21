@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-10
+updated_on: 2026-07-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,6 +12,7 @@ audience: humans-and-agents
 
 TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
 Backend Student docs own product and API truth at [Student backend docs](../../../Shikshamitra-BE/docs/modules/student/README.md).
+The current human acceptance script is [Student Enrollment UI Consistency UAT](../../e2e/student/STUDENT_ENROLLMENT_UI_UAT.md).
 
 ## Read order
 

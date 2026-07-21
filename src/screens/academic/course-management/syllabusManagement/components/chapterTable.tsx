@@ -64,7 +64,10 @@ const ChapterTable = ({
   );
 
   const tableActions = useCallback(
-    ({ popover, row }: { popover: any; row: IChapter }) => (
+    (actionProps: { popover: any; row: IChapter }) => {
+      const { popover, row } = actionProps;
+
+      return (
       <MenuList disablePadding dense>
         {canView && (
           <MenuItem
@@ -120,7 +123,8 @@ const ChapterTable = ({
           </MenuItem>
         )}
       </MenuList>
-    ),
+      );
+    },
     [
       addChapterDialog,
       canAdd,
@@ -255,7 +259,7 @@ const ChapterTable = ({
         minWidth: 160,
         filterType: 'number',
         render: (value, row) => (
-          <Stack spacing={0.5} sx={{ minWidth: 140 }}>
+          <Stack spacing={1} sx={{ minWidth: 140 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
               <Typography variant="caption">{value}%</Typography>
               <Chip
@@ -340,7 +344,7 @@ const ChapterTable = ({
           const chapter = row as IChapter;
           return (
             <ThreeDotsActions
-              showThreeDots={true}
+              showThreeDots
               placement="right-top"
               actions={(prop) => tableActions({ ...prop, row: chapter })}
             />

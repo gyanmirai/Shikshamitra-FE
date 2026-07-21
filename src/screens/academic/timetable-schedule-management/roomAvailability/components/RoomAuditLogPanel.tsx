@@ -125,7 +125,7 @@ const AuditLogItem = ({
   const hasJsonDetails = detailEntries.length > 0;
 
   return (
-    <Box sx={{ display: 'flex', gap: 1.5 }}>
+    <Box sx={{ display: 'flex', gap: 1 }}>
       {/* Timeline line */}
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
         <Box
@@ -159,7 +159,7 @@ const AuditLogItem = ({
       {/* Content */}
       <Box sx={{ flex: 1, pb: isLast ? 0 : 2, pt: 0.5 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-          <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap">
+          <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
             <Typography variant="subtitle2" fontWeight={700}>
               {log.action}
             </Typography>
@@ -183,7 +183,7 @@ const AuditLogItem = ({
 
         {/* Simple string diff (e.g. status change) */}
         {oldParsed?.type === 'text' && (
-          <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" sx={{ mt: 0.5 }}>
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mt: 0.5 }}>
             <Chip
               size="small"
               label={oldParsed.text}
@@ -234,9 +234,9 @@ const AuditLogItem = ({
                   bgcolor: 'background.neutral',
                 }}
               >
-                <Stack spacing={0.5}>
+                <Stack spacing={1}>
                   {detailEntries.map(([key, value]) => (
-                    <Stack key={key} direction="row" justifyContent="space-between" spacing={2}>
+                    <Stack key={key} direction="row" justifyContent="space-between" spacing={1}>
                       <Typography variant="caption" color="text.secondary">
                         {formatKeyLabel(key)}
                       </Typography>
@@ -283,7 +283,7 @@ export const RoomAuditLogPanel = ({
 
   if (isLoading) {
     return (
-      <Stack spacing={1.5}>
+      <Stack spacing={1}>
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} variant="rectangular" height={64} sx={{ borderRadius: 1.5 }} />
         ))}

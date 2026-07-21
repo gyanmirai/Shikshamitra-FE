@@ -88,7 +88,7 @@ const EmployeeSalaryStructureScreen = () => {
         ]}
       />
       <Card>
-        <Box display="flex" gap={2} flexWrap="wrap" p={1}>
+        <Box display="flex" gap={1} flexWrap="wrap" p={1}>
           <PaginatedSearchSelect
             label="Employee"
             fetchOptions={async (query, page) => {

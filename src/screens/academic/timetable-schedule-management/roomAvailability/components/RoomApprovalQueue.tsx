@@ -67,7 +67,7 @@ export const RoomApprovalQueue = ({
 
   return (
     <>
-      <Stack spacing={1.5}>
+      <Stack spacing={1}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="mdi:clock-outline" width={20} color="warning.main" />
           <Typography variant="h6">Approval Queue</Typography>
@@ -185,7 +185,7 @@ export const RoomApprovalQueue = ({
               sticky: true,
               stickyPosition: 'right',
               render: (_v, row) => (
-                <Stack direction="row" spacing={0.5} justifyContent="center">
+                <Stack direction="row" spacing={1} justifyContent="center">
                   <Button
                     size="small"
                     variant="contained"
@@ -233,7 +233,7 @@ export const RoomApprovalQueue = ({
         </DialogTitle>
         <Divider />
         <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
+          <Stack spacing={1} sx={{ pt: 1 }}>
             <Alert severity="warning">
               The requester will be notified with your rejection reason.
             </Alert>

@@ -159,7 +159,7 @@ export default function AdmissionsSeatPoolConfiguration() {
               </Typography>
             </Box>
             <Tooltip title="Reset form">
-              <IconButton size="small" onClick={reset}>
+              <IconButton size="small" aria-label="Reset seat pool form" onClick={reset}>
                 <RestartAlt fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -295,7 +295,7 @@ export default function AdmissionsSeatPoolConfiguration() {
                     .join(' / ') || 'General pool'}
                 </Typography>
               </Box>
-              <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+              <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
                 <Chip
                   size="small"
                   label={`${pool.occupiedSeats}/${pool.approvedCapacity} occupied`}
@@ -306,6 +306,7 @@ export default function AdmissionsSeatPoolConfiguration() {
                 <Tooltip title="Edit seat pool">
                   <IconButton
                     size="small"
+                    aria-label={`Edit seat pool ${pool.name}`}
                     onClick={() => {
                       setEditing(pool);
                       setForm(toForm(pool));

@@ -10,12 +10,12 @@ const TeacherManagement = (props: TabComponentType) => {
   const [reassigedTeacher, setReassigedTeacher] = useState<string>('');
   return (
     <Box>
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 8 }}>
           <CalendarView />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }} rowSpacing={2}>
+        <Grid size={{ xs: 12, md: 4 }} rowSpacing={1}>
           <Typography>List Of Teacher</Typography>
           <List>
             <ListItem>
@@ -38,7 +38,7 @@ const TeacherManagement = (props: TabComponentType) => {
             </ListItem>
           </List>
 
-          <Box display="flex" flexDirection="column" gap={2}>
+          <Box display="flex" flexDirection="column" gap={1}>
             <CustomSelect
               label="Reassign Teacher"
               options={[

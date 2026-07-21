@@ -51,7 +51,7 @@ const SeatAllocationEmptyState = ({
       alignItems: 'center',
       justifyContent: 'center',
       height: 'calc(100vh - 150px)',
-      gap: 2,
+      gap: 1,
       px: 2,
     }}
   >
@@ -86,7 +86,7 @@ const SeatAllocationEmptyState = ({
         ? 'Choose a division from the toolbar above to load students, then select a room to view and manage the seat layout.'
         : 'Choose a room from the toolbar above to load the seat layout and begin allocating seats.'}
     </Typography>
-    <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+    <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
       <Chip
         icon={<Iconify icon="mdi:numeric-1-circle-outline" width={16} />}
         label="Select Division"
@@ -166,7 +166,7 @@ const SeatAllocationLoadingSkeleton = () => (
     <Grid size={9} height="100%">
       <Paper
         elevation={3}
-        sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}
+        sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}
       >
         {/* Seat layout header */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1 }}>
@@ -174,7 +174,7 @@ const SeatAllocationLoadingSkeleton = () => (
           <Box
             sx={{
               display: 'flex',
-              gap: 3,
+              gap: 1,
               px: 2,
               py: 1,
               borderRadius: 1,
@@ -198,14 +198,14 @@ const SeatAllocationLoadingSkeleton = () => (
         </Box>
 
         {/* Seat grid — 2 columns of bench rows */}
-        <Grid container spacing={4} justifyContent="center" sx={{ flex: 1, overflow: 'hidden' }}>
+        <Grid container spacing={1} justifyContent="center" sx={{ flex: 1, overflow: 'hidden' }}>
           {[0, 1].map((col) => (
             <Grid key={col} size={{ xs: 12, md: 6 }}>
               <Box
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 2,
+                  gap: 1,
                   p: 2,
                   borderRadius: 2,
                   bgcolor: 'background.neutral',
@@ -224,7 +224,7 @@ const SeatAllocationLoadingSkeleton = () => (
                       sx={{
                         flex: 1,
                         display: 'flex',
-                        gap: 1.5,
+                        gap: 1,
                         p: 1.5,
                         borderRadius: 1.5,
                         bgcolor: 'background.paper',

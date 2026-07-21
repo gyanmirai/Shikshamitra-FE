@@ -112,7 +112,7 @@ export default function OperationalStatus({ items }: { items?: OperationItem[] }
                 borderRadius: 1.5,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1.5,
+                gap: 1,
                 transition: 'all 0.2s',
                 '&:hover': {
                   bgcolor: 'background.neutral',

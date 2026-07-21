@@ -30,6 +30,7 @@ interface ViewCreateSlotsProps {
 // Normalised shape used exclusively for rendering
 interface NormalisedSlotData {
   className: string;
+  shiftTiming: string;
   schoolHours: string;
   previousClassSlots: string;
   slotConfigurations: Array<{
@@ -60,6 +61,7 @@ const getDayLabel = (value: number) => dayMarks.find((d) => d.value === value)?.
 /** Maps raw API detail response → normalised view model */
 const mapApiToViewModel = (apiData: any, standardName?: string): NormalisedSlotData => ({
   className: standardName || apiData?.standardName || apiData?.standardId || '—',
+  shiftTiming: apiData?.shiftTimingLabel || 'Shift not assigned',
   schoolHours: apiData?.schoolHours || '—',
   previousClassSlots: apiData?.previousStandardId || 'None',
   slotConfigurations: (apiData?.slotConfigurations ?? []).map((config: any, ci: number) => {
@@ -159,7 +161,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
             </Typography>
           </Stack>
 
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center">
             <Box
               sx={{
                 display: 'inline-flex',
@@ -181,13 +183,34 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                 {viewData?.className || '—'}
               </Typography>
             </Box>
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 1.5,
+                py: 0.75,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.info.main, 0.08),
+                border: '1px solid',
+                borderColor: alpha(theme.palette.info.main, 0.2),
+              }}
+            >
+              <Iconify icon="mdi:clock-time-four-outline" width={16} color="info.main" />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem' }}>
+                Timing:
+              </Typography>
+              <Typography variant="body2" fontWeight={700} color="info.main">
+                {viewData?.shiftTiming || 'Shift not assigned'}
+              </Typography>
+            </Box>
           </Stack>
         </Box>
       </Paper>
 
       {/* ── Slot Configurations ────────────────────────────────────────── */}
       {viewData?.slotConfigurations && viewData.slotConfigurations.length > 0 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {viewData.slotConfigurations.map((config, index) => {
             const isExpanded = expandedConfigs[config.id] ?? false;
             const lectureCount = config.timeSlots.filter((s) => s.slotType !== 'break').length;
@@ -256,7 +279,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                     gap={1}
                   >
                     {/* Config title */}
-                    <Stack direction="row" alignItems="center" spacing={1.25}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
                       <Box
                         sx={{
                           width: 8,
@@ -288,7 +311,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                     </Stack>
 
                     {/* Summary pills */}
-                    <Stack direction="row" spacing={0.75} flexWrap="wrap">
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
                       <Chip
                         label={`${config.timeSlots.length} slots`}
                         size="small"
@@ -405,7 +428,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                                 sx={{
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: 1.5,
+                                  gap: 1,
                                   px: 1.5,
                                   py: 1,
                                   borderRadius: 2,
@@ -458,7 +481,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                                 </Box>
 
                                 {/* Times */}
-                                <Stack direction="row" alignItems="center" spacing={0.5} flex={1}>
+                                <Stack direction="row" alignItems="center" spacing={1} flex={1}>
                                   <Iconify
                                     icon="mdi:clock-start"
                                     width={13}

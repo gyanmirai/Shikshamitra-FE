@@ -174,7 +174,7 @@ const BulkDataUpdateScreen = () => {
         </Grid>
 
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
-          <Box display="flex" gap={2} flexWrap="wrap">
+          <Box display="flex" gap={1} flexWrap="wrap">
             <CustomSelect
               options={allCategory}
               label="Category"
@@ -211,7 +211,7 @@ const BulkDataUpdateScreen = () => {
               }}
             />
           </Box>
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={1}>
             {' '}
             <Button
               startIcon={<Save />}

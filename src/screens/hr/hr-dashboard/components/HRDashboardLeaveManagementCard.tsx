@@ -81,7 +81,7 @@ export default function LeaveManagementCard() {
             borderColor="grey.400"
             borderRadius={1}
             display="flex"
-            gap={1.5}
+            gap={1}
             alignItems="center"
           >
             {/* <Box mt={1}> */}

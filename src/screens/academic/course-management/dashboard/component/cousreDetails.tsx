@@ -22,7 +22,7 @@ const CousreDetails = () => {
   });
 
   return (
-    <Grid container spacing={2} mt={2}>
+    <Grid container spacing={1} mt={2}>
       <Grid size={12}>
         <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
           <CustomSelect

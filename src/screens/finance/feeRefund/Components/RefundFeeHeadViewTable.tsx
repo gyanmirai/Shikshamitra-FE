@@ -216,7 +216,7 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
           display="flex"
           justifyContent="flex-end"
           alignItems="center"
-          gap={3}
+          gap={1}
           px={2}
           py={0.75}
           sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}
@@ -273,7 +273,7 @@ const RefundFeeHeadViewTable: React.FC<Props> = ({ data }) => {
       {/* Overall summary */}
       <Box
         display="flex"
-        gap={2}
+        gap={1}
         mb={1.5}
         p={1.5}
         sx={{
