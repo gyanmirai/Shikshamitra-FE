@@ -4,8 +4,12 @@ export interface IFeeHead {
   id: string;
   feeCategoryId: string;
   name: string;
+  module?: string;
   description?: string;
+  incomeHeadId?: string;
+  isUsedInDownstream?: boolean;
   isActive: boolean;
+  deactivationReason?: string | null;
 }
 
 export interface IFeeHeadTableProps {

@@ -13,6 +13,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
@@ -94,6 +95,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
         purpose: values.purpose || '',
         ifscCode: values.ifscCode,
         upiId: values.upiId || '',
+        bankHeadId: values.bankHeadId || undefined,
       };
 
       if (editData?.id) {
@@ -130,6 +132,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
       accountType: 'accountDetails',
       accountNumber: 'accountDetails',
       purpose: 'accountDetails',
+      bankHeadId: 'accountDetails',
       ifscCode: 'paymentInfo',
       upiId: 'paymentInfo',
     };
@@ -356,6 +359,24 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   helperText={`${formik.values.purpose?.length ?? 0}/500`}
                   FormHelperTextProps={{ sx: { textAlign: 'right', mr: 0 } }}
                 />
+              </Grid>
+              {/* Bank Head */}
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.bankHeadId && formik.errors.bankHeadId) || false}
+                >
+                  <HeadSelector
+                    name="bankHeadId"
+                    label="Bank/Cash Head"
+                    headType="Bank-Cash"
+                    value={formik.values.bankHeadId}
+                    onChange={(val) => formik.setFieldValue('bankHeadId', val)}
+                    error={formik.touched.bankHeadId && Boolean(formik.errors.bankHeadId)}
+                    helperText={
+                      formik.touched.bankHeadId ? (formik.errors.bankHeadId as string) : undefined
+                    }
+                  />
+                </ShakingTextField>
               </Grid>
             </Grid>
           </AccordionDetails>

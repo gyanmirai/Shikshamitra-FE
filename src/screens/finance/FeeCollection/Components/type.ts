@@ -168,6 +168,8 @@ export interface MonthWiseFeeItem {
   dueFeeId?: string;
   feeHeadId: string;
   feeHeadName: string;
+  installmentLabel?: string;
+  dueDate?: string;
   total: number;
   paid: number;
   due: number;
@@ -186,8 +188,11 @@ export interface MonthWiseGroup {
 }
 
 export interface FeeHeadWiseFeeItem {
+  dueFeeId?: string;
   month: FeeMonth;
   year: number;
+  installmentLabel?: string;
+  dueDate?: string;
   total: number;
   paid: number;
   due: number;
@@ -218,6 +223,7 @@ export interface SelectedItem {
   feeHeadId: string;
   period: string; // e.g. "2026-04"
   dueAmount: number;
+  installmentLabel?: string;
 }
 
 export interface PaymentMode {

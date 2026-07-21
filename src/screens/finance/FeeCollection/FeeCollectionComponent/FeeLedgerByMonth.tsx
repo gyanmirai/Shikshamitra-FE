@@ -17,7 +17,14 @@ export interface ByMonthViewProps {
   groups: MonthWiseGroup[];
   selectedItems: SelectedItem[];
   year: number;
-  onToggleItem: (feeHeadId: string, month: string, due: number, itemYear?: number) => void;
+  onToggleItem: (
+    feeHeadId: string,
+    month: string,
+    due: number,
+    itemYear?: number,
+    dueFeeId?: string,
+    installmentLabel?: string
+  ) => void;
   onToggleGroup: (group: MonthWiseGroup) => void;
 }
 
@@ -27,7 +34,14 @@ interface MonthGroupProps {
   group: MonthWiseGroup;
   selectedItems: SelectedItem[];
   year: number;
-  onToggleItem: (feeHeadId: string, month: string, due: number, itemYear?: number) => void;
+  onToggleItem: (
+    feeHeadId: string,
+    month: string,
+    due: number,
+    itemYear?: number,
+    dueFeeId?: string,
+    installmentLabel?: string
+  ) => void;
   onToggleGroup: (group: MonthWiseGroup) => void;
 }
 
@@ -133,11 +147,16 @@ const MonthGroup = ({
         {group.items.map((item, idx) => {
           const isSelected =
             item.due === 0 ||
-            selectedItems.some((s) => s.feeHeadId === item.feeHeadId && s.period === period);
+            selectedItems.some(
+              (s) =>
+                (item.dueFeeId && s.dueFeeId === item.dueFeeId) ||
+                (!item.dueFeeId && s.feeHeadId === item.feeHeadId && s.period === period)
+            );
           return (
-            <React.Fragment key={item.feeHeadId}>
+            <React.Fragment key={item.dueFeeId ?? `${item.feeHeadId}-${idx}`}>
               <FeeRow
                 name={item.feeHeadName}
+                subtitle={item.installmentLabel}
                 total={item.total}
                 paid={item.paid}
                 due={item.due}
@@ -154,7 +173,9 @@ const MonthGroup = ({
                     item.feeHeadId,
                     FeeMonth[group.month] as string,
                     item.due,
-                    group.year
+                    group.year,
+                    item.dueFeeId,
+                    item.installmentLabel
                   )
                 }
               />

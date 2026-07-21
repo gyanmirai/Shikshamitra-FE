@@ -1,0 +1,520 @@
+'use client';
+
+import type { Dayjs } from 'dayjs';
+import type { FormikTouched } from 'formik';
+import type { RootState } from 'src/redux/store';
+
+import dayjs from 'dayjs';
+import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { shikshaMitraToast } from 'src/components/toast';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  useCreateRevisionMutation,
+  useGetPaymentTermByIdQuery,
+  useCreatePaymentTermMutation,
+  type CreateInstallmentRequest,
+  type PaymentTermDetailResponse,
+  useUpdatePaymentTermDraftMutation,
+  type UpdatePaymentTermDraftRequest,
+  type PaymentTermInstallmentResponse,
+} from 'src/redux/finance/paymentTerm';
+
+import { getInitialPaymentTermData } from '../Components/PaymentTermInitialValues';
+import { paymentTermValidationSchema } from '../Components/PaymentTermValidationSchema';
+
+import type { IInstallment, IPaymentTerm } from '../type';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
+// ---------------------------------------------------------------------------
+// Public board shape — eliminates `any` throughout consumers
+// ---------------------------------------------------------------------------
+export interface IBoard {
+  id: string;
+  name: string;
+  academicYearId: string;
+}
+
+// ---------------------------------------------------------------------------
+// Computed publish-readiness checks shared between the sidebar and footer
+// ---------------------------------------------------------------------------
+export interface IPaymentTermChecks {
+  boardValid: boolean;
+  nameValid: boolean;
+  hasInstallments: boolean;
+  allDueDates: boolean;
+  allNames: boolean;
+  uniqueNames: boolean;
+  datesSequential: boolean;
+  demandSet: boolean;
+  demandOffsetValid: boolean;
+  isReadyToPublish: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Full return contract exposed to consuming components
+// ---------------------------------------------------------------------------
+export interface UsePaymentTermFormReturn {
+  formik: ReturnType<typeof useFormik<IPaymentTerm>>;
+  boards: IBoard[];
+  checks: IPaymentTermChecks;
+  demandLabel: string;
+  isSubmitting: boolean;
+  codeManuallyEdited: boolean;
+  setCodeManuallyEdited: (v: boolean) => void;
+  handleSubmit: () => Promise<void>;
+  addInstallment: () => void;
+  removeInstallment: (index: number) => void;
+  duplicateInstallment: (index: number) => void;
+}
+
+// ---------------------------------------------------------------------------
+// API ↔ UI mappers
+// ---------------------------------------------------------------------------
+const toDateString = (value: string | null | Dayjs | undefined): string => {
+  if (!value) return '';
+  return dayjs(value as string).format('YYYY-MM-DD');
+};
+
+const mapApiInstallmentToUi = (inst: PaymentTermInstallmentResponse): IInstallment => ({
+  id: inst.id,
+  installmentName: inst.name,
+  sequence: inst.sequence,
+  startDate: inst.coverageStartDate,
+  endDate: inst.coverageEndDate,
+  demandDate: inst.demandDate,
+  dueDate: inst.dueDate,
+  description: '',
+  allocationPercentage: inst.allocationPercentage,
+  reminderDate: inst.reminderDate ?? null,
+  allowPartialOverride: inst.allowPartialOverride ?? null,
+  gracePeriod: inst.gracePeriodDaysOverride ?? null,
+  demandEnabled: inst.demandEnabled,
+  reminderEnabled: inst.reminderEnabled,
+});
+
+const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
+  const draft = detail.versions?.find((v) => v.status === 'Draft');
+  const current =
+    draft ??
+    detail.versions?.find((v) => v.id === detail.currentVersionId) ??
+    detail.versions?.find((v) => v.status === 'Published') ??
+    detail.versions?.[0];
+
+  return {
+    id: detail.id,
+    paymentTermName: detail.name,
+    paymentTermCode: detail.code,
+    boardId: detail.boardId,
+    description: detail.description ?? '',
+    status: detail.status,
+    academicYearId: detail.academicYearId,
+    totalInstallments: detail.totalInstallments,
+    installments: (current?.installments ?? []).map(mapApiInstallmentToUi),
+    isDefaultTerm: detail.isDefault,
+    holidayShiftingMethod: detail.holidayShiftingMethod,
+    demandGenerationRule: detail.demandGenerationRule,
+    demandOffsetDays: detail.demandOffsetDays ?? null,
+    initialDemandStatus: detail.initialDemandStatus,
+    currentVersionId: current?.id ?? detail.currentVersionId,
+    currentVersionNumber: current?.versionNumber,
+    isUsedInDownstream: detail.isUsedInFeeStructures,
+    canDirectEdit: detail.canDirectEdit,
+  };
+};
+
+const mapUiInstallmentToApi = (inst: IInstallment, index: number): CreateInstallmentRequest => ({
+  sequence: inst.sequence || index + 1,
+  name: inst.installmentName,
+  coverageStartDate: toDateString(inst.startDate),
+  coverageEndDate: toDateString(inst.endDate),
+  demandDate: toDateString(inst.demandDate),
+  dueDate: toDateString(inst.dueDate),
+  allocationPercentage: Number(inst.allocationPercentage) || 0,
+  demandEnabled: inst.demandEnabled ?? true,
+  reminderEnabled: inst.reminderEnabled ?? false,
+  reminderDate: inst.reminderDate ? toDateString(inst.reminderDate) : undefined,
+  allowPartialOverride: inst.allowPartialOverride,
+  gracePeriodDaysOverride: inst.gracePeriod,
+});
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+export function usePaymentTermForm(
+  editData: IPaymentTerm | null,
+  onClose: (e?: React.SyntheticEvent | null, isSubmit?: boolean) => void
+): UsePaymentTermFormReturn {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
+
+  // ── Detail fetch on edit (list rows lack installments) ────────────────────
+  const { data: detailData } = useGetPaymentTermByIdQuery(editData?.id ?? '', {
+    skip: !editData?.id,
+  });
+
+  const resolvedEditData = useMemo<IPaymentTerm | null>(() => {
+    if (!editData?.id) return null;
+    if (detailData) return mapDetailToForm(detailData);
+    return editData;
+  }, [detailData, editData]);
+
+  const { data: boardData } = useGetBoardsQuery('');
+
+  /**
+   * Memoization Justification:
+   * Filters the full board list by academicYearId on every render. Without memoization,
+   * a new array reference is created every render cycle, causing downstream Select and
+   * GeneralInfoSection to re-render even when board data hasn't changed.
+   * Profiling signal: boardData updates infrequently; currentYear.id only changes on
+   * year-switcher action — both are stable across form interactions.
+   */
+  const boards = useMemo<IBoard[]>(() => {
+    if (!boardData?.items || !currentYear?.id) return [];
+    return boardData.items.filter((b: IBoard) => b.academicYearId === currentYear.id);
+  }, [boardData?.items, currentYear?.id]);
+
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const [createTerm] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreatePaymentTermMutation,
+  });
+  const [updateDraft] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdatePaymentTermDraftMutation,
+  });
+  const [createRevision] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateRevisionMutation,
+  });
+
+  // ── Formik ────────────────────────────────────────────────────────────────
+  const formik = useFormik<IPaymentTerm>({
+    initialValues: getInitialPaymentTermData(resolvedEditData, currentYear?.id),
+    validationSchema: paymentTermValidationSchema(currentYear),
+    enableReinitialize: true,
+    onSubmit: async () => {},
+  });
+
+  // ── Reset manual-edit flag when switching create ↔ edit ──────────────────
+  useEffect(() => {
+    setCodeManuallyEdited(Boolean(resolvedEditData?.paymentTermCode));
+  }, [resolvedEditData]);
+
+  // ── Auto-generate code from name ──────────────────────────────────────────
+  useEffect(() => {
+    if (!codeManuallyEdited && formik.values.paymentTermName) {
+      const slug = formik.values.paymentTermName
+        .toUpperCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^A-Z0-9-]/g, '')
+        .slice(0, 16);
+      formik.setFieldValue('paymentTermCode', `PT-${slug}`);
+    }
+    // formik.setFieldValue is stable; no suppression needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.paymentTermName, codeManuallyEdited]);
+
+  // ── Build API payload ─────────────────────────────────────────────────────
+  const buildDraftBody = useCallback(
+    (values: IPaymentTerm): UpdatePaymentTermDraftRequest => ({
+      name: values.paymentTermName,
+      code: values.paymentTermCode,
+      description: values.description || undefined,
+      holidayShiftingMethod: values.holidayShiftingMethod,
+      demandGenerationRule: values.demandGenerationRule,
+      demandOffsetDays: values.demandOffsetDays,
+      initialDemandStatus: values.initialDemandStatus,
+      installments: values.installments.map(mapUiInstallmentToApi),
+    }),
+    []
+  );
+
+  // ── Submit to API ─────────────────────────────────────────────────────────
+  const submitToAPI = useCallback(async () => {
+    const { values } = formik;
+    const academicYearId = currentYear?.id ?? values.academicYearId;
+
+    if (editData?.id) {
+      const needsRevision =
+        editData.canDirectEdit === false ||
+        editData.isUsedInDownstream === true ||
+        detailData?.canDirectEdit === false ||
+        detailData?.isUsedInFeeStructures === true;
+
+      if (needsRevision) {
+        await createRevision({
+          paymentTermId: editData.id,
+          body: { changeReason: 'Updated via Payment Term editor' },
+        });
+      }
+
+      await updateDraft({
+        paymentTermId: editData.id,
+        body: buildDraftBody(values),
+      });
+
+      shikshaMitraToast.success({
+        message: needsRevision
+          ? `"${values.paymentTermName}" saved as a new draft revision.`
+          : `"${values.paymentTermName}" updated successfully.`,
+      });
+    } else {
+      await createTerm({
+        academicYearId,
+        boardId: values.boardId,
+        name: values.paymentTermName,
+        code: values.paymentTermCode,
+        description: values.description || undefined,
+        isDefault: values.isDefaultTerm,
+        holidayShiftingMethod: values.holidayShiftingMethod,
+        demandGenerationRule: values.demandGenerationRule,
+        demandOffsetDays: values.demandOffsetDays,
+        initialDemandStatus: values.initialDemandStatus,
+        installments: values.installments.map(mapUiInstallmentToApi),
+      });
+      shikshaMitraToast.success({
+        message: `"${values.paymentTermName}" created successfully.`,
+      });
+    }
+    onClose(null, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    buildDraftBody,
+    createRevision,
+    createTerm,
+    currentYear?.id,
+    detailData?.canDirectEdit,
+    detailData?.isUsedInFeeStructures,
+    editData,
+    formik.values,
+    onClose,
+    updateDraft,
+  ]);
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+  /**
+   * Memoization Justification:
+   * handleSubmit is passed as a prop to the FormFooter component.
+   * Stable reference prevents FormFooter re-renders during fast form typing.
+   */
+  const handleSubmit = useCallback(async () => {
+    const errors = await formik.validateForm();
+    const hasErrors = Object.keys(errors).length > 0;
+    if (hasErrors) {
+      const instTouched = formik.values.installments.map(() => ({
+        installmentName: true,
+        dueDate: true,
+        startDate: true,
+        endDate: true,
+        demandDate: true,
+        allocationPercentage: true,
+      }));
+      formik.setTouched({
+        boardId: true,
+        paymentTermName: true,
+        status: true,
+        demandGenerationRule: true,
+        demandOffsetDays: true,
+        installments: instTouched,
+      } as FormikTouched<IPaymentTerm>);
+      shikshaMitraToast.error({ message: 'Fix all errors before submitting.' });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await submitToAPI();
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to submit.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formik, submitToAPI]);
+
+  // ── Installment CRUD ──────────────────────────────────────────────────────
+  /**
+   * Memoization Justification:
+   * addInstallment is passed as a prop to InstallmentSection (which wraps the
+   * empty-state button and the "Add Another" button). Without useCallback, the
+   * prop changes reference every render, preventing effective React.memo bailout
+   * on InstallmentSection during typing in unrelated fields.
+   */
+  const addInstallment = useCallback(() => {
+    const seq = formik.values.installments.length + 1;
+    const newInst: IInstallment = {
+      installmentName: `Installment ${seq}`,
+      sequence: seq,
+      startDate: null,
+      endDate: null,
+      demandDate: null,
+      dueDate: null,
+      description: '',
+      allocationPercentage: 0,
+      reminderDate: null,
+      gracePeriod: null,
+      allowPartialOverride: null,
+      demandEnabled: true,
+      reminderEnabled: false,
+    };
+    const next = [...formik.values.installments, newInst];
+    // Convenience: evenly redistribute percentages across installments.
+    const base = Math.floor(10000 / next.length) / 100;
+    let remainder = Math.round((100 - base * next.length) * 100) / 100;
+    next.forEach((inst, idx) => {
+      const extra = remainder > 0 ? 0.01 : 0;
+      remainder = Math.round((remainder - extra) * 100) / 100;
+      next[idx] = { ...inst, allocationPercentage: Math.round((base + extra) * 100) / 100 };
+    });
+    formik.setFieldValue('installments', next);
+  }, [formik]);
+
+  /**
+   * Memoization Justification:
+   * removeInstallment is passed as a prop to each InstallmentCard within the
+   * list. A stable reference avoids re-rendering all cards when one field
+   * changes in the parent form.
+   */
+  const removeInstallment = useCallback(
+    (index: number) => {
+      const updated = formik.values.installments
+        .filter((_, i) => i !== index)
+        .map((inst, i) => ({ ...inst, sequence: i + 1 }));
+      formik.setFieldValue('installments', updated);
+    },
+    [formik]
+  );
+
+  /**
+   * Memoization Justification:
+   * duplicateInstallment follows the same pattern as removeInstallment — passed
+   * as a prop to InstallmentCard components in a list, requiring reference
+   * stability to allow React.memo to be effective.
+   */
+  const duplicateInstallment = useCallback(
+    (index: number) => {
+      const src = formik.values.installments[index];
+      const seq = formik.values.installments.length + 1;
+      formik.setFieldValue('installments', [
+        ...formik.values.installments,
+        {
+          ...src,
+          id: undefined,
+          installmentName: `${src.installmentName} (Copy)`,
+          sequence: seq,
+          startDate: null,
+          endDate: null,
+          demandDate: null,
+          dueDate: null,
+        },
+      ]);
+    },
+    [formik]
+  );
+
+  // ── Live validation checks (used by sidebar & footer) ────────────────────
+  /**
+   * Memoization Justification:
+   * checks iterates the entire installments array on every keystroke (O(n)
+   * per render). It also produces an object — a new reference every time —
+   * which would cascade re-renders to both SummaryPanel and FormFooter.
+   * useMemo gates re-computation to changes in formik.values only, preventing
+   * redundant work during unrelated state updates (e.g. isSavingDraft flip).
+   */
+  const checks = useMemo<IPaymentTermChecks>(() => {
+    const v = formik.values;
+    const boardValid = Boolean(v.boardId);
+    const nameValid = v.paymentTermName.trim().length >= 3;
+    const hasInstallments = v.installments.length >= 1;
+    const allDueDates = hasInstallments && v.installments.every((i) => Boolean(i.dueDate));
+    const allNames = v.installments.every((i) => i.installmentName.trim().length > 0);
+    const nameSet = new Set(v.installments.map((i) => i.installmentName.toLowerCase().trim()));
+    const uniqueNames = v.installments.length === nameSet.size;
+
+    let datesSequential = true;
+    if (v.installments.length > 1) {
+      const sorted = [...v.installments].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+      // eslint-disable-next-line no-plusplus
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i - 1].dueDate && sorted[i].dueDate) {
+          if (!dayjs(sorted[i].dueDate as string).isAfter(dayjs(sorted[i - 1].dueDate as string))) {
+            datesSequential = false;
+            break;
+          }
+        }
+      }
+    }
+
+    const demandSet = Boolean(v.demandGenerationRule);
+    const demandOffsetValid =
+      v.demandGenerationRule !== 'XDaysBeforeDue' ||
+      (v.demandOffsetDays !== null && v.demandOffsetDays >= 1);
+
+    const isReadyToPublish =
+      boardValid &&
+      nameValid &&
+      hasInstallments &&
+      allDueDates &&
+      allNames &&
+      uniqueNames &&
+      datesSequential &&
+      demandSet &&
+      demandOffsetValid;
+
+    return {
+      boardValid,
+      nameValid,
+      hasInstallments,
+      allDueDates,
+      allNames,
+      uniqueNames,
+      datesSequential,
+      demandSet,
+      demandOffsetValid,
+      isReadyToPublish,
+    };
+  }, [formik.values]);
+
+  // ── Demand label for the summary sidebar ──────────────────────────────────
+  /**
+   * Memoization Justification:
+   * demandLabel is a derived string consumed by SummaryPanel. Without memoization,
+   * the string is reconstructed on every render of the parent; the useMemo narrows
+   * recomputation to changes in the three relevant form values only, preventing
+   * SummaryPanel from re-rendering when unrelated fields (e.g. description) change.
+   */
+  const demandLabel = useMemo<string>(() => {
+    const r = formik.values.demandGenerationRule;
+    if (!r) return '—';
+    if (r === 'XDaysBeforeDue') {
+      return `${formik.values.demandOffsetDays ?? '?'} days before due`;
+    }
+    const map: Record<string, string> = {
+      Immediately: 'Immediately',
+      OnDueDate: 'On due date',
+      Manual: 'Manual',
+    };
+    return map[r] ?? r;
+  }, [formik.values.demandGenerationRule, formik.values.demandOffsetDays]);
+
+  return {
+    formik,
+    boards,
+    checks,
+    demandLabel,
+    isSubmitting,
+    codeManuallyEdited,
+    setCodeManuallyEdited,
+    handleSubmit,
+    addInstallment,
+    removeInstallment,
+    duplicateInstallment,
+  };
+}

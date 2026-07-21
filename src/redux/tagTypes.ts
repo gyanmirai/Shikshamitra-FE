@@ -298,6 +298,10 @@ export const financeModuleType = {
   feeStructure: 'FeeStructure',
   classWiseFeeStructure: 'ClassWiseFeeStructure',
   financeAudit: 'FinanceAudit',
+  accountHead: 'AccountHead',
+  accountPosting: 'AccountPosting',
+  draftPosting: 'DraftPosting',
+  payrollPostingConfig: 'PayrollPostingConfig',
 } as const;
 
 // ===== Finance Budgets Category API (reducerPath: BudgetsCategoryApi) =====
@@ -431,6 +435,11 @@ export const paymentStatusOptionType = {
 // ===== Payment Term API (reducerPath: PaymentTermApi) =====
 export const paymentTermType = {
   paymentTerm: 'Payment-Term',
+} as const;
+
+// ===== Finance Policy API (reducerPath: api) =====
+export const financePolicyType = {
+  financePolicy: 'Finance-Policy',
 } as const;
 
 // ===== Payroll Structure API (reducerPath: payrollStructureApi) =====
@@ -680,6 +689,7 @@ export const allTagTypes = {
   ...paymentHistoryType,
   ...paymentStatusOptionType,
   ...paymentTermType,
+  ...financePolicyType,
   ...payrollStructureType,
   ...professionalType,
   ...receiptType,

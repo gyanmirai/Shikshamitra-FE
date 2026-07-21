@@ -1,11 +1,15 @@
-'use client';
-
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { Box } from '@mui/material';
-import React, { useMemo } from 'react';
+import { LoadingButton } from '@mui/lab';
+import React, { useMemo, useState } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
+import { usePatchConcessionTypeStatusMutation } from 'src/redux/finance/concessionType';
 
 import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
 
@@ -21,6 +25,23 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   onServerPagination,
   onServerSearch,
 }) => {
+  const [patchConcessionTypeStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePatchConcessionTypeStatusMutation,
+  });
+
+  const statusConfirm = useBoolean();
+  const [statusData, setStatusData] = useState<null | IConcessionTypeForm>(null);
+  const [deactivationReason, setDeactivationReason] = useState('');
+
+  const handleOpenStatusConfirm = (row: IConcessionTypeForm) => {
+    setStatusData(row);
+    setDeactivationReason('');
+    statusConfirm.onTrue();
+  };
+
+  const nextStatus = statusData ? !statusData.isActive : false;
+
   const tableData = useMemo(
     () =>
       (data || []).map((row: any) => ({
@@ -60,6 +81,33 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         render: (value) => (value || []).map((doc: any) => doc.documentName).join(', '),
       },
       {
+        id: 'isActive',
+        label: 'Status',
+        width: 100,
+        minWidth: 120,
+        maxWidth: 120,
+        sticky: true,
+        render(value, row) {
+          const concession = row as IConcessionTypeForm;
+          return (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                size="small"
+                label={concession.isActive ? 'Active' : 'Inactive'}
+                color={concession.isActive ? 'success' : 'default'}
+                variant="soft"
+              />
+              <Switch
+                size="small"
+                checked={concession.isActive || false}
+                onClick={(event) => event.stopPropagation()}
+                onChange={() => handleOpenStatusConfirm(concession)}
+              />
+            </Stack>
+          );
+        },
+      },
+      {
         id: 'actions',
         label: 'Actions',
         align: 'left',
@@ -88,39 +136,102 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   );
 
   return (
-    <CustomizableTable
-      tableId="concession-table"
-      isLoading={isLoading}
-      noDataText={
-        <>
-          No Concession data found
-          <Box
-            onClick={() => {
-              addConcessionType.onTrue();
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
+    <>
+      <CustomizableTable
+        tableId="concession-table"
+        isLoading={isLoading}
+        noDataText={
+          <>
+            No Concession data found
+            <Box
+              onClick={() => {
+                addConcessionType.onTrue();
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Concession
+            </Box>
+          </>
+        }
+        columns={columns}
+        data={tableData || []}
+        serverSidePagination
+        serverSideSearch
+        totalCount={totalCount}
+        onServerPagination={onServerPagination}
+        onServerSearch={onServerSearch}
+      />
+      <ConfirmDialog
+        open={statusConfirm.value}
+        onClose={() => {
+          statusConfirm.onFalse();
+          setStatusData(null);
+          setDeactivationReason('');
+        }}
+        title={nextStatus ? 'Activate Concession Type' : 'Deactivate Concession Type'}
+        content={
+          <Stack spacing={2}>
+            <Typography variant="body2">
+              {nextStatus ? 'Activate' : 'Deactivate'}{' '}
+              <Box component="span" fontWeight="bold" color="text.primary">
+                {statusData?.name}
+              </Box>
+              ?
+            </Typography>
+            {!nextStatus && (
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                size="small"
+                label="Deactivation reason"
+                value={deactivationReason}
+                onChange={(event) => setDeactivationReason(event.target.value)}
+              />
+            )}
+          </Stack>
+        }
+        action={
+          <LoadingButton
+            loading={isStatusLoading}
+            variant="contained"
+            color={nextStatus ? 'primary' : 'warning'}
+            size="small"
+            onClick={async () => {
+              if (!statusData) return;
+              try {
+                await patchConcessionTypeStatus({
+                  id: statusData.id,
+                  body: {
+                    isActive: nextStatus,
+                    deactivationReason: nextStatus ? null : deactivationReason || null,
+                  },
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: `Concession Type ${nextStatus ? 'activated' : 'deactivated'} successfully`,
+                });
+                statusConfirm.onFalse();
+                setStatusData(null);
+                setDeactivationReason('');
+              } catch {
+                // Keep dialog open on error
+              }
             }}
           >
-            Add Concession
-          </Box>
-        </>
-      }
-      columns={columns}
-      data={tableData || []}
-      serverSidePagination
-      serverSideSearch
-      totalCount={totalCount}
-      onServerPagination={onServerPagination}
-      onServerSearch={onServerSearch}
-    />
+            {nextStatus ? 'Activate' : 'Deactivate'}
+          </LoadingButton>
+        }
+      />
+    </>
   );
 };
 

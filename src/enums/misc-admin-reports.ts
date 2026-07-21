@@ -4,6 +4,7 @@ export enum MiscAdminReportsTitle {
   PendingFeeAllBatch,
   PendingFeeWithFeeName,
   CrossOrganizationAdminQueries,
+  PayableAgeing,
 }
 
 export const MiscAdminReportsTitleOptions = [
@@ -15,4 +16,5 @@ export const MiscAdminReportsTitleOptions = [
     label: 'Cross-Organization Admin Queries',
     name: MiscAdminReportsTitle.CrossOrganizationAdminQueries,
   },
+  { label: 'Payable Ageing', name: MiscAdminReportsTitle.PayableAgeing },
 ];

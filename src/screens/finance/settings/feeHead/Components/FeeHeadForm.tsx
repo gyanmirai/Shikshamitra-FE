@@ -10,10 +10,12 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import moduleSequence from 'src/constants/module-sequence';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
@@ -27,6 +29,11 @@ import { getFeeHeadInitialValues } from './FeeHeadInitialValues';
 import { feeHeadValidationSchema } from './FeeHeadValidationSchema';
 
 import type { IFeeHeadFormProps } from './type';
+
+const moduleOptions = Object.values(moduleSequence).map((val) => ({
+  label: val,
+  value: val,
+}));
 
 const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -96,7 +103,9 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
       const payload = {
         feeCategoryId: values.feeCategoryId,
         name: values.name,
+        module: values.module,
         description: values.description || '',
+        incomeHeadId: values.incomeHeadId || undefined,
       };
 
       if (editData?.id) {
@@ -183,6 +192,50 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                     : `${formik.values.name.length}/40 Maximum characters allowed`
                 }
                 inputProps={{ maxLength: 40 }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Module */}
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(formik.touched.module && formik.errors.module) || false}>
+              <CustomSelect
+                name="module"
+                label="Module *"
+                options={moduleOptions}
+                value={formik.values.module || ''}
+                labelKey="label"
+                valueKey="value"
+                onChange={(value) => {
+                  formik.setFieldValue('module', value);
+                  formik.setFieldTouched('module', false);
+                }}
+                error={!!(formik.touched.module && formik.errors.module) || false}
+                helperText={
+                  formik.touched.module && typeof formik.errors.module === 'string'
+                    ? formik.errors.module
+                    : ''
+                }
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Income Head Field */}
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField
+              error={!!(formik.touched.incomeHeadId && formik.errors.incomeHeadId) || false}
+            >
+              <HeadSelector
+                name="incomeHeadId"
+                label="Income Head"
+                headType="Income"
+                value={formik.values.incomeHeadId || ''}
+                onChange={(val) => formik.setFieldValue('incomeHeadId', val)}
+                error={formik.touched.incomeHeadId && Boolean(formik.errors.incomeHeadId)}
+                helperText={
+                  formik.touched.incomeHeadId ? (formik.errors.incomeHeadId as string) : undefined
+                }
               />
             </ShakingTextField>
           </Grid>

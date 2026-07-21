@@ -84,6 +84,11 @@ const FeeItemRow = ({ row }: { row: AllocatedFeeRow }) => {
       {/* Fee head name */}
       <Box flex={1} minWidth={0} pr={1}>
         <Typography variant="body2">{row.feeHeadName}</Typography>
+        {row.installmentLabel && (
+          <Typography variant="caption" color="text.secondary" display="block">
+            {row.installmentLabel}
+          </Typography>
+        )}
       </Box>
 
       {/* ORIGINAL */}

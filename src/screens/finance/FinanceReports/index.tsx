@@ -6,7 +6,6 @@ import React from 'react';
 import { Box } from '@mui/material';
 import CommonReport from 'src/components/common-report';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { MiscAdminReportsTitleOptions } from 'src/enums/misc-admin-reports';
 import { SetupConfigReportTitleOptions } from 'src/enums/setup-config-reports';
 import { PendingCoreReportsTitleOptions } from 'src/enums/pending-core-reports';
 import { ExemptionNAReportsTitleOptions } from 'src/enums/exemption-na-reports';
@@ -20,6 +19,7 @@ import { ReceiptSummaryReportsTitleOptions } from 'src/enums/receipt-summary-rep
 import { PendingDetailedReportsTitleOptions } from 'src/enums/pending-detailed-reports';
 import { FeeStatusClassDivReportsTitleOptions } from 'src/enums/fee-status-divisionClass';
 import { CertificateRegisterReportTitleOptions } from 'src/enums/certificate-register-reports';
+import { MiscAdminReportsTitle, MiscAdminReportsTitleOptions } from 'src/enums/misc-admin-reports';
 import { ReceiptSummaryAdvancedReportTitleOptions } from 'src/enums/receipt-summary-advanced-reports';
 import { ReceiptListFeeHeadStudentReportsTitleOptions } from 'src/enums/receipt-list-fee-head-student-reports';
 
@@ -29,6 +29,7 @@ import PendingCoreReports from './Components/pendingCore/PendingCoreReports';
 import ReceiptListReports from './Components/receiptList/ReceiptListReports';
 import SetupConfigReports from './Components/setupConfig/SetupConfigReports';
 import PendingTotalReports from './Components/pendingTotal/PendingTotalReports';
+import PayableAgeingReport from './Components/payableAgeing/PayableAgeingReport';
 import ExemptionNAReports from './Components/exemptionReports/ExemptionNAReports';
 import FeeCollectionReports from './Components/feeCollection/FeeCollectionReports';
 import StudentCentricReports from './Components/studentCentric/StudentCentricReports';
@@ -197,7 +198,12 @@ const FinanceReports = ({ addReportDialog }: { addReportDialog: UseBooleanReturn
     icon: '',
     description: opt.label,
     categoryId: 'miscAdmin',
-    render: () => <MiscAdminReports report={opt.name} />,
+    render: () => {
+      if (opt.name === MiscAdminReportsTitle.PayableAgeing) {
+        return <PayableAgeingReport report={opt.name as unknown as string} />;
+      }
+      return <MiscAdminReports report={opt.name} />;
+    },
   }));
 
   const feeCollectionSubCategories = FeeCollectionReportsTitleOptions.map((opt, index) => ({

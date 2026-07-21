@@ -193,7 +193,11 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.accountPosting,
+        financeModuleType.draftPosting,
+      ],
     }),
   }),
   overrideExisting: false,

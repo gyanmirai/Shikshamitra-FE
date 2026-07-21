@@ -14,6 +14,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
+import FeeCategoryView from './Components/FeeCategoryView';
 import FeeCategoryTable from './Components/FeeCategoryTable';
 
 import type { IFeeCategory } from './Components/type';
@@ -21,6 +22,7 @@ import type { IFeeCategory } from './Components/type';
 const FeeCategoryCreation = () => {
   // Dialog control states
   const addFeeCategoryDialog = useBoolean(); // Controls add/edit fee category dialog
+  const viewFeeCategoryDialog = useBoolean(); // Controls view details dialog
   const [open, setOpen] = useState(false); // Controls table dialog state
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -38,7 +40,7 @@ const FeeCategoryCreation = () => {
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
-  // State to store currently selected fee category for edit/delete operations
+  // State to store currently selected fee category for edit/delete/view operations
   const [selectedFeeCategory, setSelectedFeeCategory] = useState<IFeeCategory | null>(null);
 
   const dispatch = useDispatch();
@@ -103,8 +105,13 @@ const FeeCategoryCreation = () => {
         setEditData={setSelectedFeeCategory}
         onServerPagination={handleServerPagination}
         onServerSearch={handleServerSearch}
+        onView={(data) => {
+          setSelectedFeeCategory(data);
+          viewFeeCategoryDialog.onTrue();
+        }}
       />
 
+      {/* Add/Edit Dialog */}
       <CustomDialog
         open={addFeeCategoryDialog.value}
         handleClose={() => {
@@ -132,12 +139,40 @@ const FeeCategoryCreation = () => {
             </CustomTooltip>
           </Box>
         }
+        maxWidth="md"
       >
         <FeeCategoryForm
           open={addFeeCategoryDialog}
           onClose={handleClose}
           editData={selectedFeeCategory}
         />
+      </CustomDialog>
+
+      {/* View Details Dialog */}
+      <CustomDialog
+        open={viewFeeCategoryDialog.value}
+        handleClose={() => {
+          viewFeeCategoryDialog.onFalse();
+          setTimeout(() => {
+            setSelectedFeeCategory(null);
+          }, 200);
+        }}
+        maxWidth="md"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Fee Category Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View detailed information about this fee category including mapped fee heads and concession rules."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        {selectedFeeCategory?.id && <FeeCategoryView id={selectedFeeCategory.id} />}
       </CustomDialog>
     </Box>
   );

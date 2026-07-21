@@ -64,7 +64,11 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      invalidatesTags: [
+        financeModuleType.concessionRequest,
+        financeModuleType.accountPosting,
+        financeModuleType.draftPosting,
+      ],
     }),
 
     rejectConcessionRequest: builder.mutation({

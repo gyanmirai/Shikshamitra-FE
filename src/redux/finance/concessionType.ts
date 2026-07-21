@@ -52,6 +52,14 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.concessionType],
     }),
+    patchConcessionTypeStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/concession-types/${id}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.concessionType],
+    }),
   }),
   overrideExisting: false,
 });
@@ -62,4 +70,5 @@ export const {
   usePostConcessionTypeMutation,
   usePutConcessionTypeMutation,
   useDeleteConcessionTypeMutation,
+  usePatchConcessionTypeStatusMutation,
 } = concessionTypeApi;

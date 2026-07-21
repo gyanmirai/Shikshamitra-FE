@@ -12,6 +12,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
@@ -91,6 +92,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
         name: values.name,
         description: values.description || '',
         tags: values.tags || [],
+        expenseHeadId: values.expenseHeadId || undefined,
       };
 
       if (editData?.id) {
@@ -146,7 +148,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Expense Category Name */}
-          <Grid size={12}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
@@ -168,6 +170,24 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                 }}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
+              />
+            </ShakingTextField>
+          </Grid>
+          {/* Expense Head */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ShakingTextField
+              error={!!(formik.touched.expenseHeadId && formik.errors.expenseHeadId) || false}
+            >
+              <HeadSelector
+                name="expenseHeadId"
+                label="Expense Head"
+                headType="Expense"
+                value={formik.values.expenseHeadId}
+                onChange={(val) => formik.setFieldValue('expenseHeadId', val)}
+                error={formik.touched.expenseHeadId && Boolean(formik.errors.expenseHeadId)}
+                helperText={
+                  formik.touched.expenseHeadId ? (formik.errors.expenseHeadId as string) : undefined
+                }
               />
             </ShakingTextField>
           </Grid>

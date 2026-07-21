@@ -41,6 +41,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
   const [open, setOpen] = useState(true);
+  const isFullRefund = formik.values.refundType === 'full';
 
   /**
    * Memoization Justification:
@@ -129,6 +130,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         isOpen={open}
         totalRefundInput={totalRefundInput}
         mode={mode}
+        isFullRefund={isFullRefund}
         onCheckboxToggle={onToggleAll}
         onExpandToggle={() => setOpen((o) => !o)}
         applyInAllState={applyInAllState}
@@ -158,6 +160,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 refundValue={refundValue}
                 showInputError={inputError}
                 mode={mode}
+                isFullRefund={isFullRefund}
                 onToggle={() => onToggleMonth(item.month, (item as any).dueFeeId ?? '')}
                 onAmountChange={(value) => handleAmountChange(item.month, refundable, value)}
               />

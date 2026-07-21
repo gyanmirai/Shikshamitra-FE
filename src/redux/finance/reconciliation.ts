@@ -61,6 +61,45 @@ export const ReconciliationApi = api.injectEndpoints({
       invalidatesTags: [reconciliationType.reconciliation],
     }),
 
+    /** Head-based reconciliation endpoints */
+    getReconciliationByHead: builder.query<
+      any,
+      { headId: string; academicYearId: string; month?: number; year?: number }
+    >({
+      query: (params) => ({
+        url: `/v1/finance/reconciliations/by-head/${params.headId}`,
+        method: 'GET',
+        params,
+      }),
+      providesTags: [reconciliationType.reconciliation],
+    }),
+
+    matchTransaction: builder.mutation<
+      any,
+      { id: string; body: { matched: boolean; statementReference?: string } }
+    >({
+      query: ({ id, body }) => ({
+        url: `/v1/finance/reconciliations/${id}/match`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [reconciliationType.reconciliation],
+    }),
+
+    createPostingFromStatement: builder.mutation<any, { headId: string; body: any }>({
+      query: ({ headId, body }) => ({
+        url: `/v1/finance/reconciliations/by-head/${headId}/post-statement`,
+        method: 'POST',
+        body,
+      }),
+      // Invalidate both reconciliation and posting tags since we are creating a posting
+      invalidatesTags: [
+        reconciliationType.reconciliation,
+        'AccountPosting' as any,
+        'AccountHead' as any,
+      ],
+    }),
+
     /** Download receipt PDF for reconciliation item */
     downloadReconciliationReceiptPdf: builder.mutation<Blob, { receiptId: string }>({
       query: ({ receiptId }) => ({
@@ -78,4 +117,7 @@ export const {
   useApproveReconciliationMutation,
   useRejectReconciliationMutation,
   useDownloadReconciliationReceiptPdfMutation,
+  useGetReconciliationByHeadQuery,
+  useMatchTransactionMutation,
+  useCreatePostingFromStatementMutation,
 } = ReconciliationApi;

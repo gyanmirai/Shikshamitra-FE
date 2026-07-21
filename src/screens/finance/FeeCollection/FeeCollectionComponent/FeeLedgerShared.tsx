@@ -115,6 +115,7 @@ export const ColHeader = ({
 
 export interface FeeRowProps {
   name: string;
+  subtitle?: string;
   total: number;
   paid: number;
   due: number;
@@ -131,6 +132,7 @@ export interface FeeRowProps {
 
 export const FeeRow = ({
   name,
+  subtitle,
   total,
   paid,
   due,
@@ -189,10 +191,17 @@ export const FeeRow = ({
           '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
         }}
       />
-      <Box display="flex" alignItems="center" gap={1} minWidth={0}>
-        <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
-          {name}
-        </Typography>
+      <Box display="flex" alignItems="center" gap={0.5} minWidth={0}>
+        <Box minWidth={0}>
+          <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
+            {name}
+          </Typography>
+          {subtitle && (
+            <Typography variant="caption" color="text.secondary" noWrap display="block">
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
         {hasRefund && (
           <Tooltip
             arrow

@@ -10,8 +10,18 @@ import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import {
+  Box,
+  Grid,
+  Radio,
+  Paper,
+  MenuItem,
+  TextField,
+  Typography,
+  RadioGroup,
+  FormControlLabel,
+} from '@mui/material';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
 import {
@@ -56,6 +66,44 @@ export default function FeeRefundDetailsForm({
 
   return (
     <Box display="flex" flexDirection="column" gap={1} mt={0}>
+      {/* ── Refund Type Selection ── */}
+      {formik.values.studentId && (
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            mb: 1,
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: 2,
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={700}>
+            Refund Type
+          </Typography>
+          <RadioGroup
+            row
+            name="refundType"
+            value={formik.values.refundType || 'full'}
+            onChange={(e) => {
+              const newType = e.target.value;
+              formik.setFieldValue('refundType', newType);
+              // If switched to 'full', we need to reset amounts to max refundable, but we don't have feeHeads here.
+              // We will let FeeHeadRefundTable handle the reset if we can, or we do it inside FeeHeadRefundTable via an effect.
+            }}
+          >
+            <FormControlLabel value="full" control={<Radio size="small" />} label="Full Refund" />
+            <FormControlLabel
+              value="partial"
+              control={<Radio size="small" />}
+              label="Partial Refund"
+            />
+          </RadioGroup>
+        </Paper>
+      )}
+
       {/* ── Fee Head-wise Refund Accordion Table ── */}
       <FeeHeadRefundTable
         formik={formik}

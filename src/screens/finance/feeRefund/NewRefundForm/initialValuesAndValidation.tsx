@@ -81,6 +81,7 @@ export interface IRefundFormValues {
   notes: string;
   paymentDetails: Record<string, unknown>;
   feeHeadRefunds: IFeeHeadRefundItem[];
+  refundType: string;
 }
 
 // ─── Build API payload from formik values ────────────────────────────────────
@@ -147,6 +148,7 @@ export const buildRefundInitialValues = (
     paymentDetails: mergedDetails,
     // Array of { feeHeadId, months: { month, amount }[] } — populated when student is selected
     feeHeadRefunds: (editData?.feeHeadRefunds || []) as IFeeHeadRefundItem[],
+    refundType: 'full',
   };
 };
 
@@ -159,6 +161,7 @@ export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
     standardId: Yup.string().required('Class is required'),
     divisionId: Yup.string().required('Division is required'),
     studentId: Yup.string().required('Student is required'),
+    refundType: Yup.string().required('Refund Type is required'),
     refundMethod: Yup.string().required('Select a refund method'),
     notes: Yup.string(),
     feeHeadRefunds: Yup.mixed().test(

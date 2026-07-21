@@ -20,6 +20,7 @@ export interface RefundMonthRowProps {
   refundValue: number | string;
   showInputError: boolean;
   mode?: 'refund' | 'adjustment';
+  isFullRefund?: boolean;
   onToggle: () => void;
   /** Receives the parsed string value from react-number-format's onValueChange. */
   onAmountChange: (value: number | string) => void;
@@ -32,6 +33,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
   refundValue,
   showInputError,
   mode = 'refund',
+  isFullRefund = false,
   onToggle,
   onAmountChange,
 }): React.ReactElement => {
@@ -137,6 +139,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
             isAllowed={
               ({ floatValue }) => floatValue === undefined || floatValue <= refundable // Limit to refundable/adjustable for both modes
             }
+            disabled={isFullRefund}
             error={showInputError}
             helperText={
               showInputError

@@ -5,7 +5,10 @@ export interface IIncomeCategory {
   name: string;
   description?: string;
   tags: string[];
+  incomeHeadId?: string;
   isUsedInDownstream?: boolean;
+  isActive?: boolean;
+  deactivationReason?: string | null;
 }
 
 export interface IIncomeCategoryTableProps {

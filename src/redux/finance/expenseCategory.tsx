@@ -57,6 +57,15 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.expenseCategory],
     }),
 
+    patchExpenseCategoryStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/expense-categories/${id}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.expenseCategory],
+    }),
+
     getBudgetOptions: builder.query({
       query: () => ({ url: '/expenseOptions', method: 'GET' }),
       providesTags: [financeModuleType.expenseCategory],
@@ -70,5 +79,6 @@ export const {
   usePostExpenseCategoryMutation,
   usePutExpenseCategoryMutation,
   useDeleteExpenseCategoryMutation,
+  usePatchExpenseCategoryStatusMutation,
   useGetBudgetOptionsQuery,
 } = expenseCategoryApi;

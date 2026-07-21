@@ -10,4 +10,5 @@ export const getBankAccountInitialValues = (editData?: IBankAccount | null) => (
   purpose: editData?.purpose || '',
   ifscCode: editData?.ifscCode || '',
   upiId: editData?.upiId || '',
+  bankHeadId: editData?.bankHeadId || '',
 });
