@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactElement } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { Organization } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
@@ -223,7 +224,7 @@ const SummaryCards = ({
     key: string;
     label: string;
     value: number;
-    icon: JSX.Element;
+    icon: ReactElement;
     accent: SummaryAccent;
   }[] = [
     { key: 'all', label: 'Total Classes', value: summary.totalClasses, icon: <School fontSize="small" />, accent: 'primary' },

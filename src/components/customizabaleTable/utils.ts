@@ -1,9 +1,10 @@
 import type { Dayjs } from 'dayjs';
-import type { IData, IColumn } from './types';
 
 import _ from 'lodash';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+import type { IData, IColumn } from './types';
 
 dayjs.extend(customParseFormat);
 

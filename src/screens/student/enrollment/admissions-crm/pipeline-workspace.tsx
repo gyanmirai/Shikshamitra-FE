@@ -45,6 +45,7 @@ import {
   DialogTitle,
   FormControl,
   Autocomplete,
+  CircularProgress,
   ToggleButton,
   DialogContent,
   DialogActions,
@@ -470,6 +471,8 @@ export function PipelineWorkspace() {
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !scheduleLead }
   );
+  const isExamSlotsLoading = slotsQuery.isLoading || slotsQuery.isFetching;
+  const activeExamSlots = (slotsQuery.data?.items || []).filter((slot) => slot.isActive);
   const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
@@ -1702,11 +1705,29 @@ export function PipelineWorkspace() {
                 labelId="pipeline-exam-slot-label"
                 label="Exam slot"
                 value={selectedSlotId}
+                disabled={isExamSlotsLoading}
                 onChange={(event) => setSelectedSlotId(event.target.value)}
               >
-                {(slotsQuery.data?.items || [])
-                  .filter((slot) => slot.isActive)
-                  .map((slot) => (
+                {isExamSlotsLoading && (
+                  <MenuItem disabled value="">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <CircularProgress size={16} />
+                      <Typography variant="body2">Loading exam slots...</Typography>
+                    </Stack>
+                  </MenuItem>
+                )}
+                {!isExamSlotsLoading && slotsQuery.isError && (
+                  <MenuItem disabled value="">
+                    Exam slots could not be loaded
+                  </MenuItem>
+                )}
+                {!isExamSlotsLoading && !slotsQuery.isError && !activeExamSlots.length && (
+                  <MenuItem disabled value="">
+                    No active exam slots available
+                  </MenuItem>
+                )}
+                {!isExamSlotsLoading &&
+                  activeExamSlots.map((slot) => (
                     <MenuItem
                       key={slot.id}
                       value={slot.id}

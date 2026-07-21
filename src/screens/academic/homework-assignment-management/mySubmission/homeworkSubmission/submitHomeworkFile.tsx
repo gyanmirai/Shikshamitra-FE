@@ -15,6 +15,7 @@ import { useUploadHomeworkSubmissionFileMutation } from 'src/redux/academicAPI/H
 import { homeworkFileValidationSchema } from '../validationSchema';
 
 import type { IHomeworkSubmissiontFormProps } from '../type';
+import type { UploadedFile } from '../../homeworkCreation/type';
 
 export const SubmitHomeworkFile = ({
   selectedHomework,
@@ -31,7 +32,7 @@ export const SubmitHomeworkFile = ({
 
   const formik = useFormik({
     initialValues: {
-      submission: selectedHomework?.submission || [],
+      submission: (selectedHomework?.submission || []) as unknown as UploadedFile[],
     },
     validationSchema: homeworkFileValidationSchema,
     onSubmit: async (values) => {

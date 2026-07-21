@@ -198,7 +198,7 @@ const Subjects = () => {
       {/* Custom breadcrumbs component for navigation and page header */}
       {addChapterDialog.value || bulkChapterDialog.value ? (
         <CustomBreadcrumbs
-          sx={{ mb: 1 }}
+          sx={{ mb: 1, px: 1 }}
           // heading={selectedChapter ? 'Update Chapter' : 'Add Chapter'}
           heading="Syllabus"
           description={
@@ -223,7 +223,6 @@ const Subjects = () => {
               handleClose(null, false);
             }
           }}
-          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs

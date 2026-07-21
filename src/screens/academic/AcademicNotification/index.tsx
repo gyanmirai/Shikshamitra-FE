@@ -64,7 +64,7 @@ const AcademicNotificationScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {dialog?.value ? (
         <CustomBreadcrumbs
-          sx={{ mb: 1 }}
+          sx={{ mb: 1, px: 1 }}
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
           description="Configure notifications for curriculum, timetable, homework, and examinations."
           links={[
@@ -82,7 +82,6 @@ const AcademicNotificationScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs

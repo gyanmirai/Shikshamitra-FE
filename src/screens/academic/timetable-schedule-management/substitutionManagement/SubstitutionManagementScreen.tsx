@@ -2,7 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { Organization } from 'src/types/school';
+import type { Standards, Organization } from 'src/types/school';
 import type {
   ApiLookupOption,
   ApiAffectedLecture,
@@ -838,19 +838,22 @@ const SubstitutionManagementScreen = () => {
   const metadataSubjects = createMetadata?.subjects ?? [];
   const metadataTeachers = createMetadata?.teachers ?? [];
   const metadataRooms = createMetadata?.rooms ?? [];
-  const academicStandards =
+  const academicStandards: Standards[] =
     medium?.educationMediumStages?.flatMap((stage: Organization) => stage?.standards || []) || [];
   const selectedAcademicStandard = academicStandards.find(
-    (item) => item.id === substitutionForm.standardId
+    (item: Standards) => item.id === substitutionForm.standardId
   );
   const classSelectOptions: SelectOption[] = academicStandards.length
-    ? academicStandards.map((item) => ({ value: item.id, label: item.name }))
+    ? academicStandards.map((item: Standards) => ({ value: item.id, label: item.name }))
     : uniqueLookupOptions(metadataStandards).map((item) => ({
         value: item.id,
         label: item.name,
       }));
   const divisionSelectOptions: SelectOption[] = selectedAcademicStandard?.divisions?.length
-    ? selectedAcademicStandard.divisions.map((item) => ({ value: item.id, label: item.name }))
+    ? selectedAcademicStandard.divisions.map((item: Standards['divisions'][number]) => ({
+        value: item.id,
+        label: item.name,
+      }))
     : metadataDivisions.length > 0
       ? uniqueLookupOptions(metadataDivisions)
           .filter(
@@ -1498,7 +1501,7 @@ const SubstitutionManagementScreen = () => {
 
   const handleMarkUnavailable = useCallback(async () => {
     setAvailabilitySubmitted(true);
-    if (hasAvailabilityFieldErrors) {
+    if (hasAvailabilityFieldErrors || !availabilityForm.availabilityDate) {
       setAvailabilityError('Please fix the highlighted fields before saving.');
       return;
     }

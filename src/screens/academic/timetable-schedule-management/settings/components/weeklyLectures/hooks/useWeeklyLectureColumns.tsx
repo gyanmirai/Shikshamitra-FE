@@ -139,12 +139,10 @@ export function useWeeklyLectureColumns({
         align: 'left',
         sticky: true,
         stickyPosition: 'right',
-        render: (_value, row) =>
-          row.status != null ? (
-            <TimetableStatusChip status={(row as ISubjectFormValues).status} />
-          ) : (
-            '—'
-          ),
+        render: (_value, row) => {
+          const status = (row as ISubjectFormValues).status;
+          return status != null ? <TimetableStatusChip status={status} /> : '—';
+        },
       },
       {
         id: 'action',

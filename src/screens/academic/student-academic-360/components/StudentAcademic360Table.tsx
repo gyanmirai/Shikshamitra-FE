@@ -31,6 +31,7 @@ type StudentAcademic360TableProps = {
   isLoading: boolean;
   isError: boolean;
   hasDivision: boolean;
+  activeFilterLabel?: string;
   onOpenStudent: (student: Academic360StudentRow) => void;
   onRetry: () => void;
 };
@@ -88,6 +89,7 @@ export function StudentAcademic360Table({
   isLoading,
   isError,
   hasDivision,
+  activeFilterLabel,
   onOpenStudent,
   onRetry,
 }: StudentAcademic360TableProps) {
@@ -248,7 +250,9 @@ export function StudentAcademic360Table({
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {!hasDivision
               ? 'Students will appear here after both filters are selected.'
-              : 'Students will appear here after they are enrolled and assigned to this class.'}
+              : activeFilterLabel && activeFilterLabel !== 'all'
+                ? `No students match the ${activeFilterLabel} filter.`
+                : 'Students will appear here after they are enrolled and assigned to this class.'}
           </Typography>
         </Box>
       </Box>
