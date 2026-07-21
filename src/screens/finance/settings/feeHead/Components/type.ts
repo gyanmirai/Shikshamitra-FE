@@ -1,16 +1,9 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { IFeeHeadResponse } from 'src/redux/feeCategory/feeCategoryApi';
 
-export interface IFeeHead {
-  id: string;
-  feeCategoryId: string;
-  name: string;
-  module?: string;
-  description?: string;
-  incomeHeadId?: string;
-  isUsedInDownstream?: boolean;
-  isActive: boolean;
-  deactivationReason?: string | null;
-}
+// incomeHeadId is not part of the backend Fee Head contract yet; kept optional here so the
+// existing Income Head field on this screen keeps compiling until that gap is addressed.
+export type IFeeHead = IFeeHeadResponse & { incomeHeadId?: string };
 
 export interface IFeeHeadTableProps {
   data: IFeeHead[];

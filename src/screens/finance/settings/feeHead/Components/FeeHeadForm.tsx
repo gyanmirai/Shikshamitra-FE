@@ -10,14 +10,14 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import moduleSequence from 'src/constants/module-sequence';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetFeeHeadModulesQuery } from 'src/redux/feeHeadModule/feeHeadModuleApi';
+import { Grid, Switch, Button, TextField, DialogActions, FormControlLabel } from '@mui/material';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   useGetFeeHeadsQuery,
@@ -29,11 +29,6 @@ import { getFeeHeadInitialValues } from './FeeHeadInitialValues';
 import { feeHeadValidationSchema } from './FeeHeadValidationSchema';
 
 import type { IFeeHeadFormProps } from './type';
-
-const moduleOptions = Object.values(moduleSequence).map((val) => ({
-  label: val,
-  value: val,
-}));
 
 const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -51,6 +46,21 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
     currentQueryAndMutation: useGetFeeCategoriesQuery,
     params: { academicYearId: currentYear?.id },
   });
+
+  // Custom hook to fetch the fee head module lookup
+  const { data: moduleData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeHeadModulesQuery,
+    options: {
+      skip: !open?.value,
+    },
+  });
+
+  const moduleOptions = useMemo(
+    () => (moduleData || []).map((m: any) => ({ label: m.displayName, value: m.value })),
+    [moduleData]
+  );
+
   // POST mutation for creating
   const [addFeeHead, { isLoading: isAddFeeHeadLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -104,6 +114,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
         feeCategoryId: values.feeCategoryId,
         name: values.name,
         module: values.module,
+        isConcessionApplied: values.isConcessionApplied,
         description: values.description || '',
         incomeHeadId: values.incomeHeadId || undefined,
       };
@@ -219,6 +230,20 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </ShakingTextField>
+          </Grid>
+
+          {/* Concession Applicable Switch */}
+          <Grid size={{ xs: 12 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formik.values.isConcessionApplied}
+                  onChange={(e) => formik.setFieldValue('isConcessionApplied', e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Enable concessions"
+            />
           </Grid>
 
           {/* Income Head Field */}

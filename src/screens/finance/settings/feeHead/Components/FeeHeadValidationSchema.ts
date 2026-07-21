@@ -14,5 +14,6 @@ export const feeHeadValidationSchema = (existingNames: Set<string>, editData?: I
         if (editData && editData.name.trim().toLowerCase() === trimmed) return true;
         return !existingNames.has(trimmed);
       }),
+    module: Yup.string().required('Module is required'),
     incomeHeadId: Yup.string().nullable(),
   });

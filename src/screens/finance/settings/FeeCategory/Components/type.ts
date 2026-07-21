@@ -1,21 +1,15 @@
-export interface IFeeCategory {
-  id: string;
+import type { IFeeCategoryResponse } from 'src/redux/feeCategory/feeCategoryApi';
+
+export type IFeeCategory = IFeeCategoryResponse;
+
+export interface IFeeCategoryFormHead {
+  id?: string;
   name: string;
-  description?: string;
-  isActive?: boolean;
-  deactivationReason?: string | null;
-  isUsedInDownstream?: boolean;
-  feeHeads?: Array<{
-    id?: string;
-    feeHeadId: string;
-    feeHeadName?: string;
-    name?: string;
-    module?: string;
-    description?: string;
-    isConcessionApply?: boolean;
-    isActive?: boolean;
-  }>;
+  module: string;
+  isConcessionApplied: boolean;
+  description: string;
 }
+
 export interface IFeeCategoryTableProps {
   onAddFeeCategory: any;
   editData: IFeeCategory | null;

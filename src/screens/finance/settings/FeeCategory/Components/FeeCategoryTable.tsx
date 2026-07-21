@@ -101,7 +101,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         align: 'left',
         render: (value, row: any) => (
           <Typography variant="caption" fontSize="13px">
-            {row.feeHeadName || row.name || ''}
+            {row.name || ''}
           </Typography>
         ),
       },
@@ -233,12 +233,12 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           if (heads.length === 0) return '-';
           const displayedHeads = heads
             .slice(0, 3)
-            .map((h) => h.feeHeadName || h.name || '')
+            .map((h) => h.name || '')
             .filter(Boolean);
           const displayString = displayedHeads.join(', ');
           const moreCount = heads.length - displayedHeads.length;
           const tooltipTitle = heads
-            .map((h) => h.feeHeadName || h.name || '')
+            .map((h) => h.name || '')
             .filter(Boolean)
             .join(', ');
 
@@ -258,10 +258,9 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         align: 'left',
         render(value, row) {
           const category = row as IFeeCategory;
-          const heads = category.feeHeads || [];
           return (
             <Typography variant="caption" fontSize="13px">
-              {heads.length}
+              {category.totalFeeHeads ?? category.feeHeads?.length ?? 0}
             </Typography>
           );
         },
@@ -495,7 +494,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             <Typography variant="body2">
               Are you sure you want to {nextFeeHeadStatus ? 'activate' : 'deactivate'}{' '}
               <Box component="span" fontWeight="bold" color="text.primary">
-                {feeHeadStatusData?.feeHeadName || feeHeadStatusData?.name}
+                {feeHeadStatusData?.name}
               </Box>
               ?
             </Typography>
@@ -522,7 +521,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
               if (!feeHeadStatusData) return;
               try {
                 await patchFeeHeadStatus({
-                  feeHeadId: feeHeadStatusData.feeHeadId || feeHeadStatusData.id,
+                  feeHeadId: feeHeadStatusData.id,
                   body: {
                     isActive: nextFeeHeadStatus,
                     deactivationReason: nextFeeHeadStatus

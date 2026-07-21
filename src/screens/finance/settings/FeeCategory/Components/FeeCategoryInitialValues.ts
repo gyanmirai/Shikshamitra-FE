@@ -1,14 +1,14 @@
 import type { IFeeCategory } from './type';
 
 export const getFeeCategoryInitialValues = (editData?: IFeeCategory | null) => ({
-  categoryName: editData?.name || (editData as any)?.categoryName || '',
+  name: editData?.name || '',
   description: editData?.description || '',
   feeHeads:
     editData?.feeHeads?.map((fh) => ({
-      feeHeadId: fh.feeHeadId || '',
-      name: fh.feeHeadName || (fh as any).name || '',
-      module: (fh as any).module || '',
+      id: fh.id || '',
+      name: fh.name || '',
+      module: fh.module || '',
       description: fh.description || '',
-      isConcessionApply: fh.isConcessionApply || false,
+      isConcessionApplied: fh.isConcessionApplied || false,
     })) || [],
 });

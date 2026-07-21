@@ -129,7 +129,7 @@ const ReceiptListFeeHeadStudentReports = ({ report }: { report: any }) => {
   const [allDivisions, setAllDivisions] = useState<Division[]>([]);
 
   // Fee Heads Data
-  const { data: feeHeadsData } = useGetFeeHeadsQuery('');
+  const { data: feeHeadsData } = useGetFeeHeadsQuery({});
   const allFeeHeads = useMemo(() => feeHeadsData?.items || [], [feeHeadsData]);
 
   // Months Data (Static for now)
@@ -668,8 +668,8 @@ const ReceiptListFeeHeadStudentReports = ({ report }: { report: any }) => {
                   >
                     <ResponsiveMultiSelect
                       label="Fee Head *"
-                      options={[{ id: 'all', feeHeadName: 'All' }, ...allFeeHeads]}
-                      getOptionLabel={(o) => o.feeHeadName}
+                      options={[{ id: 'all', name: 'All' }, ...allFeeHeads]}
+                      getOptionLabel={(o) => o.name}
                       getOptionValue={(o) => o.id}
                       value={formik.values.feeHeads}
                       onChange={(selectedValues) => {

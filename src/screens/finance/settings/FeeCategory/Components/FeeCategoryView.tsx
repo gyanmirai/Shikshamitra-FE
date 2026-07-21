@@ -19,7 +19,7 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
     return <LoadingScreen />;
   }
 
-  const category = feeCategoryDetails?.data || feeCategoryDetails;
+  const category = feeCategoryDetails;
   const feeHeads = category?.feeHeads || [];
 
   return (
@@ -30,7 +30,7 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
             Category Name
           </Typography>
           <Typography variant="h6" fontWeight="bold">
-            {category?.name || category?.categoryName}
+            {category?.name}
           </Typography>
         </Box>
 
@@ -64,7 +64,7 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
                     <CardContent>
                       <Stack spacing={1}>
                         <Typography variant="subtitle2" fontWeight={600} color="primary.main">
-                          {fh.feeHeadName || fh.name || 'N/A'}
+                          {fh.name || 'N/A'}
                         </Typography>
 
                         <Typography

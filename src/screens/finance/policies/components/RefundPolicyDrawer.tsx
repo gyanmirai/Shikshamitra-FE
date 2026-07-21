@@ -523,7 +523,7 @@ const RefundPolicyDrawer: React.FC<RefundPolicyDrawerProps> = ({
   };
 
   // Fetch fee heads list
-  const { data: feeHeadsData } = useGetFeeHeadsQuery('');
+  const { data: feeHeadsData } = useGetFeeHeadsQuery({});
   const feeHeads = feeHeadsData?.items || [];
 
   const [createPolicy, { isLoading: isCreating }] = useQueryAndMutation({

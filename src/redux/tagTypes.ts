@@ -286,6 +286,7 @@ export const financeModuleType = {
   receiptBook: 'ReceiptBook',
   feeCategory: 'FeeCategory',
   feeHead: 'FeeHead',
+  feeHeadModule: 'FeeHeadModule',
   feeCollection: 'FeeCollection',
   feeDetails: 'FeeDetails',
   expenseDetails: 'ExpenseDetails',
