@@ -164,6 +164,10 @@ const MonthGroup = ({
                 concessionAmount={item.concessionAmount}
                 refundAmount={item.refundAmount}
                 refundDescription={item.refundDescription}
+                lateFeeAmount={item.lateFeeAmount}
+                lateFeeExplanation={item.lateFeeExplanation}
+                lateFeeWaivedAmount={item.lateFeeWaivedAmount}
+                dueFeeId={item.dueFeeId}
                 status={item.status}
                 showStatus
                 isSelected={isSelected}

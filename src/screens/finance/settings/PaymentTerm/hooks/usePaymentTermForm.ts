@@ -15,7 +15,6 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useCreateRevisionMutation,
-  useGetPaymentTermByIdQuery,
   useCreatePaymentTermMutation,
   type CreateInstallmentRequest,
   type PaymentTermDetailResponse,
@@ -102,7 +101,6 @@ const mapApiInstallmentToUi = (inst: PaymentTermInstallmentResponse): IInstallme
 const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
   const draft = detail.versions?.find((v) => v.status === 'Draft');
   const current =
-    draft ??
     detail.versions?.find((v) => v.id === detail.currentVersionId) ??
     detail.versions?.find((v) => v.status === 'Published') ??
     detail.versions?.[0];
@@ -138,10 +136,10 @@ const mapUiInstallmentToApi = (inst: IInstallment, index: number): CreateInstall
   dueDate: toDateString(inst.dueDate),
   allocationPercentage: Number(inst.allocationPercentage) || 0,
   demandEnabled: inst.demandEnabled ?? true,
-  reminderEnabled: inst.reminderEnabled ?? false,
+  reminderEnabled: inst.reminderEnabled ?? true,
   reminderDate: inst.reminderDate ? toDateString(inst.reminderDate) : undefined,
-  allowPartialOverride: inst.allowPartialOverride,
-  gracePeriodDaysOverride: inst.gracePeriod,
+  allowPartialOverride: inst.allowPartialOverride ?? null,
+  gracePeriodDaysOverride: inst.gracePeriod ?? null,
 });
 
 // ---------------------------------------------------------------------------
@@ -156,17 +154,7 @@ export function usePaymentTermForm(
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
 
-  // ── Detail fetch on edit (list rows lack installments) ────────────────────
-  const { data: detailData } = useGetPaymentTermByIdQuery(editData?.id ?? '', {
-    skip: !editData?.id,
-  });
-
-  const resolvedEditData = useMemo<IPaymentTerm | null>(() => {
-    if (!editData?.id) return null;
-    if (detailData) return mapDetailToForm(detailData);
-    return editData;
-  }, [detailData, editData]);
-
+  // ── Data queries ──────────────────────────────────────────────────────────
   const { data: boardData } = useGetBoardsQuery('');
 
   /**
@@ -198,7 +186,7 @@ export function usePaymentTermForm(
 
   // ── Formik ────────────────────────────────────────────────────────────────
   const formik = useFormik<IPaymentTerm>({
-    initialValues: getInitialPaymentTermData(resolvedEditData, currentYear?.id),
+    initialValues: getInitialPaymentTermData(editData, currentYear?.id),
     validationSchema: paymentTermValidationSchema(currentYear),
     enableReinitialize: true,
     onSubmit: async () => {},
@@ -206,8 +194,8 @@ export function usePaymentTermForm(
 
   // ── Reset manual-edit flag when switching create ↔ edit ──────────────────
   useEffect(() => {
-    setCodeManuallyEdited(Boolean(resolvedEditData?.paymentTermCode));
-  }, [resolvedEditData]);
+    setCodeManuallyEdited(Boolean(editData?.paymentTermCode));
+  }, [editData]);
 
   // ── Auto-generate code from name ──────────────────────────────────────────
   useEffect(() => {
@@ -245,10 +233,7 @@ export function usePaymentTermForm(
 
     if (editData?.id) {
       const needsRevision =
-        editData.canDirectEdit === false ||
-        editData.isUsedInDownstream === true ||
-        detailData?.canDirectEdit === false ||
-        detailData?.isUsedInFeeStructures === true;
+        editData.canDirectEdit === false || editData.isUsedInDownstream === true;
 
       if (needsRevision) {
         await createRevision({
@@ -292,8 +277,6 @@ export function usePaymentTermForm(
     createRevision,
     createTerm,
     currentYear?.id,
-    detailData?.canDirectEdit,
-    detailData?.isUsedInFeeStructures,
     editData,
     formik.values,
     onClose,
@@ -359,8 +342,8 @@ export function usePaymentTermForm(
       description: '',
       allocationPercentage: 0,
       reminderDate: null,
-      gracePeriod: null,
-      allowPartialOverride: null,
+      gracePeriod: 0,
+      allowPartialOverride: false,
       demandEnabled: true,
       reminderEnabled: false,
     };

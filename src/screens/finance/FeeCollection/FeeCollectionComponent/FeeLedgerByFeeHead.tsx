@@ -170,6 +170,9 @@ const FeeHeadGroup = ({
                 concessionAmount={item.concessionAmount}
                 refundAmount={item.refundAmount}
                 refundDescription={item.refundDescription}
+                lateFeeAmount={item.lateFeeAmount}
+                lateFeeExplanation={item.lateFeeExplanation}
+                lateFeeWaivedAmount={item.lateFeeWaivedAmount}
                 status={item.status}
                 isSelected={isSelected}
                 isDisabled={item.due === 0}

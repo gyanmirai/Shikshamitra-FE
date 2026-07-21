@@ -27,8 +27,9 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { SectionCard } from './CollectionCommon';
+import SlabTimelinePreview from './SlabTimelinePreview';
 import HeadSelector from '../../../components/HeadSelector';
+import { SectionCard, computeSlabIssues } from './CollectionCommon';
 
 interface CollectionLateFeeSectionProps {
   formik: any;
@@ -43,6 +44,8 @@ export default function CollectionLateFeeSection({
   addSlab,
   removeSlab,
 }: CollectionLateFeeSectionProps) {
+  const { overlapIndices } = computeSlabIssues(formik.values.escalationRules);
+
   return (
     <SectionCard
       title="Late Fee Configuration"
@@ -145,6 +148,7 @@ export default function CollectionLateFeeSection({
                   <MenuItem value="Percentage">Percentage Per Day</MenuItem>
                   <MenuItem value="PerDay">Per Day</MenuItem>
                   <MenuItem value="PerWeek">Per Week</MenuItem>
+                  <MenuItem value="PerMonth">Per Month</MenuItem>
                   <MenuItem value="Compound">Compound</MenuItem>
                   <MenuItem value="Slab">Slab Based</MenuItem>
                 </Select>
@@ -289,6 +293,7 @@ export default function CollectionLateFeeSection({
                     Add Slab
                   </Button>
                 </Box>
+                <SlabTimelinePreview rules={formik.values.escalationRules} />
                 {formik.values.escalationRules.length === 0 ? (
                   <Paper
                     variant="outlined"
@@ -319,7 +324,14 @@ export default function CollectionLateFeeSection({
                       </TableHead>
                       <TableBody>
                         {formik.values.escalationRules.map((rule: any, idx: number) => (
-                          <TableRow key={idx}>
+                          <TableRow
+                            key={idx}
+                            sx={
+                              overlapIndices.includes(idx)
+                                ? { bgcolor: 'error.lighter' }
+                                : undefined
+                            }
+                          >
                             <TableCell sx={{ py: 0.5 }}>
                               <TextField
                                 size="small"
@@ -426,6 +438,59 @@ export default function CollectionLateFeeSection({
                   <MenuItem value="NearestRupee">Nearest Rupee</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+
+            {/* Runaway-charge protection: caps independent of the calculation formula */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                label="Maximum Late Fee Amount (₹)"
+                name="maximumLateFeeAmount"
+                value={formik.values.maximumLateFeeAmount ?? ''}
+                onChange={(e) =>
+                  formik.setFieldValue(
+                    'maximumLateFeeAmount',
+                    e.target.value === '' ? null : +e.target.value
+                  )
+                }
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.maximumLateFeeAmount && Boolean(formik.errors.maximumLateFeeAmount)
+                }
+                helperText={
+                  (formik.touched.maximumLateFeeAmount &&
+                    (formik.errors.maximumLateFeeAmount as string)) ||
+                  'Optional absolute ceiling, regardless of formula'
+                }
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                label="Maximum Charging Days"
+                name="maximumChargingDays"
+                value={formik.values.maximumChargingDays ?? ''}
+                onChange={(e) =>
+                  formik.setFieldValue(
+                    'maximumChargingDays',
+                    e.target.value === '' ? null : +e.target.value
+                  )
+                }
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.maximumChargingDays && Boolean(formik.errors.maximumChargingDays)
+                }
+                helperText={
+                  (formik.touched.maximumChargingDays &&
+                    (formik.errors.maximumChargingDays as string)) ||
+                  'Optional cutoff — stop accruing after this many days late'
+                }
+              />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>

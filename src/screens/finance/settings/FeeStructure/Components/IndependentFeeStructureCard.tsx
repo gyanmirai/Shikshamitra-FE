@@ -1206,6 +1206,10 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               onChange={handlePolicyChange}
               isEditing={isEditing}
               isLocked={isLocked}
+              feeHeads={formik.values.feeHeads.map((fh) => ({
+                feeHeadId: fh.feeHeadId,
+                feeHeadName: fh.feeHeadName,
+              }))}
             />
           )}
 

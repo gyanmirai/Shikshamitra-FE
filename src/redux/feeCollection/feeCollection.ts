@@ -107,6 +107,12 @@ export interface FeeLedgerLine {
   concessionAmount?: number;
   refundAmount?: number;
   refundDescription?: string;
+  /** Computed via LateFeeCalculationService, net of any applied waiver. Zero when no policy resolves, the student is exempt, or the line isn't overdue. */
+  lateFeeAmount?: number;
+  /** One-line breakdown, e.g. "₹20/day × 15 days late = ₹300". Empty when lateFeeAmount is 0. */
+  lateFeeExplanation?: string;
+  /** Sum of Applied waivers already granted against this line's late fee. */
+  lateFeeWaivedAmount?: number;
 }
 
 export interface FeeLedgerMonth {
@@ -131,6 +137,8 @@ export interface FeeCollectFormDto {
   summary: FeeSummary;
   ledger: FeeLedgerMonth[];
   charges: ChargeDetail[];
+  /** Resolved from the student's Collection Policy — true (default) when no policy resolves. */
+  allowOnlineCollection: boolean;
 }
 
 // ─── Fee-details types ────────────────────────────────────────────────────────
@@ -207,6 +215,11 @@ export interface ChargePayment {
   amount: number;
 }
 
+export interface LateFeePayment {
+  dueFeeId: string;
+  amount: number;
+}
+
 export interface FeePayment {
   paymentMethod: string | number;
   amount: number;
@@ -220,6 +233,8 @@ export interface CollectFeeInput {
   paymentConfirmed?: boolean;
   dueFeePayments: DueFeePayment[];
   chargePayments: ChargePayment[];
+  /** Late fee amount being collected per due line. Optional — omit or send an empty array for a fee-only collection. */
+  lateFeePayments?: LateFeePayment[];
   payments: FeePayment[];
 }
 
@@ -266,6 +281,8 @@ export interface CollectFeeOutput {
   paidCharges?: { chargeId: string; chargeName: string; amountPaid: number }[];
   receivedAmount: number;
   paidDueFees: { dueFeeId: string; feeHeadId: string; amountPaid: number }[];
+  /** Late fee amounts collected per due line in this transaction (empty when none). */
+  paidLateFees?: { dueFeeId: string; feeHeadId: string; amountPaid: number }[];
   correlationId?: string;
   auditEventIds?: string[];
   auditSummary?: FinanceAuditSummary;

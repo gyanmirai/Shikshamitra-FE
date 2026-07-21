@@ -113,43 +113,44 @@ const FinanceReconciliation = () => {
 
   // Map tab counts to per-tab stats (pending, approved, rejected, total)
   const tabStats = useMemo(
-    () => ({
-      [ReconciliationStatusType.Cash]: {
-        pending: 0,
-        approved: 0,
-        rejected: 0,
-      },
-      [ReconciliationStatusType.Cheque]: {
-        pending: tabCounts?.chequePending ?? 0,
-        approved: tabCounts?.chequeApproved ?? 0,
-        rejected: tabCounts?.chequeRejected ?? 0,
-      },
-      [ReconciliationStatusType.DemandDraft]: {
-        pending: tabCounts?.demandDraftPending ?? 0,
-        approved: tabCounts?.demandDraftApproved ?? 0,
-        rejected: tabCounts?.demandDraftRejected ?? 0,
-      },
-      [ReconciliationStatusType.BankTransfer]: {
-        pending: tabCounts?.bankTransferPending ?? 0,
-        approved: tabCounts?.bankTransferApproved ?? 0,
-        rejected: tabCounts?.bankTransferRejected ?? 0,
-      },
-      [ReconciliationStatusType.CreditCard]: {
-        pending: tabCounts?.creditCardPending ?? 0,
-        approved: tabCounts?.creditCardApproved ?? 0,
-        rejected: tabCounts?.creditCardRejected ?? 0,
-      },
-      [ReconciliationStatusType.DebitCard]: {
-        pending: tabCounts?.debitCardPending ?? 0,
-        approved: tabCounts?.debitCardApproved ?? 0,
-        rejected: tabCounts?.debitCardRejected ?? 0,
-      },
-      [ReconciliationStatusType.UPI]: {
-        pending: tabCounts?.upiPending ?? 0,
-        approved: tabCounts?.upiApproved ?? 0,
-        rejected: tabCounts?.upiRejected ?? 0,
-      },
-    }),
+    () =>
+      ({
+        [ReconciliationStatusType.Cash]: {
+          pending: 0,
+          approved: 0,
+          rejected: 0,
+        },
+        [ReconciliationStatusType.Cheque]: {
+          pending: tabCounts?.chequePending ?? 0,
+          approved: tabCounts?.chequeApproved ?? 0,
+          rejected: tabCounts?.chequeRejected ?? 0,
+        },
+        [ReconciliationStatusType.DemandDraft]: {
+          pending: tabCounts?.demandDraftPending ?? 0,
+          approved: tabCounts?.demandDraftApproved ?? 0,
+          rejected: tabCounts?.demandDraftRejected ?? 0,
+        },
+        [ReconciliationStatusType.BankTransfer]: {
+          pending: tabCounts?.bankTransferPending ?? 0,
+          approved: tabCounts?.bankTransferApproved ?? 0,
+          rejected: tabCounts?.bankTransferRejected ?? 0,
+        },
+        [ReconciliationStatusType.CreditCard]: {
+          pending: tabCounts?.creditCardPending ?? 0,
+          approved: tabCounts?.creditCardApproved ?? 0,
+          rejected: tabCounts?.creditCardRejected ?? 0,
+        },
+        [ReconciliationStatusType.DebitCard]: {
+          pending: tabCounts?.debitCardPending ?? 0,
+          approved: tabCounts?.debitCardApproved ?? 0,
+          rejected: tabCounts?.debitCardRejected ?? 0,
+        },
+        [ReconciliationStatusType.UPI]: {
+          pending: tabCounts?.upiPending ?? 0,
+          approved: tabCounts?.upiApproved ?? 0,
+          rejected: tabCounts?.upiRejected ?? 0,
+        },
+      }) as Record<number, { pending: number; approved: number; rejected: number }>,
     [tabCounts]
   );
 
@@ -283,7 +284,7 @@ const FinanceReconciliation = () => {
                 headType="Bank-Cash"
                 label="Bank Account Head"
                 value={selectedBankHead}
-                onChange={(val) => setSelectedBankHead(val)}
+                onChange={(val: any) => setSelectedBankHead(val)}
               />
             </Box>
             {selectedBankHead && (

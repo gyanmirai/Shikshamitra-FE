@@ -1,12 +1,6 @@
 // ─── Enums & Union Types ───────────────────────────────────────────────────────
 
-export type FinancePolicyKind =
-  | 'payment'
-  | 'late-fee'
-  | 'concession'
-  | 'refund'
-  | 'collection'
-  | 'proration';
+export type FinancePolicyKind = 'payment' | 'concession' | 'refund' | 'collection' | 'proration';
 
 export type FinancePolicyStatus = 'Active' | 'Inactive' | 'Draft' | 'Published' | 'Archived';
 
@@ -15,13 +9,6 @@ export type AllocationMethod = 'FeeHeadPriority' | 'Proportional' | 'FIFO' | 'Ma
 export type MinPaymentType = 'FixedAmount' | 'Percentage' | 'InstallmentAmount';
 
 export type ReceiptGenerationMode = 'Immediate' | 'OnApproval' | 'OnSettlement';
-
-export type LateFeeCalculationType =
-  | 'FlatAmount'
-  | 'Percentage'
-  | 'PerDay'
-  | 'PerWeek'
-  | 'PerMonth';
 
 export type ConcessionCalculationMethod = 'Percentage' | 'FixedAmount' | 'FullWaiver' | 'Manual';
 export type ConcessionCalculationBase = 'OriginalFee' | 'OutstandingAmount' | 'FeeHeadAmount';
@@ -129,7 +116,7 @@ export type IPaymentPolicyFormValues = Omit<
   'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'academicYearName'
 >;
 
-// ─── Late Fee Policy ──────────────────────────────────────────────────────────
+// ─── Shared late-fee escalation slab shape (used by Collection Policy) ────────
 
 export interface ILateFeeEscalationRule {
   startDay: number;
@@ -139,61 +126,6 @@ export interface ILateFeeEscalationRule {
   maxFee?: number | null;
   roundOff?: string;
 }
-
-export interface ILateFeePolicy extends IFinancePolicyBase {
-  policyType: 'late-fee';
-  priority?: number;
-  gracePeriodDays: number;
-  gracePeriodType: 'Calendar' | 'Working';
-  calculationType: LateFeeCalculationType;
-  calculationValue: number;
-
-  // calculation configuration
-  lateFeeType?: 'Flat' | 'Percentage' | 'Compound' | 'Slab';
-  flatAmount?: number | null;
-  percentage?: number | null;
-  percentageBase?: 'OutstandingAmount' | 'OriginalAmount';
-  compoundFrequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Yearly';
-  escalationEnabled?: boolean;
-
-  // Maximum limits
-  maximumLateFeeAmount: number | null;
-  maximumLateFeePercentage: number | null;
-  compoundLateFee: boolean;
-  roundOffMethod?: 'None' | 'Nearest' | 'RoundUp' | 'RoundDown';
-  minimumCharge?: number | null;
-  maximumCharge?: number | null;
-
-  // Charge generation
-  willCreateCharge?: boolean;
-  autoCalculate: boolean;
-  separateChargeEntry?: boolean;
-  chargeCategoryId?: string;
-  chargeHeadId?: string;
-  ledgerMappingId?: string;
-  showOnReceipt?: boolean;
-  showInParentPortal?: boolean;
-
-  // Waiver rules
-  waiveOnApproval: boolean;
-  waiveRoleIds: string[];
-  waiverAllowed?: boolean;
-  maximumWaiverPercentage?: number | null;
-  approvalRequired?: boolean;
-  reasonMandatory?: boolean;
-
-  // Escalation Slabs
-  escalationRules: ILateFeeEscalationRule[];
-  applyOnFeeHeads: string[];
-
-  lateFeeIncomeHeadId?: string;
-  maximumFineCap?: number | null;
-}
-
-export type ILateFeePolicyFormValues = Omit<
-  ILateFeePolicy,
-  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'academicYearName'
->;
 
 // ─── Concession Policy ────────────────────────────────────────────────────────
 
@@ -322,6 +254,10 @@ export interface ICollectionPolicy extends IFinancePolicyBase {
   compoundFrequency: 'Daily' | 'Weekly' | 'Monthly';
   escalationRules: ILateFeeEscalationRule[];
   roundingMethod: 'None' | 'RoundUp' | 'RoundDown' | 'NearestRupee';
+  /** Absolute ceiling on computed late fee, regardless of formula — closes the "runaway compounding" gap. */
+  maximumLateFeeAmount: number | null;
+  /** Stop accruing additional late fee once daysLate exceeds this many days. */
+  maximumChargingDays: number | null;
   considerAsIncome: boolean;
   enableWaiver: boolean;
   waiverApplyOnFeeHeads: string[];

@@ -5,6 +5,7 @@ import {
   Box,
   Grid,
   Card,
+  Alert,
   Select,
   Switch,
   MenuItem,
@@ -13,14 +14,19 @@ import {
   Typography,
   FormControl,
   FormControlLabel,
-} from '@mui/material'; // Wait, let's just type formik as any if needed, or import formik type.
+} from '@mui/material';
+
 import { SectionCard } from './CollectionCommon';
 
 interface CollectionGeneralSectionProps {
   formik: any;
+  otherDefaultPolicyName?: string;
 }
 
-export default function CollectionGeneralSection({ formik }: CollectionGeneralSectionProps) {
+export default function CollectionGeneralSection({
+  formik,
+  otherDefaultPolicyName,
+}: CollectionGeneralSectionProps) {
   return (
     <SectionCard
       title="General Information"
@@ -106,6 +112,11 @@ export default function CollectionGeneralSection({ formik }: CollectionGeneralSe
               }
             />
           </Card>
+          {formik.values.isDefault && otherDefaultPolicyName && (
+            <Alert severity="warning" sx={{ mt: 1 }}>
+              {`"${otherDefaultPolicyName}" is already the default Collection Policy for this academic year. Only one default policy is allowed per year — uncheck this or update the other policy first.`}
+            </Alert>
+          )}
         </Grid>
       </Grid>
     </SectionCard>

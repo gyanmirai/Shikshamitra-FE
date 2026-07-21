@@ -37,13 +37,10 @@ export interface IInstallment {
 
   // Reminder scheduling (date only — reminder *policy* lives in Payment Policy)
   reminderDate: string | null | Dayjs;
-
-  // Per-installment overrides (the ONLY payment-behaviour fields kept here)
-  // Both inherit from their respective policy when null/unset.
-  allowPartialOverride: boolean | null;
+  /** Optional override of the attached Collection Policy's gracePeriodDays for this installment only; inherits the policy value when null. */
   gracePeriod: number | null;
-
-  // Operational flags
+  /** Optional override of the attached Payment Policy's allowPartialPayment for this installment only; inherits the policy value when unset. */
+  allowPartialOverride: boolean | null;
   demandEnabled: boolean;
   reminderEnabled: boolean;
 }
@@ -70,20 +67,21 @@ export interface IPaymentTerm {
   installments: IInstallment[];
   isDefaultTerm: boolean;
 
-  // Holiday Rules (schedule concern — shifts due dates)
-  holidayShiftingMethod: HolidayShiftingMethod;
+  // Holiday Rules (due-date shifting is a scheduling concern, kept here rather than on Payment Policy)
+  holidayShiftingMethod: 'None' | 'NextWorkingDay' | 'PreviousWorkingDay';
 
-  // Billing Schedule / Demand generation
+  // Billing Schedule
   demandGenerationRule: DemandGenerationRule;
   demandOffsetDays: number | null;
   initialDemandStatus: InitialDemandStatus;
 
-  // Version tracking (new)
-  currentVersionId?: string;
-  currentVersionNumber?: number;
   isUsedInDownstream?: boolean;
   /** False when term is referenced by fee structures — requires createRevision before draft edit */
   canDirectEdit?: boolean;
+
+  // Version-related fields
+  currentVersionId?: string;
+  currentVersionNumber?: number;
 
   // Audit fields
   createdBy?: string;

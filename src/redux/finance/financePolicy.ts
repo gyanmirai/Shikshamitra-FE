@@ -4,13 +4,7 @@ import { api } from '../service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type FinancePolicyType =
-  | 'payment'
-  | 'late-fee'
-  | 'concession'
-  | 'refund'
-  | 'collection'
-  | 'proration';
+export type FinancePolicyType = 'payment' | 'concession' | 'refund' | 'collection' | 'proration';
 
 export type FinancePolicyStatus = 'Active' | 'Inactive' | 'Draft' | 'Published' | 'Archived';
 

@@ -7,10 +7,13 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Chip, Grid, Divider, Typography } from '@mui/material';
+import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
 import {
   type FinancePolicyType,
   useGetFinancePoliciesQuery,
 } from 'src/redux/finance/financePolicy';
+
+import FeeHeadOverridesEditor from './FeeHeadOverridesEditor';
 
 // ── types ────────────────────────────────────────────────────────────────────
 
@@ -26,6 +29,7 @@ interface FeePoliciesTabProps {
   onChange: (field: keyof PolicyValues, value: string) => void;
   isEditing: boolean;
   isLocked: boolean;
+  feeHeads?: Array<{ feeHeadId: string; feeHeadName?: string }>;
 }
 
 // ── helper ───────────────────────────────────────────────────────────────────
@@ -110,10 +114,23 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
 }) => {
   const theme = useTheme();
 
-  const { data: policyData, isLoading } = useGetFinancePoliciesQuery(
+  // Collection Policy has a real backend endpoint (Phase 1) unlike the other policy
+  // types here, which still call the generic /finance-policies endpoint that doesn't exist.
+  const isCollectionPolicy = policyType === 'collection';
+
+  const { data: genericPolicyData, isLoading: isGenericLoading } = useGetFinancePoliciesQuery(
     { policyType, academicYearId, status: 'Active' },
-    { skip: !academicYearId }
+    { skip: !academicYearId || isCollectionPolicy }
   );
+
+  const { data: collectionPolicyData, isLoading: isCollectionLoading } =
+    useGetCollectionPoliciesQuery(
+      { academicYearId: academicYearId as string, status: 'Active' },
+      { skip: !academicYearId || !isCollectionPolicy }
+    );
+
+  const isLoading = isCollectionPolicy ? isCollectionLoading : isGenericLoading;
+  const policyData = isCollectionPolicy ? collectionPolicyData : genericPolicyData;
 
   const options = (policyData?.data ?? policyData?.items ?? policyData ?? []).map((p: any) => ({
     label: p.policyName,
@@ -214,9 +231,19 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   onChange,
   isEditing,
   isLocked,
+  feeHeads = [],
 }) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [overridesEditorOpen, setOverridesEditorOpen] = React.useState(false);
+
+  const { data: collectionPolicyData } = useGetCollectionPoliciesQuery(
+    { academicYearId: currentYear?.id as string, status: 'Active' },
+    { skip: !currentYear?.id || !values.collectionPolicyId }
+  );
+  const selectedCollectionPolicy = (collectionPolicyData?.items ?? []).find(
+    (p: any) => p.id === values.collectionPolicyId
+  );
 
   return (
     <Box sx={{ p: 2 }}>
@@ -240,7 +267,7 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
         />
         <Typography variant="caption" color="info.main" fontWeight={500}>
           These policies automatically apply to all Fee Heads in this structure. Individual Fee Head
-          overrides (coming soon) will take precedence over these settings.
+          overrides for the Collection Policy will take precedence over these settings.
         </Typography>
       </Box>
       <Divider sx={{ my: 2, borderColor: varAlpha(theme.palette.grey['500Channel'], 0.1) }} />
@@ -266,6 +293,48 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
           </Grid>
         ))}
       </Grid>
+
+      {/* ── Per-fee-head Collection Policy overrides ────────────────────── */}
+      {values.collectionPolicyId && feeHeads.length > 0 && (
+        <>
+          <Divider sx={{ my: 2, borderColor: varAlpha(theme.palette.grey['500Channel'], 0.1) }} />
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1,
+            }}
+          >
+            <Box>
+              <Typography variant="body2" fontWeight={700}>
+                Fee Head Overrides
+              </Typography>
+              <Typography variant="caption" color="text.disabled">
+                Exempt a fee head from late fees, or give it its own rule.
+              </Typography>
+            </Box>
+            <Chip
+              label="Configure"
+              size="small"
+              variant="soft"
+              color="success"
+              onClick={() => setOverridesEditorOpen(true)}
+              sx={{ cursor: 'pointer', fontWeight: 600 }}
+            />
+          </Box>
+
+          {overridesEditorOpen && (
+            <FeeHeadOverridesEditor
+              open={overridesEditorOpen}
+              onClose={() => setOverridesEditorOpen(false)}
+              collectionPolicyId={values.collectionPolicyId}
+              collectionPolicyName={selectedCollectionPolicy?.policyName}
+              feeHeads={feeHeads}
+            />
+          )}
+        </>
+      )}
     </Box>
   );
 };

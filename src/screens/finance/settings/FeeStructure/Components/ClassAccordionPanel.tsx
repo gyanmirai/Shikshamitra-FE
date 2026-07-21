@@ -53,10 +53,7 @@ const mapToCardModel = (
   status: raw.status,
   classId,
   feeStructureMetaDataId,
-  paymentPolicyId: raw.paymentPolicyId,
-  collectionPolicyId: raw.collectionPolicyId,
-  refundPolicyId: raw.refundPolicyId,
-  prorationPolicyId: raw.prorationPolicyId,
+  collectionPolicyId: raw.collectionPolicyId ?? undefined,
 });
 
 // ---------------------------------------------------------------------------

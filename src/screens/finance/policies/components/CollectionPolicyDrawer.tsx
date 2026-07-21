@@ -35,6 +35,7 @@ export default function CollectionPolicyDrawer({
     isSaving,
     unsavedChangesDialog,
     checks,
+    otherDefaultPolicyName,
     calcAmount,
     setCalcAmount,
     calcDaysLate,
@@ -142,7 +143,10 @@ export default function CollectionPolicyDrawer({
           {/* Scrollable Form */}
           <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ p: 3, pb: 6 }}>
-              <CollectionGeneralSection formik={formik} />
+              <CollectionGeneralSection
+                formik={formik}
+                otherDefaultPolicyName={otherDefaultPolicyName}
+              />
               <CollectionLateFeeSection
                 formik={formik}
                 feeHeads={feeHeads}

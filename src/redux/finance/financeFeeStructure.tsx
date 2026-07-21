@@ -92,13 +92,16 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
     }),
 
     createClassWiseFeeStructure: builder.mutation({
-      query: ({ feeStructureMetaDataId, standardId, name, feeHeads }) => ({
+      // Note: only collectionPolicyId is threaded through — StandardFeeStructureRequest
+      // is the only Fee Structure policy field the backend currently persists
+      // (paymentPolicyId/refundPolicyId/prorationPolicyId have no backing DTO field yet).
+      query: ({ feeStructureMetaDataId, standardId, name, feeHeads, collectionPolicyId }) => ({
         url: `/fee-structures`,
         method: 'POST',
         params: { feeStructureMetadataId: feeStructureMetaDataId },
         body: {
           standardId,
-          standardFeeStructures: { name, feeHeads },
+          standardFeeStructures: { name, feeHeads, collectionPolicyId },
         },
       }),
       invalidatesTags: (_result, _error, { standardId }) => [

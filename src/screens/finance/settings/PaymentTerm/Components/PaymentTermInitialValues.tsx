@@ -26,12 +26,10 @@ export const getInitialPaymentTermData = (
     reminderEnabled: inst.reminderEnabled ?? false,
   })),
   isDefaultTerm: editData?.isDefaultTerm ?? false,
+
+  // Holiday Rules
   holidayShiftingMethod: editData?.holidayShiftingMethod || 'None',
   demandGenerationRule: editData?.demandGenerationRule || 'Immediately',
   demandOffsetDays: editData?.demandOffsetDays ?? null,
   initialDemandStatus: editData?.initialDemandStatus || 'Draft',
-  currentVersionId: editData?.currentVersionId,
-  currentVersionNumber: editData?.currentVersionNumber,
-  isUsedInDownstream: editData?.isUsedInDownstream,
-  canDirectEdit: editData?.canDirectEdit,
 });
