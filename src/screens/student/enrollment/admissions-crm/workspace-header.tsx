@@ -32,7 +32,7 @@ export function EnrollmentWorkspaceHeader({ title, description, actions }: Props
           </Stack>
         ) : undefined
       }
-      sx={{ px: 0, minHeight: 48 }}
+      sx={{ px: 2 }}
     />
   );
 }

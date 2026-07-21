@@ -66,7 +66,7 @@ export function EnrollmentSettingsPage({
             { name: 'Settings', href: `${studentPaths.enrollment.settings}${cycleQuery}` },
             { name: title },
           ]}
-          sx={{ px: 0, minHeight: 48 }}
+          sx={{ px: 2 }}
         />
       </Box>
       {children}

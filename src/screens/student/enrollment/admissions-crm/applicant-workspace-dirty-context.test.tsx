@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
@@ -7,6 +9,32 @@ import {
   useApplicantWorkspaceDirtyState,
   useApplicantWorkspaceTransition,
 } from './applicant-workspace-dirty-context';
+
+vi.mock('src/components/confirm-dialog', () => ({
+  ConfirmDialog: ({
+    open,
+    title,
+    content,
+    action,
+    onClose,
+  }: {
+    open: boolean;
+    title: string;
+    content: string;
+    action: ReactNode;
+    onClose: () => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label={title}>
+        <h2>{title}</h2>
+        <p>{content}</p>
+        {action}
+        <button type="button" onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+    ) : null,
+}));
 
 function DirtyHarness({ dirty, onTransition }: { dirty: boolean; onTransition: () => void }) {
   const { requestTransition } = useApplicantWorkspaceTransition();

@@ -49,6 +49,19 @@ describe('Enrollment settings route contracts', () => {
     );
     expect(source).toContain('EnrollmentSetupCenter');
     expect(source).not.toContain('redirect(');
+
+    const setupCenter = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-setup-center.tsx'
+    );
+    expect(setupCenter).toContain('<CustomBreadcrumbs');
+    expect(setupCenter).toContain('heading="Enrollment Setup Center"');
+    expect(setupCenter).toContain("{ name: 'Student Enrollment', href: withCycle");
+    expect(setupCenter).not.toContain('component="h1" variant="h4"');
   });
 
   it('protects dirty settings across domain-sidebar navigation and browser exit', () => {
@@ -165,9 +178,24 @@ describe('Enrollment settings route contracts', () => {
 
     expect(settingsPage).toContain('<CustomBreadcrumbs');
     expect(settingsPage).toContain("{ name: 'Settings', href:");
+    expect(settingsPage).toContain('sx={{ px: 2 }}');
     expect(settingsShell).toContain("flexDirection: 'column'");
     expect(examRoute).toContain('fillAvailableHeight');
     expect(playbooks).toContain('wrapperProps={{ sx: { minHeight: 320 } }}');
+  });
+
+  it('aligns CRM workspace headers with the shared module breadcrumb spacing', () => {
+    const workspaceHeader = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'workspace-header.tsx'
+    );
+
+    expect(workspaceHeader).toContain('<CustomBreadcrumbs');
+    expect(workspaceHeader).toContain('sx={{ px: 2 }}');
   });
 
   it('keeps skipped settings queries referentially stable', () => {
