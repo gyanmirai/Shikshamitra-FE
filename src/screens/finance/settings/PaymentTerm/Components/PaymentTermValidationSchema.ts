@@ -7,6 +7,7 @@ import type { PaymentTermStatus, InitialDemandStatus, DemandGenerationRule } fro
 // Shared shape for a single installment
 // ---------------------------------------------------------------------------
 const installmentSchema = Yup.object().shape({
+  sequence: Yup.number().min(0, 'Sequence must be non-negative').required('Sequence is required'),
   installmentName: Yup.string()
     .trim()
     .min(1, 'Installment name is required')

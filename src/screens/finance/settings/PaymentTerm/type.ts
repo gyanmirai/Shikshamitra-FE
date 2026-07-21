@@ -40,7 +40,7 @@ export interface IInstallment {
   /** Optional override of the attached Collection Policy's gracePeriodDays for this installment only; inherits the policy value when null. */
   gracePeriod: number | null;
   /** Optional override of the attached Payment Policy's allowPartialPayment for this installment only; inherits the policy value when unset. */
-  allowPartialOverride: boolean;
+  allowPartialOverride: boolean | null;
   demandEnabled: boolean;
   reminderEnabled: boolean;
 }
@@ -78,6 +78,10 @@ export interface IPaymentTerm {
   isUsedInDownstream?: boolean;
   /** False when term is referenced by fee structures — requires createRevision before draft edit */
   canDirectEdit?: boolean;
+
+  // Version-related fields
+  currentVersionId?: string;
+  currentVersionNumber?: number;
 
   // Audit fields
   createdBy?: string;

@@ -26,7 +26,6 @@ export const getInitialPaymentTermData = (
     reminderEnabled: inst.reminderEnabled ?? false,
   })),
   isDefaultTerm: editData?.isDefaultTerm ?? false,
-  enableBillingSchedule: editData?.enableBillingSchedule ?? true,
 
   // Holiday Rules
   holidayShiftingMethod: editData?.holidayShiftingMethod || 'None',

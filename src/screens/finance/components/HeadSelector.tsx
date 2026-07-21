@@ -9,7 +9,7 @@ interface HeadSelectorProps {
   label?: string;
   headType?: AccountHeadType;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string | number | string[] | number[]) => void;
   error?: boolean;
   helperText?: string;
   required?: boolean;
@@ -35,12 +35,16 @@ export default function HeadSelector({
       label: `${opt.headName} (${opt.headCode})`,
     })) || [];
 
+  const handleChange = (val: string | number | string[] | number[]) => {
+    onChange(val);
+  };
+
   return (
     <CustomSelect
       label={required ? `${label} *` : label}
       options={selectOptions}
       value={value}
-      onChange={onChange}
+      onChange={handleChange}
       formControlProps={{ fullWidth: true, size: 'small' }}
       error={error}
       helperText={helperText as string}
