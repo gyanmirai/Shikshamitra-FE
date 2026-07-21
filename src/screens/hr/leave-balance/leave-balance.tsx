@@ -65,7 +65,7 @@ const LeaveSectionHeader = ({
     alignItems={{ xs: 'flex-start', sm: 'center' }}
     justifyContent="space-between"
   >
-    <Stack direction="row" alignItems="center" gap={0.75}>
+    <Stack direction="row" alignItems="center" gap={1}>
       <Iconify icon={icon} sx={{ color: 'primary.main', width: 19, height: 19 }} />
       <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
         {title}

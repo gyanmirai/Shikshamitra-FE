@@ -33,7 +33,7 @@ const DetailedStudentView = () => (
     <Typography variant="h5" sx={{ color: '#4caf50', fontWeight: 'bold', marginBottom: 3 }}>
       A+
     </Typography>
-    <Grid container spacing={3} sx={{ width: '100%', maxWidth: 400 }}>
+    <Grid container spacing={1} sx={{ width: '100%', maxWidth: 400 }}>
       <Grid size={{ xs: 6 }}>
         <Box
           sx={{

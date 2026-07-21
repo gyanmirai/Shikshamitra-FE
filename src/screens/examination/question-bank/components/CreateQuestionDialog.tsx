@@ -18,9 +18,11 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useCreateQuestionMutation } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Grid,
+  Alert,
   Stack,
   Button,
   Switch,
@@ -83,6 +85,15 @@ const questionValidationSchema = Yup.object({
     .min(0.5, 'Minimum 0.5')
     .max(100, 'Maximum 100'),
   difficultyLevel: Yup.number().required(),
+  options: Yup.array().when('questionType', {
+    is: (type: number) => [1, 2, 3].includes(type),
+    then: (schema) =>
+      schema.test(
+        'has-correct-option',
+        'Mark at least one option as the correct answer',
+        (opts: any) => Array.isArray(opts) && opts.some((o: any) => o.isCorrect)
+      ),
+  }),
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -206,7 +217,7 @@ function QuestionFormFields({
   };
 
   return (
-    <Grid container spacing={2.5}>
+    <Grid container spacing={1}>
       <Grid size={12} display="flex" justifyContent="center">
         <ToggleButtonGroup
           exclusive
@@ -390,23 +401,40 @@ function QuestionFormFields({
 
           {showOptions && (
             <Grid size={12}>
-              <Typography
-                variant="overline"
-                color="text.disabled"
-                letterSpacing={1}
-                mb={1.5}
-                display="block"
+              <Stack direction="row" spacing={0.5} alignItems="center" mb={1.5}>
+                <Typography variant="overline" color="text.disabled" letterSpacing={1}>
+                  Answer Options
+                </Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  title={
+                    formik.values.questionType === 2
+                      ? 'Turn on the switch for every option that is correct. At least one option must be marked correct.'
+                      : 'Turn on the switch next to the one correct option. A question cannot be saved without a correct answer.'
+                  }
+                >
+                  <Iconify
+                    icon="lucide:info"
+                    width={14}
+                    sx={{ cursor: 'pointer' }}
+                    color="info.main"
+                  />
+                </CustomTooltip>
+              </Stack>
+              <ShakingTextField
+                error={
+                  formik.submitCount > 0 && typeof formik.errors.options === 'string'
+                }
               >
-                Answer Options
-              </Typography>
-              <Stack spacing={1.5}>
+                <Stack spacing={1}>
                 {formik.values.options.map((option: any, index: number) => (
                   <Box
                     key={index}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 1.5,
+                      gap: 1,
                       p: 1.5,
                       borderRadius: 1.5,
                       border: '1px solid',
@@ -473,7 +501,13 @@ function QuestionFormFields({
                     Add Option
                   </Button>
                 )}
-              </Stack>
+                </Stack>
+              </ShakingTextField>
+              {formik.submitCount > 0 && typeof formik.errors.options === 'string' && (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {formik.errors.options}
+                </Alert>
+              )}
             </Grid>
           )}
 
@@ -569,7 +603,7 @@ function QuestionFormFields({
                 borderColor: 'info.light',
               }}
             >
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={1} alignItems="center">
                 <Box
                   sx={{
                     p: 1.5,

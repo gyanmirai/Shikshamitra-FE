@@ -74,6 +74,7 @@ const StudentSubmission = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Student Submission"
         links={[
           { name: 'Academics' },
@@ -81,7 +82,7 @@ const StudentSubmission = (props: TabComponentType) => {
           { name: 'Student Submission' },
         ]}
       />
-      <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
+      <Box display="flex" gap={1} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect
           label="Class"
           options={classData?.items || []}

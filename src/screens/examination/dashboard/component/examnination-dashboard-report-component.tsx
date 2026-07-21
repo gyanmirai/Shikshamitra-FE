@@ -1,7 +1,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Box, Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
@@ -11,7 +11,7 @@ const ExamninationDashboardReportComponent = (props: TabComponentType) => (
     <Typography component="span" variant="h6" gutterBottom paddingTop="10px">
       Reports Section
     </Typography>
-    <Box display="flex" flexDirection="row" gap={3} sx={{ pb: '20px', pt: '20px' }}>
+    <Box display="flex" flexDirection="row" gap={1} sx={{ pb: '20px', pt: '20px' }}>
       <CustomSelect
         label="Class"
         options={[]}
@@ -38,7 +38,7 @@ const ExamninationDashboardReportComponent = (props: TabComponentType) => (
       />
     </Box>
 
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <AnalyticsCurrentVisits
           title="Pass/Fail Rates"

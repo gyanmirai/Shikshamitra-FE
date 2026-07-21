@@ -83,6 +83,7 @@ const Setting = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Settings"
         description={currentActiveComponent?.description}
         links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
@@ -106,7 +107,7 @@ const Setting = (props: TabComponentType) => {
 
             setSearchParams({ tab: value });
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
           role="tablist"
         >
           {TABS.map((tab) => (

@@ -8,7 +8,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const ResultReport = () => (
   <Box>
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <PerformanceOverview
           title="Performance Overview"
@@ -25,7 +25,7 @@ const ResultReport = () => (
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <Box display="flex" gap={2} mb={2} flexWrap="wrap">
+        <Box display="flex" gap={1} mb={2} flexWrap="wrap">
           <CustomSelect
             label="sort by"
             options={[]}
@@ -113,7 +113,7 @@ const ResultReport = () => (
         <Typography variant="h6" my={2}>
           Generate Exam Reports
         </Typography>
-        <Box display="flex" gap={2} flexWrap="wrap">
+        <Box display="flex" gap={1} flexWrap="wrap">
           <CustomSelect
             label="Select Class"
             options={[]}

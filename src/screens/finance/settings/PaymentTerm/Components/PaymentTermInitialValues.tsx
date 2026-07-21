@@ -15,15 +15,21 @@ export const getInitialPaymentTermData = (
     ...inst,
     startDate: inst.startDate || null,
     endDate: inst.endDate || null,
+    demandDate: inst.demandDate || null,
+    dueDate: inst.dueDate || null,
     description: inst.description || '',
+    allocationPercentage: inst.allocationPercentage ?? 0,
+    reminderDate: inst.reminderDate || null,
+    allowPartialOverride: inst.allowPartialOverride ?? null,
+    gracePeriod: inst.gracePeriod ?? null,
+    demandEnabled: inst.demandEnabled ?? true,
+    reminderEnabled: inst.reminderEnabled ?? false,
   })),
   isDefaultTerm: editData?.isDefaultTerm ?? false,
   enableBillingSchedule: editData?.enableBillingSchedule ?? true,
 
   // Holiday Rules
   holidayShiftingMethod: editData?.holidayShiftingMethod || 'None',
-
-  // Billing Schedule
   demandGenerationRule: editData?.demandGenerationRule || 'Immediately',
   demandOffsetDays: editData?.demandOffsetDays ?? null,
   initialDemandStatus: editData?.initialDemandStatus || 'Draft',

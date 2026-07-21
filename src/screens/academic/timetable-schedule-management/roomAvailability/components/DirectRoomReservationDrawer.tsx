@@ -4,7 +4,7 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -27,6 +27,14 @@ import {
 
 import { useRoomSchedule, useCreateRoomReservation } from '../roomAvailability.hooks';
 import { PRIORITY_OPTIONS, RESERVATION_TYPE_OPTIONS } from '../roomAvailability.constants';
+import {
+  toMinutes,
+  clampSlotDuration,
+  generateReservationSlots,
+  DEFAULT_SLOT_DURATION_MINUTES,
+  MIN_SLOT_DURATION_MINUTES,
+  MAX_SLOT_DURATION_MINUTES,
+} from './directReservationSlots';
 
 import type { RoomReservation, RoomAvailabilityItem, ReservationRequirements } from '../types';
 
@@ -95,6 +103,7 @@ export const DirectRoomReservationDrawer = ({
     ...defaultRequirements,
   });
   const [validationError, setValidationError] = useState('');
+  const [slotDurationMinutes, setSlotDurationMinutes] = useState(DEFAULT_SLOT_DURATION_MINUTES);
 
   // Dynamically query the schedule for the selected date
   const schedule = useRoomSchedule(room?.roomId || null, requirements.date);
@@ -111,61 +120,50 @@ export const DirectRoomReservationDrawer = ({
         ...defaultRequirements,
         date: dayjs().format('YYYY-MM-DD'),
       });
+      setSlotDurationMinutes(DEFAULT_SLOT_DURATION_MINUTES);
       setValidationError('');
     }
   }, [open, room]);
-
-  const convert12to24 = (time12h: string): string => {
-    const cleaned = time12h.trim().toUpperCase();
-    const match = cleaned.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
-    if (!match) return "";
-
-    let hours = parseInt(match[1], 10);
-    const minutes = match[2];
-    const modifier = match[3];
-
-    if (modifier === 'PM' && hours < 12) {
-      hours += 12;
-    }
-    if (modifier === 'AM' && hours === 12) {
-      hours = 0;
-    }
-
-    return `${hours.toString().padStart(2, '0')}:${minutes}`;
-  };
-
-  const toMinutes = (time24h: string): number => {
-    if (!time24h) return NaN;
-    const [h, m] = time24h.split(':').map(Number);
-    return h * 60 + m;
-  };
 
   const isTimeRangeInvalid = Boolean(
     requirements.startTime && requirements.endTime && requirements.endTime <= requirements.startTime
   );
 
+  const generatedSlots = useMemo(
+    () => generateReservationSlots(schedule.data?.slots || [], slotDurationMinutes),
+    [schedule.data?.slots, slotDurationMinutes]
+  );
+
   // Slot tiles are always derived from the Start/End Time fields, so typing a time
   // and clicking a tile stay in sync automatically instead of tracking selection separately.
   const overlappingSlotIndices = useMemo(() => {
-    const slots = schedule.data?.slots || [];
-    if (!requirements.startTime || !requirements.endTime || isTimeRangeInvalid) return [] as number[];
+    if (!requirements.startTime || !requirements.endTime || isTimeRangeInvalid)
+      return [] as number[];
     const reqStart = toMinutes(requirements.startTime);
     const reqEnd = toMinutes(requirements.endTime);
     const result: number[] = [];
-    slots.forEach((s: any, i: number) => {
-      const parts = (s.time || '').split(' - ');
-      if (parts.length !== 2) return;
-      const sStart = toMinutes(convert12to24(parts[0]));
-      const sEnd = toMinutes(convert12to24(parts[1]));
-      if (sStart < reqEnd && sEnd > reqStart) result.push(i);
+    generatedSlots.forEach((slot, i) => {
+      if (slot.startMinutes < reqEnd && slot.endMinutes > reqStart) result.push(i);
     });
     return result;
-  }, [schedule.data, requirements.startTime, requirements.endTime, isTimeRangeInvalid]);
+  }, [generatedSlots, requirements.startTime, requirements.endTime, isTimeRangeInvalid]);
 
-  const conflictingSlot = useMemo(() => {
-    const slots = schedule.data?.slots || [];
-    return overlappingSlotIndices.map((i) => slots[i]).find((s: any) => s && s.status !== 'free');
-  }, [overlappingSlotIndices, schedule.data]);
+  const overlappingConflictMinutes = useMemo(
+    () =>
+      overlappingSlotIndices.reduce(
+        (total, index) => total + (generatedSlots[index]?.conflictMinutes || 0),
+        0
+      ),
+    [generatedSlots, overlappingSlotIndices]
+  );
+
+  const conflictingSlot = useMemo(
+    () =>
+      overlappingSlotIndices
+        .map((i) => generatedSlots[i])
+        .find((slot) => slot?.conflictMinutes > 0),
+    [generatedSlots, overlappingSlotIndices]
+  );
 
   const validateForm = (): boolean => {
     if (!requirements.reservationType) {
@@ -190,14 +188,6 @@ export const DirectRoomReservationDrawer = ({
     }
     if (requirements.endTime <= requirements.startTime) {
       setValidationError('End time must be after start time.');
-      return false;
-    }
-    if (conflictingSlot) {
-      setValidationError(
-        `Selected time overlaps with ${conflictingSlot.period || 'a slot'} which is already ${
-          conflictingSlot.status === 'maintenance' ? 'under maintenance' : 'occupied'
-        }. Please choose a different time.`
-      );
       return false;
     }
     setValidationError('');
@@ -253,25 +243,22 @@ export const DirectRoomReservationDrawer = ({
 
   const handleClose = () => {
     setRequirements({ ...defaultRequirements });
+    setSlotDurationMinutes(DEFAULT_SLOT_DURATION_MINUTES);
     setValidationError('');
     onClose();
   };
 
-  // Set time fields when clicking a free slot. Selection highlighting is derived from
+  // Set time fields when clicking a slot. Selection highlighting is derived from
   // Start/End Time (see overlappingSlotIndices), so this only ever needs to update the times.
   const handleSelectSlot = (idx: number) => {
-    const slots = schedule.data?.slots || [];
-    const clickedSlot = slots[idx];
-    if (!clickedSlot || clickedSlot.status !== 'free') return;
+    const clickedSlot = generatedSlots[idx];
+    if (!clickedSlot) return;
 
     const selectSingle = () => {
-      const times = clickedSlot.time.split(' - ');
-      if (times.length === 2) {
-        patchRequirements({
-          startTime: convert12to24(times[0]),
-          endTime: convert12to24(times[1]),
-        });
-      }
+      patchRequirements({
+        startTime: clickedSlot.startTime,
+        endTime: clickedSlot.endTime,
+      });
     };
 
     if (overlappingSlotIndices.length === 0) {
@@ -283,25 +270,15 @@ export const DirectRoomReservationDrawer = ({
       const start = Math.min(firstIdx, idx);
       const end = Math.max(firstIdx, idx);
 
-      const hasConflicts = slots.slice(start, end + 1).some((s: any) => s.status !== 'free');
-      if (hasConflicts) {
-        shikshaMitraToast.warning({
-          message: 'Cannot select range containing occupied slots.',
-        });
-        selectSingle();
-      } else {
-        const startTimes = slots[start].time.split(' - ');
-        const endTimes = slots[end].time.split(' - ');
-        if (startTimes.length === 2 && endTimes.length === 2) {
-          patchRequirements({
-            startTime: convert12to24(startTimes[0]),
-            endTime: convert12to24(endTimes[1]),
-          });
-          shikshaMitraToast.success({
-            message: `Selected range: ${startTimes[0]} to ${endTimes[1]}`,
-          });
-        }
-      }
+      patchRequirements({
+        startTime: generatedSlots[start].startTime,
+        endTime: generatedSlots[end].endTime,
+      });
+      shikshaMitraToast.success({
+        message: `Selected range: ${generatedSlots[start].time.split('-')[0]} to ${
+          generatedSlots[end].time.split('-')[1]
+        }`,
+      });
     } else {
       selectSingle();
     }
@@ -337,7 +314,7 @@ export const DirectRoomReservationDrawer = ({
             `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={2}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Box
             sx={{
               width: 44,
@@ -388,7 +365,7 @@ export const DirectRoomReservationDrawer = ({
 
         <Stack
           direction={{ xs: 'column', md: 'row' }}
-          spacing={3}
+          spacing={1}
           sx={{ height: '100%', alignItems: 'stretch', overflow: 'hidden' }}
         >
           {/* Left Column: Room Timeline & Available Slots */}
@@ -401,8 +378,8 @@ export const DirectRoomReservationDrawer = ({
               height: '100%',
             }}
           >
-            <Stack spacing={2} sx={{ height: '100%' }}>
-              <Stack direction="row" alignItems="center" spacing={1.25}>
+            <Stack spacing={1} sx={{ height: '100%' }}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <StepBadge number={1} />
                 <Box>
                   <Typography variant="subtitle1" fontWeight={700} color="text.primary">
@@ -424,14 +401,35 @@ export const DirectRoomReservationDrawer = ({
                 slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
 
+              <TextField
+                size="small"
+                type="number"
+                label="Slot duration minutes"
+                value={slotDurationMinutes}
+                onChange={(event) => {
+                  const nextValue = Number(event.target.value);
+                  setSlotDurationMinutes(
+                    Number.isNaN(nextValue) ? MIN_SLOT_DURATION_MINUTES : nextValue
+                  );
+                }}
+                onBlur={() => setSlotDurationMinutes((value) => clampSlotDuration(value))}
+                inputProps={{
+                  min: MIN_SLOT_DURATION_MINUTES,
+                  max: MAX_SLOT_DURATION_MINUTES,
+                }}
+                helperText={`Min ${MIN_SLOT_DURATION_MINUTES} min, max ${MAX_SLOT_DURATION_MINUTES} min`}
+                fullWidth
+              />
+
               {/* Legend */}
-              <Stack direction="row" spacing={2.5}>
+              <Stack direction="row" spacing={1}>
                 {[
                   { label: 'Available', color: 'success.main' },
                   { label: 'Selected', color: 'primary.main' },
                   { label: 'Occupied', color: 'text.disabled' },
+                  { label: 'Conflict', color: 'warning.main' },
                 ].map((item) => (
-                  <Stack key={item.label} direction="row" alignItems="center" spacing={0.75}>
+                  <Stack key={item.label} direction="row" alignItems="center" spacing={1}>
                     <Box sx={{ width: 9, height: 9, borderRadius: '50%', bgcolor: item.color }} />
                     <Typography variant="caption" color="text.secondary">
                       {item.label}
@@ -450,33 +448,36 @@ export const DirectRoomReservationDrawer = ({
                   </Box>
                 )}
 
-                {schedule.error && <Alert severity="error" sx={{ borderRadius: 1.5 }}>{schedule.error}</Alert>}
+                {schedule.error && (
+                  <Alert severity="error" sx={{ borderRadius: 1.5 }}>
+                    {schedule.error}
+                  </Alert>
+                )}
 
-                {!schedule.isLoading &&
-                  !schedule.error &&
-                  (!schedule.data || schedule.data.slots.length === 0) && (
-                    <Alert severity="info" sx={{ borderRadius: 1.5 }}>
-                      No periods scheduled for this date. Any time slot is available for booking.
-                    </Alert>
-                  )}
+                {!schedule.isLoading && !schedule.error && !schedule.data && (
+                  <Alert severity="info" sx={{ borderRadius: 1.5 }}>
+                    No periods scheduled for this date. Any time slot is available for booking.
+                  </Alert>
+                )}
 
                 {!schedule.isLoading && schedule.data && (
                   <Box
                     sx={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                      gap: 1.25,
+                      gap: 1,
                     }}
                   >
-                    {schedule.data.slots.map((slot: any, idx: number) => {
-                      const isFree = slot.status === 'free';
+                    {generatedSlots.map((slot, idx: number) => {
+                      const isFree = slot.conflictMinutes === 0;
                       const isOverlapping = overlappingSlotIndices.includes(idx);
                       const isSelected = isOverlapping && isFree;
-                      const isConflict = isOverlapping && !isFree;
+                      const isConflict = slot.conflictMinutes > 0;
+                      const isSelectedConflict = isOverlapping && isConflict;
                       return (
                         <Box
                           key={idx}
-                          onClick={() => isFree && handleSelectSlot(idx)}
+                          onClick={() => handleSelectSlot(idx)}
                           sx={{
                             position: 'relative',
                             p: 1.5,
@@ -485,29 +486,43 @@ export const DirectRoomReservationDrawer = ({
                             borderColor: isSelected
                               ? 'primary.main'
                               : isConflict
-                                ? 'error.main'
+                                ? isSelectedConflict
+                                  ? 'warning.dark'
+                                  : 'warning.main'
                                 : isFree
                                   ? alpha('#2e7d32', 0.3)
                                   : 'divider',
                             bgcolor: isSelected
                               ? (theme) => alpha(theme.palette.primary.main, 0.1)
                               : isConflict
-                                ? (theme) => alpha(theme.palette.error.main, 0.08)
+                                ? (theme) =>
+                                    alpha(
+                                      theme.palette.warning.main,
+                                      isSelectedConflict ? 0.18 : 0.1
+                                    )
                                 : isFree
                                   ? (theme) => alpha(theme.palette.success.main, 0.06)
                                   : 'background.neutral',
-                            cursor: isFree ? 'pointer' : 'not-allowed',
-                            opacity: isFree || isSelected ? 1 : 0.6,
+                            cursor: 'pointer',
+                            opacity: 1,
                             transition: 'all 0.15s',
-                            '&:hover': isFree
-                              ? {
-                                  borderColor: isSelected ? 'primary.dark' : 'success.main',
-                                  transform: 'translateY(-2px)',
-                                  boxShadow: isSelected
-                                    ? (theme) => `0 6px 16px 0 ${alpha(theme.palette.primary.main, 0.25)}`
-                                    : (theme) => `0 6px 16px 0 ${alpha(theme.palette.success.main, 0.2)}`,
-                                }
-                              : undefined,
+                            '&:hover': {
+                              borderColor: isConflict
+                                ? 'warning.dark'
+                                : isSelected
+                                  ? 'primary.dark'
+                                  : 'success.main',
+                              transform: 'translateY(-2px)',
+                              boxShadow: (theme) =>
+                                `0 6px 16px 0 ${alpha(
+                                  isConflict
+                                    ? theme.palette.warning.main
+                                    : isSelected
+                                      ? theme.palette.primary.main
+                                      : theme.palette.success.main,
+                                  0.22
+                                )}`,
+                            },
                           }}
                         >
                           {isSelected && (
@@ -551,7 +566,7 @@ export const DirectRoomReservationDrawer = ({
                                 width: 16,
                                 height: 16,
                                 borderRadius: '50%',
-                                bgcolor: 'error.main',
+                                bgcolor: 'warning.main',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -568,7 +583,7 @@ export const DirectRoomReservationDrawer = ({
                               color: isSelected
                                 ? 'primary.dark'
                                 : isConflict
-                                  ? 'error.dark'
+                                  ? 'warning.dark'
                                   : isFree
                                     ? 'success.dark'
                                     : 'text.secondary',
@@ -591,6 +606,20 @@ export const DirectRoomReservationDrawer = ({
                               sx={{ display: 'block', fontSize: 10.5, mt: 0.5 }}
                             >
                               {slot.details || slot.status.toUpperCase()}
+                            </Typography>
+                          )}
+                          {isConflict && (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                display: 'block',
+                                fontSize: 10.5,
+                                mt: 0.5,
+                                color: 'warning.dark',
+                                fontWeight: 700,
+                              }}
+                            >
+                              Conflict: {slot.conflictMinutes} min
                             </Typography>
                           )}
                         </Box>
@@ -617,8 +646,8 @@ export const DirectRoomReservationDrawer = ({
           >
             {/* Scrollable Form Body */}
             <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
-              <Stack spacing={2.5}>
-                <Stack direction="row" alignItems="center" spacing={1.25}>
+              <Stack spacing={1}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <StepBadge number={2} />
                   <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                     Booking Details
@@ -626,7 +655,7 @@ export const DirectRoomReservationDrawer = ({
                 </Stack>
 
                 <Stack
-                  spacing={2.5}
+                  spacing={1}
                   sx={{
                     p: 2.5,
                     borderRadius: 2,
@@ -635,290 +664,291 @@ export const DirectRoomReservationDrawer = ({
                     bgcolor: 'background.paper',
                   }}
                 >
-                <TextField
-                  size="small"
-                  label="Selected Room"
-                  value={room?.roomName || ''}
-                  disabled
-                  fullWidth
-                />
-
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <CustomSelect
-                    label="Reservation Type *"
-                    options={RESERVATION_TYPE_OPTIONS.map((o) => ({
-                      value: o.value,
-                      label: o.label,
-                    }))}
-                    value={requirements.reservationType}
-                    onChange={(v) => patchRequirements({ reservationType: v as any })}
-                  />
-                  <CustomSelect
-                    label="Priority"
-                    options={PRIORITY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-                    value={requirements.priority}
-                    onChange={(v) => patchRequirements({ priority: v as any })}
-                  />
-                </Stack>
-
-                <TextField
-                  size="small"
-                  label="Purpose *"
-                  value={requirements.purpose}
-                  onChange={(e) => patchRequirements({ purpose: e.target.value })}
-                  fullWidth
-                  placeholder="e.g. Grade 9 Chemistry Lab"
-                />
-
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                   <TextField
                     size="small"
-                    label="Start Time *"
-                    type="time"
-                    value={requirements.startTime}
-                    onChange={(e) => patchRequirements({ startTime: e.target.value })}
+                    label="Selected Room"
+                    value={room?.roomName || ''}
+                    disabled
                     fullWidth
-                    error={isTimeRangeInvalid}
-                    InputLabelProps={{ shrink: true }}
                   />
-                  <TextField
-                    size="small"
-                    label="End Time *"
-                    type="time"
-                    value={requirements.endTime}
-                    onChange={(e) => patchRequirements({ endTime: e.target.value })}
-                    fullWidth
-                    error={isTimeRangeInvalid}
-                    helperText={isTimeRangeInvalid ? 'End time must be after start time' : ' '}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Stack>
 
-                {!isTimeRangeInvalid && conflictingSlot && (
-                  <Alert severity="warning" sx={{ borderRadius: 1.5 }}>
-                    This time overlaps with {conflictingSlot.period || 'a slot'} (
-                    {conflictingSlot.time}) which is{' '}
-                    {conflictingSlot.status === 'maintenance' ? 'under maintenance' : 'already reserved'}
-                    {conflictingSlot.details ? ` — ${conflictingSlot.details}` : ''}. Please choose a
-                    different time.
-                  </Alert>
-                )}
-
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 1.5,
-                    border: 1,
-                    borderColor: requirements.isRecurring ? 'primary.main' : 'divider',
-                    bgcolor: (theme) =>
-                      requirements.isRecurring ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Iconify icon="mdi:calendar-sync" width={20} color="primary.main" />
-                    <Typography variant="body2" fontWeight={600}>
-                      Recurring Reservation
-                    </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <CustomSelect
+                      label="Reservation Type *"
+                      options={RESERVATION_TYPE_OPTIONS.map((o) => ({
+                        value: o.value,
+                        label: o.label,
+                      }))}
+                      value={requirements.reservationType}
+                      onChange={(v) => patchRequirements({ reservationType: v as any })}
+                    />
+                    <CustomSelect
+                      label="Priority"
+                      options={PRIORITY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                      value={requirements.priority}
+                      onChange={(v) => patchRequirements({ priority: v as any })}
+                    />
                   </Stack>
-                  <Switch
-                    checked={requirements.isRecurring}
-                    onChange={(e) => patchRequirements({ isRecurring: e.target.checked })}
-                  />
-                </Stack>
 
-                {requirements.isRecurring && (
+                  <TextField
+                    size="small"
+                    label="Purpose *"
+                    value={requirements.purpose}
+                    onChange={(e) => patchRequirements({ purpose: e.target.value })}
+                    fullWidth
+                    placeholder="e.g. Grade 9 Chemistry Lab"
+                  />
+
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <TextField
+                      size="small"
+                      label="Start Time *"
+                      type="time"
+                      value={requirements.startTime}
+                      onChange={(e) => patchRequirements({ startTime: e.target.value })}
+                      fullWidth
+                      error={isTimeRangeInvalid}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                      size="small"
+                      label="End Time *"
+                      type="time"
+                      value={requirements.endTime}
+                      onChange={(e) => patchRequirements({ endTime: e.target.value })}
+                      fullWidth
+                      error={isTimeRangeInvalid}
+                      helperText={isTimeRangeInvalid ? 'End time must be after start time' : ' '}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Stack>
+                  {!isTimeRangeInvalid && conflictingSlot && (
+                    <Alert severity="warning" sx={{ borderRadius: 1.5 }}>
+                      This time overlaps for {overlappingConflictMinutes} min with{' '}
+                      {conflictingSlot.period || 'a slot'} ({conflictingSlot.time}). You can
+                      continue, but review the highlighted conflict before booking.
+                    </Alert>
+                  )}
+
                   <Stack
-                    spacing={2}
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
                     sx={{
-                      p: 2,
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                      p: 1.5,
                       borderRadius: 1.5,
                       border: 1,
-                      borderColor: (theme) => alpha(theme.palette.primary.main, 0.16),
+                      borderColor: requirements.isRecurring ? 'primary.main' : 'divider',
+                      bgcolor: (theme) =>
+                        requirements.isRecurring
+                          ? alpha(theme.palette.primary.main, 0.06)
+                          : 'transparent',
+                      transition: 'all 0.2s',
                     }}
                   >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }} color="primary.main">
-                      Recurring Configuration
-                    </Typography>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Iconify icon="mdi:calendar-sync" width={20} color="primary.main" />
+                      <Typography variant="body2" fontWeight={600}>
+                        Recurring Reservation
+                      </Typography>
+                    </Stack>
+                    <Switch
+                      checked={requirements.isRecurring}
+                      onChange={(e) => patchRequirements({ isRecurring: e.target.checked })}
+                    />
+                  </Stack>
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                      <CustomSelect
-                        label="Repeat Pattern"
-                        options={[
-                          { value: 'daily', label: 'Daily' },
-                          { value: 'weekly', label: 'Weekly' },
-                        ]}
-                        value={requirements.recurringConfig?.repeatType || 'daily'}
-                        onChange={(v) => {
-                          patchRequirements({
-                            recurringConfig: {
-                              ...(requirements.recurringConfig || {
-                                excludeHolidays: true,
-                                excludeExamDays: false,
-                                skipConflictDates: false,
-                              }),
-                              repeatType: v as any,
-                            },
-                          });
-                        }}
-                      />
+                  {requirements.isRecurring && (
+                    <Stack
+                      spacing={1}
+                      sx={{
+                        p: 2,
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                        borderRadius: 1.5,
+                        border: 1,
+                        borderColor: (theme) => alpha(theme.palette.primary.main, 0.16),
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }} color="primary.main">
+                        Recurring Configuration
+                      </Typography>
 
-                      <DatePicker
-                        label="Repeat Until *"
-                        format="DD/MM/YYYY"
-                        value={dayjs(requirements.recurringConfig?.untilDate)}
-                        onChange={(v: Dayjs | null) => {
-                          if (v) {
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        <CustomSelect
+                          label="Repeat Pattern"
+                          options={[
+                            { value: 'daily', label: 'Daily' },
+                            { value: 'weekly', label: 'Weekly' },
+                          ]}
+                          value={requirements.recurringConfig?.repeatType || 'daily'}
+                          onChange={(v) => {
                             patchRequirements({
                               recurringConfig: {
                                 ...(requirements.recurringConfig || {
-                                  repeatType: 'daily',
                                   excludeHolidays: true,
                                   excludeExamDays: false,
                                   skipConflictDates: false,
                                 }),
-                                untilDate: v.format('YYYY-MM-DD'),
+                                repeatType: v as any,
                               },
                             });
-                          }
-                        }}
-                        slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                      />
-                    </Stack>
+                          }}
+                        />
 
-                    {requirements.recurringConfig?.repeatType === 'weekly' && (
-                      <Stack spacing={1}>
-                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                          Repeat On Days
-                        </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                          {[
-                            { label: 'Mon', value: 1 },
-                            { label: 'Tue', value: 2 },
-                            { label: 'Wed', value: 3 },
-                            { label: 'Thu', value: 4 },
-                            { label: 'Fri', value: 5 },
-                            { label: 'Sat', value: 6 },
-                            { label: 'Sun', value: 0 },
-                          ].map((day) => {
-                            const daysList = requirements.recurringConfig?.repeatDays || [];
-                            const isSelected = daysList.includes(day.value);
-                            return (
-                              <Chip
-                                key={day.value}
-                                label={day.label}
-                                clickable
-                                color={isSelected ? 'primary' : 'default'}
-                                variant={isSelected ? 'filled' : 'outlined'}
-                                onClick={() => {
-                                  const newDays = isSelected
-                                    ? daysList.filter((d) => d !== day.value)
-                                    : [...daysList, day.value];
-                                  patchRequirements({
-                                    recurringConfig: {
-                                      ...(requirements.recurringConfig || {
-                                        repeatType: 'weekly',
-                                        excludeHolidays: true,
-                                        excludeExamDays: false,
-                                        skipConflictDates: false,
-                                      }),
-                                      repeatDays: newDays,
-                                    },
-                                  });
-                                }}
-                              />
-                            );
-                          })}
-                        </Stack>
+                        <DatePicker
+                          label="Repeat Until *"
+                          format="DD/MM/YYYY"
+                          value={dayjs(requirements.recurringConfig?.untilDate)}
+                          onChange={(v: Dayjs | null) => {
+                            if (v) {
+                              patchRequirements({
+                                recurringConfig: {
+                                  ...(requirements.recurringConfig || {
+                                    repeatType: 'daily',
+                                    excludeHolidays: true,
+                                    excludeExamDays: false,
+                                    skipConflictDates: false,
+                                  }),
+                                  untilDate: v.format('YYYY-MM-DD'),
+                                },
+                              });
+                            }
+                          }}
+                          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                        />
                       </Stack>
-                    )}
 
-                    <Stack direction="row" flexWrap="wrap" gap={2}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={requirements.recurringConfig?.excludeHolidays ?? true}
-                            onChange={(e) => {
-                              patchRequirements({
-                                recurringConfig: {
-                                  ...(requirements.recurringConfig || {
-                                    repeatType: 'daily',
-                                    excludeExamDays: false,
-                                    skipConflictDates: false,
-                                  }),
-                                  excludeHolidays: e.target.checked,
-                                },
-                              });
-                            }}
-                          />
-                        }
-                        label="Exclude Holidays"
-                      />
+                      {requirements.recurringConfig?.repeatType === 'weekly' && (
+                        <Stack spacing={1}>
+                          <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                            Repeat On Days
+                          </Typography>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                            {[
+                              { label: 'Mon', value: 1 },
+                              { label: 'Tue', value: 2 },
+                              { label: 'Wed', value: 3 },
+                              { label: 'Thu', value: 4 },
+                              { label: 'Fri', value: 5 },
+                              { label: 'Sat', value: 6 },
+                              { label: 'Sun', value: 0 },
+                            ].map((day) => {
+                              const daysList = requirements.recurringConfig?.repeatDays || [];
+                              const isSelected = daysList.includes(day.value);
+                              return (
+                                <Chip
+                                  key={day.value}
+                                  label={day.label}
+                                  clickable
+                                  color={isSelected ? 'primary' : 'default'}
+                                  variant={isSelected ? 'filled' : 'outlined'}
+                                  onClick={() => {
+                                    const newDays = isSelected
+                                      ? daysList.filter((d) => d !== day.value)
+                                      : [...daysList, day.value];
+                                    patchRequirements({
+                                      recurringConfig: {
+                                        ...(requirements.recurringConfig || {
+                                          repeatType: 'weekly',
+                                          excludeHolidays: true,
+                                          excludeExamDays: false,
+                                          skipConflictDates: false,
+                                        }),
+                                        repeatDays: newDays,
+                                      },
+                                    });
+                                  }}
+                                />
+                              );
+                            })}
+                          </Stack>
+                        </Stack>
+                      )}
 
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={requirements.recurringConfig?.excludeExamDays ?? false}
-                            onChange={(e) => {
-                              patchRequirements({
-                                recurringConfig: {
-                                  ...(requirements.recurringConfig || {
-                                    repeatType: 'daily',
-                                    excludeHolidays: true,
-                                    skipConflictDates: false,
-                                  }),
-                                  excludeExamDays: e.target.checked,
-                                },
-                              });
-                            }}
-                          />
-                        }
-                        label="Exclude Exam Days"
-                      />
+                      <Stack direction="row" flexWrap="wrap" gap={1}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={requirements.recurringConfig?.excludeHolidays ?? true}
+                              onChange={(e) => {
+                                patchRequirements({
+                                  recurringConfig: {
+                                    ...(requirements.recurringConfig || {
+                                      repeatType: 'daily',
+                                      excludeExamDays: false,
+                                      skipConflictDates: false,
+                                    }),
+                                    excludeHolidays: e.target.checked,
+                                  },
+                                });
+                              }}
+                            />
+                          }
+                          label="Exclude Holidays"
+                        />
 
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={requirements.recurringConfig?.skipConflictDates ?? false}
-                            onChange={(e) => {
-                              patchRequirements({
-                                recurringConfig: {
-                                  ...(requirements.recurringConfig || {
-                                    repeatType: 'daily',
-                                    excludeHolidays: true,
-                                    excludeExamDays: false,
-                                  }),
-                                  skipConflictDates: e.target.checked,
-                                },
-                              });
-                            }}
-                          />
-                        }
-                        label="Skip Conflicts"
-                      />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={requirements.recurringConfig?.excludeExamDays ?? false}
+                              onChange={(e) => {
+                                patchRequirements({
+                                  recurringConfig: {
+                                    ...(requirements.recurringConfig || {
+                                      repeatType: 'daily',
+                                      excludeHolidays: true,
+                                      skipConflictDates: false,
+                                    }),
+                                    excludeExamDays: e.target.checked,
+                                  },
+                                });
+                              }}
+                            />
+                          }
+                          label="Exclude Exam Days"
+                        />
+
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={requirements.recurringConfig?.skipConflictDates ?? false}
+                              onChange={(e) => {
+                                patchRequirements({
+                                  recurringConfig: {
+                                    ...(requirements.recurringConfig || {
+                                      repeatType: 'daily',
+                                      excludeHolidays: true,
+                                      excludeExamDays: false,
+                                    }),
+                                    skipConflictDates: e.target.checked,
+                                  },
+                                });
+                              }}
+                            />
+                          }
+                          label="Skip Conflicts"
+                        />
+                      </Stack>
                     </Stack>
-                  </Stack>
-                )}
+                  )}
 
-                <TextField
-                  size="small"
-                  label="Remarks"
-                  value={requirements.remarks || ''}
-                  onChange={(e) => patchRequirements({ remarks: e.target.value })}
-                  fullWidth
-                  multiline
-                  rows={2}
-                />
+                  <TextField
+                    size="small"
+                    label="Remarks"
+                    value={requirements.remarks || ''}
+                    onChange={(e) => patchRequirements({ remarks: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={2}
+                  />
                 </Stack>
               </Stack>
             </Box>
 
             {/* Sticky Action Button at Bottom */}
-            <Box sx={{ pt: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.neutral' }}>
+            <Box
+              sx={{ pt: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.neutral' }}
+            >
               <Button
                 variant="contained"
                 color="primary"
@@ -927,7 +957,6 @@ export const DirectRoomReservationDrawer = ({
                 disabled={
                   createReservation.isLoading ||
                   isTimeRangeInvalid ||
-                  Boolean(conflictingSlot) ||
                   !requirements.startTime ||
                   !requirements.endTime
                 }

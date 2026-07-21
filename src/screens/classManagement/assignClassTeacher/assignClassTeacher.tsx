@@ -1,461 +1,899 @@
 'use client';
 
+import type { ReactElement } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { Organization } from 'src/types/school';
+import type { LabelColor } from 'src/components/label';
+import type {
+  ClassTeacherSummary,
+  ClassTeacherEligibleTeacher,
+  ClassTeacherValidationResult,
+  ClassTeacherAssignmentRowDto,
+} from 'src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi';
 
+import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { Save } from '@mui/icons-material';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import {
+  Save,
+  School,
+  History,
+  EditNote,
+  FactCheck,
+  AccessTime,
+  RestartAlt,
+  ErrorOutline,
+  HourglassEmpty,
+  CheckCircleOutline,
+  AssignmentTurnedIn,
+} from '@mui/icons-material';
+import {
+  Box,
+  Card,
+  Alert,
+  Stack,
+  Button,
+  Drawer,
+  Avatar,
+  Divider,
+  MenuItem,
+  TextField,
+  Typography,
+  Autocomplete,
+} from '@mui/material';
+import { useState, useEffect } from 'react';
+
 import CustomSelect from 'src/components/custom-select';
+import { Label } from 'src/components/label';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Card, Button, Avatar } from '@mui/material';
-import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { useRef, useMemo, useState, useEffect, useCallback, type MouseEvent } from 'react';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import { useLazyGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import {
   useGetClassTeacherAssignmentsQuery,
+  useGetClassTeacherAssignmentHistoryQuery,
+  useGetClassTeacherAssignmentSummaryQuery,
+  useGetClassTeacherEligibleTeachersQuery,
+  useValidateClassTeacherAssignmentsMutation,
   useUpdateClassTeacherAssignmentsMutation,
 } from 'src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi';
 
-interface EmployeeOption {
-  id: string;
-  label: string;
-}
+type AssignmentTableRow = ClassTeacherAssignmentRowDto & {
+  classTeacher: string | null;
+  classTeacherName: string;
+  effectiveFromDraft: string;
+  assignmentTypeDraft: string;
+  changeReasonDraft: string;
+};
 
-// ----- Row-level teacher cell with dynamic search -----
-const TeacherCell = ({
-  teacherId,
-  isFocused,
-  onTeacherChange,
+const assignmentTypes = ['Permanent', 'Temporary', 'Acting', 'Replacement'];
+const changeReasons = [
+  'New Academic Year',
+  'Transfer',
+  'Long Leave',
+  'Workload Balancing',
+  'Administrative Decision',
+  'Other',
+];
+
+const todayIso = () => new Date().toISOString().slice(0, 10);
+
+const buildRows = (rows: ClassTeacherAssignmentRowDto[]): AssignmentTableRow[] =>
+  rows.map((row) => ({
+    ...row,
+    classTeacher: row.assignedTeacher?.teacherId ?? null,
+    classTeacherName: row.assignedTeacher?.teacherName ?? '',
+    effectiveFromDraft: row.effectiveFrom?.slice(0, 10) ?? todayIso(),
+    assignmentTypeDraft: row.assignmentType || 'Permanent',
+    changeReasonDraft: 'New Academic Year',
+  }));
+
+const getRowKey = (row: AssignmentTableRow) => `${row.classId}-${row.divisionId}`;
+
+const getChangedRows = (rows: AssignmentTableRow[], originalRows: AssignmentTableRow[]) =>
+  rows.filter((row) => {
+    const original = originalRows.find((item) => getRowKey(item) === getRowKey(row));
+    return (
+      row.classTeacher !== original?.classTeacher ||
+      row.effectiveFromDraft !== original?.effectiveFromDraft ||
+      row.assignmentTypeDraft !== original?.assignmentTypeDraft ||
+      row.changeReasonDraft !== original?.changeReasonDraft
+    );
+  });
+
+const getSummary = (
+  rows: AssignmentTableRow[],
+  apiSummary: ClassTeacherSummary | undefined,
+  pendingChanges: number
+): ClassTeacherSummary => {
+  const assigned = rows.filter((row) => row.classTeacher).length;
+  const conflicts = rows.filter((row) => row.conflictCount > 0).length;
+  const unassigned = rows.length - assigned;
+  const reasons = [
+    ...(unassigned ? [`${unassigned} class divisions are unassigned.`] : []),
+    ...(conflicts ? [`${conflicts} assignments need review.`] : []),
+    ...(pendingChanges ? [`${pendingChanges} unsaved changes are waiting.`] : []),
+  ];
+
+  return {
+    totalClasses: rows.length || apiSummary?.totalClasses || 0,
+    assigned,
+    unassigned,
+    conflicts,
+    pendingChanges,
+    pendingApproval: apiSummary?.pendingApproval ?? 0,
+    temporaryAssignments: rows.filter((row) => row.assignmentTypeDraft === 'Temporary').length,
+    acknowledgmentPending: apiSummary?.acknowledgmentPending ?? 0,
+    status: conflicts || unassigned || pendingChanges ? 'Attention Needed' : 'Ready',
+    reasons,
+  };
+};
+
+const TeacherAssignmentCell = ({
+  row,
+  teachers,
+  onChange,
 }: {
-  teacherId: string | null;
-  isFocused: boolean;
-  onTeacherChange: (val: EmployeeOption | null) => void;
+  row: AssignmentTableRow;
+  teachers: ClassTeacherEligibleTeacher[];
+  onChange: (teacher: ClassTeacherEligibleTeacher | null) => void;
 }) => {
-  const [getEmployees] = useLazyGetEmployeeQuery();
-  const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
-  const [selectedTeacher, setSelectedTeacher] = useState<EmployeeOption | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const isClearingRef = useRef(false);
-
-  /**
-   * Tracks IDs already returned for the current search query so that the
-   * same teacher is never shown twice regardless of page boundaries or
-   * race-condition appends in usePaginatedSearch. Reset on every new
-   * search (page === 1) so stale IDs from a previous query are cleared.
-   */
-  const seenTeacherIdsRef = useRef<Set<string>>(new Set());
-
-  // Pre-load the existing assigned teacher
-  useEffect(() => {
-    if (!teacherId) {
-      setSelectedTeacher(null);
-      return;
-    }
-    getEmployeeById(teacherId)
-      .unwrap()
-      .then((data: { id: string; fullName: string }) =>
-        setSelectedTeacher({ id: data.id, label: data.fullName })
-      )
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teacherId]);
-
-  const fetchOptions = useCallback(
-    async (query: string, page: number = 1) => {
-      if (page === 1) seenTeacherIdsRef.current = new Set();
-      const res = await getEmployees({ search: query, page }).unwrap();
-      const hasMore = res.currentPage < res.totalPages;
-      const data = (res?.items ?? [])
-        .map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName }))
-        .filter(({ id }: { id: string }) => {
-          if (seenTeacherIdsRef.current.has(id)) return false;
-          seenTeacherIdsRef.current.add(id);
-          return true;
-        });
-      return { data, hasMore };
-    },
-    [getEmployees]
-  );
-
-  const handleMouseDownCapture = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.MuiAutocomplete-clearIndicator')) {
-      isClearingRef.current = true;
-      setTimeout(() => {
-        isClearingRef.current = false;
-      }, 0);
-      return;
-    }
-    if (!target.closest('.MuiAutocomplete-popupIndicator')) {
-      setDropdownOpen(true);
-    }
-  }, []);
+  const selectedTeacher =
+    teachers.find((teacher) => teacher.teacherId === row.classTeacher) ??
+    (row.classTeacher
+      ? {
+          teacherId: row.classTeacher,
+          teacherName: row.classTeacherName,
+          currentClassTeacherCount: row.assignedTeacher?.currentClassTeacherCount ?? 0,
+          maximumClassTeacherCount: row.assignedTeacher?.maximumClassTeacherCount ?? 2,
+          isEligible: row.assignedTeacher?.isActive ?? true,
+          isActive: row.assignedTeacher?.isActive ?? true,
+          availabilityStatus: row.assignedTeacher?.availabilityStatus ?? 'Available',
+          workloadStatus: row.assignedTeacher?.workloadStatus ?? 'Normal',
+          conflictStatus: row.assignedTeacher?.conflictStatus ?? 'None',
+          recommendationScore: row.assignedTeacher?.recommendationScore ?? 0,
+          currentWorkload: row.assignedTeacher?.currentClassTeacherCount ?? 0,
+          maximumWorkload: 30,
+          hasTimetableConflict: false,
+          isOnLeave: false,
+          employeeCode: row.assignedTeacher?.employeeCode,
+          department: row.assignedTeacher?.department,
+          ineligibilityReasons: [],
+        }
+      : null);
 
   return (
-    <Box onMouseDownCapture={handleMouseDownCapture}>
-      <PaginatedSearchSelect
-        label="Class Teacher"
-        fetchOptions={fetchOptions}
-        value={selectedTeacher}
-        onChange={(_: unknown, newValue: EmployeeOption | null) => {
-          setSelectedTeacher(newValue);
-          onTeacherChange(newValue);
-        }}
-        open={dropdownOpen}
-        onOpen={() => {
-          if (isClearingRef.current) return;
-          setDropdownOpen(true);
-        }}
-        onClose={() => setDropdownOpen(false)}
-        getOptionLabel={(option: EmployeeOption) => option?.label || ''}
-        isOptionEqualToValue={(option: EmployeeOption, value: EmployeeOption) =>
-          option.id === value.id
-        }
-        renderOption={(props: any, option: EmployeeOption) => {
-          const { key: _key, ...rest } = props;
-          return (
-            <Box component="li" {...rest} key={option.id} sx={{ display: 'flex', gap: 1 }}>
-              <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>{option.label?.[0]}</Avatar>
-              {option.label}
+    <Autocomplete
+      size="small"
+      fullWidth
+      options={teachers}
+      value={selectedTeacher}
+      onChange={(_, value) => onChange(value)}
+      getOptionLabel={(option) => option.teacherName || ''}
+      isOptionEqualToValue={(option, value) => option.teacherId === value.teacherId}
+      getOptionDisabled={(option) => !option.isEligible && option.teacherId !== row.classTeacher}
+      renderInput={(params) => <TextField {...params} label="Class Teacher" />}
+      renderOption={(props, option) => (
+        <Box component="li" {...props} key={option.teacherId} sx={{ alignItems: 'flex-start' }}>
+          <Avatar sx={{ width: 28, height: 28, mr: 1, fontSize: 12 }}>
+            {option.teacherName?.charAt(0)}
+          </Avatar>
+          <Box>
+            <Typography variant="body2" fontWeight={700}>
+              {option.teacherName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {option.employeeCode || 'No code'} · {option.department || 'No department'}
+            </Typography>
+            <Stack direction="row" spacing={0.75} mt={0.5} flexWrap="wrap">
+              <Label variant="soft">
+                {`${option.currentClassTeacherCount}/${option.maximumClassTeacherCount} classes`}
+              </Label>
+              <Label variant="soft">{option.workloadStatus}</Label>
+              <Label variant="soft" color={option.isActive ? 'success' : 'error'}>
+                {option.availabilityStatus}
+              </Label>
+              <Label variant="soft" color="info">{`${option.recommendationScore}% match`}</Label>
+            </Stack>
+            {!option.isEligible && (
+              <Typography variant="caption" color="error">
+                {option.ineligibilityReasons.join(' ')}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      )}
+      sx={{ minWidth: 300 }}
+    />
+  );
+};
+
+type SummaryAccent = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary';
+
+const SummaryCards = ({
+  summary,
+  activeFilter,
+  onFilter,
+}: {
+  summary: ClassTeacherSummary;
+  activeFilter: string;
+  onFilter: (filter: string) => void;
+}) => {
+  const cards: {
+    key: string;
+    label: string;
+    value: number;
+    icon: ReactElement;
+    accent: SummaryAccent;
+  }[] = [
+    { key: 'all', label: 'Total Classes', value: summary.totalClasses, icon: <School fontSize="small" />, accent: 'primary' },
+    { key: 'assigned', label: 'Assigned', value: summary.assigned, icon: <CheckCircleOutline fontSize="small" />, accent: 'success' },
+    { key: 'unassigned', label: 'Unassigned', value: summary.unassigned, icon: <HourglassEmpty fontSize="small" />, accent: 'warning' },
+    { key: 'conflict', label: 'Conflicts', value: summary.conflicts, icon: <ErrorOutline fontSize="small" />, accent: 'error' },
+    { key: 'changed', label: 'Pending Changes', value: summary.pendingChanges, icon: <EditNote fontSize="small" />, accent: 'info' },
+    { key: 'temporary', label: 'Temporary', value: summary.temporaryAssignments, icon: <AccessTime fontSize="small" />, accent: 'secondary' },
+  ];
+
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+        gap: 1.5,
+      }}
+    >
+      {cards.map((card) => {
+        const isActive = activeFilter === card.key;
+        return (
+          <Card
+            key={card.key}
+            role="button"
+            tabIndex={0}
+            onClick={() => onFilter(card.key)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') onFilter(card.key);
+            }}
+            sx={{
+              p: 1.75,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              borderRadius: 2,
+              cursor: 'pointer',
+              border: '1px solid',
+              borderColor: isActive ? `${card.accent}.main` : 'transparent',
+              boxShadow: isActive ? (theme) => theme.customShadows[card.accent] : (theme) => theme.customShadows.z1,
+              transition: (theme) => theme.transitions.create(['box-shadow', 'transform', 'border-color']),
+              '&:hover': {
+                borderColor: `${card.accent}.main`,
+                boxShadow: (theme) => theme.customShadows[card.accent],
+                transform: 'translateY(-2px)',
+              },
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 40,
+                height: 40,
+                color: `${card.accent}.dark`,
+                bgcolor: `${card.accent}.lighter`,
+              }}
+            >
+              {card.icon}
+            </Avatar>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                {card.label}
+              </Typography>
+              <Typography variant="h6">{card.value}</Typography>
             </Box>
-          );
-        }}
-        debounceMs={400}
-        minChars={0}
-        size="small"
-        fullWidth
-        sx={{
-          maxWidth: '280px',
-          '& .MuiOutlinedInput-root': {
-            '& fieldset': {
-              borderColor: 'black',
-            },
-            '&:hover fieldset': {
-              borderColor: 'black',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: 'black',
-            },
-          },
-        }}
-      />
+          </Card>
+        );
+      })}
     </Box>
   );
 };
 
-const ClassTeacherAssignment = () => {
-  const resetConfirmDialog = useBoolean();
-  const saveConfirmDialog = useBoolean();
+const ReviewDrawer = ({
+  open,
+  validation,
+  changedRows,
+  isSaving,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  validation: ClassTeacherValidationResult | null;
+  changedRows: AssignmentTableRow[];
+  isSaving: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) => (
+  <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: 460, p: 2 } }}>
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="h6">Review & Confirm</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Check assignment impact before publishing the latest class teacher allocation.
+        </Typography>
+      </Box>
+      <Alert severity={validation?.canConfirm ? 'success' : 'error'}>
+        {validation?.canConfirm
+          ? 'No critical errors found. You can confirm these assignments.'
+          : 'Critical issues must be fixed before confirmation.'}
+      </Alert>
+      <Card sx={{ p: 1.5 }}>
+        <Typography variant="subtitle2">Changed Assignments</Typography>
+        <Stack spacing={1} mt={1}>
+          {changedRows.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              No local changes to review.
+            </Typography>
+          )}
+          {changedRows.map((row) => (
+            <Box key={getRowKey(row)}>
+              <Typography variant="body2" fontWeight={700}>
+                {row.className} {row.divisionName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {row.classTeacherName || 'Teacher selected'} · {row.assignmentTypeDraft} ·{' '}
+                {row.effectiveFromDraft}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+      </Card>
+      <Card sx={{ p: 1.5 }}>
+        <Typography variant="subtitle2">Validation Issues</Typography>
+        <Stack spacing={1} mt={1}>
+          {validation?.issues.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              No issues found.
+            </Typography>
+          )}
+          {validation?.issues.map((issue) => (
+            <Alert
+              key={`${issue.code}-${issue.classId}-${issue.divisionId}-${issue.teacherId}`}
+              severity={issue.severity === 'Critical' ? 'error' : 'warning'}
+              sx={{ py: 0.5 }}
+            >
+              <Typography variant="body2">{issue.message}</Typography>
+              {issue.suggestedFix && (
+                <Typography variant="caption">{issue.suggestedFix}</Typography>
+              )}
+            </Alert>
+          ))}
+        </Stack>
+      </Card>
+      <Box sx={{ flexGrow: 1 }} />
+      <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Button size="small" onClick={onClose}>
+          Close
+        </Button>
+        <LoadingButton
+          size="small"
+          variant="contained"
+          startIcon={<AssignmentTurnedIn />}
+          loading={isSaving}
+          disabled={!validation?.canConfirm || changedRows.length === 0}
+          onClick={onConfirm}
+        >
+          Confirm
+        </LoadingButton>
+      </Stack>
+    </Stack>
+  </Drawer>
+);
 
+const ClassTeacherAssignment = () => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [organization, setOrganization] = useState<string>('');
+  const [pendingOrganization, setPendingOrganization] = useState<string | null>(null);
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [tableData, setTableData] = useState<AssignmentTableRow[]>([]);
+  const [originalTableData, setOriginalTableData] = useState<AssignmentTableRow[]>([]);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [switchOpen, setSwitchOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [validationResult, setValidationResult] = useState<ClassTeacherValidationResult | null>(null);
 
-  // Set initial organization
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
-    if (medium?.educationMediumStages?.length > 0) {
+    if (medium?.educationMediumStages?.length > 0 && !organization) {
       setOrganization(medium.educationMediumStages[0].id);
     }
-  }, [medium]);
-
-  const [query, setQuery] = useState({
-    sorting: '',
-    skipCount: 0,
-    maxResultCount: 10,
-  });
+  }, [medium, organization]);
 
   const {
     data: assignmentsData,
     refetch: refetchAssignments,
     isLoading: isClassAssignmentLoading,
     isFetching: isClassAssignmentFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassTeacherAssignmentsQuery,
-    params: {
-      organizationId: organization,
-      ...query,
-    },
-    options: {
-      skip: !organization,
-    },
-  });
+  } = useGetClassTeacherAssignmentsQuery({ organizationId: organization }, { skip: !organization });
 
-  const [updateAssignments, { isLoading: isSaving }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateClassTeacherAssignmentsMutation,
-  });
-
-  const [tableData, setTableData] = useState<any[]>([]);
-  const [originalTableData, setOriginalTableData] = useState<any[]>([]);
-  const [focusedCells, setFocusedCells] = useState<number[]>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
-  const [selectedStudents] = useState<any>([]);
-
-  // Build Table Data
-  useEffect(() => {
-    if (!assignmentsData) return;
-
-    const newTableData = assignmentsData.map((item: any) => ({
-      classId: item.classId,
-      className: item.className,
-      divisionId: item.divisionId,
-      divisionName: item.divisionName,
-      classTeacher: item.assignedTeacher?.teacherId || null,
-    }));
-
-    setTableData(newTableData);
-    setOriginalTableData(JSON.parse(JSON.stringify(newTableData)));
-  }, [assignmentsData]);
-
-  const hasChanges = useMemo(
-    () => JSON.stringify(tableData) !== JSON.stringify(originalTableData),
-    [tableData, originalTableData]
+  const { data: apiSummary } = useGetClassTeacherAssignmentSummaryQuery(
+    { organizationId: organization },
+    { skip: !organization }
   );
 
-  const handleTeacherChange = (newValue: EmployeeOption | null, rowIndex: number) => {
-    const newTableData = [...tableData];
-    newTableData[rowIndex].classTeacher = newValue?.id || null;
-    setTableData(newTableData);
+  const { data: eligibleTeachers = [] } = useGetClassTeacherEligibleTeachersQuery(
+    { organizationId: organization },
+    { skip: !organization }
+  );
 
-    if (newValue?.id) {
-      if (!focusedCells.includes(rowIndex)) {
-        setFocusedCells((prev) => [...prev, rowIndex]);
-      }
-    } else {
-      setFocusedCells((prev) => prev.filter((cell) => cell !== rowIndex));
-    }
+  const { data: history = [] } = useGetClassTeacherAssignmentHistoryQuery(
+    { organizationId: organization },
+    { skip: !organization || !historyOpen }
+  );
+
+  const [validateAssignments, { isLoading: isValidating }] =
+    useValidateClassTeacherAssignmentsMutation();
+  const [updateAssignments, { isLoading: isSaving }] = useUpdateClassTeacherAssignmentsMutation();
+
+  useEffect(() => {
+    if (!assignmentsData) return;
+    const rows = buildRows(assignmentsData);
+    setTableData(rows);
+    setOriginalTableData(JSON.parse(JSON.stringify(rows)));
+  }, [assignmentsData]);
+
+  const changedRows = getChangedRows(tableData, originalTableData);
+  const hasChanges = changedRows.length > 0;
+  const summary = getSummary(tableData, apiSummary, changedRows.length);
+
+  const filteredData = tableData.filter((row) => {
+    const text = `${row.className} ${row.divisionName} ${row.classTeacherName}`.toLowerCase();
+    const matchesSearch = text.includes(search.toLowerCase());
+    const matchesFilter =
+      statusFilter === 'all' ||
+      (statusFilter === 'assigned' && !!row.classTeacher) ||
+      (statusFilter === 'unassigned' && !row.classTeacher) ||
+      (statusFilter === 'conflict' && row.conflictCount > 0) ||
+      (statusFilter === 'changed' &&
+        changedRows.some((changedRow) => getRowKey(changedRow) === getRowKey(row))) ||
+      (statusFilter === 'temporary' && row.assignmentTypeDraft === 'Temporary');
+    return matchesSearch && matchesFilter;
+  });
+
+  const buildPayload = (saveAsDraft: boolean) => ({
+    organizationId: organization,
+    saveAsDraft,
+    assignments: tableData
+      .filter((row) => row.classTeacher)
+      .map((row) => ({
+        classId: row.classId,
+        divisionId: row.divisionId,
+        teacherId: row.classTeacher as string,
+        assignmentType: row.assignmentTypeDraft,
+        effectiveFrom: row.effectiveFromDraft,
+        changeReason: row.changeReasonDraft,
+      })),
+  });
+
+  const updateRow = (rowKey: string, patch: Partial<AssignmentTableRow>) => {
+    setTableData((prev) =>
+      prev.map((row) => (getRowKey(row) === rowKey ? { ...row, ...patch } : row))
+    );
   };
 
-  const handleReset = () => {
-    setTableData(JSON.parse(JSON.stringify(originalTableData)));
-    setFocusedCells([]);
-    resetConfirmDialog.onFalse();
-    shikshaMitraToast.success({
-      message: 'Changes have been reset successfully',
+  const handleTeacherChange = (
+    row: AssignmentTableRow,
+    teacher: ClassTeacherEligibleTeacher | null
+  ) => {
+    updateRow(getRowKey(row), {
+      classTeacher: teacher?.teacherId ?? null,
+      classTeacherName: teacher?.teacherName ?? '',
+      assignedTeacher: teacher
+        ? {
+            teacherId: teacher.teacherId,
+            teacherName: teacher.teacherName,
+            employeeCode: teacher.employeeCode,
+            department: teacher.department,
+            isActive: teacher.isActive,
+            currentClassTeacherCount: teacher.currentClassTeacherCount,
+            maximumClassTeacherCount: teacher.maximumClassTeacherCount,
+            availabilityStatus: teacher.availabilityStatus,
+            workloadStatus: teacher.workloadStatus,
+            conflictStatus: teacher.conflictStatus,
+            recommendationScore: teacher.recommendationScore,
+          }
+        : null,
+      assignmentStatus: teacher ? 'Changed' : 'Unassigned',
     });
   };
 
-  const handleSave = async () => {
+  const handleDiscard = () => {
+    setTableData(JSON.parse(JSON.stringify(originalTableData)));
+    setDiscardOpen(false);
+    shikshaMitraToast.success({ message: 'Draft changes discarded.' });
+  };
+
+  const handleOrganizationChange = (value: string) => {
+    if (hasChanges) {
+      setPendingOrganization(value);
+      setSwitchOpen(true);
+      return;
+    }
+    setOrganization(value);
+  };
+
+  const confirmOrganizationSwitch = () => {
+    if (pendingOrganization) {
+      setOrganization(pendingOrganization);
+      setPendingOrganization(null);
+    }
+    setSwitchOpen(false);
+  };
+
+  const handleSaveDraft = async () => {
+    if (!organization) return;
     try {
-      const assignments = tableData
-        .filter((row) => row.classTeacher)
-        .map((row) => ({
-          classId: row.classId,
-          divisionId: row.divisionId,
-          teacherId: row.classTeacher,
-        }));
-
-      if (assignments.length === 0) {
-        shikshaMitraToast.error({
-          message: 'Please assign at least one class teacher before saving.',
-        });
-        saveConfirmDialog.onFalse();
-        return;
-      }
-
-      const payload = {
-        organizationId: organization,
-        assignments,
-      };
-
-      await updateAssignments(payload).unwrap();
-
-      shikshaMitraToast.success({
-        message: 'Class Teacher assignments have been saved successfully',
-      });
-
-      refetchAssignments();
-      saveConfirmDialog.onFalse();
-      setFocusedCells([]);
-    } catch (error) {
-      console.error(error);
-      shikshaMitraToast.error({
-        message: 'Failed to save assignments',
-      });
+      await updateAssignments(buildPayload(true)).unwrap();
+      shikshaMitraToast.success({ message: 'Class teacher draft saved.' });
+      await refetchAssignments();
+    } catch {
+      shikshaMitraToast.error({ message: 'Draft could not be saved. Please review conflicts.' });
     }
   };
 
-  const getModifiedSubjects = () =>
-    tableData
-      .filter((row, index) => {
-        const original = originalTableData[index];
-        return row.classTeacher !== original?.classTeacher;
-      })
-      .map((row) => `${row.className} - ${row.divisionName}`);
+  const handleReview = async () => {
+    if (!hasChanges) return;
+    try {
+      const result = await validateAssignments(buildPayload(false)).unwrap();
+      setValidationResult(result);
+      setReviewOpen(true);
+    } catch {
+      shikshaMitraToast.error({ message: 'Validation failed. Please try again.' });
+    }
+  };
 
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
+  const handleConfirm = async () => {
+    try {
+      await updateAssignments(buildPayload(false)).unwrap();
+      shikshaMitraToast.success({ message: 'Class teacher assignments confirmed.' });
+      setReviewOpen(false);
+      await refetchAssignments();
+    } catch {
+      shikshaMitraToast.error({ message: 'Assignments could not be confirmed.' });
     }
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Class Teacher Assignment"
         links={[
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Class Teacher Assignment' },
         ]}
-        description="Assign teachers to specific classes and divisions, manage class teacher allocations."
+        description="Assign and manage class teachers while checking workload, availability, conflicts, and continuity."
       />
-      <Card sx={{ mb: 1, p: 1 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+
+      <Card sx={{ p: 1.75, borderRadius: 2, boxShadow: (theme) => theme.customShadows.z1 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between">
           <CustomSelect
             options={allOrganization}
             label="Organization *"
             value={organization}
-            onChange={(val) => {
-              setOrganization(val as any);
-            }}
+            onChange={(val) => handleOrganizationChange(val as string)}
             labelKey="name"
             valueKey="id"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            formControlProps={{ sx: { maxWidth: 280, width: '100%' } }}
           />
-
-          <Box display="flex" gap={2} justifyContent="flex-end">
+          <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="flex-end">
+            <Button size="small" variant="outlined" startIcon={<History />} onClick={() => setHistoryOpen(true)}>
+              History
+            </Button>
             <Button
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-              onClick={resetConfirmDialog.onTrue}
               size="small"
+              variant="outlined"
+              startIcon={<RestartAlt />}
               disabled={!hasChanges}
-              sx={{ px: '32px' }}
+              onClick={() => setDiscardOpen(true)}
             >
-              Reset
+              Discard Changes
             </Button>
             <LoadingButton
-              startIcon={<Save />}
-              variant="contained"
               size="small"
-              onClick={saveConfirmDialog.onTrue}
-              loading={isSaving}
+              variant="outlined"
+              startIcon={<Save />}
               disabled={!hasChanges}
-              sx={{ px: '32px' }}
+              loading={isSaving}
+              onClick={handleSaveDraft}
             >
-              Save
+              Save Draft
             </LoadingButton>
-          </Box>
-        </Box>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              startIcon={<FactCheck />}
+              disabled={!hasChanges}
+              loading={isValidating}
+              onClick={handleReview}
+            >
+              Review & Confirm
+            </LoadingButton>
+          </Stack>
+        </Stack>
+      </Card>
+
+      <SummaryCards summary={summary} activeFilter={statusFilter} onFilter={setStatusFilter} />
+
+      <Alert severity={summary.status === 'Ready' ? 'success' : 'warning'} sx={{ borderRadius: 2 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+          <Typography variant="body2" fontWeight={700}>
+            Allocation Status: {summary.status}
+          </Typography>
+          <Typography variant="body2">
+            {summary.reasons.length ? summary.reasons.join(' ') : 'All class divisions are assigned.'}
+          </Typography>
+        </Stack>
+      </Alert>
+
+      <Card sx={{ p: 1.25, borderRadius: 2, boxShadow: (theme) => theme.customShadows.z1 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+          <TextField
+            size="small"
+            label="Search class, division, or teacher"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            sx={{ width: { xs: '100%', md: 320 } }}
+          />
+          <TextField
+            select
+            size="small"
+            label="Assignment Status"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            sx={{ width: { xs: '100%', md: 220 } }}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="assigned">Assigned</MenuItem>
+            <MenuItem value="unassigned">Unassigned</MenuItem>
+            <MenuItem value="conflict">Conflicts</MenuItem>
+            <MenuItem value="changed">Pending Changes</MenuItem>
+            <MenuItem value="temporary">Temporary</MenuItem>
+          </TextField>
+          <Button size="small" onClick={() => { setSearch(''); setStatusFilter('all'); }}>
+            Clear Filters
+          </Button>
+        </Stack>
       </Card>
 
       <CustomizableTable
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents.length !== 0}
         tableId="assignTeacherTable"
         isLoading={isClassAssignmentLoading || isClassAssignmentFetching}
-        noDataText={<>No Division Data Found for this Organization</>}
+        noDataText={<>No class divisions found for this organization.</>}
         columns={[
-          {
-            id: 'className',
-            label: 'Class',
-            align: 'left',
-          },
-          {
-            id: 'divisionName',
-            label: 'Division',
-            align: 'left',
-          },
+          { id: 'className', label: 'Class', align: 'left', minWidth: 120 },
+          { id: 'divisionName', label: 'Division', align: 'left', minWidth: 120 },
+          { id: 'studentCount', label: 'Students', align: 'left', minWidth: 100 },
           {
             id: 'classTeacher',
-            label: 'Class Teacher',
+            label: 'Current Class Teacher',
             isSort: false,
             isFilter: false,
             align: 'left',
-            minWidth: 320,
-            render: (value: any, row: any) => {
-              const rowIndex = tableData.indexOf(row);
+            minWidth: 340,
+            render: (_: unknown, row) => {
+              const typedRow = row as unknown as AssignmentTableRow;
               return (
-                <TeacherCell
-                  teacherId={row.classTeacher}
-                  isFocused={focusedCells.includes(rowIndex)}
-                  onTeacherChange={(newValue) => handleTeacherChange(newValue, rowIndex)}
+                <TeacherAssignmentCell
+                  row={typedRow}
+                  teachers={eligibleTeachers}
+                  onChange={(teacher) => handleTeacherChange(typedRow, teacher)}
                 />
               );
             },
           },
+          {
+            id: 'workload',
+            label: 'Workload',
+            isSort: false,
+            isFilter: false,
+            minWidth: 160,
+            render: (_: unknown, row) => {
+              const typedRow = row as unknown as AssignmentTableRow;
+              return (
+                <Stack spacing={0.5}>
+                  <Label variant="soft">
+                    {typedRow.assignedTeacher
+                      ? `${typedRow.assignedTeacher.currentClassTeacherCount}/${typedRow.assignedTeacher.maximumClassTeacherCount} classes`
+                      : 'No teacher'}
+                  </Label>
+                  <Typography variant="caption" color="text.secondary">
+                    {typedRow.assignedTeacher?.workloadStatus || 'Unassigned'}
+                  </Typography>
+                </Stack>
+              );
+            },
+          },
+          {
+            id: 'availability',
+            label: 'Availability',
+            isSort: false,
+            isFilter: false,
+            minWidth: 140,
+            render: (_: unknown, row) => {
+              const typedRow = row as unknown as AssignmentTableRow;
+              return (
+                <Label variant="soft" color={typedRow.assignedTeacher?.isActive ? 'success' : 'default'}>
+                  {typedRow.assignedTeacher?.availabilityStatus || 'Unassigned'}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'assignmentStatus',
+            label: 'Status',
+            minWidth: 150,
+            render: (_: unknown, row) => {
+              const typedRow = row as unknown as AssignmentTableRow;
+              const statusColor: LabelColor = typedRow.conflictCount
+                ? 'error'
+                : typedRow.classTeacher
+                  ? 'success'
+                  : 'warning';
+              return (
+                <Stack spacing={0.5}>
+                  <Label variant="soft" color={statusColor}>
+                    {typedRow.assignmentStatus}
+                  </Label>
+                  {typedRow.conflictCount > 0 && (
+                    <Typography variant="caption" color="error">
+                      {typedRow.conflictCount} issue(s)
+                    </Typography>
+                  )}
+                </Stack>
+              );
+            },
+          },
+          {
+            id: 'effectiveFromDraft',
+            label: 'Effective From',
+            isSort: false,
+            isFilter: false,
+            minWidth: 170,
+            render: (_: unknown, row) => {
+              const typedRow = row as unknown as AssignmentTableRow;
+              return (
+                <DatePicker
+                  value={typedRow.effectiveFromDraft ? dayjs(typedRow.effectiveFromDraft) : null}
+                  onChange={(newValue) =>
+                    updateRow(getRowKey(typedRow), {
+                      effectiveFromDraft: newValue?.isValid() ? newValue.format('YYYY-MM-DD') : '',
+                    })
+                  }
+                  format="DD-MM-YYYY"
+                  slotProps={{ textField: { size: 'small', sx: { width: 155 } } }}
+                />
+              );
+            },
+          },
+          {
+            id: 'assignmentTypeDraft',
+            label: 'Assignment Type',
+            isSort: false,
+            isFilter: false,
+            minWidth: 180,
+            render: (_: unknown, row) => {
+              const typedRow = row as unknown as AssignmentTableRow;
+              return (
+                <TextField
+                  select
+                  size="small"
+                  value={typedRow.assignmentTypeDraft}
+                  onChange={(event) =>
+                    updateRow(getRowKey(typedRow), { assignmentTypeDraft: event.target.value })
+                  }
+                  fullWidth
+                >
+                  {assignmentTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              );
+            },
+          },
+          {
+            id: 'changeReasonDraft',
+            label: 'Change Reason',
+            isSort: false,
+            isFilter: false,
+            minWidth: 220,
+            render: (_: unknown, row) => {
+              const typedRow = row as unknown as AssignmentTableRow;
+              return (
+                <TextField
+                  select
+                  size="small"
+                  value={typedRow.changeReasonDraft}
+                  onChange={(event) =>
+                    updateRow(getRowKey(typedRow), { changeReasonDraft: event.target.value })
+                  }
+                  fullWidth
+                >
+                  {changeReasons.map((reason) => (
+                    <MenuItem key={reason} value={reason}>
+                      {reason}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              );
+            },
+          },
         ]}
-        serverSide
-        onServerSort={(column, sortData) => {
-          setQuery((prev) => ({
-            ...prev,
-            sorting: sortQueryString(sortData),
-          }));
-        }}
-        onServerPagination={(page: number, rowsPerPage: number) => {
-          setQuery((prev) => ({
-            ...prev,
-            skipCount: page * rowsPerPage,
-            maxResultCount: rowsPerPage,
-          }));
-        }}
-        data={tableData}
+        data={filteredData}
       />
 
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudents}
-        />
-      )}
+      <ReviewDrawer
+        open={reviewOpen}
+        validation={validationResult}
+        changedRows={changedRows}
+        isSaving={isSaving}
+        onClose={() => setReviewOpen(false)}
+        onConfirm={handleConfirm}
+      />
+
+      <Drawer
+        anchor="right"
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        PaperProps={{ sx: { width: 420, p: 2 } }}
+      >
+        <Typography variant="h6">Assignment History</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Current assignment audit trail for this organization.
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+        <Stack spacing={1.5}>
+          {history.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              No assignment history found.
+            </Typography>
+          )}
+          {history.map((item) => (
+            <Card key={`${item.classId}-${item.divisionId}-${item.changedAt}`} sx={{ p: 1.25 }}>
+              <Typography variant="subtitle2">
+                {item.className} {item.divisionName}
+              </Typography>
+              <Typography variant="body2">{item.newTeacherName || 'Teacher not available'}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {item.changeReason} · {new Date(item.changedAt).toLocaleDateString('en-GB')} ·{' '}
+                {item.changedBy}
+              </Typography>
+            </Card>
+          ))}
+        </Stack>
+      </Drawer>
 
       <ConfirmDialog
-        title="Reset"
-        open={resetConfirmDialog.value}
-        onClose={resetConfirmDialog.onFalse}
-        content="Are you sure you want to reset the selected changes?"
+        title="Discard Changes"
+        open={discardOpen}
+        onClose={() => setDiscardOpen(false)}
+        content="Discard the unsaved assignment changes and restore the last saved values?"
         action={
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-            onClick={handleReset}
-            size="small"
-          >
-            Reset
+          <Button size="small" variant="contained" color="error" onClick={handleDiscard}>
+            Discard
           </Button>
         }
       />
 
       <ConfirmDialog
-        title="Save"
-        open={saveConfirmDialog.value}
-        onClose={saveConfirmDialog.onFalse}
-        content={
-          <>
-            Are you sure you want to save the <strong>{getModifiedSubjects().join(', ')}</strong>{' '}
-            changes?
-          </>
-        }
+        title="Unsaved Changes"
+        open={switchOpen}
+        onClose={() => setSwitchOpen(false)}
+        content="Changing organization will discard your unsaved assignment changes."
         action={
-          <LoadingButton
-            size="small"
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            onClick={handleSave}
-            loading={isSaving}
-          >
-            Save
-          </LoadingButton>
+          <Button size="small" variant="contained" color="warning" onClick={confirmOrganizationSwitch}>
+            Continue
+          </Button>
         }
       />
     </Box>

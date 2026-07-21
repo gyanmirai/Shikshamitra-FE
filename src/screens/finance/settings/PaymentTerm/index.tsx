@@ -6,16 +6,11 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import {
-  useGetPaymentTermQuery,
-  useDeletePaymentTermMutation,
-  useClonePaymentTermsMutation,
-} from 'src/redux/finance/paymentTerm';
 import {
   Box,
   Alert,
@@ -31,11 +26,41 @@ import {
   DialogActions,
   DialogContent,
 } from '@mui/material';
+import {
+  useGetPaymentTermsQuery,
+  type PaymentTermListItem,
+  useLazyGetPaymentTermsQuery,
+  useDeletePaymentTermMutation,
+  useClonePaymentTermsMutation,
+} from 'src/redux/finance/paymentTerm';
 
 import PaymentTermForm from './Components/PaymentTermForm';
 import PaymentTermTable from './Components/PaymentTermTable';
 
 import type { IPaymentTerm } from './type';
+
+// ---------------------------------------------------------------------------
+// Map list API item → table/form row shape
+// ---------------------------------------------------------------------------
+const mapListItemToPaymentTerm = (item: PaymentTermListItem): IPaymentTerm => ({
+  id: item.id,
+  paymentTermName: item.name,
+  paymentTermCode: item.code,
+  boardId: item.boardId,
+  description: '',
+  status: item.status,
+  academicYearId: item.academicYearId,
+  totalInstallments: item.installmentCount,
+  installments: [],
+  isDefaultTerm: item.isDefault,
+  holidayShiftingMethod: 'None',
+  demandGenerationRule: 'Immediately',
+  demandOffsetDays: null,
+  initialDemandStatus: 'Draft',
+  currentVersionNumber: item.currentVersionNumber,
+  isUsedInDownstream: item.referencedStructureCount > 0,
+  canDirectEdit: item.canDirectEdit,
+});
 
 // ---------------------------------------------------------------------------
 // PaymentTerm screen — orchestrates table, drawer, delete dialog, clone dialog
@@ -60,9 +85,11 @@ const PaymentTerm = () => {
     refetch,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetPaymentTermQuery,
-    params: { academicYearId: targetAcademicYearId },
+    currentQueryAndMutation: useGetPaymentTermsQuery,
+    params: { academicYearId: targetAcademicYearId, pageSize: 100 },
   });
+
+  const [fetchSourceTerms] = useLazyGetPaymentTermsQuery();
 
   const [deletePaymentTerm, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
@@ -104,9 +131,22 @@ const PaymentTerm = () => {
       return;
     }
     try {
+      const sourceList = await fetchSourceTerms({
+        academicYearId: cloneSourceYearId,
+        pageSize: 1000,
+        includeArchived: false,
+      }).unwrap();
+
+      const paymentTermIds = (sourceList.items ?? []).map((t) => t.id);
+      if (paymentTermIds.length === 0) {
+        shikshaMitraToast.error({ message: 'No payment terms found in the source year.' });
+        return;
+      }
+
       await clonePaymentTerms({
         sourceAcademicYearId: cloneSourceYearId,
         targetAcademicYearId,
+        paymentTermIds,
       });
       shikshaMitraToast.success({ message: 'Payment terms cloned successfully.' });
       cloneDialog.onFalse();
@@ -115,7 +155,14 @@ const PaymentTerm = () => {
     } catch {
       shikshaMitraToast.error({ message: 'Failed to clone payment terms.' });
     }
-  }, [cloneDialog, clonePaymentTerms, cloneSourceYearId, refetch, targetAcademicYearId]);
+  }, [
+    cloneDialog,
+    clonePaymentTerms,
+    cloneSourceYearId,
+    fetchSourceTerms,
+    refetch,
+    targetAcademicYearId,
+  ]);
 
   // ── Delete confirm ────────────────────────────────────────────────────────
   /**
@@ -139,9 +186,14 @@ const PaymentTerm = () => {
   }, [deletePaymentTerm, deletePaymentTermDialog, refetch, selectedPaymentTerm]);
 
   // ── Derived data ──────────────────────────────────────────────────────────
-  const tableData: IPaymentTerm[] = Array.isArray(paymentTerms)
-    ? paymentTerms
-    : (paymentTerms?.items ?? []);
+  const tableData: IPaymentTerm[] = useMemo(() => {
+    const items = paymentTerms?.items ?? (Array.isArray(paymentTerms) ? paymentTerms : []);
+    return items.map((item: PaymentTermListItem | IPaymentTerm) =>
+      'name' in item && !('paymentTermName' in item)
+        ? mapListItemToPaymentTerm(item as PaymentTermListItem)
+        : (item as IPaymentTerm)
+    );
+  }, [paymentTerms]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (

@@ -88,7 +88,7 @@ const Section = ({
         '& .MuiAccordionSummary-content': { my: 1.25, mx: 0 },
       }}
     >
-      <Stack direction="row" alignItems="center" gap={1.25}>
+      <Stack direction="row" alignItems="center" gap={1}>
         <Box
           sx={{
             width: 30,
@@ -198,9 +198,15 @@ const AuditLogDetailsDrawer = ({
           </Box>
         ) : (
           <>
-            <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
-              <Box>
-                <AuditActionBadge action={log.action} variant="inline" />
+            <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1.5}>
+              <Box sx={{ minWidth: 0 }}>
+                <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+                  <AuditActionBadge action={log.action} variant="inline" />
+                  {sourceLabel && <AuditSourceBadge source={log.source} />}
+                </Stack>
+                <Typography variant="h6" sx={{ mt: 1, fontWeight: 700, lineHeight: 1.25 }} noWrap>
+                  {log.actionLabel}
+                </Typography>
                 {showRecordRow ? (
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
                     {log.entityType} · <b>{log.entityName}</b>
@@ -219,7 +225,6 @@ const AuditLogDetailsDrawer = ({
             {hasStatusChips && (
               <Stack direction="row" alignItems="center" gap={1} sx={{ mt: 1.5 }} flexWrap="wrap">
                 <AuditRiskBadge level={log.riskLevel} />
-                <AuditSourceBadge source={log.source} />
                 {showApprovalChip && (
                   <Label
                     variant="soft"
@@ -233,13 +238,19 @@ const AuditLogDetailsDrawer = ({
             )}
 
             <Stack
-              direction="row"
-              alignItems="center"
+              direction={{ xs: 'column', sm: 'row' }}
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
               justifyContent="space-between"
-              gap={1}
-              sx={{ mt: 2 }}
+              gap={1.5}
+              sx={{
+                mt: 2,
+                p: 1.5,
+                borderRadius: 1.5,
+                backgroundColor: 'background.paper',
+                border: `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
+              }}
             >
-              <Stack direction="row" alignItems="center" gap={1.25}>
+              <Stack direction="row" alignItems="center" gap={1}>
                 <Avatar
                   sx={{
                     width: 34,
@@ -265,12 +276,12 @@ const AuditLogDetailsDrawer = ({
                 <Stack
                   direction="row"
                   alignItems="center"
-                  gap={0.5}
+                  gap={1}
                   sx={{
                     px: 1,
                     py: 0.5,
                     borderRadius: 1,
-                    backgroundColor: alpha(theme.palette.grey[500], 0.08),
+                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
                   }}
                 >
                   <Iconify icon="mdi:clock-outline" width={13} color="text.secondary" />
@@ -294,7 +305,7 @@ const AuditLogDetailsDrawer = ({
         }}
       >
         {!loading && log && (
-          <Stack spacing={1.5}>
+          <Stack spacing={1}>
             {/* Change Details */}
             <Section
               icon="mdi:clipboard-text-outline"
@@ -316,7 +327,7 @@ const AuditLogDetailsDrawer = ({
                   </DetailRow>
                 )}
                 <DetailRow label="Log ID" last>
-                  <Stack direction="row" alignItems="center" gap={0.5} sx={{ minWidth: 0 }}>
+                  <Stack direction="row" alignItems="center" gap={1} sx={{ minWidth: 0 }}>
                     <Typography
                       variant="caption"
                       fontWeight={600}
@@ -409,13 +420,13 @@ const AuditLogDetailsDrawer = ({
                 subtitle="Other records connected to this change"
                 defaultExpanded={false}
               >
-                <Stack spacing={0.75}>
+                <Stack spacing={1}>
                   {log.relatedRecords.map((r, i) => (
                     <Stack
                       key={`${r.name}-${i}`}
                       direction="row"
                       alignItems="center"
-                      gap={1.5}
+                      gap={1}
                       sx={{
                         py: 0.75,
                         cursor: r.href ? 'pointer' : 'default',
@@ -461,7 +472,7 @@ const AuditLogDetailsDrawer = ({
           }}
         >
           <Stack direction="row" gap={1} justifyContent="space-between" flexWrap="wrap">
-            <Stack direction="row" gap={0.75}>
+            <Stack direction="row" gap={1}>
               <Button
                 size="small"
                 variant="text"
@@ -471,15 +482,6 @@ const AuditLogDetailsDrawer = ({
                 sx={{ color: 'text.secondary' }}
               >
                 Copy ID
-              </Button>
-              <Button
-                size="small"
-                variant="text"
-                color="inherit"
-                startIcon={<Iconify icon="mdi:download" width={15} />}
-                sx={{ color: 'text.secondary' }}
-              >
-                Export
               </Button>
             </Stack>
             <Stack direction="row" gap={1}>
@@ -525,7 +527,7 @@ const DetailRow = ({
     <Stack
       direction="row"
       alignItems="center"
-      gap={1.5}
+      gap={1}
       sx={{
         py: 1,
         minHeight: 34,

@@ -74,6 +74,15 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.assignmentSubmissions],
     }),
+
+    uploadAssignmentSubmissionFile: builder.mutation({
+      query: (body: FormData) => ({
+        url: `/academic/assignment-submissions`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.assignmentSubmissions],
+    }),
   }),
   overrideExisting: false,
 });
@@ -84,4 +93,5 @@ export const {
   useUpdateAssignmentAssessmentMutation,
   useUpdateSubmissionFeedbackMutation,
   useUpdateSubmissionStatusMutation,
+  useUploadAssignmentSubmissionFileMutation,
 } = assessmentAndFeedbackApi;

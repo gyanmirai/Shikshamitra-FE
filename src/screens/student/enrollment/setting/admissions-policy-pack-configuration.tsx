@@ -366,6 +366,7 @@ export default function AdmissionsPolicyPackConfiguration() {
                   <span>
                     <IconButton
                       size="small"
+                      aria-label={`Remove policy source ${index + 1}`}
                       disabled={sources.length === 1}
                       onClick={() => setSources((x) => x.filter((_, i) => i !== index))}
                     >
@@ -446,6 +447,7 @@ export default function AdmissionsPolicyPackConfiguration() {
                       <span>
                         <IconButton
                           size="small"
+                          aria-label={`Remove policy rule ${rule.name || index + 1}`}
                           disabled={rules.length === 1}
                           onClick={() => setRules((x) => x.filter((_, i) => i !== index))}
                         >
@@ -573,7 +575,7 @@ export default function AdmissionsPolicyPackConfiguration() {
                     {new Date(pack.reviewDueAt).toLocaleDateString()}
                   </Typography>
                 </Box>
-                <Stack direction="row" gap={0.75} alignItems="center">
+                <Stack direction="row" gap={1} alignItems="center">
                   <Chip
                     size="small"
                     label={statusLabel[pack.status]}

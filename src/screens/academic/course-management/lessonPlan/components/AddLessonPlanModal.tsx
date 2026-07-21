@@ -5,7 +5,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import React, { useState, useCallback } from 'react';
 import { LoadingButton } from '@mui/lab';
 import CustomSelect from 'src/components/custom-select';
@@ -204,7 +204,8 @@ const AutoFilledField = ({ label, value }: { label: string; value: string }) => 
   />
 );
 
-const normalizeText = (value?: string | null) => value?.trim().toLowerCase() || '';
+const normalizeText = (value?: string | null) =>
+  value?.trim().toLowerCase().split(/\s+/).filter(Boolean).join(' ') || '';
 
 const hasDuplicateLessonTopic = (form: LessonFormState, lessonPlans: LessonPlanRow[]) => {
   const topic = normalizeText(form.topic);
@@ -549,7 +550,7 @@ const AddLessonPlanModal = ({
     <CustomDialog
       open={open}
       title={
-        <Stack spacing={0.25}>
+        <Stack spacing={1}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               {form.id ? 'Edit Lesson Plan' : 'Add Lesson Plan'}
@@ -571,7 +572,7 @@ const AddLessonPlanModal = ({
       handleClose={onClose}
     >
       <DialogScrollContent sx={{ bgcolor: 'background.neutral', pb: 2 }}>
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           {error && (
             <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
               {error}
@@ -613,7 +614,7 @@ const AddLessonPlanModal = ({
 
           {/* Schedule & context */}
           <FormSection icon="mdi:calendar-clock-outline" title="Schedule & Context">
-            <Stack spacing={2}>
+            <Stack spacing={1}>
               <CustomSelect
                 label="Teacher *"
                 options={teacherOptions}
@@ -622,7 +623,7 @@ const AddLessonPlanModal = ({
                 disabled
               />
 
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <DatePicker
                   label="Planned Date *"
                   value={form.plannedDate}
@@ -641,7 +642,7 @@ const AddLessonPlanModal = ({
                 />
               </Stack>
 
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <AutoFilledField label="Class *" value={form.className} />
                 <AutoFilledField label="Division *" value={form.divisionName} />
                 <AutoFilledField label="Subject *" value={form.subjectName} />
@@ -660,14 +661,18 @@ const AddLessonPlanModal = ({
 
           {/* Chapter & topic */}
           <FormSection icon="mdi:book-open-page-variant-outline" title="Chapter & Topic">
-            <Stack spacing={2}>
+            <Stack spacing={1}>
               <CustomSelect
                 label="Chapter *"
                 options={chapterOptions}
                 value={form.chapterName}
                 onChange={(v) => handleChapterChange(v as string)}
                 error={showValidation && (!form.chapterId || !form.chapterName)}
-                helperText={showValidation && (!form.chapterId || !form.chapterName) ? 'Chapter is required' : ''}
+                helperText={
+                  showValidation && (!form.chapterId || !form.chapterName)
+                    ? 'Chapter is required'
+                    : ''
+                }
               />
 
               <TextField
@@ -702,8 +707,8 @@ const AddLessonPlanModal = ({
 
           {/* Teaching method & resources */}
           <FormSection icon="mdi:teach" title="Teaching Method & Resources">
-            <Stack spacing={2}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
+            <Stack spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
                 <CustomSelect
                   label="Teaching Method"
                   options={teachingMethodOptions}
@@ -781,7 +786,7 @@ const AddLessonPlanModal = ({
                 alignItems="center"
                 sx={{ mb: 0.75 }}
               >
-                <Stack direction="row" spacing={0.75} alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center">
                   <Iconify icon="mdi:auto-fix" width={16} sx={{ color: 'primary.dark' }} />
                   <Typography variant="caption" color="primary.dark" fontWeight={600}>
                     AI Lesson Plan Quality Preview

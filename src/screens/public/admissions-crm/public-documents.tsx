@@ -4,9 +4,24 @@ import { useState } from 'react';
 import { UploadFile } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import { Box, Chip, Alert, Stack, Divider, TextField, Typography } from '@mui/material';
+import { AdmissionCrmApplicantDocumentStatus } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import {
+  Box,
+  Chip,
+  Alert,
+  Stack,
+  Divider,
+  TextField,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 
+import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
+import { getAccessibleStatusChipProps } from './public-admissions-styles';
+import { formatPublicNumber, getPublicStatusLabel } from './public-admissions-format';
+
+import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
 export type PublicApplicantDocument = {
   id?: string | null;
@@ -47,19 +62,10 @@ type Props = {
   accessSessionToken: string;
   checklist: PublicDocumentChecklist;
   onUpdated: (checklist: PublicDocumentChecklist) => void;
+  language?: PublicAdmissionsLanguage;
 };
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api`;
-const statusNames: Record<number, string> = {
-  0: 'Uploaded',
-  1: 'Under review',
-  2: 'Verified',
-  3: 'Rejected',
-  4: 'Expired',
-  5: 'Waived',
-  6: 'Original seen',
-};
-
 const canReplace = (status?: number | null) => status == null || status === 3 || status === 4;
 
 export default function PublicDocuments({
@@ -68,7 +74,9 @@ export default function PublicDocuments({
   accessSessionToken,
   checklist,
   onUpdated,
+  language = 'en',
 }: Props) {
+  const copy = publicAdmissionsActionCopy[language];
   const [selectedFiles, setSelectedFiles] = useState<Record<string, File | undefined>>({});
   const [validUntil, setValidUntil] = useState<Record<string, string>>({});
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
@@ -76,22 +84,24 @@ export default function PublicDocuments({
   const upload = async (document: PublicApplicantDocument) => {
     const file = selectedFiles[document.requirementKey];
     if (!file) {
-      shikshaMitraToast.error({ message: 'Choose a document file.' });
+      shikshaMitraToast.error({ message: copy.chooseDocument });
       return;
     }
     const extension = file.name.split('.').pop()?.toLowerCase() || '';
     if (!document.acceptedExtensions.includes(extension)) {
       shikshaMitraToast.error({
-        message: `Accepted formats: ${document.acceptedExtensions.join(', ')}`,
+        message: `${copy.acceptedFormats}: ${document.acceptedExtensions.join(', ')}`,
       });
       return;
     }
     if (file.size > document.maximumSizeMb * 1024 * 1024) {
-      shikshaMitraToast.error({ message: `Maximum file size is ${document.maximumSizeMb} MB.` });
+      shikshaMitraToast.error({
+        message: `${copy.maximumFileSize} ${formatPublicNumber(document.maximumSizeMb, language)} MB.`,
+      });
       return;
     }
     if (document.validityDateRequired && !validUntil[document.requirementKey]) {
-      shikshaMitraToast.error({ message: 'Enter the document validity date.' });
+      shikshaMitraToast.error({ message: copy.enterValidityDate });
       return;
     }
     setUploadingKey(document.requirementKey);
@@ -109,16 +119,17 @@ export default function PublicDocuments({
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(
           response,
-          'Unable to upload document.'
+          copy.uploadFailed,
+          language
         );
         throw new Error(problem.message);
       }
       onUpdated((await response.json()) as PublicDocumentChecklist);
       setSelectedFiles((current) => ({ ...current, [document.requirementKey]: undefined }));
-      shikshaMitraToast.success({ message: 'Document uploaded for review.' });
+      shikshaMitraToast.success({ message: copy.uploadSuccess });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'Unable to upload document.',
+        message: error instanceof Error ? error.message : copy.uploadFailed,
       });
     } finally {
       setUploadingKey(null);
@@ -130,23 +141,30 @@ export default function PublicDocuments({
       <Divider />
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
         <Box>
-          <Typography variant="subtitle1">Documents</Typography>
+          <Typography variant="subtitle1">{copy.documentsTitle}</Typography>
           <Typography variant="caption" color="text.secondary">
-            {checklist.checklistName} - version {checklist.checklistTemplateVersion}
+            {checklist.checklistName} - {copy.version} {checklist.checklistTemplateVersion}
           </Typography>
         </Box>
         <Chip
           size="small"
-          label={`${checklist.completionPercentage.toFixed(0)}% complete`}
-          color={checklist.completionPercentage === 100 ? 'success' : 'default'}
+          label={`${formatPublicNumber(checklist.completionPercentage, language, { maximumFractionDigits: 0 })}% ${copy.complete}`}
+          {...getAccessibleStatusChipProps(
+            checklist.completionPercentage === 100 ? 'success' : 'default'
+          )}
         />
       </Stack>
+      <LinearProgress
+        variant="determinate"
+        value={Math.min(100, Math.max(0, checklist.completionPercentage))}
+        aria-label={`${formatPublicNumber(checklist.completionPercentage, language, { maximumFractionDigits: 0 })}% ${copy.documentsComplete}`}
+      />
       {checklist.blockingReasons.length ? (
         <Alert severity="warning">{checklist.blockingReasons.join(' ')}</Alert>
       ) : checklist.awaitingSecondReadinessApproval ? (
-        <Alert severity="info">Document verification is awaiting the second school approval.</Alert>
+        <Alert severity="info">{copy.secondApproval}</Alert>
       ) : (
-        <Alert severity="success">All blocking document requirements are resolved.</Alert>
+        <Alert severity="success">{copy.requirementsResolved}</Alert>
       )}
       {checklist.documents.map((document) => (
         <Stack
@@ -172,14 +190,21 @@ export default function PublicDocuments({
             </Box>
             <Chip
               size="small"
-              label={document.status == null ? 'Missing' : statusNames[document.status]}
-              color={
+              label={
+                document.status == null
+                  ? copy.missing
+                  : getPublicStatusLabel(
+                      AdmissionCrmApplicantDocumentStatus[document.status],
+                      language
+                    )
+              }
+              {...getAccessibleStatusChipProps(
                 document.status === 2 || document.status === 5 || document.status === 6
                   ? 'success'
                   : document.status === 3 || document.status === 4
                     ? 'error'
                     : 'default'
-              }
+              )}
             />
           </Stack>
           {canReplace(document.status) ? (
@@ -189,6 +214,7 @@ export default function PublicDocuments({
                 type="file"
                 inputProps={{
                   accept: document.acceptedExtensions.map((item) => `.${item}`).join(','),
+                  'aria-label': `Choose ${document.requirementName}`,
                 }}
                 onChange={(event) =>
                   setSelectedFiles((current) => ({
@@ -201,7 +227,7 @@ export default function PublicDocuments({
                 <TextField
                   size="small"
                   type="date"
-                  label="Valid until"
+                  label={copy.validUntil}
                   InputLabelProps={{ shrink: true }}
                   value={validUntil[document.requirementKey] || ''}
                   onChange={(event) =>
@@ -220,14 +246,12 @@ export default function PublicDocuments({
                 disabled={!selectedFiles[document.requirementKey]}
                 onClick={() => upload(document)}
               >
-                Upload
+                {copy.upload}
               </LoadingButton>
             </Stack>
           ) : null}
           {document.requiresOriginal && document.status === 2 ? (
-            <Alert severity="info">
-              Present the original at school reception for confirmation.
-            </Alert>
+            <Alert severity="info">{copy.presentOriginal}</Alert>
           ) : null}
         </Stack>
       ))}

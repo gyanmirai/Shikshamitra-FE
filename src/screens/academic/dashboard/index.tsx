@@ -55,12 +55,31 @@ type TopSummaryTone = 'primary' | 'success' | 'info' | 'warning' | 'error' | 'se
 
 const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
 
+const toActionSeverity = (severity?: string): AcademicActionItem['severity'] => {
+  if (severity === 'critical') {
+    return 'critical';
+  }
+  if (severity === 'warning') {
+    return 'warning';
+  }
+  return 'info';
+};
+
 const toTeacherActions = (data: TeacherAcademicDashboardData): AcademicActionItem[] => [
+  ...(data.actionCenterItems || []).map((item) => ({
+    id: `academic-action-${item.id}`,
+    title: item.title,
+    summary: `${formatCount(item.count)} pending - ${item.summary}`,
+    severity: toActionSeverity(item.severity),
+    source: item.source,
+    actionLabel: item.actionLabel,
+    actionHref: item.actionHref,
+  })),
   ...data.insights.map((insight, index) => ({
     id: `teacher-insight-${index}`,
     title: insight.title,
     summary: insight.summary,
-    severity: insight.severity,
+    severity: toActionSeverity(insight.severity),
     source: insight.source,
     actionLabel: insight.actionLabel,
     actionHref: insight.actionHref,
@@ -69,7 +88,12 @@ const toTeacherActions = (data: TeacherAcademicDashboardData): AcademicActionIte
     id: `task-${task.id}`,
     title: task.title,
     summary: `${formatCount(task.count)} item${task.count === 1 ? '' : 's'} pending`,
-    severity: task.priority === 'high' ? ('critical' as const) : task.priority === 'medium' ? ('warning' as const) : ('info' as const),
+    severity:
+      task.priority === 'high'
+        ? ('critical' as const)
+        : task.priority === 'medium'
+          ? ('warning' as const)
+          : ('info' as const),
     source: 'teacher-workbench',
     actionLabel: task.action,
     actionHref: task.path,
@@ -81,7 +105,9 @@ const toTeacherModuleHealth = (data: TeacherAcademicDashboardData): AcademicModu
     id: 'lectures',
     module: 'Today Lectures',
     status: `${data.lecturesDone}/${data.todaysLecturesCount} completed`,
-    progress: data.todaysLecturesCount ? Math.round((data.lecturesDone / data.todaysLecturesCount) * 100) : 0,
+    progress: data.todaysLecturesCount
+      ? Math.round((data.lecturesDone / data.todaysLecturesCount) * 100)
+      : 0,
     tone: data.pendingAttendanceClasses > 0 ? 'warning' : 'success',
     icon: 'mdi:calendar-clock-outline',
     href: academicPaths.timetable.management,
@@ -113,6 +139,23 @@ const toTeacherModuleHealth = (data: TeacherAcademicDashboardData): AcademicModu
     icon: 'mdi:account-alert-outline',
     href: academicPaths.studentAcademic360,
   },
+  ...(data.readinessItems || []).slice(0, 4).map((item) => ({
+    id: `readiness-${item.key}`,
+    module: item.title,
+    status:
+      item.missingCount > 0
+        ? `${formatCount(item.missingCount)} missing`
+        : `${formatCount(item.completedCount)} ready`,
+    progress: item.totalCount ? Math.round((item.completedCount / item.totalCount) * 100) : 0,
+    tone:
+      item.severity === 'critical'
+        ? ('error' as const)
+        : item.severity === 'warning'
+          ? ('warning' as const)
+          : ('success' as const),
+    icon: 'mdi:clipboard-check-outline',
+    href: item.actionHref,
+  })),
 ];
 
 const getToneMain = (theme: any, tone: TopSummaryTone) => {
@@ -370,10 +413,10 @@ const TeacherLecturesSnapshotCard = ({ data }: { data: TeacherAcademicDashboardD
         </Button>
       }
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         <Stack
           direction={{ xs: 'column', sm: 'row', lg: 'column', xl: 'row' }}
-          spacing={1.25}
+          spacing={1}
           alignItems="center"
         >
           <Box
@@ -474,7 +517,7 @@ const TeacherEvaluationsPulseCard = ({ data }: { data: TeacherAcademicDashboardD
         </Button>
       }
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         <Box
           sx={{
             p: 1.5,
@@ -485,7 +528,7 @@ const TeacherEvaluationsPulseCard = ({ data }: { data: TeacherAcademicDashboardD
         >
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
-            spacing={1.25}
+            spacing={1}
             alignItems={{ xs: 'stretch', sm: 'center' }}
             justifyContent="space-between"
           >
@@ -567,7 +610,7 @@ const TeacherStudentAttentionCard = ({ data }: { data: TeacherAcademicDashboardD
     height="100%"
     minHeight={236}
   >
-    <Stack spacing={1.25}>
+    <Stack spacing={1}>
       <Box
         sx={{
           p: 1.5,
@@ -650,7 +693,7 @@ const TeacherInsightsCard = ({ data }: { data: TeacherAcademicDashboardData }) =
             justifyContent="space-between"
             spacing={1}
           >
-            <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+            <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ minWidth: 0 }}>
               <Box
                 sx={{
                   width: 30,
@@ -891,12 +934,12 @@ function CompactSchedule({ schedule }: { schedule?: TodayScheduleItem[] }) {
         </Button>
       }
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         {displaySchedule.map((lecture) => (
           <Stack
             key={lecture.id}
             direction="row"
-            spacing={1.25}
+            spacing={1}
             alignItems="center"
             sx={{
               p: 1.25,
@@ -923,7 +966,7 @@ function CompactSchedule({ schedule }: { schedule?: TodayScheduleItem[] }) {
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={0.75}>
+            <Stack direction="row" spacing={1}>
               <Label variant="soft" color={statusColor[lecture.status]} sx={{ mt: 0.75 }}>
                 {lecture.status === 'ongoing'
                   ? 'Ongoing'
@@ -970,7 +1013,7 @@ function PendingTaskCenter({ tasks }: { tasks?: PendingTaskItem[] }) {
           <Stack
             key={task.id}
             direction="row"
-            spacing={1.25}
+            spacing={1}
             alignItems="center"
             sx={{
               p: 1.25,
@@ -994,7 +1037,7 @@ function PendingTaskCenter({ tasks }: { tasks?: PendingTaskItem[] }) {
             </Box>
 
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 0.25 }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.25 }}>
                 <Typography variant="subtitle2">{task.count}</Typography>
                 <Typography variant="body2" noWrap>
                   {task.title}
@@ -1044,7 +1087,7 @@ function StudentsAttentionPanel({ students }: { students?: AttentionStudentItem[
           <Stack
             key={student.id}
             direction="row"
-            spacing={1.25}
+            spacing={1}
             alignItems="center"
             sx={{
               p: 1.25,
@@ -1125,20 +1168,20 @@ function QuickActionsPanel() {
 }
 
 const DashboardSkeleton = () => (
-  <Stack spacing={1.5}>
-    <Grid container spacing={1.5}>
+  <Stack spacing={1}>
+    <Grid container spacing={1}>
       {Array.from({ length: 3 }).map((_, index) => (
         <Grid key={index} size={{ xs: 12, lg: index === 1 ? 5 : index === 2 ? 3 : 4 }}>
           <Skeleton variant="rounded" height={260} />
         </Grid>
       ))}
     </Grid>
-    <Grid container spacing={1.5}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <Skeleton variant="rounded" height={200} />
       </Grid>
     </Grid>
-    <Grid container spacing={1.5}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <Skeleton variant="rounded" height={100} />
       </Grid>
@@ -1194,7 +1237,7 @@ const AcademicTeacherDashboardScreen = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 2 }}>
       <AcademicCommandHeader
         eyebrow="Teacher View"
         title="Teacher Academic Workbench"
@@ -1203,8 +1246,16 @@ const AcademicTeacherDashboardScreen = () => {
         isBusy={isRefreshing || isFetching}
         onRefresh={handleRefresh}
         actions={[
-          { label: 'Student 360', href: academicPaths.studentAcademic360, icon: 'mdi:account-school-outline' },
-          { label: 'Add Homework', href: academicPaths.homework.learningTasks, icon: 'solar:notebook-linear' },
+          {
+            label: 'Student 360',
+            href: academicPaths.studentAcademic360,
+            icon: 'mdi:account-school-outline',
+          },
+          {
+            label: 'Add Homework',
+            href: academicPaths.homework.learningTasks,
+            icon: 'solar:notebook-linear',
+          },
           {
             label: 'Record Marks',
             href: academicPaths.examination.recordMarks,
@@ -1216,16 +1267,29 @@ const AcademicTeacherDashboardScreen = () => {
 
       {isRefreshing || isFetching ? <LinearProgress /> : null}
 
-      <Grid container spacing={1.5} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 4 }}>
           <AcademicHealthScoreCard
             title="My Academic Health"
-            score={Math.round((data.attendanceRate + data.evaluationsRate + Math.max(0, 100 - data.studentsAttentionCount * 5)) / 3)}
-            status={data.studentsAttentionCount > 0 || data.pendingEvaluations > 0 ? 'Needs Attention' : 'Healthy'}
+            score={Math.round(
+              (data.attendanceRate +
+                data.evaluationsRate +
+                Math.max(0, 100 - data.studentsAttentionCount * 5)) /
+                3
+            )}
+            status={
+              data.studentsAttentionCount > 0 || data.pendingEvaluations > 0
+                ? 'Needs Attention'
+                : 'Healthy'
+            }
             description="Combines attendance completion, evaluation progress and student attention workload."
             factors={[
               { label: 'Attendance', value: `${data.attendanceRate}%`, tone: 'success' },
-              { label: 'Lectures', value: `${data.lecturesDone}/${data.todaysLecturesCount}`, tone: 'info' },
+              {
+                label: 'Lectures',
+                value: `${data.lecturesDone}/${data.todaysLecturesCount}`,
+                tone: 'info',
+              },
               { label: 'Evaluation', value: `${data.evaluationsRate}%`, tone: 'warning' },
               { label: 'Students', value: `${data.studentsAttentionCount} alerts`, tone: 'error' },
             ]}
@@ -1244,7 +1308,7 @@ const AcademicTeacherDashboardScreen = () => {
       </Grid>
 
       {/* Snapshot Cards */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, lg: 4 }}>
           <TeacherLecturesSnapshotCard data={data} />
         </Grid>
@@ -1257,14 +1321,14 @@ const AcademicTeacherDashboardScreen = () => {
       </Grid>
 
       {/* Smart Alerts & Insights */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12 }}>
           <TeacherInsightsCard data={data} />
         </Grid>
       </Grid>
 
       {/* Rest of the Dashboard Panels */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12 }}>
           <QuickActionsPanel />
         </Grid>

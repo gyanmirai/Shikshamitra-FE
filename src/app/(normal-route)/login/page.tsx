@@ -617,7 +617,7 @@ export default function LoginPage() {
                               sx={{
                                 position: 'absolute',
                                 left: 16,
-                                top: '50%',
+                                top: 28,
                                 transform: 'translateY(-50%)',
                                 zIndex: 1,
                                 pointerEvents: 'none',
@@ -656,7 +656,7 @@ export default function LoginPage() {
                               sx={{
                                 position: 'absolute',
                                 left: 16,
-                                top: '50%',
+                                top: 28,
                                 transform: 'translateY(-50%)',
                                 zIndex: 1,
                                 pointerEvents: 'none',
@@ -692,7 +692,7 @@ export default function LoginPage() {
                               sx={{
                                 position: 'absolute',
                                 left: 16,
-                                top: '50%',
+                                top: 28,
                                 transform: 'translateY(-50%)',
                                 zIndex: 1,
                                 pointerEvents: 'none',
@@ -920,7 +920,7 @@ export default function LoginPage() {
                                 sx={{
                                   position: 'absolute',
                                   left: 16,
-                                  top: '50%',
+                                  top: 28,
                                   transform: 'translateY(-50%)',
                                   zIndex: 1,
                                   pointerEvents: 'none',

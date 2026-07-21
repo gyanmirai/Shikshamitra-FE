@@ -4,7 +4,7 @@ import React from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import { Iconify } from 'src/components/iconify';
 import { alpha, lighten } from '@mui/material/styles';
-import { Box, Fade, Stack, Button, Tooltip, Typography } from '@mui/material';
+import { Box, Fade, Alert, Stack, Button, Tooltip, Typography } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { useSlotForm } from './useSlotForm';
@@ -24,6 +24,9 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   const {
     formik,
     allClass,
+    canConfigureSlots,
+    classShiftMessage,
+    selectedClassShift,
     isLectureSlotsLoading,
     isSubmitting,
     handleClassChange,
@@ -77,7 +80,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               pb: 12,
               display: 'flex',
               flexDirection: 'column',
-              gap: 2.5,
+              gap: 1,
             }}
           >
             {/* Slot Configurations Header */}
@@ -85,10 +88,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               direction={{ xs: 'column', sm: 'row' }}
               alignItems={{ xs: 'flex-start', sm: 'center' }}
               justifyContent="space-between"
-              spacing={1.5}
+              spacing={1}
               sx={{ mt: 0.5 }}
             >
-              <Stack direction="row" alignItems="center" spacing={1.25}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <Box
                   sx={{
                     width: 32,
@@ -127,28 +130,37 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                   <Button
                     variant="contained"
                     size="small"
-                    startIcon={<AddIcon />}
+                    startIcon={<AddIcon fontSize="small" />}
                     onClick={handleAddSlotConfiguration}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      px: 2,
-                      boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.25)}`,
-                      transition: 'transform 150ms ease, box-shadow 200ms ease',
-                      '&:hover': {
-                        transform: 'translateY(-1px)',
-                        boxShadow: (theme) =>
-                          `0 6px 16px ${alpha(theme.palette.primary.main, 0.35)}`,
-                      },
-                      '&:active': { transform: 'translateY(0)' },
-                    }}
+                    disabled={!canConfigureSlots}
                   >
                     Add Slot Group
                   </Button>
                 </Tooltip>
               )}
             </Stack>
+
+            <Alert
+              severity={selectedClassShift ? 'info' : 'warning'}
+              icon={
+                <Iconify
+                  icon={
+                    selectedClassShift ? 'mdi:clock-check-outline' : 'mdi:clock-alert-outline'
+                  }
+                />
+              }
+              sx={{
+                borderRadius: 1.5,
+                '& .MuiAlert-message': { width: '100%' },
+              }}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                Class Timing
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {classShiftMessage}
+              </Typography>
+            </Alert>
 
             {hasSlotConfigs && <CapacitySummary slotConfigurations={slotConfigs} />}
 
@@ -195,6 +207,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                     onTotalSlotsChange={(value) => handleTotalSlotsChange(configIndex, value)}
                     classes={allClass}
                     className={formik.values.className}
+                    canConfigureSlots={canConfigureSlots}
+                    classShiftMessage={classShiftMessage}
+                    shiftStartTime={selectedClassShift?.start ?? null}
+                    shiftEndTime={selectedClassShift?.end ?? null}
                     classNameError={
                       formik.touched.className && typeof formik.errors.className === 'string'
                         ? formik.errors.className

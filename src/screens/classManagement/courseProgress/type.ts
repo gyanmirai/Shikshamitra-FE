@@ -16,17 +16,34 @@ export interface IChapterLog {
     | 'secondary'
     | 'default';
   progress: number; // Progress percentage at that point
+  previousProgress?: number | null;
+  changeAmount?: number;
+  status?: string | null;
+  delayReason?: string | null;
+  revisedEndDate?: string | null;
   teacher: string; // Teacher involved in the step
 }
 // Interface representing details of a course chapter
 export interface ICourseDetail {
   id: string;
+  chapterId?: string;
+  chapterNumber?: number;
   chapterName: string; // Name of the chapter
-  teacherName: string; // Name of the teacher assigned to the chapter
+  teacherName?: string; // Name of the teacher assigned to the chapter
   progress: number; // Progress percentage completed for the chapter
-  pending: number; // Remaining percentage to be completed
+  pending?: number; // Remaining percentage to be completed
   startDate: Dayjs | string | null;
+  endDate?: Dayjs | string | null;
   timeLine: Dayjs | string | null; // Timeline/deadline for the chapter completion
+  actualStartDate?: Dayjs | string | null;
+  actualEndDate?: Dayjs | string | null;
+  expectedProgress?: number;
+  variance?: number;
+  status?: string;
+  scheduleStatus?: string;
+  riskLevel?: string;
+  lastUpdatedBy?: string | null;
+  lastUpdatedAt?: Dayjs | string | null;
   logs?: TimelineType[]; // Optional array of log steps
 }
 
@@ -39,6 +56,11 @@ export interface ICourse {
   completedChapter: number; // Number of chapters completed
   totalChapter: number; // Number of chapters pending
   color: string; // Color of the course
+  expectedProgress?: number;
+  variance?: number;
+  scheduleStatus?: string;
+  riskLevel?: string;
+  lastUpdatedAt?: Dayjs | string | null;
 }
 
 export interface ICourseCardsGridProps {
@@ -55,6 +77,11 @@ export interface IAppWidgetProps {
   totalChapter: number;
   chart: { series: number }; // % progress
   isSelected?: boolean;
+  expectedProgress?: number;
+  variance?: number;
+  scheduleStatus?: string;
+  riskLevel?: string;
+  lastUpdatedAt?: Dayjs | string | null;
 }
 
 export interface IUpdateProgressProps {

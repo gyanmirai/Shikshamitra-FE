@@ -44,6 +44,11 @@ const mapToCardModel = (
     isOptional: fh.isOptional ?? false,
     paybleMonth: fh.payableMonth ?? null,
     payableYear: fh.payableYear ?? null,
+    paymentTermId: fh.paymentTermId ?? undefined,
+    paymentTermName: fh.paymentTermName ?? undefined,
+    paymentTermVersionId: fh.paymentTermVersionId ?? undefined,
+    scheduleMode: fh.scheduleMode ?? (fh.paymentTermOverride ? 'Customized' : 'Inherited'),
+    paymentTermOverride: fh.paymentTermOverride ?? undefined,
   })),
   status: raw.status,
   classId,
@@ -142,7 +147,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
             <Box
               display="flex"
               alignItems="center"
-              gap={1.5}
+              gap={1}
               sx={{ px: 2, py: 1.25, bgcolor: 'action.hover' }}
             >
               <Skeleton variant="rounded" width={28} height={28} />

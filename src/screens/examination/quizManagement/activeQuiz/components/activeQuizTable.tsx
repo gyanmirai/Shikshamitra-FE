@@ -123,7 +123,7 @@ const QuizTable = ({
             value={tabs.value}
             onChange={handleTabChange}
             sx={{
-              '& .MuiTabs-flexContainer': { gap: 2 },
+              '& .MuiTabs-flexContainer': { gap: 1 },
               flexGrow: 1,
               pb: 1,
             }}

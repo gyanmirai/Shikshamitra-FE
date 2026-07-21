@@ -129,6 +129,7 @@ function UnifiedReceiptDisplay({
                     <TableHead>
                       <TableRow sx={{ bgcolor: alpha(theme.palette.grey[500], 0.12) }}>
                         <TableCell sx={{ fontWeight: 700 }}>Fee Head</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Installment</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>
                           Pending Before
                         </TableCell>
@@ -144,6 +145,7 @@ function UnifiedReceiptDisplay({
                       {feeReceipt.allocationDetails.map((detail, idx) => (
                         <TableRow key={idx}>
                           <TableCell>{detail.feeHeadName}</TableCell>
+                          <TableCell>{detail.installmentLabel || '—'}</TableCell>
                           <TableCell align="right">₹{formatNumber(detail.pendingBefore)}</TableCell>
                           <TableCell align="right" sx={{ color: 'success.main', fontWeight: 700 }}>
                             ₹{formatNumber(detail.amountPaid)}

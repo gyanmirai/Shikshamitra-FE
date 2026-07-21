@@ -4,7 +4,7 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
@@ -336,7 +336,7 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
           </Stack>
         </Stack>
 
-        <Stack spacing={2} sx={{ maxHeight: 420, overflowY: 'auto', pr: 0.5, mb: 3 }}>
+        <Stack spacing={1} sx={{ maxHeight: 420, overflowY: 'auto', pr: 0.5, mb: 3 }}>
           {/* Section 1: General Info */}
           <Typography
             variant="overline"
@@ -344,7 +344,7 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
           >
             General & Staff
           </Typography>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
             <DatePicker
               label="Date"
               value={draftFilters.filterDate}
@@ -384,7 +384,7 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
           >
             Academic & Rooms
           </Typography>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
             <CustomSelect
               label="Class"
               options={classFilterOptions}
@@ -431,7 +431,7 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
           >
             Status & Workflow
           </Typography>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
             <CustomSelect
               label="Status"
               options={statusOptions}
@@ -470,7 +470,7 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
           </Box>
         </Stack>
 
-        <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button variant="outlined" color="inherit" onClick={popover.onClose}>
             Cancel
           </Button>
@@ -514,17 +514,22 @@ export const SubstitutionActiveFilters = ({
           size="small"
           onDelete={() => handleRemoveFilter(af.key)}
           sx={{
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-            color: 'primary.dark',
-            borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
+            bgcolor: (theme) => alpha(theme.palette.info.main, 0.12),
+            color: 'info.main',
+            borderColor: (theme) => alpha(theme.palette.info.main, 0.28),
             borderStyle: 'solid',
             borderWidth: 1,
             fontSize: 12,
             fontWeight: 'fontWeightMedium',
+            maxWidth: 260,
+            '& .MuiChip-label': {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            },
             '& .MuiChip-deleteIcon': {
-              color: 'primary.main',
+              color: 'info.main',
               '&:hover': {
-                color: 'primary.dark',
+                color: 'info.dark',
               },
             },
           }}

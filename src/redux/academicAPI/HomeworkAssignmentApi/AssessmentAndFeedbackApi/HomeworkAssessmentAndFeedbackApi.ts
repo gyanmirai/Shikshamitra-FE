@@ -59,6 +59,15 @@ export const homeworkAssessmentAndFeedbackApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.homeworkSubmissions],
     }),
+
+    uploadHomeworkSubmissionFile: builder.mutation({
+      query: (body: FormData) => ({
+        url: `/academic/homework-submissions`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.homeworkSubmissions],
+    }),
   }),
 
   overrideExisting: false,
@@ -69,4 +78,5 @@ export const {
   useBulkUpdateAssessmentMutation,
   useUpdateHomeworkSubmissionFeedbackMutation,
   useUpdateHomeworkSubmissionStatusMutation,
+  useUploadHomeworkSubmissionFileMutation,
 } = homeworkAssessmentAndFeedbackApi;

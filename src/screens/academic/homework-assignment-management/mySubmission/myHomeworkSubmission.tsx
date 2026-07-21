@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -66,10 +66,11 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
       homeworkData?.data ??
       homeworkData?.items ??
       (Array.isArray(homeworkData) ? homeworkData : []);
-    return raw
+        return raw
       .filter((i: any) => (i.submissionStatus ?? i.status ?? 0) === tabs.value)
       .map((i: any) => ({
         id: i.id ?? i.homeworkId ?? '',
+        studentId: i.studentId ?? i.student?.id ?? '',
         subject: i.subjectName ?? i.subject ?? '',
         title: i.title ?? i.name ?? '',
         homeworkType: i.homeworkType ?? '',

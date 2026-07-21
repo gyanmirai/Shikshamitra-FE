@@ -33,7 +33,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={1}>
           <Grid size={{ xs: 12 }}>
             <Typography variant="subtitle2" fontWeight={700}>
               Basic Details
@@ -230,7 +230,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
               onChange={formik.handleChange}
               error={formik.touched.sortOrder && Boolean(formik.errors.sortOrder)}
               helperText={formik.touched.sortOrder && formik.errors.sortOrder}
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 1, max: 999999 }}
             />
           </Grid>
 

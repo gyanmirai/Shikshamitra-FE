@@ -56,7 +56,7 @@ const DocumentList = ({ documents, onDownload }: DocumentListProps) => {
               '&:hover': { bgcolor: 'action.hover' },
             }}
             secondaryAction={
-              <Box display="flex" gap={2}>
+              <Box display="flex" gap={1}>
                 <Tooltip title="Preview">
                   <IconButton aria-label="download" onClick={() => handleDownload(doc)}>
                     <Iconify icon={GlobalIcons.eye} />

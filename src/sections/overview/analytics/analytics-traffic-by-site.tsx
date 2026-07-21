@@ -24,7 +24,7 @@ export function AnalyticsTrafficBySite({ title, subheader, list, ...other }: Pro
     <Card {...other}>
       <CardHeader title={title} subheader={subheader} />
 
-      <Box display="grid" gap={2} gridTemplateColumns="repeat(2, 1fr)" sx={{ p: 3 }}>
+      <Box display="grid" gap={1} gridTemplateColumns="repeat(2, 1fr)" sx={{ p: 3 }}>
         {list.map((site) => (
           <Box
             key={site.label}

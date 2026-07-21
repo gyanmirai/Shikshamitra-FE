@@ -62,7 +62,7 @@ export const BulkGradeEntryToolbar: React.FC<BulkGradeEntryToolbarProps> = ({
             boxShadow: (theme) => `0px 20px 40px -10px rgba(0,0,0,0.15)`,
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
             {/* Left Section: Selected info */}
             <Stack direction="row" alignItems="center" spacing={1}>
               <IconButton size="small" onClick={onClearSelection} color="primary">

@@ -261,7 +261,7 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
           <Divider sx={{ mb: 1.5 }} />
 
           {/* Info grid row 1: Contact, Requested By, Processed By, Type */}
-          <Box display="flex" flexWrap="wrap" gap={3} mb={1.5}>
+          <Box display="flex" flexWrap="wrap" gap={1} mb={1.5}>
             {detail.contactNo && (
               <InfoItem icon="mdi:phone-outline" label="Contact No." value={detail.contactNo} />
             )}

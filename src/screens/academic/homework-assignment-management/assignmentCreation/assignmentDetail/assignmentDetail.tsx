@@ -17,7 +17,7 @@ interface InfoItemProps {
 }
 
 export const InfoItem = ({ icon, label, value }: InfoItemProps) => (
-  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
     <Box
       sx={{
         width: 40,
@@ -74,10 +74,10 @@ const ViewAssignmentDetails = ({
             }}
           >
             <Box sx={{ p: 2 }}>
-              <Grid container spacing={2}>
+              <Grid container spacing={1}>
                 {[1, 2, 3, 4].map((item) => (
                   <Grid size={{ xs: 12, md: 3 }} key={item}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                       <Skeleton
                         variant="rounded"
                         width={40}
@@ -97,7 +97,7 @@ const ViewAssignmentDetails = ({
 
           {/* Overview Skeleton */}
           <Box sx={{ mb: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               {/* Left Column Skeleton */}
               <Grid size={{ xs: 12, md: 8 }}>
                 <Card
@@ -122,7 +122,7 @@ const ViewAssignmentDetails = ({
                     </Box>
                     <Skeleton variant="text" width="15%" sx={{ mb: 1 }} />
                     <Skeleton variant="rectangular" height={70} sx={{ mb: 3, borderRadius: 1 }} />
-                    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 4 }}>
                       <Skeleton
                         variant="rounded"
                         width={110}
@@ -157,7 +157,7 @@ const ViewAssignmentDetails = ({
                     {[1, 2, 3].map((item) => (
                       <Box
                         key={item}
-                        sx={{ display: 'flex', gap: 1.5, mb: 2, alignItems: 'center' }}
+                        sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}
                       >
                         <Skeleton variant="circular" width={24} height={24} />
                         <Box sx={{ flexGrow: 1 }}>
@@ -170,7 +170,7 @@ const ViewAssignmentDetails = ({
                     <Box
                       sx={{
                         display: 'flex',
-                        gap: 2,
+                        gap: 1,
                         alignItems: 'center',
                         p: 1,
                         border: '1px solid',
@@ -213,7 +213,7 @@ const ViewAssignmentDetails = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 2,
+            gap: 1,
             textAlign: 'center',
           }}
         >

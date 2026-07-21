@@ -16,7 +16,7 @@ function SubjectListSkeletonImpl() {
       {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
         // Static skeleton list, key by index is acceptable.
         // eslint-disable-next-line react/no-array-index-key
-        <Box key={i} display="flex" alignItems="center" gap={2} px={1}>
+        <Box key={i} display="flex" alignItems="center" gap={1} px={1}>
           <Skeleton variant="rounded" width={24} height={24} />
           <Skeleton variant="text" sx={{ flex: 1 }} height={40} />
           <Skeleton variant="rounded" width={120} height={40} />

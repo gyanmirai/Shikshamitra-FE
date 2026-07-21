@@ -16,7 +16,9 @@ import {
   AdmissionCrmPolicyPackStatus,
   AdmissionCrmAutomationRunType,
   AdmissionCrmTimelineEventType,
+  AdmissionCrmRegistrationStatus,
   AdmissionCrmExamReadinessField,
+  buildAdmissionCrmMyWorkRequest,
   AdmissionCrmAutomationRunStatus,
   AdmissionCrmLeadRoutingStrategy,
   AdmissionCrmOperationsQueueType,
@@ -47,6 +49,7 @@ import {
   buildPublicAdmissionCrmDocumentUploadUrl,
   buildPreviewAdmissionCrmExamResultRequest,
   buildAdmissionCrmActivationPreviewRequest,
+  buildAdmissionCrmEnrollmentOverviewRequest,
   buildChangeAdmissionCrmLeadPriorityRequest,
   buildMergeAdmissionCrmDuplicateLeadRequest,
   buildAssignAdmissionCrmSpecialRouteRequest,
@@ -225,15 +228,36 @@ describe('admissions CRM API contracts', () => {
       url: '/student-enrollment/admissions-crm/year-1/operations/queues/summary',
       method: 'GET',
     });
+    expect(buildAdmissionCrmEnrollmentOverviewRequest({ academicYearId: 'year-1' })).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/operations/overview',
+      method: 'GET',
+    });
+    expect(
+      buildAdmissionCrmMyWorkRequest({
+        academicYearId: 'year-1',
+        skipCount: 25,
+        maxResultCount: 25,
+        sorting: 'dueAt asc',
+      })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/operations/my-work',
+      method: 'GET',
+      params: { skipCount: 25, maxResultCount: 25, sorting: 'dueAt asc' },
+    });
     expect(
       buildAdmissionCrmOperationsQueueRequest({
         academicYearId: 'year-1',
         queueType: AdmissionCrmOperationsQueueType.AdmissionReady,
+        registrationStatus: AdmissionCrmRegistrationStatus.AdmissionReady,
+        maxResultCount: 50,
       })
     ).toEqual({
       url: '/student-enrollment/admissions-crm/year-1/operations/queues/7',
       method: 'GET',
-      params: { maxResultCount: 200 },
+      params: {
+        maxResultCount: 50,
+        registrationStatus: AdmissionCrmRegistrationStatus.AdmissionReady,
+      },
     });
   });
 
@@ -560,6 +584,13 @@ describe('admissions CRM API contracts', () => {
       url: '/student-enrollment/admissions-crm/year-1/exams',
       method: 'GET',
       params: {},
+    });
+    expect(
+      buildAdmissionCrmExamListRequest({ academicYearId: 'year-1', filterText: 'Riya' })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/exams',
+      method: 'GET',
+      params: { filterText: 'Riya' },
     });
 
     expect(buildAdmissionCrmAnalyticsSummaryRequest({ academicYearId: 'year-1' })).toEqual({
@@ -904,6 +935,12 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmCycleConfiguration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmCycleConfiguration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmPipelineStages).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmPipelineStage).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.lockAdmissionCrmJourney).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.unlockAdmissionCrmJourney).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmInquirySource).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmInquirySource).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.setAdmissionCrmInquirySourceStatus).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmFormTemplates).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmFormTemplate).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmFormTemplate).toBeTruthy();
@@ -938,6 +975,7 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmEligibilityHandoff).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmAnalyticsSummary).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.scheduleAdmissionCrmEntranceExam).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.bulkUploadAdmissionCrmExamResults).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.issueAdmissionCrmRegistrationForm).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getCurrentAdmissionCrmRegistrationByLead).toBeTruthy();
     expect(
@@ -946,6 +984,10 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.verifyAdmissionCrmRegistration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.extendAdmissionCrmRegistration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.reissueAdmissionCrmRegistration).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.uploadAdmissionCrmRegistrationDocument).toBeTruthy();
+    expect(
+      StudentAdmissionsCrmApi.endpoints.getAdmissionCrmGeneratedDocumentAvailability
+    ).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.reviewAdmissionCrmApplicantDocument).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.waiveAdmissionCrmApplicantDocument).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.confirmAdmissionCrmDocumentReadiness).toBeTruthy();
@@ -1223,6 +1265,10 @@ describe('admissions CRM API contracts', () => {
     expect(AdmissionCrmAutomationRunType.Journey).toBe(2);
     expect(AdmissionCrmAutomationRunStatus.Completed).toBe(0);
     expect(AdmissionCrmAutomationRunStatus.CompletedWithFailures).toBe(1);
+  });
+
+  it('keeps the manual registration handoff queue aligned with the backend contract', () => {
+    expect(AdmissionCrmOperationsQueueType.RegistrationInvitationPending).toBe(21);
   });
 
   it('tracks automation run and failure analytics in the summary contract', () => {

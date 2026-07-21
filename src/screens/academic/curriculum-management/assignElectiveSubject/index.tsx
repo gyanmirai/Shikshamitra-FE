@@ -55,7 +55,7 @@ const AssignElectiveSubject = () => {
         isSort: false,
         isFilter: false,
         renderColumn: () => (
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box display="flex" alignItems="center" gap={1}>
             {subjects.map((subj) => {
               const isSelected = selectedElectiveSubject === subj.id;
               return (
@@ -83,7 +83,7 @@ const AssignElectiveSubject = () => {
           </Box>
         ),
         render: (_: any, row: any) => (
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box display="flex" alignItems="center" gap={1}>
             {subjects.map((subj) => {
               const isSelected = studentSelections[row.grNo] === subj.id;
               return (
@@ -118,6 +118,7 @@ const AssignElectiveSubject = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Student Elective Assignment"
         description="Assign elective subjects according to students preferences and academic needs. Also, manage selections through a centralized system. "
         links={[
@@ -127,7 +128,7 @@ const AssignElectiveSubject = () => {
         ]}
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <CustomSelect
             options={allClass}
             label="Class"
@@ -158,7 +159,7 @@ const AssignElectiveSubject = () => {
           />
         </Box>
 
-        <Box display="flex" gap={2} justifyContent="flex-end">
+        <Box display="flex" gap={1} justifyContent="flex-end">
           <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}} size="small">
             Reset
           </Button>

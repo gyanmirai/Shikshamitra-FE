@@ -40,7 +40,7 @@ export const RoomStatusLegend = () => {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={0.5}>
+      <Stack direction="row" alignItems="center" spacing={1}>
         <Typography variant="caption" color="text.secondary">
           Status Legend
         </Typography>

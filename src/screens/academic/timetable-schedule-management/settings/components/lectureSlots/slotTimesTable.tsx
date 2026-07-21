@@ -23,8 +23,9 @@ interface ISlotTimesTableProps {
   configId: React.Key;
   slots: ITimeSlot[];
   disabled?: boolean;
-  isEdit?: boolean;
   errors?: ISlotErrors;
+  minTime?: Dayjs | null;
+  maxTime?: Dayjs | null;
   onChange: (next: ITimeSlot[]) => void;
   onTouchField?: (slotIndex: number, field: 'startTime' | 'endTime') => void;
 }
@@ -57,12 +58,13 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
   configId,
   slots,
   disabled,
-  isEdit,
   errors,
+  minTime,
+  maxTime,
   onChange,
   onTouchField,
 }) => {
-  const pickerDisabled = !!disabled && !isEdit;
+  const pickerDisabled = !!disabled;
 
   // O(1) slot index lookup — avoids O(n) findIndex in every cell render
   const slotIndexMap = useMemo(() => {
@@ -125,6 +127,8 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
                 format="hh:mm a"
                 views={['hours', 'minutes']}
                 disabled={pickerDisabled}
+                minTime={minTime ?? undefined}
+                maxTime={maxTime ?? undefined}
                 ampm
                 onChange={(t) => handleStartChange(index, t?.isValid?.() ? dayjs(t) : null)}
                 slotProps={{
@@ -163,6 +167,8 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
                 format="hh:mm a"
                 views={['hours', 'minutes']}
                 disabled={pickerDisabled}
+                minTime={minTime ?? undefined}
+                maxTime={maxTime ?? undefined}
                 ampm
                 onChange={(t) => handleEndChange(index, t?.isValid?.() ? dayjs(t) : null)}
                 slotProps={{
@@ -300,7 +306,16 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         },
       },
     ],
-    [slotIndexMap, errors, pickerDisabled, handleStartChange, handleEndChange, updateSlot]
+    [
+      slotIndexMap,
+      errors,
+      pickerDisabled,
+      minTime,
+      maxTime,
+      handleStartChange,
+      handleEndChange,
+      updateSlot,
+    ]
   );
 
   return (

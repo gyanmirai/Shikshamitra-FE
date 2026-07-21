@@ -2,7 +2,7 @@
 
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -90,7 +90,7 @@ export const RoomDetailDrawer = ({
             `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Box
             sx={{
               width: 42,
@@ -168,7 +168,7 @@ export const RoomDetailDrawer = ({
       {/* ── Content ──────────────────────────────────────── */}
       <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2, bgcolor: 'background.neutral' }}>
         {activeTab === 'details' && room && (
-          <Stack spacing={2.5}>
+          <Stack spacing={1}>
             {/* Facilities */}
             <Box>
               <Typography variant="subtitle2" gutterBottom>
@@ -309,7 +309,7 @@ export const RoomDetailDrawer = ({
                           bgcolor: 'background.paper',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 1.5,
+                          gap: 1,
                         }}
                       >
                         <Box sx={{ minWidth: 34 }}>

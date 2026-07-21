@@ -2,7 +2,7 @@
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -50,9 +50,9 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Box display="flex" flexDirection="column" gap={1} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField error={formik.touched.className && !!formik.errors.className}>
                   <CustomSelect
@@ -226,6 +226,9 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                     value={formik.values.createDate}
                     onChange={(val) => formik.setFieldValue('createDate', val)}
                     format="DD-MM-YYYY"
+                    standardId={classes || null}
+                    divisionId={division || null}
+                    validationType="ExamSchedule"
                     slotProps={{
                       textField: {
                         size: 'small',
@@ -245,6 +248,9 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                     label="Due Date"
                     value={formik.values.dueDate}
                     onChange={(val) => formik.setFieldValue('dueDate', val)}
+                    standardId={classes || null}
+                    divisionId={division || null}
+                    validationType="ExamSchedule"
                     slotProps={{
                       textField: {
                         size: 'small',

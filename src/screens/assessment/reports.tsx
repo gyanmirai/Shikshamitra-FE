@@ -74,7 +74,7 @@ const Reports = () => (
     <Grid size={{ xs: 12 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h4">Detailed Data</Typography>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           <Button variant="outlined">Export report</Button>
           <Button variant="outlined">Generate report</Button>
         </Box>

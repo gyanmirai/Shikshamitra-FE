@@ -38,6 +38,8 @@ export interface IExamSubject {
   gradeScalingId?: string | null;
   /** For elective group entries: raw individual subjects from API (used in Separate mode) */
   subjects?: any[];
+  assignedStudentCount?: number;
+  isExamSelectionDisabled?: boolean;
 }
 
 /** Room details keyed by subjectId → divisionId */
@@ -60,6 +62,7 @@ export interface IExamFormValues {
   subjects: IExamSubject[];
   description: string;
   isRoomAssign: boolean;
+  syncToAcademicCalendar: boolean;
   /** key: subjectId → divisionId → { roomIds, capacity } */
   roomDetails: IRoomDetails;
   status?: number;

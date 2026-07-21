@@ -14,16 +14,17 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
-import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import {
   FeedbackStatusChip,
   EvaluationFilterBar,
   EvaluationStatusChip,
-  EvaluationActionButton,
   filterEvaluationRows,
   getEvaluationSummary,
+  dedupeEvaluationRows,
+  EvaluationActionButton,
   EvaluationSummaryCards,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
@@ -82,7 +83,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const viewSubmissionDialog = useBoolean();
 
   const normalizedData = React.useMemo(
-    () => homeworkSubmissions?.data || [],
+    () => dedupeEvaluationRows(homeworkSubmissions?.data || []),
     [homeworkSubmissions?.data]
   );
 
@@ -146,248 +147,221 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     }
   };
 
-  const openStudent = React.useCallback((row: any) => {
-    setSelectedStudent(row as TStudentGrade);
-    viewSubmissionDialog.onTrue();
-  }, [viewSubmissionDialog]);
+  const openStudent = React.useCallback(
+    (row: any) => {
+      setSelectedStudent(row as TStudentGrade);
+      viewSubmissionDialog.onTrue();
+    },
+    [viewSubmissionDialog]
+  );
 
   return (
     <>
-      <Stack spacing={1.5}>
-        <EvaluationSummaryCards summary={summary} />
+      <Stack spacing={1}>
+        <EvaluationSummaryCards summary={summary} showMarks={false} />
         <EvaluationFilterBar value={activeFilter} onChange={setActiveFilter} />
       </Stack>
       <Box sx={{ mt: 1.5 }}>
-      <CustomizableTable
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents?.length > 0}
-        tableId="student-submissions"
-        noDataText="Homework Submission Data Not Found"
-        columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'center',
-          //   minWidth: '60px',
-          //   isSort: false,
-          //   sticky: true,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={
-          //           studentData?.length > 0 && selectedStudents?.length === studentData?.length
-          //         }
-          //         indeterminate={
-          //           selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
-          //         }
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents(studentData || []);
-          //           } else {
-          //             setSelectedStudents([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
+        <CustomizableTable
+          onSendNotification={handlerSendNotification}
+          showCheckbox={selectedStudents?.length > 0}
+          tableId="student-submissions"
+          noDataText="Homework Submission Data Not Found"
+          columns={[
+            // {
+            //   id: 'checkBox',
+            //   align: 'center',
+            //   minWidth: '60px',
+            //   isSort: false,
+            //   sticky: true,
+            //   isFilter: false,
+            //   label: '',
+            //   renderColumn() {
+            //     return (
+            //       <Checkbox
+            //         checked={
+            //           studentData?.length > 0 && selectedStudents?.length === studentData?.length
+            //         }
+            //         indeterminate={
+            //           selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
+            //         }
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents(studentData || []);
+            //           } else {
+            //             setSelectedStudents([]);
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            //   render(value, row) {
+            //     const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
 
-          //     return (
-          //       <Checkbox
-          //         checked={isChecked}
-          //         onChange={(e) => {
-          //           e.stopPropagation();
+            //     return (
+            //       <Checkbox
+            //         checked={isChecked}
+            //         onChange={(e) => {
+            //           e.stopPropagation();
 
-          //           if (e.target.checked) {
-          //             setSelectedStudents([...selectedStudents, row]);
-          //           } else {
-          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
-          {
-            id: 'studentName',
-            label: 'Student Name/Gr No.',
-            align: 'left',
-            sticky: true,
-            minWidth: 190,
-            render: (value, row) => (
-              <Box>
-                <Typography variant="body2">{value}</Typography>
-                <Typography variant="caption">({row.grNumber})</Typography>
-              </Box>
-            ),
-          },
-          {
-            id: 'rollNumber',
-            label: 'Roll No.',
-            align: 'left',
-            minWidth: 90,
-            filterType: 'number',
-          },
-          { id: 'homeworkType', label: 'Type', align: 'left' },
-          {
-            id: 'submissionDate',
-            label: 'Submission Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: 160,
-          },
-          {
-            id: 'dueDate',
-            label: 'Due Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: 140,
-          },
-          {
-            id: 'totalMarks',
-            label: 'Total Marks',
-            align: 'left',
-            minWidth: 130,
-            filterType: 'number',
-            render: (value) =>
-              value !== undefined && value !== null && value !== '-' ? (
-                <Typography variant="caption" fontSize="13px">
-                  {value}
-                </Typography>
-              ) : (
-                <Typography variant="caption">-</Typography>
-              ),
-          },
-          {
-            id: 'marks',
-            label: 'Obtained Marks',
-            filterType: 'number',
-            minWidth: 150,
-            align: 'left',
-            render: (value) =>
-              value !== undefined && value !== null && value !== '-' ? (
-                <Typography variant="caption" fontSize="13px">
-                  {value}
-                </Typography>
-              ) : (
-                <Typography variant="caption">-</Typography>
-              ),
-          },
-          {
-            id: 'feedback',
-            label: 'Feedback',
-            render: (value, row) => {
-              const text = value && value !== '-' ? value : null;
-              return (
-                <Box
-                  onClick={() => {
-                    setSelectedStudent(row as TStudentGrade);
-                    viewSubmissionDialog.onTrue();
-                  }}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                      borderRadius: 1,
-                    },
-                    p: 0.5,
-                  }}
-                >
-                  <CustomTooltip
-                    title={text || 'Click to add feedback'}
-                    arrow
-                    sx={{ textAlign: 'justify' }}
-                  >
-                    <Typography
-                      variant="caption"
-                      fontSize="13px"
-                      noWrap
-                      sx={{
-                        maxWidth: 0,
-                        minWidth: '100%',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        display: 'block',
-                        color: text ? 'text.primary' : 'text.secondary',
-                        fontStyle: text ? 'normal' : 'italic',
-                      }}
-                    >
-                      {text || 'Add feedback'}
-                    </Typography>
-                  </CustomTooltip>
+            //           if (e.target.checked) {
+            //             setSelectedStudents([...selectedStudents, row]);
+            //           } else {
+            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            // },
+            {
+              id: 'studentName',
+              label: 'Student Name/Gr No.',
+              align: 'left',
+              sticky: true,
+              minWidth: 190,
+              render: (value, row) => (
+                <Box>
+                  <Typography variant="body2">{value}</Typography>
+                  <Typography variant="caption">({row.grNumber})</Typography>
                 </Box>
-              );
+              ),
             },
-          },
-          // {
-          //   id: 'remarks',
-          //   label: 'Remarks',
-          //   align: 'left',
-          //   minWidth: 150,
-          //   render: (value, row) => {
-          //     const text = value && value !== '-' ? value : null;
-          //     return (
-          //       <CustomTooltip title={text || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
-          //         <Typography
-          //           variant="caption"
-          //           fontSize="13px"
-          //           noWrap
-          //           sx={{
-          //             maxWidth: 150,
-          //             overflow: 'hidden',
-          //             textOverflow: 'ellipsis',
-          //             whiteSpace: 'nowrap',
-          //             display: 'block',
-          //             color: text ? 'text.primary' : 'text.secondary',
-          //             fontStyle: text ? 'normal' : 'italic',
-          //           }}
-          //         >
-          //           {text || 'No remarks'}
-          //         </Typography>
-          //       </CustomTooltip>
-          //     );
-          //   },
-          // },
-          {
-            id: 'submissionStatusLabel',
-            label: 'Submission Status',
-            minWidth: 150,
-            filterType: 'enum',
-            enumOptions: HomeworkSubmissionStatusOptions,
-            align: 'left',
-            render(_value, row) {
-              return <EvaluationStatusChip row={row} />;
+            {
+              id: 'rollNumber',
+              label: 'Roll No.',
+              align: 'left',
+              minWidth: 90,
+              filterType: 'number',
             },
-          },
-          {
-            id: 'evaluationStatus',
-            label: 'Evaluation Status',
-            minWidth: 150,
-            sticky: true,
-            align: 'left',
-            render(_value, row) {
-              return <FeedbackStatusChip row={row} />;
+            { id: 'homeworkType', label: 'Type', align: 'left' },
+            {
+              id: 'submissionDate',
+              label: 'Submission Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: 160,
             },
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            minWidth: 90,
-            isSort: false,
-            isFilter: false,
-            align: 'center',
-            sticky: true,
-            render(value, row) {
-              return <EvaluationActionButton row={row} canAdd={canAdd} onOpen={openStudent} />;
+            {
+              id: 'dueDate',
+              label: 'Due Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: 140,
             },
-          },
-        ]}
-        isLoading={isSubmissionsLoading || isFetching}
-        data={filteredData}
-      />
+            {
+              id: 'feedback',
+              label: 'Feedback',
+              render: (value, row) => {
+                const text = value && value !== '-' ? value : null;
+                return (
+                  <Box
+                    onClick={() => {
+                      setSelectedStudent(row as TStudentGrade);
+                      viewSubmissionDialog.onTrue();
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                        borderRadius: 1,
+                      },
+                      p: 0.5,
+                    }}
+                  >
+                    <CustomTooltip
+                      title={text || 'Click to add feedback'}
+                      arrow
+                      sx={{ textAlign: 'justify' }}
+                    >
+                      <Typography
+                        variant="caption"
+                        fontSize="13px"
+                        noWrap
+                        sx={{
+                          maxWidth: 0,
+                          minWidth: '100%',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          display: 'block',
+                          color: text ? 'text.primary' : 'text.secondary',
+                          fontStyle: text ? 'normal' : 'italic',
+                        }}
+                      >
+                        {text || 'Add feedback'}
+                      </Typography>
+                    </CustomTooltip>
+                  </Box>
+                );
+              },
+            },
+            // {
+            //   id: 'remarks',
+            //   label: 'Remarks',
+            //   align: 'left',
+            //   minWidth: 150,
+            //   render: (value, row) => {
+            //     const text = value && value !== '-' ? value : null;
+            //     return (
+            //       <CustomTooltip title={text || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
+            //         <Typography
+            //           variant="caption"
+            //           fontSize="13px"
+            //           noWrap
+            //           sx={{
+            //             maxWidth: 150,
+            //             overflow: 'hidden',
+            //             textOverflow: 'ellipsis',
+            //             whiteSpace: 'nowrap',
+            //             display: 'block',
+            //             color: text ? 'text.primary' : 'text.secondary',
+            //             fontStyle: text ? 'normal' : 'italic',
+            //           }}
+            //         >
+            //           {text || 'No remarks'}
+            //         </Typography>
+            //       </CustomTooltip>
+            //     );
+            //   },
+            // },
+            {
+              id: 'submissionStatusLabel',
+              label: 'Submission Status',
+              minWidth: 150,
+              filterType: 'enum',
+              enumOptions: HomeworkSubmissionStatusOptions,
+              align: 'left',
+              render(_value, row) {
+                return <EvaluationStatusChip row={row} />;
+              },
+            },
+            {
+              id: 'evaluationStatus',
+              label: 'Evaluation Status',
+              minWidth: 150,
+              sticky: true,
+              align: 'left',
+              render(_value, row) {
+                return <FeedbackStatusChip row={row} />;
+              },
+            },
+            {
+              id: 'actions',
+              label: 'Actions',
+              minWidth: 90,
+              isSort: false,
+              isFilter: false,
+              align: 'center',
+              sticky: true,
+              render(value, row) {
+                return <EvaluationActionButton row={row} canAdd={canAdd} onOpen={openStudent} />;
+              },
+            },
+          ]}
+          isLoading={isSubmissionsLoading || isFetching}
+          data={filteredData}
+        />
       </Box>
 
       {sendInstantNotificationDialogValue.value && (
@@ -404,18 +378,16 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedStudent?.marks !== undefined && selectedStudent?.marks !== null
-                ? 'Edit Feedback & Marks'
-                : 'Add Feedback & Marks'}
+              {selectedStudent?.feedback ? 'Edit Feedback' : 'Add Feedback'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
               title={
-                selectedStudent?.marks !== undefined && selectedStudent?.marks !== null
-                  ? 'You can modify the feedback & marks given to the student for their homework submission.'
-                  : "You can provide feedback & marks for the student's homework submission."
+                selectedStudent?.feedback
+                  ? 'You can modify the feedback given to the student for their homework submission.'
+                  : "You can provide feedback for the student's homework submission."
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

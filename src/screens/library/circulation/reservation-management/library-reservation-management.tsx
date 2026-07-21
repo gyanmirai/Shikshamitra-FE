@@ -127,7 +127,7 @@ const LibraryReservationManagement = () => {
       <Box
         display="flex"
         flexDirection="row"
-        gap={2}
+        gap={1}
         alignItems="center"
         justifyContent="space-between"
       >

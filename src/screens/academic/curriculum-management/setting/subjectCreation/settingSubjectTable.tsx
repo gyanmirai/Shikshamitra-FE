@@ -151,7 +151,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
           const subject = row as ISubject;
           const isArchived = getStatusLabel(subject.status) === 'Archived';
           return (
-            <Stack direction="row" spacing={0.5} justifyContent="center">
+            <Stack direction="row" spacing={1} justifyContent="center">
               <SubjectActionButton
                 title="View usage"
                 icon="solar:eye-bold"
@@ -205,12 +205,13 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
   );
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minHeight: 0 }}>
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' },
-          gap: 1.25,
+          gap: 1,
+          flexShrink: 0,
         }}
       >
         {[

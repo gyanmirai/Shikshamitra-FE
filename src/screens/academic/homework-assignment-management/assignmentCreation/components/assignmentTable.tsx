@@ -101,7 +101,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             align: 'left',
             filterType: 'string',
             render: (value, row) => (
-              <Stack spacing={0.5}>
+              <Stack spacing={1}>
                 <Typography variant="body2">{value || '-'}</Typography>
                 <Typography variant="caption" color="text.secondary">
                   {SUBMISSION_TYPE_LABELS[Number((row as any).submissionType)] || '-'}
@@ -179,7 +179,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               };
 
               return (
-                <Stack direction="row" spacing={0.5}>
+                <Stack direction="row" spacing={1}>
                   {canView && (
                     <CustomTooltip title="View Details" arrow>
                       <IconButton size="small" onClick={() => onView(rowWithDivision)}>

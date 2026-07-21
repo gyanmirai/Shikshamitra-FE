@@ -47,7 +47,7 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Box display="flex" flexDirection="column" gap={1} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -210,7 +210,7 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
 
               <Grid size={{ xs: 12 }}>
                 <Typography variant="h6">Identity Option (For Students):</Typography>
-                <Box display="flex" flexDirection="row" gap={2} mt={2}>
+                <Box display="flex" flexDirection="row" gap={1} mt={2}>
                   <ShakingTextField
                     error={
                       !!(formik.touched.incidentReportedBy && formik.errors.incidentReportedBy)

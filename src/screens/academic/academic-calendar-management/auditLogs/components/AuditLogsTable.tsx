@@ -265,7 +265,7 @@ const AuditLogsTable = ({
       data={logs}
       handleRowClick={(row) => onRowClick?.(row as unknown as AuditLog)}
       noDataText={
-        <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
+        <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
           <Box
             sx={{
               width: 64,

@@ -3,7 +3,7 @@ import { Box, Grid, Skeleton } from '@mui/material';
 
 export const SubjectAssignmentFormSkeleton = () => (
   <Box sx={{ p: 2 }}>
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Skeleton variant="rounded" height={40} width="100%" />
       </Grid>

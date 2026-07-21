@@ -173,7 +173,7 @@ const SmartRecommendationPanel = ({
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{ mb: 0.9 }}
     >
-      <Box display="flex" alignItems="center" gap={0.75} mb={0.65} px={0.25}>
+      <Box display="flex" alignItems="center" gap={1} mb={0.65} px={0.25}>
         <Iconify icon="solar:magic-stick-bold" width={14} sx={{ color: 'primary.main' }} />
         <Typography
           variant="caption"
@@ -196,7 +196,7 @@ const SmartRecommendationPanel = ({
         />
       </Box>
 
-      <Box display="flex" flexDirection="column" gap={0.65}>
+      <Box display="flex" flexDirection="column" gap={1}>
         <AnimatePresence>
           {recommendations.map((rec, idx) => {
             const styles = TYPE_STYLES[rec.type];

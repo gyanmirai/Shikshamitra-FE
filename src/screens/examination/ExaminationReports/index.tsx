@@ -115,6 +115,7 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Generate Report"
         description="Generate and manage examination reports to gain insights into student performance, subject analysis, and overall academic outcomes."
         links={[

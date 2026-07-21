@@ -4,7 +4,9 @@ export interface IRoom {
   capacity: number;
   buildingId: string;
   buildingName: string;
+  floorId?: string;
   floor: number;
+  floorName?: string;
   roomTypeId: string;
   roomTypeName: string;
   totalBenches: number;

@@ -121,6 +121,7 @@ const CurriculumOverview = (props: TabComponentType) => {
       {open ? (
         <>
           <CustomBreadcrumbs
+            sx={{ mb: 1 }}
             heading="Curriculum Overview"
             links={[
               { name: 'Academics' },
@@ -150,6 +151,7 @@ const CurriculumOverview = (props: TabComponentType) => {
       ) : (
         <>
           <CustomBreadcrumbs
+            sx={{ mb: 1 }}
             heading="Curriculum Overview"
             links={[{ name: 'Academics' }, { name: 'Curriculum' }, { name: 'Curriculum Overview' }]}
             action={

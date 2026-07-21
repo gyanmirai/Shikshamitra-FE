@@ -44,7 +44,7 @@ const HostelSetting = () => {
           { name: 'Setting', href: '' },
         ]}
       />
-      <Box display="flex" justifyContent="flex-end" gap={2}>
+      <Box display="flex" justifyContent="flex-end" gap={1}>
         <Button variant="outlined" startIcon={<Iconify icon={GlobalIcons.download} />}>
           Download Sample Rule
         </Button>

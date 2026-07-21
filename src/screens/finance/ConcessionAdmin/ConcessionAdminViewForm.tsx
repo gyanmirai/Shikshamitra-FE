@@ -338,7 +338,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
                       {doc.documentName}
                     </Typography>
                     {doc.isUploaded ? (
-                      <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
+                      <Box display="flex" alignItems="center" gap={1} mt={0.5}>
                         <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
                         <Typography variant="caption" color="success.main" fontWeight={600}>
                           Uploaded
@@ -501,7 +501,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
       <CardContent sx={{ p: 1.5, flex: 1 }}>
         {/* Header */}
         <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={1.5}>
+          <Box display="flex" alignItems="center" gap={1}>
             <Box>
               <Typography variant="subtitle1" fontWeight={600} lineHeight={1.2}>
                 {item.concessionTypeName}
@@ -610,7 +610,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
                 <Box
                   display="flex"
                   alignItems="center"
-                  gap={0.5}
+                  gap={1}
                   sx={{
                     px: 1.5,
                     py: 0.5,
@@ -635,7 +635,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
             <Box
               display="flex"
               alignItems="center"
-              gap={0.5}
+              gap={1}
               sx={{
                 px: 1.5,
                 py: 0.75,
@@ -688,7 +688,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           <Box
             display="flex"
             alignItems="center"
-            gap={0.75}
+            gap={1}
             sx={{
               p: 1,
               borderRadius: 1,
@@ -866,7 +866,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
               border: (t) => `1px solid ${t.palette.divider}`,
             }}
           >
-            <Box display="flex" alignItems="center" mb={3} gap={1.5}>
+            <Box display="flex" alignItems="center" mb={3} gap={1}>
               <Skeleton variant="circular" width={40} height={40} />
               <Box>
                 <Skeleton variant="text" width={150} height={24} />
@@ -964,7 +964,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
               <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
                 <Card variant="outlined" sx={{ borderRadius: 2, height: 320, p: 1 }}>
                   <Box display="flex" justifyContent="space-between" mb={1}>
-                    <Box display="flex" gap={1.5} alignItems="center">
+                    <Box display="flex" gap={1} alignItems="center">
                       <Skeleton
                         variant="rectangular"
                         width={36}

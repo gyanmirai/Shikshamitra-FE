@@ -15,7 +15,7 @@ export function StudentSummaryStrip({ student }: StudentSummaryStripProps) {
 
   return (
     <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
         <Avatar sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
           {name.charAt(0).toUpperCase() || 'S'}
         </Avatar>

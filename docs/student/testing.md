@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-07-12
+updated_on: 2026-07-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,6 +12,7 @@ audience: humans-and-agents
 
 TL;DR: run docs validation for documentation changes and targeted Student tests for route, client, attendance, records, or browser changes.
 Do not claim Student behavior is validated unless the relevant tests or a stronger suite ran.
+Use the [Student Enrollment UI Consistency UAT script](../../e2e/student/STUDENT_ENROLLMENT_UI_UAT.md) for the current operator, approver, and multilingual parent acceptance sessions.
 
 ## Documentation checks
 

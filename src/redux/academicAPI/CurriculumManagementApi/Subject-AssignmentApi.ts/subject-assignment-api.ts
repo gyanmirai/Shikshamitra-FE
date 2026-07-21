@@ -6,10 +6,14 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subject assignments - academicMediumId passed in query params
     getSubjectAssignments: builder.query({
-      query: ({ standardId, page, pageSize }) => ({
+      query: ({ standardId, page, pageSize, status = 1 }) => ({
         url: `/academics/curriculum/${standardId}/subject-assignments`,
         method: 'GET',
-        params: { page, pageSize },
+        params: {
+          page,
+          pageSize,
+          ...(status === 'all' ? { includeArchived: true } : { status }),
+        },
       }),
       providesTags: [academicType.subjectAssignment],
     }),
@@ -68,9 +72,6 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         url: `/files`,
         method: 'POST',
         body,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       }),
       invalidatesTags: [academicType.curriculumFile],
     }),
@@ -144,6 +145,15 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.subjectAssignment],
     }),
+
+    // Restore archived assignment back to draft
+    restoreSubjectAssignment: builder.mutation({
+      query: ({ assignmentId }) => ({
+        url: `/academics/curriculum/subject-assignments/${assignmentId}/restore`,
+        method: 'POST',
+      }),
+      invalidatesTags: [academicType.subjectAssignment],
+    }),
   }),
 
   overrideExisting: false,
@@ -165,4 +175,5 @@ export const {
   useGetSetupHealthQuery,
   useGetTeacherWorkloadQuery,
   useArchiveSubjectAssignmentMutation,
+  useRestoreSubjectAssignmentMutation,
 } = subjectAssignmentsApi;

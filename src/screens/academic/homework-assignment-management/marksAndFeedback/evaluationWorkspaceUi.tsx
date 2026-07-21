@@ -24,6 +24,9 @@ export const EVALUATION_FILTERS = [
   { label: 'Reviewed', value: 'reviewed' },
 ];
 
+const getEvaluationRowKey = (row: any, index: number) =>
+  row?.studentId || row?.studentID || row?.student?.id || row?.grNumber || row?.id || `row-${index}`;
+
 const STATUS_META: Record<number, { label: string; color: any }> = {
   0: { label: 'Not Submitted', color: 'warning' },
   1: { label: 'Submitted', color: 'info' },
@@ -33,6 +36,23 @@ const STATUS_META: Record<number, { label: string; color: any }> = {
   5: { label: 'Draft', color: 'default' },
   6: { label: 'Needs Review', color: 'warning' },
 };
+
+export function dedupeEvaluationRows(rows: any[] = []) {
+  const order: string[] = [];
+  const rowsByKey = new Map<string, any>();
+
+  rows.forEach((row, index) => {
+    const key = String(getEvaluationRowKey(row, index));
+
+    if (!rowsByKey.has(key)) {
+      order.push(key);
+    }
+
+    rowsByKey.set(key, row);
+  });
+
+  return order.map((key) => rowsByKey.get(key));
+}
 
 export function getEvaluationSummary(rows: any[] = [], apiSummary?: Summary): Required<Summary> {
   const fallback = rows.reduce(
@@ -87,22 +107,38 @@ export function filterEvaluationRows(rows: any[], filter: string) {
   return rows;
 }
 
-export function EvaluationSummaryCards({ summary }: { summary: Required<Summary> }) {
+export function EvaluationSummaryCards({
+  summary,
+  showMarks = true,
+}: {
+  summary: Required<Summary>;
+  showMarks?: boolean;
+}) {
   const cards = [
     { label: 'Students', value: summary.totalStudents, icon: 'solar:users-group-rounded-bold' },
     { label: 'Submitted', value: summary.submitted, icon: 'solar:inbox-in-bold' },
     { label: 'Needs Review', value: summary.needsReview, icon: 'solar:clipboard-check-bold' },
     { label: 'Reviewed', value: summary.reviewed, icon: 'solar:check-circle-bold' },
     { label: 'Not Submitted', value: summary.notSubmitted, icon: 'solar:clock-circle-bold' },
-    {
-      label: 'Average Marks',
-      value: summary.averageMarks ?? '-',
-      icon: 'solar:chart-2-bold',
-    },
+    ...(showMarks
+      ? [
+          {
+            label: 'Average Marks',
+            value: summary.averageMarks ?? '-',
+            icon: 'solar:chart-2-bold',
+          },
+        ]
+      : []),
   ];
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(120px, 1fr))', gap: 1.25 }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cards.length}, minmax(120px, 1fr))`,
+        gap: 1,
+      }}
+    >
       {cards.map((card) => (
         <Card key={card.label} variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack direction="row" alignItems="center" spacing={1}>
@@ -153,10 +189,21 @@ export function EvaluationStatusChip({ row }: { row: any }) {
 
 export function FeedbackStatusChip({ row }: { row: any }) {
   const isReviewed = Number(row?.status) === 4;
+  const isNeedsReview = Number(row?.status) === 6;
   const hasFeedback = Boolean(row?.feedback);
+  const hasMarks = row?.marks !== undefined && row?.marks !== null && row?.marks !== '';
+  const apiStatus = row?.evaluationStatus;
+  const statusLabel =
+    isReviewed || ((hasFeedback || hasMarks) && apiStatus === 'Draft')
+      ? 'Reviewed'
+      : apiStatus ||
+        (isNeedsReview ? 'Needs Review' : hasFeedback || hasMarks ? 'Reviewed' : 'Not Started');
+
   return (
-    <Label color={isReviewed ? 'success' : hasFeedback ? 'info' : 'default'}>
-      {row?.evaluationStatus || (isReviewed ? 'Reviewed' : hasFeedback ? 'Draft' : 'Not Started')}
+    <Label
+      color={statusLabel === 'Reviewed' ? 'success' : statusLabel === 'Needs Review' ? 'warning' : 'default'}
+    >
+      {statusLabel}
     </Label>
   );
 }
@@ -172,10 +219,24 @@ export function EvaluationActionButton({
 }) {
   if (!canAdd) return null;
 
+  // In-person homework has no digital submission event, so its rows stay
+  // stuck at status 0 ("Not Submitted") forever. Teachers still need to be
+  // able to record marks/feedback for these directly from this list.
+  const isInPerson =
+    Number(row?.submissionType) === 2 ||
+    String(row?.submissionType || '').toLowerCase().includes('in person') ||
+    String(row?.homeworkType || '').toLowerCase().includes('in person');
+
   const status = Number(row?.status);
   const isReviewed = status === 4;
-  const isNotSubmitted = status === 0;
-  const title = isNotSubmitted ? 'Send Reminder' : isReviewed ? 'Edit Feedback' : 'Evaluate';
+  const isNotSubmitted = status === 0 && !isInPerson;
+  const title = isNotSubmitted
+    ? 'Send Reminder'
+    : isReviewed
+      ? 'Edit Feedback'
+      : isInPerson && status === 0
+        ? 'Add Marks & Feedback'
+        : 'Evaluate';
   const icon = isNotSubmitted
     ? 'mdi:bell-outline'
     : isReviewed

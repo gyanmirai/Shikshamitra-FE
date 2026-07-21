@@ -31,7 +31,7 @@ const TagForm: React.FC<TagFormProps> = ({ dialog, onClose, editData }) => {
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Box display="flex" flexDirection="column" gap={1} height="100%">
           <Scrollbar sx={{ p: 2 }}>
             <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>

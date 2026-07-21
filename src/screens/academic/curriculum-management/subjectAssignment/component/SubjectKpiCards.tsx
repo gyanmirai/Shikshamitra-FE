@@ -39,7 +39,7 @@ function KpiCard({ title, value, subValue, icon, color, tooltip, onClick }: KpiC
           minWidth: 130,
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 1,
           cursor: onClick ? 'pointer' : 'default',
           border: `1px solid ${theme.vars.palette.divider}`,
           boxShadow: 'var(--shadows-2)',
@@ -170,7 +170,7 @@ export default function SubjectKpiCards({
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} variant="rounded" width={160} height={76} sx={{ borderRadius: 2 }} />
         ))}
@@ -181,7 +181,7 @@ export default function SubjectKpiCards({
   if (!kpi) return null;
 
   return (
-    <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+    <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
       {cards.map((card) => (
         <KpiCard key={card.title} {...card} />
       ))}
@@ -194,7 +194,7 @@ export default function SubjectKpiCards({
           minWidth: 130,
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 1,
           border: `1px solid ${theme.vars.palette.divider}`,
           boxShadow: 'var(--shadows-2)',
         }}

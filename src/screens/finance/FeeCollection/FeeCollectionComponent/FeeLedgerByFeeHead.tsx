@@ -17,7 +17,14 @@ export interface ByFeeHeadViewProps {
   groups: FeeHeadWiseGroup[];
   selectedItems: SelectedItem[];
   year: number;
-  onToggleItem: (feeHeadId: string, month: string, due: number, itemYear?: number) => void;
+  onToggleItem: (
+    feeHeadId: string,
+    month: string,
+    due: number,
+    itemYear?: number,
+    dueFeeId?: string,
+    installmentLabel?: string
+  ) => void;
   onToggleGroup: (group: FeeHeadWiseGroup) => void;
 }
 
@@ -27,7 +34,14 @@ interface FeeHeadGroupProps {
   group: FeeHeadWiseGroup;
   selectedItems: SelectedItem[];
   year: number;
-  onToggleItem: (feeHeadId: string, month: string, due: number, itemYear?: number) => void;
+  onToggleItem: (
+    feeHeadId: string,
+    month: string,
+    due: number,
+    itemYear?: number,
+    dueFeeId?: string,
+    installmentLabel?: string
+  ) => void;
   onToggleGroup: (group: FeeHeadWiseGroup) => void;
 }
 
@@ -134,11 +148,21 @@ const FeeHeadGroup = ({
           const period = toPeriod(FeeMonth[item.month] as string, item.year ?? year);
           const isSelected =
             item.due === 0 ||
-            selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
+            selectedItems.some(
+              (s) =>
+                (item.dueFeeId && s.dueFeeId === item.dueFeeId) ||
+                (!item.dueFeeId &&
+                  s.feeHeadId === group.feeHeadId &&
+                  s.period === period &&
+                  !s.dueFeeId)
+            );
           return (
-            <React.Fragment key={`${item.month}-${item.year ?? year}`}>
+            <React.Fragment key={item.dueFeeId ?? `${item.month}-${item.year ?? year}-${idx}`}>
               <FeeRow
-                name={`${FeeMonth[item.month]} ${item.year ?? year}`}
+                name={item.installmentLabel || `${FeeMonth[item.month]} ${item.year ?? year}`}
+                subtitle={
+                  item.installmentLabel ? `${FeeMonth[item.month]} ${item.year ?? year}` : undefined
+                }
                 total={item.total}
                 paid={item.paid}
                 due={item.due}
@@ -154,7 +178,14 @@ const FeeHeadGroup = ({
                 isDisabled={item.due === 0}
                 showStatus
                 onToggle={() =>
-                  onToggleItem(group.feeHeadId, FeeMonth[item.month] as string, item.due, item.year)
+                  onToggleItem(
+                    group.feeHeadId,
+                    FeeMonth[item.month] as string,
+                    item.due,
+                    item.year,
+                    item.dueFeeId,
+                    item.installmentLabel
+                  )
                 }
               />
               {idx < group.items.length - 1 && (

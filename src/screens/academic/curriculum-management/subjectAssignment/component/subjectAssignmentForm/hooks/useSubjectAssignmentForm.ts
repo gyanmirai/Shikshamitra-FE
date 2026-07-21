@@ -125,7 +125,12 @@ export function useSubjectAssignmentForm({
   const { data: subjectTableData = [] } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { standardId: formik?.values?.classId || classId, page: 0, pageSize: 20 },
+    params: {
+      standardId: formik?.values?.classId || classId,
+      page: 0,
+      pageSize: 20,
+      status: 'all',
+    },
     options: { skip: !classId },
   });
 
@@ -251,6 +256,22 @@ export function useSubjectAssignmentForm({
           return;
         }
       } else if (addedOption.type === 1) {
+        const existingElectiveSubjectIds = new Set<string>(
+          currentSelected
+            .filter((opt: any) => opt.type === 1)
+            .flatMap((opt: any) => (opt.subjects || []).map((s: any) => s.id))
+        );
+        const duplicateElectiveSubjects = (addedOption.subjects || []).filter((s: any) =>
+          existingElectiveSubjectIds.has(s.id)
+        );
+        if (duplicateElectiveSubjects.length > 0) {
+          const names = duplicateElectiveSubjects.map((s: any) => `"${s.name}"`).join(', ');
+          shikshaMitraToast.warning({
+            message: `${names} ${duplicateElectiveSubjects.length > 1 ? 'are' : 'is'} available in multiple Elective Groups. Please select only one Elective Group for assignment.`,
+          });
+          return;
+        }
+
         const conflicting = (addedOption.subjects || []).filter((s: any) =>
           coreSubjectIds.has(s.id)
         );
@@ -339,7 +360,6 @@ export function useSubjectAssignmentForm({
   const handleFileUpload = async (files: (File | string)[], index: number | null) => {
     if (!files || files.length === 0 || index === null) return;
     const formData = new FormData();
-    formData.append('FileName', (files[0] as File)?.name);
     formData.append('File', files[0] as File);
     const response = await uploadCurriculumFile(formData).unwrap();
     formik.setFieldValue(`subjects.${index}.documents`, [response.data]);

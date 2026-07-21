@@ -19,6 +19,7 @@ import {
   Edit,
   Archive,
   Publish,
+  Visibility,
   ContentCopy,
   DeleteOutline,
   FormatListNumbered,
@@ -63,13 +64,17 @@ import {
   useCreateAdmissionCrmRegistrationTemplateVersionMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { RegistrationTemplatePreview } from './registration-template-preview';
+import { getAdmissionCrmStageLabel } from '../admissions-crm/admissions-crm-utils';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
   createRegistrationField,
   createRegistrationSection,
   createRegistrationTemplate,
   normalizeRegistrationTemplate,
+  createBlankRegistrationTemplate,
   validateRegistrationTemplateStep,
+  normalizeRegistrationFieldForType,
   findRegistrationTemplateValidationIssue,
 } from './admissions-registration-configuration-utils';
 
@@ -154,6 +159,8 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   const [tab, setTab] = useState(0);
   const [templateStep, setTemplateStep] = useState(0);
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [previewTemplate, setPreviewTemplate] =
+    useState<AdmissionCrmRegistrationTemplateUpsertDto | null>(null);
   const [editingTemplate, setEditingTemplate] =
     useState<AdmissionCrmRegistrationTemplateDto | null>(null);
   const [templateForm, setTemplateForm] = useState<AdmissionCrmRegistrationTemplateUpsertDto>(() =>
@@ -185,6 +192,13 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   const openNewTemplate = () => {
     setEditingTemplate(null);
     setTemplateForm(createRegistrationTemplate());
+    setTemplateStep(0);
+    setTemplateOpen(true);
+  };
+
+  const openBlankTemplate = () => {
+    setEditingTemplate(null);
+    setTemplateForm(createBlankRegistrationTemplate());
     setTemplateStep(0);
     setTemplateOpen(true);
   };
@@ -381,7 +395,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
       },
       {
         id: 'autoIssueAtStage',
-        label: 'Issue Trigger',
+        label: 'Issue Method',
         minWidth: 145,
         filterType: 'enum',
         enumOptions: [
@@ -391,7 +405,9 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           { value: AdmissionInquiryStage.Eligible, label: 'Eligible' },
         ],
         render: (value) =>
-          value === null || value === undefined ? 'Manual' : AdmissionInquiryStage[value],
+          value === null || value === undefined
+            ? 'Staff issues manually'
+            : `Automatic at ${getAdmissionCrmStageLabel(value as AdmissionInquiryStage)}`,
       },
       {
         id: 'status',
@@ -434,6 +450,15 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
               handleEditClick={() => openTemplate(template)}
               actions={({ popover }) => (
                 <MenuList>
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      setPreviewTemplate(toTemplateForm(template));
+                    }}
+                  >
+                    <Visibility fontSize="small" />
+                    Preview online and print
+                  </MenuItem>
                   {template.status === AdmissionCrmRegistrationTemplateStatus.Draft ? (
                     <MenuItem
                       disabled={lifecycleBusy}
@@ -483,14 +508,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
     <Box>
       <Stack spacing={1.25}>
         <Box>
-          <Typography variant="subtitle1">Registration Orchestration</Typography>
+          <Typography variant="subtitle1">Registration Forms</Typography>
           <Typography variant="caption" color="text.secondary">
-            Versioned forms and controlled form numbering
+            Published templates control the form, secure link, issue method, and numbering.
           </Typography>
         </Box>
         <Tabs value={tab} onChange={(_event, value: number) => setTab(value)}>
-          <Tab label="Form Templates" />
-          <Tab label="Number Series" />
+          <Tab label="Templates" />
+          <Tab label="Form Numbering" />
         </Tabs>
 
         {(tab === 0 && templatesQuery.isError) || (tab === 1 && seriesQuery.isError) ? (
@@ -515,7 +540,15 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
 
         {tab === 0 && !templatesQuery.isError ? (
           <Stack spacing={1.25}>
-            <Stack direction="row" justifyContent="flex-end">
+            <Stack direction="row" justifyContent="flex-end" gap={1}>
+              <Button
+                size="small"
+                startIcon={<Add />}
+                disabled={!academicYearId}
+                onClick={openBlankTemplate}
+              >
+                Blank Template
+              </Button>
               <Button
                 size="small"
                 variant="contained"
@@ -523,7 +556,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 disabled={!academicYearId}
                 onClick={openNewTemplate}
               >
-                New Template
+                Use Starter Template
               </Button>
             </Stack>
             {templatesQuery.isFetching ? <LinearProgress /> : null}
@@ -568,7 +601,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                     Next: {series.nextPreview}
                   </Typography>
                 </Box>
-                <Stack direction="row" alignItems="center" gap={0.5}>
+                <Stack direction="row" alignItems="center" gap={1}>
                   <Chip
                     size="small"
                     label={series.isActive ? 'Active' : 'Inactive'}
@@ -653,9 +686,10 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                   <TextField
                     select
                     size="small"
-                    label="Automatic issue milestone"
+                    label="Issue registration form"
                     value={templateForm.autoIssueAtStage ?? ''}
                     disabled={templateReadOnly}
+                    helperText="Manual sends eligible applicants to Ready to Invite. Automatic issues this template when the selected stage is reached."
                     onChange={(event) =>
                       setTemplateForm((current) => ({
                         ...current,
@@ -666,10 +700,16 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                       }))
                     }
                   >
-                    <MenuItem value="">Manual issue only</MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.ExamReady}>Exam ready</MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.ExamCompleted}>Exam completed</MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.Eligible}>Eligible</MenuItem>
+                    <MenuItem value="">Staff issues manually</MenuItem>
+                    <MenuItem value={AdmissionInquiryStage.ExamReady}>
+                      Automatically when exam ready
+                    </MenuItem>
+                    <MenuItem value={AdmissionInquiryStage.ExamCompleted}>
+                      Automatically when exam completed
+                    </MenuItem>
+                    <MenuItem value={AdmissionInquiryStage.Eligible}>
+                      Automatically when eligible
+                    </MenuItem>
                   </TextField>
                 </Box>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
@@ -870,9 +910,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                             value={field.fieldType}
                             disabled={templateReadOnly}
                             onChange={(event) =>
-                              updateField(sectionIndex, fieldIndex, {
-                                fieldType: Number(event.target.value) as AdmissionCrmFormFieldType,
-                              })
+                              updateField(
+                                sectionIndex,
+                                fieldIndex,
+                                normalizeRegistrationFieldForType(
+                                  field,
+                                  Number(event.target.value) as AdmissionCrmFormFieldType
+                                )
+                              )
                             }
                           >
                             {Object.entries(fieldTypeLabel).map(([value, label]) => (
@@ -888,9 +933,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                             value={field.systemField || ''}
                             disabled={templateReadOnly}
                             onChange={(event) =>
-                              updateField(sectionIndex, fieldIndex, {
-                                systemField: event.target.value || null,
-                              })
+                              updateField(
+                                sectionIndex,
+                                fieldIndex,
+                                normalizeRegistrationFieldForType(
+                                  { ...field, systemField: event.target.value || null },
+                                  field.fieldType
+                                )
+                              )
                             }
                           >
                             <MenuItem value="">Custom field</MenuItem>
@@ -1002,6 +1052,9 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setTemplateOpen(false)}>Close</Button>
+          <Button startIcon={<Visibility />} onClick={() => setPreviewTemplate(templateForm)}>
+            Preview
+          </Button>
           {!editingTemplate && templateStep > 0 ? (
             <Button onClick={() => setTemplateStep(0)}>Back</Button>
           ) : null}
@@ -1021,6 +1074,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           ) : null}
         </DialogActions>
       </Dialog>
+
+      {previewTemplate ? (
+        <RegistrationTemplatePreview
+          open
+          template={previewTemplate}
+          onClose={() => setPreviewTemplate(null)}
+        />
+      ) : null}
 
       <Dialog open={seriesOpen} onClose={() => setSeriesOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>

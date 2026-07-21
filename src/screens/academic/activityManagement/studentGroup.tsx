@@ -85,6 +85,7 @@ const StudentGroup = (props: TabComponentType) => {
     <Box>
       {open ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Student Group"
           links={[
             { name: 'Academics' },
@@ -105,6 +106,7 @@ const StudentGroup = (props: TabComponentType) => {
         />
       ) : (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Student Group"
           links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Student Group' }]}
           action={
@@ -433,10 +435,10 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, height: '450px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Class"

@@ -76,9 +76,9 @@ export const RoomFloorView = ({ rooms, onRoomClick, onReserveRoom }: RoomFloorVi
   }, {});
 
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={1}>
       {/* Controls */}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         <CustomSelect
           label="Building"
           options={buildingOpts}
@@ -115,7 +115,7 @@ export const RoomFloorView = ({ rooms, onRoomClick, onReserveRoom }: RoomFloorVi
           <Box
             sx={{
               display: 'grid',
-              gap: 1.5,
+              gap: 1,
               gridTemplateColumns: {
                 xs: '1fr',
                 sm: 'repeat(2, minmax(0, 1fr))',
@@ -168,7 +168,7 @@ export const RoomFloorView = ({ rooms, onRoomClick, onReserveRoom }: RoomFloorVi
 
                       <RoomStatusChip status={room.status} showIcon={false} />
 
-                      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 1 }}>
+                      <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
                         <Iconify icon="mdi:seat" width={13} color="text.secondary" />
                         <Typography variant="caption" color="text.secondary">
                           {room.capacity} seats
@@ -199,7 +199,7 @@ export const RoomFloorView = ({ rooms, onRoomClick, onReserveRoom }: RoomFloorVi
                       )}
 
                       {/* Facilities */}
-                      <Stack direction="row" spacing={0.5} sx={{ mt: 1 }} flexWrap="wrap">
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
                         {room.facilities?.slice(0, 4).map((f) => (
                           <Tooltip key={f} title={FACILITY_LABELS[f]} arrow>
                             <Box sx={{ color: 'text.secondary' }}>

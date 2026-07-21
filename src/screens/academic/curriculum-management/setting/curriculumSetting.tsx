@@ -77,6 +77,7 @@ const CurriculumSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Settings"
         description="Set up global subjects and elective groups to manage curriculum consistently across different classes."
         links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
@@ -99,7 +100,7 @@ const CurriculumSetting = () => {
 
             setSearchParams({ tab: value });
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
           role="tablist"
         >
           {TABS.map((tab) => (

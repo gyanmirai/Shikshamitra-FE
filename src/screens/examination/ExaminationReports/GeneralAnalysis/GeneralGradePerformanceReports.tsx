@@ -242,7 +242,7 @@ const GeneralGradePerformanceReports = ({
       <Card>
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               {/* ORGANIZATION (single, required) */}
               {showField('organizations') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -352,7 +352,7 @@ const GeneralGradePerformanceReports = ({
               )}
 
               {/* Submit */}
-              <Grid size={12} display="flex" justifyContent="flex-end" gap={1.5}>
+              <Grid size={12} display="flex" justifyContent="flex-end" gap={1}>
                 <Button
                   startIcon={<Iconify icon="mdi:eye-outline" />}
                   variant="outlined"

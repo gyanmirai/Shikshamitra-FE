@@ -51,7 +51,7 @@ const BedNumberSetting = (props: TabComponentType) => {
 
   return (
     <>
-      <Box gap={3} display="flex" justifyContent="flex-end" ml="auto">
+      <Box gap={1} display="flex" justifyContent="flex-end" ml="auto">
         <Button
           startIcon={<Iconify icon="ic:outline-plus" />}
           onClick={() => {

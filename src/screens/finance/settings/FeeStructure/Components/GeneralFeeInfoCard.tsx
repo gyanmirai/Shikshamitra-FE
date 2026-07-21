@@ -22,7 +22,7 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
           justifyContent: 'space-between',
         }}
       >
-        <Box display="flex" alignItems="center" gap={2}>
+        <Box display="flex" alignItems="center" gap={1}>
           <Box
             sx={{
               width: 40,

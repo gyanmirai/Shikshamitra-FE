@@ -219,16 +219,12 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
             <ValidationCheck label="All due dates configured" valid={checks.allDueDates} />
             <ValidationCheck label="Unique installment names" valid={checks.uniqueNames} />
             <ValidationCheck label="Due dates in ascending order" valid={checks.datesSequential} />
-            {values.enableBillingSchedule && (
-              <>
-                <ValidationCheck label="Demand rule selected" valid={checks.demandSet} />
-                {values.demandGenerationRule === 'XDaysBeforeDue' && (
-                  <ValidationCheck
-                    label="Offset days configured (≥1)"
-                    valid={checks.demandOffsetValid}
-                  />
-                )}
-              </>
+            <ValidationCheck label="Demand rule selected" valid={checks.demandSet} />
+            {values.demandGenerationRule === 'XDaysBeforeDue' && (
+              <ValidationCheck
+                label="Offset days configured (≥1)"
+                valid={checks.demandOffsetValid}
+              />
             )}
           </Stack>
 

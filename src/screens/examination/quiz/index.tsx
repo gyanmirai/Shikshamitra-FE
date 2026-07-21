@@ -141,6 +141,7 @@ const QuizManagement = (props: TabComponentType) => {
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Quiz Management"
           description={
             selectedQuiz
@@ -159,6 +160,7 @@ const QuizManagement = (props: TabComponentType) => {
         />
       ) : (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Quiz Management"
           description="Access to manage all quizzes and track pending quizzes and analyze students performance on completed ones."
           links={[

@@ -14,6 +14,7 @@ import StudentCoursePerfoemance from './component/studentCoursePerfoemance';
 const Dashboard = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Dashboard"
       links={[{ name: 'Academics' }, { name: 'Course' }, { name: 'Dashboard' }]}
       action={

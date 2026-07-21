@@ -179,7 +179,7 @@ function ResultWorkflowPanel({
       <Box
         display="grid"
         gridTemplateColumns={{ xs: '1fr', md: '280px 1fr' }}
-        gap={2}
+        gap={1}
         alignItems="stretch"
       >
         <Box
@@ -207,8 +207,8 @@ function ResultWorkflowPanel({
           </Typography>
         </Box>
 
-        <Stack spacing={1.25}>
-          <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
+        <Stack spacing={1}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" gap={1}>
             <Box>
               <Typography variant="subtitle2">Result readiness</Typography>
               <Typography variant="caption" color="text.secondary">
@@ -280,7 +280,7 @@ function ResultWorkflowPanel({
           </Box>
 
           {pendingSubjects.length > 0 && (
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               {pendingSubjects.slice(0, 5).map((subject) => (
                 <Label key={subject} variant="soft" color="warning">
                   {subject}
@@ -458,7 +458,7 @@ function StudentDetailsDialog({
           p: 3,
           display: 'flex',
           flexDirection: 'column',
-          gap: 3,
+          gap: 1,
           overflowY: 'auto',
           flexGrow: 1,
         }}
@@ -501,7 +501,7 @@ function StudentDetailsDialog({
         </Box>
 
         {/* Top Grid: Student Info, Result Summary */}
-        <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1.2fr 1.4fr' }} gap={3}>
+        <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1.2fr 1.4fr' }} gap={1}>
           {/* Student Info Card */}
           <Card
             sx={{
@@ -523,7 +523,7 @@ function StudentDetailsDialog({
               </Typography>
             </Box>
 
-            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2}>
+            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={1}>
               <Box
                 sx={{
                   gridColumn: 'span 2',
@@ -635,7 +635,7 @@ function StudentDetailsDialog({
             <Box
               display="flex"
               alignItems="center"
-              gap={3}
+              gap={1}
               mb={3}
               width="100%"
               justifyContent="center"
@@ -703,7 +703,7 @@ function StudentDetailsDialog({
               </Box>
 
               {/* Grade & Rank Badges Stacked */}
-              <Stack spacing={1.5} sx={{ minWidth: 140 }}>
+              <Stack spacing={1} sx={{ minWidth: 140 }}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -763,7 +763,7 @@ function StudentDetailsDialog({
             </Box>
 
             {/* Sub-stats grid */}
-            <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={1.5} width="100%">
+            <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={1} width="100%">
               <Box
                 sx={{
                   bgcolor: (theme) => alpha(theme.palette.text.primary, 0.02),
@@ -907,7 +907,7 @@ function StudentDetailsDialog({
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
                       <TableCell sx={{ py: 1.5 }}>
-                        <Box display="flex" alignItems="center" gap={1.25}>
+                        <Box display="flex" alignItems="center" gap={1}>
                           <Box
                             sx={{
                               width: 28,
@@ -936,7 +936,7 @@ function StudentDetailsDialog({
                             ABSENT
                           </Typography>
                         ) : (
-                          <Box display="flex" alignItems="center" gap={1.5}>
+                          <Box display="flex" alignItems="center" gap={1}>
                             <Box
                               sx={{
                                 flex: 1,
@@ -1072,7 +1072,7 @@ function StudentDetailsDialog({
           borderTop: 1,
           borderColor: 'divider',
           justifyContent: 'flex-end',
-          gap: 1.5,
+          gap: 1,
         }}
       >
         <Button onClick={onClose} variant="outlined" size="medium" sx={{ borderRadius: '8px' }}>
@@ -1143,7 +1143,7 @@ function AnalyticsCards({
       <Box
         display="grid"
         gridTemplateColumns="repeat(auto-fill, minmax(150px, 1fr))"
-        gap={2}
+        gap={1}
         mb={2.5}
       >
         {cards.map((card) => (
@@ -1646,6 +1646,7 @@ const ResultCreation = (_props: TabComponentType) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Breadcrumbs */}
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Result Creation"
         description="Generate and review student-wise exam results with all subject marks"
         links={[
@@ -1731,7 +1732,7 @@ const ResultCreation = (_props: TabComponentType) => {
             bgcolor: 'background.paper',
             boxShadow: 'var(--shadows-3)',
             p: 1,
-            gap: 2,
+            gap: 1,
             mb: 2,
           }}
         >
@@ -1814,7 +1815,7 @@ const ResultCreation = (_props: TabComponentType) => {
                     : 'Prerequisites for result generation'}
                 </Typography>
               </Box>
-              <Stack spacing={0.75}>
+              <Stack spacing={1}>
                 {readinessData.checks.map((check: any) => (
                   <Box key={check.label} display="flex" alignItems="flex-start" gap={1}>
                     <Iconify

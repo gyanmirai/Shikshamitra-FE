@@ -2,19 +2,27 @@ import type { ReactNode } from 'react';
 
 import { Box, Stack, Typography } from '@mui/material';
 
+import { publicAdmissionsCopy } from './public-admissions-copy';
+
+import type { PublicAdmissionsLanguage } from './public-admissions-copy';
+
 type Props = {
   eyebrow?: string;
   title: string;
   description?: string;
   children: ReactNode;
+  language?: PublicAdmissionsLanguage;
 };
 
 export function PublicAdmissionsShell({
-  eyebrow = 'School Admissions',
+  eyebrow,
   title,
   description,
   children,
+  language = 'en',
 }: Props) {
+  const copy = publicAdmissionsCopy[language];
+
   return (
     <Box
       sx={{
@@ -29,7 +37,7 @@ export function PublicAdmissionsShell({
       <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 780, mx: 'auto' }}>
         <Box component="header">
           <Typography variant="overline" color="primary.darker">
-            {eyebrow}
+            {eyebrow || copy.eyebrow}
           </Typography>
           <Typography variant="h4" component="h1" sx={{ textWrap: 'balance' }}>
             {title}
@@ -44,7 +52,7 @@ export function PublicAdmissionsShell({
           {children}
         </Box>
         <Typography component="footer" variant="caption" color="text.secondary" textAlign="center">
-          Your information is protected and used only for the school admission process.
+          {copy.privacy}
         </Typography>
       </Stack>
     </Box>

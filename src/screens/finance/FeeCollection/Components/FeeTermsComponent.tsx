@@ -84,7 +84,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
 
       {/* LIST SECTION */}
       <Scrollbar sx={{ flexGrow: 1, p: 1.5, height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} pb={1}>
+        <Box display="flex" flexDirection="column" gap={1} pb={1}>
           {/* Fee Heads Section */}
           <Box>
             <Typography variant="h6" color="primary" sx={{ mb: 1 }}>
@@ -116,7 +116,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                     }}
                   >
                     <Box display="flex" alignItems="center" justifyContent="space-between">
-                      <Box display="flex" alignItems="center" gap={1.5}>
+                      <Box display="flex" alignItems="center" gap={1}>
                         <Checkbox
                           size="small"
                           checked={isSelected || isPaid}
@@ -177,7 +177,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                     }}
                   >
                     <Box display="flex" alignItems="center" justifyContent="space-between">
-                      <Box display="flex" alignItems="center" gap={1.5}>
+                      <Box display="flex" alignItems="center" gap={1}>
                         <Checkbox
                           size="small"
                           checked={isSelected}

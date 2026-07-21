@@ -34,6 +34,8 @@
     "test:e2e:student-crm:preflight": "node scripts/e2e/run-student-crm-playwright.mjs --preflight-only",
     "test:e2e:student-crm:dry-run": "node scripts/e2e/run-student-crm-playwright.mjs --dry-run",
     "test:e2e:dashboard": "playwright test e2e/dashboard --output=test-results-dashboard",
+    "test:e2e:academic": "playwright test e2e/academic --output=test-results-academic",
+    "test:e2e:academic:qa": "playwright test e2e/academic/academic-qa-signoff.spec.ts --output=test-results-academic-qa",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "start:out": "npx serve@latest out -p 8083",

@@ -75,6 +75,7 @@ const ExaminationPageScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Examination"
         links={[
           { name: 'Examination and Assessment' },
@@ -83,7 +84,7 @@ const ExaminationPageScreen = () => {
         ]}
       />
       <Box
-        sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
+        sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
       >
         <Button
           startIcon={<Iconify icon="mdi:calendar" />}

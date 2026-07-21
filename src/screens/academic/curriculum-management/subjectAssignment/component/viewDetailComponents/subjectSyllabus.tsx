@@ -44,7 +44,7 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
     <Box sx={{ height: '100%' }}>
       <Scrollbar sx={{ height: '100%', pb: 2 }}>
         {chapters.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {chapters.map((chapter: any) => (
               <Accordion
                 key={chapter.id}

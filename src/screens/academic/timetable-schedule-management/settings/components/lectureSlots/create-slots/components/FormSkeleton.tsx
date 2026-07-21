@@ -19,7 +19,7 @@ const FormSkeleton: React.FC = () => (
       <Skeleton variant="text" width={200} height={32} />
     </Box>
 
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       {[0, 1, 2].map((i) => (
         <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
           <Skeleton variant="rounded" height={40} />
@@ -45,7 +45,7 @@ const FormSkeleton: React.FC = () => (
       >
         <Stack
           direction="row"
-          spacing={3}
+          spacing={1}
           alignItems="center"
           sx={{ flexWrap: 'wrap', width: '100%', mb: 2 }}
         >
@@ -62,7 +62,7 @@ const FormSkeleton: React.FC = () => (
 
         <Divider sx={{ my: 2 }} />
 
-        <Grid container spacing={3}>
+        <Grid container spacing={1}>
           <Grid size={{ xs: 12, md: 5 }}>
             <Box
               sx={{

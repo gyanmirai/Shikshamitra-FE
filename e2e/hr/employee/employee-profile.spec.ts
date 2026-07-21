@@ -31,7 +31,7 @@ test.describe('HR Employee profile', () => {
     }, Promise.resolve());
 
     await page.getByRole('button', { name: /back/i }).click();
-    await expect(page.getByTestId(testIds.employeeList)).toBeVisible();
+    await expect(page.getByTestId(testIds.employeeListFilters)).toBeVisible();
 
     await assertNoErrors();
   });

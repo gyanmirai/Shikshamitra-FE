@@ -42,7 +42,7 @@ export function BookingTotalIncomes({ title, total, percent, chart, sx, ...other
   });
 
   const renderTrending = (
-    <Box gap={0.5} display="flex" alignItems="flex-end" flexDirection="column">
+    <Box gap={1} display="flex" alignItems="flex-end" flexDirection="column">
       <Box sx={{ gap: 0.5, display: 'flex', alignItems: 'center', typography: 'subtitle2' }}>
         <Iconify icon={percent >= 0 ? 'eva:trending-up-fill' : 'eva:trending-down-fill'} />
         <Box component="span">

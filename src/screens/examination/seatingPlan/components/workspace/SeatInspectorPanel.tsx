@@ -1,7 +1,8 @@
-import AllocationConflictPanel from './AllocationConflictPanel';
 import { Box, Button, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import type { SeatingValidationIssue } from '../../types';
+
+import AllocationConflictPanel from './AllocationConflictPanel';
 
 interface Props {
   blockers: SeatingValidationIssue[];
@@ -15,7 +16,7 @@ export default function SeatInspectorPanel({
   onOpenRules,
 }: Props) {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 1.5, height: '100%', overflow: 'auto' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, p: 1.5, height: '100%', overflow: 'auto' }}>
       <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="subtitle2" fontWeight={700}>

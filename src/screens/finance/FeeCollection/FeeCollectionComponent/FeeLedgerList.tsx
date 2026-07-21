@@ -135,17 +135,43 @@ const FeeLedgerList = ({
   onChargesChange,
   year = new Date().getFullYear(),
 }: FeeLedgerListProps) => {
+  const isItemSelected = (
+    selected: SelectedItem[],
+    feeHeadId: string,
+    period: string,
+    dueFeeId?: string
+  ) =>
+    selected.some((s) =>
+      dueFeeId
+        ? s.dueFeeId === dueFeeId
+        : s.feeHeadId === feeHeadId && s.period === period && !s.dueFeeId
+    );
+
   // ── Item toggle ────────────────────────────────────────────────────────────
-  const toggleItem = (feeHeadId: string, month: string, due: number, itemYear?: number) => {
+  const toggleItem = (
+    feeHeadId: string,
+    month: string,
+    due: number,
+    itemYear?: number,
+    dueFeeId?: string,
+    installmentLabel?: string
+  ) => {
     if (due === 0) return;
     const period = toPeriod(month, itemYear ?? year);
-    const exists = selectedItems.some((s) => s.feeHeadId === feeHeadId && s.period === period);
+    const exists = isItemSelected(selectedItems, feeHeadId, period, dueFeeId);
     if (exists) {
       onSelectionChange(
-        selectedItems.filter((s) => !(s.feeHeadId === feeHeadId && s.period === period))
+        selectedItems.filter((s) =>
+          dueFeeId
+            ? s.dueFeeId !== dueFeeId
+            : !(s.feeHeadId === feeHeadId && s.period === period && !s.dueFeeId)
+        )
       );
     } else {
-      onSelectionChange([...selectedItems, { feeHeadId, period, dueAmount: due }]);
+      onSelectionChange([
+        ...selectedItems,
+        { dueFeeId, feeHeadId, period, dueAmount: due, installmentLabel },
+      ]);
     }
   };
 
@@ -154,21 +180,31 @@ const FeeLedgerList = ({
     const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
     const selectableItems = group.items.filter((i) => i.due > 0);
     const isAllSelected = selectableItems.every((i) =>
-      selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
+      isItemSelected(selectedItems, i.feeHeadId, period, i.dueFeeId)
     );
 
     if (isAllSelected) {
       onSelectionChange(
         selectedItems.filter(
-          (s) => !(s.period === period && selectableItems.some((i) => i.feeHeadId === s.feeHeadId))
+          (s) =>
+            !(
+              s.period === period &&
+              selectableItems.some((i) =>
+                i.dueFeeId ? s.dueFeeId === i.dueFeeId : s.feeHeadId === i.feeHeadId && !s.dueFeeId
+              )
+            )
         )
       );
     } else {
       const toAdd = selectableItems
-        .filter(
-          (i) => !selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
-        )
-        .map((i) => ({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
+        .filter((i) => !isItemSelected(selectedItems, i.feeHeadId, period, i.dueFeeId))
+        .map((i) => ({
+          dueFeeId: i.dueFeeId,
+          feeHeadId: i.feeHeadId,
+          period,
+          dueAmount: i.due,
+          installmentLabel: i.installmentLabel,
+        }));
       onSelectionChange([...selectedItems, ...toAdd]);
     }
   };
@@ -180,7 +216,7 @@ const FeeLedgerList = ({
     const selectableItems = group.items.filter((i) => i.due > 0);
     const isAllSelected = selectableItems.every((i) => {
       const period = getPeriod(i);
-      return selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
+      return isItemSelected(selectedItems, group.feeHeadId, period, i.dueFeeId);
     });
 
     if (isAllSelected) {
@@ -189,7 +225,10 @@ const FeeLedgerList = ({
           (s) =>
             !(
               s.feeHeadId === group.feeHeadId &&
-              selectableItems.some((i) => getPeriod(i) === s.period)
+              selectableItems.some((i) => {
+                const period = getPeriod(i);
+                return i.dueFeeId ? s.dueFeeId === i.dueFeeId : s.period === period && !s.dueFeeId;
+              })
             )
         )
       );
@@ -197,9 +236,15 @@ const FeeLedgerList = ({
       const toAdd = selectableItems
         .filter((i) => {
           const period = getPeriod(i);
-          return !selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
+          return !isItemSelected(selectedItems, group.feeHeadId, period, i.dueFeeId);
         })
-        .map((i) => ({ feeHeadId: group.feeHeadId, period: getPeriod(i), dueAmount: i.due }));
+        .map((i) => ({
+          dueFeeId: i.dueFeeId,
+          feeHeadId: group.feeHeadId,
+          period: getPeriod(i),
+          dueAmount: i.due,
+          installmentLabel: i.installmentLabel,
+        }));
       onSelectionChange([...selectedItems, ...toAdd]);
     }
   };

@@ -139,7 +139,7 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           boxShadow: 'var(--shadows-3)',
           mt: 1,
           p: 1,
-          gap: 2,
+          gap: 1,
           mb: 1,
         }}
       >

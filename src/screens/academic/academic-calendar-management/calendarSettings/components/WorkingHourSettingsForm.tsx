@@ -72,7 +72,7 @@ const WorkingHourForm = ({
   onClose,
 }: WorkingHourFormProps) => (
   <Box component="form" onSubmit={formik.handleSubmit} noValidate>
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       <FormControl fullWidth size="small">
         <InputLabel>Class (Standard) *</InputLabel>
         <Select
@@ -112,7 +112,7 @@ const WorkingHourForm = ({
         </Select>
       </FormControl>
 
-      <Stack direction="row" spacing={2}>
+      <Stack direction="row" spacing={1}>
         <TextField
           fullWidth
           size="small"
@@ -138,7 +138,7 @@ const WorkingHourForm = ({
           helperText={formik.touched.endTime ? (formik.errors.endTime as string) : undefined}
         />
       </Stack>
-      <Stack direction="row" spacing={2}>
+      <Stack direction="row" spacing={1}>
         <TextField
           fullWidth
           size="small"
@@ -464,7 +464,7 @@ const WorkingHourSettingsForm = ({ calendarId }: Props) => {
           columns={columns}
           data={tableData}
           noDataText={
-            <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
+            <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
               <Box
                 sx={{
                   width: 64,

@@ -15,7 +15,6 @@ import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
-import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -28,12 +27,15 @@ import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor
 import {
   Box,
   Card,
+  Chip,
   Grid,
+  Stack,
   Slider,
   MenuList,
   MenuItem,
   TextField,
   Typography,
+  LinearProgress,
   DialogActions,
   CircularProgress,
 } from '@mui/material';
@@ -53,7 +55,7 @@ const EndToolTip = () => (
     sx={{ textAlign: 'left' }}
     arrow
     title={
-      <Box display="flex" flexDirection="column" gap={0.5}>
+      <Box display="flex" flexDirection="column" gap={1}>
         {/* Map through color indicators and their meanings */}
         {[
           { label: 'Red', color: 'error.main', text: 'Due within 7 days' },
@@ -78,6 +80,38 @@ const EndToolTip = () => (
     <Iconify icon="eva:info-outline" width={20} position="relative" sx={{ pt: 0.7 }} />
   </CustomTooltip>
 );
+
+const getRiskChipColor = (riskLevel?: string) => {
+  if (riskLevel === 'Critical' || riskLevel === 'High') return 'error';
+  if (riskLevel === 'Medium') return 'warning';
+  return 'success';
+};
+
+const getStatusChipColor = (status?: string) => {
+  if (status === 'Completed') return 'success';
+  if (status === 'Delayed' || status === 'Critically Delayed') return 'error';
+  if (status === 'In Progress' || status === 'Due To Start') return 'warning';
+  return 'default';
+};
+
+const formatDateCell = (value?: string | null) =>
+  value && value !== '-' && dayjs(value).isValid() ? dayjs(value).format('DD-MM-YYYY') : '-';
+
+const normalizeChapter = (chapter: any): ICourseDetail => ({
+  ...chapter,
+  id: chapter.id ?? chapter.chapterId,
+  chapterId: chapter.chapterId ?? chapter.id,
+  chapterName: chapter.chapterName ?? '',
+  progress: chapter.progress ?? 0,
+  expectedProgress: chapter.expectedProgress ?? 0,
+  variance: chapter.variance ?? (chapter.progress ?? 0) - (chapter.expectedProgress ?? 0),
+  startDate: chapter.startDate ?? null,
+  endDate: chapter.endDate ?? chapter.timeLine ?? null,
+  timeLine: chapter.timeLine ?? chapter.endDate ?? null,
+  status: chapter.status ?? 'Not Started',
+  scheduleStatus: chapter.scheduleStatus ?? 'On Track',
+  riskLevel: chapter.riskLevel ?? 'Low',
+});
 
 const CourseProgressComponent = ({
   courseData,
@@ -130,6 +164,11 @@ const CourseProgressComponent = ({
         name: s.subjectName ?? s.name ?? '',
         color: s.subjectColor ?? s.color ?? '#1976d2',
         progress: s.progressPercentage ?? s.progress ?? 0,
+        expectedProgress: s.expectedProgressPercentage ?? s.expectedProgress ?? 0,
+        variance: s.variancePercentage ?? s.variance ?? 0,
+        scheduleStatus: s.scheduleStatus ?? 'On Track',
+        riskLevel: s.riskLevel ?? 'Low',
+        lastUpdatedAt: s.lastUpdatedAt ?? null,
         completedChapter: s.completedChapters ?? s.completedChapter ?? 0,
         totalChapter: s.totalChapters ?? s.totalChapter ?? 0,
         details: s.details ?? [],
@@ -193,8 +232,37 @@ const CourseProgressComponent = ({
       chaptersData?.records ??
       (Array.isArray(chaptersData) ? chaptersData : []);
 
-    return raw;
+    return raw.map(normalizeChapter);
   }, [chaptersData, isApiActive, selectedCourse?.details]);
+
+  const progressSummary = useMemo(() => {
+    const total = chapterDetails.length;
+    const completed = chapterDetails.filter((chapter) => chapter.progress >= 100).length;
+    const delayed = chapterDetails.filter((chapter) =>
+      ['Delayed', 'Critically Delayed'].includes(chapter.scheduleStatus ?? chapter.status ?? '')
+    ).length;
+    const highRisk = chapterDetails.filter((chapter) =>
+      ['High', 'Critical'].includes(chapter.riskLevel ?? '')
+    ).length;
+    const averageProgress = total
+      ? Math.round(chapterDetails.reduce((sum, chapter) => sum + chapter.progress, 0) / total)
+      : 0;
+    const expectedProgress = total
+      ? Math.round(
+          chapterDetails.reduce((sum, chapter) => sum + (chapter.expectedProgress ?? 0), 0) / total
+        )
+      : 0;
+
+    return {
+      total,
+      completed,
+      delayed,
+      highRisk,
+      averageProgress,
+      expectedProgress,
+      variance: averageProgress - expectedProgress,
+    };
+  }, [chapterDetails]);
 
   // Dialog state for updating progress
   const updateProgressDialog = useBoolean();
@@ -359,6 +427,42 @@ const CourseProgressComponent = ({
                     {selectedCourse.name} Details
                   </Typography>
                 </Box>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1}
+                  sx={{ flexShrink: 0, mb: 1.5 }}
+                >
+                  {[
+                    { label: 'Actual', value: `${progressSummary.averageProgress}%` },
+                    { label: 'Expected', value: `${progressSummary.expectedProgress}%` },
+                    {
+                      label: 'Variance',
+                      value: `${progressSummary.variance >= 0 ? '+' : ''}${progressSummary.variance}%`,
+                    },
+                    { label: 'Completed', value: `${progressSummary.completed}/${progressSummary.total}` },
+                    { label: 'Delayed', value: progressSummary.delayed },
+                    { label: 'High Risk', value: progressSummary.highRisk },
+                  ].map((item) => (
+                    <Box
+                      key={item.label}
+                      sx={{
+                        px: 1.25,
+                        py: 0.75,
+                        border: (theme) => `1px solid ${theme.palette.divider}`,
+                        borderRadius: 1,
+                        minWidth: 112,
+                        bgcolor: 'background.paper',
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary">
+                        {item.label}
+                      </Typography>
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        {item.value}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
                 {isAction ? (
                   <CustomizableTable
                     tableId="course-progress-table"
@@ -443,32 +547,100 @@ const CourseProgressComponent = ({
                         align: 'left',
                         render(value, row) {
                           return (
-                            // Circular progress indicator with percentage
-                            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                              <CircularProgress variant="determinate" value={value} />
-                              <Box
-                                sx={{
-                                  top: 0,
-                                  left: 0,
-                                  bottom: 0,
-                                  right: 0,
-                                  position: 'absolute',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <Typography
-                                  variant="caption"
-                                  component="div"
-                                  sx={{ color: 'text.secondary' }}
-                                >
+                            <Box sx={{ minWidth: 190 }}>
+                              <Box display="flex" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                                <Typography variant="caption" fontWeight={700}>
                                   {value}%
                                 </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Expected {row.expectedProgress ?? 0}%
+                                </Typography>
                               </Box>
+                              <LinearProgress
+                                variant="determinate"
+                                value={value}
+                                sx={{ height: 8, borderRadius: 1, mb: 0.5 }}
+                              />
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: (row.variance ?? 0) < 0 ? 'error.main' : 'success.main',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {(row.variance ?? 0) >= 0 ? '+' : ''}
+                                {row.variance ?? 0}% variance
+                              </Typography>
                             </Box>
                           );
                         },
+                      },
+                      {
+                        id: 'status',
+                        label: 'Status',
+                        minWidth: 150,
+                        align: 'left',
+                        render(value, row) {
+                          return (
+                            <Stack spacing={0.5} alignItems="flex-start">
+                              <Chip
+                                label={value || 'Not Started'}
+                                size="small"
+                                color={getStatusChipColor(value) as any}
+                                variant="outlined"
+                              />
+                              <Chip
+                                label={row.scheduleStatus || 'On Track'}
+                                size="small"
+                                color={getStatusChipColor(row.scheduleStatus) as any}
+                                variant="filled"
+                              />
+                            </Stack>
+                          );
+                        },
+                      },
+                      {
+                        id: 'riskLevel',
+                        label: 'Risk',
+                        minWidth: 120,
+                        align: 'left',
+                        render(value) {
+                          return (
+                            <Chip
+                              label={value || 'Low'}
+                              size="small"
+                              color={getRiskChipColor(value) as any}
+                              variant="filled"
+                            />
+                          );
+                        },
+                      },
+                      {
+                        id: 'actualStartDate',
+                        label: 'Actual Start',
+                        minWidth: 140,
+                        align: 'left',
+                        render: (value) => (
+                          <Typography variant="caption">{formatDateCell(value)}</Typography>
+                        ),
+                      },
+                      {
+                        id: 'actualEndDate',
+                        label: 'Actual End',
+                        minWidth: 140,
+                        align: 'left',
+                        render: (value) => (
+                          <Typography variant="caption">{formatDateCell(value)}</Typography>
+                        ),
+                      },
+                      {
+                        id: 'lastUpdatedAt',
+                        label: 'Last Updated',
+                        minWidth: 155,
+                        align: 'left',
+                        render: (value) => (
+                          <Typography variant="caption">{formatDateCell(value)}</Typography>
+                        ),
                       },
                       {
                         id: 'actions',
@@ -632,8 +804,8 @@ const CourseProgressComponent = ({
           updateProgressDialog.onFalse();
         }}
         title={
-          <Box display="flex" flexDirection="column" gap={0.5}>
-            <Box display="flex" flexDirection="row" gap={0.75} alignItems="center">
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h6" component="span" sx={{ fontWeight: 700 }}>
                 Update Chapter Progress
               </Typography>
@@ -677,8 +849,8 @@ const CourseProgressComponent = ({
         }}
         maxWidth="sm"
         title={
-          <Box display="flex" flexDirection="column" gap={0.5}>
-            <Box display="flex" flexDirection="row" gap={0.75} alignItems="center">
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h6" component="span" sx={{ fontWeight: 700 }}>
                 Chapter Logs
               </Typography>
@@ -719,15 +891,6 @@ const CourseProgressComponent = ({
 
 export default CourseProgressComponent;
 
-const marks = [
-  { value: 0, label: '0' },
-  { value: 20, label: '20' },
-  { value: 40, label: '40' },
-  { value: 60, label: '60' },
-  { value: 80, label: '80' },
-  { value: 100, label: '100' },
-];
-
 const UpdateProgress: React.FC<IUpdateProgressProps> = ({
   onClose,
   selectedChapter,
@@ -742,7 +905,14 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
 
   const formik = useFormik({
     initialValues: {
-      completePercentage: currentProgress, // Adjusted field name to match the input ID
+      completePercentage: currentProgress,
+      status: selectedChapter?.status ?? 'In Progress',
+      delayReason: '',
+      revisedEndDate: '',
+      conductedLectures: '',
+      currentTopic: '',
+      teachingMethod: '',
+      studentUnderstanding: '',
       description: '',
     },
     validationSchema: Yup.object({
@@ -750,13 +920,23 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
         .min(0, 'Percentage cannot be negative')
         .max(100, 'Percentage cannot exceed 100')
         .test(
-          'is-progress-increased',
-          currentProgress >= 100
-            ? 'Progress is already completed'
-            : `Progress must be greater than current progress (${currentProgress}%)`,
-          (value) => currentProgress < 100 && Number(value) > currentProgress
+          'is-progress-changed',
+          currentProgress >= 100 ? 'Progress is already completed' : 'Change the progress value',
+          (value) => currentProgress < 100 && Number(value) !== currentProgress
         )
         .required('Complete Percentage is required'),
+      status: Yup.string().required('Status is required'),
+      delayReason: Yup.string().when('completePercentage', {
+        is: (value: number) => value < currentProgress,
+        then: (schema) => schema.required('Delay reason is required when progress is reduced'),
+        otherwise: (schema) => schema,
+      }),
+      revisedEndDate: Yup.string().when('delayReason', {
+        is: (value: string) => !!value,
+        then: (schema) => schema.required('Revised end date is required for delayed chapters'),
+        otherwise: (schema) => schema,
+      }),
+      description: Yup.string().required('Update note is required'),
     }),
     onSubmit: async (values) => {
       try {
@@ -768,6 +948,15 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
             divisionId,
             progress: values.completePercentage,
             description: values.description,
+            status: values.status,
+            delayReason: values.delayReason || undefined,
+            revisedEndDate: values.revisedEndDate || undefined,
+            conductedLectures: values.conductedLectures
+              ? Number(values.conductedLectures)
+              : undefined,
+            currentTopic: values.currentTopic || undefined,
+            teachingMethod: values.teachingMethod || undefined,
+            studentUnderstanding: values.studentUnderstanding || undefined,
           },
         };
 
@@ -784,40 +973,205 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
+        <Card variant="outlined" sx={{ p: 1.5, mb: 2, borderRadius: 1 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Current Progress
+              </Typography>
+              <Typography variant="h6">{currentProgress}%</Typography>
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Expected Progress
+              </Typography>
+              <Typography variant="h6">{selectedChapter?.expectedProgress ?? 0}%</Typography>
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Risk
+              </Typography>
+              <Box sx={{ mt: 0.5 }}>
+                <Chip
+                  label={selectedChapter?.riskLevel ?? 'Low'}
+                  size="small"
+                  color={getRiskChipColor(selectedChapter?.riskLevel) as any}
+                />
+              </Box>
+            </Box>
+          </Stack>
+        </Card>
+
         <ShakingTextField
           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
         >
-          <ComponentBlock sx={{ mb: 2 }}>
-            <Slider
-              value={formik.values.completePercentage}
-              onChange={(event, value) => {
-                const nextValue = Array.isArray(value) ? value[0] : value;
-                if (nextValue < currentProgress) return;
-
-                formik.setFieldValue('completePercentage', nextValue);
-              }}
-              getAriaValueText={(value) => `${value}%`}
-              min={0}
-              max={100}
-              step={10}
-              valueLabelDisplay="auto"
-              marks={marks}
-            />
+          <Box
+            sx={{
+              mb: 2,
+              p: 1.5,
+              borderRadius: 1,
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              bgcolor: 'background.neutral',
+            }}
+          >
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+              <Box sx={{ flex: 1, width: '100%' }}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Typography variant="caption" color="text.secondary">
+                    Progress
+                  </Typography>
+                  <Typography variant="subtitle2" color="primary.main">
+                    {formik.values.completePercentage}%
+                  </Typography>
+                </Stack>
+                <Slider
+                  value={formik.values.completePercentage}
+                  onChange={(event, value) => {
+                    const nextValue = Array.isArray(value) ? value[0] : value;
+                    formik.setFieldValue('completePercentage', nextValue);
+                  }}
+                  getAriaValueText={(value) => `${value}%`}
+                  min={0}
+                  max={100}
+                  step={5}
+                  valueLabelDisplay="off"
+                  marks={[
+                    { value: 0, label: '0' },
+                    { value: 50, label: '50' },
+                    { value: 100, label: '100' },
+                  ]}
+                  sx={{
+                    mt: 0.5,
+                    mb: 0,
+                    '& .MuiSlider-markLabel': {
+                      fontSize: 11,
+                      color: 'text.secondary',
+                    },
+                  }}
+                />
+              </Box>
+              <TextField
+                name="completePercentage"
+                label="Progress %"
+                type="number"
+                size="small"
+                sx={{ width: { xs: '100%', sm: 140 } }}
+                value={formik.values.completePercentage}
+                onChange={(event) => {
+                  const value = Math.max(0, Math.min(100, Number(event.target.value)));
+                  formik.setFieldValue('completePercentage', value);
+                }}
+                onBlur={formik.handleBlur}
+                error={!!(formik.touched.completePercentage && formik.errors.completePercentage)}
+              />
+            </Stack>
             {formik.touched.completePercentage && formik.errors.completePercentage && (
               <Typography variant="caption" color="error">
                 {formik.errors.completePercentage}
               </Typography>
             )}
-          </ComponentBlock>
+          </Box>
         </ShakingTextField>
+
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              name="status"
+              label="Chapter Status"
+              value={formik.values.status}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={!!(formik.touched.status && formik.errors.status)}
+              helperText={formik.touched.status && formik.errors.status}
+            >
+              {['Not Started', 'In Progress', 'Delayed', 'Completed'].map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              name="conductedLectures"
+              label="Conducted Lectures"
+              type="number"
+              value={formik.values.conductedLectures}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              name="delayReason"
+              label="Delay / Change Reason"
+              value={formik.values.delayReason}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={!!(formik.touched.delayReason && formik.errors.delayReason)}
+              helperText={formik.touched.delayReason && formik.errors.delayReason}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              name="revisedEndDate"
+              label="Revised End Date"
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={formik.values.revisedEndDate}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={!!(formik.touched.revisedEndDate && formik.errors.revisedEndDate)}
+              helperText={formik.touched.revisedEndDate && formik.errors.revisedEndDate}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              fullWidth
+              size="small"
+              name="currentTopic"
+              label="Current Topic / Lesson Plan Reference"
+              value={formik.values.currentTopic}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              name="teachingMethod"
+              label="Teaching Method"
+              value={formik.values.teachingMethod}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              name="studentUnderstanding"
+              label="Student Understanding"
+              value={formik.values.studentUnderstanding}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+        </Grid>
 
         <TextField
           fullWidth
+          size="small"
           multiline
           rows={4}
           name="description"
-          label="Description"
-          // placeholder="Enter description"
+          label="Update Note / Evidence"
           value={formik.values.description}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
@@ -836,7 +1190,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
           loading={isUpdateLoading}
           variant="contained"
           size="small"
-          disabled={formik.values.completePercentage <= currentProgress}
+          disabled={formik.values.completePercentage === currentProgress}
           startIcon={<Iconify icon={GlobalIcons.edit} />}
         >
           Update

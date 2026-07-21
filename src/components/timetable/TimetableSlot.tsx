@@ -379,6 +379,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
 
   const COMPACT_SLOT_HEIGHT = 45; // px
   const isCompactSlot = height <= COMPACT_SLOT_HEIGHT;
+  const isUltraCompact = height < 50;
   const subjectNames = displaySubjects.map((s) => s.name);
   const fullText = subjectNames.join(' | ');
   const firstSubject = displaySubjects[0]?.name;
@@ -422,7 +423,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             overflow: 'hidden',
           }}
         >
-          {(isFilled || isBreak) && (
+          {(isFilled || isBreak) && !isUltraCompact && (
             <Box
               sx={{
                 display: 'flex',
@@ -451,9 +452,24 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               flexDirection: 'column',
               justifyContent: 'center',
               textAlign: 'center',
+              overflow: 'hidden',
+              p: isUltraCompact ? '2px' : 0,
             }}
           >
-            {!isCompactSlot ? (
+            {isUltraCompact ? (
+              <Typography
+                variant="caption"
+                fontWeight="bold"
+                noWrap
+                sx={{
+                  fontSize: '0.72rem',
+                  lineHeight: 1.1,
+                  px: 0.5,
+                }}
+              >
+                {isBreak ? slot.breakType : firstSubject}
+              </Typography>
+            ) : !isCompactSlot ? (
               <Box>
                 <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1.3 }}>
                   {isBreak ? `${slot.breakType} BREAK` : subjectNames.join(' | ')}

@@ -436,7 +436,7 @@ export const LeaveRequestForm = ({
     <Scrollbar sx={{ maxHeight: 520 }}>
       {/*  Header  */}
       <Box sx={{ px: 3, pt: 2.5, pb: 2 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={2}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1}>
           <Box minWidth={0}>
             <Typography variant="h5" fontWeight={700} mb={0.5}>
               {employeeName}

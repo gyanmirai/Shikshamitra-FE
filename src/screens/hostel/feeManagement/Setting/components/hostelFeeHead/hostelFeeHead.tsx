@@ -155,7 +155,7 @@
 //     setSelectedFeeHeadId(value.id);
 //   };
 //   return (
-//     <Box display="flex" flexDirection="column" gap={2} p={2}>
+//     <Box display="flex" flexDirection="column" gap={1} p={2}>
 //       {/* Add New Fee Head */}
 //       <Grid size={{ xs: 12, md: 6 }}>
 //         <Box
@@ -164,7 +164,7 @@
 //           justifyItems="center"
 //           alignItems="center"
 //           flexDirection="row"
-//           gap={3}
+//           gap={1}
 //         >
 //           <TextField
 //             autoFocus

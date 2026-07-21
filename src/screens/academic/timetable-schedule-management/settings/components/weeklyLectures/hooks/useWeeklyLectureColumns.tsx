@@ -6,11 +6,16 @@ import { useMemo } from 'react';
 import { Box, Chip } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { TIMETABLE_STATUS_LABEL } from 'src/utils/timetable-capacity';
 import { TimetableStatusChip } from 'src/components/timetable-status-chip/TimetableStatusChip';
 
 import type { ISubjectFormValues } from '../type';
 
 const MAX_VISIBLE_SUBJECT_CHIPS = 2;
+
+const TIMETABLE_SETTING_STATUS_FILTER_OPTIONS = Object.values(TIMETABLE_STATUS_LABEL).map(
+  (label) => ({ value: label, label })
+);
 
 interface UseWeeklyLectureColumnsArgs {
   onView: (row: ISubjectFormValues) => void;
@@ -33,7 +38,15 @@ export function useWeeklyLectureColumns({
 }: UseWeeklyLectureColumnsArgs): IColumn[] {
   return useMemo<IColumn[]>(
     () => [
-      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
+      {
+        id: 'standardName',
+        label: 'Class',
+        filterType: 'string',
+        align: 'left',
+        sticky: true,
+        stickyPosition: 'left',
+        minWidth: 120,
+      },
       {
         id: 'totalLectures',
         label: 'Required Weekly Lectures',
@@ -63,19 +76,11 @@ export function useWeeklyLectureColumns({
         },
       },
       {
-        id: 'status',
-        label: 'Status',
-        minWidth: 150,
-        isSort: false,
-        align: 'left',
-        render: (value) => (value ? <TimetableStatusChip status={value} /> : '—'),
-      },
-      {
         id: 'newSubject',
         label: 'Subjects',
         isSort: false,
         align: 'left',
-        isFilter: false,
+        filterType: 'string',
         minWidth: 220,
         render: (_value, row) => {
           const subjects = (row as ISubjectFormValues).subjects ?? [];
@@ -85,7 +90,7 @@ export function useWeeklyLectureColumns({
             <Box
               display="flex"
               flexWrap="wrap"
-              gap={0.75}
+              gap={1}
               alignItems="center"
               sx={{ maxHeight: 56, overflow: 'hidden' }}
             >
@@ -101,7 +106,7 @@ export function useWeeklyLectureColumns({
               {overflow.length > 0 && (
                 <CustomTooltip
                   title={
-                    <Box display="flex" flexDirection="column" gap={0.5} p={0.5}>
+                    <Box display="flex" flexDirection="column" gap={1} p={0.5}>
                       {overflow.map((subject, idx) => (
                         <span key={subject.id ?? idx}>
                           {subject.electiveGroupName || subject.subjectName} ·{' '}
@@ -125,10 +130,26 @@ export function useWeeklyLectureColumns({
         },
       },
       {
+        id: 'statusLabel',
+        label: 'Status',
+        minWidth: 170,
+        isSort: false,
+        filterType: 'enum',
+        enumOptions: TIMETABLE_SETTING_STATUS_FILTER_OPTIONS,
+        align: 'left',
+        sticky: true,
+        stickyPosition: 'right',
+        render: (_value, row) => {
+          const status = (row as ISubjectFormValues).status;
+          return status != null ? <TimetableStatusChip status={status} /> : '—';
+        },
+      },
+      {
         id: 'action',
         label: 'Actions',
         minWidth: 40,
         sticky: true,
+        stickyPosition: 'right',
         align: 'left',
         isSort: false,
         isFilter: false,

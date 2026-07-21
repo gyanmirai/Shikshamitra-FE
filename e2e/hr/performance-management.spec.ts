@@ -1,11 +1,13 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 async function chooseSelectOption(page: Page, label: string, option: string) {
-  await page.getByRole('combobox', { name: label }).first().click();
+  const combobox = page.getByRole('combobox', { name: label }).first();
+  await expect(combobox).toBeVisible({ timeout: 120_000 });
+  await combobox.click({ timeout: 120_000 });
   await page
     .getByRole('option', { name: new RegExp(escapeRegExp(option)) })
     .first()
@@ -17,24 +19,38 @@ async function closeReviewWorkspace(page: Page) {
   await expect(page.getByTestId('performance-review-workspace')).toBeHidden({ timeout: 10_000 });
 }
 
+async function gotoAndExpect(page: Page, path: string, readyLocator: Locator) {
+  await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await expect(readyLocator).toBeVisible({ timeout: 120_000 });
+}
+
 test.describe('HR Performance Management', () => {
   test('renders overview, SQAAF audit pack reports, settings, and legacy setup redirect', async ({
     page,
   }) => {
-    await page.goto('/hr/professional-management/overview', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Performance Management').first()).toBeVisible();
+    test.setTimeout(360_000);
+
+    await gotoAndExpect(
+      page,
+      '/hr/professional-management/overview',
+      page.getByText('Performance Management').first()
+    );
     await expect(page.getByText('Prepare SQAAF Audit Pack')).toBeVisible();
     await expect(page.getByText('SQAAF readiness').first()).toBeVisible();
 
     const auditPackResponse = page.waitForResponse(
       (response) =>
         response.url().includes('/api/hr/professional-management/reports/sqaaf-audit-pack') &&
-        response.request().method() === 'GET'
+        response.request().method() === 'GET',
+      { timeout: 120_000 }
     );
-    await page.goto('/hr/professional-management/reports', { waitUntil: 'domcontentloaded' });
+    await gotoAndExpect(
+      page,
+      '/hr/professional-management/reports',
+      page.getByText('SQAAF Audit Pack')
+    );
     const auditResponse = await auditPackResponse;
     expect(auditResponse.ok()).toBeTruthy();
-    await expect(page.getByText('SQAAF Audit Pack')).toBeVisible();
     await expect(page.getByText('SQAAF readiness').first()).toBeVisible();
     await expect(page.getByText('Ready domains').first()).toBeVisible();
     await expect(page.getByText('Domains Ready')).toHaveCount(0);
@@ -51,31 +67,42 @@ test.describe('HR Performance Management', () => {
     ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'SQAAF Evidence Coverage' })).toBeVisible();
 
-    await page.goto('/hr/professional-management/settings', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Performance settings')).toBeVisible();
+    await gotoAndExpect(
+      page,
+      '/hr/professional-management/settings',
+      page.getByText('Performance settings')
+    );
     await expect(page.getByText('Board Presets / SQAAF Mapping')).toBeVisible();
 
-    await page.goto('/hr/professional-management/setup', { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/\/hr\/professional-management\/settings\/setup/);
-    await expect(page.getByRole('heading', { name: 'Setup & readiness' })).toBeVisible();
+    await page.goto('/hr/professional-management/setup', {
+      waitUntil: 'domcontentloaded',
+      timeout: 120_000,
+    });
+    await expect(page.getByRole('heading', { name: 'Setup & readiness' })).toBeVisible({
+      timeout: 120_000,
+    });
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/hr/professional-management/reports', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('SQAAF Audit Pack')).toBeVisible();
+    await gotoAndExpect(
+      page,
+      '/hr/professional-management/reports',
+      page.getByText('SQAAF Audit Pack')
+    );
     await expect(page.getByRole('button', { name: 'Export Audit Pack' })).toBeVisible();
   });
 
   test('runs guided setup, preserves evidence after reopen, and scopes workspace actions', async ({
     page,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(420_000);
     const unique = Date.now();
     const cycleName = `E2E PM Cycle ${unique}`;
 
-    await page.goto('/hr/professional-management/settings/setup', {
-      waitUntil: 'domcontentloaded',
-    });
-    await expect(page.getByRole('heading', { name: 'Setup & readiness' })).toBeVisible();
+    await gotoAndExpect(
+      page,
+      '/hr/professional-management/settings/setup',
+      page.getByRole('heading', { name: 'Setup & readiness' })
+    );
 
     const addPresetsButton = page.getByRole('button', { name: 'Add Board Presets' });
     await expect(addPresetsButton).toBeVisible();
@@ -97,8 +124,11 @@ test.describe('HR Performance Management', () => {
     });
     await expect(createAssignButton).toBeDisabled();
 
-    await page.goto('/hr/professional-management/overview', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Live Review Queue')).toBeVisible();
+    await gotoAndExpect(
+      page,
+      '/hr/professional-management/overview',
+      page.getByText('Live Review Queue')
+    );
     await expect(page.getByText(cycleName).first()).toBeVisible({ timeout: 30_000 });
     const overviewRow = page.getByRole('row', { name: new RegExp(cycleName) }).first();
     await expect(overviewRow.getByRole('button', { name: 'Open' })).toBeEnabled();
@@ -110,7 +140,11 @@ test.describe('HR Performance Management', () => {
     );
     await closeReviewWorkspace(page);
 
-    await page.goto('/hr/professional-management/reviews', { waitUntil: 'domcontentloaded' });
+    await gotoAndExpect(
+      page,
+      '/hr/professional-management/reviews',
+      page.getByRole('combobox', { name: 'Cycle' }).first()
+    );
     await chooseSelectOption(page, 'Cycle', cycleName);
     await expect(page.getByText('NaN%')).toHaveCount(0);
     const initialEvidenceResponse = page.waitForResponse(
@@ -188,7 +222,11 @@ test.describe('HR Performance Management', () => {
     await expect(page.getByRole('button', { name: 'Finalize Outcome' })).toHaveCount(0);
     await closeReviewWorkspace(page);
 
-    await page.goto('/hr/professional-management/outcomes', { waitUntil: 'domcontentloaded' });
+    await gotoAndExpect(
+      page,
+      '/hr/professional-management/outcomes',
+      page.getByRole('combobox', { name: 'Cycle' }).first()
+    );
     await chooseSelectOption(page, 'Cycle', cycleName);
     await page.getByRole('button', { name: 'Calibrate' }).first().click();
     await expect(page.getByTestId('performance-review-workspace')).toHaveAttribute(

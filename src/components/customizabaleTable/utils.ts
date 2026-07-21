@@ -1,7 +1,10 @@
 import type { Dayjs } from 'dayjs';
 
+import _ from 'lodash';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+import type { IData, IColumn } from './types';
 
 dayjs.extend(customParseFormat);
 
@@ -120,4 +123,26 @@ export function extractTextFromReactNode(node: any): string {
   }
 
   return '';
+}
+
+/**
+ * Resolves the text a user actually sees for a column/row pair.
+ * Falls back to the raw value when the column has no render function
+ * or when rendering throws, so filtering/search always has something to match against.
+ */
+export function getColumnDisplayText(row: IData, column: IColumn | undefined): string {
+  const rawValue = column ? _.get(row, column.id) : undefined;
+
+  if (column?.render) {
+    try {
+      const rendered = column.render(rawValue, row);
+      const text = extractTextFromReactNode(rendered);
+      if (text !== '') return text;
+    } catch {
+      // fall through to raw value below
+    }
+  }
+
+  if (rawValue === null || rawValue === undefined) return '';
+  return String(rawValue);
 }

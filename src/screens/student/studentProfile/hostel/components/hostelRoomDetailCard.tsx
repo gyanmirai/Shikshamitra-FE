@@ -24,7 +24,7 @@ const HostelRoomDetailCard: React.FC<IHostelRoomDetailCardProps> = ({
       divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
     >
       <Stack width={1}>
-        <Box fontSize="14px" display="flex" gap={2} justifyContent="center">
+        <Box fontSize="14px" display="flex" gap={1} justifyContent="center">
           <Typography variant="body2">{label}</Typography>
           <Label variant="soft" color={color} fontSize="12px" display="inline-block">
             {value}

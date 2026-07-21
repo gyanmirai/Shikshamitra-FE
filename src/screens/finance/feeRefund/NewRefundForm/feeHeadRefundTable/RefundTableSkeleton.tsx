@@ -44,7 +44,7 @@ const RefundTableSkeleton = (): React.ReactElement => {
           <Box
             display="flex"
             alignItems="center"
-            gap={1.25}
+            gap={1}
             px={1.5}
             py={1.25}
             sx={{ bgcolor: alpha(theme.palette.action.hover, 0.5) }}

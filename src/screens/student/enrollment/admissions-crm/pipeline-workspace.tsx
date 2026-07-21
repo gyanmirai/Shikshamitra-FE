@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import AddRounded from '@mui/icons-material/AddRounded';
 import { shikshaMitraToast } from 'src/components/toast';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import EventRounded from '@mui/icons-material/EventRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
@@ -21,27 +22,30 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import ViewColumnRounded from '@mui/icons-material/ViewColumnRounded';
 import ReceiptLongRounded from '@mui/icons-material/ReceiptLongRounded';
 import FormatListBulletedRounded from '@mui/icons-material/FormatListBulletedRounded';
+import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 import {
   Box,
   Chip,
   Card,
+  Paper,
   Alert,
   Stack,
-  Paper,
   Button,
   Dialog,
   Select,
   Switch,
-  Divider,
+  Tooltip,
   Checkbox,
   MenuItem,
   MenuList,
   TextField,
+  IconButton,
   Typography,
   InputLabel,
   DialogTitle,
   FormControl,
   Autocomplete,
+  CircularProgress,
   ToggleButton,
   DialogContent,
   DialogActions,
@@ -51,6 +55,7 @@ import {
 } from '@mui/material';
 import {
   AdmissionInquiryStage,
+  AdmissionCrmRouteType,
   AdmissionInquiryChannel,
   AdmissionCrmLeadPriority,
   useGetAdmissionCrmStaffQuery,
@@ -58,25 +63,39 @@ import {
   useGetAdmissionCrmExamSlotsQuery,
   useCreateAdmissionCrmLeadMutation,
   useGetAdmissionCrmPipelineStagesQuery,
+  useGetAdmissionCrmStandardOptionsQuery,
   useBulkCreateAdmissionCrmTasksMutation,
   useBulkChangeAdmissionCrmStagesMutation,
   useBulkArchiveAdmissionCrmLeadsMutation,
+  useGetAdmissionCrmCycleConfigurationQuery,
   useScheduleAdmissionCrmEntranceExamMutation,
   useBulkAssignAdmissionCrmLeadOwnersMutation,
-  useIssueAdmissionCrmRegistrationFormMutation,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
+import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import {
   getAdmissionCrmLeadName,
-  admissionCrmStageColors,
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
+  getAdmissionCrmStageTooltipLines,
 } from './admissions-crm-utils';
+import {
+  enrollmentActionsColumn,
+  enrollmentTableWrapperSx,
+  enrollmentWorkspaceRootSx,
+  EnrollmentTableEmptyState,
+  enrollmentTableContainerSx,
+  EnrollmentWorkspaceErrorState,
+  EnrollmentWorkspaceFilterPanel,
+} from './workspace-table-patterns';
+
+import type { PipelineStageGroup } from './enrollment-workspace-state';
+import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
 const pageSize = 50;
 const permissionRoot = 'Students.Enrollment.AdmissionsCrm';
@@ -96,10 +115,42 @@ const channels = Object.values(AdmissionInquiryChannel).filter(
 const priorities = Object.values(AdmissionCrmLeadPriority).filter(
   (value): value is AdmissionCrmLeadPriority => typeof value === 'number'
 );
+const routeTypes = Object.values(AdmissionCrmRouteType).filter(
+  (value): value is AdmissionCrmRouteType => typeof value === 'number'
+);
+const routeTypeLabel = (value: AdmissionCrmRouteType | string | null | undefined) => {
+  const numericValue = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
+  const enumLabel =
+    typeof numericValue === 'number' ? AdmissionCrmRouteType[numericValue] : numericValue;
+  return enumLabel?.replace(/([a-z])([A-Z])/g, '$1 $2') || 'Unknown pathway';
+};
 
 const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   const filter = [...filters].reverse().find((item) => item.column === column);
   return filter ? Number(filter.value) : undefined;
+};
+
+const getLatestStringFilter = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  return filter?.value ? String(filter.value) : undefined;
+};
+
+const getDateFilterBounds = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  if (!filter || typeof filter.value !== 'string') return {};
+  const [day, month, year] = filter.value.split('-').map(Number);
+  if (!day || !month || !year) return {};
+  const value = new Date(Date.UTC(year, month - 1, day));
+  if (filter.type === 'after') {
+    value.setUTCDate(value.getUTCDate() + 1);
+    return { from: value.toISOString() };
+  }
+  if (filter.type === 'before') {
+    value.setUTCDate(value.getUTCDate() - 1);
+    return { until: value.toISOString() };
+  }
+  const iso = value.toISOString();
+  return { from: iso, until: iso };
 };
 
 const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
@@ -110,13 +161,31 @@ const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
   [AdmissionCrmLeadPriority.Low]: 'Low',
 };
 
+const pipelineStageGroups: Record<PipelineStageGroup, AdmissionInquiryStage[]> = {
+  active: [
+    AdmissionInquiryStage.NewInquiry,
+    AdmissionInquiryStage.FollowUp,
+    AdmissionInquiryStage.ExamReady,
+    AdmissionInquiryStage.ExamScheduled,
+    AdmissionInquiryStage.ExamCompleted,
+  ],
+  decision: [AdmissionInquiryStage.Eligible, AdmissionInquiryStage.Waitlisted],
+  closed: [
+    AdmissionInquiryStage.Rejected,
+    AdmissionInquiryStage.Stale,
+    AdmissionInquiryStage.Archived,
+  ],
+};
+
 type QuickInquiryForm = {
   firstName: string;
   parentGuardianName: string;
   primaryContactNo: string;
   email: string;
   admissionIntent: string;
-  desiredClassName: string;
+  intendedRouteType: AdmissionCrmRouteType;
+  mediumStageId: string;
+  targetStandardId: string;
   channel: AdmissionInquiryChannel;
   campaignName: string;
   notes: string;
@@ -129,7 +198,9 @@ const emptyQuickInquiry: QuickInquiryForm = {
   primaryContactNo: '',
   email: '',
   admissionIntent: '',
-  desiredClassName: '',
+  intendedRouteType: AdmissionCrmRouteType.Fresh,
+  mediumStageId: '',
+  targetStandardId: '',
   channel: AdmissionInquiryChannel.WalkInReception,
   campaignName: '',
   notes: '',
@@ -145,17 +216,50 @@ const isExamReady = (lead: AdmissionCrmLeadDto) =>
     (lead.desiredClassName || lead.targetStandardId)
   );
 
+const canOpenRegistration = (lead: AdmissionCrmLeadDto, registrationRequiredBeforeExam = false) =>
+  Boolean(
+    registrationRequiredBeforeExam ||
+    lead.registrationFormNumber ||
+    lead.registrationFormIssuedAt ||
+    lead.stage === AdmissionInquiryStage.NewInquiry ||
+    lead.stage === AdmissionInquiryStage.FollowUp ||
+    lead.stage === AdmissionInquiryStage.Eligible ||
+    lead.stage === AdmissionInquiryStage.Waitlisted
+  );
+
+const isRegistrationIssued = (lead: AdmissionCrmLeadDto) =>
+  Boolean(lead.registrationFormNumber || lead.registrationFormIssuedAt);
+
+const isExamAlreadyScheduled = (lead: AdmissionCrmLeadDto) =>
+  [
+    AdmissionInquiryStage.ExamScheduled,
+    AdmissionInquiryStage.ExamCompleted,
+    AdmissionInquiryStage.Eligible,
+    AdmissionInquiryStage.Waitlisted,
+    AdmissionInquiryStage.Rejected,
+  ].includes(lead.stage);
+
+const protectedBulkStages = new Set([
+  AdmissionInquiryStage.ExamReady,
+  AdmissionInquiryStage.ExamScheduled,
+  AdmissionInquiryStage.ExamCompleted,
+  AdmissionInquiryStage.Eligible,
+  AdmissionInquiryStage.Waitlisted,
+  AdmissionInquiryStage.Rejected,
+  AdmissionInquiryStage.Archived,
+]);
+
 type LeadCardProps = {
   lead: AdmissionCrmLeadDto;
   ownerName: string;
   selected?: boolean;
   showSelection?: boolean;
   canScheduleExam: boolean;
-  canIssueRegistrationForm: boolean;
+  canManageRegistration: boolean;
   onSelect?: () => void;
   onOpen: () => void;
   onSchedule: () => void;
-  onIssueRegistrationForm: () => void;
+  onOpenRegistration: () => void;
 };
 
 function PipelineLeadCard({
@@ -164,14 +268,14 @@ function PipelineLeadCard({
   selected,
   showSelection,
   canScheduleExam,
-  canIssueRegistrationForm,
+  canManageRegistration,
   onSelect,
   onOpen,
   onSchedule,
-  onIssueRegistrationForm,
+  onOpenRegistration,
 }: LeadCardProps) {
   return (
-    <Card variant="outlined" sx={{ p: 1.25, borderRadius: 1, minWidth: 0 }}>
+    <Card variant="outlined" sx={{ p: 1.25, borderRadius: 1, minWidth: 0, flexShrink: 0 }}>
       <Stack spacing={1}>
         <Stack direction="row" gap={1} justifyContent="space-between" alignItems="flex-start">
           <Box sx={{ minWidth: 0 }}>
@@ -191,7 +295,7 @@ function PipelineLeadCard({
             />
           )}
         </Stack>
-        <Stack direction="row" gap={0.5} flexWrap="wrap">
+        <Stack direction="row" gap={1} flexWrap="wrap">
           <Chip size="small" label={`Score ${lead.leadScore}`} variant="outlined" />
           {lead.priority !== AdmissionCrmLeadPriority.None && (
             <Chip size="small" label={priorityLabels[lead.priority]} color="warning" />
@@ -203,26 +307,46 @@ function PipelineLeadCard({
             size="small"
             icon={<ReceiptLongRounded />}
             label={
-              lead.registrationFormNumber ? `Form ${lead.registrationFormNumber}` : 'Form pending'
+              lead.registrationFormNumber
+                ? `Registration ${lead.registrationFormNumber}`
+                : isRegistrationIssued(lead)
+                  ? 'Registration issued'
+                  : 'Registration not issued'
             }
             variant="outlined"
+            color="default"
+            sx={
+              isRegistrationIssued(lead)
+                ? (theme) => ({
+                    color: theme.palette.text.primary,
+                    borderColor: theme.palette.success.main,
+                    '& .MuiChip-icon': {
+                      color:
+                        theme.palette.mode === 'dark'
+                          ? theme.palette.success.light
+                          : theme.palette.success.dark,
+                    },
+                  })
+                : undefined
+            }
           />
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
           {lead.admissionIntent}
         </Typography>
+        {canManageRegistration && !lead.ownerUserId && !lead.archivedAt ? (
+          <Alert severity="warning" sx={{ py: 0.25 }}>
+            Registration can continue, but no owner is assigned for follow-up.
+          </Alert>
+        ) : null}
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
           <Typography variant="caption" color="text.secondary">
             {dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}
           </Typography>
-          <Stack direction="row" gap={0.5}>
-            {canIssueRegistrationForm && !lead.registrationFormNumber && !lead.archivedAt && (
-              <Button
-                size="small"
-                startIcon={<ReceiptLongRounded />}
-                onClick={onIssueRegistrationForm}
-              >
-                Issue Form
+          <Stack direction="row" gap={1}>
+            {canManageRegistration && !lead.archivedAt && (
+              <Button size="small" startIcon={<ReceiptLongRounded />} onClick={onOpenRegistration}>
+                Registration
               </Button>
             )}
             {canScheduleExam && isExamReady(lead) && !lead.archivedAt && (
@@ -242,14 +366,24 @@ function PipelineLeadCard({
 
 export function PipelineWorkspace() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
-  const { academicYearId, currentUserId, state, updateState, openApplicant, closeApplicant } =
-    useEnrollmentWorkspace();
+  const {
+    academicYearId,
+    academicYearName,
+    academicBoardId,
+    academicBoardName,
+    academicMediumId,
+    academicMediumName,
+    currentUserId,
+    state,
+    updateState,
+    openApplicant,
+    closeApplicant,
+  } = useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [staffSearch, setStaffSearch] = useState('');
   const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
-  const [ownerFilter, setOwnerFilter] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [quickDialogOpen, setQuickDialogOpen] = useState(false);
   const [quickForm, setQuickForm] = useState<QuickInquiryForm>(emptyQuickInquiry);
   const [duplicateMatches, setDuplicateMatches] = useState<AdmissionCrmLeadDto['likelyDuplicates']>(
@@ -257,13 +391,11 @@ export function PipelineWorkspace() {
   );
   const [duplicateReviewed, setDuplicateReviewed] = useState(false);
   const [scheduleLead, setScheduleLead] = useState<AdmissionCrmLeadDto | null>(null);
-  const [registrationLead, setRegistrationLead] = useState<AdmissionCrmLeadDto | null>(null);
-  const [registrationFormNumber, setRegistrationFormNumber] = useState('');
-  const [registrationFormAmount, setRegistrationFormAmount] = useState('250');
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [overrideCapacity, setOverrideCapacity] = useState(false);
   const [capacityOverrideReason, setCapacityOverrideReason] = useState('');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
   const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
   const [bulkOwner, setBulkOwner] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [bulkTitle, setBulkTitle] = useState('');
@@ -272,6 +404,7 @@ export function PipelineWorkspace() {
   );
   const [bulkStage, setBulkStage] = useState(AdmissionInquiryStage.FollowUp);
   const [bulkReason, setBulkReason] = useState('');
+  const [overrideProtectedStages, setOverrideProtectedStages] = useState(false);
 
   useEffect(() => {
     if ((state.view || 'list') === 'list') {
@@ -290,14 +423,21 @@ export function PipelineWorkspace() {
     {
       academicYearId: academicYearId || '',
       filterText: debouncedSearch || undefined,
+      applicantSearch: getLatestStringFilter(columnFilters, 'applicant'),
+      registrationFormNumber: getLatestStringFilter(columnFilters, 'registrationFormNumber'),
+      lastActivityFrom: getDateFilterBounds(columnFilters, 'lastActivityTime').from,
+      lastActivityUntil: getDateFilterBounds(columnFilters, 'lastActivityTime').until,
       stage: state.stage,
       channel: state.channel,
       campaignName: state.campaign,
       ownerUserId: resolvedOwner,
       priority: state.priority,
+      intendedRouteType: state.routeType,
+      desiredClassName: state.className,
+      academicMediumId,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
-      sorting: 'LastActivityTime DESC',
+      sorting: state.sorting || 'LastActivityTime DESC',
     },
     { skip: !academicYearId || state.view === 'board' }
   );
@@ -305,33 +445,76 @@ export function PipelineWorkspace() {
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
-  const staffQuery = useGetAdmissionCrmStaffQuery(
+  const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
       filter: debouncedStaffSearch || undefined,
-      ids: [resolvedOwner, bulkOwner?.id].filter(Boolean).join(',') || undefined,
+      ids:
+        [resolvedOwner, bulkAction === 'owner' ? bulkOwner?.id : undefined]
+          .filter(Boolean)
+          .join(',') || undefined,
       maxResultCount: 25,
+      academicYearId,
+      ownerOnly: true,
     },
     { skip: !academicYearId }
+  );
+  const taskStaffQuery = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedStaffSearch || undefined,
+      ids: bulkAction === 'task' ? bulkOwner?.id : undefined,
+      maxResultCount: 25,
+      academicYearId,
+    },
+    { skip: !academicYearId || bulkAction !== 'task' }
   );
   const slotsQuery = useGetAdmissionCrmExamSlotsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !scheduleLead }
   );
+  const isExamSlotsLoading = slotsQuery.isLoading || slotsQuery.isFetching;
+  const activeExamSlots = (slotsQuery.data?.items || []).filter((slot) => slot.isActive);
+  const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId }
+  );
+  const organizationOptionsQuery = useGetAcademicOrganizationOptionsQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId || !quickDialogOpen }
+  );
+  const standardOptionsQuery = useGetAdmissionCrmStandardOptionsQuery(
+    { mediumId: academicMediumId || '' },
+    { skip: !academicMediumId || !quickDialogOpen }
+  );
+  const mediumStages = useMemo(
+    () =>
+      (organizationOptionsQuery.data?.items || []).filter(
+        (option) =>
+          option.mediumId === academicMediumId &&
+          (!academicBoardId || option.boardId === academicBoardId)
+      ),
+    [academicBoardId, academicMediumId, organizationOptionsQuery.data?.items]
+  );
+  const standardOptions = useMemo(
+    () =>
+      (standardOptionsQuery.data || []).filter(
+        (standard) => standard.educationMediumStageId === quickForm.mediumStageId
+      ),
+    [quickForm.mediumStageId, standardOptionsQuery.data]
+  );
+  const registrationRequiredBeforeExam = Boolean(
+    cycleConfigurationQuery.data?.registrationFormRequiredBeforeExam
+  );
+  const entranceExamRequired = cycleConfigurationQuery.data?.entranceExamRequired !== false;
 
   const [createLead, createLeadState] = useCreateAdmissionCrmLeadMutation();
   const [previewDuplicates, previewDuplicatesState] =
     usePreviewAdmissionCrmLeadDuplicatesMutation();
   const [scheduleExam, scheduleExamState] = useScheduleAdmissionCrmEntranceExamMutation();
-  const [issueRegistrationForm, issueRegistrationFormState] =
-    useIssueAdmissionCrmRegistrationFormMutation();
   const [bulkAssignOwners, bulkAssignOwnersState] = useBulkAssignAdmissionCrmLeadOwnersMutation();
   const [bulkCreateTasks, bulkCreateTasksState] = useBulkCreateAdmissionCrmTasksMutation();
   const [bulkChangeStages, bulkChangeStagesState] = useBulkChangeAdmissionCrmStagesMutation();
   const [bulkArchiveLeads, bulkArchiveLeadsState] = useBulkArchiveAdmissionCrmLeadsMutation();
 
-  useEffect(() => {
-    setOwnerFilter((staffQuery.data || []).find((staff) => staff.id === resolvedOwner) || null);
-  }, [resolvedOwner, staffQuery.data]);
   useEffect(
     () => setSelectedLeadIds([]),
     [state.channel, state.owner, state.page, state.priority, state.stage]
@@ -341,18 +524,69 @@ export function PipelineWorkspace() {
     () => (stagesQuery.data || []).filter((stage) => stage.isEnabled),
     [stagesQuery.data]
   );
+  const stageGroup = state.stageGroup || 'active';
+  const visibleBoardStages = useMemo(
+    () =>
+      stages.filter((stageItem) =>
+        state.stage == null
+          ? pipelineStageGroups[stageGroup].includes(stageItem.systemStage)
+          : stageItem.systemStage === state.stage
+      ),
+    [stageGroup, stages, state.stage]
+  );
   const stageSelectValue =
     state.stage != null && stages.some((stage) => stage.systemStage === state.stage)
       ? state.stage
       : '';
   const leads = useMemo(() => leadsQuery.data?.items || [], [leadsQuery.data?.items]);
+  const rowOwnerIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          leads.map((lead) => lead.ownerUserId).filter((value): value is string => Boolean(value))
+        )
+      ).join(','),
+    [leads]
+  );
+  const rowStaffQuery = useGetAdmissionCrmStaffQuery(
+    { ids: rowOwnerIds || undefined, maxResultCount: 1, academicYearId },
+    { skip: !academicYearId || !rowOwnerIds }
+  );
+  const staffById = useMemo(
+    () =>
+      new Map(
+        [
+          ...(ownerStaffQuery.data || []),
+          ...(taskStaffQuery.data || []),
+          ...(rowStaffQuery.data || []),
+        ].map((staff) => [staff.id, staff.displayName])
+      ),
+    [ownerStaffQuery.data, rowStaffQuery.data, taskStaffQuery.data]
+  );
+  const ownerFilterOptions = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          [...(ownerStaffQuery.data || []), ...(rowStaffQuery.data || [])].map((staff) => [
+            staff.id,
+            { value: staff.id, label: staff.displayName },
+          ])
+        ).values()
+      ),
+    [ownerStaffQuery.data, rowStaffQuery.data]
+  );
   const selectedLeadSet = useMemo(() => new Set(selectedLeadIds), [selectedLeadIds]);
+  const protectedSelectedLeads = useMemo(
+    () =>
+      leads.filter((lead) => selectedLeadSet.has(lead.id) && protectedBulkStages.has(lead.stage)),
+    [leads, selectedLeadSet]
+  );
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   const ownerName = useCallback(
     (lead: AdmissionCrmLeadDto) =>
-      (staffQuery.data || []).find((staff) => staff.id === lead.ownerUserId)?.displayName ||
+      (lead.ownerUserId ? staffById.get(lead.ownerUserId) : undefined) ||
       (lead.ownerUserId ? 'Assigned staff' : 'Unassigned'),
-    [staffQuery.data]
+    [staffById]
   );
 
   const tableFilters = useMemo<IParams['filters']>(
@@ -393,8 +627,52 @@ export function PipelineWorkspace() {
               displayValue: priorityLabels[state.priority as AdmissionCrmLeadPriority],
             },
           ]),
+      ...(!state.className
+        ? []
+        : [
+            {
+              column: 'desiredClassName',
+              type: 'contains',
+              value: state.className,
+              valueType: 'string',
+              label: 'Target Class',
+              displayValue: state.className,
+            },
+          ]),
+      ...(state.routeType == null
+        ? []
+        : [
+            {
+              column: 'intendedRouteType',
+              type: 'equals',
+              value: state.routeType,
+              valueType: 'enum',
+              label: 'Admission Pathway',
+              displayValue: routeTypeLabel(state.routeType),
+            },
+          ]),
+      ...(!resolvedOwner
+        ? []
+        : [
+            {
+              column: 'ownerUserId',
+              type: 'equals',
+              value: resolvedOwner,
+              valueType: 'enum',
+              label: 'Owner',
+              displayValue: staffById.get(resolvedOwner) || 'Assigned staff',
+            },
+          ]),
     ],
-    [state.channel, state.priority, state.stage]
+    [
+      resolvedOwner,
+      staffById,
+      state.channel,
+      state.className,
+      state.priority,
+      state.routeType,
+      state.stage,
+    ]
   );
 
   const columns = useMemo<IColumn[]>(
@@ -411,6 +689,12 @@ export function PipelineWorkspace() {
         isSort: false,
         isFilter: false,
         excludeFromExport: true,
+        headerSx: {
+          px: 0,
+          '& .column-separator': { display: 'none' },
+          '& > div': { justifyContent: 'center' },
+        },
+        cellSx: { px: 0, textAlign: 'center' },
         renderColumn: () => (
           <Checkbox
             checked={leads.length > 0 && leads.every((lead) => selectedLeadSet.has(lead.id))}
@@ -445,14 +729,14 @@ export function PipelineWorkspace() {
       },
       {
         id: 'applicant',
+        originalId: 'ApplicantName',
         label: 'Applicant',
         width: 250,
         minWidth: 220,
         sticky: true,
         stickyPosition: 'left',
         stickyOnMobile: false,
-        isSort: false,
-        isFilter: false,
+        filterType: 'string',
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           return (
@@ -477,14 +761,63 @@ export function PipelineWorkspace() {
           value: stage.systemStage,
           label: stage.stageName,
         })),
-        isSort: false,
-        render: (value) => (
-          <Chip
-            size="small"
-            label={getAdmissionCrmStageLabel(value as AdmissionInquiryStage)}
-            color={admissionCrmStageColors[value as AdmissionInquiryStage]}
-          />
-        ),
+        render: (value) => {
+          const stage = stages.find((item) => item.systemStage === value);
+          if (!stage) return <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />;
+          return (
+            <Stack direction="row" alignItems="center" gap={0.5}>
+              <AdmissionCrmStageChip stage={stage.systemStage} />
+              <Tooltip
+                arrow
+                title={
+                  <Stack spacing={0.25}>
+                    {getAdmissionCrmStageTooltipLines(stage).map((line) => (
+                      <Typography key={line} variant="caption" color="inherit">
+                        {line}
+                      </Typography>
+                    ))}
+                  </Stack>
+                }
+              >
+                <IconButton size="small" aria-label={`${stage.stageName} stage details`}>
+                  <InfoOutlined fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          );
+        },
+      },
+      {
+        id: 'registrationFormNumber',
+        label: 'Registration',
+        width: 180,
+        minWidth: 165,
+        filterType: 'string',
+        render: (_value, row) => {
+          const lead = row as AdmissionCrmLeadDto;
+          return (
+            <Chip
+              size="small"
+              variant="outlined"
+              color="default"
+              sx={
+                isRegistrationIssued(lead)
+                  ? (theme) => ({
+                      color: theme.palette.text.primary,
+                      borderColor: theme.palette.success.main,
+                    })
+                  : undefined
+              }
+              label={
+                lead.registrationFormNumber
+                  ? `Issued · ${lead.registrationFormNumber}`
+                  : isRegistrationIssued(lead)
+                    ? 'Issued'
+                    : 'Not issued'
+              }
+            />
+          );
+        },
       },
       {
         id: 'channel',
@@ -496,28 +829,38 @@ export function PipelineWorkspace() {
           value: channel,
           label: getAdmissionCrmChannelLabel(channel),
         })),
-        isSort: false,
         render: (value) => getAdmissionCrmChannelLabel(value as AdmissionInquiryChannel),
       },
       {
-        id: 'admissionIntent',
-        label: 'Intent',
+        id: 'desiredClassName',
+        label: 'Target Class',
         width: 220,
         minWidth: 180,
-        isSort: false,
-        isFilter: false,
-        render: (value, row) => {
-          const lead = row as AdmissionCrmLeadDto;
-          return lead.desiredClassName || value;
-        },
+        isFilter: true,
+        render: (value) => value || 'Placement missing',
+      },
+      {
+        id: 'intendedRouteType',
+        label: 'Admission Pathway',
+        width: 190,
+        minWidth: 170,
+        filterType: 'enum',
+        enumOptions: routeTypes.map((routeType) => ({
+          value: routeType,
+          label: routeTypeLabel(routeType),
+        })),
+        render: (value, row) =>
+          value == null
+            ? (row as AdmissionCrmLeadDto).admissionIntent
+            : routeTypeLabel(value as AdmissionCrmRouteType),
       },
       {
         id: 'ownerUserId',
         label: 'Owner',
         width: 170,
         minWidth: 150,
-        isSort: false,
-        isFilter: false,
+        filterType: 'enum',
+        enumOptions: ownerFilterOptions,
         render: (_value, row) => ownerName(row as AdmissionCrmLeadDto),
       },
       {
@@ -530,7 +873,6 @@ export function PipelineWorkspace() {
           value: priority,
           label: priorityLabels[priority],
         })),
-        isSort: false,
         render: (value) => priorityLabels[value as AdmissionCrmLeadPriority],
       },
       {
@@ -539,7 +881,6 @@ export function PipelineWorkspace() {
         width: 90,
         minWidth: 80,
         align: 'right',
-        isSort: false,
         isFilter: false,
       },
       {
@@ -547,36 +888,33 @@ export function PipelineWorkspace() {
         label: 'Last Activity',
         width: 150,
         minWidth: 140,
-        isSort: false,
-        isFilter: false,
+        filterType: 'date',
         render: (value) => dayjs(value).format('DD MMM, HH:mm'),
       },
       {
         id: 'actions',
         label: 'Actions',
-        width: 88,
-        minWidth: 80,
-        sticky: true,
-        stickyPosition: 'right',
-        stickyOnMobile: false,
+        ...enrollmentActionsColumn,
         isSort: false,
         isFilter: false,
-        headerSx: { px: 1.5 },
-        cellSx: { px: 1.5 },
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           const canSchedule =
-            hasGrantedPermission(permissions, actionPermissions.scheduleExam) && isExamReady(lead);
-          const canIssueForm =
+            entranceExamRequired &&
+            hasGrantedPermission(permissions, actionPermissions.scheduleExam) &&
+            isExamReady(lead) &&
+            !isExamAlreadyScheduled(lead) &&
+            (!registrationRequiredBeforeExam || isRegistrationIssued(lead));
+          const canManageRegistration =
             hasGrantedPermission(permissions, actionPermissions.issueRegistrationForm) &&
-            !lead.registrationFormNumber;
+            canOpenRegistration(lead, registrationRequiredBeforeExam);
           return (
             <ThreeDotsActions
               placement="right-top"
               showViewIcon
               viewLabel="Open Applicant"
-              handleViewClick={() => openApplicant(lead.id)}
-              showThreeDots={canSchedule || canIssueForm}
+              handleViewClick={() => openApplicant(lead.id, 'overview')}
+              showThreeDots={canSchedule || canManageRegistration}
               actions={({ popover }) => (
                 <MenuList>
                   {canSchedule && (
@@ -590,17 +928,15 @@ export function PipelineWorkspace() {
                       Schedule Exam
                     </MenuItem>
                   )}
-                  {canIssueForm && (
+                  {canManageRegistration && (
                     <MenuItem
                       onClick={() => {
                         popover.onClose();
-                        setRegistrationLead(lead);
-                        setRegistrationFormNumber('');
-                        setRegistrationFormAmount('250');
+                        openApplicant(lead.id, 'registration');
                       }}
                     >
                       <ReceiptLongRounded fontSize="small" />
-                      Issue Registration Form
+                      Open Registration
                     </MenuItem>
                   )}
                 </MenuList>
@@ -610,7 +946,18 @@ export function PipelineWorkspace() {
         },
       },
     ],
-    [leads, openApplicant, ownerName, permissions, selectedLeadIds.length, selectedLeadSet, stages]
+    [
+      leads,
+      openApplicant,
+      ownerFilterOptions,
+      ownerName,
+      permissions,
+      entranceExamRequired,
+      registrationRequiredBeforeExam,
+      selectedLeadIds.length,
+      selectedLeadSet,
+      stages,
+    ]
   );
 
   const resetQuickInquiry = () => {
@@ -625,10 +972,12 @@ export function PipelineWorkspace() {
       shikshaMitraToast.error({ message: 'Contact number or email is required.' });
       return;
     }
-    if (!quickForm.admissionIntent.trim()) {
-      shikshaMitraToast.error({ message: 'Admission intent is required.' });
+    if (!quickForm.mediumStageId || !quickForm.targetStandardId) {
+      shikshaMitraToast.error({ message: 'Select the target stage and class.' });
       return;
     }
+    const selectedStandard = standardOptions.find((item) => item.id === quickForm.targetStandardId);
+    if (!selectedStandard) return;
     const body: CreateAdmissionCrmLeadDto = {
       channel: quickForm.channel,
       campaignName: quickForm.campaignName.trim() || undefined,
@@ -636,8 +985,13 @@ export function PipelineWorkspace() {
       parentGuardianName: quickForm.parentGuardianName.trim() || undefined,
       primaryContactNo: quickForm.primaryContactNo.trim() || undefined,
       email: quickForm.email.trim() || undefined,
-      admissionIntent: quickForm.admissionIntent.trim(),
-      desiredClassName: quickForm.desiredClassName.trim() || undefined,
+      admissionIntent:
+        quickForm.admissionIntent.trim() || routeTypeLabel(quickForm.intendedRouteType),
+      intendedRouteType: quickForm.intendedRouteType,
+      targetStandardId: selectedStandard.id,
+      academicBoardId,
+      academicMediumId,
+      desiredClassName: selectedStandard.name,
       notes: quickForm.notes.trim() || undefined,
       duplicateContinueReason: quickForm.duplicateContinueReason.trim() || undefined,
     };
@@ -693,34 +1047,6 @@ export function PipelineWorkspace() {
     }
   };
 
-  const handleIssueRegistrationForm = async () => {
-    if (!registrationLead) return;
-    const formNumber = registrationFormNumber.trim().toUpperCase();
-    const amount = Number(registrationFormAmount);
-    if (!formNumber) {
-      shikshaMitraToast.error({ message: 'Enter a registration form number.' });
-      return;
-    }
-    if (!Number.isFinite(amount) || amount <= 0) {
-      shikshaMitraToast.error({ message: 'Enter a valid registration amount.' });
-      return;
-    }
-    try {
-      await issueRegistrationForm({
-        leadId: registrationLead.id,
-        body: { formNumber, amount },
-      }).unwrap();
-      setRegistrationLead(null);
-      setRegistrationFormNumber('');
-      setRegistrationFormAmount('250');
-      shikshaMitraToast.success({ message: 'Registration form issued.' });
-    } catch {
-      shikshaMitraToast.error({
-        message: 'The registration form could not be issued. Review the number and retry.',
-      });
-    }
-  };
-
   const handleBulkAction = async () => {
     if (!academicYearId || !bulkAction || !selectedLeadIds.length) return;
     try {
@@ -742,12 +1068,23 @@ export function PipelineWorkspace() {
       }
       if (bulkAction === 'stage') {
         if (!bulkReason.trim()) throw new Error('Reason is required.');
-        await bulkChangeStages({
+        if (protectedSelectedLeads.length && !overrideProtectedStages) {
+          throw new Error('Remove protected applicants or choose override with a reason.');
+        }
+        const result = await bulkChangeStages({
           academicYearId,
           leadIds: selectedLeadIds,
           stage: bulkStage,
           reason: bulkReason.trim(),
+          overrideProtectedStages,
         }).unwrap();
+        if (result.failedCount > 0) {
+          shikshaMitraToast.warning({
+            message: `${result.succeededCount} stage changes completed; ${result.failedCount} failed.`,
+          });
+        } else {
+          shikshaMitraToast.success({ message: 'Bulk stage change completed.' });
+        }
       }
       if (bulkAction === 'archive') {
         if (!bulkReason.trim()) throw new Error('Reason is required.');
@@ -760,8 +1097,11 @@ export function PipelineWorkspace() {
       setBulkAction(null);
       setBulkReason('');
       setBulkTitle('');
+      setOverrideProtectedStages(false);
       setSelectedLeadIds([]);
-      shikshaMitraToast.success({ message: 'Bulk action completed.' });
+      if (bulkAction !== 'stage') {
+        shikshaMitraToast.success({ message: 'Bulk action completed.' });
+      }
     } catch (error) {
       shikshaMitraToast.error({
         message: error instanceof Error ? error.message : 'The bulk action could not be completed.',
@@ -770,7 +1110,15 @@ export function PipelineWorkspace() {
   };
 
   if (!academicYearId) {
-    return <Alert severity="info">Select an academic year to open the Admissions Pipeline.</Alert>;
+    return (
+      <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
+        <EnrollmentWorkspaceHeader
+          title="Admissions Pipeline"
+          description="Capture, qualify, assign, and progress inquiries through exam readiness."
+        />
+        <Alert severity="info">Select an academic year to open the Admissions Pipeline.</Alert>
+      </Stack>
+    );
   }
 
   const renderLeadCard = (lead: AdmissionCrmLeadDto) => (
@@ -780,8 +1128,16 @@ export function PipelineWorkspace() {
       ownerName={ownerName(lead)}
       selected={selectedLeadSet.has(lead.id)}
       showSelection={state.view === 'list'}
-      canScheduleExam={can(actionPermissions.scheduleExam)}
-      canIssueRegistrationForm={can(actionPermissions.issueRegistrationForm)}
+      canScheduleExam={
+        entranceExamRequired &&
+        can(actionPermissions.scheduleExam) &&
+        !isExamAlreadyScheduled(lead) &&
+        (!registrationRequiredBeforeExam || isRegistrationIssued(lead))
+      }
+      canManageRegistration={
+        can(actionPermissions.issueRegistrationForm) &&
+        canOpenRegistration(lead, registrationRequiredBeforeExam)
+      }
       onSelect={() =>
         setSelectedLeadIds((current) =>
           current.includes(lead.id) ? current.filter((id) => id !== lead.id) : [...current, lead.id]
@@ -789,133 +1145,28 @@ export function PipelineWorkspace() {
       }
       onOpen={() => openApplicant(lead.id)}
       onSchedule={() => setScheduleLead(lead)}
-      onIssueRegistrationForm={() => {
-        setRegistrationLead(lead);
-        setRegistrationFormNumber('');
-        setRegistrationFormAmount('250');
-      }}
+      onOpenRegistration={() => openApplicant(lead.id, 'registration')}
     />
   );
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="Admissions Pipeline"
         description="Capture, qualify, assign, and progress inquiries through exam readiness."
         actions={
-          can(actionPermissions.add) ? (
-            <Button
-              variant="contained"
-              startIcon={<AddRounded />}
-              onClick={() => setQuickDialogOpen(true)}
-            >
-              Quick Inquiry
-            </Button>
-          ) : undefined
-        }
-      />
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns:
-                state.view === 'board'
-                  ? 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))'
-                  : { xs: '1fr', sm: 'minmax(240px, 320px)' },
-              gap: 1,
-              alignItems: 'center',
-            }}
-          >
-            {state.view === 'board' && (
-              <>
-                <TextField
-                  size="small"
-                  label="Search applicants"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  autoComplete="off"
-                />
-                <TextField
-                  select
-                  size="small"
-                  label="Stage"
-                  value={stageSelectValue}
-                  onChange={(event) =>
-                    updateState({
-                      stage: event.target.value === '' ? undefined : Number(event.target.value),
-                      page: 1,
-                    })
-                  }
-                >
-                  <MenuItem value="">All stages</MenuItem>
-                  {stages.map((stageItem) => (
-                    <MenuItem key={stageItem.id} value={stageItem.systemStage}>
-                      {stageItem.stageName}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  select
-                  size="small"
-                  label="Channel"
-                  value={state.channel ?? ''}
-                  onChange={(event) =>
-                    updateState({
-                      channel: event.target.value === '' ? undefined : Number(event.target.value),
-                      page: 1,
-                    })
-                  }
-                >
-                  <MenuItem value="">All channels</MenuItem>
-                  {channels.map((channel) => (
-                    <MenuItem key={channel} value={channel}>
-                      {getAdmissionCrmChannelLabel(channel)}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </>
-            )}
-            <Autocomplete
-              size="small"
-              options={staffQuery.data || []}
-              value={ownerFilter}
-              inputValue={staffSearch}
-              onInputChange={(_, value) => setStaffSearch(value)}
-              onChange={(_, value) => updateState({ owner: value?.id, page: 1 })}
-              getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => <TextField {...params} label="Owner" />}
-            />
-            {state.view === 'board' && (
-              <TextField
-                select
-                size="small"
-                label="Priority"
-                value={state.priority ?? ''}
-                onChange={(event) =>
-                  updateState({
-                    priority: event.target.value === '' ? undefined : Number(event.target.value),
-                    page: 1,
-                  })
-                }
-              >
-                <MenuItem value="">All priorities</MenuItem>
-                {priorities.map((priority) => (
-                  <MenuItem key={priority} value={priority}>
-                    {priorityLabels[priority]}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          </Box>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+          <Stack direction="row" alignItems="center" gap={1}>
             <ToggleButtonGroup
               exclusive
               size="small"
               value={state.view || 'list'}
-              onChange={(_, value) => value && updateState({ view: value, page: 1 }, 'push')}
+              onChange={(_, value) =>
+                value &&
+                updateState(
+                  { view: value, owner: value === 'board' ? undefined : state.owner, page: 1 },
+                  'push'
+                )
+              }
               aria-label="Pipeline view"
             >
               <ToggleButton value="board" aria-label="Board view">
@@ -925,77 +1176,179 @@ export function PipelineWorkspace() {
                 <FormatListBulletedRounded />
               </ToggleButton>
             </ToggleButtonGroup>
-            <Button
+            {can(actionPermissions.add) ? (
+              <Button
+                variant="contained"
+                startIcon={<AddRounded />}
+                onClick={() => setQuickDialogOpen(true)}
+              >
+                Quick Inquiry
+              </Button>
+            ) : null}
+          </Stack>
+        }
+      />
+
+      {state.view === 'board' ? (
+        <EnrollmentWorkspaceFilterPanel
+          columns={{ xs: 1, sm: 2, lg: 4 }}
+          onClear={() => {
+            setSearch('');
+            setDebouncedSearch('');
+            updateState({
+              stage: undefined,
+              channel: undefined,
+              priority: undefined,
+              page: 1,
+            });
+          }}
+          clearDisabled={
+            state.stage == null && state.channel == null && state.priority == null && !search
+          }
+          actions={
+            <Stack direction="row" gap={0.75} flexWrap="wrap" justifyContent="flex-end">
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={stageGroup}
+                onChange={(_, value: PipelineStageGroup | null) =>
+                  value && updateState({ stageGroup: value, stage: undefined, page: 1 }, 'push')
+                }
+                aria-label="Pipeline stage group"
+              >
+                <ToggleButton value="active">Active</ToggleButton>
+                <ToggleButton value="decision">Decision</ToggleButton>
+                <ToggleButton value="closed">Closed</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+          }
+        >
+          <>
+            <TextField
               size="small"
-              onClick={() =>
+              label="Search applicants"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              autoComplete="off"
+            />
+            <TextField
+              select
+              size="small"
+              label="Stage"
+              value={stageSelectValue}
+              onChange={(event) =>
                 updateState({
-                  stage: undefined,
-                  channel: undefined,
-                  owner: undefined,
-                  priority: undefined,
+                  stage: event.target.value === '' ? undefined : Number(event.target.value),
                   page: 1,
                 })
               }
             >
-              Clear Filters
-            </Button>
-          </Stack>
+              <MenuItem value="">All stages</MenuItem>
+              {stages.map((stageItem) => (
+                <MenuItem key={stageItem.id} value={stageItem.systemStage}>
+                  {stageItem.stageName}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Channel"
+              value={state.channel ?? ''}
+              onChange={(event) =>
+                updateState({
+                  channel: event.target.value === '' ? undefined : Number(event.target.value),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All channels</MenuItem>
+              {channels.map((channel) => (
+                <MenuItem key={channel} value={channel}>
+                  {getAdmissionCrmChannelLabel(channel)}
+                </MenuItem>
+              ))}
+            </TextField>
+          </>
+          <TextField
+            select
+            size="small"
+            label="Priority"
+            value={state.priority ?? ''}
+            onChange={(event) =>
+              updateState({
+                priority: event.target.value === '' ? undefined : Number(event.target.value),
+                page: 1,
+              })
+            }
+          >
+            <MenuItem value="">All priorities</MenuItem>
+            {priorities.map((priority) => (
+              <MenuItem key={priority} value={priority}>
+                {priorityLabels[priority]}
+              </MenuItem>
+            ))}
+          </TextField>
+        </EnrollmentWorkspaceFilterPanel>
+      ) : null}
 
-          {selectedLeadIds.length > 0 && (
-            <>
-              <Divider />
-              <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
-                <Chip label={`${selectedLeadIds.length} selected`} color="primary" />
-                {can(actionPermissions.assignOwner) && (
-                  <Button size="small" onClick={() => setBulkAction('owner')}>
-                    Assign Owner
-                  </Button>
-                )}
-                {can(actionPermissions.manageTasks) && (
-                  <Button size="small" onClick={() => setBulkAction('task')}>
-                    Create Task
-                  </Button>
-                )}
-                {can(actionPermissions.changeStage) && (
-                  <Button size="small" onClick={() => setBulkAction('stage')}>
-                    Move Stage
-                  </Button>
-                )}
-                {can(actionPermissions.archiveReopen) && (
-                  <Button size="small" color="warning" onClick={() => setBulkAction('archive')}>
-                    Archive
-                  </Button>
-                )}
-              </Stack>
-            </>
-          )}
-        </Stack>
-      </Paper>
+      {selectedLeadIds.length > 0 && (
+        <Paper
+          variant="outlined"
+          role="region"
+          aria-label="Bulk inquiry actions"
+          sx={{ p: 1, position: 'sticky', top: 8, zIndex: 2, borderRadius: 1 }}
+        >
+          <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+            <Chip label={`${selectedLeadIds.length} selected`} color="primary" />
+            {can(actionPermissions.assignOwner) && (
+              <Button size="small" onClick={() => setBulkAction('owner')}>
+                Assign Owner
+              </Button>
+            )}
+            {can(actionPermissions.manageTasks) && (
+              <Button size="small" onClick={() => setBulkAction('task')}>
+                Create Task
+              </Button>
+            )}
+            {can(actionPermissions.changeStage) && (
+              <Button size="small" onClick={() => setBulkAction('stage')}>
+                Move Stage
+              </Button>
+            )}
+            {can(actionPermissions.archiveReopen) && (
+              <Button size="small" color="warning" onClick={() => setBulkAction('archive')}>
+                Archive
+              </Button>
+            )}
+          </Stack>
+        </Paper>
+      )}
 
       {stagesQuery.isFetching && <LinearProgress aria-label="Loading pipeline stages" />}
       {stagesQuery.isError && (
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" color="inherit" onClick={() => stagesQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          Pipeline stages are unavailable. Review Enrollment configuration before continuing.
-        </Alert>
+        <EnrollmentWorkspaceErrorState
+          message="Pipeline stages are unavailable. Review Enrollment configuration before continuing."
+          onRetry={() => stagesQuery.refetch()}
+        />
       )}
 
-      {state.view === 'board' && !stagesQuery.isError && (
-        <Stack
-          direction={{ xs: 'column', lg: 'row' }}
-          spacing={1.25}
-          alignItems="stretch"
-          sx={{ overflowX: { lg: 'auto' }, pb: 1 }}
-        >
-          {stages
-            .filter((stageItem) => state.stage == null || stageItem.systemStage === state.stage)
-            .map((stageItem) => (
+      {state.view === 'board' &&
+        !stagesQuery.isError &&
+        (visibleBoardStages.length ? (
+          <Stack
+            direction={{ xs: 'column', lg: 'row' }}
+            spacing={1.25}
+            alignItems="stretch"
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowX: { lg: 'auto' },
+              overflowY: { xs: 'auto', lg: 'hidden' },
+              pb: 1,
+            }}
+          >
+            {visibleBoardStages.map((stageItem) => (
               <PipelineStageColumn
                 key={stageItem.id}
                 academicYearId={academicYearId}
@@ -1004,29 +1357,26 @@ export function PipelineWorkspace() {
                   filterText: debouncedSearch || undefined,
                   channel: state.channel,
                   campaignName: state.campaign,
-                  ownerUserId: resolvedOwner,
                   priority: state.priority,
                 }}
-                resetKey={`${state.channel}-${state.campaign}-${resolvedOwner}-${state.priority}-${debouncedSearch}`}
+                resetKey={`${state.channel}-${state.campaign}-${state.priority}-${debouncedSearch}`}
                 clientFilter={() => true}
                 renderLead={renderLeadCard}
               />
             ))}
-        </Stack>
-      )}
+          </Stack>
+        ) : (
+          <Alert severity="info">
+            No enabled stages are configured for this pipeline group. Review Journey settings.
+          </Alert>
+        ))}
 
       {(state.view || 'list') === 'list' &&
         (leadsQuery.isError ? (
-          <Alert
-            severity="error"
-            action={
-              <Button size="small" color="inherit" onClick={() => leadsQuery.refetch()}>
-                Retry
-              </Button>
-            }
-          >
-            Inquiry leads are unavailable.
-          </Alert>
+          <EnrollmentWorkspaceErrorState
+            message="Inquiry leads are unavailable."
+            onRetry={() => leadsQuery.refetch()}
+          />
         ) : (
           <CustomizableTable
             tableId="student-enrollment-pipeline"
@@ -1037,14 +1387,15 @@ export function PipelineWorkspace() {
             serverSide
             serverSidePagination
             serverSideSearch
+            serverSideSort
             serverSideFilter
             searchTerm={search}
             defaultSearchTerm={search}
             searchFieldProps={{
-              placeholder: 'Search applicants...',
+              placeholder: 'Search applicants',
               inputProps: { 'aria-label': 'Search applicants' },
             }}
-            filters={tableFilters}
+            filters={[...tableFilters, ...columnFilters]}
             totalCount={leadsQuery.data?.totalCount || 0}
             page={page}
             rowsPerPage={pageSize}
@@ -1055,30 +1406,51 @@ export function PipelineWorkspace() {
               setDebouncedSearch(value.trim());
             }}
             onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
-            onServerFilter={(filters) =>
+            onServerSort={(_column, sorts) => {
+              const sort = sorts[0];
+              updateState(
+                {
+                  sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : undefined,
+                  page: 1,
+                },
+                'push'
+              );
+            }}
+            onServerFilter={(filters) => {
+              const stateColumns = new Set([
+                'stage',
+                'channel',
+                'priority',
+                'intendedRouteType',
+                'desiredClassName',
+                'ownerUserId',
+              ]);
+              setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
               updateState(
                 {
                   stage: getLatestEnumFilter(filters, 'stage'),
                   channel: getLatestEnumFilter(filters, 'channel'),
                   priority: getLatestEnumFilter(filters, 'priority'),
+                  routeType: getLatestEnumFilter(filters, 'intendedRouteType'),
+                  className: getLatestStringFilter(filters, 'desiredClassName'),
+                  owner: getLatestStringFilter(filters, 'ownerUserId'),
                   page: 1,
                 },
                 'push'
-              )
-            }
+              );
+            }}
             noDataText={
-              <Stack spacing={0.5} alignItems="center">
-                <Typography variant="subtitle2">No matching inquiries</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Change the table filters or create a new inquiry.
-                </Typography>
-              </Stack>
+              <EnrollmentTableEmptyState
+                title="No matching inquiries"
+                description="Change the table filters or create a new inquiry."
+              />
             }
             rowProps={(row) => ({
               'data-testid': 'student-enrollment-pipeline-row',
               'data-lead-id': row.id,
             })}
-            tableContainerProps={{ sx: { minHeight: 420 } }}
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{ sx: enrollmentTableContainerSx }}
           />
         ))}
 
@@ -1092,9 +1464,33 @@ export function PipelineWorkspace() {
         <DialogContent>
           <Stack spacing={1.25} sx={{ pt: 1 }}>
             <Alert severity="info">
-              Contact details and admission intent are enough to create an inquiry.
+              The selected academic context determines where this inquiry enters the pipeline.
             </Alert>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+            <Paper variant="outlined" sx={{ p: 1.25 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.5}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Academic year
+                  </Typography>
+                  <Typography variant="body2">
+                    {academicYearName || 'Selected academic year'}
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Board
+                  </Typography>
+                  <Typography variant="body2">{academicBoardName || 'Selected board'}</Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Medium
+                  </Typography>
+                  <Typography variant="body2">{academicMediumName || 'Selected medium'}</Typography>
+                </Box>
+              </Stack>
+            </Paper>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 fullWidth
                 label="Student name"
@@ -1117,7 +1513,7 @@ export function PipelineWorkspace() {
                 }}
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 fullWidth
                 label="Contact number"
@@ -1142,25 +1538,68 @@ export function PipelineWorkspace() {
                 }}
               />
             </Stack>
-            <TextField
-              required
-              label="Admission intent"
-              value={quickForm.admissionIntent}
-              onChange={(event) => {
-                setQuickForm((current) => ({ ...current, admissionIntent: event.target.value }));
-                setDuplicateReviewed(false);
-              }}
-            />
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
+                required
+                select
                 fullWidth
-                label="Desired class"
-                value={quickForm.desiredClassName}
+                label="Medium stage"
+                value={quickForm.mediumStageId}
                 onChange={(event) => {
-                  setQuickForm((current) => ({ ...current, desiredClassName: event.target.value }));
+                  setQuickForm((current) => ({
+                    ...current,
+                    mediumStageId: event.target.value,
+                    targetStandardId: '',
+                  }));
                   setDuplicateReviewed(false);
                 }}
-              />
+              >
+                {mediumStages.map((stage) => (
+                  <MenuItem key={stage.id} value={stage.id}>
+                    {stage.stageName || stage.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                required
+                select
+                fullWidth
+                label="Target class"
+                value={quickForm.targetStandardId}
+                disabled={!quickForm.mediumStageId || standardOptionsQuery.isFetching}
+                onChange={(event) => {
+                  setQuickForm((current) => ({ ...current, targetStandardId: event.target.value }));
+                  setDuplicateReviewed(false);
+                }}
+              >
+                {standardOptions.map((standard) => (
+                  <MenuItem key={standard.id} value={standard.id}>
+                    {standard.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <TextField
+                required
+                select
+                fullWidth
+                label="Admission pathway"
+                value={quickForm.intendedRouteType}
+                onChange={(event) => {
+                  setQuickForm((current) => ({
+                    ...current,
+                    intendedRouteType: Number(event.target.value),
+                  }));
+                  setDuplicateReviewed(false);
+                }}
+              >
+                {routeTypes.map((routeType) => (
+                  <MenuItem key={routeType} value={routeType}>
+                    {routeTypeLabel(routeType)}
+                  </MenuItem>
+                ))}
+              </TextField>
               <TextField
                 select
                 fullWidth
@@ -1177,6 +1616,15 @@ export function PipelineWorkspace() {
                 ))}
               </TextField>
             </Stack>
+            <TextField
+              label="Intent notes"
+              value={quickForm.admissionIntent}
+              onChange={(event) => {
+                setQuickForm((current) => ({ ...current, admissionIntent: event.target.value }));
+                setDuplicateReviewed(false);
+              }}
+              helperText="Optional context beyond the selected admission pathway."
+            />
             <TextField
               label="Campaign"
               value={quickForm.campaignName}
@@ -1237,51 +1685,6 @@ export function PipelineWorkspace() {
       </Dialog>
 
       <Dialog
-        open={Boolean(registrationLead)}
-        onClose={() => setRegistrationLead(null)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Issue Registration Form</DialogTitle>
-        <DialogContent>
-          <Stack spacing={1.25} sx={{ pt: 1 }}>
-            {registrationLead && (
-              <Alert severity="info">
-                {getAdmissionCrmLeadName(registrationLead)} ·{' '}
-                {registrationLead.desiredClassName || registrationLead.admissionIntent}
-              </Alert>
-            )}
-            <TextField
-              autoFocus
-              fullWidth
-              label="Form number"
-              value={registrationFormNumber}
-              onChange={(event) => setRegistrationFormNumber(event.target.value.toUpperCase())}
-            />
-            <TextField
-              fullWidth
-              label="Amount"
-              type="number"
-              value={registrationFormAmount}
-              onChange={(event) => setRegistrationFormAmount(event.target.value)}
-              slotProps={{ htmlInput: { min: 0.01, step: 0.01 } }}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRegistrationLead(null)}>Cancel</Button>
-          <LoadingButton
-            variant="contained"
-            loading={issueRegistrationFormState.isLoading}
-            disabled={!registrationFormNumber.trim() || Number(registrationFormAmount) <= 0}
-            onClick={handleIssueRegistrationForm}
-          >
-            Issue Form
-          </LoadingButton>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
         open={Boolean(scheduleLead)}
         onClose={() => setScheduleLead(null)}
         fullWidth
@@ -1302,11 +1705,29 @@ export function PipelineWorkspace() {
                 labelId="pipeline-exam-slot-label"
                 label="Exam slot"
                 value={selectedSlotId}
+                disabled={isExamSlotsLoading}
                 onChange={(event) => setSelectedSlotId(event.target.value)}
               >
-                {(slotsQuery.data?.items || [])
-                  .filter((slot) => slot.isActive)
-                  .map((slot) => (
+                {isExamSlotsLoading && (
+                  <MenuItem disabled value="">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <CircularProgress size={16} />
+                      <Typography variant="body2">Loading exam slots...</Typography>
+                    </Stack>
+                  </MenuItem>
+                )}
+                {!isExamSlotsLoading && slotsQuery.isError && (
+                  <MenuItem disabled value="">
+                    Exam slots could not be loaded
+                  </MenuItem>
+                )}
+                {!isExamSlotsLoading && !slotsQuery.isError && !activeExamSlots.length && (
+                  <MenuItem disabled value="">
+                    No active exam slots available
+                  </MenuItem>
+                )}
+                {!isExamSlotsLoading &&
+                  activeExamSlots.map((slot) => (
                     <MenuItem
                       key={slot.id}
                       value={slot.id}
@@ -1373,11 +1794,18 @@ export function PipelineWorkspace() {
             <Alert severity="info">{selectedLeadIds.length} selected inquiries</Alert>
             {(bulkAction === 'owner' || bulkAction === 'task') && (
               <Autocomplete
-                options={staffQuery.data || []}
+                options={
+                  bulkAction === 'owner' ? ownerStaffQuery.data || [] : taskStaffQuery.data || []
+                }
                 value={bulkOwner}
+                inputValue={staffSearch}
+                onInputChange={(_, value) => setStaffSearch(value)}
                 onChange={(_, value) => setBulkOwner(value)}
-                getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+                getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
+                loading={
+                  bulkAction === 'owner' ? ownerStaffQuery.isFetching : taskStaffQuery.isFetching
+                }
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -1404,21 +1832,41 @@ export function PipelineWorkspace() {
               </>
             )}
             {bulkAction === 'stage' && (
-              <FormControl fullWidth>
-                <InputLabel id="pipeline-bulk-stage-label">Stage</InputLabel>
-                <Select
-                  labelId="pipeline-bulk-stage-label"
-                  label="Stage"
-                  value={bulkStage}
-                  onChange={(event) => setBulkStage(Number(event.target.value))}
-                >
-                  {stages.map((stageItem) => (
-                    <MenuItem key={stageItem.id} value={stageItem.systemStage}>
-                      {stageItem.stageName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <>
+                <FormControl fullWidth>
+                  <InputLabel id="pipeline-bulk-stage-label">Stage</InputLabel>
+                  <Select
+                    labelId="pipeline-bulk-stage-label"
+                    label="Stage"
+                    value={bulkStage}
+                    onChange={(event) => setBulkStage(Number(event.target.value))}
+                  >
+                    {stages.map((stageItem) => (
+                      <MenuItem key={stageItem.id} value={stageItem.systemStage}>
+                        {stageItem.stageName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                {protectedSelectedLeads.length ? (
+                  <Alert severity={overrideProtectedStages ? 'warning' : 'error'}>
+                    {protectedSelectedLeads.length} selected applicant
+                    {protectedSelectedLeads.length === 1 ? '' : 's'} are in protected workflow
+                    stages. Remove them before applying, or choose override with an audit reason.
+                  </Alert>
+                ) : null}
+                {protectedSelectedLeads.length ? (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={overrideProtectedStages}
+                        onChange={(event) => setOverrideProtectedStages(event.target.checked)}
+                      />
+                    }
+                    label="Override protected stage guardrails"
+                  />
+                ) : null}
+              </>
             )}
             {(bulkAction === 'stage' || bulkAction === 'archive') && (
               <TextField
@@ -1436,6 +1884,11 @@ export function PipelineWorkspace() {
           <Button onClick={() => setBulkAction(null)}>Cancel</Button>
           <LoadingButton
             variant="contained"
+            disabled={
+              bulkAction === 'stage' &&
+              protectedSelectedLeads.length > 0 &&
+              !overrideProtectedStages
+            }
             loading={
               bulkAssignOwnersState.isLoading ||
               bulkCreateTasksState.isLoading ||
@@ -1452,7 +1905,11 @@ export function PipelineWorkspace() {
       <ApplicantWorkspaceDrawer
         leadId={state.applicant}
         academicYearId={academicYearId}
+        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || 'overview'}
+        onTabChange={(nextTab) => updateState({ applicantTab: nextTab }, 'replace')}
         onClose={closeApplicant}
+        context="pipeline"
+        allowRegistrationBeforeExam={registrationRequiredBeforeExam}
       />
     </Stack>
   );

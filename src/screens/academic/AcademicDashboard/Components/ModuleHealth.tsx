@@ -95,7 +95,7 @@ export default function ModuleHealth() {
     <Card sx={{ p: 2, boxShadow: 'none', border: (t) => `1px solid ${t.palette.divider}` }}>
       <CardHeader title="Module Health Overview" sx={{ p: 0, mb: 1.5 }} />
 
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         {MODULES.map((mod) => {
           const color = HEALTH_COLOR[mod.health];
           return (

@@ -14,6 +14,7 @@ import DashboardProgressVisualization from './component/dashboardProgressVisuali
 const Dashboard = (props: TabComponentType) => (
   <Box sx={{ flexGrow: 1 }}>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Dashboard"
       links={[{ name: 'Academics' }, { name: 'Learning Management System' }, { name: 'Dashboard' }]}
     />

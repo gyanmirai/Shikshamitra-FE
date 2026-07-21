@@ -51,6 +51,79 @@ interface FileUploaderProps<T extends boolean = true> {
   dragProps?: BoxProps;
 }
 
+const getAbsoluteFileUrl = (url: string) => {
+  if (!url) return '';
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
+    return url;
+  }
+
+  const apiRoot = process.env.NEXT_PUBLIC_API_URL || '';
+
+  // If the url is already prefixed with /api/files/ or api/files/
+  if (url.includes('/api/files/')) {
+    if (url.startsWith('/')) {
+      return `${apiRoot}${url}`;
+    }
+    return `${apiRoot}/${url}`;
+  }
+
+  const cleanFilename = url.startsWith('/') ? url.slice(1) : url;
+
+  if (cleanFilename.startsWith('api/')) {
+    return `${apiRoot}/${cleanFilename}`;
+  }
+  return `${apiRoot}/api/files/${encodeURIComponent(cleanFilename)}`;
+};
+
+const getFileNameFromUrl = (file: string | File): string => {
+  if (!file) return '';
+  if (file instanceof File) return file.name;
+  const parts = file.split('/');
+  const nameWithGuid = parts[parts.length - 1];
+  const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i;
+  return nameWithGuid.replace(guidPattern, '');
+};
+
+const getFileType = (fileUrl: string): string => {
+  const urlWithoutQuery = fileUrl.split('?')[0];
+  const extension = urlWithoutQuery.split('.').pop()?.toLowerCase();
+  if (extension === 'pdf') {
+    return 'application/pdf';
+  }
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension || '')) {
+    return `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+  }
+  return '';
+};
+
+const normalizeFile = (file: any): File | FileData => {
+  if (typeof file === 'string') {
+    const absoluteUrl = getAbsoluteFileUrl(file);
+    return {
+      url: absoluteUrl,
+      filePath: absoluteUrl,
+      name: getFileNameFromUrl(file),
+      size: undefined,
+      type: getFileType(file),
+    };
+  }
+
+  if (file && typeof file === 'object' && !(file instanceof File)) {
+    return {
+      ...file,
+      url: file.url ? getAbsoluteFileUrl(file.url) : file.url,
+      filePath: file.filePath ? getAbsoluteFileUrl(file.filePath) : file.filePath,
+    };
+  }
+
+  return file;
+};
+
 const FileUploader = <T extends boolean = true>({
   primaryText = 'Upload Files',
   secondaryText = '',
@@ -71,6 +144,14 @@ const FileUploader = <T extends boolean = true>({
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
   const [showAllDialog, setShowAllDialog] = useState<boolean>(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const normalizedValue = React.useMemo(() => {
+    if (!value) return value;
+    if (Array.isArray(value)) {
+      return value.map(normalizeFile);
+    }
+    return normalizeFile(value);
+  }, [value]);
 
   const handlePreview = (file: File | FileData) => {
     if (onPreview) {
@@ -132,26 +213,43 @@ const FileUploader = <T extends boolean = true>({
     }
   };
 
-  const downloadFile = (file: File | FileData) => {
+  const downloadFile = async (file: File | FileData) => {
     let url: string;
     if (file instanceof File) {
       url = URL.createObjectURL(file);
     } else if (file.base64) {
       url = file.base64;
     } else if (file.url) {
-      // eslint-disable-next-line prefer-destructuring
       url = file.url;
     } else {
       console.error('Invalid file format for download');
       return;
     }
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    if (file instanceof File) {
-      URL.revokeObjectURL(url);
+    try {
+      if (url.startsWith('blob:') || url.startsWith('data:')) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      }
+    } catch (err) {
+      console.warn('Failed to download file via fetch, opening in new tab as fallback:', err);
+      window.open(url, '_blank');
     }
   };
 
@@ -306,16 +404,16 @@ const FileUploader = <T extends boolean = true>({
           onChange={handleFileInput}
         />
       </Box>
-      {(Array.isArray(value) ? value.length > 0 : value) && (
+      {(Array.isArray(normalizedValue) ? normalizedValue.length > 0 : normalizedValue) && (
         <Stack spacing={1} mt={2}>
-          {Array.isArray(value) && value.slice(0, showVisibleDocumentCount).map(renderFileCard)}
+          {Array.isArray(normalizedValue) && normalizedValue.slice(0, showVisibleDocumentCount).map(renderFileCard)}
 
-          {Array.isArray(value) && value.length > showVisibleDocumentCount && (
+          {Array.isArray(normalizedValue) && normalizedValue.length > showVisibleDocumentCount && (
             <Button variant="outlined" onClick={() => setShowAllDialog(true)}>
-              View All Files ({value.length})
+              View All Files ({normalizedValue.length})
             </Button>
           )}
-          {!Array.isArray(value) && value && renderFileCard(value, 0)}
+          {!Array.isArray(normalizedValue) && normalizedValue && renderFileCard(normalizedValue, 0)}
         </Stack>
       )}
 
@@ -375,7 +473,7 @@ const FileUploader = <T extends boolean = true>({
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <Stack spacing={2}>{Array.isArray(value) && value.map(renderFileCard)}</Stack>
+          <Stack spacing={2}>{Array.isArray(normalizedValue) && normalizedValue.map(renderFileCard)}</Stack>
         </DialogContent>
         <DialogActions>
           <Button

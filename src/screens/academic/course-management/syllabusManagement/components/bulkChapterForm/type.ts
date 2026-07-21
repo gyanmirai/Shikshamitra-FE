@@ -25,6 +25,7 @@ export interface IBulkChapterFormProps {
 export interface IChapterCardProps {
   entry: IBulkChapterEntry;
   index: number;
+  classId?: string;
   onRemove: (uid: string) => void;
   onChange: (uid: string, field: string, value: unknown) => void;
   onBlur: (uid: string, field: string) => void;

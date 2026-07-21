@@ -36,6 +36,7 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
 
 export const {
   useGetStudentElectiveAssignmentsQuery,
+  useLazyGetStudentElectiveAssignmentsQuery,
   useUpdateStudentElectiveAssignmentsMutation,
   useLockStudentElectiveAssignmentsMutation,
 } = studentElectiveAssignmentApi;

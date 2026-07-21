@@ -5,7 +5,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -17,7 +17,9 @@ import {
   Button,
   Switch,
   Divider,
+  Tooltip,
   TextField,
+  IconButton,
   Typography,
   CardContent,
   CardActions,
@@ -44,6 +46,7 @@ type ReviewState = {
 type ReviewRow = {
   id: string;
   targetType: 'plan' | 'diary';
+  teacherId?: string;
   teacherName: string;
   submittedDate: string;
   pendingSince: string;
@@ -64,6 +67,7 @@ type Props = {
   lessonPlans: LessonPlanRow[];
   diaryEntries: TeacherDiaryRow[];
   canReviewSubmissions: boolean;
+  currentTeacherId?: string;
   onApprove: (target: ReviewTarget, comment: string, updateProgress: boolean) => void;
   onReject: (target: ReviewTarget, comment: string) => void;
   onRequestChanges: (target: ReviewTarget, comment: string) => void;
@@ -73,6 +77,7 @@ const ReviewQueueTab = ({
   lessonPlans,
   diaryEntries,
   canReviewSubmissions,
+  currentTeacherId,
   onApprove,
   onReject,
   onRequestChanges,
@@ -115,6 +120,7 @@ const ReviewQueueTab = ({
         (p): ReviewRow => ({
           id: p.id,
           targetType: 'plan',
+          teacherId: p.teacherId,
           teacherName: p.teacherName,
           submittedDate: p.plannedDate,
           pendingSince: p.plannedDate,
@@ -139,6 +145,7 @@ const ReviewQueueTab = ({
         return {
           id: e.id,
           targetType: 'diary',
+          teacherId: plan?.teacherId || e.teacherId,
           teacherName: plan?.teacherName || '-',
           submittedDate: e.actualDate,
           pendingSince: e.submittedAt
@@ -201,10 +208,14 @@ const ReviewQueueTab = ({
     return 'warning';
   };
 
+  const canReviewRow = (row: ReviewRow) =>
+    canReviewSubmissions &&
+    (!currentTeacherId || !row.teacherId || row.teacherId !== currentTeacherId);
+
   return (
     <Box>
       {/* Toolbar */}
-      <Stack spacing={1.5} sx={{ mb: 2 }}>
+      <Stack spacing={1} sx={{ mb: 2 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle1">
             Review Queue ({filteredReviewRows.length}/{reviewRows.length} pending)
@@ -324,7 +335,7 @@ const ReviewQueueTab = ({
         <Box
           sx={{
             display: 'grid',
-            gap: 2,
+            gap: 1,
             gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' },
           }}
         >
@@ -347,64 +358,51 @@ const ReviewQueueTab = ({
                       {dayjs(row.submittedDate).format('DD-MM-YYYY')}
                     </Typography>
                   </Box>
-                  <Chip
-                    label={row.targetType === 'plan' ? 'Lesson Plan' : 'Diary'}
-                    size="small"
-                    color={row.targetType === 'plan' ? 'info' : 'secondary'}
-                    variant="soft"
-                  />
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Tooltip
+                      title={
+                        <Box sx={{ p: 0.5 }}>
+                          <Typography variant="caption" display="block">
+                            Planned: {row.plannedPct}%
+                          </Typography>
+                          <Typography variant="caption" display="block">
+                            Actual: {row.actualPct === '-' ? '-' : `${row.actualPct}%`}
+                          </Typography>
+                          {row.progressGap !== '-' && (
+                            <Typography variant="caption" display="block">
+                              Gap: {Number(row.progressGap) > 0 ? '+' : ''}
+                              {row.progressGap}%
+                            </Typography>
+                          )}
+                          <Typography variant="caption" display="block">
+                            Evidence:{' '}
+                            {row.evidenceCount > 0 ? `${row.evidenceCount} file(s)` : 'Missing'}
+                          </Typography>
+                        </Box>
+                      }
+                      arrow
+                      placement="top"
+                    >
+                      <IconButton size="small" sx={{ p: 0.5, color: 'text.secondary' }}>
+                        <Iconify icon="mdi:information-outline" width={18} height={18} />
+                      </IconButton>
+                    </Tooltip>
+                    <Chip
+                      label={row.targetType === 'plan' ? 'Lesson Plan' : 'Diary'}
+                      size="small"
+                      color={row.targetType === 'plan' ? 'info' : 'secondary'}
+                      variant="soft"
+                    />
+                  </Stack>
                 </Stack>
 
                 <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
                   {row.chapterName} — {row.topic}
                 </Typography>
 
-                {/* Progress */}
-                <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Planned
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {row.plannedPct}%
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Actual
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {row.actualPct === '-' ? '-' : `${row.actualPct}%`}
-                    </Typography>
-                  </Box>
-                  {row.progressGap !== '-' && (
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Gap
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={600}
-                        color={Number(row.progressGap) < 0 ? 'error.main' : 'success.main'}
-                      >
-                        {Number(row.progressGap) > 0 ? '+' : ''}
-                        {row.progressGap}%
-                      </Typography>
-                    </Box>
-                  )}
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Evidence
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {row.evidenceCount > 0 ? `${row.evidenceCount} file(s)` : 'Missing'}
-                    </Typography>
-                  </Box>
-                </Stack>
-
                 {/* AI Summary */}
                 <Box sx={{ p: 1, bgcolor: 'grey.50', borderRadius: 1, mb: 1 }}>
-                  <Stack direction="row" spacing={0.5} alignItems="flex-start">
+                  <Stack direction="row" spacing={1} alignItems="flex-start">
                     <Iconify
                       icon="mdi:robot-outline"
                       width={14}
@@ -431,7 +429,7 @@ const ReviewQueueTab = ({
                 )}
               </CardContent>
 
-              {canReviewSubmissions && (
+              {canReviewRow(row) && (
                 <>
                   <Divider />
                   <CardActions sx={{ px: 2, py: 1, gap: 1 }}>
@@ -459,6 +457,16 @@ const ReviewQueueTab = ({
                     >
                       Reject
                     </Button>
+                  </CardActions>
+                </>
+              )}
+              {canReviewSubmissions && !canReviewRow(row) && (
+                <>
+                  <Divider />
+                  <CardActions sx={{ px: 2, py: 1 }}>
+                    <Alert severity="info" sx={{ width: 1, py: 0.5 }}>
+                      You cannot review your own submission.
+                    </Alert>
                   </CardActions>
                 </>
               )}
@@ -563,40 +571,51 @@ const ReviewQueueTab = ({
                     isSort: false,
                     sticky: true,
                     stickyPosition: 'right' as const,
-                    render: (_: any, row: any) => (
-                      <Stack direction="row" spacing={0.5} justifyContent="center">
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="success"
-                          onClick={() =>
-                            openReview({ type: row.targetType, id: row.id }, 'approve')
-                          }
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="warning"
-                          onClick={() =>
-                            openReview({ type: row.targetType, id: row.id }, 'changes')
-                          }
-                        >
-                          Changes
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          onClick={() =>
-                            openReview({ type: row.targetType, id: row.id }, 'reject')
-                          }
-                        >
-                          Reject
-                        </Button>
-                      </Stack>
-                    ),
+                    render: (_: any, row: any) => {
+                      const reviewRow = row as ReviewRow;
+                      return canReviewRow(reviewRow) ? (
+                        <Stack direction="row" spacing={1} justifyContent="center">
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="success"
+                            onClick={() =>
+                              openReview(
+                                { type: reviewRow.targetType, id: reviewRow.id },
+                                'approve'
+                              )
+                            }
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="warning"
+                            onClick={() =>
+                              openReview(
+                                { type: reviewRow.targetType, id: reviewRow.id },
+                                'changes'
+                              )
+                            }
+                          >
+                            Changes
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            onClick={() =>
+                              openReview({ type: reviewRow.targetType, id: reviewRow.id }, 'reject')
+                            }
+                          >
+                            Reject
+                          </Button>
+                        </Stack>
+                      ) : (
+                        <Chip label="Own submission" size="small" color="info" variant="soft" />
+                      );
+                    },
                   },
                 ]
               : []),
@@ -618,7 +637,7 @@ const ReviewQueueTab = ({
         handleClose={closeReview}
       >
         <DialogScrollContent>
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {/* Action toggle */}
             <Stack direction="row" spacing={1}>
               {(['approve', 'changes', 'reject'] as const).map((action) => (

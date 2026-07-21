@@ -172,7 +172,7 @@ export function SettingsDrawer({
 
       <Scrollbar>
         <Stack spacing={6} sx={{ px: 2.5, pb: 5 }}>
-          <Box gap={2} display="grid" gridTemplateColumns="repeat(2, 1fr)">
+          <Box gap={1} display="grid" gridTemplateColumns="repeat(2, 1fr)">
             {!hideColorScheme && renderMode}
             {!hideContrast && renderContrast}
             {!hideDirection && renderRTL}

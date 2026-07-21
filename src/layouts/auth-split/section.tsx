@@ -82,7 +82,7 @@ export function Section({
       />
 
       {!!methods?.length && method && (
-        <Box component="ul" gap={2} display="flex">
+        <Box component="ul" gap={1} display="flex">
           {methods.map((option) => {
             const selected = method === option.label.toLowerCase();
 

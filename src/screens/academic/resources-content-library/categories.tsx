@@ -85,7 +85,7 @@ const Categories = (props: TabComponentType) => {
           </Box>
         </Box>
       </Popover>
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 6, md: 4 }}>
           <Card
             sx={{

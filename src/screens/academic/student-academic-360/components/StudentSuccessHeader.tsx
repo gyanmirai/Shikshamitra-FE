@@ -3,6 +3,7 @@
 import { Iconify } from 'src/components/iconify';
 import { Box, Chip, Stack, Button, Avatar, Tooltip, IconButton, Typography } from '@mui/material';
 
+import { RegistrationStatusType, RegistrationStatusTypeColor } from 'src/enums/registration-status-type';
 import { readText, getStudentName } from '../types';
 import { HealthScoreGauge } from './HealthScoreGauge';
 
@@ -61,8 +62,8 @@ export function StudentSuccessHeader({
           `linear-gradient(180deg, ${theme.palette.primary.lighter ?? theme.palette.primary.light}14, transparent)`,
       }}
     >
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ md: 'center' }}>
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
           <Avatar
             sx={{
               width: 60,
@@ -80,12 +81,39 @@ export function StudentSuccessHeader({
               <Typography variant="h6" noWrap>
                 {name || 'Student'}
               </Typography>
-              <Chip
-                size="small"
-                color="success"
-                variant="soft"
-                label={readText(student.operationalStatus ?? student.status, 'Active')}
-              />
+              {(() => {
+                const rawStatus = student.operationalStatus ?? student.status;
+                let statusLabel = 'Active';
+                let statusColor: 'success' | 'warning' | 'error' | 'info' | 'default' = 'success';
+
+                if (rawStatus !== undefined && rawStatus !== null) {
+                  if (typeof rawStatus === 'number') {
+                    statusLabel = RegistrationStatusType[rawStatus] || 'Active';
+                    statusColor = (RegistrationStatusTypeColor[rawStatus as RegistrationStatusType] as any) || 'success';
+                  } else if (typeof rawStatus === 'string') {
+                    const parsed = Number(rawStatus);
+                    if (!Number.isNaN(parsed)) {
+                      statusLabel = RegistrationStatusType[parsed] || 'Active';
+                      statusColor = (RegistrationStatusTypeColor[parsed as RegistrationStatusType] as any) || 'success';
+                    } else {
+                      statusLabel = rawStatus;
+                      const found = Object.values(RegistrationStatusType).indexOf(rawStatus);
+                      if (found !== -1) {
+                        statusColor = (RegistrationStatusTypeColor[found as RegistrationStatusType] as any) || 'success';
+                      }
+                    }
+                  }
+                }
+
+                return (
+                  <Chip
+                    size="small"
+                    color={statusColor}
+                    variant="soft"
+                    label={statusLabel}
+                  />
+                );
+              })()}
             </Stack>
             <Typography variant="body2" color="text.secondary" noWrap>
               {readText(student.standardName ?? student.standard, 'Class')}{' '}
@@ -94,7 +122,7 @@ export function StudentSuccessHeader({
               {' · '}GR No. {readText(student.grNo)}
               {' · '}{readText(student.academicMediumName, 'Medium')}
             </Typography>
-            <Stack direction="row" flexWrap="wrap" gap={0.75} sx={{ mt: 1 }}>
+            <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 1 }}>
               <Chip
                 size="small"
                 variant="soft"
@@ -124,7 +152,7 @@ export function StudentSuccessHeader({
           </Typography>
         </Stack>
 
-        <Stack direction="row" alignItems="center" spacing={0.5}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Tooltip title="Previous student">
             <span>
               <IconButton aria-label="Previous student" disabled={!canGoPrevious} onClick={onPrevious}>
@@ -142,9 +170,6 @@ export function StudentSuccessHeader({
               </IconButton>
             </span>
           </Tooltip>
-          <Button size="small" variant="outlined" startIcon={<Iconify icon="mdi:account-box-outline" />}>
-            Full Profile
-          </Button>
           <IconButton aria-label="Close Student Academic 360" onClick={onClose}>
             <Iconify icon="mdi:close" />
           </IconButton>

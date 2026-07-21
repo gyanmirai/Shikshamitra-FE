@@ -94,11 +94,11 @@ export const RoomUsageReport = () => {
 
   if (isLoading) {
     return (
-      <Stack spacing={2}>
+      <Stack spacing={1}>
         <Box
           sx={{
             display: 'grid',
-            gap: 2,
+            gap: 1,
             gridTemplateColumns: {
               xs: '1fr',
               sm: 'repeat(2, minmax(0, 1fr))',
@@ -120,7 +120,7 @@ export const RoomUsageReport = () => {
   const kpis = KPI_CARDS(data);
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={1}>
       {/* KPI Cards */}
       <Box>
         <Typography variant="h6" sx={{ mb: 1.5 }}>
@@ -129,7 +129,7 @@ export const RoomUsageReport = () => {
         <Box
           sx={{
             display: 'grid',
-            gap: 2,
+            gap: 1,
             gridTemplateColumns: {
               xs: '1fr',
               sm: 'repeat(2, minmax(0, 1fr))',
@@ -142,7 +142,7 @@ export const RoomUsageReport = () => {
             <Box key={kpi.label}>
               <Card sx={{ borderRadius: 2 }}>
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                  <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
                     <Box
                       sx={{
                         width: 40,
@@ -179,7 +179,7 @@ export const RoomUsageReport = () => {
           Room Utilization
         </Typography>
         <Card sx={{ p: 2.5 }}>
-          <Stack spacing={1.5}>
+          <Stack spacing={1}>
             {data
               .slice()
               .sort((a, b) => b.utilizationPercentage - a.utilizationPercentage)

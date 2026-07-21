@@ -408,10 +408,10 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Class"

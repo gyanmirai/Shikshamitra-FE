@@ -17,7 +17,7 @@ const CommonCtaComponent: React.FC<CommonCtaComponentProps> = ({
   returnBookHandler,
   createReservationHandler,
 }) => (
-  <Box display="flex" flexDirection="row" gap={2} justifyContent="flex-end">
+  <Box display="flex" flexDirection="row" gap={1} justifyContent="flex-end">
     {/* <Button
 
                 startIcon={<Iconify icon="fluent-mdl2:reservation-orders" />}

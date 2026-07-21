@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import React, { isValidElement, cloneElement } from 'react';
 
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -68,7 +69,7 @@ export function ConfirmDialog({
         >
           Cancel
         </Button>
-        {action}
+        {isValidElement(action) ? cloneElement(action as React.ReactElement<any>, { size: 'small' }) : action}
       </DialogActions>
     </Dialog>
   );

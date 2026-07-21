@@ -61,6 +61,7 @@ const ParentTeacherCommunicationScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Parent Teacher Communication"
         links={[
           { name: 'Academic And Assessment' },

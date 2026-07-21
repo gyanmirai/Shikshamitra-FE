@@ -1,3 +1,5 @@
+import type { PublicAdmissionsLanguage } from './public-admissions-copy';
+
 export type PublicAdmissionStatusProblem = {
   code?: string;
   title?: string;
@@ -34,47 +36,91 @@ const getProblemDataValue = (
   key: string
 ) => problem?.error?.data?.[key] ?? problem?.data?.[key];
 
-const formatRetryAfter = (problem?: PublicAdmissionStatusProblem | null) => {
+const recoveryCopy = {
+  en: {
+    wait: 'Please wait before requesting another OTP.',
+    waitSeconds: (seconds: number) =>
+      `Please wait ${seconds} second${seconds === 1 ? '' : 's'} before requesting another OTP.`,
+    invalidOtp: 'The OTP code is incorrect. Check the latest code and try again.',
+    locked: 'Too many incorrect OTP attempts. Request a new OTP to continue.',
+    otpExpired: 'This OTP has expired. Request a new OTP to continue.',
+    notIssued: 'Request an OTP before checking the admission status.',
+    linkExpired: 'This status link has expired. Contact the school admissions office.',
+    linkInvalid:
+      'This status link is invalid. Check the link or contact the school admissions office.',
+  },
+  gu: {
+    wait: 'બીજો OTP માંગતા પહેલાં થોડી રાહ જુઓ.',
+    waitSeconds: (seconds: number) => `બીજો OTP માંગતા પહેલાં ${seconds} સેકન્ડ રાહ જુઓ.`,
+    invalidOtp: 'OTP કોડ ખોટો છે. તાજેતરનો કોડ તપાસીને ફરી પ્રયાસ કરો.',
+    locked: 'ઘણા ખોટા OTP પ્રયાસ થયા. આગળ વધવા માટે નવો OTP માંગો.',
+    otpExpired: 'આ OTP ની મુદત પૂરી થઈ છે. આગળ વધવા માટે નવો OTP માંગો.',
+    notIssued: 'પ્રવેશ સ્થિતિ તપાસતા પહેલાં OTP માંગો.',
+    linkExpired: 'આ સ્થિતિ લિંકની મુદત પૂરી થઈ છે. શાળા પ્રવેશ કચેરીનો સંપર્ક કરો.',
+    linkInvalid: 'આ સ્થિતિ લિંક અમાન્ય છે. લિંક તપાસો અથવા શાળા પ્રવેશ કચેરીનો સંપર્ક કરો.',
+  },
+  hi: {
+    wait: 'दूसरा OTP माँगने से पहले कुछ समय प्रतीक्षा करें।',
+    waitSeconds: (seconds: number) => `दूसरा OTP माँगने से पहले ${seconds} सेकंड प्रतीक्षा करें।`,
+    invalidOtp: 'OTP कोड गलत है। नवीनतम कोड जाँचकर फिर प्रयास करें।',
+    locked: 'बहुत अधिक गलत OTP प्रयास हुए। आगे बढ़ने के लिए नया OTP माँगें।',
+    otpExpired: 'इस OTP की समय-सीमा समाप्त हो गई है। आगे बढ़ने के लिए नया OTP माँगें।',
+    notIssued: 'प्रवेश स्थिति देखने से पहले OTP माँगें।',
+    linkExpired:
+      'इस स्थिति लिंक की समय-सीमा समाप्त हो गई है। विद्यालय प्रवेश कार्यालय से संपर्क करें।',
+    linkInvalid:
+      'यह स्थिति लिंक अमान्य है। लिंक जाँचें या विद्यालय प्रवेश कार्यालय से संपर्क करें।',
+  },
+} satisfies Record<
+  PublicAdmissionsLanguage,
+  Record<string, string | ((seconds: number) => string)>
+>;
+
+const formatRetryAfter = (
+  problem: PublicAdmissionStatusProblem | null | undefined,
+  language: PublicAdmissionsLanguage
+) => {
   const retryAfter = Number(
     getProblemDataValue(problem, 'RetryAfterSeconds') ??
       getProblemDataValue(problem, 'retryAfterSeconds')
   );
 
   if (!Number.isFinite(retryAfter) || retryAfter <= 0) {
-    return 'Please wait before requesting another OTP.';
+    return recoveryCopy[language].wait;
   }
 
   const seconds = Math.ceil(retryAfter);
-  return `Please wait ${seconds} second${seconds === 1 ? '' : 's'} before requesting another OTP.`;
+  return recoveryCopy[language].waitSeconds(seconds);
 };
 
 export const getPublicAdmissionStatusProblemMessage = (
   problem: PublicAdmissionStatusProblem | null | undefined,
-  fallback: string
+  fallback: string,
+  language: PublicAdmissionsLanguage = 'en'
 ): PublicAdmissionStatusProblemResult => {
   const code = getProblemCode(problem);
+  const copy = recoveryCopy[language];
 
   switch (code) {
     case 'AdmissionCrm:StatusOtpResendTooSoon':
-      return { code, message: formatRetryAfter(problem) };
+      return { code, message: formatRetryAfter(problem, language) };
     case 'AdmissionCrm:InvalidStatusOtp':
-      return { code, message: 'The OTP code is incorrect. Check the latest code and try again.' };
+      return { code, message: copy.invalidOtp };
     case 'AdmissionCrm:StatusOtpLocked':
-      return { code, message: 'Too many incorrect OTP attempts. Request a new OTP to continue.' };
+      return { code, message: copy.locked };
     case 'AdmissionCrm:StatusOtpExpired':
-      return { code, message: 'This OTP has expired. Request a new OTP to continue.' };
+      return { code, message: copy.otpExpired };
     case 'AdmissionCrm:StatusOtpNotIssued':
-      return { code, message: 'Request an OTP before checking the admission status.' };
+      return { code, message: copy.notIssued };
     case 'AdmissionCrm:StatusTokenExpired':
       return {
         code,
-        message: 'This status link has expired. Contact the school admissions office.',
+        message: copy.linkExpired,
       };
     case 'AdmissionCrm:StatusTokenInvalid':
       return {
         code,
-        message:
-          'This status link is invalid. Check the link or contact the school admissions office.',
+        message: copy.linkInvalid,
       };
     default:
       return {
@@ -91,7 +137,8 @@ export const getPublicAdmissionStatusProblemMessage = (
 
 export async function readPublicAdmissionStatusProblem(
   response: Response,
-  fallback: string
+  fallback: string,
+  language: PublicAdmissionsLanguage = 'en'
 ): Promise<PublicAdmissionStatusProblemResult> {
   let payload: PublicAdmissionStatusProblem | null = null;
 
@@ -101,5 +148,5 @@ export async function readPublicAdmissionStatusProblem(
     payload = null;
   }
 
-  return getPublicAdmissionStatusProblemMessage(payload, fallback);
+  return getPublicAdmissionStatusProblemMessage(payload, fallback, language);
 }

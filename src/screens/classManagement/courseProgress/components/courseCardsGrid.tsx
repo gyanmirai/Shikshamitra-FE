@@ -1,9 +1,8 @@
-import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import React, { useRef, useState, useEffect } from 'react';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { Box, Card, Skeleton, IconButton, Typography, CircularProgress } from '@mui/material';
+import { Box, Card, Chip, Stack, Skeleton, IconButton, Typography, LinearProgress } from '@mui/material';
 
 import type { IAppWidgetProps, ICourseCardsGridProps } from '../type';
 
@@ -155,6 +154,11 @@ export default function CourseCardsGrid({
               completedChapter={course.completedChapter}
               totalChapter={course.totalChapter}
               isSelected={isSelected}
+              expectedProgress={course.expectedProgress}
+              variance={course.variance}
+              scheduleStatus={course.scheduleStatus}
+              riskLevel={course.riskLevel}
+              lastUpdatedAt={course.lastUpdatedAt}
             />
           </Card>
         );
@@ -225,9 +229,20 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
   completedChapter,
   totalChapter,
   isSelected,
+  expectedProgress = 0,
+  variance = 0,
+  scheduleStatus = 'On Track',
+  riskLevel = 'Low',
 }: IAppWidgetProps) => {
   const progress = chart.series;
   const safeColor = color || '#1976d2';
+  const riskColor: 'error' | 'warning' | 'success' =
+    riskLevel === 'Critical' || riskLevel === 'High'
+      ? 'error'
+      : riskLevel === 'Medium'
+        ? 'warning'
+        : 'success';
+  const varianceColor = variance < 0 ? 'error.main' : 'success.main';
 
   return (
     <Box
@@ -239,7 +254,6 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
         gap: 0.75,
       }}
     >
-      {/* Title row & Circular Progress */}
       <Box display="flex" justifyContent="space-between" alignItems="center" gap={1}>
         <Box display="flex" alignItems="center" gap={1} sx={{ minWidth: 0, flex: 1 }}>
           {!isSelected && <SubjectColorIndicator color={safeColor} />}
@@ -252,47 +266,40 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
             {title}
           </Typography>
         </Box>
-        {/* Circular Progress */}
-        <Box sx={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
-          {/* Background Track */}
-          <CircularProgress
-            variant="determinate"
-            value={100}
-            size={40}
-            thickness={4}
-            sx={{ color: alpha(safeColor, 0.16) }}
-          />
-          {/* Active Progress */}
-          <CircularProgress
-            variant="determinate"
-            value={progress}
-            size={40}
-            thickness={4}
-            sx={{
-              position: 'absolute',
-              left: 0,
-              '& .MuiCircularProgress-circle': { strokeLinecap: 'round' },
-            }}
-          />
-          {/* Percentage Text */}
-          <Box
-            sx={{
-              top: 0,
-              left: 0,
-              bottom: 0,
-              right: 0,
-              position: 'absolute',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Typography variant="caption" sx={{ color: 'text.primary', fontWeight: 700 }}>
-              {progress}%
-            </Typography>
-          </Box>
-        </Box>
+        <Chip label={riskLevel} size="small" color={riskColor} variant="filled" />
       </Box>
+
+      <Box>
+        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+          <Typography variant="caption" color="text.secondary">
+            Actual {progress}%
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Expected {expectedProgress}%
+          </Typography>
+        </Box>
+        <LinearProgress
+          variant="determinate"
+          value={progress}
+          sx={{
+            height: 8,
+            borderRadius: 1,
+            bgcolor: 'action.hover',
+            '& .MuiLinearProgress-bar': { bgcolor: safeColor },
+          }}
+        />
+      </Box>
+
+      <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Typography variant="caption" color="text.secondary">
+          {completedChapter}/{totalChapter} chapters
+        </Typography>
+        <Typography variant="caption" sx={{ color: varianceColor, fontWeight: 700 }}>
+          {variance >= 0 ? '+' : ''}
+          {variance}% variance
+        </Typography>
+        <Chip label={scheduleStatus} size="small" variant="outlined" />
+      </Stack>
     </Box>
   );
 };

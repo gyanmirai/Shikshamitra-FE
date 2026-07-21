@@ -45,7 +45,7 @@ const ProgressRow = ({ label, value, color = 'primary' }: ProgressRowProps) => (
     <Typography variant="caption" color="text.secondary">
       {label}
     </Typography>
-    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5 }}>
+    <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
       <LinearProgress
         variant="determinate"
         value={value ?? 0}
@@ -126,7 +126,7 @@ const SectionCard = ({
       </Stack>
       {action}
     </Stack>
-    <Stack spacing={1.5}>{children}</Stack>
+    <Stack spacing={1}>{children}</Stack>
   </Box>
 );
 
@@ -161,7 +161,7 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
 
         {/* Content */}
         <Stack
-          spacing={2}
+          spacing={1}
           sx={{ p: 2.5, overflowY: 'auto', flex: 1, bgcolor: 'background.neutral' }}
         >
           {/* Plan Details */}
@@ -176,7 +176,7 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
               ) : null
             }
           >
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <DetailItem label="Date" value={formatDate(plan.plannedDate)} />
               <DetailItem label="Period" value={plan.period} />
               <DetailItem label="Time" value={plan.plannedTime} />
@@ -232,7 +232,7 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
           >
             {diary ? (
               <>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <DetailItem label="Actual Date" value={formatDate(diary.actualDate)} />
                   <DetailItem label="Class Conducted" value={diary.classConducted ? 'Yes' : 'No'} />
                 </Stack>

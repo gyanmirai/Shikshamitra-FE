@@ -292,7 +292,7 @@ const MemberTransportScreen = () => {
         </Tabs>
 
         {/* CTA buttons aligned to the right */}
-        <Box display="flex" gap={3}>
+        <Box display="flex" gap={1}>
           {/* <Button onClick={dialogForBulkEdit.onTrue} variant="contained" size="small">
                         Bulk Assign
                     </Button> */}

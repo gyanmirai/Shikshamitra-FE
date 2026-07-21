@@ -8,8 +8,11 @@ import type { IFeeCharge, SelectedItem } from '../../Components/type';
 export interface AllocatedFeeRow {
   type: 'fee';
   key: string;
+  dueFeeId?: string;
+  feeHeadId: string;
   feeHeadName: string;
   period: string; // formatted e.g. "Apr 2026"
+  installmentLabel?: string;
   originalAmount: number;
   paidAmount: number;
   remainingAmount: number;
@@ -71,9 +74,12 @@ const allocateFeeItem = (
       ...wallet.rows,
       {
         type: 'fee',
-        key: `${item.feeHeadId}-${item.period}`,
+        key: item.dueFeeId ?? `${item.feeHeadId}-${item.period}`,
+        dueFeeId: item.dueFeeId,
+        feeHeadId: item.feeHeadId,
         feeHeadName: feeHeadMap[item.feeHeadId] ?? item.feeHeadId,
         period: dayjs(`${item.period}-01`).format('MMM YYYY'),
+        installmentLabel: item.installmentLabel,
         originalAmount: item.dueAmount,
         paidAmount,
         remainingAmount: item.dueAmount - paidAmount,

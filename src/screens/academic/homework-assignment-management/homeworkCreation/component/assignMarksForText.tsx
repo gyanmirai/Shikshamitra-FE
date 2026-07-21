@@ -81,22 +81,19 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      marks: typeof data?.marks === 'number' ? data.marks : '',
-      totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : '',
       feedback: data?.feedback || '',
     },
     validationSchema: assignGradeValidationSchema,
     async onSubmit(values) {
-      const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
+      const isUpdate = Boolean(data?.feedback);
       try {
         await updateSubmissionFeedback({
           homeworkId: homeworkId || data?.homeworkId,
           studentId: data?.studentId,
           academicMediumId: (medium as any)?.id,
           body: {
-            marks: values.marks !== '' ? Number(values.marks) : null,
-            totalMarks: values.totalMarks !== '' ? Number(values.totalMarks) : null,
             feedback: values.feedback,
+            status: 4,
           },
         }).unwrap();
 
@@ -110,7 +107,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
         }).unwrap();
 
         shikshaMitraToast.success({
-          message: `Feedback and marks have been ${isUpdate ? 'updated' : 'added'} successfully for ${
+          message: `Feedback has been ${isUpdate ? 'updated' : 'added'} successfully for ${
             data?.studentName ?? 'the student'
           }.`,
         });
@@ -122,7 +119,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           onClose(null, true);
         }
       } catch (error) {
-        console.error('Failed to submit feedback and marks', error);
+        console.error('Failed to submit feedback', error);
       }
     },
   });
@@ -142,7 +139,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           onSubmit={formik.handleSubmit}
         >
           <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
                 <Card
@@ -166,9 +163,9 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                       direction="row"
                       alignItems="center"
                       justifyContent="space-between"
-                      spacing={2}
+                      spacing={1}
                     >
-                      <Stack direction="row" alignItems="center" spacing={1.5}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
                         <Avatar
                           alt={data?.studentName || 'Student'}
                           sx={{
@@ -331,81 +328,6 @@ I have completed all answers as per the instructions.`}
                     >
                       {`Homework Assignment: Science Fundamentals\n\nDue Date: Friday, March 15th, 2024\nInstructions: Write detailed explanations for the following scientific facts.\n\nQuestions:\n1. Explain why the sun appears to rise in the east every day\n2. Describe the process of water boiling and why it occurs at 100°C at sea level\n3. Explain the importance of water in plant growth and development\n\nAdditional Notes:\nI have completed all answers according to the given instructions and provided scientific explanations for each point.`}
                     </Typography>
-                  </Box>
-                </Card>
-              </Grid>
-
-              {/* ── Evaluation & Marks Section ── */}
-              <Grid size={{ xs: 12 }}>
-                <Card
-                  sx={{
-                    p: 0,
-                    overflow: 'hidden',
-                    boxShadow: 'none',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      px: 2,
-                      py: 1.25,
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
-                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Typography
-                      variant="overline"
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.75,
-                        color: 'text.secondary',
-                        letterSpacing: 0.8,
-                      }}
-                    >
-                      <Iconify icon="solar:star-bold" width={16} sx={{ color: 'warning.main' }} />
-                      Evaluation & Marks
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ p: 2 }}>
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <ShakingTextField
-                          error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
-                        >
-                          <TextField
-                            label="Total Marks *"
-                            fullWidth
-                            name="totalMarks"
-                            type="number"
-                            value={formik.values.totalMarks}
-                            onChange={formik.handleChange}
-                            error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                            helperText={formik.touched.totalMarks && formik.errors.totalMarks}
-                            disabled={!isEdit}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <ShakingTextField
-                          error={!!(formik.touched.marks && formik.errors.marks) || false}
-                        >
-                          <TextField
-                            label="Obtained Marks *"
-                            fullWidth
-                            name="marks"
-                            type="number"
-                            value={formik.values.marks}
-                            onChange={formik.handleChange}
-                            error={formik.touched.marks && Boolean(formik.errors.marks)}
-                            helperText={formik.touched.marks && formik.errors.marks}
-                            disabled={!isEdit}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                    </Grid>
                   </Box>
                 </Card>
               </Grid>

@@ -17,6 +17,7 @@ import GradeDistributionChart from './performanceAnalytics/gradeDistribution';
 const PerformanceAnalytics = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Performace Analytics"
       links={[
         { name: 'Academics' },
@@ -24,7 +25,7 @@ const PerformanceAnalytics = (props: TabComponentType) => (
         { name: 'Performace Analytics' },
       ]}
     />
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <ClassPerformance />
       <GradeDistributionChart />
       <SubjectAnalytics />

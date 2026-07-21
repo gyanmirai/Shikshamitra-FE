@@ -94,7 +94,7 @@ const AdjustmentPendingFeesTable = ({
             </TableCell>
 
             <TableCell sx={{ px: 1.5, py: 1.25 }}>
-              <Box display="flex" alignItems="center" gap={0.75}>
+              <Box display="flex" alignItems="center" gap={1}>
                 <Iconify
                   icon="mdi:book-education-outline"
                   width={16}

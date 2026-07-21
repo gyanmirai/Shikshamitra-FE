@@ -64,7 +64,7 @@ export function CapacityBanner({
       <Iconify icon={icon} width={20} sx={{ color: `${color}.main`, mt: 0.25, flexShrink: 0 }} />
       <Box sx={{ minWidth: 0 }}>
         {hasSlots && (
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 0.5 }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
             <Typography variant="caption" color="text.secondary">
               Available teaching slots/week: <strong>{availableCapacity}</strong>
             </Typography>

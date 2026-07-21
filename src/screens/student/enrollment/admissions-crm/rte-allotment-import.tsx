@@ -139,24 +139,25 @@ export function RteAllotmentImport({ academicYearId }: Props) {
         id: 'applicantReference',
         label: 'Applicant reference',
         minWidth: 200,
-        isSort: false,
-        isFilter: false,
+        filterType: 'string',
         render: (value, row) => value || row.leadId || '-',
       },
       {
         id: 'allotmentNumber',
         label: 'Allotment',
         minWidth: 160,
-        isSort: false,
-        isFilter: false,
+        filterType: 'string',
         render: (value) => value || '-',
       },
       {
         id: 'success',
         label: 'Outcome',
         minWidth: 180,
-        isSort: false,
-        isFilter: false,
+        filterType: 'enum',
+        enumOptions: [
+          { value: true, label: 'Imported' },
+          { value: false, label: 'Failed' },
+        ],
         render: (value, row) => (
           <Chip
             size="small"
@@ -298,7 +299,6 @@ export function RteAllotmentImport({ academicYearId }: Props) {
               columns={resultColumns}
               data={result.items}
               isSearch={false}
-              isFilter={false}
               isPagination={false}
               isShowedDense={false}
               tableContainerProps={{ sx: { minHeight: 220 } }}

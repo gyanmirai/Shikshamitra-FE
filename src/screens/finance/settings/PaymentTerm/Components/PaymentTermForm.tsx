@@ -63,13 +63,13 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
       </Box>
 
       {/* ── Downstream warning ─────────────────────────────────────────────── */}
-      {editData?.isUsedInDownstream && (
+      {(editData?.isUsedInDownstream || editData?.canDirectEdit === false) && (
         <Alert
           severity="warning"
           variant="filled"
           sx={{ mx: 3, mt: 1.5, borderRadius: 1, flexShrink: 0, py: 0.75 }}
         >
-          This term is mapped to active fee structures. Saving will create a new version
+          This term is mapped to active fee structures. Saving will create a new draft revision
           automatically.
         </Alert>
       )}

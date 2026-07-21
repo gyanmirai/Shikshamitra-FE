@@ -118,7 +118,7 @@ export const RoomAuditLogDrawer = ({
             `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Box
             sx={{
               width: 42,
@@ -155,7 +155,7 @@ export const RoomAuditLogDrawer = ({
       </Stack>
 
       {/* Filters */}
-      <Stack spacing={1.5} sx={{ px: 2.5, py: 2, borderBottom: 1, borderColor: 'divider' }}>
+      <Stack spacing={1} sx={{ px: 2.5, py: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Autocomplete
           size="small"
           options={roomOptions}

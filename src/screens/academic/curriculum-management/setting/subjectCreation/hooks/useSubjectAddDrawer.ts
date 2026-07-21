@@ -46,6 +46,18 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
     },
   ]);
   const [showErrors, setShowErrors] = useState(false);
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+
+  const isDirty = rows.some(
+    (row) =>
+      row.name.trim() !== '' ||
+      row.displayName.trim() !== '' ||
+      row.color !== '' ||
+      row.sortOrder !== '' ||
+      row.category !== 'General' ||
+      row.icon !== '' ||
+      row.status !== 'Active'
+  );
 
   /**
    * Memoization Justification:
@@ -115,6 +127,7 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
 
   const resetAndClose = useCallback(() => {
     onClose();
+    setConfirmCloseOpen(false);
     setTimeout(() => {
       setRows([
         {
@@ -132,10 +145,30 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
     }, 300);
   }, [onClose]);
 
+  const requestClose = useCallback(() => {
+    if (isDirty) {
+      setConfirmCloseOpen(true);
+      return;
+    }
+    resetAndClose();
+  }, [isDirty, resetAndClose]);
+
   const handleSave = async () => {
-    const hasError = rows.some(
-      (r) => !r.name.trim() || !r.color || !!getDuplicateError(r.name, r.tempId)
-    );
+    const hasError = rows.some((r) => {
+      const nameEmpty = !r.name.trim();
+      const dupError = r.name.trim() ? getDuplicateError(r.name, r.tempId) : null;
+      const colorError = !r.color;
+
+      let sortOrderError = false;
+      if (r.sortOrder !== '') {
+        const num = Number(r.sortOrder);
+        if (Number.isNaN(num) || !Number.isInteger(num) || num < 1 || num > 999999) {
+          sortOrderError = true;
+        }
+      }
+
+      return nameEmpty || dupError || colorError || sortOrderError;
+    });
     if (hasError) {
       setShowErrors(true);
       shikshaMitraToast.error({ message: 'Please fix all errors before saving.' });
@@ -179,6 +212,9 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
     removeRow,
     getDuplicateError,
     resetAndClose,
+    requestClose,
+    confirmCloseOpen,
+    setConfirmCloseOpen,
     handleSave,
   };
 };

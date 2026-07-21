@@ -24,7 +24,7 @@ import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
-import { Add, Delete, Visibility, ContentCopy } from '@mui/icons-material';
+import { Add, Delete, ExpandMore, Visibility, ContentCopy } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -38,15 +38,19 @@ import {
   Divider,
   Checkbox,
   MenuItem,
+  Accordion,
   TextField,
   Typography,
   IconButton,
   InputLabel,
   DialogTitle,
   FormControl,
+  Autocomplete,
   DialogActions,
   DialogContent,
   LinearProgress,
+  AccordionDetails,
+  AccordionSummary,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -61,17 +65,23 @@ import {
   AdmissionCrmExamReadinessField,
   AdmissionCrmLeadRoutingStrategy,
   AdmissionCrmMessageTemplateStatus,
+  useLockAdmissionCrmJourneyMutation,
   useGetAdmissionCrmFormTemplatesQuery,
+  useUnlockAdmissionCrmJourneyMutation,
   useGetAdmissionCrmPipelineStagesQuery,
   useGetAdmissionCrmInquirySourcesQuery,
   useGetAdmissionCrmMessageTemplatesQuery,
   useCreateAdmissionCrmFormTemplateMutation,
   useGetAdmissionCrmCycleConfigurationQuery,
   useUpdateAdmissionCrmFormTemplateMutation,
+  useCreateAdmissionCrmInquirySourceMutation,
   useUpdateAdmissionCrmPipelineStageMutation,
+  useCreateAdmissionCrmPipelineStageMutation,
+  useUpdateAdmissionCrmInquirySourceMutation,
   useCreateAdmissionCrmMessageTemplateMutation,
   useGetAdmissionCrmCommunicationProvidersQuery,
   usePreviewAdmissionCrmMessageTemplateMutation,
+  useSetAdmissionCrmInquirySourceStatusMutation,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   useUpdateAdmissionCrmFormTemplateStatusMutation,
   useUpdateAdmissionCrmCommunicationProviderMutation,
@@ -87,7 +97,6 @@ import {
   getAdmissionCrmChannelLabel,
 } from '../admissions-crm/admissions-crm-utils';
 import {
-  getCrmUserLabel,
   getCrmUserOptionLabel,
   buildCrmUserSelectOptions,
   getAdmissionCrmProviderAdapter,
@@ -107,6 +116,13 @@ import {
 } from './admissions-crm-configuration-utils';
 
 import type { EnrollmentSettingsPanel } from '../admissions-crm/enrollment-workspace-state';
+import type {
+  AdmissionCrmCycleForm as CycleForm,
+  AdmissionCrmTemplateForm as TemplateForm,
+  AdmissionCrmPipelineStageForm as PipelineStageForm,
+  AdmissionCrmMessageTemplateForm as MessageTemplateForm,
+  AdmissionCrmCommunicationProviderForm as CommunicationProviderForm,
+} from './admissions-crm-configuration-model';
 
 export type AdmissionsCrmConfigurationFocusSection =
   | 'journey'
@@ -129,76 +145,6 @@ const emptyCommunicationProviders: AdmissionCrmCommunicationProviderDto[] = [];
 const getSettingsErrorMessage = (error: unknown, fallback: string) => {
   const message = (error as any)?.data?.error?.message || (error as any)?.data?.message;
   return typeof message === 'string' && message.trim() ? message : fallback;
-};
-
-type TemplateForm = {
-  templateName: string;
-  description: string;
-  channel: AdmissionInquiryChannel;
-  isPublic: boolean;
-  isActive: boolean;
-  consentText: string;
-  privacyNoticeUrl: string;
-  fields: AdmissionCrmFormFieldDto[];
-  localizations: Record<
-    'gu' | 'hi',
-    { templateName: string; description: string; consentText: string }
-  >;
-};
-
-type MessageTemplateForm = {
-  templateName: string;
-  channel: AdmissionCrmMessageChannel;
-  purpose: string;
-  subject: string;
-  body: string;
-  variables: string;
-};
-
-type CommunicationProviderForm = {
-  isEnabled: boolean;
-  providerName: string;
-  senderId: string;
-  settingsJson: string;
-  webhookUrl: string;
-};
-
-type CycleForm = {
-  cycleName: string;
-  isActive: boolean;
-  registrationFormRequiredBeforeExam: boolean;
-  staleAfterDays: number;
-  archiveAfterDays: number;
-  defaultLeadSlaHours: number;
-  slaPolicy: {
-    timeZoneId: string;
-    workingDays: number[];
-    workingDayStartHour: number;
-    workingDayEndHour: number;
-    holidays: string[];
-    escalationAfterHours: number;
-    escalationOwnerUserId?: string | null;
-  };
-  activationCancellationWindowDays: number;
-  defaultExamPassingPercentage: number;
-  meritRankingMode: AdmissionCrmMeritRankingMode;
-  examReadinessFields: AdmissionCrmExamReadinessField;
-  leadScoringRules: AdmissionCrmLeadScoringRulesDto;
-  leadRoutingSettings: AdmissionCrmLeadRoutingSettingsDto;
-  journeyRules: AdmissionCrmJourneyRuleDto[];
-  applicantChecklist: AdmissionCrmApplicantChecklistItemDto[];
-  channelSettings: AdmissionCrmChannelSettingDto[];
-  notes: string;
-};
-
-type PipelineStageForm = {
-  stageName: string;
-  displayOrder: number;
-  isEnabled: boolean;
-  colorHex: string;
-  slaTargetHours: string;
-  ownerResponsibility: string;
-  allowedNextStages: AdmissionInquiryStage[];
 };
 
 const pipelineStageOptions = [
@@ -225,6 +171,8 @@ const slaWorkingDayOptions = [
 ];
 
 const createEmptyPipelineStageForm = (): PipelineStageForm => ({
+  stageKey: '',
+  baseSystemStage: AdmissionInquiryStage.FollowUp,
   stageName: '',
   displayOrder: 0,
   isEnabled: true,
@@ -237,6 +185,8 @@ const createEmptyPipelineStageForm = (): PipelineStageForm => ({
 const buildPipelineStageFormFromStage = (
   stage: AdmissionCrmPipelineStageDto
 ): PipelineStageForm => ({
+  stageKey: stage.stageKey || stage.systemStage.toString(),
+  baseSystemStage: stage.baseSystemStage ?? stage.systemStage,
   stageName: stage.stageName,
   displayOrder: stage.displayOrder,
   isEnabled: stage.isEnabled,
@@ -349,6 +299,7 @@ const defaultCycleForm: CycleForm = {
   cycleName: '',
   isActive: true,
   registrationFormRequiredBeforeExam: false,
+  entranceExamRequired: true,
   staleAfterDays: 30,
   archiveAfterDays: 60,
   defaultLeadSlaHours: 24,
@@ -369,6 +320,10 @@ const defaultCycleForm: CycleForm = {
   journeyRules: [],
   applicantChecklist: [],
   channelSettings: buildDefaultChannelSettings(),
+  journeyLocked: false,
+  journeyLockedAt: null,
+  journeyLockedByUserId: null,
+  journeyLockReason: null,
   notes: '',
 };
 
@@ -397,7 +352,7 @@ const templateSystemFieldOptions = [
   { value: 'PrimaryContactNo', label: 'Primary contact number' },
   { value: 'Email', label: 'Email' },
   { value: 'AdmissionIntent', label: 'Admission intent' },
-  { value: 'TargetStandardId', label: 'Target standard ID' },
+  { value: 'TargetStandardId', label: 'Target class' },
   { value: 'DesiredClassName', label: 'Desired class text' },
   { value: 'CampaignName', label: 'Campaign name' },
   { value: 'CampusBranchName', label: 'Campus branch' },
@@ -619,6 +574,7 @@ const buildCycleFormFromConfiguration = (
   cycleName: configuration.cycleName,
   isActive: configuration.isActive,
   registrationFormRequiredBeforeExam: configuration.registrationFormRequiredBeforeExam,
+  entranceExamRequired: configuration.entranceExamRequired ?? true,
   staleAfterDays: configuration.staleAfterDays,
   archiveAfterDays: configuration.archiveAfterDays,
   defaultLeadSlaHours: configuration.defaultLeadSlaHours,
@@ -643,6 +599,10 @@ const buildCycleFormFromConfiguration = (
   journeyRules: configuration.journeyRules ?? [],
   applicantChecklist: configuration.applicantChecklist ?? [],
   channelSettings: mergeChannelSettings(configuration.channelSettings),
+  journeyLocked: configuration.journeyLocked ?? false,
+  journeyLockedAt: configuration.journeyLockedAt ?? null,
+  journeyLockedByUserId: configuration.journeyLockedByUserId ?? null,
+  journeyLockReason: configuration.journeyLockReason ?? null,
   notes: configuration.notes || '',
 });
 
@@ -674,6 +634,44 @@ const AdmissionsCrmConfiguration = ({
   const [messagePreviewVariablesText, setMessagePreviewVariablesText] = useState('');
   const [providerForms, setProviderForms] = useState<Record<number, CommunicationProviderForm>>({});
   const lastProviderBaselineRef = useRef<string | null>(null);
+  const [staffSearch, setStaffSearch] = useState('');
+  const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
+  const [customStageOpen, setCustomStageOpen] = useState(false);
+  const [customStageForm, setCustomStageForm] = useState<PipelineStageForm>(() =>
+    createEmptyPipelineStageForm()
+  );
+  const [journeyLockReason, setJourneyLockReason] = useState('');
+  const [inquirySourceOpen, setInquirySourceOpen] = useState(false);
+  const [editingInquirySourceId, setEditingInquirySourceId] = useState<string | null>(null);
+  const [inquirySourceForm, setInquirySourceForm] = useState({
+    code: '',
+    displayName: '',
+    description: '',
+    allowedChannels: inquiryChannelOptions,
+    displayOrder: 100,
+    isRoutingEligible: true,
+  });
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [staffSearch]);
+
+  const configuredStaffIds = useMemo(
+    () =>
+      [
+        cycleForm.leadRoutingSettings.defaultOwnerUserId,
+        ...(cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []),
+        ...cycleForm.leadRoutingSettings.rules.map((rule) => rule.ownerUserId),
+        ...cycleForm.channelSettings.map((setting) => setting.defaultOwnerUserId),
+        ...cycleForm.journeyRules.map((rule) => rule.ownerUserId),
+        cycleForm.slaPolicy.escalationOwnerUserId,
+      ]
+        .filter((id): id is string => Boolean(id))
+        .filter((id, index, ids) => ids.indexOf(id) === index)
+        .join(','),
+    [cycleForm]
+  );
 
   const needsCycleConfiguration =
     (focusSection === 'journey' && focusPanel === 'cycle') ||
@@ -761,7 +759,16 @@ const AdmissionsCrmConfiguration = ({
     isLoading: isUsersLoading,
     isFetching: isUsersFetching,
     refetch: refetchUsers,
-  } = useGetAdmissionCrmStaffQuery({ maxResultCount: 25 }, { skip: !needsStaff });
+  } = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedStaffSearch || undefined,
+      ids: configuredStaffIds || undefined,
+      maxResultCount: 25,
+      academicYearId,
+      ownerOnly: true,
+    },
+    { skip: !needsStaff }
+  );
   const {
     data: communicationProviders,
     isError: isCommunicationProvidersError,
@@ -788,6 +795,16 @@ const AdmissionsCrmConfiguration = ({
     useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation();
   const [updatePipelineStage, { isLoading: isUpdatingPipelineStage }] =
     useUpdateAdmissionCrmPipelineStageMutation();
+  const [createPipelineStage, { isLoading: isCreatingPipelineStage }] =
+    useCreateAdmissionCrmPipelineStageMutation();
+  const [lockJourney, { isLoading: isLockingJourney }] = useLockAdmissionCrmJourneyMutation();
+  const [unlockJourney, { isLoading: isUnlockingJourney }] = useUnlockAdmissionCrmJourneyMutation();
+  const [createInquirySource, { isLoading: isCreatingInquirySource }] =
+    useCreateAdmissionCrmInquirySourceMutation();
+  const [updateInquirySource, { isLoading: isUpdatingInquirySource }] =
+    useUpdateAdmissionCrmInquirySourceMutation();
+  const [setInquirySourceStatus, { isLoading: isUpdatingInquirySourceStatus }] =
+    useSetAdmissionCrmInquirySourceStatusMutation();
   const [createMessageTemplate, { isLoading: isCreatingMessageTemplate }] =
     useCreateAdmissionCrmMessageTemplateMutation();
   const [updateMessageTemplateStatus, { isLoading: isUpdatingMessageTemplateStatus }] =
@@ -1172,6 +1189,7 @@ const AdmissionsCrmConfiguration = ({
     cycleName: cycleForm.cycleName,
     isActive: cycleForm.isActive,
     registrationFormRequiredBeforeExam: cycleForm.registrationFormRequiredBeforeExam,
+    entranceExamRequired: cycleForm.entranceExamRequired,
     staleAfterDays: cycleForm.staleAfterDays,
     archiveAfterDays: cycleForm.archiveAfterDays,
     defaultLeadSlaHours: cycleForm.defaultLeadSlaHours,
@@ -1521,20 +1539,169 @@ const AdmissionsCrmConfiguration = ({
     try {
       await updatePipelineStage({
         stageId,
-        body: {
-          stageName: stageForm.stageName,
-          displayOrder: stageForm.displayOrder,
-          isEnabled: stageForm.isEnabled,
-          colorHex,
-          slaTargetHours,
-          ownerResponsibility: stageForm.ownerResponsibility.trim(),
-          allowedNextStages: stageForm.allowedNextStages,
-        },
+        body: cycleForm.journeyLocked
+          ? {
+              stageName: stageForm.stageName,
+              colorHex,
+              slaTargetHours,
+              ownerResponsibility: stageForm.ownerResponsibility.trim(),
+            }
+          : {
+              stageName: stageForm.stageName,
+              displayOrder: stageForm.displayOrder,
+              isEnabled: stageForm.isEnabled,
+              colorHex,
+              slaTargetHours,
+              ownerResponsibility: stageForm.ownerResponsibility.trim(),
+              allowedNextStages: stageForm.allowedNextStages,
+            },
       }).unwrap();
       shikshaMitraToast.success({ message: 'Pipeline stage updated.' });
     } catch (error) {
       const message = getSettingsErrorMessage(error, 'Unable to update pipeline stage.');
       shikshaMitraToast.error({ message });
+    }
+  };
+
+  const validateStageForm = (stageForm: PipelineStageForm) => {
+    const stageKey = stageForm.stageKey.trim().toUpperCase();
+    if (!stageKey) return 'Stage key is required.';
+    if (!/^[A-Z0-9_-]+$/.test(stageKey)) {
+      return 'Stage key can use letters, numbers, hyphen, and underscore only.';
+    }
+    if (!stageForm.stageName.trim()) return 'Stage name is required.';
+    if (stages.some((stage) => stage.stageKey?.toUpperCase() === stageKey)) {
+      return 'Stage key already exists.';
+    }
+    return null;
+  };
+
+  const handleCreateCustomStage = async () => {
+    if (!academicYearId) return;
+    const validationMessage = validateStageForm(customStageForm);
+    if (validationMessage) {
+      shikshaMitraToast.error({ message: validationMessage });
+      return;
+    }
+
+    const slaTargetHours =
+      customStageForm.slaTargetHours.trim() === '' ? 0 : Number(customStageForm.slaTargetHours);
+    try {
+      await createPipelineStage({
+        academicYearId,
+        body: {
+          stageKey: customStageForm.stageKey.trim().toUpperCase(),
+          baseSystemStage: customStageForm.baseSystemStage,
+          systemStage: customStageForm.baseSystemStage,
+          stageName: customStageForm.stageName.trim(),
+          displayOrder: Number(customStageForm.displayOrder) || 0,
+          isEnabled: customStageForm.isEnabled,
+          colorHex: customStageForm.colorHex.trim(),
+          slaTargetHours,
+          ownerResponsibility: customStageForm.ownerResponsibility.trim(),
+          allowedNextStages: customStageForm.allowedNextStages,
+        },
+      }).unwrap();
+      setCustomStageOpen(false);
+      setCustomStageForm(createEmptyPipelineStageForm());
+      shikshaMitraToast.success({ message: 'Custom stage added.' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getSettingsErrorMessage(error, 'Unable to add custom stage.'),
+      });
+    }
+  };
+
+  const handleToggleJourneyLock = async (lock: boolean) => {
+    if (!academicYearId) return;
+    if (!lock && !journeyLockReason.trim()) {
+      shikshaMitraToast.error({ message: 'Enter a reason before unlocking the journey.' });
+      return;
+    }
+
+    try {
+      const action = lock ? lockJourney : unlockJourney;
+      await action({
+        academicYearId,
+        body: { reason: journeyLockReason.trim() || undefined },
+      }).unwrap();
+      setJourneyLockReason('');
+      shikshaMitraToast.success({ message: lock ? 'Journey locked.' : 'Journey unlocked.' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getSettingsErrorMessage(
+          error,
+          lock ? 'Unable to lock journey.' : 'Unable to unlock journey.'
+        ),
+      });
+    }
+  };
+
+  const openInquirySourceDialog = (sourceId?: string) => {
+    const source = sourceId ? inquirySources?.items.find((item) => item.id === sourceId) : null;
+    setEditingInquirySourceId(source?.id ?? null);
+    setInquirySourceForm(
+      source
+        ? {
+            code: source.code,
+            displayName: source.displayName,
+            description: source.description || '',
+            allowedChannels: source.allowedChannels,
+            displayOrder: source.displayOrder,
+            isRoutingEligible: source.isRoutingEligible,
+          }
+        : {
+            code: '',
+            displayName: '',
+            description: '',
+            allowedChannels: inquiryChannelOptions,
+            displayOrder: ((inquirySources?.items.length ?? 0) + 1) * 10,
+            isRoutingEligible: true,
+          }
+    );
+    setInquirySourceOpen(true);
+  };
+
+  const handleSaveInquirySource = async () => {
+    if (!academicYearId) return;
+    const code = inquirySourceForm.code.trim().toUpperCase();
+    if (!/^[A-Z0-9_-]+$/.test(code)) {
+      shikshaMitraToast.error({
+        message: 'Source code can use letters, numbers, hyphen, and underscore only.',
+      });
+      return;
+    }
+    if (!inquirySourceForm.displayName.trim()) {
+      shikshaMitraToast.error({ message: 'Display name is required.' });
+      return;
+    }
+    if (!inquirySourceForm.allowedChannels.length) {
+      shikshaMitraToast.error({ message: 'Select at least one allowed channel.' });
+      return;
+    }
+
+    const body = {
+      ...inquirySourceForm,
+      code,
+      displayName: inquirySourceForm.displayName.trim(),
+      description: inquirySourceForm.description.trim() || null,
+      displayOrder: Number(inquirySourceForm.displayOrder) || 0,
+    };
+
+    try {
+      if (editingInquirySourceId) {
+        await updateInquirySource({ sourceId: editingInquirySourceId, body }).unwrap();
+      } else {
+        await createInquirySource({ academicYearId, body }).unwrap();
+      }
+      setInquirySourceOpen(false);
+      shikshaMitraToast.success({
+        message: editingInquirySourceId ? 'Inquiry source updated.' : 'Inquiry source added.',
+      });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getSettingsErrorMessage(error, 'Unable to save inquiry source.'),
+      });
     }
   };
 
@@ -1547,6 +1714,12 @@ const AdmissionsCrmConfiguration = ({
   const handleOpenEditTemplate = (template: AdmissionCrmFormTemplateDto) => {
     setEditingTemplateId(template.id);
     setTemplateForm(buildTemplateFormFromTemplate(template));
+    admissionsCrmConfigurationDialog.onTrue();
+  };
+
+  const handleOpenCreateTemplate = () => {
+    setEditingTemplateId(null);
+    setTemplateForm(createDefaultTemplateForm());
     admissionsCrmConfigurationDialog.onTrue();
   };
 
@@ -2205,7 +2378,9 @@ const AdmissionsCrmConfiguration = ({
             <Stack spacing={1.25}>
               <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} justifyContent="space-between">
                 <Box>
-                  <Typography variant="subtitle1">Admission Cycle</Typography>
+                  <Typography component="h2" variant="subtitle1">
+                    Admission Cycle
+                  </Typography>
                   <Typography variant="caption" color="text.secondary">
                     School defaults can be applied to the current form or saved from it.
                   </Typography>
@@ -2234,423 +2409,522 @@ const AdmissionsCrmConfiguration = ({
                 </Stack>
               </Stack>
               <Divider />
-              <TextField
-                size="small"
-                label="Cycle name"
-                value={cycleForm.cycleName}
-                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                onChange={(event) => handleCycleChange('cycleName', event.target.value)}
-              />
-              <Typography variant="subtitle2">SLA working calendar</Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Time zone"
-                  value={cycleForm.slaPolicy.timeZoneId}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: { ...current.slaPolicy, timeZoneId: event.target.value },
-                    }))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Working day starts"
-                  inputProps={{ min: 0, max: 23 }}
-                  value={cycleForm.slaPolicy.workingDayStartHour}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: {
-                        ...current.slaPolicy,
-                        workingDayStartHour: Number(event.target.value),
-                      },
-                    }))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Working day ends"
-                  inputProps={{ min: 1, max: 24 }}
-                  value={cycleForm.slaPolicy.workingDayEndHour}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: {
-                        ...current.slaPolicy,
-                        workingDayEndHour: Number(event.target.value),
-                      },
-                    }))
-                  }
-                />
-              </Stack>
-              <Stack direction="row" gap={0.5} flexWrap="wrap">
-                {slaWorkingDayOptions.map((day) => (
-                  <FormControlLabel
-                    key={day.value}
-                    label={day.label}
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={cycleForm.slaPolicy.workingDays.includes(day.value)}
+              <Accordion defaultExpanded disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box>
+                    <Typography variant="subtitle2">Basics</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Name and identify this admission cycle.
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Cycle name"
+                    value={cycleForm.cycleName}
+                    disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                    onChange={(event) => handleCycleChange('cycleName', event.target.value)}
+                  />
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box>
+                    <Typography variant="subtitle2">Working calendar</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Working days, hours, holidays, and escalation ownership.
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ display: 'grid', gap: 1.25 }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Time zone"
+                      value={cycleForm.slaPolicy.timeZoneId}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: { ...current.slaPolicy, timeZoneId: event.target.value },
+                        }))
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Working day starts"
+                      inputProps={{ min: 0, max: 23 }}
+                      value={cycleForm.slaPolicy.workingDayStartHour}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: {
+                            ...current.slaPolicy,
+                            workingDayStartHour: Number(event.target.value),
+                          },
+                        }))
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Working day ends"
+                      inputProps={{ min: 1, max: 24 }}
+                      value={cycleForm.slaPolicy.workingDayEndHour}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: {
+                            ...current.slaPolicy,
+                            workingDayEndHour: Number(event.target.value),
+                          },
+                        }))
+                      }
+                    />
+                  </Stack>
+                  <Stack direction="row" gap={1} flexWrap="wrap">
+                    {slaWorkingDayOptions.map((day) => (
+                      <FormControlLabel
+                        key={day.value}
+                        label={day.label}
+                        control={
+                          <Checkbox
+                            size="small"
+                            checked={cycleForm.slaPolicy.workingDays.includes(day.value)}
+                            onChange={(event) =>
+                              setCycleForm((current) => ({
+                                ...current,
+                                slaPolicy: {
+                                  ...current.slaPolicy,
+                                  workingDays: event.target.checked
+                                    ? [...current.slaPolicy.workingDays, day.value]
+                                    : current.slaPolicy.workingDays.filter(
+                                        (value) => value !== day.value
+                                      ),
+                                },
+                              }))
+                            }
+                          />
+                        }
+                      />
+                    ))}
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Holidays"
+                      helperText="Comma-separated dates in YYYY-MM-DD format"
+                      value={cycleForm.slaPolicy.holidays.join(', ')}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: {
+                            ...current.slaPolicy,
+                            holidays: event.target.value
+                              .split(',')
+                              .map((value) => value.trim())
+                              .filter(Boolean),
+                          },
+                        }))
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Escalate after additional hours"
+                      inputProps={{ min: 0, max: 720 }}
+                      value={cycleForm.slaPolicy.escalationAfterHours}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: {
+                            ...current.slaPolicy,
+                            escalationAfterHours: Number(event.target.value),
+                          },
+                        }))
+                      }
+                    />
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Escalation owner</InputLabel>
+                      <Select
+                        label="Escalation owner"
+                        inputProps={{ 'aria-label': 'Escalation owner' }}
+                        value={cycleForm.slaPolicy.escalationOwnerUserId || ''}
                         onChange={(event) =>
                           setCycleForm((current) => ({
                             ...current,
                             slaPolicy: {
                               ...current.slaPolicy,
-                              workingDays: event.target.checked
-                                ? [...current.slaPolicy.workingDays, day.value]
-                                : current.slaPolicy.workingDays.filter(
-                                    (value) => value !== day.value
-                                  ),
+                              escalationOwnerUserId: event.target.value || null,
                             },
                           }))
                         }
-                      />
-                    }
-                  />
-                ))}
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Holidays"
-                  helperText="Comma-separated dates in YYYY-MM-DD format"
-                  value={cycleForm.slaPolicy.holidays.join(', ')}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: {
-                        ...current.slaPolicy,
-                        holidays: event.target.value
-                          .split(',')
-                          .map((value) => value.trim())
-                          .filter(Boolean),
-                      },
-                    }))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Escalate after additional hours"
-                  inputProps={{ min: 0, max: 720 }}
-                  value={cycleForm.slaPolicy.escalationAfterHours}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: {
-                        ...current.slaPolicy,
-                        escalationAfterHours: Number(event.target.value),
-                      },
-                    }))
-                  }
-                />
-                <FormControl fullWidth size="small">
-                  <InputLabel>Escalation owner</InputLabel>
-                  <Select
-                    label="Escalation owner"
-                    inputProps={{ 'aria-label': 'Escalation owner' }}
-                    value={cycleForm.slaPolicy.escalationOwnerUserId || ''}
-                    onChange={(event) =>
-                      setCycleForm((current) => ({
-                        ...current,
-                        slaPolicy: {
-                          ...current.slaPolicy,
-                          escalationOwnerUserId: event.target.value || null,
-                        },
-                      }))
-                    }
-                  >
-                    <MenuItem value="">Lead owner</MenuItem>
-                    {ownerOptions.map((owner) => (
-                      <MenuItem key={owner.id} value={owner.id}>
-                        {getCrmUserOptionLabel(owner)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Lead SLA hours"
-                  value={cycleForm.defaultLeadSlaHours}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange('defaultLeadSlaHours', Number(event.target.value))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Passing %"
-                  value={cycleForm.defaultExamPassingPercentage}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange('defaultExamPassingPercentage', Number(event.target.value))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Activation cancellation window (days)"
-                  inputProps={{ min: 0, max: 90 }}
-                  value={cycleForm.activationCancellationWindowDays}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange(
-                      'activationCancellationWindowDays',
-                      Number(event.target.value)
-                    )
-                  }
-                />
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Stale after days"
-                  value={cycleForm.staleAfterDays}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange('staleAfterDays', Number(event.target.value))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Archive after days"
-                  value={cycleForm.archiveAfterDays}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange('archiveAfterDays', Number(event.target.value))
-                  }
-                />
-              </Stack>
-              <FormControl fullWidth size="small">
-                <InputLabel>Merit ranking</InputLabel>
-                <Select
-                  label="Merit ranking"
-                  inputProps={{ 'aria-label': 'Merit ranking' }}
-                  value={cycleForm.meritRankingMode}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange(
-                      'meritRankingMode',
-                      Number(event.target.value) as AdmissionCrmMeritRankingMode
-                    )
-                  }
-                >
-                  {Object.entries(meritModeLabel).map(([value, label]) => (
-                    <MenuItem key={value} value={Number(value)}>
-                      {label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={cycleForm.isActive}
+                      >
+                        <MenuItem value="">Lead owner</MenuItem>
+                        {ownerOptions.map((owner) => (
+                          <MenuItem key={owner.id} value={owner.id}>
+                            {getCrmUserOptionLabel(owner)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box>
+                    <Typography variant="subtitle2">Evaluation and automation</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Service targets, passing score, inactivity, and ranking defaults.
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ display: 'grid', gap: 1.25 }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Lead SLA hours"
+                      value={cycleForm.defaultLeadSlaHours}
                       disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                      onChange={(event) => handleCycleChange('isActive', event.target.checked)}
+                      onChange={(event) =>
+                        handleCycleChange('defaultLeadSlaHours', Number(event.target.value))
+                      }
                     />
-                  }
-                  label="Active"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={cycleForm.registrationFormRequiredBeforeExam}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Passing %"
+                      value={cycleForm.defaultExamPassingPercentage}
                       disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
                       onChange={(event) =>
                         handleCycleChange(
-                          'registrationFormRequiredBeforeExam',
-                          event.target.checked
+                          'defaultExamPassingPercentage',
+                          Number(event.target.value)
                         )
                       }
                     />
-                  }
-                  label="Registration before exam"
-                />
-              </Stack>
-              <Stack spacing={0.5}>
-                <Typography variant="subtitle2">Exam readiness</Typography>
-                <Stack direction="row" gap={0.5} flexWrap="wrap">
-                  {readinessOptions.map((option) => (
-                    <FormControlLabel
-                      key={option.value}
-                      sx={{ mr: 1 }}
-                      control={
-                        <Checkbox
-                          size="small"
-                          checked={(cycleForm.examReadinessFields & option.value) === option.value}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={() => handleCycleReadinessToggle(option.value)}
-                        />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Activation cancellation window (days)"
+                      inputProps={{ min: 0, max: 90 }}
+                      value={cycleForm.activationCancellationWindowDays}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange(
+                          'activationCancellationWindowDays',
+                          Number(event.target.value)
+                        )
                       }
-                      label={option.label}
                     />
-                  ))}
-                </Stack>
-              </Stack>
-              <Stack spacing={0.75}>
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  justifyContent="space-between"
-                  gap={1}
-                  alignItems={{ sm: 'center' }}
-                >
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Stale after days"
+                      value={cycleForm.staleAfterDays}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange('staleAfterDays', Number(event.target.value))
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Archive after days"
+                      value={cycleForm.archiveAfterDays}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange('archiveAfterDays', Number(event.target.value))
+                      }
+                    />
+                  </Stack>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Merit ranking</InputLabel>
+                    <Select
+                      label="Merit ranking"
+                      inputProps={{ 'aria-label': 'Merit ranking' }}
+                      value={cycleForm.meritRankingMode}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange(
+                          'meritRankingMode',
+                          Number(event.target.value) as AdmissionCrmMeritRankingMode
+                        )
+                      }
+                    >
+                      {Object.entries(meritModeLabel).map(([value, label]) => (
+                        <MenuItem key={value} value={Number(value)}>
+                          {label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
                   <Box>
-                    <Typography variant="subtitle2">Applicant checklist</Typography>
+                    <Typography variant="subtitle2">Activation safeguards</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Show required and optional items on the secure status link.
+                      Cycle availability and registration-before-exam controls.
                     </Typography>
                   </Box>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                    onClick={handleAddApplicantChecklistItem}
-                  >
-                    Add Item
-                  </Button>
-                </Stack>
-                <Box sx={{ display: 'grid', gap: 1 }}>
-                  {cycleForm.applicantChecklist.map((item, index) => (
-                    <Box
-                      key={`${item.key}-${index}`}
-                      sx={{
-                        border: 1,
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        p: 1,
-                        display: 'grid',
-                        gap: 1,
-                      }}
-                    >
-                      <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Label"
-                          value={item.label}
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={cycleForm.isActive}
                           disabled={
                             !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
                           }
-                          onChange={(event) =>
-                            handleApplicantChecklistChange(index, 'label', event.target.value)
-                          }
+                          onChange={(event) => handleCycleChange('isActive', event.target.checked)}
                         />
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Key"
-                          value={item.key}
+                      }
+                      label="Active"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={cycleForm.registrationFormRequiredBeforeExam}
                           disabled={
                             !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
                           }
                           onChange={(event) =>
-                            handleApplicantChecklistChange(index, 'key', event.target.value)
-                          }
-                        />
-                      </Stack>
-                      <Stack
-                        direction={{ xs: 'column', md: 'row' }}
-                        gap={1}
-                        alignItems={{ md: 'center' }}
-                      >
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Details"
-                          value={item.details ?? ''}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={(event) =>
-                            handleApplicantChecklistChange(index, 'details', event.target.value)
-                          }
-                        />
-                        <TextField
-                          size="small"
-                          type="number"
-                          label="Order"
-                          value={item.displayOrder}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={(event) =>
-                            handleApplicantChecklistChange(
-                              index,
-                              'displayOrder',
-                              Number(event.target.value)
+                            handleCycleChange(
+                              'registrationFormRequiredBeforeExam',
+                              event.target.checked
                             )
                           }
                         />
+                      }
+                      label="Registration before exam"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={cycleForm.entranceExamRequired}
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onChange={(event) =>
+                            handleCycleChange('entranceExamRequired', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Entrance exam required"
+                    />
+                  </Stack>
+                  {!cycleForm.entranceExamRequired && (
+                    <Alert severity="warning" sx={{ mt: 1 }}>
+                      Exam scheduling is disabled for this cycle. Applicants use the exam-waived
+                      registration and admission readiness path.
+                    </Alert>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box>
+                    <Typography variant="subtitle2">Readiness and applicant checklist</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Required inquiry information and the family-facing checklist.
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ display: 'grid', gap: 1.25 }}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="subtitle2">Exam readiness</Typography>
+                    <Stack direction="row" gap={1} flexWrap="wrap">
+                      {readinessOptions.map((option) => (
                         <FormControlLabel
+                          key={option.value}
+                          sx={{ mr: 1 }}
                           control={
-                            <Switch
-                              checked={item.isRequired}
+                            <Checkbox
+                              size="small"
+                              checked={
+                                (cycleForm.examReadinessFields & option.value) === option.value
+                              }
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={() => handleCycleReadinessToggle(option.value)}
+                            />
+                          }
+                          label={option.label}
+                        />
+                      ))}
+                    </Stack>
+                  </Stack>
+                  <Stack spacing={0.75}>
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      justifyContent="space-between"
+                      gap={1}
+                      alignItems={{ sm: 'center' }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle2">Applicant checklist</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Show required and optional items on the secure status link.
+                        </Typography>
+                      </Box>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={
+                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                        }
+                        onClick={handleAddApplicantChecklistItem}
+                      >
+                        Add Item
+                      </Button>
+                    </Stack>
+                    <Box sx={{ display: 'grid', gap: 1 }}>
+                      {cycleForm.applicantChecklist.map((item, index) => (
+                        <Box
+                          key={`${item.key}-${index}`}
+                          sx={{
+                            border: 1,
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            p: 1,
+                            display: 'grid',
+                            gap: 1,
+                          }}
+                        >
+                          <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Label"
+                              value={item.label}
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={(event) =>
+                                handleApplicantChecklistChange(index, 'label', event.target.value)
+                              }
+                            />
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Key"
+                              value={item.key}
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={(event) =>
+                                handleApplicantChecklistChange(index, 'key', event.target.value)
+                              }
+                            />
+                          </Stack>
+                          <Stack
+                            direction={{ xs: 'column', md: 'row' }}
+                            gap={1}
+                            alignItems={{ md: 'center' }}
+                          >
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Details"
+                              value={item.details ?? ''}
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={(event) =>
+                                handleApplicantChecklistChange(index, 'details', event.target.value)
+                              }
+                            />
+                            <TextField
+                              size="small"
+                              type="number"
+                              label="Order"
+                              value={item.displayOrder}
                               disabled={
                                 !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
                               }
                               onChange={(event) =>
                                 handleApplicantChecklistChange(
                                   index,
-                                  'isRequired',
-                                  event.target.checked
+                                  'displayOrder',
+                                  Number(event.target.value)
                                 )
                               }
                             />
-                          }
-                          label="Required"
-                        />
-                        <Button
-                          size="small"
-                          color="error"
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onClick={() => handleRemoveApplicantChecklistItem(index)}
-                        >
-                          Remove
-                        </Button>
-                      </Stack>
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={item.isRequired}
+                                  disabled={
+                                    !academicYearId ||
+                                    isUpdatingCycle ||
+                                    isUpdatingSchoolDefaultCycle
+                                  }
+                                  onChange={(event) =>
+                                    handleApplicantChecklistChange(
+                                      index,
+                                      'isRequired',
+                                      event.target.checked
+                                    )
+                                  }
+                                />
+                              }
+                              label="Required"
+                            />
+                            <Button
+                              size="small"
+                              color="error"
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onClick={() => handleRemoveApplicantChecklistItem(index)}
+                            >
+                              Remove
+                            </Button>
+                          </Stack>
+                        </Box>
+                      ))}
+                      {!cycleForm.applicantChecklist.length && (
+                        <Typography variant="body2" color="text.secondary">
+                          No applicant checklist items configured
+                        </Typography>
+                      )}
                     </Box>
-                  ))}
-                  {!cycleForm.applicantChecklist.length && (
-                    <Typography variant="body2" color="text.secondary">
-                      No applicant checklist items configured
-                    </Typography>
-                  )}
-                </Box>
-              </Stack>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
               <LoadingButton
                 size="small"
                 variant="contained"
                 loading={isUpdatingCycle}
                 disabled={!academicYearId || isUpdatingSchoolDefaultCycle}
                 onClick={handleSaveCycle}
-                sx={{ alignSelf: 'flex-start' }}
+                sx={{
+                  alignSelf: 'flex-start',
+                  position: 'sticky',
+                  bottom: 16,
+                  zIndex: 1,
+                  boxShadow: 2,
+                }}
               >
                 Save Cycle
               </LoadingButton>
@@ -2662,18 +2936,79 @@ const AdmissionsCrmConfiguration = ({
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
             <Stack spacing={1.25}>
               <Box>
-                <Typography variant="subtitle1">Inquiry Channels</Typography>
+                <Typography component="h2" variant="subtitle1">
+                  Inquiry Channels
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Enable intake channels and set cycle defaults for source, owner, form, and
                   acknowledgement.
                 </Typography>
               </Box>
               <Divider />
+              <Stack spacing={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  gap={1}
+                >
+                  <Box>
+                    <Typography variant="subtitle2">Inquiry Sources</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Maintain school-specific sources used by channel defaults and lead routing.
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Add />}
+                    disabled={!academicYearId}
+                    onClick={() => openInquirySourceDialog()}
+                  >
+                    Add Custom Inquiry Source
+                  </Button>
+                </Stack>
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  {(inquirySources?.items ?? []).map((source) => (
+                    <Chip
+                      key={source.id}
+                      size="small"
+                      label={`${source.displayName}${source.isActive ? '' : ' (inactive)'}`}
+                      color={source.isActive ? 'default' : 'warning'}
+                      variant="outlined"
+                      onClick={() => openInquirySourceDialog(source.id)}
+                      onDelete={() =>
+                        setInquirySourceStatus({
+                          sourceId: source.id,
+                          body: {
+                            isActive: !source.isActive,
+                            reason: source.isActive
+                              ? 'Disabled from admissions settings.'
+                              : undefined,
+                          },
+                        })
+                      }
+                      deleteIcon={
+                        <Typography component="span" variant="caption">
+                          {source.isActive ? 'Disable' : 'Enable'}
+                        </Typography>
+                      }
+                    />
+                  ))}
+                  {!inquirySources?.items?.length && (
+                    <Typography variant="body2" color="text.secondary">
+                      No inquiry sources configured.
+                    </Typography>
+                  )}
+                </Stack>
+              </Stack>
+              <Divider />
               <Box sx={{ display: 'grid', gap: 1 }}>
                 {channelSettings.map((setting) => {
                   const templatesForChannel = formTemplates.filter(
                     (template) => template.channel === setting.channel
                   );
+                  const channelFieldId = `inquiry-channel-${setting.channel}`;
 
                   return (
                     <Box
@@ -2731,8 +3066,12 @@ const AdmissionsCrmConfiguration = ({
                       </Stack>
                       <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Default Inquiry Source</InputLabel>
+                          <InputLabel id={`${channelFieldId}-source-label`}>
+                            Default Inquiry Source
+                          </InputLabel>
                           <Select
+                            id={`${channelFieldId}-source`}
+                            labelId={`${channelFieldId}-source-label`}
                             label="Default Inquiry Source"
                             value={setting.defaultInquirySourceId ?? ''}
                             disabled={
@@ -2756,8 +3095,12 @@ const AdmissionsCrmConfiguration = ({
                           </Select>
                         </FormControl>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Default owner</InputLabel>
+                          <InputLabel id={`${channelFieldId}-owner-label`}>
+                            Default owner
+                          </InputLabel>
                           <Select
+                            id={`${channelFieldId}-owner`}
+                            labelId={`${channelFieldId}-owner-label`}
                             label="Default owner"
                             value={setting.defaultOwnerUserId ?? ''}
                             disabled={
@@ -2783,8 +3126,12 @@ const AdmissionsCrmConfiguration = ({
                       </Stack>
                       <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Default form template</InputLabel>
+                          <InputLabel id={`${channelFieldId}-form-label`}>
+                            Default form template
+                          </InputLabel>
                           <Select
+                            id={`${channelFieldId}-form`}
+                            labelId={`${channelFieldId}-form-label`}
                             label="Default form template"
                             value={setting.defaultFormTemplateId ?? ''}
                             disabled={
@@ -2807,8 +3154,12 @@ const AdmissionsCrmConfiguration = ({
                           </Select>
                         </FormControl>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Acknowledgement template</InputLabel>
+                          <InputLabel id={`${channelFieldId}-acknowledgement-label`}>
+                            Acknowledgement template
+                          </InputLabel>
                           <Select
+                            id={`${channelFieldId}-acknowledgement`}
+                            labelId={`${channelFieldId}-acknowledgement-label`}
                             label="Acknowledgement template"
                             value={setting.defaultAcknowledgementTemplateId ?? ''}
                             disabled={
@@ -2852,7 +3203,55 @@ const AdmissionsCrmConfiguration = ({
         {focusSection === 'journey' && (!focusPanel || focusPanel === 'pipeline') && (
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
             <Stack spacing={1.25}>
-              <Typography variant="subtitle1">Pipeline Stages</Typography>
+              <Box>
+                <Typography component="h2" variant="subtitle1">
+                  Applicant Stages
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Keep the standard journey recognizable while tailoring names, service targets,
+                  ownership, and the next steps staff can select.
+                </Typography>
+              </Box>
+              <Alert severity="info">
+                Exam scheduling, results, eligibility, and stale or archive actions update their
+                related stages through the corresponding workflow. These stage settings control
+                presentation and permitted staff transitions; they do not replace those operational
+                actions.
+              </Alert>
+              {cycleForm.journeyLocked && (
+                <Alert severity="warning">
+                  Journey structure is locked. Metadata such as owner responsibility and SLA can be
+                  maintained, but stage order, enabled state, and next-stage rules are protected.
+                  {cycleForm.journeyLockReason ? ` Reason: ${cycleForm.journeyLockReason}` : ''}
+                </Alert>
+              )}
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems={{ sm: 'center' }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Add />}
+                  disabled={!academicYearId || cycleForm.journeyLocked}
+                  onClick={() => setCustomStageOpen(true)}
+                >
+                  Add Custom Stage
+                </Button>
+                <TextField
+                  size="small"
+                  label={cycleForm.journeyLocked ? 'Unlock reason' : 'Lock reason'}
+                  value={journeyLockReason}
+                  onChange={(event) => setJourneyLockReason(event.target.value)}
+                  sx={{ minWidth: { sm: 280 } }}
+                />
+                <LoadingButton
+                  size="small"
+                  variant={cycleForm.journeyLocked ? 'contained' : 'outlined'}
+                  loading={isLockingJourney || isUnlockingJourney}
+                  disabled={!academicYearId}
+                  onClick={() => handleToggleJourneyLock(!cycleForm.journeyLocked)}
+                >
+                  {cycleForm.journeyLocked ? 'Unlock Journey' : 'Lock Journey'}
+                </LoadingButton>
+              </Stack>
               <Divider />
               <Box sx={{ display: 'grid', gap: 1 }}>
                 {stages.map((stage) => {
@@ -2863,185 +3262,237 @@ const AdmissionsCrmConfiguration = ({
                       : 'transparent';
 
                   return (
-                    <Box
+                    <Accordion
                       key={stage.id}
+                      disableGutters
+                      elevation={0}
                       sx={{
                         border: 1,
                         borderColor: 'divider',
                         borderRadius: 1,
-                        p: 1,
-                        display: 'grid',
-                        gap: 1,
+                        '&:before': { display: 'none' },
+                        '&.Mui-expanded': { m: 0 },
                       }}
                     >
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        gap={1}
-                        alignItems="center"
-                      >
-                        <Stack direction="row" gap={1} alignItems="center">
-                          <Box
-                            sx={{
-                              width: 18,
-                              height: 18,
-                              borderRadius: 0.5,
-                              border: 1,
-                              borderColor: 'divider',
-                              bgcolor: stageColor,
-                              flexShrink: 0,
-                            }}
-                          />
-                          <Chip
-                            size="small"
-                            label={stage.isSystem ? 'System' : 'Custom'}
-                            variant="outlined"
-                          />
-                        </Stack>
-                        <Chip
-                          size="small"
-                          label={stageForm.isEnabled ? 'Enabled' : 'Disabled'}
-                          color={stageForm.isEnabled ? 'primary' : 'default'}
-                          sx={
-                            stageForm.isEnabled
-                              ? { bgcolor: 'primary.darker', color: 'common.white' }
-                              : undefined
-                          }
-                        />
-                      </Stack>
-                      <Box
+                      <AccordionSummary
+                        expandIcon={<ExpandMore />}
+                        aria-controls={`applicant-stage-${stage.id}-content`}
+                        id={`applicant-stage-${stage.id}-header`}
                         sx={{
-                          display: 'grid',
-                          gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' },
-                          gap: 1,
+                          px: 1.25,
+                          minHeight: 56,
+                          '& .MuiAccordionSummary-content': { my: 1 },
                         }}
                       >
-                        <TextField
-                          size="small"
-                          label="Stage name"
-                          value={stageForm.stageName}
-                          disabled={isUpdatingPipelineStage}
-                          onChange={(event) =>
-                            handleStageChange(stage.id, 'stageName', event.target.value)
-                          }
-                        />
-                        <TextField
-                          size="small"
-                          type="number"
-                          label="Order"
-                          value={stageForm.displayOrder}
-                          disabled={isUpdatingPipelineStage}
-                          onChange={(event) =>
-                            handleStageChange(stage.id, 'displayOrder', Number(event.target.value))
-                          }
-                        />
-                        <TextField
-                          size="small"
-                          label="Color"
-                          placeholder="#1976D2"
-                          value={stageForm.colorHex}
-                          disabled={isUpdatingPipelineStage}
-                          inputProps={{ maxLength: 16 }}
-                          onChange={(event) =>
-                            handleStageChange(stage.id, 'colorHex', event.target.value)
-                          }
-                        />
-                      </Box>
-                      <Box
-                        sx={{
-                          display: 'grid',
-                          gridTemplateColumns: { xs: '1fr', md: '1fr 2fr' },
-                          gap: 1,
-                        }}
-                      >
-                        <TextField
-                          size="small"
-                          type="number"
-                          label="SLA hours"
-                          value={stageForm.slaTargetHours}
-                          disabled={isUpdatingPipelineStage}
-                          onChange={(event) =>
-                            handleStageChange(stage.id, 'slaTargetHours', event.target.value)
-                          }
-                        />
-                        <TextField
-                          size="small"
-                          label="Owner responsibility"
-                          value={stageForm.ownerResponsibility}
-                          disabled={isUpdatingPipelineStage}
-                          inputProps={{ maxLength: 500 }}
-                          onChange={(event) =>
-                            handleStageChange(stage.id, 'ownerResponsibility', event.target.value)
-                          }
-                        />
-                      </Box>
-                      <FormControl size="small" disabled={isUpdatingPipelineStage}>
-                        <InputLabel id={`allowed-next-stages-${stage.id}`}>
-                          Allowed next stages
-                        </InputLabel>
-                        <Select
-                          multiple
-                          displayEmpty
-                          labelId={`allowed-next-stages-${stage.id}`}
-                          label="Allowed next stages"
-                          SelectDisplayProps={{
-                            'aria-label': `Allowed next stages for ${stageForm.stageName}`,
-                          }}
-                          value={stageForm.allowedNextStages}
-                          renderValue={(selected) =>
-                            selected.length
-                              ? selected
-                                  .map((value) =>
-                                    getAdmissionCrmStageLabel(value as AdmissionInquiryStage)
-                                  )
-                                  .join(', ')
-                              : 'None'
-                          }
-                          onChange={(event) => {
-                            const { value } = event.target;
-                            const selectedValues = Array.isArray(value)
-                              ? value.map(Number)
-                              : String(value).split(',').filter(Boolean).map(Number);
-                            handleStageChange(
-                              stage.id,
-                              'allowedNextStages',
-                              selectedValues as AdmissionInquiryStage[]
-                            );
-                          }}
+                        <Stack
+                          direction={{ xs: 'column', sm: 'row' }}
+                          justifyContent="space-between"
+                          alignItems={{ xs: 'flex-start', sm: 'center' }}
+                          gap={1}
+                          sx={{ width: '100%', pr: 1 }}
                         >
-                          {pipelineStageOptions
-                            .filter((option) => option !== stage.systemStage)
-                            .map((option) => (
-                              <MenuItem key={option} value={option}>
-                                <Checkbox checked={stageForm.allowedNextStages.includes(option)} />
-                                {getAdmissionCrmStageLabel(option)}
-                              </MenuItem>
-                            ))}
-                        </Select>
-                      </FormControl>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems="center">
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={stageForm.isEnabled}
-                              disabled={isUpdatingPipelineStage}
-                              onChange={(event) =>
-                                handleStageChange(stage.id, 'isEnabled', event.target.checked)
+                          <Stack direction="row" gap={1} alignItems="center" sx={{ minWidth: 0 }}>
+                            <Box
+                              sx={{
+                                width: 18,
+                                height: 18,
+                                borderRadius: 0.5,
+                                border: 1,
+                                borderColor: 'divider',
+                                bgcolor: stageColor,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography variant="subtitle2" noWrap>
+                                {stageForm.stageName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Order {stageForm.displayOrder}
+                                {stageForm.slaTargetHours
+                                  ? ` - ${stageForm.slaTargetHours} hour target`
+                                  : ' - No service target'}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <Stack direction="row" gap={0.5} flexWrap="wrap">
+                            <Chip
+                              size="small"
+                              label={stage.isSystem ? 'Core stage' : 'School stage'}
+                              variant="outlined"
+                            />
+                            <Chip
+                              size="small"
+                              label={stageForm.isEnabled ? 'Enabled' : 'Disabled'}
+                              color={stageForm.isEnabled ? 'primary' : 'default'}
+                              sx={
+                                stageForm.isEnabled
+                                  ? { bgcolor: 'primary.darker', color: 'common.white' }
+                                  : undefined
                               }
                             />
-                          }
-                          label="Enabled"
-                        />
-                        <LoadingButton
-                          size="small"
-                          variant="outlined"
-                          loading={isUpdatingPipelineStage}
-                          onClick={() => handleSaveStage(stage.id)}
-                        >
-                          Save
-                        </LoadingButton>
-                      </Stack>
-                    </Box>
+                          </Stack>
+                        </Stack>
+                      </AccordionSummary>
+                      <AccordionDetails
+                        id={`applicant-stage-${stage.id}-content`}
+                        sx={{ px: 1.25, pt: 0, pb: 1.25 }}
+                      >
+                        <Stack spacing={1}>
+                          <Divider />
+                          <Box
+                            sx={{
+                              display: 'grid',
+                              gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' },
+                              gap: 1,
+                            }}
+                          >
+                            <TextField
+                              size="small"
+                              label="Stage name"
+                              value={stageForm.stageName}
+                              disabled={isUpdatingPipelineStage}
+                              onChange={(event) =>
+                                handleStageChange(stage.id, 'stageName', event.target.value)
+                              }
+                            />
+                            <TextField
+                              size="small"
+                              type="number"
+                              label="Display order"
+                              value={stageForm.displayOrder}
+                              disabled={isUpdatingPipelineStage || cycleForm.journeyLocked}
+                              onChange={(event) =>
+                                handleStageChange(
+                                  stage.id,
+                                  'displayOrder',
+                                  Number(event.target.value)
+                                )
+                              }
+                            />
+                            <TextField
+                              size="small"
+                              label="Color hex"
+                              placeholder="#1976D2"
+                              value={stageForm.colorHex}
+                              disabled={isUpdatingPipelineStage}
+                              inputProps={{ maxLength: 16 }}
+                              onChange={(event) =>
+                                handleStageChange(stage.id, 'colorHex', event.target.value)
+                              }
+                            />
+                          </Box>
+                          <Box
+                            sx={{
+                              display: 'grid',
+                              gridTemplateColumns: { xs: '1fr', md: '1fr 2fr' },
+                              gap: 1,
+                            }}
+                          >
+                            <TextField
+                              size="small"
+                              type="number"
+                              label="Service target (hours)"
+                              value={stageForm.slaTargetHours}
+                              disabled={isUpdatingPipelineStage}
+                              onChange={(event) =>
+                                handleStageChange(stage.id, 'slaTargetHours', event.target.value)
+                              }
+                            />
+                            <TextField
+                              size="small"
+                              label="Typical owner and responsibility"
+                              value={stageForm.ownerResponsibility}
+                              disabled={isUpdatingPipelineStage}
+                              inputProps={{ maxLength: 500 }}
+                              onChange={(event) =>
+                                handleStageChange(
+                                  stage.id,
+                                  'ownerResponsibility',
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </Box>
+                          <FormControl
+                            size="small"
+                            disabled={isUpdatingPipelineStage || cycleForm.journeyLocked}
+                          >
+                            <InputLabel id={`allowed-next-stages-${stage.id}`}>
+                              Staff can move applicants to
+                            </InputLabel>
+                            <Select
+                              multiple
+                              displayEmpty
+                              labelId={`allowed-next-stages-${stage.id}`}
+                              label="Staff can move applicants to"
+                              SelectDisplayProps={{
+                                'aria-label': `Allowed next stages for ${stageForm.stageName}`,
+                              }}
+                              value={stageForm.allowedNextStages}
+                              renderValue={(selected) =>
+                                selected.length
+                                  ? selected
+                                      .map((value) =>
+                                        getAdmissionCrmStageLabel(value as AdmissionInquiryStage)
+                                      )
+                                      .join(', ')
+                                  : 'No manual next stage'
+                              }
+                              onChange={(event) => {
+                                const { value } = event.target;
+                                const selectedValues = Array.isArray(value)
+                                  ? value.map(Number)
+                                  : String(value).split(',').filter(Boolean).map(Number);
+                                handleStageChange(
+                                  stage.id,
+                                  'allowedNextStages',
+                                  selectedValues as AdmissionInquiryStage[]
+                                );
+                              }}
+                            >
+                              {pipelineStageOptions
+                                .filter((option) => option !== stage.systemStage)
+                                .map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    <Checkbox
+                                      checked={stageForm.allowedNextStages.includes(option)}
+                                    />
+                                    {getAdmissionCrmStageLabel(option)}
+                                  </MenuItem>
+                                ))}
+                            </Select>
+                          </FormControl>
+                          <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            justifyContent="space-between"
+                            gap={1}
+                            alignItems={{ sm: 'center' }}
+                          >
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={stageForm.isEnabled}
+                                  disabled={isUpdatingPipelineStage || cycleForm.journeyLocked}
+                                  onChange={(event) =>
+                                    handleStageChange(stage.id, 'isEnabled', event.target.checked)
+                                  }
+                                />
+                              }
+                              label="Available in Enrollment"
+                            />
+                            <LoadingButton
+                              size="small"
+                              variant="contained"
+                              loading={isUpdatingPipelineStage}
+                              onClick={() => handleSaveStage(stage.id)}
+                            >
+                              Save Stage
+                            </LoadingButton>
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
                   );
                 })}
                 {!stages.length && (
@@ -3058,7 +3509,9 @@ const AdmissionsCrmConfiguration = ({
       {focusSection === 'routing' && (!focusPanel || focusPanel === 'scoring') && (
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
-            <Typography variant="subtitle1">Lead Scoring</Typography>
+            <Typography component="h2" variant="subtitle1">
+              Lead Scoring
+            </Typography>
             <Divider />
             <Box
               sx={{
@@ -3099,7 +3552,9 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-              <Typography variant="subtitle1">Lead Routing</Typography>
+              <Typography component="h2" variant="subtitle1">
+                Lead Routing
+              </Typography>
               <Button size="small" variant="outlined" onClick={handleAddRoutingRule}>
                 Add Rule
               </Button>
@@ -3159,37 +3614,35 @@ const AdmissionsCrmConfiguration = ({
                   ))}
                 </Select>
               </FormControl>
-              <FormControl fullWidth size="small">
-                <InputLabel>Owner pool</InputLabel>
-                <Select
-                  multiple
-                  label="Owner pool"
-                  value={cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []}
-                  disabled={!academicYearId || isUpdatingCycle}
-                  renderValue={(selected) =>
-                    (selected as string[]).map((id) => getCrmUserLabel(ownerOptions, id)).join(', ')
-                  }
-                  onChange={(event) => {
-                    const { value } = event.target;
-                    handleRoutingSettingsChange(
-                      'ownerPoolUserIds',
-                      typeof value === 'string' ? value.split(',').filter(Boolean) : value
-                    );
-                  }}
-                >
-                  {ownerOptions.map((owner) => (
-                    <MenuItem key={owner.id} value={owner.id}>
-                      <Checkbox
-                        checked={(cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []).includes(
-                          owner.id
-                        )}
-                      />
-                      {getCrmUserOptionLabel(owner)}
-                      {owner.isActive === false ? ' (Inactive)' : ''}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                multiple
+                fullWidth
+                size="small"
+                limitTags={2}
+                options={ownerOptions.filter((owner) => owner.isActive !== false)}
+                value={(cycleForm.leadRoutingSettings.ownerPoolUserIds ?? [])
+                  .map((id) => ownerOptions.find((owner) => owner.id === id))
+                  .filter((owner): owner is (typeof ownerOptions)[number] => Boolean(owner))}
+                inputValue={staffSearch}
+                onInputChange={(_, value) => setStaffSearch(value)}
+                onChange={(_, selected) =>
+                  handleRoutingSettingsChange(
+                    'ownerPoolUserIds',
+                    selected.map((owner) => owner.id)
+                  )
+                }
+                disabled={!academicYearId || isUpdatingCycle}
+                loading={isUsersFetching}
+                getOptionLabel={getCrmUserOptionLabel}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Pipeline owners"
+                    helperText="Only active HR employees with Enrollment CRM access are available."
+                  />
+                )}
+              />
             </Stack>
             <Box sx={{ display: 'grid', gap: 1 }}>
               {cycleForm.leadRoutingSettings.rules.map((rule, index) => (
@@ -3396,7 +3849,9 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-              <Typography variant="subtitle1">Journey Automation</Typography>
+              <Typography component="h2" variant="subtitle1">
+                Journey Automation
+              </Typography>
               <Button size="small" variant="outlined" onClick={handleAddJourneyRule}>
                 Add Rule
               </Button>
@@ -3859,10 +4314,22 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-              <Typography variant="subtitle1">Form Templates</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {templates?.totalCount || 0} templates
+              <Typography component="h2" variant="subtitle1">
+                Form Templates
               </Typography>
+              <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                <Typography variant="caption" color="text.secondary">
+                  {templates?.totalCount || 0} templates
+                </Typography>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={isCreatingTemplate || isUpdatingTemplate}
+                  onClick={handleOpenCreateTemplate}
+                >
+                  Create Custom Inquiry Form
+                </Button>
+              </Stack>
             </Stack>
             <Divider />
             <Box
@@ -3892,7 +4359,7 @@ const AdmissionsCrmConfiguration = ({
                     <Typography variant="body2" color="text.secondary">
                       {template.fields.length} fields
                     </Typography>
-                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Stack direction="row" gap={1} flexWrap="wrap">
                       <Button
                         size="small"
                         variant="outlined"
@@ -3924,7 +4391,7 @@ const AdmissionsCrmConfiguration = ({
                     {template.isPublic && (
                       <Stack
                         direction={{ xs: 'column', md: 'row' }}
-                        gap={0.75}
+                        gap={1}
                         alignItems={{ xs: 'stretch', md: 'center' }}
                       >
                         <TextField
@@ -3957,7 +4424,7 @@ const AdmissionsCrmConfiguration = ({
                       template.channel === AdmissionInquiryChannel.StaffSharedLink && (
                         <Stack
                           direction={{ xs: 'column', md: 'row' }}
-                          gap={0.75}
+                          gap={1}
                           alignItems={{ xs: 'stretch', md: 'center' }}
                         >
                           <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
@@ -4013,7 +4480,9 @@ const AdmissionsCrmConfiguration = ({
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
               <Box>
-                <Typography variant="subtitle1">Message Templates</Typography>
+                <Typography component="h2" variant="subtitle1">
+                  Message Templates
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
                   {messageTemplates?.totalCount || 0} templates
                 </Typography>
@@ -4055,7 +4524,7 @@ const AdmissionsCrmConfiguration = ({
                     <Typography variant="body2" color="text.secondary" noWrap>
                       {template.body}
                     </Typography>
-                    <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+                    <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
                       <Chip
                         size="small"
                         label={template.isActive ? 'Active' : 'Inactive'}
@@ -4102,7 +4571,9 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-              <Typography variant="subtitle1">Communication Providers</Typography>
+              <Typography component="h2" variant="subtitle1">
+                Communication Providers
+              </Typography>
               <Typography variant="caption" color="text.secondary">
                 {communicationProviders?.totalCount || 0} channels
               </Typography>
@@ -4866,7 +5337,7 @@ const AdmissionsCrmConfiguration = ({
             </Stack>
             <Stack spacing={0.75}>
               <Typography variant="subtitle2">Preview</Typography>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
+              <Stack direction="row" gap={1} flexWrap="wrap">
                 {[...templateForm.fields]
                   .sort((a, b) => a.displayOrder - b.displayOrder)
                   .map((field) => (
@@ -5055,6 +5526,216 @@ const AdmissionsCrmConfiguration = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseMessagePreview}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={customStageOpen}
+        onClose={() => setCustomStageOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Add Custom Stage</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.25} sx={{ pt: 1 }}>
+            <TextField
+              required
+              label="Stage key"
+              value={customStageForm.stageKey}
+              onChange={(event) =>
+                setCustomStageForm((prev) => ({ ...prev, stageKey: event.target.value }))
+              }
+              helperText="Stable code used by workflow automation, for example DOCUMENT_REVIEW."
+            />
+            <TextField
+              required
+              label="Stage name"
+              value={customStageForm.stageName}
+              onChange={(event) =>
+                setCustomStageForm((prev) => ({ ...prev, stageName: event.target.value }))
+              }
+            />
+            <FormControl size="small">
+              <InputLabel>Reporting category</InputLabel>
+              <Select
+                label="Reporting category"
+                value={customStageForm.baseSystemStage}
+                onChange={(event) =>
+                  setCustomStageForm((prev) => ({
+                    ...prev,
+                    baseSystemStage: Number(event.target.value) as AdmissionInquiryStage,
+                  }))
+                }
+              >
+                {pipelineStageOptions.map((stage) => (
+                  <MenuItem key={stage} value={stage}>
+                    {getAdmissionCrmStageLabel(stage)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <TextField
+                size="small"
+                type="number"
+                label="Display order"
+                value={customStageForm.displayOrder}
+                onChange={(event) =>
+                  setCustomStageForm((prev) => ({
+                    ...prev,
+                    displayOrder: Number(event.target.value),
+                  }))
+                }
+              />
+              <TextField
+                size="small"
+                label="Color hex"
+                value={customStageForm.colorHex}
+                onChange={(event) =>
+                  setCustomStageForm((prev) => ({ ...prev, colorHex: event.target.value }))
+                }
+              />
+              <TextField
+                size="small"
+                type="number"
+                label="SLA hours"
+                value={customStageForm.slaTargetHours}
+                onChange={(event) =>
+                  setCustomStageForm((prev) => ({ ...prev, slaTargetHours: event.target.value }))
+                }
+              />
+            </Stack>
+            <TextField
+              label="Typical owner and responsibility"
+              value={customStageForm.ownerResponsibility}
+              onChange={(event) =>
+                setCustomStageForm((prev) => ({
+                  ...prev,
+                  ownerResponsibility: event.target.value,
+                }))
+              }
+              multiline
+              minRows={2}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCustomStageOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={isCreatingPipelineStage}
+            onClick={handleCreateCustomStage}
+          >
+            Add Stage
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={inquirySourceOpen}
+        onClose={() => setInquirySourceOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          {editingInquirySourceId ? 'Edit Inquiry Source' : 'Add Custom Inquiry Source'}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.25} sx={{ pt: 1 }}>
+            <TextField
+              required
+              label="Code"
+              value={inquirySourceForm.code}
+              onChange={(event) =>
+                setInquirySourceForm((prev) => ({ ...prev, code: event.target.value }))
+              }
+            />
+            <TextField
+              required
+              label="Display name"
+              value={inquirySourceForm.displayName}
+              onChange={(event) =>
+                setInquirySourceForm((prev) => ({ ...prev, displayName: event.target.value }))
+              }
+            />
+            <TextField
+              label="Description"
+              value={inquirySourceForm.description}
+              onChange={(event) =>
+                setInquirySourceForm((prev) => ({ ...prev, description: event.target.value }))
+              }
+              multiline
+              minRows={2}
+            />
+            <FormControl size="small">
+              <InputLabel>Allowed channels</InputLabel>
+              <Select
+                multiple
+                label="Allowed channels"
+                value={inquirySourceForm.allowedChannels}
+                renderValue={(selected) =>
+                  selected.map((channel) => getAdmissionCrmChannelLabel(channel)).join(', ')
+                }
+                onChange={(event) => {
+                  const { value } = event.target;
+                  setInquirySourceForm((prev) => ({
+                    ...prev,
+                    allowedChannels: Array.isArray(value)
+                      ? (value.map(Number) as AdmissionInquiryChannel[])
+                      : (String(value)
+                          .split(',')
+                          .filter(Boolean)
+                          .map(Number) as AdmissionInquiryChannel[]),
+                  }));
+                }}
+              >
+                {inquiryChannelOptions.map((channel) => (
+                  <MenuItem key={channel} value={channel}>
+                    <Checkbox checked={inquirySourceForm.allowedChannels.includes(channel)} />
+                    {getAdmissionCrmChannelLabel(channel)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems={{ sm: 'center' }}>
+              <TextField
+                size="small"
+                type="number"
+                label="Display order"
+                value={inquirySourceForm.displayOrder}
+                onChange={(event) =>
+                  setInquirySourceForm((prev) => ({
+                    ...prev,
+                    displayOrder: Number(event.target.value),
+                  }))
+                }
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={inquirySourceForm.isRoutingEligible}
+                    onChange={(event) =>
+                      setInquirySourceForm((prev) => ({
+                        ...prev,
+                        isRoutingEligible: event.target.checked,
+                      }))
+                    }
+                  />
+                }
+                label="Routing eligible"
+              />
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInquirySourceOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={isCreatingInquirySource || isUpdatingInquirySource}
+            onClick={handleSaveInquirySource}
+          >
+            Save Source
+          </LoadingButton>
         </DialogActions>
       </Dialog>
     </Box>

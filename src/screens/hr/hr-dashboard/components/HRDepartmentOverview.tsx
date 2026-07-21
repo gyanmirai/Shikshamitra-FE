@@ -160,7 +160,7 @@ const HRDepartmentOverview = () => {
         sx={{ p: 2 }}
       />
       <Scrollbar sx={{ flexGrow: 1, height: '50vh' }}>
-        <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%" p={1}>
+        <Box display="flex" flexDirection="column" gap={1} maxHeight="500px" height="100%" p={1}>
           <CustomizableTable
             tableId="hr-department-overview"
             columns={columns}

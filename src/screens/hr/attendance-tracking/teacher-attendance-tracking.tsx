@@ -74,7 +74,7 @@ const TeacherAttendanceTracking = ({
         sx={{ mb: 2 }}
         slotProps={{ textField: { size: 'small' } }}
       />
-      <Box display="flex" gap={2}>
+      <Box display="flex" gap={1}>
         <Card
           sx={{
             maxWidth: 280,

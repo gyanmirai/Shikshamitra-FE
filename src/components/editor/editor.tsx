@@ -95,7 +95,8 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
       ],
       onUpdate({ editor: _editor }) {
         const html = _editor.getHTML();
-        onChange?.(html);
+        const isEmpty = _editor.isEmpty || _editor.getText().trim() === '';
+        onChange?.(isEmpty ? '' : html);
         if (!mentionable) return;
         const { from } = _editor.state.selection;
         const textBeforeCursor = _editor.state.doc.textBetween(0, from, '\n', '\ufffc');

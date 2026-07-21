@@ -13,15 +13,17 @@ import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
   Grid,
@@ -379,10 +381,10 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit, onClose, data, is
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
@@ -629,15 +631,38 @@ const AssignStudents = () => {
 };
 
 interface FormValues {
-  docs: File[];
+  docs: (File | string)[];
 }
 
 const UploadPictures = () => {
+  const [uploadFile, { isLoading: isUploading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
   const formik = useFormik({
     initialValues: {
-      docs: [],
+      docs: [] as (File | string)[],
     },
-    onSubmit: (values) => {},
+    onSubmit: async (values) => {
+      const files = values.docs.filter((file): file is File => file instanceof File);
+      if (files.length === 0) return;
+
+      try {
+        const uploaded = await Promise.all(
+          files.map(async (file) => {
+            const formData = new FormData();
+            formData.append('File', file);
+            const response = await uploadFile(formData).unwrap();
+            return response.data || '';
+          })
+        );
+        formik.setFieldValue('docs', uploaded.filter(Boolean));
+        shikshaMitraToast.success({ message: 'Picture(s) uploaded successfully.' });
+      } catch (error) {
+        console.error('Activity picture upload failed', error);
+        shikshaMitraToast.error({ message: 'Picture upload failed.' });
+      }
+    },
   });
 
   const uploadProps = {
@@ -665,10 +690,10 @@ const UploadPictures = () => {
   );
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12 }}>
               <Upload
                 {...uploadProps}
@@ -680,7 +705,8 @@ const UploadPictures = () => {
                 }}
                 onRemove={(file) => handleRemoveFile(file, formik.values, formik.setFieldValue)}
                 onRemoveAll={() => handleRemoveAllFiles(formik.values, formik.setFieldValue)}
-                onUpload={() => console.info('ON UPLOAD')}
+                onUpload={() => formik.handleSubmit()}
+                disabled={isUploading}
                 // disabled={editData}
               />
             </Grid>

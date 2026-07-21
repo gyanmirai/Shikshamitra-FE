@@ -3,12 +3,16 @@ import { test, expect, type Page, type APIResponse } from '@playwright/test';
 
 import { withHrPayrollQaMutex } from './hr-payroll-qa-mutex';
 import { createEmployeeFixture } from './employee/employee-fixtures';
-import { employeeApiRequest, createEmployeeFromExistingDefaults } from './employee/employee-api';
 import {
   searchEmployee,
   gotoEmployeeList,
   dismissAcademicYearTour,
 } from './employee/employee-page';
+import {
+  employeeApiRequest,
+  createEmployeeFromExistingDefaults,
+  assignEmployeeToFirstAcademicScope,
+} from './employee/employee-api';
 
 const fullCycleEnabled = process.env.E2E_HR_FULL_CYCLE === '1';
 
@@ -495,6 +499,7 @@ test.describe('HR policy payroll edge cases', () => {
       const employee = await createEmployeeFromExistingDefaults(page, employeeFixture, {
         dateOfJoining: yyyyMmDd(targetMonthDate),
       });
+      await assignEmployeeToFirstAcademicScope(page, employee);
       const employeeId = employee.id as string;
 
       await gotoEmployeeList(page);

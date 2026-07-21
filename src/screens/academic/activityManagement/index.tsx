@@ -47,6 +47,7 @@ const ActivityManagementScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Activity Management"
         links={[
           { name: 'Academic And Assessment' },

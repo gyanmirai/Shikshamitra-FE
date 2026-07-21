@@ -157,7 +157,7 @@ const ScheduleExamPreviewDrawer = ({
       PaperProps={{ sx: { width: { xs: '100%', sm: 430 }, p: 0 } }}
     >
       <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="h6" noWrap>
               {previewExam?.examName || 'Exam Preview'}
@@ -178,7 +178,7 @@ const ScheduleExamPreviewDrawer = ({
       <Box sx={{ p: 2 }}>
         {isDetailsLoading && <LoadingScreen sx={{ minHeight: 180 }} />}
         {!isDetailsLoading && (
-        <Stack spacing={1.5}>
+        <Stack spacing={1}>
           {infoRows.map(([label, key]) => (
             <Box key={key}>
               <Typography variant="caption" color="text.secondary">
@@ -192,7 +192,7 @@ const ScheduleExamPreviewDrawer = ({
             <Typography variant="caption" color="text.secondary">
               Divisions
             </Typography>
-            <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mt: 0.5 }}>
+            <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 0.5 }}>
               {(previewExam?.divisions || []).length ? (
                 previewExam.divisions.map((division: string) => (
                   <Chip key={division} label={division} size="small" variant="soft" />

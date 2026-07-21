@@ -84,6 +84,11 @@ const FeeItemRow = ({ row }: { row: AllocatedFeeRow }) => {
       {/* Fee head name */}
       <Box flex={1} minWidth={0} pr={1}>
         <Typography variant="body2">{row.feeHeadName}</Typography>
+        {row.installmentLabel && (
+          <Typography variant="caption" color="text.secondary" display="block">
+            {row.installmentLabel}
+          </Typography>
+        )}
       </Box>
 
       {/* ORIGINAL */}
@@ -219,7 +224,7 @@ const MonthGroupBlock = ({ group }: { group: MonthAllocationGroup }) => {
       <Box
         display="flex"
         alignItems="center"
-        gap={1.5}
+        gap={1}
         px={2}
         py={1.25}
         sx={{
@@ -338,7 +343,7 @@ const ChargesSection = ({ rows }: { rows: AllocatedChargeRow[] }) => {
       <Box
         display="flex"
         alignItems="center"
-        gap={1.5}
+        gap={1}
         px={2}
         py={1.25}
         sx={{

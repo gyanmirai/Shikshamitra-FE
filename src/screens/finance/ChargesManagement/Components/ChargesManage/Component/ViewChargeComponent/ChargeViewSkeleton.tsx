@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Grid, Paper, Stack, Skeleton } from '@mui/material';
 
 const ChargeViewSkeleton = () => (
-  <Box display="flex" flexDirection="column" gap={2} height="100%">
+  <Box display="flex" flexDirection="column" gap={1} height="100%">
     <Box sx={{ height: '100%', p: 2 }}>
       <Grid container spacing={2}>
         {/* Basic Charge Accordion Skeleton */}

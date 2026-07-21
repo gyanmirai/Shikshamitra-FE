@@ -6,6 +6,55 @@ import type {
 
 import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+const optionFieldTypes = new Set([
+  AdmissionCrmFormFieldType.Select,
+  AdmissionCrmFormFieldType.MultiSelect,
+]);
+
+const systemFieldTypeRules: Record<string, AdmissionCrmFormFieldType[]> = {
+  dateOfBirth: [AdmissionCrmFormFieldType.Date],
+  primaryContactNo: [AdmissionCrmFormFieldType.Phone, AdmissionCrmFormFieldType.Text],
+  email: [AdmissionCrmFormFieldType.Email, AdmissionCrmFormFieldType.Text],
+};
+
+const fieldKeyPattern = /^[a-z][a-zA-Z0-9_]*$/;
+
+export const registrationFieldNeedsOptions = (fieldType: AdmissionCrmFormFieldType) =>
+  optionFieldTypes.has(fieldType);
+
+export const normalizeRegistrationFieldForType = (
+  field: AdmissionCrmRegistrationFieldDto,
+  fieldType: AdmissionCrmFormFieldType
+): AdmissionCrmRegistrationFieldDto => {
+  const needsOptions = registrationFieldNeedsOptions(fieldType);
+  const systemTypes = field.systemField ? systemFieldTypeRules[field.systemField] : null;
+  return {
+    ...field,
+    fieldType,
+    systemField: systemTypes && !systemTypes.includes(fieldType) ? null : field.systemField,
+    options: needsOptions ? field.options : [],
+    minimumLength:
+      fieldType === AdmissionCrmFormFieldType.Text ||
+      fieldType === AdmissionCrmFormFieldType.TextArea
+        ? field.minimumLength
+        : null,
+    maximumLength:
+      fieldType === AdmissionCrmFormFieldType.Text ||
+      fieldType === AdmissionCrmFormFieldType.TextArea
+        ? field.maximumLength
+        : null,
+    minimumValue: fieldType === AdmissionCrmFormFieldType.Number ? field.minimumValue : null,
+    maximumValue: fieldType === AdmissionCrmFormFieldType.Number ? field.maximumValue : null,
+    validationPattern:
+      fieldType === AdmissionCrmFormFieldType.Text ||
+      fieldType === AdmissionCrmFormFieldType.TextArea ||
+      fieldType === AdmissionCrmFormFieldType.Email ||
+      fieldType === AdmissionCrmFormFieldType.Phone
+        ? field.validationPattern
+        : null,
+  };
+};
+
 export const createRegistrationField = (): AdmissionCrmRegistrationFieldDto => ({
   key: '',
   label: '',
@@ -36,7 +85,7 @@ export const createRegistrationSection = (): AdmissionCrmRegistrationSectionDto 
   fields: [createRegistrationField()],
 });
 
-export const createRegistrationTemplate = (): AdmissionCrmRegistrationTemplateUpsertDto => ({
+export const createBlankRegistrationTemplate = (): AdmissionCrmRegistrationTemplateUpsertDto => ({
   name: '',
   isFallback: false,
   applicability: {},
@@ -47,6 +96,123 @@ export const createRegistrationTemplate = (): AdmissionCrmRegistrationTemplateUp
   feeAmount: 0,
   autoIssueAtStage: null,
   notes: null,
+});
+
+const starterField = (
+  value: Partial<AdmissionCrmRegistrationFieldDto> &
+    Pick<AdmissionCrmRegistrationFieldDto, 'key' | 'label'>
+): AdmissionCrmRegistrationFieldDto => ({
+  ...createRegistrationField(),
+  ...value,
+});
+
+export const createRegistrationTemplate = (): AdmissionCrmRegistrationTemplateUpsertDto => ({
+  ...createBlankRegistrationTemplate(),
+  name: 'Standard School Registration',
+  sections: [
+    {
+      key: 'student-details',
+      title: 'Student details',
+      description: 'Identity and basic information for the student applying for admission.',
+      displayOrder: 10,
+      parentVisible: true,
+      fields: [
+        starterField({
+          key: 'firstName',
+          label: 'First name',
+          systemField: 'firstName',
+          required: true,
+        }),
+        starterField({ key: 'middleName', label: 'Middle name', systemField: 'middleName' }),
+        starterField({ key: 'lastName', label: 'Last name', systemField: 'lastName' }),
+        starterField({
+          key: 'dateOfBirth',
+          label: 'Date of birth',
+          fieldType: AdmissionCrmFormFieldType.Date,
+          systemField: 'dateOfBirth',
+          required: true,
+        }),
+      ],
+    },
+    {
+      key: 'family-contact',
+      title: 'Parent and contact details',
+      description: 'Primary guardian and communication information.',
+      displayOrder: 20,
+      parentVisible: true,
+      fields: [
+        starterField({
+          key: 'parentGuardianName',
+          label: 'Parent or guardian name',
+          systemField: 'parentGuardianName',
+          required: true,
+        }),
+        starterField({
+          key: 'primaryContactNo',
+          label: 'Primary contact number',
+          fieldType: AdmissionCrmFormFieldType.Phone,
+          systemField: 'primaryContactNo',
+          required: true,
+        }),
+        starterField({
+          key: 'email',
+          label: 'Email address',
+          fieldType: AdmissionCrmFormFieldType.Email,
+          systemField: 'email',
+        }),
+        starterField({
+          key: 'residentialAddress',
+          label: 'Residential address',
+          fieldType: AdmissionCrmFormFieldType.TextArea,
+          required: true,
+        }),
+        starterField({ key: 'city', label: 'City', required: true }),
+        starterField({ key: 'postalCode', label: 'Postal code' }),
+      ],
+    },
+    {
+      key: 'academic-background',
+      title: 'Academic background',
+      description: 'Requested placement and prior-school information.',
+      displayOrder: 30,
+      parentVisible: true,
+      fields: [
+        starterField({
+          key: 'desiredClassName',
+          label: 'Target class',
+          systemField: 'desiredClassName',
+          required: true,
+          parentEditable: false,
+        }),
+        starterField({
+          key: 'admissionRoute',
+          label: 'Admission pathway',
+          systemField: 'admissionRoute',
+          required: true,
+          parentEditable: false,
+        }),
+        starterField({ key: 'previousSchoolName', label: 'Previous school' }),
+        starterField({ key: 'lastClassCompleted', label: 'Last class completed' }),
+        starterField({ key: 'transferCertificateNumber', label: 'Transfer certificate number' }),
+      ],
+    },
+    {
+      key: 'declaration',
+      title: 'Declaration',
+      description: 'Confirmation that the submitted details are complete and accurate.',
+      displayOrder: 40,
+      parentVisible: true,
+      fields: [
+        starterField({
+          key: 'declarationAccepted',
+          label: 'I confirm that the information provided is accurate.',
+          fieldType: AdmissionCrmFormFieldType.Checkbox,
+          required: true,
+        }),
+      ],
+    },
+  ],
+  notes: 'Starter template. Review fields, required rules, and applicability before publishing.',
 });
 
 export type RegistrationTemplateEditorStep = 0 | 1;
@@ -77,8 +243,25 @@ export const validateRegistrationTemplateStep = (
     section.fields.forEach((field) => {
       const fieldKey = field.key.trim().toLowerCase();
       if (!fieldKey || !field.label.trim()) errors.push('Every field needs a key and label.');
+      if (fieldKey && !fieldKeyPattern.test(field.key.trim())) {
+        errors.push(
+          `Field key "${field.key}" must start with a letter and use letters, numbers, or underscore.`
+        );
+      }
       if (fieldKeys.has(fieldKey)) errors.push(`Field key "${field.key}" is duplicated.`);
       fieldKeys.add(fieldKey);
+      if (registrationFieldNeedsOptions(field.fieldType) && !field.options.filter(Boolean).length) {
+        errors.push(`Field "${field.label || field.key}" needs at least one option.`);
+      }
+      if (!registrationFieldNeedsOptions(field.fieldType) && field.options.filter(Boolean).length) {
+        errors.push(
+          `Field "${field.label || field.key}" has options but its type does not use options.`
+        );
+      }
+      const allowedTypes = field.systemField ? systemFieldTypeRules[field.systemField] : null;
+      if (allowedTypes && !allowedTypes.includes(field.fieldType)) {
+        errors.push(`Field "${field.label || field.key}" type does not match its system mapping.`);
+      }
       if (
         field.minimumLength != null &&
         field.maximumLength != null &&

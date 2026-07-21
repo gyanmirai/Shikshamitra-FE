@@ -8,6 +8,7 @@ import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -52,6 +53,96 @@ const computeSchoolHours = (slotConfigurations: any[]): string => {
   return `${fmt(minStartMins)} - ${fmt(maxEndMins)}`;
 };
 
+interface IClassShiftInfo {
+  label: string;
+  start: dayjs.Dayjs;
+  end: dayjs.Dayjs;
+}
+
+const parseShiftTime = (value?: string | null) => {
+  if (!value) return null;
+  const timeValue = value.length === 5 ? `${value}:00` : value;
+  const parsed = dayjs(`2024-01-01T${timeValue}`);
+  return parsed.isValid() ? parsed : null;
+};
+
+const getClassShiftInfo = (standard?: Standards | null): IClassShiftInfo | null => {
+  if (!standard?.shiftId) {
+    return null;
+  }
+
+  const start = parseShiftTime(standard.shift?.startTime);
+  const end = parseShiftTime(standard.shift?.endTime);
+  if (!start || !end || !end.isAfter(start)) {
+    return {
+      label: 'School shift assigned. Timing details are not loaded.',
+      start: dayjs('2024-01-01T00:00:00'),
+      end: dayjs('2024-01-01T23:59:59'),
+    };
+  }
+
+  return {
+    label: `${standard.shift?.shiftName || 'Assigned shift'} (${start.format('hh:mm A')} - ${end.format(
+      'hh:mm A'
+    )})`,
+    start,
+    end,
+  };
+};
+
+const getClassShiftInfoFromSlot = (slot?: any): IClassShiftInfo | null => {
+  if (!slot?.shiftId) {
+    return null;
+  }
+
+  const start = parseShiftTime(slot.shiftStartTime);
+  const end = parseShiftTime(slot.shiftEndTime);
+  if (!start || !end || !end.isAfter(start)) {
+    return {
+      label: slot.shiftTimingLabel || 'School shift assigned. Timing details are not loaded.',
+      start: dayjs('2024-01-01T00:00:00'),
+      end: dayjs('2024-01-01T23:59:59'),
+    };
+  }
+
+  return {
+    label:
+      slot.shiftTimingLabel ||
+      `${slot.shiftName || 'Assigned shift'} (${start.format('hh:mm A')} - ${end.format('hh:mm A')})`,
+    start,
+    end,
+  };
+};
+
+const getSlotTimingError = (
+  slotConfigurations: any[],
+  shiftInfo: IClassShiftInfo | null
+): string | null => {
+  if (!shiftInfo) {
+    return 'Please assign the school shift to this class before configuring lecture slots.';
+  }
+
+  const outsideShiftSlot = slotConfigurations
+    .flatMap((config) => config.timeSlots || [])
+    .find((slot) => {
+      const start = slot.startTime ? dayjs(slot.startTime) : null;
+      const end = slot.endTime ? dayjs(slot.endTime) : null;
+      return (
+        start?.isValid() &&
+        end?.isValid() &&
+        (start.isBefore(shiftInfo.start) || end.isAfter(shiftInfo.end))
+      );
+    });
+
+  if (outsideShiftSlot) {
+    return `Lecture slot timing must be within the class shift timing ${shiftInfo.start.format(
+      'hh:mm A'
+    )} - ${shiftInfo.end.format('hh:mm A')}.`;
+  }
+
+  return null;
+};
+
 interface IUseSlotFormParams {
   isEdit?: boolean;
   data?: any;
@@ -64,6 +155,13 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
   const [selectedClassSlotId, setSelectedClassSlotId] = useState<string | undefined>();
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const { data: classesByMedium } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassByMediumQuery,
+    params: medium?.id,
+    options: { skip: !medium?.id },
+  });
 
   // Edit mode: load the slot being edited
   const { data: lectureSlots, isLoading: isLectureSlotsLoading } = useQueryAndMutation({
@@ -100,11 +198,12 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
   });
 
   useEffect(() => {
-    const allClasses =
+    const latestClasses = Array.isArray(classesByMedium) ? classesByMedium : [];
+    const fallbackClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-    setAllClass(allClasses);
+    setAllClass(latestClasses.length > 0 ? latestClasses : fallbackClasses);
     setClasses('');
-  }, [medium]);
+  }, [classesByMedium, medium]);
 
   const initialValues = useMemo(
     () => getInitialValues(classes, isEdit ? lectureSlots : undefined),
@@ -121,6 +220,15 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
     onSubmit: async (values) => {
       const selectedClassName =
         allClass.find((c) => c.id === values.className)?.name || values.className;
+      const selectedClass = allClass.find((c) => c.id === values.className);
+      const shiftInfo =
+        getClassShiftInfo(selectedClass) ||
+        getClassShiftInfoFromSlot(isEdit ? lectureSlots : existingClassSlotData);
+      const slotTimingError = getSlotTimingError(values.slotConfigurations, shiftInfo);
+      if (slotTimingError) {
+        shikshaMitraToast.error({ message: slotTimingError });
+        return;
+      }
 
       const slotConfigurationsPayload = mapSlotConfigurations(values.slotConfigurations);
       const schoolHours = computeSchoolHours(values.slotConfigurations);
@@ -228,13 +336,31 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
         return;
       }
 
+      const shiftInfo =
+        getClassShiftInfo(allClass.find((c) => c.id === formik.values.className)) ||
+        getClassShiftInfoFromSlot(isEdit ? lectureSlots : existingClassSlotData);
       formik.setFieldValue(
         `slotConfigurations[${configIndex}].timeSlots`,
-        generateSlots(value, configIndex, formik.values.slotConfigurations[configIndex]?.timeSlots)
+        generateSlots(
+          value,
+          configIndex,
+          formik.values.slotConfigurations[configIndex]?.timeSlots,
+          shiftInfo?.start
+        )
       );
     },
-    [formik]
+    [allClass, existingClassSlotData, formik, isEdit, lectureSlots]
   );
+
+  const selectedClass = allClass.find((c) => c.id === formik.values.className);
+  const selectedClassShift =
+    getClassShiftInfo(selectedClass) ||
+    getClassShiftInfoFromSlot(isEdit ? lectureSlots : existingClassSlotData);
+  const classShiftMessage = formik.values.className
+    ? selectedClassShift?.label ||
+      'Please assign the school shift to this class before configuring lecture slots.'
+    : 'Select a class to view class timing.';
+  const canConfigureSlots = Boolean(selectedClassShift);
 
   const isSubmitting = useMemo(
     () => isAddLoading || isUpdateLoading,
@@ -244,6 +370,9 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
   return {
     formik,
     allClass,
+    canConfigureSlots,
+    classShiftMessage,
+    selectedClassShift,
     isLectureSlotsLoading:
       isLectureSlotsLoading || (!!selectedClassSlotId && isExistingSlotLoading),
     isSubmitting,

@@ -101,7 +101,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
   const receiptKindMeta = getReceiptKindMeta(receipt?.receiptKind);
 
   const title = (
-    <Box display="flex" flexDirection="column" gap={0.5} flexGrow={1}>
+    <Box display="flex" flexDirection="column" gap={1} flexGrow={1}>
       <Box display="flex" alignItems="center" gap={1}>
         <Typography variant="h6" fontWeight={700}>
           {receipt?.studentName || 'Receipt Preview'} {receipt?.grNo ? `(${receipt.grNo})` : ''}

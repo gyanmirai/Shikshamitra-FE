@@ -15,7 +15,7 @@ function SentMessage(props: TabComponentType) {
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 4, padding: 4 }}>
+    <Box sx={{ display: 'flex', gap: 1, padding: 4 }}>
       {/* Sent Message List */}
       <Box sx={{ flex: 1 }}>
         <Typography variant="h6" gutterBottom>
@@ -27,7 +27,7 @@ function SentMessage(props: TabComponentType) {
           fullWidth
           sx={{ input: {}, marginBottom: 2 }}
         />
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {[1, 2, 3].map((messageId) => (
             <Card key={messageId} sx={{}}>
               <CardContent>
@@ -65,7 +65,7 @@ function SentMessage(props: TabComponentType) {
           <Typography variant="body2" sx={{ marginTop: 2 }}>
             Message Body
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2, marginTop: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1, marginTop: 2 }}>
             <Button variant="contained" color="primary">
               Resend
             </Button>

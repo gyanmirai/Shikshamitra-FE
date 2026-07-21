@@ -59,7 +59,7 @@ const SummaryCard = ({ title, value, icon, status = 'info', path, helper }: ICar
     <Box
       sx={{
         p: 1.5,
-        gap: 1.25,
+        gap: 1,
         flex: 1,
         minWidth: 0,
         display: 'flex',

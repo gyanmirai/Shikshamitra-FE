@@ -42,10 +42,16 @@ export function InstallmentSection({
   onRemove,
   onDuplicate,
 }: InstallmentSectionProps) {
+  const allocationTotal = formik.values.installments.reduce(
+    (sum, i) => sum + (Number(i.allocationPercentage) || 0),
+    0
+  );
+  const allocationDelta = Math.round((100 - allocationTotal) * 100) / 100;
+
   return (
     <SectionCard
       title="Installment Schedule"
-      subtitle="Define payment installments with start dates, due dates, and policies."
+      subtitle="Define payment installments with coverage windows, demand/due dates, and percentage allocation (must total 100%)."
       action={
         <Button
           size="small"
@@ -62,6 +68,16 @@ export function InstallmentSection({
       {formik.touched.installments && typeof formik.errors.installments === 'string' && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {formik.errors.installments}
+        </Alert>
+      )}
+
+      {formik.values.installments.length > 0 && (
+        <Alert severity={Math.abs(allocationDelta) <= 0.01 ? 'success' : 'warning'} sx={{ mb: 2 }}>
+          {Math.abs(allocationDelta) <= 0.01
+            ? `Allocation totals 100% across ${formik.values.installments.length} installment(s).`
+            : allocationDelta > 0
+              ? `Allocation totals ${allocationTotal.toFixed(2)}%; ${allocationDelta.toFixed(2)}% remains unassigned.`
+              : `Allocation totals ${allocationTotal.toFixed(2)}%; reduce by ${Math.abs(allocationDelta).toFixed(2)}%.`}
         </Alert>
       )}
 
@@ -148,7 +164,7 @@ export function InstallmentSection({
 
               <Grid container spacing={2}>
                 {/* Installment Name */}
-                <Grid size={{ xs: 12, sm: 3 }}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -163,7 +179,7 @@ export function InstallmentSection({
                 </Grid>
 
                 {/* Start Date */}
-                <Grid size={{ xs: 12, sm: 3 }}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <DatePicker
                     label="Start Date *"
                     value={inst.startDate ? dayjs(inst.startDate as string) : null}
@@ -182,7 +198,7 @@ export function InstallmentSection({
                 </Grid>
 
                 {/* End Date */}
-                <Grid size={{ xs: 12, sm: 3 }}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <DatePicker
                     label="End Date *"
                     value={inst.endDate ? dayjs(inst.endDate as string) : null}
@@ -200,8 +216,27 @@ export function InstallmentSection({
                   />
                 </Grid>
 
+                {/* Demand Date */}
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <DatePicker
+                    label="Demand Date *"
+                    value={inst.demandDate ? dayjs(inst.demandDate as string) : null}
+                    onChange={(date) =>
+                      formik.setFieldValue(`${prefix}.demandDate`, date ? date.toISOString() : null)
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: Boolean(errObj?.demandDate),
+                        helperText: errObj?.demandDate,
+                      },
+                    }}
+                  />
+                </Grid>
+
                 {/* Due Date */}
-                <Grid size={{ xs: 12, sm: 3 }}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <DatePicker
                     label="Due Date *"
                     value={inst.dueDate ? dayjs(inst.dueDate as string) : null}
@@ -216,6 +251,23 @@ export function InstallmentSection({
                         helperText: errObj?.dueDate,
                       },
                     }}
+                  />
+                </Grid>
+
+                {/* Allocation % */}
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Allocation % *"
+                    name={`${prefix}.allocationPercentage`}
+                    value={inst.allocationPercentage ?? ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={Boolean(errObj?.allocationPercentage)}
+                    helperText={errObj?.allocationPercentage}
+                    inputProps={{ min: 0.01, max: 100, step: 'any' }}
                   />
                 </Grid>
               </Grid>

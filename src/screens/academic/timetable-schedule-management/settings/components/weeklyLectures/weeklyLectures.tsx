@@ -13,7 +13,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { normalizeTimetableStatus } from 'src/utils/timetable-capacity';
+import { TIMETABLE_STATUS_LABEL, normalizeTimetableStatus } from 'src/utils/timetable-capacity';
 import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
 import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
@@ -66,15 +66,20 @@ const WeeklyLectures = () => {
    */
   const tableData = useMemo<ISubjectFormValues[]>(
     () =>
-      weeklyLectureData?.items?.map((item: ISubjectFormValues & { subjects: ISubject[] }) => ({
-        ...item,
-        newSubject: item.subjects
-          .map(
-            (subject) =>
-              `${subject.electiveGroupName || subject.subjectName} (${subject.weeklyLectures})`
-          )
-          .join(' '),
-      })) ?? [],
+      weeklyLectureData?.items?.map((item: ISubjectFormValues & { subjects: ISubject[] }) => {
+        const normalizedStatus = normalizeTimetableStatus(item.status);
+
+        return {
+          ...item,
+          statusLabel: normalizedStatus ? TIMETABLE_STATUS_LABEL[normalizedStatus] : '',
+          newSubject: item.subjects
+            .map(
+              (subject) =>
+                `${subject.electiveGroupName || subject.subjectName} (${subject.weeklyLectures})`
+            )
+            .join(' '),
+        };
+      }) ?? [],
     [weeklyLectureData]
   );
 
@@ -125,6 +130,7 @@ const WeeklyLectures = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Weekly Lectures Slots"
         description="Configure and manage weekly lecture slots for each class."
         links={[

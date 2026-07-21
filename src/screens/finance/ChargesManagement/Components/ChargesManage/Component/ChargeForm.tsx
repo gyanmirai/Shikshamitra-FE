@@ -712,7 +712,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         )}
 
                         {values.selectedStudentIds.length > 0 && (
-                          <Box mt={1} display="flex" flexWrap="wrap" gap={0.5}>
+                          <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
                             {values.selectedStudentIds.slice(0, 5).map((id) => {
                               const s = studentOptions.find((o) => o.studentId === id);
                               return s ? (
@@ -756,7 +756,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
               alignItems="center"
               justifyContent="flex-end"
               flexWrap="wrap"
-              gap={1.5}
+              gap={1}
             >
               <Stack direction="row" spacing={1.5} flexWrap="wrap">
                 <Button

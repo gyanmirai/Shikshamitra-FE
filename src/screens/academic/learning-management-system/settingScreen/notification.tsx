@@ -6,8 +6,9 @@ import { Box, Grid, Switch, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const NotificationSetting = () => (
-  <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+  <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Notification "
       description="Configure notification settings for the learning management system."
       links={[
@@ -20,7 +21,7 @@ const NotificationSetting = () => (
         { name: 'Notification' },
       ]}
     />
-    <Grid container spacing={2} alignItems="flex-start" sx={{ mt: 2 }}>
+    <Grid container spacing={1} alignItems="flex-start" sx={{ mt: 2 }}>
       <Grid size={{ xs: 12, md: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           Custom Notifications

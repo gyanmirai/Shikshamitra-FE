@@ -1477,7 +1477,7 @@ const EmployeeICardBuilder = ({
                   <Stack spacing={1}>
                     {designRecommendations.map((item) => (
                       <Paper key={item.id} variant="outlined" sx={{ p: 1.5 }}>
-                        <Stack direction="row" justifyContent="space-between" gap={2}>
+                        <Stack direction="row" justifyContent="space-between" gap={1}>
                           <Box>
                             <Typography variant="subtitle2">{item.title}</Typography>
                             <Typography variant="body2" color="text.secondary">

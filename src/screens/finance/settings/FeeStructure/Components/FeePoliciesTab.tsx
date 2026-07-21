@@ -46,11 +46,11 @@ const POLICY_CONFIG: Array<{
   {
     key: 'paymentPolicyId',
     type: 'payment',
-    label: 'Payment Term',
+    label: 'Payment Policy',
     icon: 'solar:card-bold-duotone',
     color: 'primary',
     required: true,
-    description: 'Controls installment schedule and payment behaviour',
+    description: 'Controls payment behaviour, partial payments, and allocation',
   },
   {
     key: 'collectionPolicyId',

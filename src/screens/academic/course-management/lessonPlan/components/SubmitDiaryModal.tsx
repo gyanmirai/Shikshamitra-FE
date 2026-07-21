@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import React, { useState, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -273,10 +273,10 @@ const SubmitDiaryModal = ({
             borderColor: 'divider',
           }}
         >
-          <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Stack
               direction="row"
-              spacing={0.75}
+              spacing={1}
               alignItems="center"
               sx={{
                 px: 1.5,
@@ -294,7 +294,7 @@ const SubmitDiaryModal = ({
             </Stack>
             <Stack
               direction="row"
-              spacing={0.75}
+              spacing={1}
               alignItems="center"
               sx={{
                 px: 1.5,
@@ -312,7 +312,7 @@ const SubmitDiaryModal = ({
             </Stack>
             <Stack
               direction="row"
-              spacing={0.75}
+              spacing={1}
               alignItems="center"
               sx={{
                 px: 1.5,
@@ -334,7 +334,7 @@ const SubmitDiaryModal = ({
             </Stack>
             <Stack
               direction="row"
-              spacing={0.75}
+              spacing={1}
               alignItems="center"
               sx={{
                 px: 1.5,
@@ -352,7 +352,7 @@ const SubmitDiaryModal = ({
             </Stack>
             <Stack
               direction="row"
-              spacing={0.75}
+              spacing={1}
               alignItems="center"
               sx={{
                 px: 1.5,
@@ -404,7 +404,7 @@ const SubmitDiaryModal = ({
       </Tabs>
 
       <DialogScrollContent>
-        <Stack spacing={3}>
+        <Stack spacing={1}>
           {error && (
             <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
               {error}
@@ -422,7 +422,7 @@ const SubmitDiaryModal = ({
             }}
           >
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Stack direction="row" spacing={0.75} alignItems="center">
+              <Stack direction="row" spacing={1} alignItems="center">
                 <Iconify
                   icon="mdi:chart-donut"
                   width={16}
@@ -457,9 +457,9 @@ const SubmitDiaryModal = ({
                   bgcolor: 'background.paper',
                 }}
               >
-                <Stack spacing={2}>
+                <Stack spacing={1}>
                   {sectionHeader('mdi:calendar-check-outline', 'Class Status')}
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
                     <DatePicker
                       label="Actual Date *"
                       value={form.actualDate}
@@ -490,7 +490,7 @@ const SubmitDiaryModal = ({
                       bgcolor: 'background.paper',
                     }}
                   >
-                    <Stack spacing={2.5}>
+                    <Stack spacing={1}>
                       {sectionHeader('mdi:book-open-variant', 'Lesson Coverage')}
                       <TextField
                         size="small"
@@ -510,7 +510,7 @@ const SubmitDiaryModal = ({
                         placeholder="Describe what was taught in detail..."
                         helperText="Summarize the concepts, examples and activities actually covered"
                       />
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                         <Box sx={{ flex: 1 }}>
                           <Stack direction="row" justifyContent="space-between" alignItems="center">
                             <Typography variant="body2" color="text.secondary">
@@ -559,9 +559,9 @@ const SubmitDiaryModal = ({
                       bgcolor: 'background.paper',
                     }}
                   >
-                    <Stack spacing={2.5}>
+                    <Stack spacing={1}>
                       {sectionHeader('mdi:account-group-outline', 'Classroom Feedback')}
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                         <CustomSelect
                           label="Class Understanding Level"
                           options={understandingLevelOptions}
@@ -589,7 +589,7 @@ const SubmitDiaryModal = ({
                       />
                       <Stack
                         direction={{ xs: 'column', sm: 'row' }}
-                        spacing={2}
+                        spacing={1}
                         alignItems="center"
                       >
                         <TextField
@@ -623,7 +623,7 @@ const SubmitDiaryModal = ({
                     bgcolor: 'background.paper',
                   }}
                 >
-                  <Stack spacing={2}>
+                  <Stack spacing={1}>
                     <Alert severity="warning" icon={<Iconify icon="mdi:alert-outline" />}>
                       Class not conducted. Please provide a reason and reschedule date if needed.
                     </Alert>
@@ -656,7 +656,7 @@ const SubmitDiaryModal = ({
                 bgcolor: 'background.paper',
               }}
             >
-              <Stack spacing={2.5}>
+              <Stack spacing={1}>
                 {sectionHeader('mdi:thought-bubble-outline', 'Teacher Reflection')}
                 <TextField
                   size="small"
@@ -735,7 +735,7 @@ const SubmitDiaryModal = ({
                 bgcolor: 'background.paper',
               }}
             >
-              <Stack spacing={2.5}>
+              <Stack spacing={1}>
                 {sectionHeader('mdi:paperclip', 'Supporting Evidence')}
                 <Alert severity="info" icon={<Iconify icon="mdi:information-outline" />}>
                   Upload classroom evidence to support your diary entry. Supported: photos, PDF,
@@ -775,7 +775,7 @@ const SubmitDiaryModal = ({
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 1.5,
+                          gap: 1,
                           p: 1.5,
                           bgcolor: 'background.neutral',
                           borderRadius: '8px',

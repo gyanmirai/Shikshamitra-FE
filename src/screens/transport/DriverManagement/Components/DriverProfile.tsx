@@ -188,12 +188,12 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
             spacing={2}
             sx={{ color: 'text.secondary' }}
           >
-            <Box display="flex" alignItems="center" gap={0.5}>
+            <Box display="flex" alignItems="center" gap={1}>
               <Iconify icon="mdi:card-account-details-outline" width={16} />
               <Typography variant="body2">{profileData.employeeId}</Typography>
             </Box>
             <Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />
-            <Box display="flex" alignItems="center" gap={0.5}>
+            <Box display="flex" alignItems="center" gap={1}>
               <Iconify icon="mdi:briefcase-clock-outline" width={16} />
               <Typography variant="body2">{profileData.experience} Exp.</Typography>
             </Box>

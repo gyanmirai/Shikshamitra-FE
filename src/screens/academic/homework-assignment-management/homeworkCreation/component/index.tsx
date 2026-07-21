@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Box, Typography } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -33,8 +33,9 @@ import {
 import HomeworkForm from './homeworkForm';
 import HomeworkTable from './homeworkTable';
 import ViewHomeworkDetails from './viewHomeworkDetails';
+import { StudentSubmissions } from '../studentSubmission/homeworkStudentSubmission';
 
-import type { IHomework, IHomeworkDetail } from '../type';
+import type { IHomework } from '../type';
 
 const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   // Dialog state for adding disciplinary incidents
@@ -119,7 +120,6 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // State to track the currently selected homework assignment for editing
   const [selectedHomework, setSelectedHomework] = useState<IHomework | null>(null);
-  const [, setViewHomework] = useState<IHomeworkDetail | null>(null);
   // ID of homework to fetch detail for — drives the GET-by-id query
   const [viewHomeworkId, setViewHomeworkId] = useState<string | null>(null);
 
@@ -232,7 +232,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           boxShadow: 'var(--shadows-3)',
           mt: 1,
           p: 1,
-          gap: 2,
+          gap: 1,
           mb: 1,
         }}
       >
@@ -377,8 +377,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           viewHomeworkDetailDialog.onTrue();
         }}
         onViewSubmission={(row) => {
+          setSelectedHomework(row as IHomework);
           viewHomeworkSubmissionDialog.onTrue();
-          setViewHomework(row);
         }}
       />
 
@@ -534,8 +534,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         />
       </CustomDialog>
 
-      {/* <CustomDialog
-        title={selectedHomework?.title || 'Homework Details'}
+      <CustomDialog
+        title={selectedHomework?.title || 'Homework Submissions'}
         open={viewHomeworkSubmissionDialog.value}
         handleClose={() => {
           viewHomeworkSubmissionDialog.onFalse();
@@ -544,9 +544,14 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         maxWidth="lg"
       >
         <Box sx={{ p: 2 }}>
-          <StudentSubmissions selectedHomework={selectedHomework} />
+          <StudentSubmissions
+            selectedClass={classes}
+            selectedDivision={division}
+            selectedSubject={subject}
+            selectedHomework={selectedHomework}
+          />
         </Box>
-      </CustomDialog> */}
+      </CustomDialog>
     </Box>
   );
 };

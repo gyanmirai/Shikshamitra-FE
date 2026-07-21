@@ -50,7 +50,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
   return (
     <Box sx={{ gap: 2, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
       {/* Action Button */}
-      <Box display="flex" justifyContent="flex-end" alignItems="center" flexWrap="wrap" gap={2}>
+      <Box display="flex" justifyContent="flex-end" alignItems="center" flexWrap="wrap" gap={1}>
         <Button
           variant="contained"
           size="small"

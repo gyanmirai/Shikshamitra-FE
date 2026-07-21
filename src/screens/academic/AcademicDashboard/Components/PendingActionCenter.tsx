@@ -120,7 +120,7 @@ export default function PendingActionCenter() {
             key={item.id}
             direction="row"
             alignItems="center"
-            spacing={1.5}
+            spacing={1}
             sx={{ p: 1.5, borderRadius: 1.5, bgcolor: BG[item.priority] }}
           >
             {/* Icon */}
@@ -141,7 +141,7 @@ export default function PendingActionCenter() {
 
             {/* Count + label */}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap">
+              <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
                 <Label
                   color={PRIORITY_COLOR[item.priority]}
                   variant="filled"
