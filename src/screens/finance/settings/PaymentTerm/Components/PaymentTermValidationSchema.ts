@@ -69,21 +69,4 @@ export const paymentTermValidationSchema = (_currentYear?: { id?: string; name?:
       ['Draft', 'Published'] as const,
       'Invalid demand status'
     ),
-
-    // Partial payment — min amount/percentage only validated when partial is enabled
-    minPartialAmount: Yup.number()
-      .nullable()
-      .when('allowPartialInstallment', {
-        is: true,
-        then: (schema) => schema.min(0, 'Must be ≥ 0'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-
-    minPartialPercentage: Yup.number()
-      .nullable()
-      .when('allowPartialInstallment', {
-        is: true,
-        then: (schema) => schema.min(0).max(100, 'Must be between 0 and 100'),
-        otherwise: (schema) => schema.nullable(),
-      }),
   });

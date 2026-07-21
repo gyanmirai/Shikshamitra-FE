@@ -9,7 +9,6 @@ import { SummaryPanel } from './panels/SummaryPanel';
 import { usePaymentTermForm } from '../hooks/usePaymentTermForm';
 import { GeneralInfoSection } from './sections/GeneralInfoSection';
 import { InstallmentSection } from './sections/InstallmentSection';
-import { PartialPaymentSection } from './sections/PartialPaymentSection';
 import { BillingScheduleSection } from './sections/BillingScheduleSection';
 
 import type { IPaymentTermFormProps } from '../type';
@@ -93,7 +92,6 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
               onDuplicate={duplicateInstallment}
             />
             <BillingScheduleSection formik={formik} />
-            <PartialPaymentSection formik={formik} />
           </Box>
         </Scrollbar>
 

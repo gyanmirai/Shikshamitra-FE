@@ -2,7 +2,9 @@
 
 > **Scope:** This document explains how the **Collection Policy** connects with Fee Collection, Charges, Refund, Adjustment, and Concession submodules. It covers the complete runtime flow, all scenarios, and edge cases.
 >
-> **Last Updated:** 2026-07-02
+> **Late Fee Policy retired:** The separate, unrouted `ILateFeePolicy` type/drawer/hook (`LateFeePolicyDrawer.tsx`, `LateFeePolicyWorkspace.tsx`, `useLateFeePolicyForm.ts`, and the `'late-fee'` `FinancePolicyKind`) has been removed. Collection Policy is the only place a school configures late-fee and waiver behaviour — there is no second, parallel late-fee system to reconcile against.
+>
+> **Last Updated:** 2026-07-14
 
 ---
 
@@ -475,7 +477,7 @@ The waiver subsystem allows a cashier/admin to **reduce or nullify the late fee*
 | 2 | Waiver not enforceable at collection time | Policy rules bypassed | High | Add waiver input + max-cap validation in collect flow |
 | 3 | Adjustment form ignores collection policy | Inconsistent late-fee recalculation | Medium | Pass policy to adjustment form |
 | 4 | `allowOnlineCollection` not gating payment methods | Online payment possible even if disabled | Medium | Filter payment methods based on policy flag |
-| 5 | Slab overlap/gap validation missing | Ambiguous late fee computation | Medium | Add validation in `useCollectionPolicyForm.ts` |
+| 5 | ~~Slab overlap/gap validation missing~~ **Resolved** | Ambiguous late fee computation | Medium | Added in `useCollectionPolicyForm.ts` (`computeSlabIssues`, shared with the `SlabTimelinePreview` visual) |
 | 6 | Charge late-fee applicability undefined | Unpredictable penalties | Low | Clarify schema: add `applyToCharges` flag |
 | 7 | Concession `lateFeeBehaviour` override not wired | Concession-latefee conflict unresolved | High | Wire concession policy into collection runtime |
 | 8 | `waiverExpiry` not enforced at runtime | Expired waivers still processed | Medium | Add date check in collect flow |

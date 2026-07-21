@@ -175,6 +175,9 @@ export interface MonthWiseFeeItem {
   concessionAmount?: number;
   refundAmount?: number;
   refundDescription?: string;
+  lateFeeAmount?: number;
+  lateFeeExplanation?: string;
+  lateFeeWaivedAmount?: number;
   status: FeeCollectionStatusType;
 }
 
@@ -195,6 +198,9 @@ export interface FeeHeadWiseFeeItem {
   concessionAmount?: number;
   refundAmount?: number;
   refundDescription?: string;
+  lateFeeAmount?: number;
+  lateFeeExplanation?: string;
+  lateFeeWaivedAmount?: number;
   status: FeeCollectionStatusType;
 }
 

@@ -16,6 +16,11 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
+  useGetCollectionPoliciesQuery,
+  useArchiveCollectionPolicyMutation,
+  useUnarchiveCollectionPolicyMutation,
+} from 'src/redux/finance/collectionPolicy';
+import {
   useGetFinancePoliciesQuery,
   useGetFinancePolicyByIdQuery,
   usePatchFinancePolicyMutation,
@@ -43,6 +48,16 @@ const STATUS_COLOR: Record<FinancePolicyStatus, 'success' | 'warning' | 'error' 
   Archived: 'default',
 };
 
+// Collection Policy's status is restricted to Active/Archived and never reaches Draft
+// (see finance-policy.types.ts ICollectionPolicy.status), so the delete-eligibility rule
+// can't be a single hardcoded 'Draft' check across all policy kinds — it's resolved
+// per policy type instead. For Collection Policy, Archived is the terminal "safe to
+// hard-delete" state; for every other kind, an unpublished Draft is.
+const isPolicyDeletable = (
+  policyType: IFinancePolicyTableProps['policyType'],
+  status: FinancePolicyStatus
+): boolean => (policyType === 'collection' ? status === 'Archived' : status === 'Draft');
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, onAdd, onEdit }) => {
@@ -63,16 +78,49 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   const academicYearId = currentYear?.id || '';
 
   // ── Queries / Mutations ──────────────────────────────────────────────────────
+  // Collection Policy has a real backend (Phase 1); every other kind still calls
+  // the generic, not-yet-implemented `/finance-policies` slice. Both queries are
+  // called unconditionally (React hooks can't branch) and gated with `skip` —
+  // only the one matching `policyType` actually fires.
+  const isCollectionKind = policyType === 'collection';
 
   const {
-    data: policyData,
-    isLoading,
-    isFetching,
+    data: genericPolicyData,
+    isLoading: isGenericLoading,
+    isFetching: isGenericFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFinancePoliciesQuery,
     params: { policyType, ...queryParams },
+    options: { skip: isCollectionKind },
   });
+
+  const {
+    data: collectionPolicyData,
+    isLoading: isCollectionLoading,
+    isFetching: isCollectionFetching,
+  } = useGetCollectionPoliciesQuery(
+    {
+      academicYearId,
+      status: queryParams.status || undefined,
+      search: queryParams.search || undefined,
+      skipCount: (queryParams.page - 1) * queryParams.pageSize,
+      maxResultCount: queryParams.pageSize,
+    },
+    { skip: !isCollectionKind || !academicYearId }
+  );
+
+  const policyData = isCollectionKind
+    ? collectionPolicyData && {
+        items: collectionPolicyData.items,
+        totalCount: collectionPolicyData.totalCount,
+      }
+    : genericPolicyData;
+  const isLoading = isCollectionKind ? isCollectionLoading : isGenericLoading;
+  const isFetching = isCollectionKind ? isCollectionFetching : isGenericFetching;
+
+  const [archiveCollectionPolicy] = useArchiveCollectionPolicyMutation();
+  const [unarchiveCollectionPolicy] = useUnarchiveCollectionPolicyMutation();
 
   const { data: policyDetails, isLoading: isDetailsLoading } = useGetFinancePolicyByIdQuery(
     selected?.id || '',
@@ -157,40 +205,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
               render: (value: any) => (
                 <Typography variant="caption" fontSize="13px" color="text.secondary">
                   {value || '-'}
-                </Typography>
-              ),
-            },
-          ]
-        : []),
-      ...(policyType === 'late-fee'
-        ? [
-            {
-              id: 'lateFeeType',
-              label: 'Late Fee Type',
-              align: 'left' as const,
-              render: (_: any, row: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {row.lateFeeType || row.calculationType || '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'gracePeriodDays',
-              label: 'Grace Days',
-              align: 'center' as const,
-              render: (_: any, row: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {row.gracePeriodDays ?? 0} days
-                </Typography>
-              ),
-            },
-            {
-              id: 'maximumLateFeeAmount',
-              label: 'Max Late Fee',
-              align: 'right' as const,
-              render: (_: any, row: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {row.maximumLateFeeAmount ? `₹${row.maximumLateFeeAmount}` : 'No Limit'}
                 </Typography>
               ),
             },
@@ -426,7 +440,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
               }}
               showEditIcon={policy.status !== 'Archived'}
               handleEditClick={() => onEdit(policy)}
-              showDeleteIcon={policy.status === 'Draft'}
+              showDeleteIcon={isPolicyDeletable(policyType, policy.status)}
               disableDeleteIcon={policy.isUsedInDownstream}
               handleDeleteClick={() => {
                 setSelected(policy);
@@ -483,13 +497,23 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
                   <MenuItem
                     onClick={async () => {
                       popover.onClose();
+                      const isRestoring = policy.status === 'Archived';
                       try {
-                        const newStatus: FinancePolicyStatus =
-                          policy.status === 'Archived' ? 'Active' : 'Archived';
-                        await patchPolicy({ id: policy.id, body: { status: newStatus } });
+                        if (isCollectionKind) {
+                          if (isRestoring) {
+                            await unarchiveCollectionPolicy(policy.id).unwrap();
+                          } else {
+                            await archiveCollectionPolicy(policy.id).unwrap();
+                          }
+                        } else {
+                          const newStatus: FinancePolicyStatus = isRestoring
+                            ? 'Active'
+                            : 'Archived';
+                          await patchPolicy({ id: policy.id, body: { status: newStatus } });
+                        }
                         shikshaMitraToast.success({
                           message: `Policy ${policy.policyName} ${
-                            newStatus === 'Archived' ? 'archived' : 'restored'
+                            isRestoring ? 'restored' : 'archived'
                           } successfully.`,
                         });
                       } catch {
@@ -515,7 +539,14 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onEdit, isCloning, academicYearId]
+    [
+      onEdit,
+      isCloning,
+      academicYearId,
+      isCollectionKind,
+      archiveCollectionPolicy,
+      unarchiveCollectionPolicy,
+    ]
   );
 
   // ── Render ────────────────────────────────────────────────────────────────────

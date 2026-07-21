@@ -13,6 +13,8 @@ import {
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
+import LateFeeWaiverButton from './LateFeeWaiverButton';
+
 // ─── Constants & Helpers ───────────────────────────────────────────────────────
 
 export const MONTH_TO_NUM: Record<string, number> = {
@@ -45,7 +47,7 @@ const AMOUNT_COLUMN_WIDTH = 112;
 const STATUS_COLUMN_WIDTH = 96;
 
 const getLedgerGridColumns = (showStatus: boolean): string =>
-  `28px minmax(160px, 1fr) repeat(5, ${AMOUNT_COLUMN_WIDTH}px)${showStatus ? ` ${STATUS_COLUMN_WIDTH}px` : ''}`;
+  `28px minmax(160px, 1fr) repeat(6, ${AMOUNT_COLUMN_WIDTH}px)${showStatus ? ` ${STATUS_COLUMN_WIDTH}px` : ''}`;
 
 // ─── ColHeader ─────────────────────────────────────────────────────────────────
 
@@ -83,19 +85,21 @@ export const ColHeader = ({
     >
       {firstLabel}
     </Typography>
-    {(['TOTAL', 'PAID', 'PENDING', 'CONCESSION', 'RECONCILIATION AMOUNT'] as const).map((col) => (
-      <Typography
-        key={col}
-        variant="caption"
-        color="text.disabled"
-        fontWeight={700}
-        textTransform="uppercase"
-        letterSpacing="0.05em"
-        sx={{ textAlign: 'right', fontSize: '0.7rem' }}
-      >
-        {col}
-      </Typography>
-    ))}
+    {(['TOTAL', 'PAID', 'PENDING', 'LATE FEE', 'CONCESSION', 'RECONCILIATION AMOUNT'] as const).map(
+      (col) => (
+        <Typography
+          key={col}
+          variant="caption"
+          color="text.disabled"
+          fontWeight={700}
+          textTransform="uppercase"
+          letterSpacing="0.05em"
+          sx={{ textAlign: 'right', fontSize: '0.7rem' }}
+        >
+          {col}
+        </Typography>
+      )
+    )}
     {showStatus && (
       <Typography
         variant="caption"
@@ -127,6 +131,11 @@ export interface FeeRowProps {
   concessionAmount?: number;
   refundAmount?: number;
   refundDescription?: string;
+  lateFeeAmount?: number;
+  lateFeeExplanation?: string;
+  lateFeeWaivedAmount?: number;
+  /** Enables the waiver action button on this row — omitted for charges and views where the due fee id isn't resolvable. */
+  dueFeeId?: string;
 }
 
 export const FeeRow = ({
@@ -138,6 +147,10 @@ export const FeeRow = ({
   concessionAmount,
   refundAmount,
   refundDescription,
+  lateFeeAmount,
+  lateFeeExplanation,
+  lateFeeWaivedAmount,
+  dueFeeId,
   status,
   isSelected,
   isDisabled = false,
@@ -147,6 +160,8 @@ export const FeeRow = ({
   const theme = useTheme();
   const safeReconciliationAmount = reconciliationAmount ?? 0;
   const safeConcessionAmount = concessionAmount ?? 0;
+  const safeLateFeeAmount = lateFeeAmount ?? 0;
+  const safeLateFeeWaivedAmount = lateFeeWaivedAmount ?? 0;
   const hasRefund = (refundAmount ?? 0) > 0 && !!refundDescription;
 
   return (
@@ -272,6 +287,75 @@ export const FeeRow = ({
       >
         {formatNumber(due, 'INR')}
       </Typography>
+
+      {/* LATE FEE */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: 0.5,
+          minWidth: 0,
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{
+            textAlign: 'right',
+            fontVariantNumeric: 'tabular-nums',
+            color: safeLateFeeAmount > 0 ? 'error.main' : 'text.secondary',
+            fontWeight: safeLateFeeAmount > 0 ? 600 : 400,
+          }}
+        >
+          {formatNumber(safeLateFeeAmount, 'INR')}
+        </Typography>
+        {(lateFeeExplanation || safeLateFeeWaivedAmount > 0) && (
+          <Tooltip
+            arrow
+            placement="top"
+            title={
+              <Box>
+                {lateFeeExplanation && (
+                  <Typography variant="caption" display="block">
+                    {lateFeeExplanation}
+                  </Typography>
+                )}
+                {safeLateFeeWaivedAmount > 0 && (
+                  <Typography variant="caption" display="block">
+                    {formatNumber(safeLateFeeWaivedAmount, 'INR')} already waived
+                  </Typography>
+                )}
+              </Box>
+            }
+          >
+            <Box
+              component="span"
+              onClick={(e) => e.stopPropagation()}
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                bgcolor: 'error.main',
+                color: 'error.contrastText',
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                cursor: 'help',
+                flexShrink: 0,
+                lineHeight: 1,
+                userSelect: 'none',
+              }}
+            >
+              ?
+            </Box>
+          </Tooltip>
+        )}
+        {safeLateFeeAmount > 0 && dueFeeId && (
+          <LateFeeWaiverButton dueFeeId={dueFeeId} computedLateFeeAmount={safeLateFeeAmount} />
+        )}
+      </Box>
 
       {/* CONCESSION */}
       <Typography

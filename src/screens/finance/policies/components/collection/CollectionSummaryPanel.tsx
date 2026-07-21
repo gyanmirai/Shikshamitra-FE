@@ -4,7 +4,7 @@ import React from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Chip, Stack, Paper, Divider, TextField, Typography } from '@mui/material';
 
-import { SummaryRow, ValidationCheck } from './CollectionCommon';
+import { SummaryRow, ValidationCheck, ValidationWarning } from './CollectionCommon';
 
 interface CollectionSummaryPanelProps {
   formik: any;
@@ -13,6 +13,9 @@ interface CollectionSummaryPanelProps {
     graceValid: boolean;
     lateFeeValid: boolean;
     waiverHeadsValid: boolean;
+    slabValid: boolean;
+    isDefaultConflict: boolean;
+    uncappedRunawayRisk: boolean;
     isReadyToPublish: boolean;
   };
   calcAmount: number;
@@ -234,7 +237,15 @@ export default function CollectionSummaryPanel({
             <ValidationCheck label="General Information Complete" valid={checks.nameValid} />
             <ValidationCheck label="Grace Period Configured" valid={checks.graceValid} />
             <ValidationCheck label="Late Fee Slabs/Inputs Configured" valid={checks.lateFeeValid} />
+            <ValidationCheck label="No Overlapping/Missing Slab Ranges" valid={checks.slabValid} />
             <ValidationCheck label="Waiver Applies To Fee Heads" valid={checks.waiverHeadsValid} />
+            <ValidationCheck
+              label="Only One Default Policy This Year"
+              valid={!checks.isDefaultConflict}
+            />
+            {checks.uncappedRunawayRisk && (
+              <ValidationWarning label="No cap set — Compound/Percentage fees can grow unbounded" />
+            )}
             {checks.isReadyToPublish ? (
               <Chip
                 label="Ready to Publish"

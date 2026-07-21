@@ -12,9 +12,12 @@ import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
-  useCreateFinancePolicyMutation,
-  useUpdateFinancePolicyMutation,
-} from 'src/redux/finance/financePolicy';
+  useGetCollectionPoliciesQuery,
+  useCreateCollectionPolicyMutation,
+  useUpdateCollectionPolicyMutation,
+} from 'src/redux/finance/collectionPolicy';
+
+import { computeSlabIssues } from '../components/collection/CollectionCommon';
 
 import type {
   IFinancePolicyRow,
@@ -52,6 +55,8 @@ const getInitialValues = (
     compoundFrequency: data?.compoundFrequency || 'Daily',
     escalationRules: data?.escalationRules || [],
     roundingMethod: data?.roundingMethod || 'None',
+    maximumLateFeeAmount: data?.maximumLateFeeAmount ?? null,
+    maximumChargingDays: data?.maximumChargingDays ?? null,
     considerAsIncome: data?.considerAsIncome ?? false,
 
     enableWaiver: data?.enableWaiver ?? false,
@@ -132,6 +137,12 @@ const validationSchema = Yup.object().shape({
       then: (s) => s.required('Amount Per Month is required').min(0, 'Must be 0 or greater'),
     }),
 
+  maximumLateFeeAmount: Yup.number().nullable().min(0, 'Must be 0 or greater'),
+  maximumChargingDays: Yup.number()
+    .nullable()
+    .integer('Must be a whole number')
+    .min(1, 'Must be at least 1 day'),
+
   enableWaiver: Yup.boolean(),
   waiverApplyOnFeeHeads: Yup.array()
     .of(Yup.string())
@@ -169,14 +180,33 @@ export function useCollectionPolicyForm({
   const { data: feeHeadsData } = useGetFeeHeadsQuery('');
   const feeHeads = useMemo(() => feeHeadsData?.items || [], [feeHeadsData]);
 
+  // Load existing Collection Policies for this academic year, to catch a second
+  // policy being marked isDefault before it ever reaches the backend — the backend
+  // enforces the same "one default per academic year per policy type" invariant
+  // authoritatively (CollectionPolicyAppService.EnsureNoOtherDefaultAsync); this is
+  // a fast client-side pre-check so the toast fires before a round trip.
+  const effectiveAcademicYearId = academicYearId || currentYear?.id || '';
+  const { data: existingPoliciesData } = useGetCollectionPoliciesQuery(
+    { academicYearId: effectiveAcademicYearId, status: 'Active' },
+    { skip: !effectiveAcademicYearId }
+  );
+  const otherDefaultPolicyName = useMemo(() => {
+    const items = existingPoliciesData?.items || [];
+    const conflict = items.find(
+      (p: any) =>
+        p.isDefault && p.id !== editData?.id && p.academicYearId === effectiveAcademicYearId
+    );
+    return conflict?.policyName as string | undefined;
+  }, [existingPoliciesData, editData?.id, effectiveAcademicYearId]);
+
   const [createPolicy, { isLoading: isCreating }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useCreateFinancePolicyMutation,
+    currentQueryAndMutation: useCreateCollectionPolicyMutation,
   });
 
   const [updatePolicy, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateFinancePolicyMutation,
+    currentQueryAndMutation: useUpdateCollectionPolicyMutation,
   });
 
   const isSaving = isCreating || isUpdating;
@@ -189,6 +219,83 @@ export function useCollectionPolicyForm({
       // Custom handler is used instead
     },
   });
+
+  // Live Calculator State
+  const [calcAmount, setCalcAmount] = useState(1000);
+  const [calcDaysLate, setCalcDaysLate] = useState(10);
+  const [calcPayment, setCalcPayment] = useState(500);
+
+  /**
+   * Memoization Justification:
+   * Memoizes validation status checks computed dynamically from form values,
+   * minimizing re-computations of state rules on simple text typing changes.
+   */
+  const checks = useMemo(() => {
+    const v = formik.values;
+    const nameValid = v.policyName.trim().length >= 3;
+    const graceValid = !v.enableLateFee || (v.gracePeriodDays >= 0 && v.gracePeriodDays <= 365);
+    const headsValid = !v.enableLateFee || v.lateFeeApplyOnFeeHeads.length >= 1;
+
+    let lateFeeValid = true;
+    if (v.enableLateFee) {
+      if (v.lateFeeType === 'Flat') lateFeeValid = v.flatAmount !== null && v.flatAmount >= 0;
+      else if (v.lateFeeType === 'Percentage' || v.lateFeeType === 'Compound') {
+        lateFeeValid = v.percentage !== null && v.percentage >= 0 && v.percentage <= 100;
+      } else if (v.lateFeeType === 'PerDay')
+        lateFeeValid = v.amountPerDay !== null && v.amountPerDay >= 0;
+      else if (v.lateFeeType === 'PerWeek')
+        lateFeeValid = v.amountPerWeek !== null && v.amountPerWeek >= 0;
+      else if (v.lateFeeType === 'PerMonth')
+        lateFeeValid = v.amountPerMonth !== null && v.amountPerMonth >= 0;
+      else if (v.lateFeeType === 'Slab') {
+        const slabIssues = computeSlabIssues(v.escalationRules);
+        lateFeeValid =
+          v.escalationRules.length > 0 &&
+          v.escalationRules.every(
+            (s) => s.startDay >= 0 && (s.endDay === null || s.endDay >= s.startDay) && s.value >= 0
+          ) &&
+          !slabIssues.hasIssues;
+      }
+    }
+
+    const slabValid =
+      v.lateFeeType !== 'Slab' ||
+      !v.enableLateFee ||
+      !computeSlabIssues(v.escalationRules).hasIssues;
+
+    const waiverHeadsValid = !v.enableWaiver || v.waiverApplyOnFeeHeads.length >= 1;
+    const isDefaultConflict = v.isDefault && Boolean(otherDefaultPolicyName);
+
+    // Phase 4b: Compound and Percentage can grow unbounded with days-late — warn (don't
+    // block) when neither cap is set, since an uncapped Flat/PerDay/PerWeek/PerMonth policy
+    // is bounded by its own arithmetic and doesn't carry the same runaway risk.
+    const uncappedRunawayRisk =
+      v.enableLateFee &&
+      (v.lateFeeType === 'Compound' || v.lateFeeType === 'Percentage') &&
+      v.maximumLateFeeAmount === null &&
+      v.maximumChargingDays === null;
+
+    const isReadyToPublish =
+      nameValid &&
+      graceValid &&
+      headsValid &&
+      lateFeeValid &&
+      waiverHeadsValid &&
+      slabValid &&
+      !isDefaultConflict;
+
+    return {
+      nameValid,
+      graceValid,
+      headsValid,
+      lateFeeValid,
+      waiverHeadsValid,
+      slabValid,
+      isDefaultConflict,
+      uncappedRunawayRisk,
+      isReadyToPublish,
+    };
+  }, [formik.values, otherDefaultPolicyName]);
 
   const handleCustomSubmit = async (overrideStatus?: 'Active' | 'Archived') => {
     const errors = await formik.validateForm();
@@ -207,6 +314,20 @@ export function useCollectionPolicyForm({
         waiverApplyOnFeeHeads: true,
       });
       shikshaMitraToast.error({ message: 'Fix all errors before saving.' });
+      return;
+    }
+
+    if (!checks.slabValid) {
+      shikshaMitraToast.error({
+        message: 'Fix overlapping or missing-day-range slabs before saving.',
+      });
+      return;
+    }
+
+    if (checks.isDefaultConflict) {
+      shikshaMitraToast.error({
+        message: `"${otherDefaultPolicyName}" is already the default Collection Policy for this academic year. Only one default policy is allowed per year.`,
+      });
       return;
     }
 
@@ -266,56 +387,6 @@ export function useCollectionPolicyForm({
     const updated = formik.values.escalationRules.filter((_, i) => i !== index);
     formik.setFieldValue('escalationRules', updated);
   };
-
-  /**
-   * Memoization Justification:
-   * Memoizes validation status checks computed dynamically from form values,
-   * minimizing re-computations of state rules on simple text typing changes.
-   */
-  const checks = useMemo(() => {
-    const v = formik.values;
-    const nameValid = v.policyName.trim().length >= 3;
-    const graceValid = !v.enableLateFee || (v.gracePeriodDays >= 0 && v.gracePeriodDays <= 365);
-    const headsValid = !v.enableLateFee || v.lateFeeApplyOnFeeHeads.length >= 1;
-
-    let lateFeeValid = true;
-    if (v.enableLateFee) {
-      if (v.lateFeeType === 'Flat') lateFeeValid = v.flatAmount !== null && v.flatAmount >= 0;
-      else if (v.lateFeeType === 'Percentage' || v.lateFeeType === 'Compound') {
-        lateFeeValid = v.percentage !== null && v.percentage >= 0 && v.percentage <= 100;
-      } else if (v.lateFeeType === 'PerDay')
-        lateFeeValid = v.amountPerDay !== null && v.amountPerDay >= 0;
-      else if (v.lateFeeType === 'PerWeek')
-        lateFeeValid = v.amountPerWeek !== null && v.amountPerWeek >= 0;
-      else if (v.lateFeeType === 'PerMonth')
-        lateFeeValid = v.amountPerMonth !== null && v.amountPerMonth >= 0;
-      else if (v.lateFeeType === 'Slab') {
-        lateFeeValid =
-          v.escalationRules.length > 0 &&
-          v.escalationRules.every(
-            (s) => s.startDay >= 0 && (s.endDay === null || s.endDay >= s.startDay) && s.value >= 0
-          );
-      }
-    }
-
-    const waiverHeadsValid = !v.enableWaiver || v.waiverApplyOnFeeHeads.length >= 1;
-    const isReadyToPublish =
-      nameValid && graceValid && headsValid && lateFeeValid && waiverHeadsValid;
-
-    return {
-      nameValid,
-      graceValid,
-      headsValid,
-      lateFeeValid,
-      waiverHeadsValid,
-      isReadyToPublish,
-    };
-  }, [formik.values]);
-
-  // Live Calculator State
-  const [calcAmount, setCalcAmount] = useState(1000);
-  const [calcDaysLate, setCalcDaysLate] = useState(10);
-  const [calcPayment, setCalcPayment] = useState(500);
 
   /**
    * Memoization Justification:
@@ -401,6 +472,7 @@ export function useCollectionPolicyForm({
     isSaving,
     unsavedChangesDialog,
     checks,
+    otherDefaultPolicyName,
     calcAmount,
     setCalcAmount,
     calcDaysLate,

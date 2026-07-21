@@ -14,9 +14,9 @@ export interface IInstallment {
   endDate: string | null | Dayjs;
   description: string;
   reminderDate: string | null | Dayjs;
+  /** Optional override of the attached Collection Policy's gracePeriodDays for this installment only; inherits the policy value when null. */
   gracePeriod: number | null;
-  lateFeePolicyId: string | null;
-  lateFeePolicyName?: string;
+  /** Optional override of the attached Payment Policy's allowPartialPayment for this installment only; inherits the policy value when unset. */
   allowPartialOverride: boolean;
   demandEnabled: boolean;
   reminderEnabled: boolean;
@@ -37,28 +37,13 @@ export interface IPaymentTerm {
   isDefaultTerm: boolean;
   enableBillingSchedule?: boolean;
 
-  // Reminder Rules (kept for API compatibility)
-  autoReminder: boolean;
-  reminderDaysBefore: number | null;
-  reminderFrequencyDays: number | null;
-  reminderMaxCount: number | null;
-
-  // Holiday Rules (kept for API compatibility)
+  // Holiday Rules (due-date shifting is a scheduling concern, kept here rather than on Payment Policy)
   holidayShiftingMethod: 'None' | 'NextWorkingDay' | 'PreviousWorkingDay';
 
   // Billing Schedule
   demandGenerationRule: DemandGenerationRule;
   demandOffsetDays: number | null;
   initialDemandStatus: InitialDemandStatus;
-
-  // Advance & Partial Payment
-  allowAdvancePayment: boolean;
-  minAdvanceDays: number | null;
-  maxAdvanceMonths: number | null;
-  allowFullYearPayment: boolean;
-  allowPartialInstallment: boolean;
-  minPartialAmount: number | null;
-  minPartialPercentage: number | null;
 
   isUsedInDownstream?: boolean;
   createdBy?: string;

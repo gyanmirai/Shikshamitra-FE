@@ -12,7 +12,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFinancePoliciesQuery } from 'src/redux/finance/financePolicy';
 import {
   useCreatePaymentTermMutation,
   useUpdatePaymentTermMutation,
@@ -33,14 +32,6 @@ export interface IBoard {
   id: string;
   name: string;
   academicYearId: string;
-}
-
-// ---------------------------------------------------------------------------
-// Late-fee policy shape — eliminates `any` throughout consumers
-// ---------------------------------------------------------------------------
-export interface ILateFeePolicy {
-  id: string;
-  policyName: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +56,6 @@ export interface IPaymentTermChecks {
 export interface UsePaymentTermFormReturn {
   formik: ReturnType<typeof useFormik<IPaymentTerm>>;
   boards: IBoard[];
-  lateFeePolicies: ILateFeePolicy[];
   checks: IPaymentTermChecks;
   demandLabel: string;
   isSubmitting: boolean;
@@ -90,12 +80,6 @@ export function usePaymentTermForm(
   const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
 
   // ── Data queries ──────────────────────────────────────────────────────────
-  const { data: lateFeePoliciesData } = useGetFinancePoliciesQuery({ policyType: 'late-fee' });
-  const lateFeePolicies = useMemo(
-    () => (lateFeePoliciesData?.items || []) as ILateFeePolicy[],
-    [lateFeePoliciesData?.items]
-  );
-
   const { data: boardData } = useGetBoardsQuery('');
 
   /**
@@ -253,7 +237,6 @@ export function usePaymentTermForm(
       description: '',
       reminderDate: null,
       gracePeriod: 0,
-      lateFeePolicyId: '',
       allowPartialOverride: false,
       demandEnabled: true,
       reminderEnabled: true,
@@ -396,7 +379,6 @@ export function usePaymentTermForm(
   return {
     formik,
     boards,
-    lateFeePolicies,
     checks,
     demandLabel,
     isSubmitting,

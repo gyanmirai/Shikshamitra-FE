@@ -85,6 +85,16 @@ import type {
   FeeCollectionFormValues,
 } from '../Components/type';
 
+// Methods a cashier keys in on behalf of the parent, gated by the resolved Collection
+// Policy's allowOnlineCollection flag (Phase 3) — physical instruments (Cash/Cheque/DD)
+// are never gated, matching collection-policy-flow.md §7.9's intent.
+const ONLINE_PAYMENT_METHOD_KEYS = new Set([
+  'UPI',
+  'Credit Card',
+  'Debit Card',
+  'Bank Transfer (NEFT/RTGS/IMPS)',
+]);
+
 type GeneratedReceipt = {
   id: string;
   receiptNumber?: string;
@@ -442,6 +452,9 @@ const FeeCollectComponentForm = ({
           concessionAmount: item.concessionAmount,
           refundAmount: item.refundAmount,
           refundDescription: item.refundDescription,
+          lateFeeAmount: item.lateFeeAmount,
+          lateFeeExplanation: item.lateFeeExplanation,
+          lateFeeWaivedAmount: item.lateFeeWaivedAmount,
           status: normalizeStatus(item.status, item.paid, item.due),
         })),
       })) as FeeLedgerData['monthWise'],
@@ -460,6 +473,9 @@ const FeeCollectComponentForm = ({
               concessionAmount: item.concessionAmount,
               refundAmount: item.refundAmount,
               refundDescription: item.refundDescription,
+              lateFeeAmount: item.lateFeeAmount,
+              lateFeeExplanation: item.lateFeeExplanation,
+              lateFeeWaivedAmount: item.lateFeeWaivedAmount,
               status: normalizeStatus(item.status, item.paid, item.due),
             }))
           )
@@ -485,6 +501,9 @@ const FeeCollectComponentForm = ({
               concessionAmount: line.concessionAmount,
               refundAmount: line.refundAmount,
               refundDescription: line.refundDescription,
+              lateFeeAmount: line.lateFeeAmount,
+              lateFeeExplanation: line.lateFeeExplanation,
+              lateFeeWaivedAmount: line.lateFeeWaivedAmount,
               status: line.status,
             });
             return acc;
@@ -492,6 +511,13 @@ const FeeCollectComponentForm = ({
       ),
     };
   }, [formData]);
+
+  // ── Payment methods available for this student, gated by allowOnlineCollection ──
+  const availablePaymentMethods = useMemo(() => {
+    const allowOnline = formData?.allowOnlineCollection ?? true;
+    const allKeys = Object.keys(paymentMethodsConfig);
+    return allowOnline ? allKeys : allKeys.filter((key) => !ONLINE_PAYMENT_METHOD_KEYS.has(key));
+  }, [formData?.allowOnlineCollection]);
 
   // ── Apply frontend filters to ledger data ──────────────────────────────────
   const filteredLedgerData: FeeLedgerData = useMemo(() => {
@@ -1657,7 +1683,7 @@ const FeeCollectComponentForm = ({
                         }
                         sx={{ mb: 1.5 }}
                       >
-                        {Object.keys(paymentMethodsConfig).map((method) => (
+                        {availablePaymentMethods.map((method) => (
                           <MenuItem key={method} value={method}>
                             {method.charAt(0).toUpperCase() + method.slice(1)}
                           </MenuItem>

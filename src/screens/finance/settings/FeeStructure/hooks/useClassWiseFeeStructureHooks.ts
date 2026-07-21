@@ -32,8 +32,13 @@ export const useCreateClassWiseFeeStructure = () => {
   });
 
   return useCallback(
-    (args: { feeStructureMetaDataId: string; standardId: string; name: string; feeHeads: any[] }) =>
-      create(args).unwrap(),
+    (args: {
+      feeStructureMetaDataId: string;
+      standardId: string;
+      name: string;
+      feeHeads: any[];
+      collectionPolicyId?: string;
+    }) => create(args).unwrap(),
     [create]
   );
 };
@@ -48,8 +53,11 @@ export const useUpdateClassWiseFeeStructure = () => {
   });
 
   return useCallback(
-    (args: { structureId: string; classId: string; body: { name: string; feeHeads: any[] } }) =>
-      update(args).unwrap(),
+    (args: {
+      structureId: string;
+      classId: string;
+      body: { name: string; feeHeads: any[]; collectionPolicyId?: string };
+    }) => update(args).unwrap(),
     [update]
   );
 };

@@ -6,17 +6,20 @@ import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Box, Button } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinancePolicyTable from '../components/FinancePolicyTable';
 import CollectionPolicyDrawer from '../components/CollectionPolicyDrawer';
+import ExceptionWindowsDialog from '../components/ExceptionWindowsDialog';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
 export default function CollectionPolicyWorkspace() {
   const [selectedPolicy, setSelectedPolicy] = useState<IFinancePolicyRow | null>(null);
   const drawerOpen = useBoolean();
+  const exceptionWindowsOpen = useBoolean();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const academicYearId = currentYear?.id || '';
@@ -42,15 +45,26 @@ export default function CollectionPolicyWorkspace() {
           { name: 'Collection Policy' },
         ]}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Add />}
-            onClick={handleAdd}
-            sx={{ px: '24px' }}
-          >
-            Collection Policy
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              color="warning"
+              startIcon={<Iconify icon="solar:calendar-mark-bold" width={18} />}
+              onClick={exceptionWindowsOpen.onTrue}
+            >
+              Exception Windows
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              onClick={handleAdd}
+              sx={{ px: '24px' }}
+            >
+              Collection Policy
+            </Button>
+          </Box>
         }
       />
 
@@ -63,6 +77,11 @@ export default function CollectionPolicyWorkspace() {
         onClose={drawerOpen.onFalse}
         editData={selectedPolicy}
         academicYearId={academicYearId}
+      />
+
+      <ExceptionWindowsDialog
+        open={exceptionWindowsOpen.value}
+        onClose={exceptionWindowsOpen.onFalse}
       />
     </Box>
   );

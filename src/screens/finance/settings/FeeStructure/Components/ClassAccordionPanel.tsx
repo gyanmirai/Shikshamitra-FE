@@ -48,6 +48,7 @@ const mapToCardModel = (
   status: raw.status,
   classId,
   feeStructureMetaDataId,
+  collectionPolicyId: raw.collectionPolicyId ?? undefined,
 });
 
 // ---------------------------------------------------------------------------

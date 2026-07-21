@@ -151,18 +151,6 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
                 </Typography>
               }
             />
-            <SummaryRow
-              label="Partial Pay"
-              value={
-                <Chip
-                  label={values.allowPartialInstallment ? 'Enabled' : 'Off'}
-                  size="small"
-                  color={values.allowPartialInstallment ? 'info' : 'default'}
-                  variant={values.allowPartialInstallment ? 'filled' : 'outlined'}
-                  sx={{ height: 18, fontSize: '0.6rem' }}
-                />
-              }
-            />
           </Stack>
 
           <Divider sx={{ my: 1.5 }} />
