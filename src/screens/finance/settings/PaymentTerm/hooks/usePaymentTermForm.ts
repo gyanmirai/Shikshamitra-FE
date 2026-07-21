@@ -1,5 +1,6 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { FormikTouched } from 'formik';
 import type { RootState } from 'src/redux/store';
 
@@ -12,10 +13,15 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFinancePoliciesQuery } from 'src/redux/finance/financePolicy';
 import {
+  useCreateRevisionMutation,
+  useGetPaymentTermByIdQuery,
   useCreatePaymentTermMutation,
-  useUpdatePaymentTermMutation,
+  type CreateInstallmentRequest,
+  type PaymentTermDetailResponse,
+  useUpdatePaymentTermDraftMutation,
+  type UpdatePaymentTermDraftRequest,
+  type PaymentTermInstallmentResponse,
 } from 'src/redux/finance/paymentTerm';
 
 import { getInitialPaymentTermData } from '../Components/PaymentTermInitialValues';
@@ -33,14 +39,6 @@ export interface IBoard {
   id: string;
   name: string;
   academicYearId: string;
-}
-
-// ---------------------------------------------------------------------------
-// Late-fee policy shape — eliminates `any` throughout consumers
-// ---------------------------------------------------------------------------
-export interface ILateFeePolicy {
-  id: string;
-  policyName: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +63,6 @@ export interface IPaymentTermChecks {
 export interface UsePaymentTermFormReturn {
   formik: ReturnType<typeof useFormik<IPaymentTerm>>;
   boards: IBoard[];
-  lateFeePolicies: ILateFeePolicy[];
   checks: IPaymentTermChecks;
   demandLabel: string;
   isSubmitting: boolean;
@@ -76,6 +73,76 @@ export interface UsePaymentTermFormReturn {
   removeInstallment: (index: number) => void;
   duplicateInstallment: (index: number) => void;
 }
+
+// ---------------------------------------------------------------------------
+// API ↔ UI mappers
+// ---------------------------------------------------------------------------
+const toDateString = (value: string | null | Dayjs | undefined): string => {
+  if (!value) return '';
+  return dayjs(value as string).format('YYYY-MM-DD');
+};
+
+const mapApiInstallmentToUi = (inst: PaymentTermInstallmentResponse): IInstallment => ({
+  id: inst.id,
+  installmentName: inst.name,
+  sequence: inst.sequence,
+  startDate: inst.coverageStartDate,
+  endDate: inst.coverageEndDate,
+  demandDate: inst.demandDate,
+  dueDate: inst.dueDate,
+  description: '',
+  allocationPercentage: inst.allocationPercentage,
+  reminderDate: inst.reminderDate ?? null,
+  allowPartialOverride: inst.allowPartialOverride ?? null,
+  gracePeriod: inst.gracePeriodDaysOverride ?? null,
+  demandEnabled: inst.demandEnabled,
+  reminderEnabled: inst.reminderEnabled,
+});
+
+const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
+  const draft = detail.versions?.find((v) => v.status === 'Draft');
+  const current =
+    draft ??
+    detail.versions?.find((v) => v.id === detail.currentVersionId) ??
+    detail.versions?.find((v) => v.status === 'Published') ??
+    detail.versions?.[0];
+
+  return {
+    id: detail.id,
+    paymentTermName: detail.name,
+    paymentTermCode: detail.code,
+    boardId: detail.boardId,
+    description: detail.description ?? '',
+    status: detail.status,
+    academicYearId: detail.academicYearId,
+    totalInstallments: detail.totalInstallments,
+    installments: (current?.installments ?? []).map(mapApiInstallmentToUi),
+    isDefaultTerm: detail.isDefault,
+    holidayShiftingMethod: detail.holidayShiftingMethod,
+    demandGenerationRule: detail.demandGenerationRule,
+    demandOffsetDays: detail.demandOffsetDays ?? null,
+    initialDemandStatus: detail.initialDemandStatus,
+    currentVersionId: current?.id ?? detail.currentVersionId,
+    currentVersionNumber: current?.versionNumber,
+    isUsedInDownstream: detail.isUsedInFeeStructures,
+    canDirectEdit: detail.canDirectEdit,
+  };
+};
+
+const mapUiInstallmentToApi = (inst: IInstallment, index: number): CreateInstallmentRequest => ({
+  sequence: inst.sequence || index + 1,
+  name: inst.installmentName,
+  coverageStartDate: toDateString(inst.startDate),
+  coverageEndDate: toDateString(inst.endDate),
+  demandDate: toDateString(inst.demandDate),
+  dueDate: toDateString(inst.dueDate),
+  allocationPercentage: Number(inst.allocationPercentage) || 0,
+  demandEnabled: inst.demandEnabled ?? true,
+  reminderEnabled: inst.reminderEnabled ?? false,
+  reminderDate: inst.reminderDate ? toDateString(inst.reminderDate) : undefined,
+  allowPartialOverride: inst.allowPartialOverride,
+  gracePeriodDaysOverride: inst.gracePeriod,
+});
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -89,12 +156,16 @@ export function usePaymentTermForm(
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
 
-  // ── Data queries ──────────────────────────────────────────────────────────
-  const { data: lateFeePoliciesData } = useGetFinancePoliciesQuery({ policyType: 'late-fee' });
-  const lateFeePolicies = useMemo(
-    () => (lateFeePoliciesData?.items || []) as ILateFeePolicy[],
-    [lateFeePoliciesData?.items]
-  );
+  // ── Detail fetch on edit (list rows lack installments) ────────────────────
+  const { data: detailData } = useGetPaymentTermByIdQuery(editData?.id ?? '', {
+    skip: !editData?.id,
+  });
+
+  const resolvedEditData = useMemo<IPaymentTerm | null>(() => {
+    if (!editData?.id) return null;
+    if (detailData) return mapDetailToForm(detailData);
+    return editData;
+  }, [detailData, editData]);
 
   const { data: boardData } = useGetBoardsQuery('');
 
@@ -116,14 +187,18 @@ export function usePaymentTermForm(
     type: 'mutation',
     currentQueryAndMutation: useCreatePaymentTermMutation,
   });
-  const [updateTerm] = useQueryAndMutation({
+  const [updateDraft] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdatePaymentTermMutation,
+    currentQueryAndMutation: useUpdatePaymentTermDraftMutation,
+  });
+  const [createRevision] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateRevisionMutation,
   });
 
   // ── Formik ────────────────────────────────────────────────────────────────
   const formik = useFormik<IPaymentTerm>({
-    initialValues: getInitialPaymentTermData(editData, currentYear?.id),
+    initialValues: getInitialPaymentTermData(resolvedEditData, currentYear?.id),
     validationSchema: paymentTermValidationSchema(currentYear),
     enableReinitialize: true,
     onSubmit: async () => {},
@@ -131,8 +206,8 @@ export function usePaymentTermForm(
 
   // ── Reset manual-edit flag when switching create ↔ edit ──────────────────
   useEffect(() => {
-    setCodeManuallyEdited(Boolean(editData?.paymentTermCode));
-  }, [editData]);
+    setCodeManuallyEdited(Boolean(resolvedEditData?.paymentTermCode));
+  }, [resolvedEditData]);
 
   // ── Auto-generate code from name ──────────────────────────────────────────
   useEffect(() => {
@@ -149,54 +224,81 @@ export function usePaymentTermForm(
   }, [formik.values.paymentTermName, codeManuallyEdited]);
 
   // ── Build API payload ─────────────────────────────────────────────────────
-  const buildPayload = useCallback(
-    (values: IPaymentTerm, overrideStatus?: string) => ({
-      ...values,
-      boardName: boards.find((b) => b.id === values.boardId)?.name ?? '',
-      academicYearId: currentYear?.id ?? values.academicYearId,
-      ...(overrideStatus ? { status: overrideStatus as IPaymentTerm['status'] } : {}),
-      installments: values.installments.map((inst) => ({
-        ...inst,
-        startDate: inst.startDate ? dayjs(inst.startDate as string).toISOString() : null,
-        dueDate: inst.dueDate ? dayjs(inst.dueDate as string).toISOString() : null,
-        reminderDate: inst.reminderDate ? dayjs(inst.reminderDate as string).toISOString() : null,
-      })),
+  const buildDraftBody = useCallback(
+    (values: IPaymentTerm): UpdatePaymentTermDraftRequest => ({
+      name: values.paymentTermName,
+      code: values.paymentTermCode,
+      description: values.description || undefined,
+      holidayShiftingMethod: values.holidayShiftingMethod,
+      demandGenerationRule: values.demandGenerationRule,
+      demandOffsetDays: values.demandOffsetDays,
+      initialDemandStatus: values.initialDemandStatus,
+      installments: values.installments.map(mapUiInstallmentToApi),
     }),
-    [boards, currentYear?.id]
+    []
   );
 
   // ── Submit to API ─────────────────────────────────────────────────────────
-  const submitToAPI = useCallback(
-    async (overrideStatus?: string) => {
-      const payload = buildPayload(formik.values, overrideStatus);
+  const submitToAPI = useCallback(async () => {
+    const { values } = formik;
+    const academicYearId = currentYear?.id ?? values.academicYearId;
 
-      if (editData?.id) {
-        if (editData.isUsedInDownstream) {
-          const suffix = Date.now().toString().slice(-3);
-          await createTerm({
-            ...payload,
-            paymentTermName: `${payload.paymentTermName} (V${suffix})`,
-            paymentTermCode: `${payload.paymentTermCode}-V${suffix}`,
-          });
-          shikshaMitraToast.success({
-            message: 'Payment term is in use. Saved as a new version.',
-          });
-        } else {
-          await updateTerm({ id: editData.id, body: payload });
-          shikshaMitraToast.success({
-            message: `"${payload.paymentTermName}" updated successfully.`,
-          });
-        }
-      } else {
-        await createTerm(payload);
-        shikshaMitraToast.success({
-          message: `"${payload.paymentTermName}" created successfully.`,
+    if (editData?.id) {
+      const needsRevision =
+        editData.canDirectEdit === false ||
+        editData.isUsedInDownstream === true ||
+        detailData?.canDirectEdit === false ||
+        detailData?.isUsedInFeeStructures === true;
+
+      if (needsRevision) {
+        await createRevision({
+          paymentTermId: editData.id,
+          body: { changeReason: 'Updated via Payment Term editor' },
         });
       }
-      onClose(null, true);
-    },
-    [buildPayload, createTerm, editData, formik.values, onClose, updateTerm]
-  );
+
+      await updateDraft({
+        paymentTermId: editData.id,
+        body: buildDraftBody(values),
+      });
+
+      shikshaMitraToast.success({
+        message: needsRevision
+          ? `"${values.paymentTermName}" saved as a new draft revision.`
+          : `"${values.paymentTermName}" updated successfully.`,
+      });
+    } else {
+      await createTerm({
+        academicYearId,
+        boardId: values.boardId,
+        name: values.paymentTermName,
+        code: values.paymentTermCode,
+        description: values.description || undefined,
+        isDefault: values.isDefaultTerm,
+        holidayShiftingMethod: values.holidayShiftingMethod,
+        demandGenerationRule: values.demandGenerationRule,
+        demandOffsetDays: values.demandOffsetDays,
+        initialDemandStatus: values.initialDemandStatus,
+        installments: values.installments.map(mapUiInstallmentToApi),
+      });
+      shikshaMitraToast.success({
+        message: `"${values.paymentTermName}" created successfully.`,
+      });
+    }
+    onClose(null, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    buildDraftBody,
+    createRevision,
+    createTerm,
+    currentYear?.id,
+    detailData?.canDirectEdit,
+    detailData?.isUsedInFeeStructures,
+    editData,
+    formik.values,
+    onClose,
+    updateDraft,
+  ]);
 
   // ── Submit ────────────────────────────────────────────────────────────────
   /**
@@ -212,6 +314,9 @@ export function usePaymentTermForm(
         installmentName: true,
         dueDate: true,
         startDate: true,
+        endDate: true,
+        demandDate: true,
+        allocationPercentage: true,
       }));
       formik.setTouched({
         boardId: true,
@@ -249,16 +354,26 @@ export function usePaymentTermForm(
       sequence: seq,
       startDate: null,
       endDate: null,
+      demandDate: null,
       dueDate: null,
       description: '',
+      allocationPercentage: 0,
       reminderDate: null,
-      gracePeriod: 0,
-      lateFeePolicyId: '',
-      allowPartialOverride: false,
+      gracePeriod: null,
+      allowPartialOverride: null,
       demandEnabled: true,
-      reminderEnabled: true,
+      reminderEnabled: false,
     };
-    formik.setFieldValue('installments', [...formik.values.installments, newInst]);
+    const next = [...formik.values.installments, newInst];
+    // Convenience: evenly redistribute percentages across installments.
+    const base = Math.floor(10000 / next.length) / 100;
+    let remainder = Math.round((100 - base * next.length) * 100) / 100;
+    next.forEach((inst, idx) => {
+      const extra = remainder > 0 ? 0.01 : 0;
+      remainder = Math.round((remainder - extra) * 100) / 100;
+      next[idx] = { ...inst, allocationPercentage: Math.round((base + extra) * 100) / 100 };
+    });
+    formik.setFieldValue('installments', next);
   }, [formik]);
 
   /**
@@ -295,6 +410,8 @@ export function usePaymentTermForm(
           installmentName: `${src.installmentName} (Copy)`,
           sequence: seq,
           startDate: null,
+          endDate: null,
+          demandDate: null,
           dueDate: null,
         },
       ]);
@@ -335,9 +452,8 @@ export function usePaymentTermForm(
       }
     }
 
-    const demandSet = !v.enableBillingSchedule || Boolean(v.demandGenerationRule);
+    const demandSet = Boolean(v.demandGenerationRule);
     const demandOffsetValid =
-      !v.enableBillingSchedule ||
       v.demandGenerationRule !== 'XDaysBeforeDue' ||
       (v.demandOffsetDays !== null && v.demandOffsetDays >= 1);
 
@@ -375,7 +491,6 @@ export function usePaymentTermForm(
    * SummaryPanel from re-rendering when unrelated fields (e.g. description) change.
    */
   const demandLabel = useMemo<string>(() => {
-    if (!formik.values.enableBillingSchedule) return 'Disabled';
     const r = formik.values.demandGenerationRule;
     if (!r) return '—';
     if (r === 'XDaysBeforeDue') {
@@ -387,16 +502,11 @@ export function usePaymentTermForm(
       Manual: 'Manual',
     };
     return map[r] ?? r;
-  }, [
-    formik.values.enableBillingSchedule,
-    formik.values.demandGenerationRule,
-    formik.values.demandOffsetDays,
-  ]);
+  }, [formik.values.demandGenerationRule, formik.values.demandOffsetDays]);
 
   return {
     formik,
     boards,
-    lateFeePolicies,
     checks,
     demandLabel,
     isSubmitting,

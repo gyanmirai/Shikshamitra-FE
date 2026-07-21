@@ -435,6 +435,8 @@ const FeeCollectComponentForm = ({
           dueFeeId: item.dueFeeId,
           feeHeadId: item.feeHeadId,
           feeHeadName: item.feeHeadName,
+          installmentLabel: item.installmentLabel,
+          dueDate: item.dueDate,
           total: item.total,
           paid: item.paid,
           due: item.due,
@@ -449,8 +451,11 @@ const FeeCollectComponentForm = ({
         months
           .flatMap((m: FeeLedgerMonth) =>
             m.items.map((item: FeeLedgerLine) => ({
+              dueFeeId: item.dueFeeId,
               feeHeadId: item.feeHeadId,
               feeHeadName: item.feeHeadName,
+              installmentLabel: item.installmentLabel,
+              dueDate: item.dueDate,
               month: normalizeMonth(m.month as unknown as string | number),
               year: m.year,
               total: item.total,
@@ -476,8 +481,11 @@ const FeeCollectComponentForm = ({
             acc[line.feeHeadId].months += 1;
             acc[line.feeHeadId].totalDue += line.due;
             acc[line.feeHeadId].items.push({
+              dueFeeId: line.dueFeeId,
               month: line.month,
               year: line.year,
+              installmentLabel: line.installmentLabel,
+              dueDate: line.dueDate,
               total: line.total,
               paid: line.paid,
               due: line.due,
@@ -777,7 +785,9 @@ const FeeCollectComponentForm = ({
         .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.paidAmount > 0)
         .map((r) => {
           const matchingItem = formik.values.selectedItems.find(
-            (item) => `${item.feeHeadId}-${item.period}` === r.key
+            (item) =>
+              (r.dueFeeId && item.dueFeeId === r.dueFeeId) ||
+              (!r.dueFeeId && `${item.feeHeadId}-${item.period}` === r.key)
           );
           if (!matchingItem) {
             throw new Error(`Matching item not found for key ${r.key}`);
@@ -785,6 +795,7 @@ const FeeCollectComponentForm = ({
           const [yearStr, monthStr] = matchingItem.period.split('-');
           const feeMonthIdx = Number(monthStr) - 1;
           const dueFeeId =
+            r.dueFeeId ??
             matchingItem.dueFeeId ??
             dueFeeIdMap[`${matchingItem.feeHeadId}|${feeMonthIdx}|${yearStr}`];
 
@@ -859,7 +870,9 @@ const FeeCollectComponentForm = ({
         .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.paidAmount > 0)
         .map((r) => {
           const matchingItem = formik.values.selectedItems.find(
-            (item) => `${item.feeHeadId}-${item.period}` === r.key
+            (item) =>
+              (r.dueFeeId && item.dueFeeId === r.dueFeeId) ||
+              (!r.dueFeeId && `${item.feeHeadId}-${item.period}` === r.key)
           );
           if (!matchingItem) {
             throw new Error(`Matching item not found for key ${r.key}`);
@@ -867,6 +880,7 @@ const FeeCollectComponentForm = ({
           const [yearStr, monthStr] = matchingItem.period.split('-');
           const feeMonthIdx = Number(monthStr) - 1;
           const dueFeeId =
+            r.dueFeeId ??
             matchingItem.dueFeeId ??
             dueFeeIdMap[`${matchingItem.feeHeadId}|${feeMonthIdx}|${yearStr}`];
 
@@ -983,6 +997,7 @@ const FeeCollectComponentForm = ({
             feeHeadId: i.feeHeadId,
             period,
             dueAmount: i.due,
+            installmentLabel: i.installmentLabel,
           });
         });
     });

@@ -1,12 +1,9 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -16,6 +13,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { useGetPaymentTermByIdQuery } from 'src/redux/finance/paymentTerm';
 import {
   Box,
   Chip,
@@ -28,8 +26,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-
-import { DUMMY_PAYMENT_TERMS } from '../type';
 
 import type { IInstallmentOverride, IFeeHeadPaymentTermOverride } from '../type';
 
@@ -52,17 +48,14 @@ const installmentSchema = Yup.array(
         if (!startDate || !endDate) return true;
         return dayjs(endDate).isAfter(dayjs(startDate));
       }),
+    demandDate: Yup.string().nullable(),
     dueDate: Yup.string()
       .nullable()
       .required('Due date is required')
-      .test('due-in-range', 'Must be between start & end dates', function (dueDate) {
-        const { startDate, endDate } = this.parent;
-        if (!startDate || !endDate || !dueDate) return true;
-        const due = dayjs(dueDate);
-        return (
-          (due.isSame(dayjs(startDate)) || due.isAfter(dayjs(startDate))) &&
-          (due.isSame(dayjs(endDate)) || due.isBefore(dayjs(endDate)))
-        );
+      .test('demand-before-due', 'Demand date must be on or before due date', function (dueDate) {
+        const { demandDate } = this.parent;
+        if (!demandDate || !dueDate) return true;
+        return !dayjs(demandDate).isAfter(dayjs(dueDate), 'day');
       }),
   })
 )
@@ -132,24 +125,33 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
   onSave,
 }) => {
   const theme = useTheme();
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // ── Get canonical installment schedule from DUMMY_PAYMENT_TERMS ─────
-  const isMasterLoading = false;
+  // ── Load canonical installment schedule from Payment Term detail ─────
+  const { data: paymentTermDetail, isLoading: isMasterLoading } = useGetPaymentTermByIdQuery(
+    paymentTermId,
+    { skip: !open || !paymentTermId }
+  );
 
   const masterInstallments: IInstallmentOverride[] = useMemo(() => {
-    const term = DUMMY_PAYMENT_TERMS.find((t) => t.id === paymentTermId);
-    const rawInst: any[] = term?.installments ?? [];
-    return rawInst.map((inst: any, idx: number) => ({
+    if (!paymentTermDetail) return [];
+
+    const draft = paymentTermDetail.versions?.find((v) => v.status === 'Draft');
+    const current =
+      draft ??
+      paymentTermDetail.versions?.find((v) => v.id === paymentTermDetail.currentVersionId) ??
+      paymentTermDetail.versions?.find((v) => v.status === 'Published') ??
+      paymentTermDetail.versions?.[0];
+
+    return (current?.installments ?? []).map((inst, idx) => ({
       id: inst.id ?? String(idx),
-      installmentName: inst.installmentName ?? `Installment ${idx + 1}`,
+      installmentName: inst.name ?? `Installment ${idx + 1}`,
       sequence: inst.sequence ?? idx + 1,
-      startDate: inst.startDate ?? null,
-      endDate: inst.endDate ?? null,
+      startDate: inst.coverageStartDate ?? null,
+      endDate: inst.coverageEndDate ?? null,
       dueDate: inst.dueDate ?? null,
       isModified: false,
     }));
-  }, [paymentTermId]);
+  }, [paymentTermDetail]);
 
   const initialInstallments: IInstallmentOverride[] = useMemo(() => {
     if (override?.isCustomized && override.installments?.length) {
@@ -607,8 +609,6 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
                         label="Due Date *"
                         value={inst.dueDate ? dayjs(inst.dueDate) : null}
                         disabled={isLocked}
-                        minDate={inst.startDate ? dayjs(inst.startDate) : undefined}
-                        maxDate={inst.endDate ? dayjs(inst.endDate) : undefined}
                         onChange={(d) => updateRow(idx, 'dueDate', d ? d.toISOString() : null)}
                         slotProps={{
                           textField: {

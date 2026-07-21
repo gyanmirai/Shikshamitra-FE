@@ -8,9 +8,12 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, Typography } from '@mui/material';
-import { usePatchPaymentTermMutation } from 'src/redux/finance/paymentTerm';
+import {
+  useArchivePaymentTermMutation,
+  useRestorePaymentTermMutation,
+} from 'src/redux/finance/paymentTerm';
 
-import type { IPaymentTerm, PaymentTermStatus, IPaymentTermTableProps } from '../type';
+import type { IPaymentTerm, IPaymentTermTableProps } from '../type';
 
 const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   data,
@@ -20,9 +23,13 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const [patchPaymentTerm] = useQueryAndMutation({
+  const [archivePaymentTerm] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: usePatchPaymentTermMutation,
+    currentQueryAndMutation: useArchivePaymentTermMutation,
+  });
+  const [restorePaymentTerm] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRestorePaymentTermMutation,
   });
 
   const columns: IColumn[] = useMemo(
@@ -38,14 +45,23 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         ),
       },
       {
-        id: 'installments',
+        id: 'totalInstallments',
         label: 'Installments',
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {Array.isArray(value) ? value.length : 0}
-          </Typography>
-        ),
+        render: (value, row) => {
+          const term = row as IPaymentTerm;
+          const count =
+            typeof value === 'number'
+              ? value
+              : Array.isArray(term.installments)
+                ? term.installments.length
+                : 0;
+          return (
+            <Typography variant="caption" fontSize="13px">
+              {count}
+            </Typography>
+          );
+        },
       },
       {
         id: 'updatedBy',
@@ -70,7 +86,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip
                 size="small"
-                label={isActive ? 'Active' : 'Inactive'}
+                label={isActive ? 'Active' : 'Archived'}
                 color={isActive ? 'success' : 'default'}
                 variant="soft"
               />
@@ -79,12 +95,22 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
                 checked={isActive}
                 onClick={(event) => event.stopPropagation()}
                 onChange={async () => {
+                  if (!term.id) return;
                   try {
-                    const newStatus: PaymentTermStatus = isActive ? 'Archived' : 'Active';
-                    await patchPaymentTerm({ id: term.id, body: { status: newStatus } });
-                    shikshaMitraToast.success({
-                      message: `Payment Term "${term.paymentTermName}" marked as ${newStatus === 'Active' ? 'Active' : 'Inactive'} successfully.`,
-                    });
+                    if (isActive) {
+                      await archivePaymentTerm({
+                        paymentTermId: term.id,
+                        body: { reason: 'Archived from Payment Terms list' },
+                      });
+                      shikshaMitraToast.success({
+                        message: `Payment Term "${term.paymentTermName}" archived successfully.`,
+                      });
+                    } else {
+                      await restorePaymentTerm(term.id);
+                      shikshaMitraToast.success({
+                        message: `Payment Term "${term.paymentTermName}" restored successfully.`,
+                      });
+                    }
                   } catch {
                     shikshaMitraToast.error({ message: 'Failed to update status.' });
                   }
@@ -118,7 +144,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         },
       },
     ],
-    [onEdit, onDelete, patchPaymentTerm]
+    [onEdit, onDelete, archivePaymentTerm, restorePaymentTerm]
   );
 
   return (

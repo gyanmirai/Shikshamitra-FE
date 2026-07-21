@@ -12,6 +12,7 @@ export interface IInstallmentOverride {
   sequence: number;
   startDate: string | null;
   endDate: string | null;
+  demandDate?: string | null;
   dueDate: string | null;
   /** UI-only flag — true when user has edited this row vs the master */
   isModified?: boolean;
@@ -44,6 +45,9 @@ export interface IClassWiseFeeItem {
   /** Payment term assigned to this fee head (id + display name from master) */
   paymentTermId?: string;
   paymentTermName?: string;
+  paymentTermVersionId?: string;
+  /** Inherited = master schedule; Customized = fee-head override applied */
+  scheduleMode?: 'Inherited' | 'Customized';
   /** Override schedule; undefined = inherited from master payment term */
   paymentTermOverride?: IFeeHeadPaymentTermOverride;
 }

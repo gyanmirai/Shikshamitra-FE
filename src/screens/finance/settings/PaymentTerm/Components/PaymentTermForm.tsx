@@ -9,7 +9,6 @@ import { SummaryPanel } from './panels/SummaryPanel';
 import { usePaymentTermForm } from '../hooks/usePaymentTermForm';
 import { GeneralInfoSection } from './sections/GeneralInfoSection';
 import { InstallmentSection } from './sections/InstallmentSection';
-import { PartialPaymentSection } from './sections/PartialPaymentSection';
 import { BillingScheduleSection } from './sections/BillingScheduleSection';
 
 import type { IPaymentTermFormProps } from '../type';
@@ -64,13 +63,13 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
       </Box>
 
       {/* ── Downstream warning ─────────────────────────────────────────────── */}
-      {editData?.isUsedInDownstream && (
+      {(editData?.isUsedInDownstream || editData?.canDirectEdit === false) && (
         <Alert
           severity="warning"
           variant="filled"
           sx={{ mx: 3, mt: 1.5, borderRadius: 1, flexShrink: 0, py: 0.75 }}
         >
-          This term is mapped to active fee structures. Saving will create a new version
+          This term is mapped to active fee structures. Saving will create a new draft revision
           automatically.
         </Alert>
       )}
@@ -93,7 +92,6 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
               onDuplicate={duplicateInstallment}
             />
             <BillingScheduleSection formik={formik} />
-            <PartialPaymentSection formik={formik} />
           </Box>
         </Scrollbar>
 

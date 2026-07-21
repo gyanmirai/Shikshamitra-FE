@@ -94,6 +94,11 @@ export interface FeeLedgerLine {
   dueFeeId: string;
   feeHeadId: string;
   feeHeadName: string;
+  installmentLabel?: string;
+  dueDate?: string;
+  coverageStartDate?: string;
+  coverageEndDate?: string;
+  scheduleSource?: 'PaymentTerm' | 'Legacy' | string;
   total: number;
   paid: number;
   due: number;

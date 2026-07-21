@@ -44,10 +44,19 @@ const mapToCardModel = (
     isOptional: fh.isOptional ?? false,
     paybleMonth: fh.payableMonth ?? null,
     payableYear: fh.payableYear ?? null,
+    paymentTermId: fh.paymentTermId ?? undefined,
+    paymentTermName: fh.paymentTermName ?? undefined,
+    paymentTermVersionId: fh.paymentTermVersionId ?? undefined,
+    scheduleMode: fh.scheduleMode ?? (fh.paymentTermOverride ? 'Customized' : 'Inherited'),
+    paymentTermOverride: fh.paymentTermOverride ?? undefined,
   })),
   status: raw.status,
   classId,
   feeStructureMetaDataId,
+  paymentPolicyId: raw.paymentPolicyId,
+  collectionPolicyId: raw.collectionPolicyId,
+  refundPolicyId: raw.refundPolicyId,
+  prorationPolicyId: raw.prorationPolicyId,
 });
 
 // ---------------------------------------------------------------------------

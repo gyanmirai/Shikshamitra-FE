@@ -24,6 +24,10 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import {
+  useGetPaymentTermsQuery,
+  useLazyGetPaymentTermByIdQuery,
+} from 'src/redux/finance/paymentTerm';
+import {
   Box,
   Tab,
   Chip,
@@ -40,7 +44,6 @@ import {
 } from '@mui/material';
 
 import FeePoliciesTab from './FeePoliciesTab';
-import { DUMMY_PAYMENT_TERMS } from '../type';
 import AddFeeHeadToCardDialog from './AddFeeHeadToCardDialog';
 import PaymentTermScheduleDrawer from './PaymentTermScheduleDrawer';
 import {
@@ -171,16 +174,25 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     { skip: !currentYear?.id }
   );
 
-  // ── Payment Term options (for the per-fee-head dropdown using DUMMY_PAYMENT_TERMS) ──
-  const isPaymentTermLoading = false;
+  // ── Payment Term options (live list for current academic year) ─────────────
+  const {
+    data: paymentTermsData,
+    isLoading: isPaymentTermLoading,
+    isFetching: isPaymentTermFetching,
+  } = useGetPaymentTermsQuery(
+    { academicYearId: currentYear?.id ?? '', status: 'Active', pageSize: 100 },
+    { skip: !currentYear?.id }
+  );
+  const [fetchPaymentTermById] = useLazyGetPaymentTermByIdQuery();
+
   const paymentTermOptions = useMemo(
     () =>
-      DUMMY_PAYMENT_TERMS.map((t: any) => ({
-        label: t.paymentTermName,
+      (paymentTermsData?.items ?? []).map((t) => ({
+        label: t.name,
         value: t.id,
-        installments: t.installments,
+        currentVersionNumber: t.currentVersionNumber,
       })),
-    []
+    [paymentTermsData?.items]
   );
 
   const monthOptions = [
@@ -232,7 +244,12 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const handleScheduleSave = (override: IFeeHeadPaymentTermOverride) => {
     if (selectedFeeHeadForSchedule === null) return;
-    updateFeeHead(selectedFeeHeadForSchedule.idx, 'paymentTermOverride', override);
+    updateFeeHeadFields(selectedFeeHeadForSchedule.idx, {
+      paymentTermOverride: override,
+      scheduleMode: override.isCustomized ? 'Customized' : 'Inherited',
+      paymentTermId: override.paymentTermId,
+      paymentTermName: override.paymentTermName,
+    });
   };
 
   const addFeeHeads = (items: IClassWiseFeeItem[]) => {
@@ -275,6 +292,28 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         feeHeadId: fh.feeHeadId,
         amount: fh.amount,
         isOptional: fh.isOptional,
+        isOneTime: fh.isOneTime ?? false,
+        payableMonth: fh.paybleMonth,
+        payableYear: fh.payableYear,
+        ...(fh.paymentTermId && {
+          paymentTermId: fh.paymentTermId,
+          ...(fh.paymentTermVersionId && { paymentTermVersionId: fh.paymentTermVersionId }),
+          scheduleMode: fh.paymentTermOverride?.isCustomized ? 'Customized' : 'Inherited',
+          ...(fh.paymentTermOverride?.isCustomized &&
+            fh.paymentTermOverride.installments?.length && {
+              installmentOverrides: fh.paymentTermOverride.installments
+                .filter((inst) => Boolean(inst.id))
+                .map((inst) => ({
+                  sourcePaymentTermInstallmentId: inst.id,
+                  sequence: inst.sequence,
+                  name: inst.installmentName,
+                  coverageStartDate: inst.startDate,
+                  coverageEndDate: inst.endDate,
+                  demandDate: inst.demandDate ?? inst.dueDate,
+                  dueDate: inst.dueDate,
+                })),
+            }),
+        }),
       }));
 
       // Collect non-empty policy IDs
@@ -960,17 +999,35 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                               <CustomSelect
                                 label="Payment Term"
                                 options={paymentTermOptions}
-                                isLoading={isPaymentTermLoading}
+                                isLoading={isPaymentTermLoading || isPaymentTermFetching}
                                 labelKey="label"
                                 valueKey="value"
                                 value={item.paymentTermId ?? ''}
                                 disabled={!isEditing || isLocked}
-                                onChange={(val) => {
+                                onChange={async (val) => {
                                   const selected = paymentTermOptions.find((o) => o.value === val);
                                   if (!selected) return;
+                                  let versionId: string | undefined;
+                                  try {
+                                    const detail = await fetchPaymentTermById(
+                                      String(selected.value)
+                                    ).unwrap();
+                                    const published = detail.versions?.find(
+                                      (v) => v.status === 'Published'
+                                    );
+                                    versionId =
+                                      published?.id ??
+                                      detail.currentVersionId ??
+                                      detail.versions?.[0]?.id;
+                                  } catch {
+                                    // Keep selection even if version lookup fails
+                                  }
                                   updateFeeHeadFields(idx, {
                                     paymentTermId: String(selected.value),
                                     paymentTermName: selected.label,
+                                    paymentTermVersionId: versionId,
+                                    scheduleMode: 'Inherited',
+                                    paymentTermOverride: undefined,
                                   });
                                 }}
                                 size="small"
