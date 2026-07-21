@@ -3,6 +3,7 @@
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { studentPaths } from 'src/constants/student-menu';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Alert, Stack, Paper, Button, Typography, LinearProgress } from '@mui/material';
 import { useGetAdmissionCrmSetupStatusQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -87,22 +88,23 @@ export function EnrollmentSetupCenter() {
 
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={1.5}>
-        <Box>
-          <Typography component="h1" variant="h4">
-            Enrollment Setup Center
-          </Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            Complete the essentials first. Advanced controls can stay on the recommended defaults.
-          </Typography>
-        </Box>
-        <Chip
-          icon={<Iconify icon={configured ? 'mdi:check-circle-outline' : 'mdi:progress-alert'} />}
-          color={configured ? 'success' : 'warning'}
-          label={configured ? 'Core setup ready' : 'Setup needs attention'}
-          sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
-        />
-      </Stack>
+      <CustomBreadcrumbs
+        heading="Enrollment Setup Center"
+        description="Complete the essentials first. Advanced controls can stay on the recommended defaults."
+        links={[
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Student Enrollment', href: withCycle(studentPaths.enrollment.overview) },
+          { name: 'Settings' },
+        ]}
+        action={
+          <Chip
+            icon={<Iconify icon={configured ? 'mdi:check-circle-outline' : 'mdi:progress-alert'} />}
+            color={configured ? 'success' : 'warning'}
+            label={configured ? 'Core setup ready' : 'Setup needs attention'}
+          />
+        }
+        sx={{ px: 2 }}
+      />
 
       {query.isFetching ? <LinearProgress aria-label="Loading enrollment setup" /> : null}
       {query.isError ? (
