@@ -69,7 +69,7 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
     expect(queueColumns).toContain('openApplicant(item.leadId, applicantTab)');
   });
 
-  it('keeps the pipeline focused on the applicant current stage', () => {
+  it('keeps pipeline actions focused and renders predictable disabled workspace tabs', () => {
     const pipeline = read('pipeline-workspace.tsx');
     const drawer = read('applicant-workspace-drawer.tsx');
     const context = read('enrollment-workspace-context.tsx');
@@ -85,10 +85,17 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
     expect(pipeline).toContain('!isExamAlreadyScheduled(lead)');
     expect(pipeline).toContain('flexShrink: 0');
     expect(pipeline).not.toContain('<DialogTitle>Issue Registration Form</DialogTitle>');
+    expect(drawer).toContain('const disabledTabCopy: Record<ApplicantDrawerTab, string>');
+    expect(drawer).toContain("exam: 'Schedule an entrance exam first.'");
+    expect(drawer).toContain(
+      "registration: 'Issue registration first, or enable registration before exam for this cycle.'"
+    );
     expect(drawer).toContain('pipelineExamStages.has(lead.stage)');
-    expect(drawer).toContain("if (section.value === 'overview') return true");
     expect(drawer).toContain("if (section.value === 'registration')");
-    expect(drawer).toContain('return false;');
+    expect(drawer).toContain('disabled={disabled}');
+    expect(drawer).toContain('title={reason}');
+    expect(drawer).toContain('if (tabAvailability[nextTab]?.disabled) return;');
+    expect(drawer).toContain('selectedDisabledReason');
     expect(context).toContain(
       'const currentState = parseEnrollmentWorkspaceState(current, defaults)'
     );
