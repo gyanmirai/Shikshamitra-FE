@@ -170,7 +170,7 @@ export function useProrationPolicyForm({
   const unsavedChangesDialog = useBoolean();
 
   // ─── Fee Heads ───────────────────────────────────────────────────────────
-  const { data: feeHeadsData } = useGetFeeHeadsQuery('', { skip: !open });
+  const { data: feeHeadsData } = useGetFeeHeadsQuery({}, { skip: !open });
 
   const feeHeads: { id: string; name: string; feeType?: 'Recurring' | 'OneTime' }[] =
     useMemo(() => {

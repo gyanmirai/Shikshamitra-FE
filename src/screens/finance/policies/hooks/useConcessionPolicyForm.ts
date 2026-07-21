@@ -119,7 +119,7 @@ export function useConcessionPolicyForm({
   const [simLateFee, setSimLateFee] = useState(0);
 
   // ─── Fee Heads ────────────────────────────────────────────────────────────
-  const { data: feeHeadsData } = useGetFeeHeadsQuery('');
+  const { data: feeHeadsData } = useGetFeeHeadsQuery({});
   const feeHeads: { id: string; name: string }[] = useMemo(
     () => (feeHeadsData as any)?.data || [],
     [feeHeadsData]

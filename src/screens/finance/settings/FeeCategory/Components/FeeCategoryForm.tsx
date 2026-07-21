@@ -13,19 +13,14 @@ import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import moduleSequence from 'src/constants/module-sequence';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetFeeHeadModulesQuery } from 'src/redux/feeHeadModule/feeHeadModuleApi';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
-import {
-  useGetFeeHeadsQuery,
-  useAddFeeHeadMutation,
-  useUpdateFeeHeadMutation,
-} from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
   Box,
   Grid,
@@ -48,11 +43,6 @@ import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
 
 import type { IFeeCategoryFormProps } from './type';
-
-const moduleOptions = Object.values(moduleSequence).map((val) => ({
-  label: val,
-  value: val,
-}));
 
 const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -84,19 +74,19 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     },
   });
 
-  // Fetch all fee heads for the dropdown
-  const {
-    data: feeHeadsData,
-    isLoading: isFeeHeadsLoading,
-    refetch: refetchFeeHeads,
-  } = useQueryAndMutation({
+  // Fetch the fee head module lookup for the Module dropdown
+  const { data: moduleData, isLoading: isModulesLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetFeeHeadsQuery,
-    params: { academicYearId: currentYear?.id, maxResultCount: 1000 },
+    currentQueryAndMutation: useGetFeeHeadModulesQuery,
     options: {
-      skip: !currentYear?.id || !open?.value,
+      skip: !open?.value,
     },
   });
+
+  const moduleOptions = useMemo(
+    () => (moduleData || []).map((m: any) => ({ label: m.displayName, value: m.value })),
+    [moduleData]
+  );
 
   const existingNames = useMemo(
     () =>
@@ -105,8 +95,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
       ),
     [feeCategoriesData]
   );
-
-  const feeHeadOptions = useMemo(() => feeHeadsData?.items || [], [feeHeadsData]);
 
   const [addFeeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -118,17 +106,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     currentQueryAndMutation: useUpdateFeeCategoryMutation,
   });
 
-  const [addFeeHead, { isLoading: isAddFeeHeadLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddFeeHeadMutation,
-  });
-
-  const [updateFeeHead] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateFeeHeadMutation,
-  });
-
-  const categoryDetails = feeCategoryDetails?.data || feeCategoryDetails || editData;
+  const categoryDetails = feeCategoryDetails || editData;
 
   const formik = useFormik({
     initialValues: getFeeCategoryInitialValues(categoryDetails),
@@ -147,116 +125,35 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     },
   });
 
-  // Perform the actual form submission
+  // Perform the actual form submission -- single call creates/updates the category and all its fee heads together
   const performSubmission = async (values: any) => {
     try {
-      let categoryId = editData?.id;
+      const body = {
+        name: values.name.trim(),
+        description: values.description || '',
+        feeHeads: values.feeHeads.map((fh: any) => ({
+          id: fh.id || null,
+          name: fh.name.trim(),
+          module: fh.module,
+          isConcessionApplied: fh.isConcessionApplied,
+          description: fh.description || '',
+        })),
+      };
 
-      if (!categoryId) {
-        // 1. Create the Fee Category first
-        const resCategory = await addFeeCategory({
-          academicYearId: currentYear?.id,
-          body: {
-            categoryName: values.categoryName,
-            description: values.description,
-            feeHeads: values.feeHeads.map((fh: any) => ({
-              feeHeadId: fh.feeHeadId || undefined,
-              feeHeadName: fh.name.trim(),
-              module: fh.module,
-              isConcessionApply: fh.isConcessionApply,
-              description: fh.description || '',
-            })),
-          },
+      if (editData?.id) {
+        await updateFeeCategory({
+          id: editData.id,
+          body,
         }).unwrap();
-        categoryId = resCategory.data?.id || resCategory.id;
+      } else {
+        await addFeeCategory({
+          academicYearId: currentYear?.id,
+          body,
+        }).unwrap();
       }
 
-      // 2. Create or update fee heads on the backend
-      const mappedFeeHeads = await Promise.all(
-        values.feeHeads.map(async (fh: any) => {
-          // Check if a fee head with this name already exists in the academic year
-          const existingFeeHead = feeHeadsData?.items?.find(
-            (item: any) => item.name.trim().toLowerCase() === fh.name.trim().toLowerCase()
-          );
-
-          if (fh.feeHeadId) {
-            // Update existing fee head
-            await updateFeeHead({
-              id: fh.feeHeadId,
-              body: {
-                feeCategoryId: categoryId,
-                name: fh.name.trim(),
-                module: fh.module,
-                description: fh.description || '',
-              },
-            }).unwrap();
-
-            return {
-              feeHeadId: fh.feeHeadId,
-              feeHeadName: fh.name.trim(),
-              module: fh.module,
-              isConcessionApply: fh.isConcessionApply,
-              description: fh.description || '',
-            };
-          }
-
-          if (existingFeeHead) {
-            // Reuse existing fee head with the same name
-            await updateFeeHead({
-              id: existingFeeHead.id,
-              body: {
-                feeCategoryId: categoryId,
-                name: existingFeeHead.name,
-                module: fh.module,
-                description: fh.description || existingFeeHead.description || '',
-              },
-            }).unwrap();
-
-            return {
-              feeHeadId: existingFeeHead.id,
-              feeHeadName: existingFeeHead.name.trim(),
-              module: fh.module,
-              isConcessionApply: fh.isConcessionApply,
-              description: fh.description || '',
-            };
-          }
-
-          // Create new fee head
-          const resHead = await addFeeHead({
-            academicYearId: currentYear?.id,
-            body: {
-              feeCategoryId: categoryId,
-              name: fh.name.trim(),
-              module: fh.module,
-              description: fh.description || '',
-            },
-          }).unwrap();
-          const realId = resHead.data?.id || resHead.id;
-
-          return {
-            feeHeadId: realId,
-            feeHeadName: fh.name.trim(),
-            module: fh.module,
-            isConcessionApply: fh.isConcessionApply,
-            description: fh.description || '',
-          };
-        })
-      );
-
-      // 3. Update the Fee Category with the complete mapped fee heads
-      await updateFeeCategory({
-        feeCategoryId: categoryId,
-        body: {
-          categoryName: values.categoryName,
-          description: values.description,
-          feeHeads: mappedFeeHeads,
-        },
-      }).unwrap();
-
-      refetchFeeHeads();
-
       shikshaMitraToast.success({
-        message: `${values.categoryName} Fee Category ${editData ? 'updated' : 'added'} successfully`,
+        message: `${values.name} Fee Category ${editData ? 'updated' : 'added'} successfully`,
       });
 
       onClose(null, true);
@@ -269,11 +166,11 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     formik.setFieldValue('feeHeads', [
       ...(formik.values.feeHeads ?? []),
       {
-        feeHeadId: '',
+        id: '',
         name: '',
         module: '',
         description: '',
-        isConcessionApply: false,
+        isConcessionApplied: false,
       },
     ]);
   };
@@ -300,7 +197,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     setRemoveIndex(null);
   };
 
-  if (isLoadingDetails || isFeeHeadsLoading) {
+  if (isLoadingDetails || isModulesLoading) {
     return <LoadingScreen />;
   }
 
@@ -310,15 +207,13 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
         <Grid container spacing={3}>
           {/* Section 1 -- Fee Category Information */}
           <Grid size={{ xs: 12 }}>
-            <ShakingTextField
-              error={!!(formik.touched.categoryName && formik.errors.categoryName) || false}
-            >
+            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
                 label="Category Name *"
-                name="categoryName"
+                name="name"
                 size="small"
-                value={formik.values.categoryName}
+                value={formik.values.name}
                 onChange={(e) => {
                   let value = e.target.value
                     .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
@@ -331,13 +226,11 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                     )
                     .join(' ');
 
-                  formik.setFieldValue('categoryName', value);
+                  formik.setFieldValue('name', value);
                 }}
-                error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
+                error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={
-                  formik.touched.categoryName && formik.errors.categoryName
-                    ? (formik.errors.categoryName as string)
-                    : ''
+                  formik.touched.name && formik.errors.name ? (formik.errors.name as string) : ''
                 }
                 inputProps={{ maxLength: 100 }}
               />
@@ -504,10 +397,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                             <FormControlLabel
                               control={
                                 <Switch
-                                  checked={fh.isConcessionApply}
+                                  checked={fh.isConcessionApplied}
                                   onChange={(e) => {
                                     formik.setFieldValue(
-                                      `feeHeads.${idx}.isConcessionApply`,
+                                      `feeHeads.${idx}.isConcessionApplied`,
                                       e.target.checked
                                     );
                                   }}

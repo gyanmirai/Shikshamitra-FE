@@ -39,7 +39,7 @@ export type ConfigValue = {
 
 export const CONFIG: ConfigValue = {
   site: {
-    name: 'Siksha Mitra',
+    name: 'Shiksha Mitra',
     serverUrl: process.env.NEXT_PUBLIC_SERVER_URL ?? '',
     assetURL: process.env.NEXT_PUBLIC_ASSET_URL ?? '',
     basePath: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',

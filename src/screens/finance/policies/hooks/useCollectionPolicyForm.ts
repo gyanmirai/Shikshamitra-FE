@@ -177,7 +177,7 @@ export function useCollectionPolicyForm({
   const unsavedChangesDialog = useBoolean();
 
   // Load fee heads
-  const { data: feeHeadsData } = useGetFeeHeadsQuery('');
+  const { data: feeHeadsData } = useGetFeeHeadsQuery({});
   const feeHeads = useMemo(() => feeHeadsData?.items || [], [feeHeadsData]);
 
   // Load existing Collection Policies for this academic year, to catch a second

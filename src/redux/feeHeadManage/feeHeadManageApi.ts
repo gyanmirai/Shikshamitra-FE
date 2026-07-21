@@ -2,10 +2,33 @@ import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../finance/financeModuleApi';
 
+import type { IFeeHeadResponse } from '../feeCategory/feeCategoryApi';
+
+export interface IFeeHeadListResponse {
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  items: IFeeHeadResponse[];
+}
+
+export interface IFeeHeadCreateOrUpdateBody {
+  feeCategoryId: string;
+  name: string;
+  module: string;
+  isConcessionApplied: boolean;
+  description?: string;
+}
+
+export interface IFeeHeadStatusUpdateBody {
+  isActive: boolean;
+  deactivationReason?: string | null;
+}
+
 export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get fee head list
-    getFeeHeads: builder.query({
+    getFeeHeads: builder.query<IFeeHeadListResponse, Record<string, unknown>>({
       query: (params) => ({
         url: '/fee-heads',
         method: 'GET',
@@ -15,7 +38,10 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
     }),
 
     // Add fee head
-    addFeeHead: builder.mutation({
+    addFeeHead: builder.mutation<
+      IFeeHeadResponse,
+      { academicYearId: string; body: IFeeHeadCreateOrUpdateBody }
+    >({
       query: ({ academicYearId, body }) => ({
         url: `/fee-heads`,
         method: 'POST',
@@ -24,34 +50,40 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: [financeModuleType.feeHead],
+      invalidatesTags: [financeModuleType.feeHead, financeModuleType.feeCategory],
     }),
 
     // Update fee head
-    updateFeeHead: builder.mutation({
+    updateFeeHead: builder.mutation<
+      IFeeHeadResponse,
+      { id: string; body: IFeeHeadCreateOrUpdateBody }
+    >({
       query: ({ id, body }) => ({
         url: `/fee-heads/${id}`,
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeHead],
+      invalidatesTags: [financeModuleType.feeHead, financeModuleType.feeCategory],
     }),
 
     // Delete fee head
-    deleteFeeHead: builder.mutation({
+    deleteFeeHead: builder.mutation<void, { id: string }>({
       query: ({ id }) => ({
         url: `/fee-heads/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [financeModuleType.feeHead],
+      invalidatesTags: [financeModuleType.feeHead, financeModuleType.feeCategory],
     }),
-    patchFeeHead: builder.mutation({
+    patchFeeHead: builder.mutation<
+      IFeeHeadResponse,
+      { feeHeadId: string; body: IFeeHeadStatusUpdateBody }
+    >({
       query: ({ feeHeadId, body }) => ({
         url: `/fee-heads/${feeHeadId}/status`,
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeHead],
+      invalidatesTags: [financeModuleType.feeHead, financeModuleType.feeCategory],
     }),
   }),
 });

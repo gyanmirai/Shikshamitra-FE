@@ -7,7 +7,7 @@ export const feeCategoryValidationSchema = (
   editData?: IFeeCategory | null
 ) =>
   Yup.object().shape({
-    categoryName: Yup.string()
+    name: Yup.string()
       .required('Category Name is required')
       .test('min-length', 'Category Name must be between 3 and 100 characters', (value) =>
         value ? value.trim().length >= 3 : false
@@ -19,11 +19,7 @@ export const feeCategoryValidationSchema = (
         if (!value?.trim()) return true;
         const trimmed = value.trim().toLowerCase();
         // Allow saving the same name when editing the current record
-        if (
-          editData &&
-          (editData.name || (editData as any).categoryName)?.trim().toLowerCase() === trimmed
-        )
-          return true;
+        if (editData && editData.name?.trim().toLowerCase() === trimmed) return true;
         return !existingNames.has(trimmed);
       }),
     description: Yup.string()
@@ -44,6 +40,7 @@ export const feeCategoryValidationSchema = (
             .test('max-length', 'Fee Head Name must be between 3 and 40 characters', (value) =>
               value ? value.trim().length <= 40 : true
             ),
+          module: Yup.string().required('Module is required'),
           description: Yup.string()
             .max(500, 'Description cannot exceed 500 characters')
             .test('no-only-spaces', 'Description cannot consist of only spaces', (value) => {
