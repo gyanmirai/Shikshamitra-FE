@@ -107,6 +107,38 @@ const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   year: 'numeric',
 });
 const accessibleStatusSx = { color: 'text.primary' } as const;
+type BulkExamResultForm = {
+  totalMarks: string;
+  passingMarks: string;
+  obtainedMarks: string;
+  meritRank: string;
+};
+
+const parseBulkExamNumber = (value: string) => {
+  if (!value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const isValidBulkExamResultForm = (form: BulkExamResultForm | undefined) => {
+  if (!form) return false;
+  const totalMarks = parseBulkExamNumber(form.totalMarks);
+  const passingMarks = parseBulkExamNumber(form.passingMarks);
+  const obtainedMarks = parseBulkExamNumber(form.obtainedMarks);
+  const meritRank = form.meritRank.trim() ? parseBulkExamNumber(form.meritRank) : null;
+
+  return (
+    totalMarks != null &&
+    totalMarks > 0 &&
+    passingMarks != null &&
+    passingMarks >= 0 &&
+    passingMarks <= totalMarks &&
+    obtainedMarks != null &&
+    obtainedMarks >= 0 &&
+    obtainedMarks <= totalMarks &&
+    (!form.meritRank.trim() || (meritRank != null && Number.isInteger(meritRank) && meritRank > 0))
+  );
+};
 
 const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   const filter = [...filters].reverse().find((item) => item.column === column);
@@ -213,8 +245,9 @@ export function ExamsWorkspace() {
   const [overrideReason, setOverrideReason] = useState('');
   const [bulkTotalMarks, setBulkTotalMarks] = useState('100');
   const [bulkPassingMarks, setBulkPassingMarks] = useState('40');
-  const [bulkObtainedMarks, setBulkObtainedMarks] = useState('');
-  const [bulkMeritRank, setBulkMeritRank] = useState('');
+  const [bulkMarksByExamId, setBulkMarksByExamId] = useState<Record<string, BulkExamResultForm>>(
+    {}
+  );
 
   const examsQuery = useGetAdmissionCrmEntranceExamsQuery(
     {
@@ -321,6 +354,48 @@ export function ExamsWorkspace() {
 
   const exams = useMemo(() => examsQuery.data?.items || [], [examsQuery.data?.items]);
   const selectedExamSet = useMemo(() => new Set(selectedExamIds), [selectedExamIds]);
+  const selectedExams = useMemo(
+    () => exams.filter((exam) => selectedExamSet.has(exam.id)),
+    [exams, selectedExamSet]
+  );
+
+  const openBulkMarksDialog = () => {
+    setBulkMarksByExamId(
+      selectedExams.reduce<Record<string, BulkExamResultForm>>((acc, exam) => {
+        acc[exam.id] = {
+          totalMarks: exam.totalMarks?.toString() || bulkTotalMarks,
+          passingMarks: exam.passingMarks?.toString() || bulkPassingMarks,
+          obtainedMarks: exam.obtainedMarks?.toString() || '',
+          meritRank: exam.meritRank?.toString() || '',
+        };
+        return acc;
+      }, {})
+    );
+    setBulkMarksOpen(true);
+  };
+
+  const updateBulkExamResult = (examId: string, field: keyof BulkExamResultForm, value: string) => {
+    setBulkMarksByExamId((current) => {
+      const form: BulkExamResultForm = current[examId]
+        ? { ...current[examId] }
+        : {
+            totalMarks: bulkTotalMarks,
+            passingMarks: bulkPassingMarks,
+            obtainedMarks: '',
+            meritRank: '',
+          };
+
+      return {
+        ...current,
+        [examId]: { ...form, [field]: value },
+      };
+    });
+  };
+
+  const bulkMarksReady =
+    selectedExams.length > 0 &&
+    selectedExams.length === selectedExamIds.length &&
+    selectedExams.every((exam) => isValidBulkExamResultForm(bulkMarksByExamId[exam.id]));
 
   const markSelectedAttendance = async (value: AdmissionCrmExamAttendanceStatus) => {
     if (!academicYearId || selectedExamIds.length === 0) return;
@@ -349,15 +424,26 @@ export function ExamsWorkspace() {
   };
 
   const uploadSelectedResults = async () => {
-    if (!academicYearId || selectedExamIds.length === 0) return;
+    if (!academicYearId || selectedExamIds.length === 0 || !bulkMarksReady) return;
     try {
       const result = await bulkUploadResults({
         academicYearId,
-        examRecordIds: selectedExamIds,
-        totalMarks: Number(bulkTotalMarks),
-        passingMarks: Number(bulkPassingMarks),
-        obtainedMarks: Number(bulkObtainedMarks),
-        meritRank: bulkMeritRank ? Number(bulkMeritRank) : undefined,
+        items: selectedExams.map((exam) => {
+          const form = bulkMarksByExamId[exam.id] || {
+            totalMarks: bulkTotalMarks,
+            passingMarks: bulkPassingMarks,
+            obtainedMarks: '',
+            meritRank: '',
+          };
+          const bulkMeritRank = form.meritRank.trim() ? Number(form.meritRank) : undefined;
+          return {
+            examRecordId: exam.id,
+            totalMarks: Number(form.totalMarks),
+            passingMarks: Number(form.passingMarks),
+            obtainedMarks: Number(form.obtainedMarks),
+            meritRank: bulkMeritRank,
+          };
+        }),
       }).unwrap();
       if (result.failedCount > 0) {
         setSelectedExamIds(
@@ -369,8 +455,7 @@ export function ExamsWorkspace() {
         return;
       }
       setBulkMarksOpen(false);
-      setBulkObtainedMarks('');
-      setBulkMeritRank('');
+      setBulkMarksByExamId({});
       setSelectedExamIds([]);
       shikshaMitraToast.success({
         message: `${result.succeededCount} exam result${result.succeededCount === 1 ? '' : 's'} recorded.`,
@@ -616,8 +701,14 @@ export function ExamsWorkspace() {
                 >
                   Mark absent
                 </LoadingButton>
-                <Button size="small" onClick={() => setBulkMarksOpen(true)}>
+                <Button size="small" onClick={openBulkMarksDialog}>
                   Give Marks
+                </Button>
+                <Button size="small" disabled>
+                  Upload Results
+                </Button>
+                <Button size="small" disabled>
+                  OMR Import
                 </Button>
               </>
             ) : null}
@@ -699,38 +790,122 @@ export function ExamsWorkspace() {
         />
       ) : null}
 
-      <Dialog open={bulkMarksOpen} onClose={() => setBulkMarksOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={bulkMarksOpen} onClose={() => setBulkMarksOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>Give Marks</DialogTitle>
         <DialogContent>
           <Stack spacing={1.25} sx={{ pt: 1 }}>
             <Alert severity="info">
-              Apply the same marks to {selectedExamIds.length} selected exam
-              {selectedExamIds.length === 1 ? '' : 's'}.
+              Enter individual marks for each selected applicant. Total and passing marks can stay
+              shared unless a specific exam needs a different value.
             </Alert>
-            <TextField
-              label="Total marks"
-              type="number"
-              value={bulkTotalMarks}
-              onChange={(event) => setBulkTotalMarks(event.target.value)}
-            />
-            <TextField
-              label="Passing marks"
-              type="number"
-              value={bulkPassingMarks}
-              onChange={(event) => setBulkPassingMarks(event.target.value)}
-            />
-            <TextField
-              label="Obtained marks"
-              type="number"
-              value={bulkObtainedMarks}
-              onChange={(event) => setBulkObtainedMarks(event.target.value)}
-            />
-            <TextField
-              label="Merit rank"
-              type="number"
-              value={bulkMeritRank}
-              onChange={(event) => setBulkMeritRank(event.target.value)}
-            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <TextField
+                fullWidth
+                label="Default total marks"
+                type="number"
+                value={bulkTotalMarks}
+                onChange={(event) => {
+                  const { value } = event.target;
+                  setBulkTotalMarks(value);
+                  setBulkMarksByExamId((current) =>
+                    Object.fromEntries(
+                      Object.entries(current).map(([examId, form]) => [
+                        examId,
+                        { ...form, totalMarks: value },
+                      ])
+                    )
+                  );
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Default passing marks"
+                type="number"
+                value={bulkPassingMarks}
+                onChange={(event) => {
+                  const { value } = event.target;
+                  setBulkPassingMarks(value);
+                  setBulkMarksByExamId((current) =>
+                    Object.fromEntries(
+                      Object.entries(current).map(([examId, form]) => [
+                        examId,
+                        { ...form, passingMarks: value },
+                      ])
+                    )
+                  );
+                }}
+              />
+            </Stack>
+            <Stack spacing={1}>
+              {selectedExams.map((exam) => {
+                const form = bulkMarksByExamId[exam.id] || {
+                  totalMarks: bulkTotalMarks,
+                  passingMarks: bulkPassingMarks,
+                  obtainedMarks: '',
+                  meritRank: '',
+                };
+
+                return (
+                  <Paper key={exam.id} variant="outlined" sx={{ p: 1, borderRadius: 1 }}>
+                    <Stack spacing={1}>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        justifyContent="space-between"
+                        gap={1}
+                      >
+                        <Typography variant="subtitle2">{exam.applicantName}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {dateTimeFormatter.format(new Date(exam.examStartTime))}
+                        </Typography>
+                      </Stack>
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gap: 1,
+                          gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(4, minmax(0, 1fr))',
+                          },
+                        }}
+                      >
+                        <TextField
+                          label="Total marks"
+                          type="number"
+                          value={form.totalMarks}
+                          onChange={(event) =>
+                            updateBulkExamResult(exam.id, 'totalMarks', event.target.value)
+                          }
+                        />
+                        <TextField
+                          label="Passing marks"
+                          type="number"
+                          value={form.passingMarks}
+                          onChange={(event) =>
+                            updateBulkExamResult(exam.id, 'passingMarks', event.target.value)
+                          }
+                        />
+                        <TextField
+                          label="Obtained marks"
+                          type="number"
+                          value={form.obtainedMarks}
+                          onChange={(event) =>
+                            updateBulkExamResult(exam.id, 'obtainedMarks', event.target.value)
+                          }
+                        />
+                        <TextField
+                          label="Merit rank"
+                          type="number"
+                          value={form.meritRank}
+                          onChange={(event) =>
+                            updateBulkExamResult(exam.id, 'meritRank', event.target.value)
+                          }
+                        />
+                      </Box>
+                    </Stack>
+                  </Paper>
+                );
+              })}
+            </Stack>
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -738,7 +913,7 @@ export function ExamsWorkspace() {
           <LoadingButton
             variant="contained"
             loading={bulkResultsState.isLoading}
-            disabled={!bulkTotalMarks || !bulkPassingMarks || !bulkObtainedMarks}
+            disabled={!bulkMarksReady}
             onClick={uploadSelectedResults}
           >
             Save Marks

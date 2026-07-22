@@ -45,11 +45,11 @@ import {
   DialogTitle,
   FormControl,
   Autocomplete,
-  CircularProgress,
   ToggleButton,
   DialogContent,
   DialogActions,
   LinearProgress,
+  CircularProgress,
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -517,7 +517,15 @@ export function PipelineWorkspace() {
 
   useEffect(
     () => setSelectedLeadIds([]),
-    [state.channel, state.owner, state.page, state.priority, state.stage]
+    [
+      debouncedSearch,
+      columnFilters,
+      state.channel,
+      state.owner,
+      state.page,
+      state.priority,
+      state.stage,
+    ]
   );
 
   const stages = useMemo(
@@ -1228,7 +1236,10 @@ export function PipelineWorkspace() {
               size="small"
               label="Search applicants"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                updateState({ page: 1 }, 'replace');
+              }}
               autoComplete="off"
             />
             <TextField
@@ -1404,6 +1415,8 @@ export function PipelineWorkspace() {
             onServerSearch={(value) => {
               setSearch(value);
               setDebouncedSearch(value.trim());
+              setSelectedLeadIds([]);
+              updateState({ page: 1 }, 'push');
             }}
             onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
             onServerSort={(_column, sorts) => {
@@ -1425,6 +1438,7 @@ export function PipelineWorkspace() {
                 'desiredClassName',
                 'ownerUserId',
               ]);
+              setSelectedLeadIds([]);
               setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
               updateState(
                 {
