@@ -2988,6 +2988,24 @@ export const buildScheduleAdmissionCrmExamRequest = ({
   body,
 });
 
+export const buildBulkAdmissionCrmExamResultsRequest = ({
+  academicYearId,
+  items,
+}: {
+  academicYearId: string;
+  items: Array<{
+    examRecordId: string;
+    totalMarks: number;
+    passingMarks: number;
+    obtainedMarks: number;
+    meritRank?: number;
+  }>;
+}): FetchArgs => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/bulk/exam-results`,
+  method: 'POST',
+  body: { items },
+});
+
 export const buildMergeAdmissionCrmDuplicateLeadRequest = ({
   leadId,
   body,
@@ -6815,18 +6833,16 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       AdmissionCrmBulkOperationResultDto,
       {
         academicYearId: string;
-        examRecordIds: string[];
-        totalMarks: number;
-        passingMarks: number;
-        obtainedMarks: number;
-        meritRank?: number;
+        items: Array<{
+          examRecordId: string;
+          totalMarks: number;
+          passingMarks: number;
+          obtainedMarks: number;
+          meritRank?: number;
+        }>;
       }
     >({
-      query: ({ academicYearId, ...body }) => ({
-        url: `/student-enrollment/admissions-crm/${academicYearId}/bulk/exams/results`,
-        method: 'POST',
-        body,
-      }),
+      query: buildBulkAdmissionCrmExamResultsRequest,
       invalidatesTags: [
         studentAdmissionsCrmType.exam,
         studentAdmissionsCrmType.lead,

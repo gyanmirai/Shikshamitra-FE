@@ -39,6 +39,7 @@ import {
   buildCreateAdmissionCrmPlaybookRequest,
   buildCreateAdmissionCrmSeatPoolRequest,
   buildAdmissionCrmPolicyPackListRequest,
+  buildBulkAdmissionCrmExamResultsRequest,
   buildAdmissionCrmOperationsQueueRequest,
   buildAdmissionCrmJourneyRulesRunRequest,
   buildChangeAdmissionCrmLeadStageRequest,
@@ -924,6 +925,49 @@ describe('admissions CRM API contracts', () => {
     ).toEqual({
       url: '/public/student-enrollment/admissions-crm/tenant-1/forms/template-1',
       method: 'GET',
+    });
+  });
+
+  it('sends individual rows for bulk entrance exam result entry', () => {
+    expect(
+      buildBulkAdmissionCrmExamResultsRequest({
+        academicYearId: 'year-1',
+        items: [
+          {
+            examRecordId: 'exam-1',
+            totalMarks: 100,
+            passingMarks: 40,
+            obtainedMarks: 76,
+            meritRank: 3,
+          },
+          {
+            examRecordId: 'exam-2',
+            totalMarks: 50,
+            passingMarks: 20,
+            obtainedMarks: 34,
+          },
+        ],
+      })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/bulk/exam-results',
+      method: 'POST',
+      body: {
+        items: [
+          {
+            examRecordId: 'exam-1',
+            totalMarks: 100,
+            passingMarks: 40,
+            obtainedMarks: 76,
+            meritRank: 3,
+          },
+          {
+            examRecordId: 'exam-2',
+            totalMarks: 50,
+            passingMarks: 20,
+            obtainedMarks: 34,
+          },
+        ],
+      },
     });
   });
 

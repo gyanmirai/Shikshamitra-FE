@@ -34,6 +34,7 @@ import {
   AdmissionCrmRecommendedAction,
   AdmissionCrmGeneratedDocumentType,
   useGetAdmissionCrmPipelineStagesQuery,
+  useGetAdmissionCrmCycleConfigurationQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
@@ -192,6 +193,17 @@ function ApplicantWorkspaceDrawerContent({
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !leadId }
   );
+  const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId || !leadId || allowRegistrationBeforeExam }
+  );
+  const canOpenRegistrationBeforeExam = Boolean(
+    allowRegistrationBeforeExam || cycleConfigurationQuery.data?.registrationFormRequiredBeforeExam
+  );
+  const isCheckingRegistrationBeforeExam =
+    !allowRegistrationBeforeExam &&
+    Boolean(academicYearId && leadId) &&
+    (cycleConfigurationQuery.isLoading || cycleConfigurationQuery.isFetching);
   const currentStage = useMemo(
     () => stagesQuery.data?.find((item) => item.systemStage === lead?.stage),
     [lead?.stage, stagesQuery.data]
@@ -221,13 +233,19 @@ function ApplicantWorkspaceDrawerContent({
             reason = disabled ? disabledTabCopy.exam : '';
           } else if (section.value === 'registration') {
             disabled = !(
-              allowRegistrationBeforeExam ||
+              canOpenRegistrationBeforeExam ||
               lead.registrationFormIssuedAt ||
               lead.registrationFormNumber ||
               lead.stage === AdmissionInquiryStage.Eligible ||
               lead.stage === AdmissionInquiryStage.Waitlisted
             );
-            reason = disabled ? disabledTabCopy.registration : '';
+            if (disabled) {
+              reason = isCheckingRegistrationBeforeExam
+                ? 'Checking registration settings for this cycle.'
+                : disabledTabCopy.registration;
+            } else {
+              reason = '';
+            }
           } else if (section.value === 'offer') {
             disabled = ![
               AdmissionInquiryStage.Eligible,
@@ -249,7 +267,7 @@ function ApplicantWorkspaceDrawerContent({
       },
       {} as Record<ApplicantDrawerTab, { disabled: boolean; reason: string }>
     );
-  }, [allowRegistrationBeforeExam, context, lead, workItem]);
+  }, [canOpenRegistrationBeforeExam, context, isCheckingRegistrationBeforeExam, lead, workItem]);
   const selectedSection = sections.find((section) => section.value === tab) || sections[0];
   const selectedDisabledReason = tabAvailability[tab]?.reason;
 

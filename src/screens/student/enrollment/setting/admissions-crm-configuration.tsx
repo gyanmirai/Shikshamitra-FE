@@ -24,7 +24,14 @@ import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
-import { Add, Delete, ExpandMore, Visibility, ContentCopy } from '@mui/icons-material';
+import {
+  Add,
+  Delete,
+  ExpandMore,
+  Visibility,
+  ContentCopy,
+  InfoOutlined,
+} from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -36,6 +43,7 @@ import {
   Dialog,
   Button,
   Divider,
+  Tooltip,
   Checkbox,
   MenuItem,
   Accordion,
@@ -137,6 +145,38 @@ type AdmissionsCrmConfigurationProps = {
   focusSection?: AdmissionsCrmConfigurationFocusSection;
   focusPanel?: EnrollmentSettingsPanel;
 };
+
+function SettingsHelpLabel({ label, help }: { label: string; help: string }) {
+  return (
+    <Box
+      component="span"
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0.5,
+        minWidth: 0,
+        verticalAlign: 'middle',
+      }}
+    >
+      <Typography component="span" variant="inherit">
+        {label}
+      </Typography>
+      <Tooltip title={help} arrow>
+        <Box
+          component="span"
+          aria-label={`${label} help`}
+          tabIndex={0}
+          sx={{ display: 'inline-flex', color: 'action.active' }}
+        >
+          <InfoOutlined sx={{ fontSize: 16 }} />
+        </Box>
+      </Tooltip>
+    </Box>
+  );
+}
+
+const nextRulePriority = (priorities: number[]) =>
+  priorities.length ? Math.max(...priorities.map((value) => Number(value) || 0)) + 10 : 10;
 
 const emptyPipelineStages: AdmissionCrmPipelineStageDto[] = [];
 const emptyFormTemplates: AdmissionCrmFormTemplateDto[] = [];
@@ -1433,6 +1473,30 @@ const AdmissionsCrmConfiguration = ({
     }));
   };
 
+  const handleDuplicateRoutingRule = (index: number) => {
+    setCycleForm((prev) => {
+      const source = prev.leadRoutingSettings.rules[index];
+      if (!source) return prev;
+
+      return {
+        ...prev,
+        leadRoutingSettings: {
+          ...prev.leadRoutingSettings,
+          rules: [
+            ...prev.leadRoutingSettings.rules,
+            {
+              ...source,
+              ruleName: `${source.ruleName || 'Routing rule'} Copy`,
+              priority: nextRulePriority(
+                prev.leadRoutingSettings.rules.map((rule) => rule.priority)
+              ),
+            },
+          ],
+        },
+      };
+    });
+  };
+
   const handleRemoveRoutingRule = (index: number) => {
     setCycleForm((prev) => ({
       ...prev,
@@ -1507,6 +1571,25 @@ const AdmissionsCrmConfiguration = ({
         },
       ],
     }));
+  };
+
+  const handleDuplicateJourneyRule = (index: number) => {
+    setCycleForm((prev) => {
+      const source = prev.journeyRules[index];
+      if (!source) return prev;
+
+      return {
+        ...prev,
+        journeyRules: [
+          ...prev.journeyRules,
+          {
+            ...source,
+            ruleName: `${source.ruleName || 'Journey rule'} Copy`,
+            priority: nextRulePriority(prev.journeyRules.map((rule) => rule.priority)),
+          },
+        ],
+      };
+    });
   };
 
   const handleRemoveJourneyRule = (index: number) => {
@@ -2334,6 +2417,24 @@ const AdmissionsCrmConfiguration = ({
     (template) =>
       template.status === AdmissionCrmMessageTemplateStatus.Approved && template.isActive
   );
+  const getJourneyRuleSummary = (rule: AdmissionCrmJourneyRuleDto) => {
+    const trigger =
+      rule.trigger === AdmissionCrmJourneyTrigger.StageReached && rule.stage != null
+        ? `When applicant reaches ${
+            stages.find((stage) => stage.systemStage === rule.stage)?.stageName ||
+            getAdmissionCrmStageLabel(rule.stage)
+          }`
+        : `When ${journeyTriggerLabel[rule.trigger].toLowerCase()}`;
+    const template = approvedMessageTemplates.find((item) => item.id === rule.messageTemplateId);
+    const actions = [
+      rule.createTask ? 'create a staff task' : null,
+      rule.sendMessage
+        ? `send ${template ? messageChannelLabel[template.channel] : 'a parent message'}`
+        : null,
+    ].filter(Boolean);
+
+    return actions.length ? `${trigger}, ${actions.join(' and ')}.` : `${trigger}.`;
+  };
 
   if (isInitialLoading) {
     return <LinearProgress aria-label="Loading Enrollment settings" />;
@@ -2432,7 +2533,12 @@ const AdmissionsCrmConfiguration = ({
               <Accordion disableGutters variant="outlined">
                 <AccordionSummary expandIcon={<ExpandMore />}>
                   <Box>
-                    <Typography variant="subtitle2">Working calendar</Typography>
+                    <Typography variant="subtitle2">
+                      <SettingsHelpLabel
+                        label="Working calendar"
+                        help="Defines which days and hours count toward response targets for admission inquiries."
+                      />
+                    </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Working days, hours, holidays, and escalation ownership.
                     </Typography>
@@ -2539,6 +2645,7 @@ const AdmissionsCrmConfiguration = ({
                       size="small"
                       type="number"
                       label="Escalate after additional hours"
+                      helperText="How long to wait after the response target is missed before notifying the escalation owner."
                       inputProps={{ min: 0, max: 720 }}
                       value={cycleForm.slaPolicy.escalationAfterHours}
                       onChange={(event) =>
@@ -2574,6 +2681,9 @@ const AdmissionsCrmConfiguration = ({
                           </MenuItem>
                         ))}
                       </Select>
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                        The person notified when an inquiry is overdue beyond the extra hours above.
+                      </Typography>
                     </FormControl>
                   </Stack>
                 </AccordionDetails>
@@ -2581,7 +2691,12 @@ const AdmissionsCrmConfiguration = ({
               <Accordion disableGutters variant="outlined">
                 <AccordionSummary expandIcon={<ExpandMore />}>
                   <Box>
-                    <Typography variant="subtitle2">Evaluation and automation</Typography>
+                    <Typography variant="subtitle2">
+                      <SettingsHelpLabel
+                        label="Evaluation and automation"
+                        help="Controls default response targets, exam pass marks, stale inquiries, and ranking behavior."
+                      />
+                    </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Service targets, passing score, inactivity, and ranking defaults.
                     </Typography>
@@ -2594,6 +2709,7 @@ const AdmissionsCrmConfiguration = ({
                       size="small"
                       type="number"
                       label="Lead SLA hours"
+                      helperText="Target response time for a new admission inquiry before it is treated as overdue."
                       value={cycleForm.defaultLeadSlaHours}
                       disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
                       onChange={(event) =>
@@ -2750,6 +2866,10 @@ const AdmissionsCrmConfiguration = ({
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails sx={{ display: 'grid', gap: 1.25 }}>
+                  <Alert severity="info" variant="outlined">
+                    These settings are used when an inquiry is reviewed in Pipeline and when an
+                    applicant moves into exam, registration, and document readiness workspaces.
+                  </Alert>
                   <Stack spacing={0.5}>
                     <Typography variant="subtitle2">Exam readiness</Typography>
                     <Stack direction="row" gap={1} flexWrap="wrap">
@@ -3510,7 +3630,10 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Typography component="h2" variant="subtitle1">
-              Lead Scoring
+              <SettingsHelpLabel
+                label="Lead Scoring"
+                help="Adds points to inquiries so the admissions team can identify higher-intent applicants first."
+              />
             </Typography>
             <Divider />
             <Box
@@ -3553,7 +3676,10 @@ const AdmissionsCrmConfiguration = ({
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
               <Typography component="h2" variant="subtitle1">
-                Lead Routing
+                <SettingsHelpLabel
+                  label="Lead Routing"
+                  help="Assigns inquiries to the right admissions owner using the first matching configured rule."
+                />
               </Typography>
               <Button size="small" variant="outlined" onClick={handleAddRoutingRule}>
                 Add Rule
@@ -3613,6 +3739,9 @@ const AdmissionsCrmConfiguration = ({
                     </MenuItem>
                   ))}
                 </Select>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                  Controls how matching rules and owner pools decide who receives a new inquiry.
+                </Typography>
               </FormControl>
               <Autocomplete
                 multiple
@@ -3690,6 +3819,18 @@ const AdmissionsCrmConfiguration = ({
                       }
                       label="Enabled"
                     />
+                    <Tooltip title="Duplicate this routing rule" arrow>
+                      <span>
+                        <IconButton
+                          size="small"
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onClick={() => handleDuplicateRoutingRule(index)}
+                          aria-label={`Duplicate routing rule ${rule.ruleName || index + 1}`}
+                        >
+                          <ContentCopy fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </Stack>
                   <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                     <FormControl fullWidth size="small">
@@ -3850,7 +3991,10 @@ const AdmissionsCrmConfiguration = ({
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
               <Typography component="h2" variant="subtitle1">
-                Journey Automation
+                <SettingsHelpLabel
+                  label="Journey Automation"
+                  help="Runs follow-up tasks or parent messages when an applicant reaches a stage or matches configured conditions."
+                />
               </Typography>
               <Button size="small" variant="outlined" onClick={handleAddJourneyRule}>
                 Add Rule
@@ -3903,6 +4047,18 @@ const AdmissionsCrmConfiguration = ({
                       }
                       label="Enabled"
                     />
+                    <Tooltip title="Duplicate this journey rule" arrow>
+                      <span>
+                        <IconButton
+                          size="small"
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onClick={() => handleDuplicateJourneyRule(index)}
+                          aria-label={`Duplicate journey rule ${rule.ruleName || index + 1}`}
+                        >
+                          <ContentCopy fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </Stack>
                   <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                     <FormControl fullWidth size="small">
@@ -4226,6 +4382,9 @@ const AdmissionsCrmConfiguration = ({
                       label="Send message"
                     />
                   </Stack>
+                  <Alert severity="info" variant="outlined">
+                    {getJourneyRuleSummary(rule)}
+                  </Alert>
                   {rule.createTask && (
                     <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                       <TextField
@@ -4286,6 +4445,10 @@ const AdmissionsCrmConfiguration = ({
                           </MenuItem>
                         ))}
                       </Select>
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Use an approved template so parent communication stays consistent by
+                        channel.
+                      </Typography>
                     </FormControl>
                   )}
                 </Box>
@@ -4367,6 +4530,15 @@ const AdmissionsCrmConfiguration = ({
                         onClick={() => handleOpenEditTemplate(template)}
                       >
                         Edit
+                      </Button>
+                      <Button size="small" variant="outlined" disabled>
+                        Duplicate Form
+                      </Button>
+                      <Button size="small" variant="outlined" disabled>
+                        Language Preview
+                      </Button>
+                      <Button size="small" variant="outlined" disabled>
+                        Download QR
                       </Button>
                       <Button
                         size="small"
