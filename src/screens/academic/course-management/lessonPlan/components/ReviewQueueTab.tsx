@@ -27,6 +27,7 @@ import {
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
 
 import type { LessonPlanRow, TeacherDiaryRow } from '../lessonPlanData';
 
@@ -68,9 +69,12 @@ type Props = {
   diaryEntries: TeacherDiaryRow[];
   canReviewSubmissions: boolean;
   currentTeacherId?: string;
-  onApprove: (target: ReviewTarget, comment: string, updateProgress: boolean) => void;
-  onReject: (target: ReviewTarget, comment: string) => void;
-  onRequestChanges: (target: ReviewTarget, comment: string) => void;
+  onApprove: (target: ReviewTarget, comment: string, updateProgress: boolean) => Promise<boolean>;
+  onReject: (target: ReviewTarget, comment: string) => Promise<boolean>;
+  onRequestChanges: (target: ReviewTarget, comment: string) => Promise<boolean>;
+  isApproving?: boolean;
+  isRejecting?: boolean;
+  isRequesting?: boolean;
 };
 
 const ReviewQueueTab = ({
@@ -81,6 +85,9 @@ const ReviewQueueTab = ({
   onApprove,
   onReject,
   onRequestChanges,
+  isApproving = false,
+  isRejecting = false,
+  isRequesting = false,
 }: Props) => {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [dateFilterMode, setDateFilterMode] = useState<ReviewDateFilterMode>('all');
@@ -103,13 +110,24 @@ const ReviewQueueTab = ({
 
   const closeReview = () => setReviewDialog(false);
 
-  const submitReview = () => {
+  const isSubmitLoading =
+    (review.action === 'approve' && isApproving) ||
+    (review.action === 'reject' && isRejecting) ||
+    (review.action === 'changes' && isRequesting);
+
+  const submitReview = async () => {
     if (!review.target) return;
-    if (review.action === 'approve')
-      onApprove(review.target, review.comment, review.updateProgress);
-    else if (review.action === 'reject') onReject(review.target, review.comment);
-    else onRequestChanges(review.target, review.comment);
-    closeReview();
+    let success = false;
+    if (review.action === 'approve') {
+      success = await onApprove(review.target, review.comment, review.updateProgress);
+    } else if (review.action === 'reject') {
+      success = await onReject(review.target, review.comment);
+    } else {
+      success = await onRequestChanges(review.target, review.comment);
+    }
+    if (success) {
+      closeReview();
+    }
   };
 
   // Build review rows
@@ -696,17 +714,18 @@ const ReviewQueueTab = ({
         </DialogScrollContent>
         <Divider />
         <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
-          <Button variant="outlined" onClick={closeReview}>
+          <Button variant="outlined" onClick={closeReview} disabled={isSubmitLoading}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             variant="contained"
             color={getActionColor(review.action) as any}
             disabled={review.action !== 'approve' && !review.comment.trim()}
+            loading={isSubmitLoading}
             onClick={submitReview}
           >
             Submit Review
-          </Button>
+          </LoadingButton>
         </Stack>
       </CustomDialog>
     </Box>

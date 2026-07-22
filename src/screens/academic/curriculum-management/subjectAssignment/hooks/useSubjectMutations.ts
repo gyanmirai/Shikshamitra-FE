@@ -70,22 +70,28 @@ export function useSubjectMutations({
         ? PublishUnpublishStatusType.Draft
         : PublishUnpublishStatusType.Published;
 
-    await publishSubjectAssignment({
-      assignmentId: selectedSubject?.id,
-      status: nextStatus,
-    }).unwrap();
+    try {
+      await publishSubjectAssignment({
+        assignmentId: selectedSubject?.id,
+        status: nextStatus,
+      }).unwrap();
 
-    refetch();
+      refetch();
 
-    const label = getSubjectDisplayLabel(selectedSubject);
-    const action =
-      nextStatus === PublishUnpublishStatusType.Published ? 'published' : 'moved to draft';
+      const label = getSubjectDisplayLabel(selectedSubject);
+      const action =
+        nextStatus === PublishUnpublishStatusType.Published ? 'published' : 'moved to draft';
 
-    shikshaMitraToast.success({
-      message: `"${label}" subject ${action} successfully`,
-    });
-
-    onPublishComplete();
+      shikshaMitraToast.success({
+        message: `"${label}" subject ${action} successfully`,
+      });
+    } catch (err: any) {
+      shikshaMitraToast.error({
+        message: err?.data?.error?.message || err?.data?.message || 'Failed to publish subject assignment.',
+      });
+    } finally {
+      onPublishComplete();
+    }
   }, [selectedSubject, publishSubjectAssignment, refetch, onPublishComplete]);
 
   return { isDeleteLoading, isPublishLoading, handleConfirmDelete, handleConfirmPublish };

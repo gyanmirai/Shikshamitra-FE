@@ -1,0 +1,673 @@
+'use client';
+
+import type { RootState } from 'src/redux/store';
+import type { AssessmentRubricDto } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+
+import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector } from 'react-redux';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  Box,
+  Chip,
+  Grid,
+  Paper,
+  Stack,
+  Button,
+  Divider,
+  Typography,
+  DialogActions,
+} from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { alpha } from '@mui/material/styles';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { academicPermissions } from 'src/constants/academic-menu';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Label } from 'src/components/label';
+import {
+  RubricStatus,
+  useAddRubricMutation,
+  useGetRubricsQuery,
+  useArchiveRubricMutation,
+  usePublishRubricMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+
+import RubricConfigForm from './rubricConfigForm';
+import RubricConfigTable from './rubricConfigTable';
+import {
+  RUBRIC_STATUS_LABELS,
+  RUBRIC_WORK_TYPE_LABELS,
+  RUBRIC_SCORING_MODEL_LABELS,
+} from './constants';
+
+const RubricConfigScreen = () => {
+  const addDialog = useBoolean();
+  const archiveDialog = useBoolean();
+  const previewDialog = useBoolean();
+  const usageDialog = useBoolean();
+  const [selectedData, setSelectedData] = useState<AssessmentRubricDto | null>(null);
+  const [statusFilter, setStatusFilter] = useState<RubricStatus | 'all'>('all');
+
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.settings.rubricConfig}.Add`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.settings.rubricConfig}.Delete`
+  );
+
+  const {
+    data: rubricData = [],
+    isLoading,
+    isFetching,
+  } = useGetRubricsQuery(
+    { academicMediumId: currentMedium?.id, isTemplate: true },
+    { skip: !currentMedium?.id }
+  );
+  const { data: allRubrics = [] } = useGetRubricsQuery(
+    { academicMediumId: currentMedium?.id },
+    { skip: !currentMedium?.id }
+  );
+
+  const [addRubric, { isLoading: isDuplicating }] = useAddRubricMutation();
+  const [publishRubric, { isLoading: isPublishing }] = usePublishRubricMutation();
+  const [archiveRubric, { isLoading: isArchiving }] = useArchiveRubricMutation();
+
+  const handleClose = (_event: unknown, isSubmit?: boolean) => {
+    addDialog.onFalse();
+    if (isSubmit) {
+      setSelectedData(null);
+      return;
+    }
+    setTimeout(() => setSelectedData(null), 200);
+  };
+
+  const activeRubrics = rubricData.filter((rubric) => rubric.status === RubricStatus.Published);
+  const draftRubrics = rubricData.filter((rubric) => rubric.status === RubricStatus.Draft);
+  const archivedRubrics = rubricData.filter((rubric) => rubric.status === RubricStatus.Archived);
+  const linkedRubrics = allRubrics.filter(
+    (rubric) => !rubric.isTemplate && rubric.sourceTemplateId
+  );
+  const usageCountByTemplate = linkedRubrics.reduce<Record<string, number>>((usageMap, rubric) => {
+    if (!rubric.sourceTemplateId) return usageMap;
+    return {
+      ...usageMap,
+      [rubric.sourceTemplateId]: (usageMap[rubric.sourceTemplateId] || 0) + 1,
+    };
+  }, {});
+  const tableData = rubricData
+    .filter((rubric) => statusFilter === 'all' || rubric.status === statusFilter)
+    .map((rubric) => ({
+      ...rubric,
+      usageCount: usageCountByTemplate[rubric.id] || 0,
+    }));
+
+  const duplicateRubric = async (rubric: AssessmentRubricDto, title: string) => {
+    try {
+      await addRubric({
+        standardId: null,
+        subjectId: null,
+        academicMediumId: rubric.academicMediumId || currentMedium?.id || null,
+        homeworkId: null,
+        assignmentId: null,
+        homeworkTypeId: rubric.homeworkTypeId,
+        assignmentTypeId: rubric.assignmentTypeId,
+        isTemplate: true,
+        appliesToWorkType: rubric.appliesToWorkType,
+        scoringModel: rubric.scoringModel,
+        visibility: rubric.visibility,
+        title,
+        description: rubric.description,
+        evaluationInstructions: rubric.evaluationInstructions,
+        studentInstructions: rubric.studentInstructions,
+        tags: rubric.tags || [],
+        performanceLevels: rubric.performanceLevels || [],
+        criteria: rubric.criteria.map((criterion, index) => ({
+          title: criterion.title,
+          description: criterion.description,
+          maxMarks: criterion.maxMarks,
+          displayOrder: index + 1,
+        })),
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Rubric template duplicated as draft.' });
+    } catch (error: unknown) {
+      const apiError = error as { data?: { message?: string; detail?: string } };
+      shikshaMitraToast.error({
+        message:
+          apiError.data?.detail || apiError.data?.message || 'Failed to duplicate rubric template.',
+      });
+    }
+  };
+
+  return (
+    <Box height="100%" display="flex" flexDirection="column" gap={1}>
+      <CustomBreadcrumbs
+        sx={{ mb: 1 }}
+        heading="Rubric Templates"
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Homework & Assignment' },
+          { name: 'Settings' },
+          { name: 'Rubric Templates' },
+        ]}
+        description="Create reusable scoring frameworks for homework, assignments, projects, practicals, presentations, and academic activities."
+        action={
+          canAdd ? (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="mdi:plus" />}
+              onClick={addDialog.onTrue}
+              sx={{ px: '32px' }}
+            >
+              Create Rubric
+            </Button>
+          ) : null
+        }
+      />
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(4, minmax(0, 1fr))',
+          },
+          gap: 1,
+          mb: 1,
+        }}
+      >
+        {[
+          {
+            label: 'Total Templates',
+            value: rubricData.length,
+            color: 'text.primary',
+            filter: 'all' as const,
+          },
+          {
+            label: 'Published',
+            value: activeRubrics.length,
+            color: 'success.main',
+            filter: RubricStatus.Published,
+          },
+          {
+            label: 'Draft',
+            value: draftRubrics.length,
+            color: 'warning.main',
+            filter: RubricStatus.Draft,
+          },
+          {
+            label: 'In Use',
+            value: linkedRubrics.length,
+            color: 'info.main',
+            filter: 'all' as const,
+          },
+          {
+            label: 'Used This Term',
+            value: linkedRubrics.length,
+            color: 'primary.main',
+            filter: 'all' as const,
+          },
+          {
+            label: 'Archived',
+            value: archivedRubrics.length,
+            color: 'text.secondary',
+            filter: RubricStatus.Archived,
+          },
+        ].map((card) => (
+          <Paper
+            key={card.label}
+            variant="outlined"
+            onClick={() => setStatusFilter(card.filter)}
+            sx={{
+              p: 1.25,
+              borderRadius: 1,
+              cursor: 'pointer',
+              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
+              borderColor:
+                statusFilter === card.filter &&
+                card.label !== 'In Use' &&
+                card.label !== 'Used This Term'
+                  ? 'primary.main'
+                  : 'divider',
+            }}
+          >
+            <Stack spacing={1}>
+              <Typography variant="caption" color="text.secondary">
+                {card.label}
+              </Typography>
+              <Typography variant="h6" sx={{ color: card.color, lineHeight: 1.1 }}>
+                {card.value}
+              </Typography>
+            </Stack>
+          </Paper>
+        ))}
+      </Box>
+
+      <RubricConfigTable
+        data={tableData}
+        isLoading={isLoading || isFetching}
+        canAdd={canAdd}
+        canDelete={canDelete}
+        onEdit={(row) => {
+          setSelectedData(row);
+          addDialog.onTrue();
+        }}
+        onDuplicate={(row) => duplicateRubric(row, `${row.title} Copy`)}
+        onVersion={(row) => duplicateRubric(row, `${row.title} Version ${row.version + 1}`)}
+        onPreview={(row) => {
+          setSelectedData(row);
+          previewDialog.onTrue();
+        }}
+        onUsage={(row) => {
+          setSelectedData(row);
+          usageDialog.onTrue();
+        }}
+        onPublish={async (row) => {
+          try {
+            await publishRubric(row.id).unwrap();
+            shikshaMitraToast.success({ message: 'Rubric template published successfully.' });
+          } catch (error: unknown) {
+            const apiError = error as { data?: { message?: string; detail?: string } };
+            shikshaMitraToast.error({
+              message:
+                apiError.data?.detail ||
+                apiError.data?.message ||
+                'Failed to publish rubric template.',
+            });
+          }
+        }}
+        onArchive={(row) => {
+          setSelectedData(row);
+          archiveDialog.onTrue();
+        }}
+      />
+
+      <CustomDialog
+        open={addDialog.value}
+        handleClose={() => handleClose(null, false)}
+        title={selectedData ? 'Update Rubric Template' : 'Create Rubric Template'}
+        maxWidth="xl"
+        paperProps={{
+          sx: { height: { xs: '100%', md: '92vh' }, maxHeight: { xs: '100%', md: '92vh' } },
+        }}
+      >
+        <RubricConfigForm editData={selectedData} onClose={handleClose} />
+      </CustomDialog>
+
+      <CustomDialog
+        open={previewDialog.value}
+        handleClose={() => {
+          setSelectedData(null);
+          previewDialog.onFalse();
+        }}
+        title={
+          <Stack direction="row" alignItems="center" gap={1.5}>
+            <Box
+              sx={{
+                p: 1,
+                borderRadius: 1.5,
+                color: 'primary.main',
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Iconify icon="solar:clipboard-check-bold-duotone" width={24} height={24} />
+            </Box>
+            <Stack>
+              <Typography variant="h6" fontWeight={700}>
+                {selectedData?.title || 'Rubric'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Rubric Template Details & Preview
+              </Typography>
+            </Stack>
+          </Stack>
+        }
+        maxWidth="md"
+      >
+        <DialogScrollContent>
+          <Stack spacing={2.5} sx={{ py: 1 }}>
+            <Stack direction="row" flexWrap="wrap" gap={1}>
+              <Label
+                variant="soft"
+                color={selectedData?.appliesToWorkType === 0 ? 'info' : 'secondary'}
+                sx={{ py: 1.5, px: 1.5, borderRadius: 1, textTransform: 'capitalize' }}
+                startIcon={
+                  <Iconify
+                    icon={
+                      selectedData?.appliesToWorkType === 0
+                        ? 'solar:document-bold'
+                        : 'solar:bill-list-bold'
+                    }
+                  />
+                }
+              >
+                {selectedData?.appliesToWorkType !== undefined &&
+                selectedData?.appliesToWorkType !== null
+                  ? RUBRIC_WORK_TYPE_LABELS[selectedData.appliesToWorkType]
+                  : 'Homework & Assignment'}
+              </Label>
+              <Label
+                variant="soft"
+                color="success"
+                sx={{ py: 1.5, px: 1.5, borderRadius: 1 }}
+                startIcon={<Iconify icon="solar:calculator-bold" />}
+              >
+                {selectedData
+                  ? RUBRIC_SCORING_MODEL_LABELS[selectedData.scoringModel] ||
+                    selectedData.scoringModel
+                  : 'Points-Based'}
+              </Label>
+              <Label
+                variant="soft"
+                color={
+                  selectedData?.status === 1
+                    ? 'success'
+                    : selectedData?.status === 0
+                      ? 'warning'
+                      : 'default'
+                }
+                sx={{ py: 1.5, px: 1.5, borderRadius: 1 }}
+                startIcon={<Iconify icon="solar:shield-check-bold" />}
+              >
+                {selectedData ? RUBRIC_STATUS_LABELS[selectedData.status] : 'Draft'}
+              </Label>
+              <Label
+                variant="filled"
+                color="primary"
+                sx={{ py: 1.5, px: 1.5, borderRadius: 1 }}
+                startIcon={<Iconify icon="solar:medal-ribbon-star-bold" />}
+              >
+                {selectedData?.totalMarks || 0} Points Max
+              </Label>
+            </Stack>
+
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2,
+                borderRadius: 1.5,
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
+                border: (theme) => `1px dashed ${alpha(theme.palette.primary.main, 0.2)}`,
+                display: 'flex',
+                gap: 1.5,
+                alignItems: 'flex-start',
+              }}
+            >
+              <Iconify
+                icon="solar:info-circle-bold-duotone"
+                sx={{ color: 'primary.main', mt: 0.25 }}
+                width={20}
+                height={20}
+              />
+              <Stack spacing={0.5} width="100%">
+                <Typography variant="subtitle2" fontWeight={700} color="primary.darker">
+                  Instructions for Students & Evaluators
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
+                  {selectedData?.studentInstructions ||
+                    selectedData?.description ||
+                    'No student-facing instructions or description added for this template.'}
+                </Typography>
+              </Stack>
+            </Paper>
+
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mt: 1 }}
+            >
+              <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+                Evaluation Criteria ({selectedData?.criteria?.length || 0})
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Please evaluate according to the max scores below
+              </Typography>
+            </Stack>
+
+            {selectedData?.criteria.map((criterion, idx) => {
+              const previewCriterion = criterion as typeof criterion & {
+                studentDescription?: string | null;
+                teacherGuidance?: string | null;
+              };
+
+              return (
+                <Paper
+                  key={criterion.id}
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 1.5,
+                    boxShadow: (theme) => `0 2px 8px -2px ${alpha(theme.palette.grey[500], 0.08)}`,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      boxShadow: (theme) =>
+                        `0 4px 12px -2px ${alpha(theme.palette.primary.main, 0.08)}`,
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    alignItems="flex-start"
+                    justifyContent="space-between"
+                  >
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start" width="100%">
+                      <Box
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: '50%',
+                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                          color: 'primary.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          flexShrink: 0,
+                          mt: 0.25,
+                        }}
+                      >
+                        {idx + 1}
+                      </Box>
+                      <Stack spacing={0.5} width="100%">
+                        <Typography variant="subtitle2" fontWeight={700}>
+                          {criterion.title}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ fontSize: '13px', lineHeight: 1.4 }}
+                        >
+                          {criterion.description || 'No description added for this criterion.'}
+                        </Typography>
+
+                        {(previewCriterion.studentDescription ||
+                          previewCriterion.teacherGuidance) && (
+                          <Stack
+                            spacing={1}
+                            sx={{
+                              mt: 1.5,
+                              pt: 1.5,
+                              borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
+                            }}
+                          >
+                            {previewCriterion.studentDescription && (
+                              <Stack direction="row" gap={1} alignItems="flex-start">
+                                <Iconify
+                                  icon="solar:user-speak-bold-duotone"
+                                  sx={{ color: 'text.disabled', mt: 0.25 }}
+                                  width={16}
+                                  height={16}
+                                />
+                                <Typography variant="caption" color="text.secondary">
+                                  <strong>Student Guidance:</strong>{' '}
+                                  {previewCriterion.studentDescription}
+                                </Typography>
+                              </Stack>
+                            )}
+                            {previewCriterion.teacherGuidance && (
+                              <Stack direction="row" gap={1} alignItems="flex-start">
+                                <Iconify
+                                  icon="solar:key-bold-duotone"
+                                  sx={{ color: 'text.disabled', mt: 0.25 }}
+                                  width={16}
+                                  height={16}
+                                />
+                                <Typography variant="caption" color="text.secondary">
+                                  <strong>Teacher Guidance:</strong>{' '}
+                                  {previewCriterion.teacherGuidance}
+                                </Typography>
+                              </Stack>
+                            )}
+                          </Stack>
+                        )}
+                      </Stack>
+                    </Stack>
+
+                    <Box sx={{ flexShrink: 0, textAlign: 'right' }}>
+                      <Typography variant="h6" fontWeight={800} color="primary.main">
+                        {criterion.maxMarks}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Points Max
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              );
+            })}
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setSelectedData(null);
+              previewDialog.onFalse();
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+
+      <CustomDialog
+        open={usageDialog.value}
+        handleClose={() => {
+          setSelectedData(null);
+          usageDialog.onFalse();
+        }}
+        title="Rubric Usage"
+        maxWidth="md"
+      >
+        <DialogScrollContent>
+          <Stack spacing={1.5}>
+            <Grid container spacing={1}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Used In
+                  </Typography>
+                  <Typography variant="h6">
+                    {selectedData ? usageCountByTemplate[selectedData.id] || 0 : 0}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Evaluated Submissions
+                  </Typography>
+                  <Typography variant="h6">-</Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Last Used
+                  </Typography>
+                  <Typography variant="h6">-</Typography>
+                </Paper>
+              </Grid>
+            </Grid>
+            <Typography variant="body2" color="text.secondary">
+              Detailed submission and teacher-level usage requires a dedicated backend usage
+              endpoint. Current usage is counted from task rubrics copied from this template.
+            </Typography>
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setSelectedData(null);
+              usageDialog.onFalse();
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+
+      <ConfirmDialog
+        open={archiveDialog.value}
+        onClose={() => {
+          setSelectedData(null);
+          archiveDialog.onFalse();
+        }}
+        title="Archive"
+        content={
+          <>
+            Are you sure you want to archive rubric template <strong>{selectedData?.title}</strong>?
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isArchiving || isPublishing || isDuplicating}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={async () => {
+              if (!selectedData) return;
+              try {
+                await archiveRubric(selectedData.id).unwrap();
+                shikshaMitraToast.success({ message: 'Rubric template archived successfully.' });
+              } catch (error: unknown) {
+                const apiError = error as { data?: { message?: string; detail?: string } };
+                shikshaMitraToast.error({
+                  message:
+                    apiError.data?.detail ||
+                    apiError.data?.message ||
+                    'Failed to archive rubric template.',
+                });
+              }
+              archiveDialog.onFalse();
+              setSelectedData(null);
+            }}
+          >
+            Archive
+          </LoadingButton>
+        }
+      />
+    </Box>
+  );
+};
+
+export default RubricConfigScreen;

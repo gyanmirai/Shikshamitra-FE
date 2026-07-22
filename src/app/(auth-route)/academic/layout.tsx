@@ -7,6 +7,7 @@ import { View403 } from 'src/sections/error';
 import { SplashScreen } from 'src/components/loading-screen';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
+import { AcademicModuleUiProvider } from 'src/screens/academic/components/AcademicModuleUiProvider';
 
 const AcademicLayout: React.FC<{ children: React.ReactNode }> = ({
   children,

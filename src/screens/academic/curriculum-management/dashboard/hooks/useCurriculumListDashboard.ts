@@ -73,8 +73,10 @@ export const useCurriculumListDashboard = () => {
             newValue === PublishUnpublishStatusType.Published ? 'published' : 'unpublished'
           } successfully.`,
         });
-      } catch {
-        shikshaMitraToast.error({ message: 'Failed to update curriculum status.' });
+      } catch (err: any) {
+        shikshaMitraToast.error({
+          message: err?.data?.error?.message || err?.data?.message || 'Failed to update curriculum status.',
+        });
       }
     }
     confirmPublishDialog.onFalse();

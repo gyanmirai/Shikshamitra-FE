@@ -244,6 +244,11 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
     },
     validationSchema: Yup.object().shape({
       class: Yup.string().required('Class is required'),
+      limit: Yup.number()
+        .typeError('Limit of Age must be a number')
+        .integer('Limit of Age must be an integer')
+        .positive('Limit of Age must be positive')
+        .required('Limit of Age is required'),
       shift: Yup.string().required('Shift is required'),
     }),
     onSubmit: async (values) => {

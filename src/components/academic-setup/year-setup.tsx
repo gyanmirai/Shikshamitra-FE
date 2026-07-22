@@ -29,6 +29,7 @@ import {
   Grid,
   Card,
   List,
+  Link,
   Chip,
   Stack,
   Button,
@@ -802,15 +803,48 @@ const DetailsPanel = ({ selectedNode, currentAcademicYear, onSelectChild }: Deta
   const { parentsData } = selectedNode;
 
   // Determine Breadcrumbs List
-  const crumbs = [];
-  if (parentsData?.year) crumbs.push(parentsData.year.name);
-  else crumbs.push(currentAcademicYear?.name || 'Academic Year');
+  const crumbs: { name: string; type: NodeType; id: string }[] = [];
+  crumbs.push({
+    name: parentsData?.year?.name || currentAcademicYear?.name || 'Academic Year',
+    type: 'Academic Year',
+    id: parentsData?.year?.id || currentAcademicYear?.id || '',
+  });
 
-  if (parentsData?.board) crumbs.push(parentsData.board.name);
-  if (parentsData?.medium) crumbs.push(parentsData.medium.name);
-  if (parentsData?.organization) crumbs.push(parentsData.organization.name);
-  if (parentsData?.standard) crumbs.push(parentsData.standard.name);
-  if (selectedNode.type !== 'Academic Year') crumbs.push(selectedNode.name); // Current node
+  if (parentsData?.board) {
+    crumbs.push({
+      name: parentsData.board.name,
+      type: 'Education Board',
+      id: parentsData.board.id,
+    });
+  }
+  if (parentsData?.medium) {
+    crumbs.push({
+      name: parentsData.medium.name,
+      type: 'Medium',
+      id: parentsData.medium.id,
+    });
+  }
+  if (parentsData?.organization) {
+    crumbs.push({
+      name: parentsData.organization.name,
+      type: 'Organization',
+      id: parentsData.organization.id,
+    });
+  }
+  if (parentsData?.standard) {
+    crumbs.push({
+      name: parentsData.standard.name,
+      type: 'Standard',
+      id: parentsData.standard.id,
+    });
+  }
+  if (selectedNode.type !== 'Academic Year') {
+    crumbs.push({
+      name: selectedNode.name,
+      type: selectedNode.type,
+      id: selectedNode.id,
+    });
+  }
 
   const meta = NODE_TYPE_META[selectedNode.type];
   const childCount = selectedNode.children?.length ?? 0;
@@ -873,21 +907,52 @@ const DetailsPanel = ({ selectedNode, currentAcademicYear, onSelectChild }: Deta
           separator={<Iconify icon="eva:arrow-ios-forward-fill" width={16} />}
           sx={{ mb: 2 }}
         >
-          {crumbs.map((crumb, index) => (
-            <Typography
-              key={index}
-              variant="caption"
-              sx={{
-                color: index === crumbs.length - 1 ? 'text.primary' : 'text.secondary',
-                fontWeight: index === crumbs.length - 1 ? 'fontWeightBold' : 'fontWeightMedium',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-              }}
-            >
-              {crumb}
-            </Typography>
-          ))}
+          {crumbs.map((crumb, index) => {
+            const isLast = index === crumbs.length - 1;
+            return isLast ? (
+              <Typography
+                key={index}
+                variant="caption"
+                sx={{
+                  color: 'text.primary',
+                  fontWeight: 'fontWeightBold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                {crumb.name}
+              </Typography>
+            ) : (
+              <Link
+                key={index}
+                component="button"
+                variant="caption"
+                onClick={() => {
+                  onSelectChild({
+                    id: crumb.id,
+                    type: crumb.type,
+                    name: crumb.name,
+                    parentsData: {},
+                  } as NodeData);
+                }}
+                sx={{
+                  color: 'text.secondary',
+                  fontWeight: 'fontWeightMedium',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                {crumb.name}
+              </Link>
+            );
+          })}
         </Breadcrumbs>
 
         <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>

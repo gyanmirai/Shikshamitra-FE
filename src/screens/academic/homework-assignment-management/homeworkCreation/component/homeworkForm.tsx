@@ -28,6 +28,12 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
+  RubricStatus,
+  RubricWorkType,
+  useGetRubricsQuery,
+  useCreateRubricFromTemplateMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import {
   Box,
   Grid,
   Chip,
@@ -68,11 +74,15 @@ export const cardStyle = {
 const SubmissionTypeCard = ({
   value,
   label,
+  description,
+  icon,
   selected,
   onClick,
 }: {
   value: number;
   label: string;
+  description: string;
+  icon: string;
   selected: boolean;
   onClick: () => void;
 }) => (
@@ -80,26 +90,82 @@ const SubmissionTypeCard = ({
     onClick={onClick}
     sx={{
       cursor: 'pointer',
-      p: 2,
+      p: 2.5,
+      width: '100%',
       height: '100%',
       borderRadius: 2,
       border: (theme) =>
-        `1px solid ${selected ? theme.palette.primary.main : theme.palette.grey[300]}`,
-      bgcolor: (theme) => (selected ? alpha(theme.palette.primary.main, 0.08) : 'transparent'),
-      transition: 'all 0.2s',
+        `2px solid ${selected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.12)}`,
+      bgcolor: (theme) => (selected ? alpha(theme.palette.primary.main, 0.04) : 'background.paper'),
+      boxShadow: (theme) =>
+        selected
+          ? `0 8px 16px -4px ${alpha(theme.palette.primary.main, 0.12)}, 0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`
+          : 'none',
+      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       display: 'flex',
-      alignItems: 'center',
-      gap: 1,
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      gap: 2,
       '&:hover': {
-        borderColor: 'primary.main',
-        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+        borderColor: (theme) => (selected ? theme.palette.primary.main : 'text.disabled'),
+        boxShadow: (theme) =>
+          selected
+            ? `0 8px 16px -4px ${alpha(theme.palette.primary.main, 0.16)}, 0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`
+            : `0 4px 12px -2px ${alpha(theme.palette.grey[500], 0.08)}`,
+        transform: 'translateY(-2px)',
       },
     }}
   >
-    <Radio checked={selected} value={value} sx={{ p: 0 }} />
-    <Typography variant="subtitle2" color={selected ? 'primary.dark' : 'text.primary'}>
-      {label}
-    </Typography>
+    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+      <Box
+        sx={{
+          p: 1,
+          borderRadius: 1.5,
+          color: selected ? 'primary.main' : 'text.secondary',
+          bgcolor: (theme) => (selected ? alpha(theme.palette.primary.main, 0.12) : alpha(theme.palette.grey[500], 0.08)),
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.25s',
+        }}
+      >
+        <Iconify icon={icon} width={24} height={24} />
+      </Box>
+      <Radio
+        checked={selected}
+        value={value}
+        sx={{
+          p: 0,
+          color: 'text.disabled',
+          '&.Mui-checked': {
+            color: 'primary.main',
+          }
+        }}
+      />
+    </Stack>
+
+    <Stack spacing={0.5}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 700,
+          color: selected ? 'primary.darker' : 'text.primary',
+          transition: 'all 0.25s',
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+          lineHeight: 1.3,
+          fontSize: '11px',
+        }}
+      >
+        {description}
+      </Typography>
+    </Stack>
   </Box>
 );
 
@@ -116,6 +182,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   });
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewFileState, setPreviewFileState] = useState<any>(null);
+  const [selectedRubricTemplateId, setSelectedRubricTemplateId] = useState('');
+  const [createRubricFromTemplate, { isLoading: isRubricCopyLoading }] =
+    useCreateRubricFromTemplateMutation();
   const submitModeRef = useRef<'draft' | 'publish' | 'schedule'>('draft');
   const setHomeworkSubmitMode = (mode: 'draft' | 'publish' | 'schedule') => {
     submitModeRef.current = mode;
@@ -158,6 +227,18 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Composite key for subject dropdown display (handles elective groups: "assignmentId::subjectId")
   const [subjectSelectValue, setSubjectSelectValue] = useState<string>('');
+
+  const { data: rubricTemplates = [], isFetching: isRubricTemplateFetching } = useGetRubricsQuery(
+    {
+      academicMediumId: medium?.id,
+      isTemplate: true,
+      appliesToWorkType: RubricWorkType.Homework,
+      status: RubricStatus.Published,
+    },
+    {
+      skip: !medium?.id,
+    }
+  );
   // Update classes when organization changes
   useEffect(() => {
     // Flatten the list of standards from all stages
@@ -306,6 +387,17 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
           const response = await addHomework({ academicMediumId: medium?.id, body: formData }).unwrap();
           const createdHomeworkId = response?.data?.id || response?.id;
+          if (selectedRubricTemplateId && createdHomeworkId) {
+            await createRubricFromTemplate({
+              templateId: selectedRubricTemplateId,
+              body: {
+                standardId: values.classId || values.standardId || values.class || activeClassId || '',
+                subjectId: values.subjectId || values.subject,
+                homeworkId: createdHomeworkId,
+                title: `${values.title} Rubric`,
+              },
+            }).unwrap();
+          }
           if (submitModeRef.current === 'publish' && createdHomeworkId) {
             await updateHomeworkStatus({ homeworkId: createdHomeworkId, status: 1 }).unwrap();
           }
@@ -749,6 +841,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       value={formik.values.homeworkTypeId || ''}
                       onChange={(val) => {
                         formik.setFieldValue('homeworkTypeId', val);
+                        setSelectedRubricTemplateId('');
                         const selectedType = activeHomeworkTypes.find((t: any) => t.id === val);
                         if (selectedType) {
                           if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null) {
@@ -786,6 +879,20 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       open={homeworkTypeDialog}
                     />
                   </CustomDialog>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <CustomSelect
+                    label="Rubric Template"
+                    options={rubricTemplates}
+                    labelKey="title"
+                    valueKey="id"
+                    value={selectedRubricTemplateId}
+                    disabled={!!editData?.id}
+                    isLoading={isRubricTemplateFetching}
+                    onChange={(value) => setSelectedRubricTemplateId(String(value))}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
                 </Grid>
               </SectionCard>
             </Grid>
@@ -1021,15 +1128,37 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   >
                     <Grid container spacing={1} alignItems="stretch">
                       {[
-                        { value: 0, label: 'Online Text' },
-                        { value: 1, label: 'File Upload' },
-                        { value: 2, label: 'In-Person' },
-                        { value: 3, label: 'No Submission Required' },
+                        {
+                          value: 0,
+                          label: 'Online Text',
+                          description: 'Type response directly in the text editor.',
+                          icon: 'solar:keyboard-bold-duotone'
+                        },
+                        {
+                          value: 1,
+                          label: 'File Upload',
+                          description: 'Submit PDFs, documents, or images.',
+                          icon: 'solar:file-send-bold-duotone'
+                        },
+                        {
+                          value: 2,
+                          label: 'In-Person',
+                          description: 'Turn in physically in class.',
+                          icon: 'solar:users-group-two-rounded-bold-duotone'
+                        },
+                        {
+                          value: 3,
+                          label: 'No Submission',
+                          description: 'For reading or verbal homework tasks.',
+                          icon: 'solar:verified-check-bold-duotone'
+                        },
                       ].map((item) => (
-                        <Grid size={{ xs: 12, md: 3 }} key={item.value} sx={{ display: 'flex' }}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.value} sx={{ display: 'flex' }}>
                           <SubmissionTypeCard
                             value={item.value}
                             label={item.label}
+                            description={item.description}
+                            icon={item.icon}
                             selected={formik.values.submissionType === item.value}
                             onClick={() => formik.setFieldValue('submissionType', item.value)}
                           />
@@ -1071,7 +1200,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           <LoadingButton
             variant="contained"
             size="small"
-            loading={isUpdateLoading || isAddLoading}
+            loading={isUpdateLoading || isAddLoading || isRubricCopyLoading}
             startIcon={
               <Iconify
                 icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -1091,7 +1220,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             <LoadingButton
               variant="contained"
               size="small"
-              loading={isUpdateLoading || isAddLoading || isPublishLoading}
+              loading={isUpdateLoading || isAddLoading || isPublishLoading || isRubricCopyLoading}
               startIcon={<Iconify icon={shouldSchedule ? 'solar:calendar-mark-bold' : 'solar:upload-bold'} />}
               onClick={(e: any) => {
                 setHomeworkSubmitMode(shouldSchedule ? 'schedule' : 'publish');

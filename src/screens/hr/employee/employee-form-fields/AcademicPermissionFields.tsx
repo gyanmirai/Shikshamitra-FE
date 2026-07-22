@@ -12,7 +12,7 @@ const emptySelection = {
 };
 
 function RenderAcademicPermissionFields(props: any) {
-  const { formik } = props;
+  const { allBoards, formik } = props;
 
   const [checkedItem, setCheckedItemLocal] = useState(
     formik?.values?.academicPermission || emptySelection
@@ -57,6 +57,7 @@ function RenderAcademicPermissionFields(props: any) {
 
   return (
     <BoardScreenStep
+      boards={allBoards}
       checkedItem={checkedItem}
       setCheckedItem={setCheckedItem}
       selectedData={selectedData}

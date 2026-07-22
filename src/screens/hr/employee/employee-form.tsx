@@ -1543,6 +1543,7 @@ const FormSlider = ({
                                   isMainForm: true,
                                   editData,
                                   defaultPolicyAssignment,
+                                  allBoards: step === 7 ? allBoardsForYear : undefined,
                                   isLoading:
                                     step === 7 && (accessControlFetching || boardsFetching),
                                 })

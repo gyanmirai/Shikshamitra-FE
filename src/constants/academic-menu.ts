@@ -51,6 +51,7 @@ export const academicPaths = {
       root: '/academic/homeworkSettings',
       homeworkTypes: '/academic/homeworkSettings/homeworkTypes',
       assignmentTypes: '/academic/homeworkSettings/assignmentTypes',
+      rubricConfig: '/academic/homeworkSettings/rubricConfig',
     },
   },
   examination: {
@@ -141,6 +142,7 @@ export const academicPermissions = {
       root: `${defaultModulePermissionName}${defaultAcademicPermissionName}HomeworkAssignment.Settings`,
       homeworkTypes: `${defaultAcademicPermissionName}HomeworkAndAssignment.Settings.HomeworkTypes`,
       assignmentTypes: `${defaultAcademicPermissionName}HomeworkAndAssignment.Settings.AssignmentTypes`,
+      rubricConfig: `${defaultAcademicPermissionName}HomeworkAndAssignment.Settings.RubricConfig`,
     },
   },
   examination: {
@@ -459,6 +461,15 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKeyName: 'Alt+A+H+4+2',
                   permissionName: academicPermissions.homework.settings.assignmentTypes,
                   icon: menuIconView('mdi:playlist-edit'),
+                },
+                {
+                  title: 'Rubric Templates',
+                  path: academicPaths.homework.settings.rubricConfig,
+                  _action: 'rubric-config',
+                  shortcutKey: 'Alt+A+H+4+3',
+                  shortcutKeyName: 'Alt+A+H+4+3',
+                  permissionName: academicPermissions.homework.settings.rubricConfig,
+                  icon: menuIconView('mdi:clipboard-check-multiple-outline'),
                 },
               ],
             },

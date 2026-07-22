@@ -219,6 +219,7 @@ export const AccessControlForm = ({
             </Typography>
           ) : (
             <BoardScreenStep
+              boards={allBoards}
               checkedItem={checkedItem}
               setCheckedItem={setCheckedItem}
               selectedData={selectedData}
@@ -471,11 +472,13 @@ const RenderNode = React.memo(function RenderNode({
 
 // Component for managing board selection step
 export const BoardScreenStep = ({
+  boards,
   checkedItem,
   setCheckedItem,
   selectedData,
   setSelectedData,
 }: {
+  boards?: Board[];
   checkedItem: AccessSelection;
   setCheckedItem: (checkedItem: AccessSelection) => void;
   selectedData: AccessSelection;
@@ -484,18 +487,12 @@ export const BoardScreenStep = ({
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // Query hook for fetching boards data
-  const { data: boards } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBoardsQuery,
-  });
-
   // Filter boards for current academic year. Memoized so `nodeData` keeps a
   // stable reference between renders — this is what lets RenderNode's React.memo
   // actually skip re-renders for unchanged nodes.
   const allBoards = useMemo(
-    () => boards?.items?.filter((board: Board) => board.academicYearId === currentYear?.id),
-    [boards?.items, currentYear?.id]
+    () => boards?.filter((board: Board) => board.academicYearId === currentYear?.id),
+    [boards, currentYear?.id]
   );
 
   // Memoized hierarchical data structure for boards

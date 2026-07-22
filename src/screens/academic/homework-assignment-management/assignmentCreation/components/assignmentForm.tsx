@@ -24,6 +24,12 @@ import DocumentPreviewDialog from 'src/components/preview-document/DocumentPrevi
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetAssignmentTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
 import {
+  RubricStatus,
+  RubricWorkType,
+  useGetRubricsQuery,
+  useCreateRubricFromTemplateMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import {
   Box,
   Grid,
   Chip,
@@ -103,6 +109,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [subjectSelectValue, setSubjectSelectValue] = useState('');
+  const [selectedRubricTemplateId, setSelectedRubricTemplateId] = useState('');
 
   const [uploadCurriculumFile] = useQueryAndMutation({
     type: 'mutation',
@@ -186,6 +193,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     type: 'mutation',
     currentQueryAndMutation: useUpdateAssignmentMutation,
   });
+  const [createRubricFromTemplate, { isLoading: isRubricCopyLoading }] =
+    useCreateRubricFromTemplateMutation();
 
   const {
     data: assignmentByIdData,
@@ -306,7 +315,19 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
             message: `Assignment "${values.title}" has been updated successfully.`,
           });
         } else {
-          await addAssignment({ academicMediumId: medium?.id, body: formData }).unwrap();
+          const response = await addAssignment({ academicMediumId: medium?.id, body: formData }).unwrap();
+          const createdAssignmentId = response?.data?.id || response?.id;
+          if (selectedRubricTemplateId && createdAssignmentId) {
+            await createRubricFromTemplate({
+              templateId: selectedRubricTemplateId,
+              body: {
+                standardId: values.classId,
+                subjectId: values.subjectId,
+                assignmentId: createdAssignmentId,
+                title: `${values.title} Rubric`,
+              },
+            }).unwrap();
+          }
           shikshaMitraToast.success({
             message: `Assignment "${values.title}" has been created successfully.`,
           });
@@ -356,6 +377,18 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
   }, [editData?.id, subjectOptionsData?.data?.items, formik.values.subjectId]);
 
   const isLoadingData = isAssignmentByIdLoading || isAssignmentByIdFetching;
+
+  const { data: rubricTemplates = [], isFetching: isRubricTemplateFetching } = useGetRubricsQuery(
+    {
+      academicMediumId: medium?.id,
+      isTemplate: true,
+      appliesToWorkType: RubricWorkType.Assignment,
+      status: RubricStatus.Published,
+    },
+    {
+      skip: !medium?.id,
+    }
+  );
 
   if (isLoadingData) {
     return (
@@ -645,6 +678,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       value={formik.values.assignmentTypeId || ''}
                       onChange={(val) => {
                         formik.setFieldValue('assignmentTypeId', val);
+                        setSelectedRubricTemplateId('');
                         const selectedType = activeAssignmentTypes.find((t: any) => t.id === val);
                         if (selectedType) {
                           if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null) {
@@ -708,6 +742,20 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       }}
                     />
                   </ShakingTextField>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <CustomSelect
+                    label="Rubric Template"
+                    options={rubricTemplates}
+                    labelKey="title"
+                    valueKey="id"
+                    value={selectedRubricTemplateId}
+                    disabled={!!editData?.id}
+                    isLoading={isRubricTemplateFetching}
+                    onChange={(value) => setSelectedRubricTemplateId(String(value))}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
                 </Grid>
               </SectionCard>
             </Grid>
@@ -980,7 +1028,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
           <LoadingButton
             size="small"
             variant="contained"
-            loading={isAddLoading || isUpdateLoading}
+            loading={isAddLoading || isUpdateLoading || isRubricCopyLoading}
             startIcon={
               <Iconify
                 icon={editData ? GlobalIcons.edit : GlobalIcons.submit}

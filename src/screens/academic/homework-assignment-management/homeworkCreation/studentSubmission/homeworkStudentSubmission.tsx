@@ -16,6 +16,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 import {
   FeedbackStatusChip,
@@ -85,6 +86,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const normalizedData = React.useMemo(
     () => dedupeEvaluationRows(homeworkSubmissions?.data || []),
     [homeworkSubmissions?.data]
+  );
+  const hasRubricAssessment = React.useMemo(
+    () =>
+      Number(selectedHomework?.defaultEvaluationMethod) === 2 ||
+      normalizedData.some((row: any) => row.totalMarks !== null && row.totalMarks !== undefined),
+    [normalizedData, selectedHomework?.defaultEvaluationMethod]
   );
 
   const filteredData = React.useMemo(
@@ -158,7 +165,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   return (
     <>
       <Stack spacing={1}>
-        <EvaluationSummaryCards summary={summary} showMarks={false} />
+        <EvaluationSummaryCards summary={summary} showMarks={hasRubricAssessment} />
         <EvaluationFilterBar value={activeFilter} onChange={setActiveFilter} />
       </Stack>
       <Box sx={{ mt: 1.5 }}>
@@ -396,6 +403,22 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         }
         maxWidth="sm"
       >
+        {selectedStudent &&
+          selectedClass &&
+          selectedSubject &&
+          selectedHomework?.id &&
+          hasRubricAssessment && (
+            <Box sx={{ p: 2, pb: 0 }}>
+              <RubricEvaluationPanel
+                mode="homework"
+                standardId={selectedClass}
+                subjectId={selectedSubject}
+                taskId={selectedHomework.id}
+                taskTitle={selectedHomework.label}
+                studentRow={selectedStudent}
+              />
+            </Box>
+          )}
         {selectedHomework?.submissionType === 'file_upload' ? (
           <AssignGrade
             data={selectedStudent}

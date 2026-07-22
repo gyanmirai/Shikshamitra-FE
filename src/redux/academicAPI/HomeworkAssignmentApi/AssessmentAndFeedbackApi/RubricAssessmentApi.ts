@@ -6,6 +6,7 @@ export enum RubricStatus {
   Draft = 0,
   Published = 1,
   Archived = 2,
+  Superseded = 3,
 }
 
 export enum RubricEvaluationStatus {
@@ -15,6 +16,26 @@ export enum RubricEvaluationStatus {
   Returned = 3,
 }
 
+export enum RubricWorkType {
+  Homework = 0,
+  Assignment = 1,
+}
+
+export enum RubricScoringModel {
+  PointsBased = 0,
+  WeightedPercentage = 1,
+  PerformanceLevels = 2,
+  Checklist = 3,
+  RatingScale = 4,
+}
+
+export enum RubricVisibility {
+  Private = 0,
+  SelectedTeachers = 1,
+  Department = 2,
+  Institution = 3,
+}
+
 export type RubricCriterionInputDto = {
   title: string;
   description?: string | null;
@@ -22,14 +43,43 @@ export type RubricCriterionInputDto = {
   displayOrder: number;
 };
 
+export type RubricPerformanceLevelDto = {
+  level: number;
+  label: string;
+  score: number;
+  description?: string | null;
+  studentLabel?: string | null;
+};
+
 export type CreateUpdateRubricDto = {
+  standardId?: string | null;
+  subjectId?: string | null;
+  academicMediumId?: string | null;
+  homeworkId?: string | null;
+  assignmentId?: string | null;
+  homeworkTypeId?: string | null;
+  assignmentTypeId?: string | null;
+  sourceTemplateId?: string | null;
+  isTemplate?: boolean;
+  appliesToWorkType?: RubricWorkType | null;
+  scoringModel?: RubricScoringModel;
+  visibility?: RubricVisibility;
+  title: string;
+  description?: string | null;
+  evaluationInstructions?: string | null;
+  studentInstructions?: string | null;
+  tags?: string[];
+  performanceLevels?: RubricPerformanceLevelDto[];
+  criteria: RubricCriterionInputDto[];
+};
+
+export type CreateRubricFromTemplateDto = {
   standardId: string;
   subjectId: string;
   homeworkId?: string | null;
   assignmentId?: string | null;
-  title: string;
+  title?: string | null;
   description?: string | null;
-  criteria: RubricCriterionInputDto[];
 };
 
 export type AssessmentRubricCriterionDto = {
@@ -43,23 +93,42 @@ export type AssessmentRubricCriterionDto = {
 
 export type AssessmentRubricDto = {
   id: string;
-  standardId: string;
-  subjectId: string;
+  standardId?: string | null;
+  subjectId?: string | null;
+  academicMediumId?: string | null;
   homeworkId?: string | null;
   assignmentId?: string | null;
+  homeworkTypeId?: string | null;
+  assignmentTypeId?: string | null;
+  sourceTemplateId?: string | null;
+  isTemplate?: boolean;
+  appliesToWorkType?: RubricWorkType | null;
+  scoringModel: RubricScoringModel;
+  visibility: RubricVisibility;
   title: string;
   description?: string | null;
+  evaluationInstructions?: string | null;
+  studentInstructions?: string | null;
+  tags: string[];
+  performanceLevels: RubricPerformanceLevelDto[];
   totalMarks: number;
   version: number;
   status: RubricStatus;
+  creationTime?: string;
+  lastModificationTime?: string | null;
   criteria: AssessmentRubricCriterionDto[];
 };
 
 export type GetRubricsParams = {
   standardId?: string;
   subjectId?: string;
+  academicMediumId?: string;
   homeworkId?: string;
   assignmentId?: string;
+  homeworkTypeId?: string;
+  assignmentTypeId?: string;
+  isTemplate?: boolean;
+  appliesToWorkType?: RubricWorkType;
   status?: RubricStatus;
   search?: string;
 };
@@ -137,6 +206,22 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.assessmentRubric, academicType.rubricEvaluation],
     }),
 
+    createRubricFromTemplate: builder.mutation<
+      AssessmentRubricDto,
+      { templateId: string; body: CreateRubricFromTemplateDto }
+    >({
+      query: ({ templateId, body }) => ({
+        url: `/academic/rubrics/${templateId}/copy-to-task`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        academicType.assessmentRubric,
+        academicType.homework,
+        academicType.assignment,
+      ],
+    }),
+
     publishRubric: builder.mutation<void, string>({
       query: (id) => ({
         url: `/academic/rubrics/${id}/publish`,
@@ -205,6 +290,7 @@ export const {
   useGetRubricByIdQuery,
   useAddRubricMutation,
   useUpdateRubricMutation,
+  useCreateRubricFromTemplateMutation,
   usePublishRubricMutation,
   useArchiveRubricMutation,
   useUpsertRubricEvaluationMutation,

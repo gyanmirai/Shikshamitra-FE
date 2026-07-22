@@ -273,9 +273,9 @@ const LessonPlanScreen = () => {
   const [updateLessonPlan, { isLoading: isUpdatingLesson }] = useUpdateLessonPlanMutation();
   const [submitLessonPlan, { isLoading: isSubmittingLesson }] = useSubmitLessonPlanMutation();
   const isSavingLesson = isCreatingLesson || isUpdatingLesson || isSubmittingLesson;
-  const [approveLessonPlan] = useApproveLessonPlanMutation();
-  const [rejectLessonPlan] = useRejectLessonPlanMutation();
-  const [requestChanges] = useRequestPlanChangesMutation();
+  const [approveLessonPlan, { isLoading: isApproving }] = useApproveLessonPlanMutation();
+  const [rejectLessonPlan, { isLoading: isRejecting }] = useRejectLessonPlanMutation();
+  const [requestChanges, { isLoading: isRequestingPlanChanges }] = useRequestPlanChangesMutation();
   const [createHomeworkFromLessonPlan, { isLoading: isCreatingHomeworkFromPlan }] =
     useCreateHomeworkFromLessonPlanMutation();
   const [createTeacherDiary, { isLoading: isCreatingDiary }] = useCreateTeacherDiaryMutation();
@@ -744,7 +744,7 @@ const LessonPlanScreen = () => {
         };
 
         const createPayload = {
-          academicYearId: currentYear.id,
+          academicYearId: currentYear?.id,
           teacherId: form.teacherId,
           standardId: form.standardId,
           divisionId: form.divisionId,
@@ -752,6 +752,7 @@ const LessonPlanScreen = () => {
           plannedDate,
           timetableSlotId: form.timetableSlotId || null,
           isAiGenerated: form.source === 'AiGenerated',
+          status: submitAfterSave ? 1 : 0,
           ...planDetailsPayload,
         };
 
@@ -890,14 +891,16 @@ const LessonPlanScreen = () => {
               ? 'Diary approval with progress update is not wired yet.'
               : 'Diary approval is not wired yet.',
           });
-          return;
+          return false;
         }
         await approveLessonPlan({ id: target.id, body: { comment } }).unwrap();
         refetchTimeline();
         refetchLessonPlans();
         shikshaMitraToast.success({ message: 'Approved successfully.' });
+        return true;
       } catch (err: any) {
         shikshaMitraToast.error({ message: err?.data?.error?.message || 'Failed to approve.' });
+        return false;
       }
     },
     [approveLessonPlan, refetchTimeline, refetchLessonPlans]
@@ -908,18 +911,20 @@ const LessonPlanScreen = () => {
       try {
         if (target.type === 'diary') {
           shikshaMitraToast.info({ message: 'Diary rejection is not wired yet.' });
-          return;
+          return false;
         }
         if (!comment) {
           shikshaMitraToast.warning({ message: 'Please provide a reason.' });
-          return;
+          return false;
         }
         await rejectLessonPlan({ id: target.id, body: { comment } }).unwrap();
         refetchTimeline();
         refetchLessonPlans();
         shikshaMitraToast.success({ message: 'Rejected and returned for correction.' });
+        return true;
       } catch (err: any) {
         shikshaMitraToast.error({ message: err?.data?.error?.message || 'Failed to reject.' });
+        return false;
       }
     },
     [rejectLessonPlan, refetchTimeline, refetchLessonPlans]
@@ -930,20 +935,22 @@ const LessonPlanScreen = () => {
       try {
         if (target.type === 'diary') {
           shikshaMitraToast.info({ message: 'Diary change request is not wired yet.' });
-          return;
+          return false;
         }
         if (!comment) {
           shikshaMitraToast.warning({ message: 'Please provide comments.' });
-          return;
+          return false;
         }
         await requestChanges({ id: target.id, body: { comment } }).unwrap();
         refetchTimeline();
         refetchLessonPlans();
         shikshaMitraToast.success({ message: 'Changes requested successfully.' });
+        return true;
       } catch (err: any) {
         shikshaMitraToast.error({
           message: err?.data?.error?.message || 'Failed to request changes.',
         });
+        return false;
       }
     },
     [requestChanges, refetchTimeline, refetchLessonPlans]
@@ -1371,6 +1378,9 @@ const LessonPlanScreen = () => {
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
+          isApproving={isApproving}
+          isRejecting={isRejecting}
+          isRequesting={isRequestingPlanChanges}
         />
       )}
 
