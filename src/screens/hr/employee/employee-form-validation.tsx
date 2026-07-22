@@ -49,10 +49,14 @@ const aadhaarValidation = ({ requireIdentity = true }: PersonalInformationValida
       if (!requireIdentity) return true;
       return !!value;
     })
-    .test('aadhaar-format', 'Aadhaar number must be 12 digits', (value) => {
-      if (!value) return !requireIdentity;
-      return /^\d{12}$/.test(value);
-    });
+    .test(
+      'aadhaar-format',
+      'Aadhaar number must be exactly 12 digits and cannot start with 0 or 1',
+      (value) => {
+        if (!value) return !requireIdentity;
+        return /^[2-9]{1}[0-9]{11}$/.test(value);
+      }
+    );
 
 const panValidation = ({ requireIdentity = true }: PersonalInformationValidationOptions = {}) =>
   Yup.string()
@@ -151,6 +155,19 @@ export const getPersonalInformationValidationSchema = (
         if (!value) return true;
         return dayjs(value as any).isBefore(MAX_DOJ);
       })
+      // eslint-disable-next-line func-names
+      .test(
+        'age-check',
+        'Employee must be at least 18 years old at the time of joining',
+        function (value) {
+          if (!value) return true;
+          const { dob } = this.parent;
+          if (dob && value) {
+            return dayjs(value as any).diff(dayjs(dob as any), 'year') >= 18;
+          }
+          return true;
+        }
+      )
       .required('Date of Joining is required'),
     employeeGroup: Yup.string().required('Employee Group is required'),
     // qualification: Yup.string(),
@@ -222,7 +239,13 @@ const familyInformationValidationSchema = Yup.object({
   motherPinCode: Yup.string()
     .test('pincode', 'Must be exactly 6 numbers', isValidPincode)
     .nullable(),
-  spouseName: Yup.string().nullable(),
+  spouseName: Yup.string()
+    .nullable()
+    .when('maritalStatus', {
+      is: 'Married',
+      then: (schema) => schema.required('Spouse name is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
   //   spouseOccupation: Yup.string().required('Spouse occupation is required'),
   spouseContactNo: Yup.string()
     .nullable()
@@ -256,15 +279,6 @@ export const workExperienceValidationSchema = Yup.object({
   experiences: Yup.array().of(
     Yup.object({
       mediumStageName: Yup.string().required('Organization Name is required'),
-      // organizationAddress: Yup.string(),
-      country: Yup.object().shape({
-        name: Yup.string(),
-        isoCode: Yup.string(),
-      }),
-      state: Yup.object().shape({
-        name: Yup.string(),
-        isoCode: Yup.string(),
-      }),
       city: Yup.object().shape({
         name: Yup.string(),
       }),
@@ -425,6 +439,6 @@ export const infoValidations = [
   familyInformationValidationSchema,
   additionalDetailsValidationSchema,
   workExperienceValidationSchema,
-  Yup.object({}),
+  payrollValidationSchema,
   reportingManagerValidationSchema,
 ];

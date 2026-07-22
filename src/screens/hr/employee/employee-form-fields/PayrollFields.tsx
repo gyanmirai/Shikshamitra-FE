@@ -3,6 +3,7 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { setNestedObjectValues } from 'formik';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
@@ -615,9 +616,11 @@ const RenderPayrollFields = (props: any) => {
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
+    if (Object.keys(validation).length > 0) {
+      formik.setTouched(setNestedObjectValues(validation, true));
+      return false;
+    }
     await formik?.submitForm?.();
-    if (Object.keys(validation).length > 0) return false;
-
     formik.resetForm({ values: formik.values });
     return undefined;
   };

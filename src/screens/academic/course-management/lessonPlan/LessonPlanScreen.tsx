@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -17,6 +16,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import {
   Box,
@@ -31,8 +31,8 @@ import {
   MenuList,
   TextField,
   Typography,
-  LinearProgress,
   IconButton,
+  LinearProgress,
 } from '@mui/material';
 import {
   useGetLessonPlansQuery,
@@ -250,6 +250,7 @@ const LessonPlanScreen = () => {
   const {
     data: timelineData,
     isLoading: isTimelineLoading,
+    isFetching: isTimelineFetching,
     refetch: refetchTimeline,
   } = useGetLessonPlanTimelineQuery({
     date: dateConvertor(selectedDate.format(dateFormat)),
@@ -1275,7 +1276,7 @@ const LessonPlanScreen = () => {
           selectedDate={selectedDate}
           onChangeDate={setSelectedDate}
           slots={timelineData?.slots || []}
-          isLoading={isTimelineLoading}
+          isLoading={isTimelineLoading || isTimelineFetching}
           onAddLesson={(date, prefill) => {
             setEditPlan(null);
             setPrefillDate(date ?? null);

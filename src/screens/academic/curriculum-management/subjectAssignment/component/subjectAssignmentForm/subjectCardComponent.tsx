@@ -56,6 +56,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     activeSubjectId,
   });
 
+  console.log('subject====', subject);
+
   const getFileNameFromUrl = (file: string | File): string => {
     if (!file) return '';
     if (typeof file !== 'string') return file.name;
@@ -141,22 +143,31 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           </Box>
 
           {!isPublished && onRemove && (
-            <Tooltip title="Remove subject">
-              <IconButton
-                component="span"
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove();
-                }}
-                sx={{
-                  mr: 0.5,
-                  color: 'text.secondary',
-                  '&:hover': { color: 'error.main', bgcolor: 'error.lighter' },
-                }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
+            <Tooltip
+              title={
+                subject.subjectType === 1
+                  ? "Can't remove, subject belongs to elective group"
+                  : 'Remove subject'
+              }
+            >
+              <span>
+                <IconButton
+                  component="span"
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove();
+                  }}
+                  disabled={subject.subjectType === 1}
+                  sx={{
+                    mr: 0.5,
+                    color: 'text.secondary',
+                    '&:hover': { color: 'error.main', bgcolor: 'error.lighter' },
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </span>
             </Tooltip>
           )}
         </AccordionSummary>

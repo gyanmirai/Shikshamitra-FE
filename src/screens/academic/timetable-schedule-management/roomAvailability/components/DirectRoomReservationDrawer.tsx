@@ -4,11 +4,12 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   Chip,
@@ -31,9 +32,9 @@ import {
   toMinutes,
   clampSlotDuration,
   generateReservationSlots,
-  DEFAULT_SLOT_DURATION_MINUTES,
   MIN_SLOT_DURATION_MINUTES,
   MAX_SLOT_DURATION_MINUTES,
+  DEFAULT_SLOT_DURATION_MINUTES,
 } from './directReservationSlots';
 
 import type { RoomReservation, RoomAvailabilityItem, ReservationRequirements } from '../types';
@@ -125,9 +126,26 @@ export const DirectRoomReservationDrawer = ({
     }
   }, [open, room]);
 
-  const isTimeRangeInvalid = Boolean(
-    requirements.startTime && requirements.endTime && requirements.endTime <= requirements.startTime
-  );
+  const isStartTimeOutOfRange = useMemo(() => {
+    if (!requirements.startTime) return false;
+    const mins = toMinutes(requirements.startTime);
+    return mins < 6 * 60 || requirements.startTime === '00:00';
+  }, [requirements.startTime]);
+
+  const isEndTimeOutOfRange = useMemo(() => {
+    if (!requirements.endTime) return false;
+    if (requirements.endTime === '00:00') return false;
+    const mins = toMinutes(requirements.endTime);
+    return mins < 6 * 60;
+  }, [requirements.endTime]);
+
+  const isTimeRangeInvalid = useMemo(() => {
+    if (!requirements.startTime || !requirements.endTime) return false;
+    if (isStartTimeOutOfRange || isEndTimeOutOfRange) return false;
+    const startMins = toMinutes(requirements.startTime);
+    const endMins = requirements.endTime === '00:00' ? 24 * 60 : toMinutes(requirements.endTime);
+    return endMins <= startMins;
+  }, [requirements.startTime, requirements.endTime, isStartTimeOutOfRange, isEndTimeOutOfRange]);
 
   const generatedSlots = useMemo(
     () => generateReservationSlots(schedule.data?.slots || [], slotDurationMinutes),
@@ -137,16 +155,29 @@ export const DirectRoomReservationDrawer = ({
   // Slot tiles are always derived from the Start/End Time fields, so typing a time
   // and clicking a tile stay in sync automatically instead of tracking selection separately.
   const overlappingSlotIndices = useMemo(() => {
-    if (!requirements.startTime || !requirements.endTime || isTimeRangeInvalid)
+    if (
+      !requirements.startTime ||
+      !requirements.endTime ||
+      isTimeRangeInvalid ||
+      isStartTimeOutOfRange ||
+      isEndTimeOutOfRange
+    )
       return [] as number[];
     const reqStart = toMinutes(requirements.startTime);
-    const reqEnd = toMinutes(requirements.endTime);
+    const reqEnd = requirements.endTime === '00:00' ? 24 * 60 : toMinutes(requirements.endTime);
     const result: number[] = [];
     generatedSlots.forEach((slot, i) => {
       if (slot.startMinutes < reqEnd && slot.endMinutes > reqStart) result.push(i);
     });
     return result;
-  }, [generatedSlots, requirements.startTime, requirements.endTime, isTimeRangeInvalid]);
+  }, [
+    generatedSlots,
+    requirements.startTime,
+    requirements.endTime,
+    isTimeRangeInvalid,
+    isStartTimeOutOfRange,
+    isEndTimeOutOfRange,
+  ]);
 
   const overlappingConflictMinutes = useMemo(
     () =>
@@ -186,7 +217,15 @@ export const DirectRoomReservationDrawer = ({
       setValidationError('End time is required.');
       return false;
     }
-    if (requirements.endTime <= requirements.startTime) {
+    if (isStartTimeOutOfRange) {
+      setValidationError('Start time must be between 06:00 AM and 12:00 AM.');
+      return false;
+    }
+    if (isEndTimeOutOfRange) {
+      setValidationError('End time must be between 06:00 AM and 12:00 AM.');
+      return false;
+    }
+    if (isTimeRangeInvalid) {
       setValidationError('End time must be after start time.');
       return false;
     }
@@ -700,26 +739,61 @@ export const DirectRoomReservationDrawer = ({
                   />
 
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                    <TextField
-                      size="small"
+                    <TimePicker
                       label="Start Time *"
-                      type="time"
-                      value={requirements.startTime}
-                      onChange={(e) => patchRequirements({ startTime: e.target.value })}
-                      fullWidth
-                      error={isTimeRangeInvalid}
-                      InputLabelProps={{ shrink: true }}
+                      value={
+                        requirements.startTime
+                          ? dayjs(`2000-01-01T${requirements.startTime}`)
+                          : null
+                      }
+                      onChange={(newValue: Dayjs | null) => {
+                        patchRequirements({
+                          startTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                        });
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error: isStartTimeOutOfRange || isTimeRangeInvalid,
+                          helperText: isStartTimeOutOfRange
+                            ? 'Must be between 06:00 AM and 12:00 AM'
+                            : ' ',
+                        },
+                      }}
                     />
-                    <TextField
-                      size="small"
+                    <TimePicker
                       label="End Time *"
-                      type="time"
-                      value={requirements.endTime}
-                      onChange={(e) => patchRequirements({ endTime: e.target.value })}
-                      fullWidth
-                      error={isTimeRangeInvalid}
-                      helperText={isTimeRangeInvalid ? 'End time must be after start time' : ' '}
-                      InputLabelProps={{ shrink: true }}
+                      value={
+                        requirements.endTime ? dayjs(`2000-01-01T${requirements.endTime}`) : null
+                      }
+                      onChange={(newValue: Dayjs | null) => {
+                        patchRequirements({
+                          endTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                        });
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error: isEndTimeOutOfRange || isTimeRangeInvalid,
+                          helperText: isEndTimeOutOfRange
+                            ? 'Must be between 06:00 AM and 12:00 AM'
+                            : isTimeRangeInvalid
+                              ? 'End time must be after start time'
+                              : ' ',
+                        },
+                      }}
                     />
                   </Stack>
                   {!isTimeRangeInvalid && conflictingSlot && (

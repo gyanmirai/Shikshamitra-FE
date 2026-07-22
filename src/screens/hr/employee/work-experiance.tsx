@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { setNestedObjectValues } from 'formik';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Add, RemoveCircle } from '@mui/icons-material';
@@ -20,15 +21,18 @@ const WorkExperiences = (props: any) => {
   const isEditable = useBoolean(isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
+    if (Object.keys(validation).length > 0) {
+      formik.setTouched(setNestedObjectValues(validation, true));
+      return false;
+    }
     await formik?.submitForm?.();
-    if (Object.keys(validation).length > 0) return false;
-
     formik.resetForm({ values: formik.values });
     return undefined;
   };
   const handleCancel = () => {
     formik.resetForm();
   };
+  console.log('formik errors---------', formik.errors);
   return (
     <Box width="100%">
       {!isMainForm && (

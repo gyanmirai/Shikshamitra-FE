@@ -6,7 +6,8 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import { Chip, Stack, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useGetQuestionsQuery } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 
@@ -162,25 +163,44 @@ export default function ChapterQuestionsDialog({
     []
   );
 
-  const title = chapterName ? `Questions — ${chapterName}` : 'Chapter Questions';
-
   return (
-    <CustomDialog open={open} handleClose={onClose} title={title} maxWidth="lg">
-      <CustomizableTable
-        tableId="chapter-questions-view"
-        tableTitle={`${data?.items?.length ?? 0} Question${data?.items?.length === 1 ? '' : 's'}`}
-        columns={columns}
-        data={data?.items || []}
-        isLoading={isFetching}
-        noDataText={
-          <Stack alignItems="center" spacing={1} py={6}>
-            <Iconify icon="mingcute:question-line" width={40} sx={{ color: 'text.disabled' }} />
-            <Typography variant="subtitle2" color="text.secondary">
-              No questions for this chapter yet
-            </Typography>
-          </Stack>
-        }
-      />
+    <CustomDialog
+      open={open}
+      handleClose={onClose}
+      title={
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+          <Typography variant="h5">
+            <Box component="span">Questions —</Box> {chapterName || 'Chapter Questions'}
+          </Typography>
+          <CustomTooltip
+            arrow
+            placement="right"
+            sx={{ textAlign: 'justify' }}
+            title="View all questions added under this chapter."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
+        </Box>
+      }
+      maxWidth="lg"
+    >
+      <Box sx={{ p: 2 }}>
+        <CustomizableTable
+          tableId="chapter-questions-view"
+          tableTitle={`${data?.items?.length ?? 0} Question${data?.items?.length === 1 ? '' : 's'}`}
+          columns={columns}
+          data={data?.items || []}
+          isLoading={isFetching}
+          noDataText={
+            <Stack alignItems="center" spacing={1} py={6}>
+              <Iconify icon="mingcute:question-line" width={40} sx={{ color: 'text.disabled' }} />
+              <Typography variant="subtitle2" color="text.secondary">
+                No questions for this chapter yet
+              </Typography>
+            </Stack>
+          }
+        />
+      </Box>
     </CustomDialog>
   );
 }

@@ -4,6 +4,7 @@ import type { GridProps, PaperProps } from '@mui/material';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
+import { setNestedObjectValues } from 'formik';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
@@ -358,9 +359,11 @@ const InformationAllFields = ({
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
+    if (Object.keys(validation).length > 0) {
+      formik.setTouched(setNestedObjectValues(validation, true));
+      return false;
+    }
     await formik?.submitForm?.();
-    if (Object.keys(validation).length > 0) return false;
-
     formik.resetForm({ values: formik.values });
     return undefined;
   };
