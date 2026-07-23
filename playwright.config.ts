@@ -1,6 +1,6 @@
-/* eslint-disable import/no-extraneous-dependencies */
-import { existsSync, readFileSync } from 'node:fs';
+/* eslint-disable import/no-extraneous-dependencies, no-restricted-syntax, no-continue */
 import path from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
 import { devices, defineConfig } from '@playwright/test';
 
 // Inline loader for .env.local and .env files to populate process.env
@@ -35,8 +35,15 @@ import { devices, defineConfig } from '@playwright/test';
 })();
 
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3000';
-
-
+const browserExecutablePath = process.env.E2E_BROWSER_EXECUTABLE_PATH;
+const isVivaldiExecutable =
+  browserExecutablePath && path.basename(browserExecutablePath).toLowerCase() === 'vivaldi.exe';
+const browserLaunchOptions = browserExecutablePath
+  ? {
+      executablePath: browserExecutablePath,
+      ...(isVivaldiExecutable ? { args: ['--disable-vivaldi'] } : {}),
+    }
+  : undefined;
 
 export default defineConfig({
   testDir: './e2e',
@@ -68,6 +75,7 @@ export default defineConfig({
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
+        launchOptions: browserLaunchOptions,
         storageState: 'playwright/.auth/hr-manager.json',
       },
       testIgnore: /.*\.guest\.spec\.ts/,
@@ -76,6 +84,7 @@ export default defineConfig({
       name: 'chromium-guest',
       use: {
         ...devices['Desktop Chrome'],
+        launchOptions: browserLaunchOptions,
       },
       testMatch: /.*\.guest\.spec\.ts/,
     },

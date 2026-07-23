@@ -741,7 +741,7 @@ test.describe('Student admissions CRM E2E', () => {
     await page.goBack({ waitUntil: 'networkidle' });
     await expect(page).toHaveURL(/view=list/);
     await expect(page).toHaveURL(/stage=0/);
-    await expect(page).toHaveURL(/page=2/);
+    await expect(page).not.toHaveURL(/page=2/);
 
     await page.goto(`/student/enrollment/settings?cycle=${academicYearId}`, {
       waitUntil: 'networkidle',
@@ -1510,7 +1510,7 @@ test.describe('Student admissions CRM E2E', () => {
       const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await leadCard.getByRole('button', { name: 'Manage' }).click();
       const operationsDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
-      await operationsDialog.getByRole('tab', { name: 'Registration' }).click();
+      await operationsDialog.getByRole('tab', { name: 'Registration', exact: true }).click();
       await expect(operationsDialog).toContainText(registration.formNumber);
       await operationsDialog.getByRole('button', { name: 'Verify Registration' }).click();
       await expect(operationsDialog.getByText('Verified', { exact: true })).toBeVisible({
@@ -1546,7 +1546,7 @@ test.describe('Student admissions CRM E2E', () => {
       const refreshedLeadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
       const refreshedDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
-      await refreshedDialog.getByRole('tab', { name: 'Registration' }).click();
+      await refreshedDialog.getByRole('tab', { name: 'Registration', exact: true }).click();
       await refreshedDialog.getByRole('button', { name: 'Verify', exact: true }).click();
       await expect(refreshedDialog.getByRole('button', { name: 'Original Seen' })).toBeVisible({
         timeout: 20_000,

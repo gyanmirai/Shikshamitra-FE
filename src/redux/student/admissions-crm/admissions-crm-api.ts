@@ -136,6 +136,7 @@ export enum AdmissionCrmJourneyTrigger {
   DocumentPending = 15,
   ExamNoShow = 16,
   AdmissionReady = 17,
+  DocumentExpiring = 18,
 }
 
 export enum AdmissionCrmOperationsQueueType {
@@ -1254,9 +1255,11 @@ export type AdmissionCrmDocumentRequirementDto = {
   blocksAdmissionReadiness: boolean;
   requiresOriginal: boolean;
   validityDateRequired: boolean;
+  expiryReminderDaysBefore?: number | null;
   maximumSizeMb: number;
   acceptedExtensions: string[];
   uploadInstructions?: string | null;
+  rejectionReasons: string[];
   displayOrder: number;
 };
 
@@ -1288,6 +1291,7 @@ export type AdmissionCrmApplicantDocumentDto = {
   blocksAdmissionReadiness: boolean;
   requiresOriginal: boolean;
   validityDateRequired: boolean;
+  expiryReminderDaysBefore?: number | null;
   originalSeen: boolean;
   status?: AdmissionCrmApplicantDocumentStatus | null;
   version: number;
@@ -1301,6 +1305,7 @@ export type AdmissionCrmApplicantDocumentDto = {
   acceptedExtensions: string[];
   maximumSizeMb: number;
   uploadInstructions?: string | null;
+  rejectionReasons: string[];
 };
 
 export type AdmissionCrmApplicantDocumentChecklistDto = {

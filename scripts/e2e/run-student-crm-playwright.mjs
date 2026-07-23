@@ -16,6 +16,7 @@ const dryRun = flagSet.has('--dry-run');
 const preflightOnly = flagSet.has('--preflight-only');
 const allowRemoteMutation = flagSet.has('--allow-stage-mutation');
 const useDefaultCredentials = flagSet.has('--use-default-credentials');
+const headed = flagSet.has('--headed');
 const project = getArgValue('--project', 'chromium-guest');
 const reporter = getArgValue('--reporter', 'list');
 const specPath = [
@@ -65,6 +66,10 @@ const resolvedApiUrl = getArgValue(
 const resolvedBaseUrl = getArgValue(
   '--base-url',
   readEnv('E2E_BASE_URL') || 'http://localhost:3000'
+);
+const browserExecutablePath = getArgValue(
+  '--browser-executable',
+  readEnv('E2E_BROWSER_EXECUTABLE_PATH')
 );
 
 const normalizeUrl = (url, label) => {
@@ -131,6 +136,10 @@ const fail = (message) => {
   process.exit(1);
 };
 
+if (browserExecutablePath && !existsSync(browserExecutablePath)) {
+  fail(`Browser executable was not found at ${browserExecutablePath}.`);
+}
+
 if (!preflightOnly && !dryRun && remoteGyanmiraiHost && !allowRemoteMutation) {
   fail(
     `Refusing to run against ${apiHost} because this CRM spec creates inquiry leads, registration forms, exam schedules, results, and eligibility records. Pass --allow-stage-mutation only for an approved disposable seeded tenant.`
@@ -153,6 +162,7 @@ const childEnv = {
   E2E_TENANT: resolvedCredentials.E2E_TENANT || defaults.E2E_TENANT,
   E2E_PRINCIPAL_EMAIL: resolvedCredentials.E2E_PRINCIPAL_EMAIL || defaults.E2E_PRINCIPAL_EMAIL,
   E2E_PASSWORD: resolvedCredentials.E2E_PASSWORD || defaults.E2E_PASSWORD,
+  E2E_BROWSER_EXECUTABLE_PATH: browserExecutablePath,
   E2E_STUDENT_CRM_DENIED_EMAIL:
     readEnv('E2E_STUDENT_CRM_DENIED_EMAIL') ||
     (useDefaultCredentials ? defaults.E2E_STUDENT_CRM_DENIED_EMAIL : ''),
@@ -173,14 +183,17 @@ const playwrightArgs = [
   specPath,
   `--project=${project}`,
   `--reporter=${reporter}`,
+  ...(headed ? ['--headed'] : []),
 ];
 
 const printSummary = () => {
-  console.log('Student CRM Playwright preflight');
+  console.log('Student CRM Playwright runner');
   console.log(`Mode: ${preflightOnly ? 'read-only preflight' : 'full mutating CRM smoke'}`);
+  console.log(`Browser mode: ${headed ? 'headed' : 'headless'}`);
   console.log(`API URL: ${apiUrl}`);
   console.log(`Frontend URL: ${baseUrl}`);
   console.log(`Project: ${project}`);
+  console.log(`Browser executable: ${browserExecutablePath || 'Playwright default'}`);
   console.log(`Reporter: ${reporter}`);
   console.log(`Credentials: ${describeCredentialState()}`);
   console.log(`Local HTTPS self-signed TLS allowed: ${isLocalHttpsApi ? 'yes' : 'no'}`);

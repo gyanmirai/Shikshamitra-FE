@@ -15,9 +15,11 @@ export const createDocumentRequirement = (): AdmissionCrmDocumentRequirementDto 
   blocksAdmissionReadiness: true,
   requiresOriginal: false,
   validityDateRequired: false,
+  expiryReminderDaysBefore: null,
   maximumSizeMb: 5,
   acceptedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
   uploadInstructions: null,
+  rejectionReasons: [],
   displayOrder: 10,
 });
 
@@ -48,6 +50,28 @@ export const validateDocumentChecklistTemplate = (
     keys.add(key);
     if (!requirement.acceptedExtensions.length)
       errors.push(`${requirement.name || requirement.key} needs an accepted format.`);
+    if (requirement.maximumSizeMb < 0.1 || requirement.maximumSizeMb > 25) {
+      errors.push(`${requirement.name || requirement.key} must allow between 0.1 and 25 MB.`);
+    }
+    if ((requirement.uploadInstructions?.trim().length || 0) > 500) {
+      errors.push(`${requirement.name || requirement.key} upload instructions exceed 500 characters.`);
+    }
+    if (
+      requirement.expiryReminderDaysBefore != null &&
+      (!requirement.validityDateRequired ||
+        requirement.expiryReminderDaysBefore < 1 ||
+        requirement.expiryReminderDaysBefore > 365)
+    ) {
+      errors.push(
+        `${requirement.name || requirement.key} expiry reminder needs a validity date and 1 to 365 days.`
+      );
+    }
+    const rejectionReasons = requirement.rejectionReasons || [];
+    if (rejectionReasons.length > 8 || rejectionReasons.some((reason) => reason.trim().length > 160)) {
+      errors.push(
+        `${requirement.name || requirement.key} supports up to 8 rejection reasons of 160 characters each.`
+      );
+    }
     if (
       requirement.requirementLevel === AdmissionCrmDocumentRequirementLevel.Conditional &&
       !requirement.conditionalFieldKey?.trim()
@@ -75,8 +99,19 @@ export const normalizeDocumentChecklistTemplate = (
     conditionalFieldValue: requirement.conditionalFieldValue?.trim() || null,
     acceptedExtensions: requirement.acceptedExtensions
       .map((item) => item.trim().replace(/^\./, '').toLowerCase())
-      .filter(Boolean),
+      .filter((item, itemIndex, items) => Boolean(item) && items.indexOf(item) === itemIndex),
     uploadInstructions: requirement.uploadInstructions?.trim() || null,
+    expiryReminderDaysBefore: requirement.validityDateRequired
+      ? requirement.expiryReminderDaysBefore
+      : null,
+    rejectionReasons: (requirement.rejectionReasons || [])
+      .map((item) => item.trim())
+      .filter(
+        (item, itemIndex, items) =>
+          Boolean(item) &&
+          items.findIndex((candidate) => candidate.toLowerCase() === item.toLowerCase()) ===
+            itemIndex
+      ),
     displayOrder: (index + 1) * 10,
   })),
 });

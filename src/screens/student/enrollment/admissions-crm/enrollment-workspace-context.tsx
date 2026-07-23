@@ -93,7 +93,14 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
 
   const updateState = useCallback(
     (patch: EnrollmentWorkspaceStatePatch, mode: 'push' | 'replace' = 'replace') => {
-      const next = { ...state } as EnrollmentWorkspaceState;
+      const currentState =
+        typeof window === 'undefined'
+          ? state
+          : parseEnrollmentWorkspaceState(
+              new URLSearchParams(window.location.search),
+              defaults
+            );
+      const next = { ...currentState } as EnrollmentWorkspaceState;
       Object.entries(patch).forEach(([key, value]) => {
         if (value === undefined || value === null || value === '') {
           delete (next as Record<string, unknown>)[key];
@@ -104,7 +111,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       next.page = Number(next.page) > 0 ? Number(next.page) : 1;
       navigate(next, mode);
     },
-    [navigate, state]
+    [defaults, navigate, state]
   );
 
   useEffect(() => {
@@ -133,14 +140,20 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     };
     const canonical = serializeEnrollmentWorkspaceState(next as EnrollmentWorkspaceState);
     if (!areSearchParamsEquivalent(canonical, current)) {
-      navigate(next as EnrollmentWorkspaceState, 'replace');
+      const query = canonical.toString();
+      const href = query ? `${pathname}?${query}` : pathname;
+
+      // This is URL normalization, not application navigation.
+      // Updating the current history entry synchronously prevents a delayed router.replace
+      // from overwriting a newer menu click or applicant-workspace push.
+      window.history.replaceState(window.history.state, '', href);
     }
   }, [
     currentBoard?.id,
     currentMedium?.id,
     currentYear?.id,
     defaults,
-    navigate,
+    pathname,
     searchParams,
     workspace,
   ]);
