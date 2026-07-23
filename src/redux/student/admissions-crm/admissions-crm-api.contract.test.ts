@@ -1292,6 +1292,7 @@ describe('admissions CRM API contracts', () => {
     expect(AdmissionCrmJourneyTrigger.ExamScheduled).toBe(4);
     expect(AdmissionCrmJourneyTrigger.ExamCompleted).toBe(5);
     expect(AdmissionCrmJourneyTrigger.EligibilityDecided).toBe(6);
+    expect(AdmissionCrmJourneyTrigger.DocumentExpiring).toBe(18);
   });
 
   it('keeps timeline event enum values aligned with the backend contract', () => {

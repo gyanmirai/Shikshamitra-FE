@@ -238,7 +238,8 @@ describe('Enrollment settings route contracts', () => {
     expect(configuration).toContain('function SettingsHelpLabel');
     expect(configuration).toContain('component="span"');
     expect(configuration).toContain("display: 'inline-flex'");
-    expect(configuration).toContain(['aria-label={`', '$', '{label} help`}'].join(''));
+    expect(configuration).toContain('role="img"');
+    expect(configuration).toContain('aria-label={help}');
     expect(configuration).toContain('Target response time for a new admission inquiry');
     expect(configuration).toContain('handleDuplicateRoutingRule');
     expect(configuration).toContain('handleDuplicateJourneyRule');

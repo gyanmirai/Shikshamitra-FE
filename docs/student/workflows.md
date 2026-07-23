@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-07-12
+updated_on: 2026-07-23
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -50,7 +50,9 @@ Frontend workflows must respect backend data ownership.
 | Inquiry CRM to entrance exam   | CRM leads can schedule into entrance exam slots before a `Student` record exists                |
 | Inquiry CRM registration form  | Staff can issue a CRM-native registration form from an inquiry lead before exam scheduling when the cycle requires it |
 | Admissions CRM registration    | Applicant operations issue the applicable versioned registration template, manage correction and link lifecycle actions, record fee references, and verify submissions |
-| Admissions CRM documents       | Applicant operations assign the applicable checklist, review or waive requirements, confirm originals, and enforce one-person or two-person readiness approval |
+| Admissions CRM documents       | Applicant operations assign the applicable checklist, show configured family upload instructions, use configured rejection-reason shortcuts, review or waive requirements, confirm originals, and enforce one-person or two-person readiness approval |
+| Admissions CRM document expiry | Each validity-aware requirement may define a reminder window; the backend `DocumentExpiring` journey trigger creates the configured deduplicated task or approved parent message when a current document enters that window |
+| Admissions CRM fee policy      | Admission Criteria offers supported quick starts, a live INR parent quotation preview, friendly Finance-owned payment gates, and collapsed campus, class, board, medium, route, date, and grace-period filters |
 | Admissions CRM operations      | Exception queues open the selected applicant workspace for owner, priority, checklist, task, registration, document, and readiness actions |
 | Inquiry CRM eligibility handoff | Exam view handoff uses CRM eligibility context and missing-admission-field review before the admission team creates student records |
 | Inquiry CRM exam management    | Exam view actions let staff mark attendance, enter marks, decide eligibility, and record override reasons before handoff |
@@ -73,7 +75,7 @@ Frontend workflows must respect backend data ownership.
 | Inquiry CRM opt-out controls   | Workspace send-message flow can record parent opt-out or clear opt-out with reason for the selected channel and recipient |
 | Inquiry CRM opt-out register   | Workspace opt-out register shows active and cleared opt-outs with channel, contact, and status filters |
 | Inquiry CRM delivery logs      | Workspace communication logs show recent delivery evidence, provider message IDs, provider ID search, channel and status filters, plus retry actions for failed or blocked logs |
-| Inquiry CRM journey automation | Settings journey rules can filter by channel, Inquiry Source, campaign, current stage, owner, target standard, desired class, branch, language, priority, score, idle days, and lead age before creating deduplicated tasks, message delivery logs, or failure timeline evidence from CRM events and manual runner invocations |
+| Inquiry CRM journey automation | Settings journey rules can filter by channel, Inquiry Source, campaign, current stage, owner, target standard, desired class, branch, language, priority, score, idle days, and lead age before creating deduplicated tasks, message delivery logs, or failure timeline evidence from CRM events, document expiry windows, and manual runner invocations |
 | Public admissions links        | Public inquiry and status routes live outside authenticated Student navigation                   |
 | Public duplicate privacy       | Public inquiry submission never displays private duplicate match details to the applicant, including contact, parent-profile, or DOB-profile matches |
 | Public campaign tracking       | Public inquiry links can pass `campaignName`, `campaign`, `utm_campaign`, or `utmCampaign` into CRM campaign analytics without showing the field to applicants |

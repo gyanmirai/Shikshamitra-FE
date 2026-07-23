@@ -164,8 +164,8 @@ function SettingsHelpLabel({ label, help }: { label: string; help: string }) {
       <Tooltip title={help} arrow>
         <Box
           component="span"
-          aria-label={`${label} help`}
-          tabIndex={0}
+          role="img"
+          aria-label={help}
           sx={{ display: 'inline-flex', color: 'action.active' }}
         >
           <InfoOutlined sx={{ fontSize: 16 }} />
@@ -538,6 +538,7 @@ const journeyTriggerLabel: Record<AdmissionCrmJourneyTrigger, string> = {
   [AdmissionCrmJourneyTrigger.DocumentPending]: 'Document review pending',
   [AdmissionCrmJourneyTrigger.ExamNoShow]: 'Exam no-show',
   [AdmissionCrmJourneyTrigger.AdmissionReady]: 'Admission ready',
+  [AdmissionCrmJourneyTrigger.DocumentExpiring]: 'Document expiring',
 };
 
 const leadPriorityLabel: Record<AdmissionCrmLeadPriority, string> = {

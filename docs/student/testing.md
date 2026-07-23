@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-07-14
+updated_on: 2026-07-23
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -31,7 +31,7 @@ Use these commands as the first validation set.
 | Risk area                                      | Command                                                                                                            |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Student route and permission gates             | `npm run test -- src/constants/student-menu.permissions.test.ts`                                                   |
-| Admissions CRM client, dynamic form templates, applicant-side conditional visibility, workspace utilities, inquiry channel defaults, condition-aware journey settings, applicant checklist progress, public campaign and staff-shared owner tracking, and public status OTP | `npm run test -- src/screens/public/admissions-crm src/redux/student/admissions-crm src/screens/student/enrollment/admissions-crm src/screens/student/enrollment/setting` |
+| Admissions CRM client, dynamic form templates, applicant-side conditional visibility, workspace utilities, inquiry channel defaults, condition-aware journey settings, document guidance, expiry windows, rejection shortcuts, fee-policy preview calculations, applicant checklist progress, public campaign and staff-shared owner tracking, and public status OTP | `npm run test -- src/screens/public/admissions-crm src/redux/student/admissions-crm src/screens/student/enrollment/admissions-crm src/screens/student/enrollment/setting` |
 | Production API contracts and mock guardrails   | `npm run test -- src/redux/student/student-api.production.test.ts src/screens/student/no-production-mocks.test.ts` |
 | Enrollment settings                            | `npm run test -- src/screens/student/enrollment/setting`                                                           |
 | Student management tabs and roll projections   | `npm run test -- src/screens/student/management`                                                                   |
@@ -46,6 +46,10 @@ Use these commands as the first validation set.
 Use `node scripts/e2e/run-student-crm-playwright.mjs --dry-run` before live CRM browser execution.
 The runner reads `E2E_API_URL`, `NEXT_PUBLIC_API_URL`, `.env.local`, or `.env` for the backend URL.
 The runner sets `E2E_STUDENT_CRM=1` only after preflight checks pass.
+Pass `--browser-executable=<absolute-path>` to run the Chromium project against a compatible installed browser such as Vivaldi.
+Pass `--headed` when an installed browser does not support Playwright's headless launch flags.
+The runner forwards that value as `E2E_BROWSER_EXECUTABLE_PATH` and reports the selected executable before the suite starts.
+When the selected executable is Vivaldi, Playwright adds Vivaldi's supported `--disable-vivaldi` automation switch so the Vivaldi binary can use Chromium's DevTools automation surface without its browser UI process exiting before test page creation.
 The runner allows localhost self-signed HTTPS only for local API URLs so seeded development certificates do not block CRM validation.
 Run final mutating CRM browser validation against a local seeded DDVS backend and frontend stack.
 Start the backend with `DevAutoAuth__Enabled=false` for the full CRM smoke so anonymous-denial coverage is not bypassed by local development auto-auth.

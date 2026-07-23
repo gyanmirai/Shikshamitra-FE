@@ -599,6 +599,38 @@ export function ApplicantRegistrationOperations({
                       }
                     />
                   </Stack>
+                  {document.uploadInstructions ? (
+                    <Typography variant="caption" color="text.secondary">
+                      Family upload guidance: {document.uploadInstructions}
+                    </Typography>
+                  ) : null}
+                  {document.id &&
+                  [
+                    AdmissionCrmApplicantDocumentStatus.Uploaded,
+                    AdmissionCrmApplicantDocumentStatus.UnderReview,
+                  ].includes(document.status as AdmissionCrmApplicantDocumentStatus) &&
+                  document.rejectionReasons?.length ? (
+                    <Stack direction="row" gap={0.5} flexWrap="wrap" alignItems="center">
+                      <Typography variant="caption" color="text.secondary">
+                        Common rejection reasons:
+                      </Typography>
+                      {document.rejectionReasons.map((rejectionReason) => (
+                        <Button
+                          key={rejectionReason}
+                          size="small"
+                          variant="text"
+                          onClick={() =>
+                            setDocumentReasonByKey((current) => ({
+                              ...current,
+                              [document.requirementKey]: rejectionReason,
+                            }))
+                          }
+                        >
+                          {rejectionReason}
+                        </Button>
+                      ))}
+                    </Stack>
+                  ) : null}
                   <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                     {canUploadDocuments ? (
                       <Button
@@ -706,6 +738,11 @@ export function ApplicantRegistrationOperations({
                     <TextField
                       size="small"
                       label="Decision or waiver reason"
+                      helperText={
+                        document.rejectionReasons?.length
+                          ? 'Choose a common reason above or enter a specific reason.'
+                          : undefined
+                      }
                       value={documentReasonByKey[document.requirementKey] || ''}
                       onChange={(event) =>
                         setDocumentReasonByKey((current) => ({
