@@ -95,11 +95,13 @@ export interface ISubjectTableProps {
   query: {
     page: number;
     pageSize: number;
+    teacherSearch: string;
   };
   setQuery: React.Dispatch<
     React.SetStateAction<{
       page: number;
       pageSize: number;
+      teacherSearch: string;
     }>
   >;
 }

@@ -223,10 +223,10 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
           name: sub.subjectName,
           subjectAssignmentId: sub.subjectAssignmentId,
           color: sub.color || subject.color,
-          teacherId: undefined,
-          teacherName: undefined,
-          roomId: undefined,
-          roomName: undefined,
+          teacherId: sub.teacherId,
+          teacherName: sub.teacherName,
+          roomId: sub.roomId,
+          roomName: sub.roomName,
         }));
       } else {
         // --- Core subject: legacy pipe-split fallback ---
@@ -472,8 +472,10 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                   ? slotSub.subjectId.split('_part_')[0]
                   : slotSub.subjectId;
 
+                const isSameSubject = slotSubRawId === rawSubId;
                 const match =
-                  shouldApplyToAll || (shouldApplyToAllSubject && slotSubRawId === rawSubId);
+                  (shouldApplyToAll && (slot.subjects?.length === 1 || isSameSubject)) ||
+                  (shouldApplyToAllSubject && isSameSubject);
 
                 if (match) {
                   subjectsChanged = true;
@@ -592,14 +594,23 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         Saturday: 'Sat',
         Sunday: 'Sun',
       };
-      
-      const isConsecutiveAllWeek = days.length === 6 && 
-        days.includes('Monday') && days.includes('Tuesday') && days.includes('Wednesday') &&
-        days.includes('Thursday') && days.includes('Friday') && days.includes('Saturday');
-        
-      const isConsecutiveFiveWeek = days.length === 5 && 
-        days.includes('Monday') && days.includes('Tuesday') && days.includes('Wednesday') &&
-        days.includes('Thursday') && days.includes('Friday');
+
+      const isConsecutiveAllWeek =
+        days.length === 6 &&
+        days.includes('Monday') &&
+        days.includes('Tuesday') &&
+        days.includes('Wednesday') &&
+        days.includes('Thursday') &&
+        days.includes('Friday') &&
+        days.includes('Saturday');
+
+      const isConsecutiveFiveWeek =
+        days.length === 5 &&
+        days.includes('Monday') &&
+        days.includes('Tuesday') &&
+        days.includes('Wednesday') &&
+        days.includes('Thursday') &&
+        days.includes('Friday');
 
       let daysStr = '';
       if (isConsecutiveAllWeek) {
@@ -607,7 +618,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
       } else if (isConsecutiveFiveWeek) {
         daysStr = 'Mon - Fri';
       } else {
-        daysStr = days.map(d => dayAbbrevMap[d] || d).join(', ');
+        daysStr = days.map((d) => dayAbbrevMap[d] || d).join(', ');
       }
 
       warnings.push(`${daysStr}: ${conflictKey}`);

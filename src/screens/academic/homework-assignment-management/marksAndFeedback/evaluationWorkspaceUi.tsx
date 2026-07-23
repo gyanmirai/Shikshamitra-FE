@@ -212,19 +212,21 @@ export function EvaluationActionButton({
   row,
   onOpen,
   canAdd,
+  taskSubmissionType,
 }: {
   row: any;
   canAdd: boolean;
+  taskSubmissionType?: number | string | null;
   onOpen: (row: any) => void;
 }) {
   if (!canAdd) return null;
 
-  // In-person homework has no digital submission event, so its rows stay
-  // stuck at status 0 ("Not Submitted") forever. Teachers still need to be
-  // able to record marks/feedback for these directly from this list.
+  const rowSubmissionType = row?.submissionType || taskSubmissionType;
+  const normalizedSubmissionType = String(rowSubmissionType || '').toLowerCase();
   const isInPerson =
-    Number(row?.submissionType) === 2 ||
-    String(row?.submissionType || '').toLowerCase().includes('in person') ||
+    Number(rowSubmissionType) === 2 ||
+    normalizedSubmissionType.includes('inperson') ||
+    normalizedSubmissionType.includes('in person') ||
     String(row?.homeworkType || '').toLowerCase().includes('in person');
 
   const status = Number(row?.status);

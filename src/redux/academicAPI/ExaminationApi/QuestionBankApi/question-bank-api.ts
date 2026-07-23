@@ -26,7 +26,7 @@ export const questionBankApi = academicApi.injectEndpoints({
     }),
     createQuestion: builder.mutation({
       query: (body) => ({ url: '/academics/question-bank/questions', method: 'POST', body }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     updateQuestion: builder.mutation({
       query: ({ id, body }) => ({
@@ -34,18 +34,18 @@ export const questionBankApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     deleteQuestion: builder.mutation({
       query: ({ id }) => ({ url: `/academics/question-bank/questions/${id}`, method: 'DELETE' }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     submitQuestion: builder.mutation({
       query: ({ id }) => ({
         url: `/academics/question-bank/questions/${id}/submit`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     approveQuestion: builder.mutation({
       query: ({ id, body }) => ({
@@ -53,7 +53,7 @@ export const questionBankApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     rejectQuestion: builder.mutation({
       query: ({ id, body }) => ({
@@ -61,21 +61,21 @@ export const questionBankApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     archiveQuestion: builder.mutation({
       query: ({ id }) => ({
         url: `/academics/question-bank/questions/${id}/archive`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     duplicateQuestion: builder.mutation({
       query: ({ id }) => ({
         url: `/academics/question-bank/questions/${id}/duplicate`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     checkDuplicateQuestion: builder.mutation({
       query: (body) => ({
@@ -90,7 +90,7 @@ export const questionBankApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
     bulkRejectQuestions: builder.mutation({
       query: (body) => ({
@@ -98,7 +98,7 @@ export const questionBankApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.questionBank],
+      invalidatesTags: [academicType.questionBank, academicType.chapter],
     }),
   }),
   overrideExisting: false,

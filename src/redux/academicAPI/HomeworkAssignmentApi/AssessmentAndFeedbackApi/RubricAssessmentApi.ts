@@ -191,7 +191,7 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.assessmentRubric],
+      invalidatesTags: [academicType.assessmentRubric, academicType.chapter],
     }),
 
     updateRubric: builder.mutation<
@@ -203,7 +203,11 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicType.assessmentRubric, academicType.rubricEvaluation],
+      invalidatesTags: [
+        academicType.assessmentRubric,
+        academicType.rubricEvaluation,
+        academicType.chapter,
+      ],
     }),
 
     createRubricFromTemplate: builder.mutation<
@@ -219,6 +223,7 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
         academicType.assessmentRubric,
         academicType.homework,
         academicType.assignment,
+        academicType.chapter,
       ],
     }),
 
@@ -227,7 +232,7 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
         url: `/academic/rubrics/${id}/publish`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.assessmentRubric],
+      invalidatesTags: [academicType.assessmentRubric, academicType.chapter],
     }),
 
     archiveRubric: builder.mutation<void, string>({
@@ -235,7 +240,7 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
         url: `/academic/rubrics/${id}/archive`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.assessmentRubric],
+      invalidatesTags: [academicType.assessmentRubric, academicType.chapter],
     }),
 
     upsertRubricEvaluation: builder.mutation<

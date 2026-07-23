@@ -654,7 +654,7 @@ const TimeTableGrid = () => {
         isFilter: false,
         render: (value, row) => {
           const displayStatus = getDisplayStatus(row);
-          
+
           if (displayStatus === 'Not Ready') {
             return (
               <Button
@@ -750,7 +750,7 @@ const TimeTableGrid = () => {
       else if (status === 'Draft' || status === 'In Progress') draftInProgress += 1;
       else if (status === 'Ready to Publish') readyToPublish += 1;
       else if (status === 'Not Ready') notReady += 1;
-      
+
       if (row.conflictCount > 0) conflicts += 1;
     });
 
@@ -1324,7 +1324,7 @@ const TimeTableForm = ({
   const subjectProgress = useMemo(() => {
     let completed = 0;
     const total = subjects.length;
-    
+
     subjects.forEach((subject: any) => {
       const subjectKey = subject.electiveGroupId || subject.subjectId;
       let count = 0;
@@ -1336,7 +1336,7 @@ const TimeTableForm = ({
       });
       if (count === subject.totalLectures) completed += 1;
     });
-    
+
     return { completed, total };
   }, [subjects, formik.values.slots]);
 
@@ -1344,7 +1344,7 @@ const TimeTableForm = ({
     let totalFilledSubjects = 0;
     let teacherAssigned = 0;
     let roomAssigned = 0;
-    
+
     Object.values(formik.values.slots).forEach((daySlots) => {
       (daySlots as TimeSlot[]).forEach((slot) => {
         if (slot.type === 'LECTURE') {
@@ -1357,7 +1357,7 @@ const TimeTableForm = ({
         }
       });
     });
-    
+
     return {
       totalFilledSubjects,
       teacherAssigned,
@@ -1426,7 +1426,7 @@ const TimeTableForm = ({
       createValidationIssue('Timetable conflict', conflict)
     );
     let emptySlots = 0;
-    
+
     Object.values(formik.values.slots).forEach((daySlots) => {
       (daySlots as TimeSlot[]).forEach((slot) => {
         if (slot.type === 'LECTURE') {
@@ -1872,22 +1872,118 @@ const TimeTableForm = ({
           {validationResult && (
             <Stack spacing={2}>
               {validationResult.passed ? (
-                <Box>
-                  <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
-                    All checks passed successfully! The timetable is complete and ready to be published.
-                  </Typography>
-                  <Stack spacing={1.5}>
-                    <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
-                      ✓ {slotSummary.filled}/{slotSummary.total} slots filled
+                <Stack spacing={2}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      borderColor: (theme) => alpha(theme.palette.success.main, 0.24),
+                      bgcolor: (theme) => alpha(theme.palette.success.main, 0.06),
+                      boxShadow: (theme) => `inset 4px 0 0 ${theme.palette.success.main}`,
+                    }}
+                  >
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      spacing={1.5}
+                      alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    >
+                      <Box
+                        sx={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 1,
+                          display: 'grid',
+                          flexShrink: 0,
+                          placeItems: 'center',
+                          color: 'success.main',
+                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.12),
+                        }}
+                      >
+                        <Iconify icon="mdi:check-decagram-outline" width={26} />
+                      </Box>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                          Timetable is ready to publish
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          Class {selectedClass} Division {selectedDivision} passed every validation
+                          check and can now move from draft to published.
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Paper>
+
+                  <Grid container spacing={1}>
+                    {[
+                      {
+                        label: 'Slots filled',
+                        value: `${slotSummary.filled}/${slotSummary.total}`,
+                        helper:
+                          slotSummary.remaining === 0
+                            ? 'All lecture periods assigned'
+                            : `${slotSummary.remaining} periods remaining`,
+                        icon: 'mdi:calendar-check-outline',
+                      },
+                      {
+                        label: 'Subjects complete',
+                        value: `${subjectProgress.completed}/${subjectProgress.total}`,
+                        helper: 'Required subject load is balanced',
+                        icon: 'mdi:book-check-outline',
+                      },
+                      {
+                        label: 'Conflicts found',
+                        value: '0',
+                        helper: 'Teacher and room checks are clear',
+                        icon: 'mdi:shield-check-outline',
+                      },
+                    ].map((item) => (
+                      <Grid key={item.label} size={{ xs: 12, sm: 4 }}>
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: 1.5,
+                            height: '100%',
+                            borderRadius: 1,
+                            bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.5),
+                          }}
+                        >
+                          <Stack spacing={1}>
+                            <Stack direction="row" spacing={0.75} alignItems="center">
+                              <Iconify
+                                icon={item.icon}
+                                width={18}
+                                sx={{ color: 'success.main', flexShrink: 0 }}
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                {item.label}
+                              </Typography>
+                            </Stack>
+                            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>
+                              {item.value}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {item.helper}
+                            </Typography>
+                          </Stack>
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  <Alert
+                    severity="success"
+                    icon={<Iconify icon="mdi:check-circle-outline" width={22} />}
+                    sx={{ alignItems: 'flex-start' }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                      Validation passed
                     </Typography>
-                    <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
-                      ✓ {subjectProgress.completed}/{subjectProgress.total} subjects complete
+                    <Typography variant="body2">
+                      Publish now to make this timetable visible to teachers, students, and parents.
                     </Typography>
-                    <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
-                      ✓ 0 conflicts found
-                    </Typography>
-                  </Stack>
-                </Box>
+                  </Alert>
+                </Stack>
               ) : (
                 <Box>
                   <Typography variant="subtitle2" color="error" sx={{ mb: 1.5, fontWeight: 700 }}>

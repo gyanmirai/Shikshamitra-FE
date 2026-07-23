@@ -37,6 +37,7 @@ export const statusColor = (status?: string) => {
     normalized.includes('approved') ||
     normalized.includes('ready') ||
     normalized.includes('published') ||
+    normalized.includes('linked') ||
     normalized === 'mapped'
   ) {
     return 'success';

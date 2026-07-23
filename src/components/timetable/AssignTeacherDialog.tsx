@@ -66,7 +66,7 @@ export interface TeacherOption {
 
 export function buildTeacherOptions(
   subjects: Array<{
-    subjectId: string;
+    subjectId?: string;
     primaryTeacher?: { id: string; name: string } | null;
     secondaryTeachers?: Array<{ id: string; name: string }>;
   }>
@@ -74,6 +74,8 @@ export function buildTeacherOptions(
   const result: Record<string, TeacherOption[]> = {};
 
   subjects.forEach((sub) => {
+    if (!sub.subjectId) return;
+
     const options: TeacherOption[] = [];
 
     if (sub.primaryTeacher) {
@@ -146,9 +148,16 @@ const SubjectTeacherRow: React.FC<SubjectTeacherRowProps> = ({
     options: { skip: !subjectAssignmentId },
   });
 
+  /**
+   * Memoization Justification:
+   * - Converts the subject assignment detail payload into per-subject teacher options.
+   * - Prevents rebuilding option arrays on local row state updates while the fetched payload is stable.
+   * - The modal renders one row per elective child subject, so stable option maps reduce repeated Autocomplete work.
+   */
   const teacherOptionsBySubject: Record<string, TeacherOption[]> = React.useMemo(() => {
-    if (!subjectAssignmentData?.data?.subjects) return {};
-    return buildTeacherOptions(subjectAssignmentData.data.subjects);
+    const assignmentSubjects =
+      subjectAssignmentData?.data?.subjects ?? subjectAssignmentData?.subjects ?? [];
+    return buildTeacherOptions(assignmentSubjects);
   }, [subjectAssignmentData]);
 
   // Derive the base subjectId (strip _part_ suffix if present)

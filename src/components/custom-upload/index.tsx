@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { getCachedAuthSession } from 'src/redux/session-cache';
 import {
   Box,
   Card,
@@ -101,6 +102,27 @@ const getFileType = (fileUrl: string): string => {
   return '';
 };
 
+const getAuthenticatedDownloadOptions = async (url: string): Promise<RequestInit> => {
+  const apiRoot = process.env.NEXT_PUBLIC_API_URL || '';
+  const isApiFileUrl = !!apiRoot && url.startsWith(`${apiRoot}/api/`);
+
+  if (!isApiFileUrl) {
+    return {};
+  }
+
+  const session = await getCachedAuthSession();
+  const headers = new Headers();
+
+  if (session?.accessToken) {
+    headers.set('Authorization', `Bearer ${session.accessToken}`);
+  }
+
+  return {
+    credentials: 'include',
+    headers,
+  };
+};
+
 const normalizeFile = (file: any): File | FileData => {
   if (typeof file === 'string') {
     const absoluteUrl = getAbsoluteFileUrl(file);
@@ -145,6 +167,11 @@ const FileUploader = <T extends boolean = true>({
   const [showAllDialog, setShowAllDialog] = useState<boolean>(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  /**
+   * Memoization Justification:
+   * Normalizes stored blob identifiers into display/download objects.
+   * Prevents rebuilding file card values on every uploader render.
+   */
   const normalizedValue = React.useMemo(() => {
     if (!value) return value;
     if (Array.isArray(value)) {
@@ -235,7 +262,7 @@ const FileUploader = <T extends boolean = true>({
         a.click();
         document.body.removeChild(a);
       } else {
-        const response = await fetch(url);
+        const response = await fetch(url, await getAuthenticatedDownloadOptions(url));
         if (!response.ok) throw new Error('Network response was not ok');
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
@@ -406,7 +433,8 @@ const FileUploader = <T extends boolean = true>({
       </Box>
       {(Array.isArray(normalizedValue) ? normalizedValue.length > 0 : normalizedValue) && (
         <Stack spacing={1} mt={2}>
-          {Array.isArray(normalizedValue) && normalizedValue.slice(0, showVisibleDocumentCount).map(renderFileCard)}
+          {Array.isArray(normalizedValue) &&
+            normalizedValue.slice(0, showVisibleDocumentCount).map(renderFileCard)}
 
           {Array.isArray(normalizedValue) && normalizedValue.length > showVisibleDocumentCount && (
             <Button variant="outlined" onClick={() => setShowAllDialog(true)}>
@@ -473,7 +501,9 @@ const FileUploader = <T extends boolean = true>({
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <Stack spacing={2}>{Array.isArray(normalizedValue) && normalizedValue.map(renderFileCard)}</Stack>
+          <Stack spacing={2}>
+            {Array.isArray(normalizedValue) && normalizedValue.map(renderFileCard)}
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button

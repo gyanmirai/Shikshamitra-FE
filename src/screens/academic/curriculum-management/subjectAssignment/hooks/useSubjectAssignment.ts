@@ -27,10 +27,12 @@ export function useSubjectAssignment() {
 
   const { allClass, classes, classId, handleClassChange } = useClassSelection({ medium });
 
-  const [query, setQuery] = useState<{ page: number; pageSize: number }>({
+  const [query, setQuery] = useState<{ page: number; pageSize: number; teacherSearch: string }>({
     page: 0,
     pageSize: 10,
+    teacherSearch: '',
   });
+  const trimmedTeacherSearch = query.teacherSearch.trim();
 
   const {
     data: subjectTableData = [],
@@ -40,7 +42,13 @@ export function useSubjectAssignment() {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { standardId: classId, ...query, status: 'all' },
+    params: {
+      standardId: classId,
+      page: query.page,
+      pageSize: query.pageSize,
+      status: 'all',
+      ...(trimmedTeacherSearch ? { teacherSearch: trimmedTeacherSearch } : {}),
+    },
     options: { skip: !classId },
   });
 
@@ -210,6 +218,15 @@ export function useSubjectAssignment() {
     setSelectedSubject(null);
   }, [addSubjectDialog]);
 
+  /**
+   * Memoization Justification:
+   * Passed to SubjectActionBar (React.memo) as `onTeacherSearchChange`.
+   * Keeps toolbar input changes from recreating the handler while resetting pagination.
+   */
+  const handleTeacherSearchChange = useCallback((value: string) => {
+    setQuery((prev) => ({ ...prev, page: 0, teacherSearch: value }));
+  }, []);
+
   const handleBackFromView = useCallback(() => {
     showSubjectDialog.onFalse();
     setSelectedSubject(null);
@@ -249,6 +266,7 @@ export function useSubjectAssignment() {
     handleConfirmDelete,
     handleConfirmPublish,
     handleClassChange,
+    handleTeacherSearchChange,
     handleAddNew,
     handleBackFromView,
     query,
