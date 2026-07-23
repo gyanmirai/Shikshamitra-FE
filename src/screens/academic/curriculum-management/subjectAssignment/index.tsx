@@ -54,6 +54,7 @@ const Subject = () => {
     handleConfirmDelete,
     handleConfirmPublish,
     handleClassChange,
+    handleTeacherSearchChange,
     handleAddNew,
     handleBackFromView,
     query,
@@ -102,7 +103,9 @@ const Subject = () => {
             <SubjectActionBar
               allClass={allClass}
               classId={classId}
+              teacherSearch={query.teacherSearch}
               onClassChange={handleClassChange}
+              onTeacherSearchChange={handleTeacherSearchChange}
               onAddNew={handleAddNew}
             />
           )}

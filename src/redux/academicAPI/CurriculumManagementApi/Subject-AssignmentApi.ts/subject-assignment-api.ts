@@ -6,12 +6,13 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subject assignments - academicMediumId passed in query params
     getSubjectAssignments: builder.query({
-      query: ({ standardId, page, pageSize, status = 1 }) => ({
+      query: ({ standardId, page, pageSize, status = 1, teacherSearch }) => ({
         url: `/academics/curriculum/${standardId}/subject-assignments`,
         method: 'GET',
         params: {
           page,
           pageSize,
+          ...(teacherSearch ? { teacherSearch } : {}),
           ...(status === 'all' ? { includeArchived: true } : { status }),
         },
       }),

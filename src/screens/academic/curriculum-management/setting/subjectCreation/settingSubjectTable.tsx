@@ -103,7 +103,24 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         id: 'usedInClassesCount',
         label: 'Used In Classes',
         align: 'center',
-        render: (value) => value || 0,
+        render: (value, row) => (
+          <Box
+            component="button"
+            type="button"
+            onClick={() => onViewUsage(row as ISubject)}
+            style={{
+              border: 0,
+              background: 'transparent',
+              cursor: 'pointer',
+              padding: 0,
+              font: 'inherit',
+            }}
+          >
+            <Typography variant="body2" color={value ? 'primary.main' : 'text.secondary'}>
+              {value ? `Used in ${value} classes` : 'Unused'}
+            </Typography>
+          </Box>
+        ),
       },
       {
         id: 'usedInElectiveGroupsCount',

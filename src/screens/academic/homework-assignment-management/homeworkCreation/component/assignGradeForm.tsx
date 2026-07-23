@@ -246,7 +246,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               <Grid size={{ xs: 12 }}>
                 <Card
                   variant="outlined"
-                  sx={{ borderStyle: 'dashed', boxShadow: 'var(--shadows-10)' }}
+                  sx={{ borderStyle: 'dashed', boxShadow: 'var(--shadows-10)', display: 'none' }}
                 >
                   <Box sx={{ p: 2 }}>
                     <Stack direction="row" alignItems="center" gap={1} mb={2}>

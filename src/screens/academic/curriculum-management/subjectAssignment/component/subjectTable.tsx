@@ -417,7 +417,7 @@ const SubjectTable = ({
       }
       serverSidePagination
       onServerPagination={(page, rowPerPage) => {
-        setQuery({ page: page - 1, pageSize: rowPerPage });
+        setQuery((prev) => ({ ...prev, page: page - 1, pageSize: rowPerPage }));
       }}
       columns={columns}
       data={subjectData}

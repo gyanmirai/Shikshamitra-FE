@@ -24,6 +24,7 @@ type Props = {
   taskId: string;
   taskTitle?: string;
   studentRow?: any;
+  ensureSubmissionId?: () => Promise<string | null>;
 };
 
 const defaultCriteria = [
@@ -39,6 +40,7 @@ export default function RubricEvaluationPanel({
   taskId,
   taskTitle,
   studentRow,
+  ensureSubmissionId,
 }: Props) {
   const params =
     mode === 'homework'
@@ -53,8 +55,10 @@ export default function RubricEvaluationPanel({
   const { data: evaluations = [] } = useGetRubricEvaluationsQuery(activeRubric?.id ?? '', {
     skip: !activeRubric?.id,
   });
+  const [resolvedSubmissionId, setResolvedSubmissionId] = React.useState<string | null>(null);
+  const studentSubmissionId = resolvedSubmissionId || studentRow?.id;
   const currentEvaluation = evaluations.find(
-    (evaluation) => evaluation.studentSubmissionId === studentRow?.id
+    (evaluation) => evaluation.studentSubmissionId === studentSubmissionId
   );
   const [scores, setScores] = React.useState<Record<string, string>>({});
   const [remarks, setRemarks] = React.useState('');
@@ -100,7 +104,19 @@ export default function RubricEvaluationPanel({
   };
 
   const handleSaveEvaluation = async () => {
-    if (!activeRubric || !studentRow?.id || !studentRow?.studentId) return;
+    if (!activeRubric || !studentRow?.studentId) return;
+
+    const submissionId =
+      studentSubmissionId && !studentSubmissionId.startsWith('00000000')
+        ? studentSubmissionId
+        : await ensureSubmissionId?.();
+
+    if (!submissionId) {
+      shikshaMitraToast.error({ message: 'Student submission is not available for rubric scoring.' });
+      return;
+    }
+
+    setResolvedSubmissionId(submissionId);
 
     const payloadScores = activeRubric.criteria.map((criterion) => ({
       criterionId: criterion.id,
@@ -112,7 +128,7 @@ export default function RubricEvaluationPanel({
       const saved = await upsertEvaluation({
         rubricId: activeRubric.id,
         body: {
-          studentSubmissionId: studentRow.id,
+          studentSubmissionId: submissionId,
           studentId: studentRow.studentId,
           remarks,
           scores: payloadScores,
@@ -204,7 +220,7 @@ export default function RubricEvaluationPanel({
               size="small"
               variant="contained"
               loading={isSaving || isSubmitting || isApproving}
-              disabled={!studentRow?.id}
+              disabled={!studentRow?.studentId}
               onClick={handleSaveEvaluation}
             >
               Save Rubric Score
