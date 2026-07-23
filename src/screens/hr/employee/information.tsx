@@ -229,11 +229,11 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateFamilyInformation
   const handleFamilyInformation = useCallback(
-    async (values: any, formik: any) => {
+    async (values: any, formik: any, id?: any) => {
       const res = await updateFamilyInfo({
-        employeeId: values.employeeId,
+        employeeId: values.employeeId || id,
         body: {
-          id: values.employeeId,
+          id: values.employeeId || id,
           fatherDetails: {
             name: values.fatherName,
             occupation: values.fatherOccupation,
@@ -313,9 +313,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // handler TO update experience
   const handleWorkExperience = useCallback(
-    async (values: any, formik: any) => {
+    async (values: any, formik: any, id?: any) => {
       const res = await updateExperienceInfo({
-        employeeId: values.employeeId,
+        employeeId: values.employeeId || id,
         body: values.experiences.map((i: any) =>
           buildWorkExperiencePayload(i, (date) => dateConvertor(date.format(dateFormat)))
         ),
@@ -327,9 +327,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateBankDetailsInformation
   const handleBankDetailsInformation = useCallback(
-    async (values: any, formik: any) => {
+    async (values: any, formik: any, id?: any) => {
       const res = await updateBankDetails({
-        employeeId: values.employeeId,
+        employeeId: values.employeeId || id,
         body: {
           bankDetails: {
             bankName: values.bankName,
@@ -367,9 +367,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   );
 
   const handleAdditionalDetails = useCallback(
-    async (values: any, formik: any) => {
+    async (values: any, formik: any, id?: any) => {
       const res = await updateAdditionalInfo({
-        employeeId: values.employeeId,
+        employeeId: values.employeeId || id,
         body: {
           bplCardNo: values.bplCardNo,
           personWithDisability: values.personWithDisability === 'Yes',
@@ -408,16 +408,16 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
         await handleUpdateEmployee(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Employee details updated successfully' });
       } else if (activeTabIndex === 1) {
-        await handleFamilyInformation(formik.values, formik);
+        await handleFamilyInformation(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Family Details updated successfully' });
       } else if (activeTabIndex === 2) {
-        await handleAdditionalDetails(formik.values, formik);
+        await handleAdditionalDetails(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Additional Details updated successfully' });
       } else if (activeTabIndex === 3) {
-        await handleWorkExperience(formik.values, formik);
+        await handleWorkExperience(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Work Experience  updated successfully' });
       } else if (activeTabIndex === 4) {
-        await handleBankDetailsInformation(formik.values, formik);
+        await handleBankDetailsInformation(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Bank Details updated successfully' });
       } else if (activeTabIndex === 5) {
         await handleReportingManager(formik.values, formik, editData?.id);

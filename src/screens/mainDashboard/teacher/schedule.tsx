@@ -2,613 +2,110 @@
 
 import type { TimeSlot, DayOfWeek } from 'src/components/timetable/types';
 
-import { SlotType, BreakType } from 'src/components/timetable/types';
+import dayjs from 'dayjs';
+import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from 'src/redux/store';
+import { SlotType } from 'src/components/timetable/types';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
+import { useGetLessonPlanTimelineQuery } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
 
 import { DashboardWidgetWrapper } from '../component/dashboard-widget-wrapper';
 
-// ----------------------------------------------------------------------
-// Teacher dummy timetable — Subject · Class / Div · Room per slot
-// readOnly=true disables all drag-drop interactions
-// ----------------------------------------------------------------------
-
-const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
-  MONDAY: [
-    {
-      id: 'MONDAY-0',
-      sequence: 1,
-      day: 'MONDAY',
-      startTime: '07:30',
-      endTime: '08:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's1',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r101',
-          roomName: 'Room 101',
-          className: '10',
-          division: 'A',
-        },
-      ],
-      subjectId: 's1',
-    },
-    {
-      id: 'MONDAY-1',
-      sequence: 2,
-      day: 'MONDAY',
-      startTime: '08:30',
-      endTime: '09:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's2',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#b615a1ff',
-          roomId: 'r102',
-          roomName: 'Room 102',
-          className: '9',
-          division: 'B',
-        },
-      ],
-      subjectId: 's2',
-    },
-    {
-      id: 'MONDAY-2',
-      sequence: 3,
-      day: 'MONDAY',
-      startTime: '09:30',
-      endTime: '10:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.SHORT,
-      subjects: [],
-    },
-    {
-      id: 'MONDAY-3',
-      sequence: 4,
-      day: 'MONDAY',
-      startTime: '10:00',
-      endTime: '11:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's3',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r105',
-          roomName: 'Room 105',
-          className: '8',
-          division: 'A',
-        },
-      ],
-      subjectId: 's3',
-    },
-    {
-      id: 'MONDAY-4',
-      sequence: 5,
-      day: 'MONDAY',
-      startTime: '11:00',
-      endTime: '12:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.LUNCH,
-      subjects: [],
-    },
-    {
-      id: 'MONDAY-5',
-      sequence: 6,
-      day: 'MONDAY',
-      startTime: '12:00',
-      endTime: '13:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's4',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#b615a1ff',
-          roomId: 'r101',
-          roomName: 'Room 101',
-          className: '10',
-          division: 'B',
-        },
-      ],
-      subjectId: 's4',
-    },
-  ],
-  TUESDAY: [
-    {
-      id: 'TUESDAY-0',
-      sequence: 1,
-      day: 'TUESDAY',
-      startTime: '07:30',
-      endTime: '08:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's5',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r103',
-          roomName: 'Room 103',
-          className: '8',
-          division: 'B',
-        },
-      ],
-      subjectId: 's5',
-    },
-    {
-      id: 'TUESDAY-1',
-      sequence: 2,
-      day: 'TUESDAY',
-      startTime: '08:30',
-      endTime: '09:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's6',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r101',
-          roomName: 'Room 101',
-          className: '10',
-          division: 'A',
-        },
-      ],
-      subjectId: 's6',
-    },
-    {
-      id: 'TUESDAY-2',
-      sequence: 3,
-      day: 'TUESDAY',
-      startTime: '09:30',
-      endTime: '10:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.SHORT,
-      subjects: [],
-    },
-    {
-      id: 'TUESDAY-3',
-      sequence: 4,
-      day: 'TUESDAY',
-      startTime: '10:00',
-      endTime: '11:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's7',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r102',
-          roomName: 'Room 102',
-          className: '9',
-          division: 'A',
-        },
-      ],
-      subjectId: 's7',
-    },
-    {
-      id: 'TUESDAY-4',
-      sequence: 5,
-      day: 'TUESDAY',
-      startTime: '11:00',
-      endTime: '12:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.LUNCH,
-      subjects: [],
-    },
-    {
-      id: 'TUESDAY-5',
-      sequence: 6,
-      day: 'TUESDAY',
-      startTime: '12:00',
-      endTime: '13:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's8',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r105',
-          roomName: 'Room 105',
-          className: '8',
-          division: 'A',
-        },
-      ],
-      subjectId: 's8',
-    },
-  ],
-  WEDNESDAY: [
-    {
-      id: 'WEDNESDAY-0',
-      sequence: 1,
-      day: 'WEDNESDAY',
-      startTime: '07:30',
-      endTime: '08:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's9',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r101',
-          roomName: 'Room 101',
-          className: '10',
-          division: 'A',
-        },
-      ],
-      subjectId: 's9',
-    },
-    {
-      id: 'WEDNESDAY-1',
-      sequence: 2,
-      day: 'WEDNESDAY',
-      startTime: '08:30',
-      endTime: '09:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's10',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r103',
-          roomName: 'Room 103',
-          className: '8',
-          division: 'B',
-        },
-      ],
-      subjectId: 's10',
-    },
-    {
-      id: 'WEDNESDAY-2',
-      sequence: 3,
-      day: 'WEDNESDAY',
-      startTime: '09:30',
-      endTime: '10:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.SHORT,
-      subjects: [],
-    },
-    {
-      id: 'WEDNESDAY-3',
-      sequence: 4,
-      day: 'WEDNESDAY',
-      startTime: '10:00',
-      endTime: '11:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's11',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r102',
-          roomName: 'Room 102',
-          className: '9',
-          division: 'B',
-        },
-      ],
-      subjectId: 's11',
-    },
-    {
-      id: 'WEDNESDAY-4',
-      sequence: 5,
-      day: 'WEDNESDAY',
-      startTime: '11:00',
-      endTime: '12:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.LUNCH,
-      subjects: [],
-    },
-    {
-      id: 'WEDNESDAY-5',
-      sequence: 6,
-      day: 'WEDNESDAY',
-      startTime: '12:00',
-      endTime: '13:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's12',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r105',
-          roomName: 'Room 105',
-          className: '8',
-          division: 'A',
-        },
-      ],
-      subjectId: 's12',
-    },
-  ],
-  THURSDAY: [
-    {
-      id: 'THURSDAY-0',
-      sequence: 1,
-      day: 'THURSDAY',
-      startTime: '07:30',
-      endTime: '08:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's13',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r101',
-          roomName: 'Room 101',
-          className: '10',
-          division: 'A',
-        },
-      ],
-      subjectId: 's13',
-    },
-    {
-      id: 'THURSDAY-1',
-      sequence: 2,
-      day: 'THURSDAY',
-      startTime: '08:30',
-      endTime: '09:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's14',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#b615a1ff',
-          roomId: 'r102',
-          roomName: 'Room 102',
-          className: '10',
-          division: 'B',
-        },
-      ],
-      subjectId: 's14',
-    },
-    {
-      id: 'THURSDAY-2',
-      sequence: 3,
-      day: 'THURSDAY',
-      startTime: '09:30',
-      endTime: '10:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.SHORT,
-      subjects: [],
-    },
-    {
-      id: 'THURSDAY-3',
-      sequence: 4,
-      day: 'THURSDAY',
-      startTime: '10:00',
-      endTime: '11:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's15',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r103',
-          roomName: 'Room 103',
-          className: '8',
-          division: 'B',
-        },
-      ],
-      subjectId: 's15',
-    },
-    {
-      id: 'THURSDAY-4',
-      sequence: 5,
-      day: 'THURSDAY',
-      startTime: '11:00',
-      endTime: '12:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.LUNCH,
-      subjects: [],
-    },
-    {
-      id: 'THURSDAY-5',
-      sequence: 6,
-      day: 'THURSDAY',
-      startTime: '12:00',
-      endTime: '13:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's16',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r101',
-          roomName: 'Room 101',
-          className: '9',
-          division: 'A',
-        },
-      ],
-      subjectId: 's16',
-    },
-  ],
-  FRIDAY: [
-    {
-      id: 'FRIDAY-0',
-      sequence: 1,
-      day: 'FRIDAY',
-      startTime: '07:30',
-      endTime: '08:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's17',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r105',
-          roomName: 'Room 105',
-          className: '8',
-          division: 'A',
-        },
-      ],
-      subjectId: 's17',
-    },
-    {
-      id: 'FRIDAY-1',
-      sequence: 2,
-      day: 'FRIDAY',
-      startTime: '08:30',
-      endTime: '09:30',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's18',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r101',
-          roomName: 'Room 101',
-          className: '10',
-          division: 'A',
-        },
-      ],
-      subjectId: 's18',
-    },
-    {
-      id: 'FRIDAY-2',
-      sequence: 3,
-      day: 'FRIDAY',
-      startTime: '09:30',
-      endTime: '10:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.SHORT,
-      subjects: [],
-    },
-    {
-      id: 'FRIDAY-3',
-      sequence: 4,
-      day: 'FRIDAY',
-      startTime: '10:00',
-      endTime: '11:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's19',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r102',
-          roomName: 'Room 102',
-          className: '9',
-          division: 'B',
-        },
-      ],
-      subjectId: 's19',
-    },
-    {
-      id: 'FRIDAY-4',
-      sequence: 5,
-      day: 'FRIDAY',
-      startTime: '11:00',
-      endTime: '12:00',
-      type: SlotType.BREAK,
-      breakType: BreakType.LUNCH,
-      subjects: [],
-    },
-    {
-      id: 'FRIDAY-5',
-      sequence: 6,
-      day: 'FRIDAY',
-      startTime: '12:00',
-      endTime: '13:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's20',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r103',
-          roomName: 'Room 103',
-          className: '8',
-          division: 'B',
-        },
-      ],
-      subjectId: 's20',
-    },
-  ],
-  SATURDAY: [
-    {
-      id: 'SATURDAY-0',
-      sequence: 1,
-      day: 'SATURDAY',
-      startTime: '08:00',
-      endTime: '09:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's21',
-          subjectAssignmentId: '',
-          name: 'Mathematics',
-          color: '#1573b6ff',
-          roomId: 'r101',
-          roomName: 'Room 101',
-          className: '10',
-          division: 'A',
-        },
-      ],
-      subjectId: 's21',
-    },
-    {
-      id: 'SATURDAY-1',
-      sequence: 2,
-      day: 'SATURDAY',
-      startTime: '09:00',
-      endTime: '09:30',
-      type: SlotType.BREAK,
-      breakType: BreakType.SHORT,
-      subjects: [],
-    },
-    {
-      id: 'SATURDAY-2',
-      sequence: 3,
-      day: 'SATURDAY',
-      startTime: '09:30',
-      endTime: '11:00',
-      type: SlotType.LECTURE,
-      subjects: [
-        {
-          subjectId: 's22',
-          subjectAssignmentId: '',
-          name: 'Science',
-          color: '#197020ff',
-          roomId: 'r105',
-          roomName: 'Room 105',
-          className: '8',
-          division: 'A',
-        },
-      ],
-      subjectId: 's22',
-    },
-  ],
+type Props = {
+  employeeId?: string;
 };
 
-// ----------------------------------------------------------------------
+export default function TeacherSchedule({ employeeId }: Props = {}) {
+  const { employee } = useSelector((state: any) => state.auth);
+  const targetEmployeeId = employeeId || employee?.id || employee?._id;
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-export default function TeacherSchedule() {
+  const academicDates = useMemo(() => {
+    console.log('currentYear', currentYear);
+
+    if (!currentYear) return { startDate: '', endDate: '' };
+    return {
+      startDate: dayjs(currentYear?.startDate).format('YYYY-MM-DD'),
+      endDate: dayjs(currentYear?.endDate).format('YYYY-MM-DD'),
+    };
+  }, [currentYear]);
+
+  const { data: timelineData, isLoading } = useGetLessonPlanTimelineQuery(
+    {
+      startDate: academicDates.startDate,
+      endDate: academicDates.endDate,
+      teacherId: targetEmployeeId,
+    },
+    { skip: !targetEmployeeId }
+  );
+
+  const scheduleSlots = useMemo(() => {
+    const result: Record<DayOfWeek, TimeSlot[]> = {
+      MONDAY: [],
+      TUESDAY: [],
+      WEDNESDAY: [],
+      THURSDAY: [],
+      FRIDAY: [],
+      SATURDAY: [],
+    };
+
+    if (!timelineData) return result;
+
+    const slotsArray = Array.isArray(timelineData) ? timelineData : timelineData.slots;
+    if (!slotsArray || !Array.isArray(slotsArray)) return result;
+
+    const seen = new Set<string>();
+
+    slotsArray.forEach((slot: any, index: number) => {
+      let day = (slot.day || slot.dayOfWeek || '').toUpperCase();
+      if (!day && slot.date) {
+        day = dayjs(slot.date).format('dddd').toUpperCase();
+      }
+      if (!day || !result[day as DayOfWeek]) return;
+
+      const uniqueKey = `${day}-${slot.startTime}-${slot.endTime}-${slot.subjectId}-${slot.standardId}-${slot.divisionId}`;
+      if (seen.has(uniqueKey)) return;
+      seen.add(uniqueKey);
+
+      result[day as DayOfWeek].push({
+        id: slot.timetableSlotId || `${day}-${index}`,
+        sequence: index,
+        day: day as DayOfWeek,
+        startTime: slot.startTime || '00:00',
+        endTime: slot.endTime || '00:00',
+        type: SlotType.LECTURE,
+        subjects: [
+          {
+            subjectId: slot.subjectId,
+            subjectAssignmentId: '',
+            name: slot.subjectName || slot.subject?.name || 'Subject',
+            color: '#1573b6ff',
+            roomId: slot.roomId || 'room-1',
+            roomName: slot.roomName || slot.room?.name || 'Room',
+            className: slot.standardName || slot.standard?.name || '',
+            division: slot.divisionName || slot.division?.name || '',
+          },
+        ],
+        subjectId: slot.subjectId,
+      });
+    });
+
+    // Sort slots by start time
+    Object.keys(result).forEach((dayKey) => {
+      result[dayKey as DayOfWeek].sort((a, b) => a.startTime.localeCompare(b.startTime));
+    });
+
+    return result;
+  }, [timelineData]);
+
   return (
     <DashboardWidgetWrapper
       title="Today's Schedule"
       subheader="Week-wise timetable — Subject · Class/Div · Room"
     >
       <TimetableBoard
-        slots={TEACHER_SLOTS}
+        slots={scheduleSlots}
         onChange={() => {}}
         subjects={[]}
         readOnly

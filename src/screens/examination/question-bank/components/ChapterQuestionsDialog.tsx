@@ -193,7 +193,6 @@ export default function ChapterQuestionsDialog({
           isLoading={isFetching}
           noDataText={
             <Stack alignItems="center" spacing={1} py={6}>
-              <Iconify icon="mingcute:question-line" width={40} sx={{ color: 'text.disabled' }} />
               <Typography variant="subtitle2" color="text.secondary">
                 No questions for this chapter yet
               </Typography>
