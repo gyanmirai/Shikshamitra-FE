@@ -122,16 +122,20 @@ const getSlotTimingError = (
     return 'Please assign the school shift to this class before configuring lecture slots.';
   }
 
+  // Compare time-of-day only (minutes since midnight) to avoid false positives
+  // caused by slot times carrying today's date while shiftInfo uses a fixed anchor date.
+  const shiftStartMin = shiftInfo.start.hour() * 60 + shiftInfo.start.minute();
+  const shiftEndMin = shiftInfo.end.hour() * 60 + shiftInfo.end.minute();
+
   const outsideShiftSlot = slotConfigurations
     .flatMap((config) => config.timeSlots || [])
     .find((slot) => {
       const start = slot.startTime ? dayjs(slot.startTime) : null;
       const end = slot.endTime ? dayjs(slot.endTime) : null;
-      return (
-        start?.isValid() &&
-        end?.isValid() &&
-        (start.isBefore(shiftInfo.start) || end.isAfter(shiftInfo.end))
-      );
+      if (!start?.isValid() || !end?.isValid()) return false;
+      const startMin = start.hour() * 60 + start.minute();
+      const endMin = end.hour() * 60 + end.minute();
+      return startMin < shiftStartMin || endMin > shiftEndMin;
     });
 
   if (outsideShiftSlot) {

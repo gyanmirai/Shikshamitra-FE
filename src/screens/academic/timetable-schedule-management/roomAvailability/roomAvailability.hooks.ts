@@ -159,13 +159,14 @@ export function useRoomReservations() {
     return data.map((r: any) => ({
       id: r.id,
       roomId: r.roomId,
-      roomName: r.roomName || 'Room',
-      buildingName: r.buildingName || 'Main Building',
+      roomName: r.roomName || '',
+      buildingName: r.buildingName || '',
       date: r.date ? r.date.split('T')[0] : '',
       startTime: r.startTime ? r.startTime.substring(0, 5) : '',
       endTime: r.endTime ? r.endTime.substring(0, 5) : '',
       purpose: r.purpose || '',
       reservationType: (REVERSE_RESERVATION_TYPE_MAP[r.reservationType] as any) || 'other',
+      requestedBy: r.requestedBy || '',
       status:
         r.status === 1
           ? 'draft'

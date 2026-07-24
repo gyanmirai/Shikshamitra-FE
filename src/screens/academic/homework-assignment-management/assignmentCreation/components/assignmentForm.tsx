@@ -36,8 +36,10 @@ import {
   Radio,
   Stack,
   Button,
+  Checkbox,
   Skeleton,
   TextField,
+  Autocomplete,
   Typography,
   FormControl,
 } from '@mui/material';
@@ -45,6 +47,7 @@ import {
   useGetSubjectAssignmentsQuery,
   useUploadCurriculumFileMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   useAddAssignmentMutation,
   useGetAssignmentByIdQuery,
@@ -233,7 +236,9 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
   const activeAssignmentTypes = useMemo(() => {
     const list = (assignmentTypeData?.data || []).filter((t: any) => t.status === 0);
     if (editData?.assignmentTypeId) {
-      const editType = (assignmentTypeData?.data || []).find((t: any) => t.id === editData.assignmentTypeId);
+      const editType = (assignmentTypeData?.data || []).find(
+        (t: any) => t.id === editData.assignmentTypeId
+      );
       if (editType && editType.status === 1) {
         list.push(editType);
       }
@@ -254,14 +259,24 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     onSubmit: async (values) => {
       try {
         // Check if user is overriding selected template defaults
-        const selectedType = activeAssignmentTypes.find((t: any) => t.id === values.assignmentTypeId);
+        const selectedType = activeAssignmentTypes.find(
+          (t: any) => t.id === values.assignmentTypeId
+        );
         if (selectedType) {
           let hasOverride = false;
-          if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null && selectedType.defaultSubmissionType !== values.submissionType) {
+          if (
+            selectedType.defaultSubmissionType !== undefined &&
+            selectedType.defaultSubmissionType !== null &&
+            selectedType.defaultSubmissionType !== values.submissionType
+          ) {
             hasOverride = true;
           }
 
-          if (selectedType.defaultMarks !== undefined && selectedType.defaultMarks !== null && Number(selectedType.defaultMarks) !== Number(values.totalMarks)) {
+          if (
+            selectedType.defaultMarks !== undefined &&
+            selectedType.defaultMarks !== null &&
+            Number(selectedType.defaultMarks) !== Number(values.totalMarks)
+          ) {
             hasOverride = true;
           }
 
@@ -293,6 +308,12 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
         if (values.description) formData.append('Description', values.description);
         formData.append('SubmissionType', String(values.submissionType));
 
+        if ((values as any).chapterIds?.length > 0) {
+          (values as any).chapterIds.forEach((id: string) => {
+            formData.append('ChapterIds', id);
+          });
+        }
+
         if (values.attachments && values.attachments.length > 0) {
           values.attachments.forEach((file: any) => {
             const fileValue = file instanceof File ? null : file.url || file.filePath || file;
@@ -315,7 +336,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
             message: `Assignment "${values.title}" has been updated successfully.`,
           });
         } else {
-          const response = await addAssignment({ academicMediumId: medium?.id, body: formData }).unwrap();
+          const response = await addAssignment({
+            academicMediumId: medium?.id,
+            body: formData,
+          }).unwrap();
           const createdAssignmentId = response?.data?.id || response?.id;
           if (selectedRubricTemplateId && createdAssignmentId) {
             await createRubricFromTemplate({
@@ -345,8 +369,6 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     setAllDivision(allClass.find((org: any) => org?.id === activeClassId)?.divisions || []);
   }, [allClass, formik.values.classId]);
 
-
-
   const {
     data: subjectOptionsData,
     isLoading: isSubjectOptionsLoading,
@@ -375,6 +397,17 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editData?.id, subjectOptionsData?.data?.items, formik.values.subjectId]);
+
+  const {
+    data: chapterResponse,
+    isLoading: isChapterLoading,
+    isFetching: isChapterFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    params: { standardId: formik.values.classId, subjectId: formik.values.subjectId },
+    options: { skip: !formik.values.classId || !formik.values.subjectId },
+  });
 
   const isLoadingData = isAssignmentByIdLoading || isAssignmentByIdFetching;
 
@@ -558,7 +591,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                               divisionName: selectedDivData?.name || '',
                               createdAt: dayjs(),
                               publishDate,
-                              dueDate: defaultDueDays !== undefined && defaultDueDays !== null ? publishDate.add(defaultDueDays, 'day') : null,
+                              dueDate:
+                                defaultDueDays !== undefined && defaultDueDays !== null
+                                  ? publishDate.add(defaultDueDays, 'day')
+                                  : null,
                             }
                           );
                         });
@@ -640,6 +676,64 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   </ShakingTextField>
                 </Grid>
 
+                {/* Chapters (optional, links assignment to syllabus assessment status) */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Autocomplete
+                    multiple
+                    disableCloseOnSelect
+                    options={
+                      Array.isArray(chapterResponse)
+                        ? chapterResponse
+                        : chapterResponse?.data?.items || []
+                    }
+                    disabled={!formik.values.subjectId}
+                    loading={isChapterLoading || isChapterFetching}
+                    value={(Array.isArray(chapterResponse)
+                      ? chapterResponse
+                      : chapterResponse?.data?.items || []
+                    ).filter((c: any) => ((formik.values as any).chapterIds || []).includes(c.id))}
+                    onChange={(_event, newValue: any[]) => {
+                      formik.setFieldValue(
+                        'chapterIds',
+                        newValue.map((c: any) => c.id)
+                      );
+                    }}
+                    getOptionLabel={(option: any) => {
+                      const no = option.chapterNumber ?? option.chapterNo;
+                      const name = option.chapterName || option.name || '';
+                      return no !== undefined && no !== null ? `Ch ${no} - ${name}` : name;
+                    }}
+                    isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                    renderOption={(props, option: any, { selected }) => {
+                      const no = option.chapterNumber ?? option.chapterNo;
+                      const name = option.chapterName || option.name || '';
+                      const displayText =
+                        no !== undefined && no !== null ? `Ch ${no} - ${name}` : name;
+                      return (
+                        <li {...props}>
+                          <Checkbox
+                            icon={<Iconify icon="mdi:checkbox-blank-outline" />}
+                            checkedIcon={<Iconify icon="mdi:checkbox-marked" />}
+                            style={{ marginRight: 8 }}
+                            checked={selected}
+                          />
+                          {displayText}
+                        </li>
+                      );
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Link to Chapter(s)"
+                        size="small"
+                        fullWidth
+                        helperText="Links this assignment to the syllabus assessment status"
+                      />
+                    )}
+                    slotProps={{ chip: { size: 'small', variant: 'soft' as any } }}
+                  />
+                </Grid>
+
                 {/* Assignment Title */}
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
@@ -681,13 +775,25 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                         setSelectedRubricTemplateId('');
                         const selectedType = activeAssignmentTypes.find((t: any) => t.id === val);
                         if (selectedType) {
-                          if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null) {
-                            formik.setFieldValue('submissionType', selectedType.defaultSubmissionType);
+                          if (
+                            selectedType.defaultSubmissionType !== undefined &&
+                            selectedType.defaultSubmissionType !== null
+                          ) {
+                            formik.setFieldValue(
+                              'submissionType',
+                              selectedType.defaultSubmissionType
+                            );
                           }
-                          if (selectedType.defaultMarks !== undefined && selectedType.defaultMarks !== null) {
+                          if (
+                            selectedType.defaultMarks !== undefined &&
+                            selectedType.defaultMarks !== null
+                          ) {
                             formik.setFieldValue('totalMarks', selectedType.defaultMarks);
                           }
-                          if (selectedType.defaultDueDays !== undefined && selectedType.defaultDueDays !== null) {
+                          if (
+                            selectedType.defaultDueDays !== undefined &&
+                            selectedType.defaultDueDays !== null
+                          ) {
                             const newDivisions = formik.values.divisions.map((d: any) => {
                               const pubDate = d.publishDate ? dayjs(d.publishDate) : dayjs();
                               return {
@@ -824,11 +930,9 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   <Grid container spacing={1} sx={{ width: '100%' }}>
                     {formik.values.divisions.map((div: any, idx: number) => {
                       const divError = (formik.errors.divisions as any[])?.[idx] as
-                        | Record<string, string>
-                        | undefined;
+                        Record<string, string> | undefined;
                       const divTouched = (formik.touched.divisions as any[])?.[idx] as
-                        | Record<string, boolean>
-                        | undefined;
+                        Record<string, boolean> | undefined;
                       return (
                         <Grid size={{ xs: 12 }} key={div.divisionId}>
                           <Box

@@ -85,8 +85,7 @@ const formatLogDate = (value: string) => {
 };
 
 type ParsedAuditValue =
-  | { type: 'json'; entries: [string, unknown][] }
-  | { type: 'text'; text: string };
+  { type: 'json'; entries: [string, unknown][] } | { type: 'text'; text: string };
 
 const parseAuditValue = (raw?: string | null): ParsedAuditValue | null => {
   if (!raw) return null;
@@ -125,23 +124,33 @@ const AuditLogItem = ({
   const hasJsonDetails = detailEntries.length > 0;
 
   return (
-    <Box sx={{ display: 'flex', gap: 1 }}>
-      {/* Timeline line */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+    <Box sx={{ display: 'flex', gap: 1.5, position: 'relative' }}>
+      {/* Timeline connector + icon */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          flexShrink: 0,
+          pt: 0.5,
+        }}
+      >
         <Box
           sx={{
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             borderRadius: '50%',
             display: 'grid',
             placeItems: 'center',
             bgcolor: config.bg,
             color: config.color,
-            mt: 0.5,
+            border: '2px solid',
+            borderColor: config.color,
             flexShrink: 0,
+            boxShadow: `0 0 0 3px ${config.bg}`,
           }}
         >
-          <Iconify icon={config.icon} width={16} />
+          <Iconify icon={config.icon} width={18} />
         </Box>
         {!isLast && (
           <Box
@@ -149,20 +158,48 @@ const AuditLogItem = ({
               width: 2,
               flex: 1,
               bgcolor: 'divider',
-              my: 0.5,
-              minHeight: 16,
+              my: 0.75,
+              minHeight: 20,
             }}
           />
         )}
       </Box>
 
-      {/* Content */}
-      <Box sx={{ flex: 1, pb: isLast ? 0 : 2, pt: 0.5 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+      {/* Card content */}
+      <Box
+        sx={{
+          flex: 1,
+          mb: isLast ? 0 : 1.5,
+          p: 1.5,
+          borderRadius: 1.5,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          '&:hover': { borderColor: config.color, bgcolor: config.bg },
+          transition: 'border-color 0.15s, background-color 0.15s',
+        }}
+      >
+        {/* Header row */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          sx={{ mb: 0.5 }}
+        >
           <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-            <Typography variant="subtitle2" fontWeight={700}>
-              {log.action}
-            </Typography>
+            <Chip
+              size="small"
+              label={log.action}
+              sx={{
+                bgcolor: config.bg,
+                color: config.color,
+                fontWeight: 700,
+                fontSize: 11,
+                height: 22,
+                border: '1px solid',
+                borderColor: config.color,
+              }}
+            />
             {showRoomChip && log.roomName && (
               <Chip
                 size="small"
@@ -272,7 +309,9 @@ export const RoomAuditLogPanel = ({
   compact = false,
   showRoomChip = false,
 }: RoomAuditLogPanelProps) => {
-  const { data, isLoading, error, fetch } = useRoomAuditLogs(roomId, { skip: Boolean(externalLogs) });
+  const { data, isLoading, error, fetch } = useRoomAuditLogs(roomId, {
+    skip: Boolean(externalLogs),
+  });
 
   useEffect(() => {
     if (!externalLogs) fetch();

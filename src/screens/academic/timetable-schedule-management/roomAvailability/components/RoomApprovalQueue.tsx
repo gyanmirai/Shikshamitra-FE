@@ -28,7 +28,7 @@ import type { RoomReservation } from '../types';
 
 interface RoomApprovalQueueProps {
   reservations: RoomReservation[];
-  onApprove?: (id: string, remarks?: string) => void;
+  onApprove?: (id: string, remarks?: string) => void | Promise<void>;
   onReject?: (id: string, reason: string) => void;
 }
 
@@ -42,6 +42,7 @@ export const RoomApprovalQueue = ({
   const [rejectTargetId, setRejectTargetId] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [rejectError, setRejectError] = useState('');
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const handleOpenReject = (id: string) => {
     setRejectTargetId(id);

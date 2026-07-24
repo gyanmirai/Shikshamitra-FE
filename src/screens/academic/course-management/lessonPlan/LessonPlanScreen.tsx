@@ -753,7 +753,7 @@ const LessonPlanScreen = () => {
           plannedDate,
           timetableSlotId: form.timetableSlotId || null,
           isAiGenerated: form.source === 'AiGenerated',
-          status: submitAfterSave ? 1 : 0,
+          status: 0,
           ...planDetailsPayload,
         };
 
