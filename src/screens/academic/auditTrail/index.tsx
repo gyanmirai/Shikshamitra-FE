@@ -7,7 +7,7 @@ import type {
   AcademicAuditEventListArgs,
 } from 'src/redux/academicAPI/AuditApi/academic-audit-api';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -191,18 +191,30 @@ const AcademicAuditTrail = () => {
     []
   );
 
-  const handleFilterChange = <K extends keyof AcademicAuditFilters>(
-    key: K,
-    value: AcademicAuditFilters[K]
-  ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setPage(0);
-  };
+  /**
+   * Memoization Justification:
+   * - Passed to AcademicAuditFilter, which debounces search changes with this callback.
+   * - Stable identity prevents the debounce timer from restarting on unrelated table/drawer renders.
+   * - The handler only depends on state setters, which are stable.
+   */
+  const handleFilterChange = useCallback(
+    <K extends keyof AcademicAuditFilters>(key: K, value: AcademicAuditFilters[K]) => {
+      setFilters((prev) => (prev[key] === value ? prev : { ...prev, [key]: value }));
+      setPage(0);
+    },
+    []
+  );
 
-  const handleReset = () => {
+  /**
+   * Memoization Justification:
+   * - Passed to AcademicAuditFilter beside the debounced search handler.
+   * - Stable identity avoids child-side debounce churn during unrelated screen updates.
+   * - The handler only resets local screen state.
+   */
+  const handleReset = useCallback(() => {
     setFilters(DEFAULT_FILTERS);
     setPage(0);
-  };
+  }, []);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

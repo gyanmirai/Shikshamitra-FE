@@ -154,11 +154,17 @@ export const RoomAvailabilityTable = ({
             </Tooltip>
 
             {canReserve && (
-              <Tooltip title={row.status !== 'available' ? 'Room not available' : 'Reserve Room'}>
+              <Tooltip
+                title={
+                  row.status === 'maintenance'
+                    ? 'Room under maintenance — reservations blocked'
+                    : 'Reserve Room'
+                }
+              >
                 <span>
                   <IconButton
                     size="small"
-                    disabled={row.status !== 'available'}
+                    disabled={row.status === 'maintenance'}
                     onClick={() => onReserveRoom?.(row as RoomAvailabilityItem)}
                     color="primary"
                   >

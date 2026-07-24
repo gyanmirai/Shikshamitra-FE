@@ -3,9 +3,11 @@
 import type { ChangeEvent } from 'react';
 
 import dayjs from 'dayjs';
+import { useState, useEffect, useCallback } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { useDebounceEffect } from 'src/hooks/use-debounce';
 import { Box, Grid, Button, TextField, InputAdornment } from '@mui/material';
 
 import {
@@ -28,14 +30,43 @@ type AcademicAuditFilterProps = {
   onReset: () => void;
 };
 
+const SEARCH_DEBOUNCE_MS = 400;
+
 const AcademicAuditFilter = ({
   filters,
   isFiltered,
   onChange,
   onReset,
 }: AcademicAuditFilterProps) => {
+  const [localSearchValue, setLocalSearchValue] = useState(filters.search);
   const startDate = filters.fromDate ? dayjs(filters.fromDate) : null;
   const endDate = filters.toDate ? dayjs(filters.toDate) : null;
+
+  useEffect(() => {
+    setLocalSearchValue(filters.search);
+  }, [filters.search]);
+
+  /**
+   * Memoization Justification:
+   * - This callback is passed into the shared debounce hook.
+   * - Keeping it stable prevents the debounce timer from being recreated by unrelated filter renders.
+   * - It only updates the parent when the applied search differs from the typed search value.
+   */
+  const applySearchFilter = useCallback(() => {
+    if (filters.search === localSearchValue) return;
+
+    onChange('search', localSearchValue);
+  }, [filters.search, localSearchValue, onChange]);
+
+  useDebounceEffect(applySearchFilter, SEARCH_DEBOUNCE_MS, [applySearchFilter]);
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setLocalSearchValue(event.target.value);
+  };
+
+  const handleSearchClear = () => {
+    setLocalSearchValue('');
+  };
 
   return (
     <Box
@@ -53,10 +84,8 @@ const AcademicAuditFilter = ({
             fullWidth
             size="small"
             label="Search academic activity"
-            value={filters.search}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              onChange('search', event.target.value)
-            }
+            value={localSearchValue}
+            onChange={handleSearchChange}
             InputProps={{
               sx: { height: 40 },
               startAdornment: (
@@ -64,13 +93,13 @@ const AcademicAuditFilter = ({
                   <Iconify icon="mdi:magnify" width={18} sx={{ color: 'text.disabled' }} />
                 </InputAdornment>
               ),
-              endAdornment: filters.search ? (
+              endAdornment: localSearchValue ? (
                 <InputAdornment position="end">
                   <Iconify
                     icon="mdi:close"
                     width={16}
                     sx={{ color: 'text.disabled', cursor: 'pointer' }}
-                    onClick={() => onChange('search', '')}
+                    onClick={handleSearchClear}
                   />
                 </InputAdornment>
               ) : null,
