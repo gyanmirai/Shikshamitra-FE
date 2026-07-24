@@ -62,3 +62,14 @@ tokenSet.json
 skills-lock.json
 
 graphify-out
+
+# Playwright
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+
+.opencode
+.codex
+opencode.json
