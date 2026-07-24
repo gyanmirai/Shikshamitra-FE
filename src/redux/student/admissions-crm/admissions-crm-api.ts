@@ -136,6 +136,7 @@ export enum AdmissionCrmJourneyTrigger {
   DocumentPending = 15,
   ExamNoShow = 16,
   AdmissionReady = 17,
+  DocumentExpiring = 18,
 }
 
 export enum AdmissionCrmOperationsQueueType {
@@ -1254,9 +1255,11 @@ export type AdmissionCrmDocumentRequirementDto = {
   blocksAdmissionReadiness: boolean;
   requiresOriginal: boolean;
   validityDateRequired: boolean;
+  expiryReminderDaysBefore?: number | null;
   maximumSizeMb: number;
   acceptedExtensions: string[];
   uploadInstructions?: string | null;
+  rejectionReasons: string[];
   displayOrder: number;
 };
 
@@ -1288,6 +1291,7 @@ export type AdmissionCrmApplicantDocumentDto = {
   blocksAdmissionReadiness: boolean;
   requiresOriginal: boolean;
   validityDateRequired: boolean;
+  expiryReminderDaysBefore?: number | null;
   originalSeen: boolean;
   status?: AdmissionCrmApplicantDocumentStatus | null;
   version: number;
@@ -1301,6 +1305,7 @@ export type AdmissionCrmApplicantDocumentDto = {
   acceptedExtensions: string[];
   maximumSizeMb: number;
   uploadInstructions?: string | null;
+  rejectionReasons: string[];
 };
 
 export type AdmissionCrmApplicantDocumentChecklistDto = {
@@ -2986,6 +2991,24 @@ export const buildScheduleAdmissionCrmExamRequest = ({
   url: `/student-enrollment/admissions-crm/leads/${leadId}/exam/schedule`,
   method: 'POST',
   body,
+});
+
+export const buildBulkAdmissionCrmExamResultsRequest = ({
+  academicYearId,
+  items,
+}: {
+  academicYearId: string;
+  items: Array<{
+    examRecordId: string;
+    totalMarks: number;
+    passingMarks: number;
+    obtainedMarks: number;
+    meritRank?: number;
+  }>;
+}): FetchArgs => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/bulk/exam-results`,
+  method: 'POST',
+  body: { items },
 });
 
 export const buildMergeAdmissionCrmDuplicateLeadRequest = ({
@@ -6815,18 +6838,16 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       AdmissionCrmBulkOperationResultDto,
       {
         academicYearId: string;
-        examRecordIds: string[];
-        totalMarks: number;
-        passingMarks: number;
-        obtainedMarks: number;
-        meritRank?: number;
+        items: Array<{
+          examRecordId: string;
+          totalMarks: number;
+          passingMarks: number;
+          obtainedMarks: number;
+          meritRank?: number;
+        }>;
       }
     >({
-      query: ({ academicYearId, ...body }) => ({
-        url: `/student-enrollment/admissions-crm/${academicYearId}/bulk/exams/results`,
-        method: 'POST',
-        body,
-      }),
+      query: buildBulkAdmissionCrmExamResultsRequest,
       invalidatesTags: [
         studentAdmissionsCrmType.exam,
         studentAdmissionsCrmType.lead,

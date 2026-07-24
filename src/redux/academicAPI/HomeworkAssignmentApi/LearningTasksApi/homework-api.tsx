@@ -46,7 +46,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         params: { academicMediumId },
         body,
       }),
-      invalidatesTags: [academicType.homework],
+      invalidatesTags: [academicType.homework, academicType.chapter],
     }),
 
     // UPDATE homework
@@ -56,7 +56,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicType.homework],
+      invalidatesTags: [academicType.homework, academicType.chapter],
     }),
 
     // DELETE homework
@@ -65,7 +65,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         url: `/academic/homeworks/${homeworkId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [academicType.homework],
+      invalidatesTags: [academicType.homework, academicType.chapter],
     }),
 
     // PUBLISH homework
@@ -75,7 +75,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         method: 'POST',
         data: { status },
       }),
-      invalidatesTags: [academicType.homework],
+      invalidatesTags: [academicType.homework, academicType.chapter],
     }),
 
     // UPDATE homework status
@@ -85,7 +85,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         method: 'PATCH',
         body: { status },
       }),
-      invalidatesTags: [academicType.homework],
+      invalidatesTags: [academicType.homework, academicType.chapter],
     }),
   }),
 

@@ -93,6 +93,7 @@ export const academicPaths = {
     },
   },
   notification: '/academic/notification',
+  audits: '/academic/audits',
 };
 
 export const academicPermissions = {
@@ -184,6 +185,7 @@ export const academicPermissions = {
     },
   },
   notification: `${defaultModulePermissionName}${defaultAcademicPermissionName}Notification`,
+  audits: `${defaultAcademicPermissionName}Audits.View`,
 };
 
 const academicModule = (isDdvs: boolean) => ({
@@ -818,6 +820,15 @@ const academicModule = (isDdvs: boolean) => ({
             //   icon: menuIconView('mdi:cog-outline'),
             // },
           ],
+        },
+        {
+          title: 'Audits',
+          path: academicPaths.audits,
+          _action: 'academic-audits',
+          shortcutKey: 'Alt+A+U',
+          shortcutKeyName: 'Alt+A+U',
+          permissionName: academicPermissions.audits,
+          icon: menuIconView('mdi:clipboard-clock-outline'),
         },
         {
           title: 'Notification',

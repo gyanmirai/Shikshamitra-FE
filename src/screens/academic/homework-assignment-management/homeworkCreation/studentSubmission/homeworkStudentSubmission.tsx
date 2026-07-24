@@ -17,7 +17,10 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
-import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+import {
+  useGetHomeworkSubmissionsQuery,
+  useUpdateHomeworkSubmissionFeedbackMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 import {
   FeedbackStatusChip,
   EvaluationFilterBar,
@@ -70,6 +73,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       skip: !selectedClass || !selectedDivision || !selectedSubject || !selectedHomework?.id,
     },
   });
+  const [ensureSubmissionFeedback] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
+  });
   // State to track the currently selected student for individual grading
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>();
 
@@ -108,6 +115,41 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     () => filteredData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
     [filteredData, selectedStudent?.studentId]
   );
+  const selectedSubmissionType = selectedStudent?.submissionType || selectedHomework?.submissionType;
+  const selectedSubmissionTypeLabel = String(selectedSubmissionType || '').toLowerCase();
+  const isSelectedInPerson =
+    Number(selectedSubmissionType) === 2 ||
+    selectedSubmissionTypeLabel.includes('inperson') ||
+    selectedSubmissionTypeLabel.includes('in person');
+  const hasRealSubmissionId = (id?: string) => Boolean(id && !id.startsWith('00000000'));
+
+  const ensureInPersonSubmissionId = async () => {
+    if (hasRealSubmissionId(selectedStudent?.id)) {
+      return selectedStudent?.id ?? null;
+    }
+
+    if (!selectedStudent?.studentId || !selectedHomework?.id || !isSelectedInPerson) {
+      return null;
+    }
+
+    const response = await ensureSubmissionFeedback({
+      homeworkId: selectedHomework.id,
+      studentId: selectedStudent.studentId,
+      academicMediumId: (medium as any)?.id,
+      body: {
+        feedback: null,
+        remarks: 'Rubric evaluation started.',
+        status: 6,
+      },
+    }).unwrap();
+    const submissionId = response?.data?.submissionId;
+
+    if (submissionId) {
+      setSelectedStudent((prev) => (prev ? { ...prev, id: submissionId, status: '6' } : prev));
+    }
+
+    return submissionId ?? null;
+  };
 
   const moveStudent = React.useCallback(
     (direction: 1 | -1) => {
@@ -362,7 +404,14 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               align: 'center',
               sticky: true,
               render(value, row) {
-                return <EvaluationActionButton row={row} canAdd={canAdd} onOpen={openStudent} />;
+                return (
+                  <EvaluationActionButton
+                    row={row}
+                    canAdd={canAdd}
+                    taskSubmissionType={selectedHomework?.submissionType}
+                    onOpen={openStudent}
+                  />
+                );
               },
             },
           ]}
@@ -416,10 +465,11 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 taskId={selectedHomework.id}
                 taskTitle={selectedHomework.label}
                 studentRow={selectedStudent}
+                ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
               />
             </Box>
           )}
-        {selectedHomework?.submissionType === 'file_upload' ? (
+        {!isSelectedInPerson && Number(selectedHomework?.submissionType) === 1 ? (
           <AssignGrade
             data={selectedStudent}
             onClose={() => {
@@ -435,7 +485,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             onPrevious={() => moveStudent(-1)}
             onNext={() => moveStudent(1)}
           />
-        ) : (
+        ) : !isSelectedInPerson ? (
           <AssignMarksForText
             data={selectedStudent}
             onClose={handleClose}
@@ -446,7 +496,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             onPrevious={() => moveStudent(-1)}
             onNext={() => moveStudent(1)}
           />
-        )}
+        ) : null}
       </CustomDialog>
     </>
   );

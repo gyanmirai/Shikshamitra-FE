@@ -90,6 +90,11 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
     expect(drawer).toContain(
       "registration: 'Issue registration first, or enable registration before exam for this cycle.'"
     );
+    expect(drawer).toContain('useGetAdmissionCrmCycleConfigurationQuery');
+    expect(drawer).toContain('canOpenRegistrationBeforeExam');
+    expect(drawer).toContain('isCheckingRegistrationBeforeExam');
+    expect(drawer).toContain('Checking registration settings for this cycle.');
+    expect(drawer).toContain('cycleConfigurationQuery.data?.registrationFormRequiredBeforeExam');
     expect(drawer).toContain('pipelineExamStages.has(lead.stage)');
     expect(drawer).toContain("if (section.value === 'registration')");
     expect(drawer).toContain('disabled={disabled}');
@@ -100,6 +105,22 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
       'const currentState = parseEnrollmentWorkspaceState(current, defaults)'
     );
     expect(context).toContain('...currentState');
+  });
+
+  it('uses individual result rows for bulk entrance exam marks entry', () => {
+    const exams = read('exams-workspace.tsx');
+
+    expect(exams).toContain('type BulkExamResultForm');
+    expect(exams).toContain('parseBulkExamNumber');
+    expect(exams).toContain('isValidBulkExamResultForm');
+    expect(exams).toContain('bulkMarksByExamId');
+    expect(exams).toContain('selectedExams.length === selectedExamIds.length');
+    expect(exams).toContain('items: selectedExams.map((exam)');
+    expect(exams).toContain('examRecordId: exam.id');
+    expect(exams).toContain('Enter individual marks for each selected applicant');
+    expect(exams).toContain('Upload Results');
+    expect(exams).toContain('OMR Import');
+    expect(exams).not.toContain('bulkObtainedMarks');
   });
 
   it('keeps generated documents in their owning workflow', () => {

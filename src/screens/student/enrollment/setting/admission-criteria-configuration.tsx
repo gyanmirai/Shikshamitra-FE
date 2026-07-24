@@ -39,10 +39,12 @@ export default function AdmissionCriteriaConfiguration() {
             <Box>
               <Stack direction="row" spacing={0.75} alignItems="center">
                 <RuleOutlined fontSize="small" />
-                <Typography variant="subtitle1">Admission confirmation gates</Typography>
+                <Typography component="h2" variant="subtitle1">
+                  Admission criteria &amp; fee policy
+                </Typography>
               </Stack>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-                Enrollment checks these conditions before final approval and student activation.
+                Keep the confirmation path simple for staff while the backend enforces every gate.
               </Typography>
             </Box>
             <Chip size="small" color="info" variant="outlined" label="Backend enforced" />

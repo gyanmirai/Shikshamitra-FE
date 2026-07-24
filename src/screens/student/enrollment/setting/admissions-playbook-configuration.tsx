@@ -1551,6 +1551,13 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
                         }
                       />
                     </Stack>
+                    <Alert severity="info">
+                      Runtime outcome routing is fixed and auditable: a pass moves the applicant to
+                      Eligible, a failed result moves to Rejected, and a waitlist requires an
+                      eligibility decision.
+                      Use Follow-up Automation to send the matching parent message or create a
+                      staff task.
+                    </Alert>
                   </Box>
                 ))}
               </Stack>

@@ -86,6 +86,9 @@ describe('Student Enrollment workspace route contracts', () => {
     );
 
     expect(pipeline).toContain('const pageSize = 50');
+    expect(pipeline).toContain('setSelectedLeadIds([])');
+    expect(pipeline).toContain("updateState({ page: 1 }, 'push')");
+    expect(pipeline).toContain("updateState({ page: 1 }, 'replace')");
     expect(operations).toContain('const pageSize = 50');
     expect(pipeline).toContain('setDebouncedStaffSearch');
     expect(operations).toContain('setDebouncedOwnerSearch');

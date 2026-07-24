@@ -9,6 +9,7 @@ import type {
 
 import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { studentPaths } from 'src/constants/student-menu';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -361,6 +362,24 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
         </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
+            <Alert
+              severity="info"
+              action={
+                academicYearId ? (
+                  <Button
+                    color="inherit"
+                    size="small"
+                    href={`${studentPaths.enrollment.settingsSections.automation}?cycle=${encodeURIComponent(academicYearId)}`}
+                  >
+                    Configure automation
+                  </Button>
+                ) : null
+              }
+            >
+              Family instructions appear beside each upload.
+              Rejection and expiry SMS or email are sent through matching follow-up automation
+              rules and approved message content.
+            </Alert>
             <TextField
               size="small"
               label="Checklist name"
@@ -570,6 +589,43 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
                       }
                     />
                   </Box>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                      gap: 1,
+                    }}
+                  >
+                    <TextField
+                      size="small"
+                      multiline
+                      minRows={2}
+                      label="Upload instructions shown to families"
+                      placeholder="Example: Upload the front and back in one clear PDF."
+                      value={requirement.uploadInstructions || ''}
+                      disabled={readOnly}
+                      helperText={`${requirement.uploadInstructions?.length || 0}/500 characters`}
+                      slotProps={{ htmlInput: { maxLength: 500 } }}
+                      onChange={(event) =>
+                        updateRequirement(index, { uploadInstructions: event.target.value || null })
+                      }
+                    />
+                    <TextField
+                      size="small"
+                      multiline
+                      minRows={2}
+                      label="Default rejection reasons"
+                      placeholder={'Document is unreadable\nDetails do not match the form'}
+                      value={(requirement.rejectionReasons || []).join('\n')}
+                      disabled={readOnly}
+                      helperText="One reason per line, up to 8. Reviewers can still enter a custom reason."
+                      onChange={(event) =>
+                        updateRequirement(index, {
+                          rejectionReasons: event.target.value.split('\n'),
+                        })
+                      }
+                    />
+                  </Box>
                   <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                     <FormControlLabel
                       control={
@@ -612,6 +668,25 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
                       }
                       label="Validity date required"
                     />
+                    {requirement.validityDateRequired ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        label="Remind before expiry"
+                        value={requirement.expiryReminderDaysBefore ?? ''}
+                        disabled={readOnly}
+                        helperText="Days before expiry; leave blank for no reminder."
+                        slotProps={{ htmlInput: { min: 1, max: 365 } }}
+                        onChange={(event) =>
+                          updateRequirement(index, {
+                            expiryReminderDaysBefore: event.target.value
+                              ? Number(event.target.value)
+                              : null,
+                          })
+                        }
+                        sx={{ width: { xs: '100%', sm: 220 } }}
+                      />
+                    ) : null}
                   </Stack>
                 </Stack>
               </Box>

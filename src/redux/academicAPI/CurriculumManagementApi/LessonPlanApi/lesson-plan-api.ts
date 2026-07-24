@@ -43,7 +43,7 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.homework],
+      invalidatesTags: [academicType.homework, academicType.chapter],
     }),
 
     getLessonPlanById: builder.query({
@@ -53,7 +53,7 @@ export const lessonPlanApi = academicApi.injectEndpoints({
 
     createLessonPlan: builder.mutation({
       query: (body) => ({ url: '/academic/curriculum/lesson-plans', method: 'POST', body }),
-      invalidatesTags: [academicType.lessonPlan, academicType.coverageTracker],
+      invalidatesTags: [academicType.lessonPlan, academicType.coverageTracker, academicType.chapter],
     }),
 
     updateLessonPlan: builder.mutation({
@@ -62,12 +62,12 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicType.lessonPlan],
+      invalidatesTags: [academicType.lessonPlan, academicType.chapter],
     }),
 
     deleteLessonPlan: builder.mutation({
       query: ({ id }) => ({ url: `/academic/curriculum/lesson-plans/${id}`, method: 'DELETE' }),
-      invalidatesTags: [academicType.lessonPlan, academicType.coverageTracker],
+      invalidatesTags: [academicType.lessonPlan, academicType.coverageTracker, academicType.chapter],
     }),
 
     submitLessonPlan: builder.mutation({

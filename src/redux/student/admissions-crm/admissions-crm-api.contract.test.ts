@@ -39,6 +39,7 @@ import {
   buildCreateAdmissionCrmPlaybookRequest,
   buildCreateAdmissionCrmSeatPoolRequest,
   buildAdmissionCrmPolicyPackListRequest,
+  buildBulkAdmissionCrmExamResultsRequest,
   buildAdmissionCrmOperationsQueueRequest,
   buildAdmissionCrmJourneyRulesRunRequest,
   buildChangeAdmissionCrmLeadStageRequest,
@@ -927,6 +928,49 @@ describe('admissions CRM API contracts', () => {
     });
   });
 
+  it('sends individual rows for bulk entrance exam result entry', () => {
+    expect(
+      buildBulkAdmissionCrmExamResultsRequest({
+        academicYearId: 'year-1',
+        items: [
+          {
+            examRecordId: 'exam-1',
+            totalMarks: 100,
+            passingMarks: 40,
+            obtainedMarks: 76,
+            meritRank: 3,
+          },
+          {
+            examRecordId: 'exam-2',
+            totalMarks: 50,
+            passingMarks: 20,
+            obtainedMarks: 34,
+          },
+        ],
+      })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/bulk/exam-results',
+      method: 'POST',
+      body: {
+        items: [
+          {
+            examRecordId: 'exam-1',
+            totalMarks: 100,
+            passingMarks: 40,
+            obtainedMarks: 76,
+            meritRank: 3,
+          },
+          {
+            examRecordId: 'exam-2',
+            totalMarks: 50,
+            passingMarks: 20,
+            obtainedMarks: 34,
+          },
+        ],
+      },
+    });
+  });
+
   it('registers workspace, configuration, task, public form, exam, and analytics endpoints', () => {
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmLeads).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmLead).toBeTruthy();
@@ -1248,6 +1292,7 @@ describe('admissions CRM API contracts', () => {
     expect(AdmissionCrmJourneyTrigger.ExamScheduled).toBe(4);
     expect(AdmissionCrmJourneyTrigger.ExamCompleted).toBe(5);
     expect(AdmissionCrmJourneyTrigger.EligibilityDecided).toBe(6);
+    expect(AdmissionCrmJourneyTrigger.DocumentExpiring).toBe(18);
   });
 
   it('keeps timeline event enum values aligned with the backend contract', () => {

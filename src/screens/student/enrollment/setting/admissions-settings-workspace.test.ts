@@ -215,6 +215,45 @@ describe('Enrollment settings route contracts', () => {
     expect(configuration).not.toContain('data: stages = []');
   });
 
+  it('adds administrator help and duplicate actions to dense Admission Journey settings', () => {
+    const configuration = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-crm-configuration.tsx'
+    );
+    const settingsPage = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-settings-page.tsx'
+    );
+
+    expect(settingsPage).toContain('<Box');
+    expect(settingsPage).toContain('px: 2');
+    expect(configuration).toContain('function SettingsHelpLabel');
+    expect(configuration).toContain('component="span"');
+    expect(configuration).toContain("display: 'inline-flex'");
+    expect(configuration).toContain('role="img"');
+    expect(configuration).toContain('aria-label={help}');
+    expect(configuration).toContain('Target response time for a new admission inquiry');
+    expect(configuration).toContain('handleDuplicateRoutingRule');
+    expect(configuration).toContain('handleDuplicateJourneyRule');
+    expect(configuration).toContain('Duplicate this routing rule');
+    expect(configuration).toContain('Duplicate this journey rule');
+    expect(configuration).toContain('getJourneyRuleSummary');
+    expect(configuration).toContain(
+      'These settings are used when an inquiry is reviewed in Pipeline'
+    );
+    expect(configuration).toContain('Duplicate Form');
+    expect(configuration).toContain('Language Preview');
+    expect(configuration).toContain('Download QR');
+  });
+
   it('uses one edit event per project-table action and retains operational summary columns', () => {
     const playbooks = read(
       'src',

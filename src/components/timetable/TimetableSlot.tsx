@@ -90,8 +90,13 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
           electiveGroupName: slot.electiveGroupName,
           subjects: displaySubjects.map((s) => ({
             subjectId: s.subjectId,
+            subjectAssignmentId: s.subjectAssignmentId,
             subjectName: s.name,
             color: s.color,
+            teacherId: s.teacherId,
+            teacherName: s.teacherName,
+            roomId: s.roomId,
+            roomName: s.roomName,
           })),
         };
         return {

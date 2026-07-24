@@ -86,7 +86,7 @@ const questionValidationSchema = Yup.object({
     .max(100, 'Maximum 100'),
   difficultyLevel: Yup.number().required(),
   options: Yup.array().when('questionType', {
-    is: (type: number) => [1, 2, 3].includes(type),
+    is: (type: number) => [1, 2, 3].includes(Number(type)),
     then: (schema) =>
       schema
         .of(
@@ -95,6 +95,13 @@ const questionValidationSchema = Yup.object({
             isCorrect: Yup.boolean(),
             sortOrder: Yup.number(),
           })
+        )
+        .test(
+          'has-two-options',
+          'Enter at least two answer options',
+          (opts: any) =>
+            Array.isArray(opts) &&
+            opts.filter((option: any) => String(option?.optionText || '').trim()).length >= 2
         )
         .test(
           'has-correct-option',
@@ -126,24 +133,66 @@ function buildSubjectOptions(data: any) {
   return options;
 }
 
-const toQuestionBody = (values: any) => ({
-  ...values,
-  chapterId: values.chapterId || null,
-  topicId: values.topicId || null,
-  bloomLevel: values.bloomLevel || null,
-  marks: Number(values.marks),
-  negativeMarks:
-    values.negativeMarks === '' || values.negativeMarks == null
-      ? null
-      : Number(values.negativeMarks),
-  tags: String(values.tagsText || '')
-    .split(',')
-    .map((t: string) => t.trim())
-    .filter(Boolean),
-  options: (values.options || [])
-    .map((o: any) => ({ ...o, optionText: String(o.optionText || '').trim() }))
-    .filter((o: any) => o.optionText),
-});
+const OBJECTIVE_QUESTION_TYPES = [1, 2, 3];
+
+const getObjectiveAnswerKey = (questionType: number, options: any[] = []) => {
+  if (!OBJECTIVE_QUESTION_TYPES.includes(questionType)) {
+    return '';
+  }
+
+  return options
+    .filter((option) => option.isCorrect)
+    .map((option) => String(option.optionText || '').trim())
+    .filter(Boolean)
+    .join(', ');
+};
+
+const normalizeSingleCorrectOptions = (options: any[]) => {
+  let correctSeen = false;
+  return options.map((option) => {
+    if (!option.isCorrect) {
+      return option;
+    }
+
+    if (correctSeen) {
+      return { ...option, isCorrect: false };
+    }
+
+    correctSeen = true;
+    return option;
+  });
+};
+
+const toQuestionBody = (values: any) => {
+  const options = (values.options || [])
+    .map((o: any, index: number) => ({
+      ...o,
+      optionText: String(o.optionText || '').trim(),
+      sortOrder: index + 1,
+    }))
+    .filter((o: any) => o.optionText);
+  const answerKey =
+    String(values.answerKey || '').trim() ||
+    getObjectiveAnswerKey(Number(values.questionType), options);
+
+  return {
+    ...values,
+    answerKey,
+    chapterId: values.chapterId || null,
+    topicId: values.topicId || null,
+    bloomLevel: values.bloomLevel || null,
+    marks: Number(values.marks),
+    negativeMarks:
+      values.negativeMarks === '' || values.negativeMarks == null
+        ? null
+        : Number(values.negativeMarks),
+    tags: String(values.tagsText || '')
+      .split(',')
+      .map((t: string) => t.trim())
+      .filter(Boolean),
+    options,
+  };
+};
 
 const makeInitialValues = (
   academicYearId: string,
@@ -217,6 +266,8 @@ function QuestionFormFields({
         { optionText: '', isCorrect: true, sortOrder: 1 },
         { optionText: '', isCorrect: false, sortOrder: 2 },
       ];
+    } else if (type === 1) {
+      newOptions = normalizeSingleCorrectOptions(newOptions);
     } else if (![1, 2, 3].includes(type)) {
       newOptions = [];
     }
@@ -752,6 +803,7 @@ export default function CreateQuestionDialog({
           return;
         }
         await createQuestion(toQuestionBody(values)).unwrap();
+        shikshaMitraToast.success({ message: 'Question created successfully.' });
         helpers.resetForm({
           values: makeInitialValues(
             academicYearId,
@@ -761,8 +813,11 @@ export default function CreateQuestionDialog({
           ),
         });
         onClose();
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to create question:', err);
+        shikshaMitraToast.error({
+          message: err?.data?.detail || err?.data?.error?.message || 'Failed to create question.',
+        });
       }
     },
   });

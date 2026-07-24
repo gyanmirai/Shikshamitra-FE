@@ -46,7 +46,7 @@ export const assignmentApi = academicApi.injectEndpoints({
         params: { academicMediumId },
         body,
       }),
-      invalidatesTags: [academicType.assignment],
+      invalidatesTags: [academicType.assignment, academicType.chapter],
     }),
 
     // DELETE assignment
@@ -55,7 +55,7 @@ export const assignmentApi = academicApi.injectEndpoints({
         url: `/academic/assignments/${assignmentId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [academicType.assignment],
+      invalidatesTags: [academicType.assignment, academicType.chapter],
     }),
 
     // UPDATE assignment (multipart/form-data)
@@ -65,7 +65,7 @@ export const assignmentApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicType.assignment],
+      invalidatesTags: [academicType.assignment, academicType.chapter],
     }),
 
     // UPDATE assignment status
@@ -75,7 +75,7 @@ export const assignmentApi = academicApi.injectEndpoints({
         method: 'PATCH',
         body: { status },
       }),
-      invalidatesTags: [academicType.assignment],
+      invalidatesTags: [academicType.assignment, academicType.chapter],
     }),
   }),
 

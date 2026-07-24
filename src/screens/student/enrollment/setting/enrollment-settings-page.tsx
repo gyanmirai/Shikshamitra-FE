@@ -69,7 +69,19 @@ export function EnrollmentSettingsPage({
           sx={{ px: 2 }}
         />
       </Box>
-      {children}
+      <Box
+        sx={{
+          px: 2,
+          display: fillAvailableHeight ? 'flex' : undefined,
+          flexDirection: fillAvailableHeight ? 'column' : undefined,
+          gap: fillAvailableHeight ? 1.5 : undefined,
+          minWidth: 0,
+          minHeight: fillAvailableHeight ? 0 : undefined,
+          flex: fillAvailableHeight ? 1 : undefined,
+        }}
+      >
+        {children}
+      </Box>
     </Stack>
   );
 }

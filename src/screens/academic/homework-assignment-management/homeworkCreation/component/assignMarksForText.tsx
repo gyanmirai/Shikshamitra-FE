@@ -77,6 +77,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
 
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const templateBtnRef = useRef<HTMLButtonElement>(null);
+  const submittedContent = data?.submittedContent?.trim();
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -239,7 +240,39 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                       Student Submission
                     </Typography>
                   </Box>
-                  <Box sx={{ p: 1 }}>
+                  <Box sx={{ p: 1.5 }}>
+                    {submittedContent ? (
+                      <Typography
+                        component="pre"
+                        variant="body2"
+                        sx={{
+                          whiteSpace: 'pre-wrap',
+                          m: 0,
+                          fontFamily: 'inherit',
+                          color: 'text.primary',
+                          p: 2,
+                          bgcolor: 'background.neutral',
+                          borderRadius: 1,
+                          minHeight: 80,
+                        }}
+                      >
+                        {submittedContent}
+                      </Typography>
+                    ) : (
+                      <Box
+                        sx={{
+                          p: 2,
+                          textAlign: 'center',
+                          borderRadius: 1,
+                          bgcolor: 'background.neutral',
+                          color: 'text.secondary',
+                        }}
+                      >
+                        <Typography variant="body2">No text submission available.</Typography>
+                      </Box>
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'none' }}>
                     <Editor
                       editable={false}
                       onChange={() => {}}
@@ -253,7 +286,7 @@ I have completed all answers as per the instructions.`}
                     />
                     <Typography variant="subtitle2">Student Submission</Typography>
                   </Box>
-                  <Box sx={{ p: 1.5 }}>
+                  <Box sx={{ display: 'none' }}>
                     <Typography
                       component="pre"
                       variant="body2"
@@ -283,6 +316,7 @@ I have completed all answers as per the instructions.`}
                     boxShadow: 'none',
                     border: (theme) => `1px solid ${theme.palette.divider}`,
                     borderStyle: 'dashed',
+                    display: 'none',
                   }}
                 >
                   <Box
