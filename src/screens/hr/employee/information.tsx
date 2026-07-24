@@ -28,14 +28,14 @@ import {
 } from 'src/redux/hr/employeeApi';
 
 import { infoValidations } from './employee-form-validation';
-import { getSalaryComponentPayloadAmount } from './salary-utils';
 import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
 import { buildWorkExperiencePayload } from './work-experience-payload';
-import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
 import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
+import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
 import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
+import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
 import { AdditionalDetailsFields } from './employee-form-fields/AdditionalDetailsFields';
 import { AcademicPermissionFields } from './employee-form-fields/AcademicPermissionFields';
 import {
@@ -61,6 +61,9 @@ import {
 import type { FieldsType } from './employee-form-fields/types';
 
 const toOptionalNumber = (value: unknown) => (value === '' || value == null ? null : Number(value));
+const toOptionalGuid = (value: unknown) =>
+  typeof value === 'string' && value.trim() ? value : null;
+const getPayrollComponentId = (item: any) => item?.componentId || item?._id || item?.id || null;
 
 const TabSkeleton = ({ activeTabIndex }: { activeTabIndex: number }) => {
   switch (activeTabIndex) {
@@ -226,11 +229,11 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateFamilyInformation
   const handleFamilyInformation = useCallback(
-    async (values: any, formik: any) => {
+    async (values: any, formik: any, id?: any) => {
       const res = await updateFamilyInfo({
-        employeeId: values.employeeId,
+        employeeId: values.employeeId || id,
         body: {
-          id: values.employeeId,
+          id: values.employeeId || id,
           fatherDetails: {
             name: values.fatherName,
             occupation: values.fatherOccupation,
@@ -278,24 +281,17 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateEmployee
   const handleUpdateEmployee = useCallback(
-    async (values: any, _formik: any, id: any) => {
-      try {
-        const body = buildProfilePersonalInfoUpdatePayload(values, {
-          initialValues: {
-            initialPanNo: values.initialPanNo,
-            initialAdharNo: values.initialAdharNo,
-          },
-        });
+    async (values: any, formik: any, id: any) => {
+      const body = buildProfilePersonalInfoUpdatePayload(values, {
+        initialValues: formik.initialValues,
+      });
 
-        const res = await updateEmployee({
-          id,
-          body,
-        }).unwrap();
+      const res = await updateEmployee({
+        id,
+        body,
+      }).unwrap();
 
-        return res;
-      } catch (error) {
-        throw new Error(error);
-      }
+      return res;
     },
     [updateEmployee]
   );
@@ -317,9 +313,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // handler TO update experience
   const handleWorkExperience = useCallback(
-    async (values: any, formik: any) => {
+    async (values: any, formik: any, id?: any) => {
       const res = await updateExperienceInfo({
-        employeeId: values.employeeId,
+        employeeId: values.employeeId || id,
         body: values.experiences.map((i: any) =>
           buildWorkExperiencePayload(i, (date) => dateConvertor(date.format(dateFormat)))
         ),
@@ -331,9 +327,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateBankDetailsInformation
   const handleBankDetailsInformation = useCallback(
-    async (values: any, formik: any) => {
-      const res = updateBankDetails({
-        employeeId: values.employeeId,
+    async (values: any, formik: any, id?: any) => {
+      const res = await updateBankDetails({
+        employeeId: values.employeeId || id,
         body: {
           bankDetails: {
             bankName: values.bankName,
@@ -344,7 +340,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           },
 
           salaryDetails: {
-            pfRuleId: values.pfRule,
+            pfRuleId: toOptionalGuid(values.pfRule),
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
             punchId: values.punchId,
@@ -352,14 +348,16 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           },
 
           earningComponents: values.earningComponents.map((item: any) => ({
-            componentId: item?.id || item?.componentId,
+            componentId: getPayrollComponentId(item),
             name: item?.name || item?.earningComponentName || '',
             amount: getSalaryComponentPayloadAmount(item),
+            isFixed: isSalaryComponentFixed(item),
           })),
           deductionComponents: values.deductionComponents.map((item: any) => ({
-            componentId: item?.id || item?.componentId,
+            componentId: getPayrollComponentId(item),
             name: item?.name || item?.deductionComponentName || '',
             amount: getSalaryComponentPayloadAmount(item),
+            isFixed: isSalaryComponentFixed(item),
           })),
         },
       }).unwrap();
@@ -369,9 +367,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   );
 
   const handleAdditionalDetails = useCallback(
-    async (values: any, formik: any) => {
+    async (values: any, formik: any, id?: any) => {
       const res = await updateAdditionalInfo({
-        employeeId: values.employeeId,
+        employeeId: values.employeeId || id,
         body: {
           bplCardNo: values.bplCardNo,
           personWithDisability: values.personWithDisability === 'Yes',
@@ -408,18 +406,18 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     try {
       if (activeTabIndex === 0) {
         await handleUpdateEmployee(formik.values, formik, editData?.id);
-        shikshaMitraToast.success({ message: 'Employee Details updated successfully' });
+        shikshaMitraToast.success({ message: 'Employee details updated successfully' });
       } else if (activeTabIndex === 1) {
-        await handleFamilyInformation(formik.values, formik);
+        await handleFamilyInformation(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Family Details updated successfully' });
       } else if (activeTabIndex === 2) {
-        await handleAdditionalDetails(formik.values, formik);
+        await handleAdditionalDetails(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Additional Details updated successfully' });
       } else if (activeTabIndex === 3) {
-        await handleWorkExperience(formik.values, formik);
+        await handleWorkExperience(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Work Experience  updated successfully' });
       } else if (activeTabIndex === 4) {
-        await handleBankDetailsInformation(formik.values, formik);
+        await handleBankDetailsInformation(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Bank Details updated successfully' });
       } else if (activeTabIndex === 5) {
         await handleReportingManager(formik.values, formik, editData?.id);

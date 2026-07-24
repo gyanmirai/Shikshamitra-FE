@@ -10,11 +10,11 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { formatDateOnly } from 'src/utils/date-only';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Archive, Restore, RemoveCircle } from '@mui/icons-material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Archive, Restore, RemoveCircle } from '@mui/icons-material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
 import {
@@ -149,10 +149,13 @@ const SubjectTable = ({
     [subjectTableData]
   );
 
+  console.log('subjectData', subjectData);
+
   const actions = useCallback(
     ({ popover, row }: any) => {
       const removeDisabled = row.canDelete === false;
       const isArchived = row.status === SubjectAssignmentStatus.Archived;
+      console.log('row=====', row);
       const removeDisabledReason =
         row.deleteDisabledReason ||
         'This subject is already used in another module. Remove those references before removing it.';
@@ -170,7 +173,7 @@ const SubjectTable = ({
               Reactivate
             </MenuItem>
           )}
-          {!isArchived && canDelete && (
+          {!isArchived && canDelete && SubjectAssignmentStatus.Draft !== row.status && (
             <MenuItem
               onClick={() => {
                 onArchive?.(row);
@@ -235,7 +238,13 @@ const SubjectTable = ({
         isFilter: false,
         isSort: false,
         minWidth: 180,
-        render: (value, row) => row.subjectName,
+        sticky: true,
+        render: (value, row) => (
+          <>
+            {row.electiveGroupName ? `${row.electiveGroupName} - ` : ''}
+            {row.subjectName}
+          </>
+        ),
       },
       {
         id: 'subjectCodeValue',

@@ -2,6 +2,7 @@
 
 // ── Components ─────────────────────────────────────────────────────────────────
 import dayjs from 'dayjs';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -206,49 +207,59 @@ const RoomAvailabilityScreen = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 4 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', gap: 1 }}>
       {/* ── Breadcrumbs & Header ─────────────────────────── */}
-      <CustomBreadcrumbs
-        sx={{ mb: 1 }}
-        heading="Room Availability"
-        description="Find free rooms, inspect conflicts, reserve rooms, and review room usage."
-        links={[
-          { name: 'Academic', href: '/academic/dashboard' },
-          { name: 'Timetable' },
-          { name: 'Room Availability' },
-        ]}
-        action={
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="Audit Trail">
+      <Box sx={{ flexShrink: 0 }}>
+        <CustomBreadcrumbs
+          sx={{ mb: 1 }}
+          heading="Room Availability"
+          description="Find free rooms, inspect conflicts, reserve rooms, and review room usage."
+          links={[
+            { name: 'Academic', href: '/academic/dashboard' },
+            { name: 'Timetable' },
+            { name: 'Room Availability' },
+          ]}
+          action={
+            <Stack direction="row" spacing={1}>
+              <Tooltip title="Audit Trail">
+                <Button
+                  size="small"
+                  variant={showAudit ? 'contained' : 'outlined'}
+                  color="inherit"
+                  startIcon={<Iconify icon={GlobalIcons.history} />}
+                  onClick={() => setShowAudit((v) => !v)}
+                >
+                  Audit Log
+                </Button>
+              </Tooltip>
+              <Tooltip title="Refresh Data">
+                <IconButton size="small" onClick={handleRefresh}>
+                  <Iconify icon={GlobalIcons.refresh} />
+                </IconButton>
+              </Tooltip>
               <Button
                 size="small"
-                variant={showAudit ? 'contained' : 'outlined'}
-                color="inherit"
-                startIcon={<Iconify icon="mdi:history" />}
-                onClick={() => setShowAudit((v) => !v)}
+                variant="contained"
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                onClick={() => handleOpenReservation()}
               >
-                Audit Log
+                Reserve Room
               </Button>
-            </Tooltip>
-            <Tooltip title="Refresh Data">
-              <IconButton size="small" onClick={handleRefresh}>
-                <Iconify icon="mdi:refresh" />
-              </IconButton>
-            </Tooltip>
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => handleOpenReservation()}
-            >
-              Reserve Room
-            </Button>
-          </Stack>
-        }
-      />
+            </Stack>
+          }
+        />
+      </Box>
 
-      {/* ── Tabs ─────────────────────────────────────────── */}
-      <Card>
+      {/* ── Sticky Tabs Card ─────────────────────────────── */}
+      <Card
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          flexShrink: 0,
+          borderRadius: 1,
+        }}
+      >
         <Stack
           direction="row"
           alignItems="center"
@@ -298,7 +309,7 @@ const RoomAvailabilityScreen = () => {
 
           {/* Right side: View Switcher & Filters — only for availability tab */}
           {activeTab === 'availability' && (
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, py: 0.5 }}>
               <AcademicDatePicker
                 label="Date"
                 value={dayjs(filters.date)}
@@ -333,45 +344,43 @@ const RoomAvailabilityScreen = () => {
             </Stack>
           )}
         </Stack>
-
-        {/* Border divider placeholder */}
       </Card>
 
-      {/* ── Tab Content ──────────────────────────────────── */}
+      {/* ── Tab Content Container with Scrollbar ──────────────────── */}
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Availability Tab */}
+        {activeTab === 'availability' && (
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {availability.error && (
+              <Alert
+                severity="error"
+                sx={{ mb: 1 }}
+                action={
+                  <Button size="small" onClick={availability.fetch}>
+                    Retry
+                  </Button>
+                }
+              >
+                {availability.error}
+              </Alert>
+            )}
 
-      {/* Availability Tab */}
-      {activeTab === 'availability' && (
-        <>
-          {availability.error && (
-            <Alert
-              severity="error"
-              action={
-                <Button size="small" onClick={availability.fetch}>
-                  Retry
-                </Button>
-              }
-            >
-              {availability.error}
-            </Alert>
-          )}
+            <RoomAvailabilityTable
+              data={availability.data}
+              isLoading={availability.isLoading}
+              canReserve
+              canMaintenance
+              canApprove
+              onViewRoom={handleViewRoom}
+              onReserveRoom={handleOpenReservation}
+              onViewSchedule={handleViewSchedule}
+              onMarkMaintenance={handleOpenMaintenance}
+            />
+          </Box>
+        )}
 
-          <RoomAvailabilityTable
-            data={availability.data}
-            isLoading={availability.isLoading}
-            canReserve
-            canMaintenance
-            canApprove
-            onViewRoom={handleViewRoom}
-            onReserveRoom={handleOpenReservation}
-            onViewSchedule={handleViewSchedule}
-            onMarkMaintenance={handleOpenMaintenance}
-          />
-        </>
-      )}
-
-      {/* Reservations Tab */}
-      {activeTab === 'reservations' && (
-        <Card sx={{ p: 2 }}>
+        {/* Reservations Tab */}
+        {activeTab === 'reservations' && (
           <RoomReservationsTab
             reservations={reservationsHook.data}
             canApprove
@@ -380,19 +389,17 @@ const RoomAvailabilityScreen = () => {
             onReject={handleRejectReservation}
             onViewRoom={handleViewRoom}
           />
-        </Card>
-      )}
+        )}
 
-      {/* Approvals Tab */}
-      {activeTab === 'approvals' && (
-        <Card sx={{ p: 2 }}>
+        {/* Approvals Tab */}
+        {activeTab === 'approvals' && (
           <RoomApprovalQueue
             reservations={reservationsHook.data}
             onApprove={handleApproveReservation}
             onReject={handleRejectReservation}
           />
-        </Card>
-      )}
+        )}
+      </Box>
 
       {/* ── Drawers ──────────────────────────────────────── */}
 

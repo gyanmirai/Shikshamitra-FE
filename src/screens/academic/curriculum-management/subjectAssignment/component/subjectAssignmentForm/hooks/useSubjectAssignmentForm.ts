@@ -37,6 +37,7 @@ export function useSubjectAssignmentForm({
   isEdit = false,
   selectedClass,
   classId,
+  subjectTableData: subjectTableDataProp,
 }: UseSubjectAssignmentFormParams) {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -122,16 +123,16 @@ export function useSubjectAssignmentForm({
     },
   });
 
-  const { data: subjectTableData = [] } = useQueryAndMutation({
+  const { data: subjectTableDataApi } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: {
       standardId: formik?.values?.classId || classId,
       page: 0,
-      pageSize: 20,
+      pageSize: 100,
       status: 'all',
     },
-    options: { skip: !classId },
+    options: { skip: !(formik?.values?.classId || classId) },
   });
 
   const latestSubjectsRef = useRef<ISubjectAssignmentFormValues['subjects']>([]);
@@ -142,7 +143,7 @@ export function useSubjectAssignmentForm({
    * Checks if a subject/group already exists in the table to prevent duplicates.
    * Accepts the full option item to support cross-type duplicate detection:
    * - Core subject blocked if already assigned as Core OR within an existing Elective group
-   * - Elective group blocked if already assigned OR if any of its subjects are assigned as Core
+   * - Elective group blocked if already assigned OR if any of its subjects are assigned (Core or Elective)
    * In edit mode, the record being edited is excluded so its own subjects remain selectable.
    */
   const checkIfSubjectExists = useCallback(
@@ -152,31 +153,22 @@ export function useSubjectAssignmentForm({
         subjectType?: number;
         subjects?: Array<{ subjectId?: string }>;
         electiveGroupId?: string;
-      }> = subjectTableData?.data?.items || [];
+      }> = subjectTableDataApi?.data?.items || subjectTableDataProp || [];
 
       const itemsToCheck = isEdit && data?.id ? items.filter((item) => item.id !== data.id) : items;
 
       return itemsToCheck.some((item) => {
         if (option.subjectType === SubjectType.Core) {
-          if (item.subjectType === SubjectType.Core) {
-            return item.subjects?.[0]?.subjectId === option.id;
-          }
-          // Already present inside an Elective group in another record
           return item.subjects?.some((s) => s.subjectId === option.id) ?? false;
         }
 
-        // Elective group: already assigned as the same group in another record
         if (item.electiveGroupId === option.id) return true;
-        // One or more of this group's subjects are already assigned as Core in another record
-        if (item.subjectType === SubjectType.Core) {
-          const groupSubjectIds = new Set((option.subjects || []).map((s) => s.id));
-          return item.subjects?.some((s) => groupSubjectIds.has(s.subjectId ?? '')) ?? false;
-        }
-        return false;
+
+        const groupSubjectIds = new Set((option.subjects || []).map((s) => s.id));
+        return item.subjects?.some((s) => groupSubjectIds.has(s.subjectId ?? '')) ?? false;
       });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [subjectTableData?.data?.items, isEdit, data?.id]
+    [subjectTableDataApi?.data?.items, subjectTableDataProp, isEdit, data?.id]
   );
 
   /**

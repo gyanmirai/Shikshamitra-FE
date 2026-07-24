@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { setNestedObjectValues } from 'formik';
 import { DatePicker } from '@mui/x-date-pickers';
+import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Add, RemoveCircle } from '@mui/icons-material';
 import { EmptyContent } from 'src/components/empty-content';
@@ -18,16 +19,27 @@ const WorkExperiences = (props: any) => {
   const { formik, isMainForm } = props;
   const { values, setFieldValue } = formik;
   const isEditable = useBoolean(isMainForm);
+  const [snapshot, setSnapshot] = useState<any>(null);
+
+  useEffect(() => {
+    if (isEditable.value) {
+      setSnapshot(values.experiences);
+    }
+  }, [isEditable.value, values.experiences]);
+
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
+    if (Object.keys(validation).length > 0) {
+      formik.setTouched(setNestedObjectValues(validation, true));
+      return false;
+    }
     await formik?.submitForm?.();
-    if (Object.keys(validation).length > 0) return false;
-
-    formik.resetForm({ values: formik.values });
     return undefined;
   };
   const handleCancel = () => {
-    formik.resetForm();
+    if (snapshot) {
+      setFieldValue('experiences', snapshot);
+    }
   };
   return (
     <Box width="100%">
@@ -426,7 +438,7 @@ const WorkExperiences = (props: any) => {
               );
               // handle delete action
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+          // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </Button>

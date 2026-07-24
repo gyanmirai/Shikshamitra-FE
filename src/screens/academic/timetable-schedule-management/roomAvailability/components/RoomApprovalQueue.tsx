@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -17,7 +18,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 import { ApprovalStatusChip, ConflictSeverityChip } from './RoomStatusChip';
 
@@ -67,7 +70,7 @@ export const RoomApprovalQueue = ({
 
   return (
     <>
-      <Stack spacing={1}>
+      <Stack spacing={1} sx={{ height: '100%' }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="mdi:clock-outline" width={20} color="warning.main" />
           <Typography variant="h6">Approval Queue</Typography>
@@ -86,6 +89,7 @@ export const RoomApprovalQueue = ({
         </Stack>
 
         <CustomizableTable
+          tableContainerProps={{ sx: { height: '100%' } }}
           tableId="room-approval-queue"
           tableTitle="Pending Approvals"
           data={pending}
@@ -142,12 +146,29 @@ export const RoomApprovalQueue = ({
               id: 'reservationType',
               label: 'Type',
               minWidth: 110,
+              filterType: 'enum',
+              enumOptions: [
+                { label: 'Class', value: 'class' },
+                { label: 'Exam', value: 'exam' },
+                { label: 'Event', value: 'event' },
+                { label: 'Maintenance', value: 'maintenance' },
+                { label: 'Meeting', value: 'meeting' },
+                { label: 'Other', value: 'other' },
+              ],
               render: (v) => <Box sx={{ textTransform: 'capitalize', fontSize: 13 }}>{v}</Box>,
             },
             {
               id: 'conflictStatus',
               label: 'Conflict',
               minWidth: 120,
+              filterType: 'enum',
+              enumOptions: [
+                { label: 'None', value: 'none' },
+                { label: 'Low', value: 'low' },
+                { label: 'Medium', value: 'medium' },
+                { label: 'High', value: 'high' },
+                { label: 'Critical', value: 'critical' },
+              ],
               render: (_v, row) =>
                 row.conflictStatus && row.conflictStatus !== 'none' ? (
                   <Tooltip title={row.conflictReason || ''} arrow>
@@ -159,13 +180,7 @@ export const RoomApprovalQueue = ({
                   </Typography>
                 ),
             },
-            {
-              id: 'approvalStatus',
-              label: 'Status',
-              minWidth: 120,
-              render: (_v, row) =>
-                row.approvalStatus ? <ApprovalStatusChip status={row.approvalStatus} /> : null,
-            },
+
             {
               id: 'createdAt',
               label: 'Requested On',
@@ -177,6 +192,21 @@ export const RoomApprovalQueue = ({
               ),
             },
             {
+              id: 'approvalStatus',
+              label: 'Status',
+              minWidth: 80,
+              filterType: 'enum',
+              sticky: true,
+              enumOptions: [
+                { label: 'Pending', value: 'pending' },
+                { label: 'Approved', value: 'approved' },
+                { label: 'Rejected', value: 'rejected' },
+                { label: 'Auto Approved', value: 'autoApproved' },
+              ],
+              render: (_v, row) =>
+                row.approvalStatus ? <ApprovalStatusChip status={row.approvalStatus} /> : null,
+            },
+            {
               id: 'actions',
               label: 'Actions',
               minWidth: 180,
@@ -186,31 +216,39 @@ export const RoomApprovalQueue = ({
               stickyPosition: 'right',
               render: (_v, row) => (
                 <Stack direction="row" spacing={1} justifyContent="center">
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="success"
-                    startIcon={<Iconify icon="mdi:check" width={14} />}
-                    onClick={() => {
-                      onApprove?.(row.id);
-                      shikshaMitraToast.success({
-                        message: `${row.roomName} reservation approved.`,
-                      });
-                    }}
-                    sx={{ fontSize: 11 }}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="error"
-                    startIcon={<Iconify icon="mdi:close" width={14} />}
-                    onClick={() => handleOpenReject(row.id)}
-                    sx={{ fontSize: 11 }}
-                  >
-                    Reject
-                  </Button>
+                  <Tooltip title="Approve">
+                    <IconButton
+                      size="small"
+                      color="success"
+                      onClick={() => {
+                        onApprove?.(row.id);
+                        shikshaMitraToast.success({
+                          message: `${row.roomName} reservation approved.`,
+                        });
+                      }}
+                      sx={{
+                        bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
+                        '&:hover': {
+                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
+                        },
+                      }}
+                    >
+                      <Iconify icon="mdi:check-circle" width={16} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Reject">
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleOpenReject(row.id)}
+                      sx={{
+                        bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                        '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
+                      }}
+                    >
+                      <Iconify icon="mdi:close-circle" width={16} />
+                    </IconButton>
+                  </Tooltip>
                 </Stack>
               ),
             },
@@ -226,9 +264,16 @@ export const RoomApprovalQueue = ({
         fullWidth
       >
         <DialogTitle>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Iconify icon="mdi:close-circle" width={22} color="error.main" />
-            <Typography variant="h6">Reject Reservation</Typography>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Iconify icon="mdi:close-circle" width={22} color="error.main" />
+              <Typography variant="h6">Reject Reservation</Typography>
+            </Stack>
+            <Tooltip title="Provide a reason for rejecting this reservation request. The requester will be notified.">
+              <IconButton size="small">
+                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" />
+              </IconButton>
+            </Tooltip>
           </Stack>
         </DialogTitle>
         <Divider />
@@ -238,6 +283,7 @@ export const RoomApprovalQueue = ({
               The requester will be notified with your rejection reason.
             </Alert>
             <TextField
+              size="small"
               label="Rejection Reason *"
               multiline
               rows={3}
@@ -251,10 +297,22 @@ export const RoomApprovalQueue = ({
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button variant="outlined" color="inherit" onClick={() => setRejectDialogOpen(false)}>
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
+            onClick={() => setRejectDialogOpen(false)}
+          >
             Cancel
           </Button>
-          <Button variant="contained" color="error" onClick={handleConfirmReject}>
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} width={16} />}
+            onClick={handleConfirmReject}
+          >
             Confirm Rejection
           </Button>
         </DialogActions>

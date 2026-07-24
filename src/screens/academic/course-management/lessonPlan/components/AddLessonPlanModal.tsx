@@ -3,14 +3,15 @@
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
+import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import React, { useState, useCallback } from 'react';
-import { LoadingButton } from '@mui/lab';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { useGetLessonPlanTimelineQuery } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
@@ -21,10 +22,9 @@ import {
   Button,
   Slider,
   Divider,
-  TextField,
   Tooltip,
+  TextField,
   Typography,
-  IconButton,
   InputAdornment,
   LinearProgress,
 } from '@mui/material';
@@ -555,11 +555,14 @@ const AddLessonPlanModal = ({
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               {form.id ? 'Edit Lesson Plan' : 'Add Lesson Plan'}
             </Typography>
-            <Tooltip title="Schedule a lesson, set its coverage plan, and track expected progress.">
-              <IconButton size="small" sx={{ color: 'text.secondary', p: 0.25 }}>
-                <Iconify icon="mdi:information-outline" width={18} />
-              </IconButton>
-            </Tooltip>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Schedule a lesson, set its coverage plan, and track expected progress."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
             {form.source === 'AiGenerated' && (
               <Label color="info" variant="soft" startIcon={<Iconify icon="mdi:robot-outline" />}>
                 AI Generated

@@ -7,7 +7,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Chip, Stack, Tooltip, IconButton, Typography, LinearProgress, MenuList, MenuItem } from '@mui/material';
+import { Box, Chip, Stack, MenuList, MenuItem, Typography, LinearProgress } from '@mui/material';
 
 import { statusColor, getCoverageStatus, getChapterProgress } from '../syllabusPlanningData';
 
@@ -68,61 +68,61 @@ const ChapterTable = ({
       const { popover, row } = actionProps;
 
       return (
-      <MenuList disablePadding dense>
-        {canView && (
+        <MenuList disablePadding dense>
+          {canView && (
+            <MenuItem
+              onClick={() => {
+                onViewDocuments(row);
+                popover.onClose();
+              }}
+            >
+              <Iconify icon="carbon:view-filled" sx={{ mr: 1, width: 18, height: 18 }} />
+              View Documents
+            </MenuItem>
+          )}
+          {canAdd && (
+            <MenuItem
+              onClick={() => {
+                setEditData(row);
+                addChapterDialog.onTrue();
+                popover.onClose();
+              }}
+            >
+              <Iconify icon="solar:pen-bold" sx={{ mr: 1, width: 18, height: 18 }} />
+              Edit Chapter
+            </MenuItem>
+          )}
           <MenuItem
             onClick={() => {
-              onViewDocuments(row);
+              onCreateQuestion?.(row);
               popover.onClose();
             }}
           >
-            <Iconify icon="carbon:view-filled" sx={{ mr: 1, width: 18, height: 18 }} />
-            View Documents
+            <Iconify icon="mingcute:question-line" sx={{ mr: 1, width: 18, height: 18 }} />
+            Create Question
           </MenuItem>
-        )}
-        {canAdd && (
           <MenuItem
             onClick={() => {
-              setEditData(row);
-              addChapterDialog.onTrue();
+              onViewQuestions?.(row);
               popover.onClose();
             }}
           >
-            <Iconify icon="solar:pen-bold" sx={{ mr: 1, width: 18, height: 18 }} />
-            Edit Chapter
+            <Iconify icon="mingcute:list-check-line" sx={{ mr: 1, width: 18, height: 18 }} />
+            View Questions
           </MenuItem>
-        )}
-        <MenuItem
-          onClick={() => {
-            onCreateQuestion?.(row);
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="mingcute:question-line" sx={{ mr: 1, width: 18, height: 18 }} />
-          Create Question
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            onViewQuestions?.(row);
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="mingcute:list-check-line" sx={{ mr: 1, width: 18, height: 18 }} />
-          View Questions
-        </MenuItem>
-        {canDelete && (
-          <MenuItem
-            onClick={() => {
-              onDelete(row);
-              popover.onClose();
-            }}
-            sx={{ color: 'error.main' }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" sx={{ mr: 1, width: 18, height: 18 }} />
-            Delete Chapter
-          </MenuItem>
-        )}
-      </MenuList>
+          {canDelete && (
+            <MenuItem
+              onClick={() => {
+                onDelete(row);
+                popover.onClose();
+              }}
+              sx={{ color: 'error.main' }}
+            >
+              <Iconify icon="solar:trash-bin-trash-bold" sx={{ mr: 1, width: 18, height: 18 }} />
+              Delete Chapter
+            </MenuItem>
+          )}
+        </MenuList>
       );
     },
     [
@@ -152,6 +152,7 @@ const ChapterTable = ({
         id: 'chapterName',
         label: 'Chapter Name',
         align: 'left',
+        sticky: true,
         filterType: 'string',
       },
       {
@@ -352,9 +353,7 @@ const ChapterTable = ({
         },
       },
     ],
-    [
-      tableActions,
-    ]
+    [tableActions]
   );
   return (
     <CustomizableTable

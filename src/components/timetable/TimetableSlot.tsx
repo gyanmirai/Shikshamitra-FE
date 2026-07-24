@@ -485,8 +485,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                     display="block"
                     sx={{ color: 'text.secondary', lineHeight: 1.2 }}
                   >
-                    Class {displaySubjects[0].className}
-                    {displaySubjects[0].division ? `-${displaySubjects[0].division}` : ''}
+                    {displaySubjects[0].className}
                   </Typography>
                 )}
                 {!isBreak && isFilled && (
