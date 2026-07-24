@@ -61,6 +61,7 @@ export const academicType = {
   lessonPlanReport: 'LessonPlanReport',
   teachingExecutionHealth: 'TeachingExecutionHealth',
   coverageTracker: 'CoverageTracker',
+  academicAudit: 'AcademicAudit',
 } as const;
 
 // ===== Quiz Management API (reducerPath: quizManagementApi) =====

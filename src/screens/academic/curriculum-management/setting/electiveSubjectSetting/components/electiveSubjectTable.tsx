@@ -67,6 +67,14 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         label: 'Elective Group',
         align: 'left',
         minWidth: 240,
+        sticky: true,
+        stickyPosition: 'left',
+        headerSx: {
+          boxShadow: '2px 0 5px -2px rgba(0, 0, 0, 0.12)',
+        },
+        cellSx: {
+          boxShadow: '2px 0 5px -2px rgba(0, 0, 0, 0.12)',
+        },
         render: (value, row) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Avatar sx={{ width: 34, height: 34, bgcolor: row.color || 'primary.main' }}>

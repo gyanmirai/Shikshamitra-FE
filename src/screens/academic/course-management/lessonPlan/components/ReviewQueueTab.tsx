@@ -19,6 +19,7 @@ import {
   Divider,
   Tooltip,
   TextField,
+  InputAdornment,
   IconButton,
   Typography,
   CardContent,
@@ -94,6 +95,7 @@ const ReviewQueueTab = ({
   const [filterDate, setFilterDate] = useState<Dayjs | null>(dayjs());
   const [rangeStart, setRangeStart] = useState<Dayjs | null>(getWeekStart(dayjs()));
   const [rangeEnd, setRangeEnd] = useState<Dayjs | null>(getWeekEnd(dayjs()));
+  const [teacherSearch, setTeacherSearch] = useState('');
   const [reviewDialog, setReviewDialog] = useState(false);
   const [review, setReview] = useState<ReviewState>({
     target: null,
@@ -134,27 +136,25 @@ const ReviewQueueTab = ({
   const reviewRows: ReviewRow[] = [
     ...lessonPlans
       .filter((p) => p.planStatus === 'Submitted')
-      .map(
-        (p): ReviewRow => ({
-          id: p.id,
-          targetType: 'plan',
-          teacherId: p.teacherId,
-          teacherName: p.teacherName,
-          submittedDate: p.plannedDate,
-          pendingSince: p.plannedDate,
-          classDivision: `${p.className}-${p.divisionName}`,
-          subjectName: p.subjectName,
-          chapterName: p.chapterName,
-          topic: p.topic,
-          plannedPct: p.plannedCompletionPercentage,
-          actualPct: '-',
-          progressGap: '-',
-          evidenceCount: 0,
-          diaryQuality: '-',
-          aiSummary: 'Plan matches curriculum. Objective is clear.',
-          submittedAt: p.plannedDate,
-        })
-      ),
+      .map((p): ReviewRow => ({
+        id: p.id,
+        targetType: 'plan',
+        teacherId: p.teacherId,
+        teacherName: p.teacherName,
+        submittedDate: p.plannedDate,
+        pendingSince: p.plannedDate,
+        classDivision: `${p.className}-${p.divisionName}`,
+        subjectName: p.subjectName,
+        chapterName: p.chapterName,
+        topic: p.topic,
+        plannedPct: p.plannedCompletionPercentage,
+        actualPct: '-',
+        progressGap: '-',
+        evidenceCount: 0,
+        diaryQuality: '-',
+        aiSummary: 'Plan matches curriculum. Objective is clear.',
+        submittedAt: p.plannedDate,
+      })),
     ...diaryEntries
       .filter((e) => e.diaryStatus === 'Submitted')
       .map((e): ReviewRow => {
@@ -188,6 +188,11 @@ const ReviewQueueTab = ({
   ];
 
   const filteredReviewRows = reviewRows.filter((row) => {
+    const teacherSearchText = teacherSearch.trim().toLowerCase();
+    if (teacherSearchText && !row.teacherName.toLowerCase().includes(teacherSearchText)) {
+      return false;
+    }
+
     const submittedDate = dayjs(row.submittedDate);
     if (!submittedDate.isValid() || dateFilterMode === 'all') return true;
 
@@ -218,6 +223,7 @@ const ReviewQueueTab = ({
     setFilterDate(dayjs());
     setRangeStart(getWeekStart(dayjs()));
     setRangeEnd(getWeekEnd(dayjs()));
+    setTeacherSearch('');
   };
 
   const getActionColor = (action: ReviewState['action']) => {
@@ -258,6 +264,33 @@ const ReviewQueueTab = ({
           spacing={1}
           alignItems={{ xs: 'stretch', md: 'center' }}
         >
+          <TextField
+            size="small"
+            label="Search Teacher..."
+            value={teacherSearch}
+            onChange={(event) => setTeacherSearch(event.target.value)}
+            sx={{ minWidth: { xs: 1, md: 240 } }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify icon="mdi:magnify" width={18} sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+              endAdornment: teacherSearch ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    aria-label="Clear teacher search"
+                    onClick={() => setTeacherSearch('')}
+                    edge="end"
+                  >
+                    <Iconify icon="mdi:close" width={16} />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            }}
+          />
+
           <ToggleButtonGroup
             value={dateFilterMode}
             exclusive
@@ -306,7 +339,7 @@ const ReviewQueueTab = ({
             color="inherit"
             startIcon={<Iconify icon="mdi:filter-remove-outline" />}
             onClick={clearDateFilter}
-            disabled={dateFilterMode === 'all'}
+            disabled={dateFilterMode === 'all' && !teacherSearch}
             sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
           >
             Clear
@@ -340,10 +373,10 @@ const ReviewQueueTab = ({
             sx={{ color: 'text.disabled', mb: 1 }}
           />
           <Typography variant="h6" color="text.secondary">
-            No submissions match this date filter
+            No submissions match these filters
           </Typography>
           <Typography variant="body2" color="text.disabled">
-            Try another day, week, or date range.
+            Try another teacher name, day, week, or date range.
           </Typography>
         </Card>
       )}
