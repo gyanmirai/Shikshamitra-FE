@@ -49,7 +49,7 @@ export const RoomReservationsTab = ({
   ];
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} sx={{ height: '100%' }}>
       {/* Status filter chips */}
       <Stack direction="row" flexWrap="wrap" gap={1}>
         {statusFilters.map((sf) => (
@@ -66,6 +66,7 @@ export const RoomReservationsTab = ({
       </Stack>
 
       <CustomizableTable
+        tableContainerProps={{ sx: { height: '100%' } }}
         tableId="room-reservations-enhanced"
         tableTitle="Room Reservations"
         data={filtered}
@@ -90,6 +91,7 @@ export const RoomReservationsTab = ({
             id: 'date',
             label: 'Date Range',
             minWidth: 180,
+            filterType: 'date',
             render: (_v, row) => (
               <Box>
                 <Typography variant="body2">
@@ -129,6 +131,15 @@ export const RoomReservationsTab = ({
             id: 'reservationType',
             label: 'Type',
             minWidth: 110,
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Class', value: 'class' },
+              { label: 'Exam', value: 'exam' },
+              { label: 'Event', value: 'event' },
+              { label: 'Maintenance', value: 'maintenance' },
+              { label: 'Meeting', value: 'meeting' },
+              { label: 'Other', value: 'other' },
+            ],
             render: (v) => (
               <Chip
                 size="small"
@@ -141,7 +152,15 @@ export const RoomReservationsTab = ({
           {
             id: 'approvalStatus',
             label: 'Approval',
-            minWidth: 130,
+            minWidth: 90,
+            sticky: true,
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Approved', value: 'approved' },
+              { label: 'Pending', value: 'pending' },
+              { label: 'Rejected', value: 'rejected' },
+              { label: 'Auto Approved', value: 'autoApproved' },
+            ],
             render: (_v, row) =>
               row.approvalStatus ? (
                 <ApprovalStatusChip status={row.approvalStatus} />
@@ -154,7 +173,7 @@ export const RoomReservationsTab = ({
           {
             id: 'actions',
             label: 'Actions',
-            minWidth: 120,
+            minWidth: 90,
             isSort: false,
             isFilter: false,
             sticky: true,
@@ -235,7 +254,6 @@ export const RoomReservationsTab = ({
                       color="error"
                       onClick={() => {
                         onCancel(row.id);
-                        shikshaMitraToast.info({ message: 'Reservation cancelled.' });
                       }}
                       sx={{
                         bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),

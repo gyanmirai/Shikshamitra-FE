@@ -85,6 +85,11 @@ const questionValidationSchema = Yup.object({
     .min(0.5, 'Minimum 0.5')
     .max(100, 'Maximum 100'),
   difficultyLevel: Yup.number().required(),
+  answerKey: Yup.string().when('questionType', {
+    is: (type: number) => [4, 5, 6].includes(type),
+    then: (schema) => schema.trim().required('Answer key is required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   options: Yup.array().when('questionType', {
     is: (type: number) => [1, 2, 3].includes(Number(type)),
     then: (schema) =>
@@ -273,6 +278,9 @@ function QuestionFormFields({
     }
     formik.setFieldValue('questionType', type);
     formik.setFieldValue('options', newOptions);
+    if (![4, 5, 6].includes(type)) {
+      formik.setFieldValue('answerKey', '');
+    }
   };
 
   return (
@@ -595,17 +603,23 @@ function QuestionFormFields({
             </Typography>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Answer Key"
-              name="answerKey"
-              value={formik.values.answerKey}
-              onChange={formik.handleChange}
-              helperText="For short / long answer question types"
-            />
-          </Grid>
+          {[4, 5, 6].includes(formik.values.questionType) && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <ShakingTextField error={formik.touched.answerKey && !!formik.errors.answerKey}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Answer Key *"
+                  name="answerKey"
+                  value={formik.values.answerKey}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.answerKey && !!formik.errors.answerKey}
+                  helperText={(formik.touched.answerKey && formik.errors.answerKey) || ''}
+                />
+              </ShakingTextField>
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField

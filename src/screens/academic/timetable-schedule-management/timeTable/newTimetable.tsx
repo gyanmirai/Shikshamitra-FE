@@ -2185,7 +2185,7 @@ const TimeTableForm = ({
         <DialogContent dividers sx={{ height: '70vh', p: 0 }}>
           <TimetableBoard
             slots={formik.values.slots}
-            onChange={() => {}}
+            onChange={() => { }}
             subjects={subjects}
             readOnly
             selectedClass={selectedClass}

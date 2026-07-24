@@ -438,7 +438,7 @@ const WorkExperiences = (props: any) => {
               );
               // handle delete action
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+          // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </Button>

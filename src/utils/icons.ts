@@ -1,5 +1,6 @@
 export const GlobalIcons = {
   retrunIcon: 'famicons:return-down-back-outline',
+  info: 'lucide:info',
   addIcon: 'si:add-duotone',
   issueBook: 'mingcute:book-5-line',
   reservation: 'fluent-mdl2:reservation-orders',
@@ -54,6 +55,7 @@ export const GlobalIcons = {
   question: 'mdi:question-mark-circle-outline',
   report: 'streamline-plump:file-report-solid',
   refresh: 'mdi:refresh',
+  history: 'mdi:history',
 };
 
 export const GlobalIconColors = {

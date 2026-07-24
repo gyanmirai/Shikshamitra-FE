@@ -97,6 +97,7 @@ export default function ChapterQuestionsDialog({
         label: 'Question',
         filterType: 'string' as const,
         minWidth: 260,
+        sticky: true,
         render: (_: any, row: any) => (
           <Stack spacing={1}>
             <Typography variant="body2">{row.questionText}</Typography>
@@ -117,9 +118,9 @@ export default function ChapterQuestionsDialog({
         width: 160,
         enumOptions: QUESTION_TYPE_OPTIONS,
         render: (v: any) => (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" fontSize="13px">
             {QUESTION_TYPE_OPTIONS.find((q) => q.value === v)?.label || '—'}
-          </Typography>
+          </Typography >
         ),
       },
       {
@@ -128,7 +129,7 @@ export default function ChapterQuestionsDialog({
         filterType: 'number' as const,
         width: 80,
         align: 'center' as const,
-        render: (v: any) => <Typography variant="subtitle2">{v}</Typography>,
+        render: (v: any) => <Typography variant="caption">{v}</Typography>,
       },
       {
         id: 'difficultyLevel',
@@ -150,10 +151,12 @@ export default function ChapterQuestionsDialog({
         label: 'Status',
         filterType: 'enum' as const,
         width: 110,
+        sticky: true,
         enumOptions: STATUS_OPTIONS,
         render: (v: any) => (
           <Chip
             size="small"
+            variant='soft'
             color={(STATUS_COLOR[v] as any) || 'default'}
             label={STATUS_OPTIONS.find((s) => s.value === v)?.label || '—'}
           />

@@ -38,6 +38,7 @@ import {
 } from './directReservationSlots';
 
 import type { RoomReservation, RoomAvailabilityItem, ReservationRequirements } from '../types';
+import { GlobalIcons } from 'src/utils/icons';
 
 const StepBadge = ({ number }: { number: number }) => (
   <Box
@@ -112,6 +113,14 @@ export const DirectRoomReservationDrawer = ({
 
   const patchRequirements = useCallback((patch: Partial<ReservationRequirements>) => {
     setRequirements((prev) => ({ ...prev, ...patch }));
+    // Clear field error for modified fields
+    setFieldErrors((prev) => {
+      const updated = { ...prev };
+      Object.keys(patch).forEach((key) => {
+        delete updated[key];
+      });
+      return updated;
+    });
   }, []);
 
   // Initialize form when drawer opens
@@ -123,6 +132,7 @@ export const DirectRoomReservationDrawer = ({
       });
       setSlotDurationMinutes(DEFAULT_SLOT_DURATION_MINUTES);
       setValidationError('');
+      setFieldErrors({});
     }
   }, [open, room]);
 
@@ -196,39 +206,47 @@ export const DirectRoomReservationDrawer = ({
     [generatedSlots, overlappingSlotIndices]
   );
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
     if (!requirements.reservationType) {
-      setValidationError('Reservation type is required.');
-      return false;
+      errors.reservationType = 'Reservation type is required.';
     }
-    if (!requirements.purpose) {
-      setValidationError('Purpose is required.');
-      return false;
+    if (!requirements.purpose || !requirements.purpose.trim()) {
+      errors.purpose = 'Purpose is required.';
     }
     if (!requirements.date) {
-      setValidationError('Date is required.');
-      return false;
+      errors.date = 'Date is required.';
     }
     if (!requirements.startTime) {
-      setValidationError('Start time is required.');
-      return false;
+      errors.startTime = 'Start time is required.';
+    } else if (isStartTimeOutOfRange) {
+      errors.startTime = 'Start time must be between 06:00 AM and 12:00 AM.';
     }
+
     if (!requirements.endTime) {
-      setValidationError('End time is required.');
+      errors.endTime = 'End time is required.';
+    } else if (isEndTimeOutOfRange) {
+      errors.endTime = 'End time must be between 06:00 AM and 12:00 AM.';
+    } else if (isTimeRangeInvalid) {
+      errors.endTime = 'End time must be after start time.';
+    }
+
+    if (requirements.isRecurring && requirements.recurringConfig?.repeatType === 'weekly') {
+      if (!requirements.recurringConfig.repeatDays || requirements.recurringConfig.repeatDays.length === 0) {
+        errors.repeatDays = 'Please select at least one day for weekly recurrence.';
+      }
+    }
+
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setValidationError('Please fix the validation errors below.');
       return false;
     }
-    if (isStartTimeOutOfRange) {
-      setValidationError('Start time must be between 06:00 AM and 12:00 AM.');
-      return false;
-    }
-    if (isEndTimeOutOfRange) {
-      setValidationError('End time must be between 06:00 AM and 12:00 AM.');
-      return false;
-    }
-    if (isTimeRangeInvalid) {
-      setValidationError('End time must be after start time.');
-      return false;
-    }
+
     setValidationError('');
     return true;
   };
@@ -254,13 +272,13 @@ export const DirectRoomReservationDrawer = ({
         isRecurring: requirements.isRecurring,
         recurringConfig: requirements.isRecurring
           ? {
-              repeatType: requirements.recurringConfig?.repeatType || 'daily',
-              repeatDays: requirements.recurringConfig?.repeatDays || [],
-              untilDate: requirements.recurringConfig?.untilDate || requirements.date,
-              excludeHolidays: requirements.recurringConfig?.excludeHolidays ?? true,
-              excludeExamDays: requirements.recurringConfig?.excludeExamDays ?? false,
-              skipConflictDates: requirements.recurringConfig?.skipConflictDates ?? false,
-            }
+            repeatType: requirements.recurringConfig?.repeatType || 'daily',
+            repeatDays: requirements.recurringConfig?.repeatDays || [],
+            untilDate: requirements.recurringConfig?.untilDate || requirements.date,
+            excludeHolidays: requirements.recurringConfig?.excludeHolidays ?? true,
+            excludeExamDays: requirements.recurringConfig?.excludeExamDays ?? false,
+            skipConflictDates: requirements.recurringConfig?.skipConflictDates ?? false,
+          }
           : undefined,
       } as any);
 
@@ -284,6 +302,7 @@ export const DirectRoomReservationDrawer = ({
     setRequirements({ ...defaultRequirements });
     setSlotDurationMinutes(DEFAULT_SLOT_DURATION_MINUTES);
     setValidationError('');
+    setFieldErrors({});
     onClose();
   };
 
@@ -314,9 +333,8 @@ export const DirectRoomReservationDrawer = ({
         endTime: generatedSlots[end].endTime,
       });
       shikshaMitraToast.success({
-        message: `Selected range: ${generatedSlots[start].time.split('-')[0]} to ${
-          generatedSlots[end].time.split('-')[1]
-        }`,
+        message: `Selected range: ${generatedSlots[start].time.split('-')[0]} to ${generatedSlots[end].time.split('-')[1]
+          }`,
       });
     } else {
       selectSingle();
@@ -392,16 +410,6 @@ export const DirectRoomReservationDrawer = ({
 
       {/* Main Content Area */}
       <Box sx={{ flex: 1, overflow: 'hidden', p: 2.5, bgcolor: 'background.neutral' }}>
-        {validationError && (
-          <Alert
-            severity="error"
-            sx={{ mb: 2, borderRadius: 1.5 }}
-            onClose={() => setValidationError('')}
-          >
-            {validationError}
-          </Alert>
-        )}
-
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           spacing={1}
@@ -417,7 +425,7 @@ export const DirectRoomReservationDrawer = ({
               height: '100%',
             }}
           >
-            <Stack spacing={1} sx={{ height: '100%' }}>
+            <Stack spacing={3} sx={{ height: '100%' }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <StepBadge number={1} />
                 <Box>
@@ -535,10 +543,10 @@ export const DirectRoomReservationDrawer = ({
                               ? (theme) => alpha(theme.palette.primary.main, 0.1)
                               : isConflict
                                 ? (theme) =>
-                                    alpha(
-                                      theme.palette.warning.main,
-                                      isSelectedConflict ? 0.18 : 0.1
-                                    )
+                                  alpha(
+                                    theme.palette.warning.main,
+                                    isSelectedConflict ? 0.18 : 0.1
+                                  )
                                 : isFree
                                   ? (theme) => alpha(theme.palette.success.main, 0.06)
                                   : 'background.neutral',
@@ -694,7 +702,7 @@ export const DirectRoomReservationDrawer = ({
                 </Stack>
 
                 <Stack
-                  spacing={1}
+                  spacing={3}
                   sx={{
                     p: 2.5,
                     borderRadius: 2,
@@ -720,6 +728,8 @@ export const DirectRoomReservationDrawer = ({
                       }))}
                       value={requirements.reservationType}
                       onChange={(v) => patchRequirements({ reservationType: v as any })}
+                      error={!!fieldErrors.reservationType}
+                      helperText={fieldErrors.reservationType}
                     />
                     <CustomSelect
                       label="Priority"
@@ -736,6 +746,8 @@ export const DirectRoomReservationDrawer = ({
                     onChange={(e) => patchRequirements({ purpose: e.target.value })}
                     fullWidth
                     placeholder="e.g. Grade 9 Chemistry Lab"
+                    error={!!fieldErrors.purpose}
+                    helperText={fieldErrors.purpose || 'Briefly describe why this room is being reserved'}
                   />
 
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -760,10 +772,12 @@ export const DirectRoomReservationDrawer = ({
                         textField: {
                           size: 'small',
                           fullWidth: true,
-                          error: isStartTimeOutOfRange || isTimeRangeInvalid,
-                          helperText: isStartTimeOutOfRange
-                            ? 'Must be between 06:00 AM and 12:00 AM'
-                            : ' ',
+                          error: !!fieldErrors.startTime || isStartTimeOutOfRange || isTimeRangeInvalid,
+                          helperText:
+                            fieldErrors.startTime ||
+                            (isStartTimeOutOfRange
+                              ? 'Must be between 06:00 AM and 12:00 AM'
+                              : ' '),
                         },
                       }}
                     />
@@ -786,12 +800,14 @@ export const DirectRoomReservationDrawer = ({
                         textField: {
                           size: 'small',
                           fullWidth: true,
-                          error: isEndTimeOutOfRange || isTimeRangeInvalid,
-                          helperText: isEndTimeOutOfRange
-                            ? 'Must be between 06:00 AM and 12:00 AM'
-                            : isTimeRangeInvalid
-                              ? 'End time must be after start time'
-                              : ' ',
+                          error: !!fieldErrors.endTime || isEndTimeOutOfRange || isTimeRangeInvalid,
+                          helperText:
+                            fieldErrors.endTime ||
+                            (isEndTimeOutOfRange
+                              ? 'Must be between 06:00 AM and 12:00 AM'
+                              : isTimeRangeInvalid
+                                ? 'End time must be after start time'
+                                : ' '),
                         },
                       }}
                     />
@@ -894,8 +910,11 @@ export const DirectRoomReservationDrawer = ({
 
                       {requirements.recurringConfig?.repeatType === 'weekly' && (
                         <Stack spacing={1}>
-                          <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                            Repeat On Days
+                          <Typography
+                            variant="caption"
+                            sx={{ fontWeight: 600, color: fieldErrors.repeatDays ? 'error.main' : 'text.secondary' }}
+                          >
+                            Repeat On Days *
                           </Typography>
                           <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
                             {[
@@ -914,7 +933,7 @@ export const DirectRoomReservationDrawer = ({
                                   key={day.value}
                                   label={day.label}
                                   clickable
-                                  color={isSelected ? 'primary' : 'default'}
+                                  color={isSelected ? 'primary' : fieldErrors.repeatDays ? 'error' : 'default'}
                                   variant={isSelected ? 'filled' : 'outlined'}
                                   onClick={() => {
                                     const newDays = isSelected
@@ -936,6 +955,11 @@ export const DirectRoomReservationDrawer = ({
                               );
                             })}
                           </Stack>
+                          {fieldErrors.repeatDays && (
+                            <Typography variant="caption" color="error">
+                              {fieldErrors.repeatDays}
+                            </Typography>
+                          )}
                         </Stack>
                       )}
 
@@ -1018,40 +1042,6 @@ export const DirectRoomReservationDrawer = ({
                 </Stack>
               </Stack>
             </Box>
-
-            {/* Sticky Action Button at Bottom */}
-            <Box
-              sx={{ pt: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.neutral' }}
-            >
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                fullWidth
-                disabled={
-                  createReservation.isLoading ||
-                  isTimeRangeInvalid ||
-                  !requirements.startTime ||
-                  !requirements.endTime
-                }
-                onClick={handleBook}
-                startIcon={
-                  createReservation.isLoading ? (
-                    <CircularProgress size={20} color="inherit" />
-                  ) : (
-                    <Iconify icon="mdi:calendar-check" />
-                  )
-                }
-                sx={{
-                  py: 1.25,
-                  borderRadius: 1.5,
-                  fontWeight: 700,
-                  boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.24)}`,
-                }}
-              >
-                Book Instantly
-              </Button>
-            </Box>
           </Box>
         </Stack>
       </Box>
@@ -1062,15 +1052,38 @@ export const DirectRoomReservationDrawer = ({
         direction="row"
         justifyContent="flex-end"
         alignItems="center"
+        spacing={1.5}
         sx={{ px: 2.5, py: 2, bgcolor: 'background.paper' }}
       >
         <Button
           variant="outlined"
           color="inherit"
           onClick={handleClose}
-          sx={{ borderRadius: 1.5, px: 3 }}
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
           Cancel
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          disabled={
+            createReservation.isLoading ||
+            isTimeRangeInvalid ||
+            !requirements.startTime ||
+            !requirements.endTime
+          }
+          onClick={handleBook}
+          startIcon={
+            createReservation.isLoading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              <Iconify icon="mdi:calendar-check" />
+            )
+          }
+        >
+          Book Instantly
         </Button>
       </Stack>
     </Drawer>
