@@ -11,6 +11,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -123,6 +124,23 @@ const questionValidationSchema = Yup.object({
     .min(0.5, 'Minimum 0.5')
     .max(100, 'Maximum 100'),
   difficultyLevel: Yup.number().required(),
+  options: Yup.array().when('questionType', {
+    is: (type: number) => [1, 2, 3].includes(Number(type)),
+    then: (schema) =>
+      schema
+        .test(
+          'has-two-options',
+          'Enter at least two answer options',
+          (opts: any) =>
+            Array.isArray(opts) &&
+            opts.filter((option: any) => String(option?.optionText || '').trim()).length >= 2
+        )
+        .test(
+          'has-correct-option',
+          'Mark at least one option as the correct answer',
+          (opts: any) => Array.isArray(opts) && opts.some((option: any) => option.isCorrect)
+        ),
+  }),
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -147,27 +165,66 @@ function buildSubjectOptions(data: any) {
   return options;
 }
 
-const toQuestionBody = (values: any) => ({
-  ...values,
-  chapterId: values.chapterId || null,
-  topicId: values.topicId || null,
-  bloomLevel: values.bloomLevel || null,
-  marks: Number(values.marks),
-  negativeMarks:
-    values.negativeMarks === '' || values.negativeMarks == null
-      ? null
-      : Number(values.negativeMarks),
-  tags: String(values.tagsText || '')
-    .split(',')
-    .map((t: string) => t.trim())
-    .filter(Boolean),
-  options: (values.options || [])
-    .map((o: any) => ({
+const OBJECTIVE_QUESTION_TYPES = [1, 2, 3];
+
+const getObjectiveAnswerKey = (questionType: number, options: any[] = []) => {
+  if (!OBJECTIVE_QUESTION_TYPES.includes(questionType)) {
+    return '';
+  }
+
+  return options
+    .filter((option) => option.isCorrect)
+    .map((option) => String(option.optionText || '').trim())
+    .filter(Boolean)
+    .join(', ');
+};
+
+const normalizeSingleCorrectOptions = (options: any[]) => {
+  let correctSeen = false;
+  return options.map((option) => {
+    if (!option.isCorrect) {
+      return option;
+    }
+
+    if (correctSeen) {
+      return { ...option, isCorrect: false };
+    }
+
+    correctSeen = true;
+    return option;
+  });
+};
+
+const toQuestionBody = (values: any) => {
+  const options = (values.options || [])
+    .map((o: any, index: number) => ({
       ...o,
       optionText: String(o.optionText || '').trim(),
+      sortOrder: index + 1,
     }))
-    .filter((o: any) => o.optionText),
-});
+    .filter((o: any) => o.optionText);
+  const answerKey =
+    String(values.answerKey || '').trim() ||
+    getObjectiveAnswerKey(Number(values.questionType), options);
+
+  return {
+    ...values,
+    answerKey,
+    chapterId: values.chapterId || null,
+    topicId: values.topicId || null,
+    bloomLevel: values.bloomLevel || null,
+    marks: Number(values.marks),
+    negativeMarks:
+      values.negativeMarks === '' || values.negativeMarks == null
+        ? null
+        : Number(values.negativeMarks),
+    tags: String(values.tagsText || '')
+      .split(',')
+      .map((t: string) => t.trim())
+      .filter(Boolean),
+    options,
+  };
+};
 
 const initialFormValues = (academicYearId?: string) => ({
   academicYearId: academicYearId || '',
@@ -507,6 +564,11 @@ function QuestionFormFields({
               </Button>
             )}
           </Stack>
+          {formik.submitCount > 0 && typeof formik.errors.options === 'string' && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {formik.errors.options}
+            </Alert>
+          )}
         </Grid>
       )}
 
@@ -655,10 +717,14 @@ export default function QuestionBankScreen() {
     onSubmit: async (values, helpers) => {
       try {
         await createQuestion(toQuestionBody(values)).unwrap();
+        shikshaMitraToast.success({ message: 'Question created successfully.' });
         helpers.resetForm({ values: initialFormValues(academicYearId) });
         setDialogOpen(false);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to create question:', err);
+        shikshaMitraToast.error({
+          message: err?.data?.detail || err?.data?.error?.message || 'Failed to create question.',
+        });
       }
     },
   });
@@ -671,11 +737,15 @@ export default function QuestionBankScreen() {
       if (!selectedQuestion) return;
       try {
         await updateQuestion({ id: selectedQuestion.id, body: toQuestionBody(values) }).unwrap();
+        shikshaMitraToast.success({ message: 'Question updated successfully.' });
         helpers.resetForm();
         setEditDialogOpen(false);
         setSelectedQuestion(null);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to update question:', err);
+        shikshaMitraToast.error({
+          message: err?.data?.detail || err?.data?.error?.message || 'Failed to update question.',
+        });
       }
     },
   });
@@ -811,6 +881,8 @@ export default function QuestionBankScreen() {
         { optionText: '', isCorrect: true, sortOrder: 1 },
         { optionText: '', isCorrect: false, sortOrder: 2 },
       ];
+    } else if (type === 1) {
+      newOptions = normalizeSingleCorrectOptions(newOptions);
     } else if (![1, 2, 3].includes(type)) {
       newOptions = [];
     }
@@ -847,6 +919,8 @@ export default function QuestionBankScreen() {
         { optionText: '', isCorrect: true, sortOrder: 1 },
         { optionText: '', isCorrect: false, sortOrder: 2 },
       ];
+    } else if (type === 1) {
+      newOptions = normalizeSingleCorrectOptions(newOptions);
     } else if (![1, 2, 3].includes(type)) {
       newOptions = [];
     }

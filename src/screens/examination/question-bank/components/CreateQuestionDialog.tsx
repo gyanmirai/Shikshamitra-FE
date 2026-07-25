@@ -12,13 +12,13 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useCreateQuestionMutation } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
-import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Grid,
@@ -85,14 +85,34 @@ const questionValidationSchema = Yup.object({
     .min(0.5, 'Minimum 0.5')
     .max(100, 'Maximum 100'),
   difficultyLevel: Yup.number().required(),
+  answerKey: Yup.string().when('questionType', {
+    is: (type: number) => [4, 5, 6].includes(type),
+    then: (schema) => schema.trim().required('Answer key is required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   options: Yup.array().when('questionType', {
-    is: (type: number) => [1, 2, 3].includes(type),
+    is: (type: number) => [1, 2, 3].includes(Number(type)),
     then: (schema) =>
-      schema.test(
-        'has-correct-option',
-        'Mark at least one option as the correct answer',
-        (opts: any) => Array.isArray(opts) && opts.some((o: any) => o.isCorrect)
-      ),
+      schema
+        .of(
+          Yup.object({
+            optionText: Yup.string().trim().required('Option text is required'),
+            isCorrect: Yup.boolean(),
+            sortOrder: Yup.number(),
+          })
+        )
+        .test(
+          'has-two-options',
+          'Enter at least two answer options',
+          (opts: any) =>
+            Array.isArray(opts) &&
+            opts.filter((option: any) => String(option?.optionText || '').trim()).length >= 2
+        )
+        .test(
+          'has-correct-option',
+          'Mark at least one option as the correct answer',
+          (opts: any) => Array.isArray(opts) && opts.some((o: any) => o.isCorrect)
+        ),
   }),
 });
 
@@ -118,24 +138,66 @@ function buildSubjectOptions(data: any) {
   return options;
 }
 
-const toQuestionBody = (values: any) => ({
-  ...values,
-  chapterId: values.chapterId || null,
-  topicId: values.topicId || null,
-  bloomLevel: values.bloomLevel || null,
-  marks: Number(values.marks),
-  negativeMarks:
-    values.negativeMarks === '' || values.negativeMarks == null
-      ? null
-      : Number(values.negativeMarks),
-  tags: String(values.tagsText || '')
-    .split(',')
-    .map((t: string) => t.trim())
-    .filter(Boolean),
-  options: (values.options || [])
-    .map((o: any) => ({ ...o, optionText: String(o.optionText || '').trim() }))
-    .filter((o: any) => o.optionText),
-});
+const OBJECTIVE_QUESTION_TYPES = [1, 2, 3];
+
+const getObjectiveAnswerKey = (questionType: number, options: any[] = []) => {
+  if (!OBJECTIVE_QUESTION_TYPES.includes(questionType)) {
+    return '';
+  }
+
+  return options
+    .filter((option) => option.isCorrect)
+    .map((option) => String(option.optionText || '').trim())
+    .filter(Boolean)
+    .join(', ');
+};
+
+const normalizeSingleCorrectOptions = (options: any[]) => {
+  let correctSeen = false;
+  return options.map((option) => {
+    if (!option.isCorrect) {
+      return option;
+    }
+
+    if (correctSeen) {
+      return { ...option, isCorrect: false };
+    }
+
+    correctSeen = true;
+    return option;
+  });
+};
+
+const toQuestionBody = (values: any) => {
+  const options = (values.options || [])
+    .map((o: any, index: number) => ({
+      ...o,
+      optionText: String(o.optionText || '').trim(),
+      sortOrder: index + 1,
+    }))
+    .filter((o: any) => o.optionText);
+  const answerKey =
+    String(values.answerKey || '').trim() ||
+    getObjectiveAnswerKey(Number(values.questionType), options);
+
+  return {
+    ...values,
+    answerKey,
+    chapterId: values.chapterId || null,
+    topicId: values.topicId || null,
+    bloomLevel: values.bloomLevel || null,
+    marks: Number(values.marks),
+    negativeMarks:
+      values.negativeMarks === '' || values.negativeMarks == null
+        ? null
+        : Number(values.negativeMarks),
+    tags: String(values.tagsText || '')
+      .split(',')
+      .map((t: string) => t.trim())
+      .filter(Boolean),
+    options,
+  };
+};
 
 const makeInitialValues = (
   academicYearId: string,
@@ -209,11 +271,16 @@ function QuestionFormFields({
         { optionText: '', isCorrect: true, sortOrder: 1 },
         { optionText: '', isCorrect: false, sortOrder: 2 },
       ];
+    } else if (type === 1) {
+      newOptions = normalizeSingleCorrectOptions(newOptions);
     } else if (![1, 2, 3].includes(type)) {
       newOptions = [];
     }
     formik.setFieldValue('questionType', type);
     formik.setFieldValue('options', newOptions);
+    if (![4, 5, 6].includes(type)) {
+      formik.setFieldValue('answerKey', '');
+    }
   };
 
   return (
@@ -424,83 +491,102 @@ function QuestionFormFields({
               </Stack>
               <ShakingTextField
                 error={
-                  formik.submitCount > 0 && typeof formik.errors.options === 'string'
+                  formik.submitCount > 0 &&
+                  (typeof formik.errors.options === 'string' ||
+                    (Array.isArray(formik.errors.options) &&
+                      formik.errors.options.some((err: any) => err && err.optionText)))
                 }
               >
                 <Stack spacing={1}>
-                {formik.values.options.map((option: any, index: number) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      p: 1.5,
-                      borderRadius: 1.5,
-                      border: '1px solid',
-                      borderColor: option.isCorrect ? 'success.light' : 'divider',
-                      bgcolor: option.isCorrect
-                        ? alpha(theme.palette.success.main, 0.04)
-                        : 'transparent',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    <TextField
-                      fullWidth
+                  {formik.values.options.map((option: any, index: number) => {
+                    const optError =
+                      (formik.touched.options?.[index]?.optionText || formik.submitCount > 0) &&
+                      (formik.errors.options as any)?.[index]?.optionText;
+
+                    return (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          p: 1.5,
+                          borderRadius: 1.5,
+                          border: '1px solid',
+                          borderColor: option.isCorrect ? 'success.light' : 'divider',
+                          bgcolor: option.isCorrect
+                            ? alpha(theme.palette.success.main, 0.04)
+                            : 'transparent',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <ShakingTextField error={Boolean(optError)} sx={{ flex: 1 }}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label={`Option ${index + 1}`}
+                            name={`options[${index}].optionText`}
+                            value={option.optionText}
+                            disabled={formik.values.questionType === 3}
+                            onChange={(e) =>
+                              handleOptionChange(index, 'optionText', e.target.value)
+                            }
+                            onBlur={formik.handleBlur}
+                            error={Boolean(optError)}
+                            helperText={optError || ''}
+                          />
+                        </ShakingTextField>
+                        <Tooltip title={option.isCorrect ? 'Correct answer' : 'Mark as correct'}>
+                          <Switch
+                            size="small"
+                            checked={option.isCorrect}
+                            color="success"
+                            onChange={(_, checked) =>
+                              handleOptionChange(index, 'isCorrect', checked)
+                            }
+                          />
+                        </Tooltip>
+                        {formik.values.options.length > 2 && formik.values.questionType !== 3 && (
+                          <Tooltip title="Remove option">
+                            <IconButton
+                              type="button"
+                              size="small"
+                              color="error"
+                              onClick={() =>
+                                formik.setFieldValue(
+                                  'options',
+                                  formik.values.options.filter((_: any, i: number) => i !== index)
+                                )
+                              }
+                            >
+                              <Iconify icon="mingcute:delete-2-line" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
+                    );
+                  })}
+                  {formik.values.questionType !== 3 && (
+                    <Button
+                      type="button"
                       size="small"
-                      label={`Option ${index + 1}`}
-                      value={option.optionText}
-                      disabled={formik.values.questionType === 3}
-                      onChange={(e) => handleOptionChange(index, 'optionText', e.target.value)}
-                    />
-                    <Tooltip title={option.isCorrect ? 'Correct answer' : 'Mark as correct'}>
-                      <Switch
-                        size="small"
-                        checked={option.isCorrect}
-                        color="success"
-                        onChange={(_, checked) => handleOptionChange(index, 'isCorrect', checked)}
-                      />
-                    </Tooltip>
-                    {formik.values.options.length > 2 && formik.values.questionType !== 3 && (
-                      <Tooltip title="Remove option">
-                        <IconButton
-                          type="button"
-                          size="small"
-                          color="error"
-                          onClick={() =>
-                            formik.setFieldValue(
-                              'options',
-                              formik.values.options.filter((_: any, i: number) => i !== index)
-                            )
-                          }
-                        >
-                          <Iconify icon="mingcute:delete-2-line" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
-                ))}
-                {formik.values.questionType !== 3 && (
-                  <Button
-                    type="button"
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="mingcute:add-line" />}
-                    onClick={() =>
-                      formik.setFieldValue('options', [
-                        ...formik.values.options,
-                        {
-                          optionText: '',
-                          isCorrect: false,
-                          sortOrder: formik.values.options.length + 1,
-                        },
-                      ])
-                    }
-                    sx={{ alignSelf: 'flex-start', mt: 0.5 }}
-                  >
-                    Add Option
-                  </Button>
-                )}
+                      variant="outlined"
+                      startIcon={<Iconify icon="mingcute:add-line" />}
+                      onClick={() =>
+                        formik.setFieldValue('options', [
+                          ...formik.values.options,
+                          {
+                            optionText: '',
+                            isCorrect: false,
+                            sortOrder: formik.values.options.length + 1,
+                          },
+                        ])
+                      }
+                      sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                    >
+                      Add Option
+                    </Button>
+                  )}
                 </Stack>
               </ShakingTextField>
               {formik.submitCount > 0 && typeof formik.errors.options === 'string' && (
@@ -517,17 +603,23 @@ function QuestionFormFields({
             </Typography>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Answer Key"
-              name="answerKey"
-              value={formik.values.answerKey}
-              onChange={formik.handleChange}
-              helperText="For short / long answer question types"
-            />
-          </Grid>
+          {[4, 5, 6].includes(formik.values.questionType) && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <ShakingTextField error={formik.touched.answerKey && !!formik.errors.answerKey}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Answer Key *"
+                  name="answerKey"
+                  value={formik.values.answerKey}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.answerKey && !!formik.errors.answerKey}
+                  helperText={(formik.touched.answerKey && formik.errors.answerKey) || ''}
+                />
+              </ShakingTextField>
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
@@ -725,6 +817,7 @@ export default function CreateQuestionDialog({
           return;
         }
         await createQuestion(toQuestionBody(values)).unwrap();
+        shikshaMitraToast.success({ message: 'Question created successfully.' });
         helpers.resetForm({
           values: makeInitialValues(
             academicYearId,
@@ -734,8 +827,11 @@ export default function CreateQuestionDialog({
           ),
         });
         onClose();
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to create question:', err);
+        shikshaMitraToast.error({
+          message: err?.data?.detail || err?.data?.error?.message || 'Failed to create question.',
+        });
       }
     },
   });
@@ -775,7 +871,25 @@ export default function CreateQuestionDialog({
   const title = chapterName ? `Create Question — ${chapterName}` : 'Create New Question';
 
   return (
-    <CustomDialog open={open} handleClose={handleClose} title={title} maxWidth="md" hasForm={false}>
+    <CustomDialog
+      open={open}
+      handleClose={handleClose}
+      title={
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+          <Typography variant="h5">{title}</Typography>
+          <CustomTooltip
+            arrow
+            placement="right"
+            sx={{ textAlign: 'justify' }}
+            title="Add new question manually or upload an Excel/CSV file to create questions in bulk."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
+        </Box>
+      }
+      maxWidth="md"
+      hasForm={false}
+    >
       <form
         onSubmit={formik.handleSubmit}
         style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}

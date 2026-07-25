@@ -12,7 +12,12 @@ const TABS = [
   { value: 'timetable', label: 'Timetable' },
   { value: 'subjectPerformace', label: 'Subject Progress' },
 ];
-const EmployeeAcademicTabs = () => {
+
+interface EmployeeAcademicTabsProps {
+  employee?: any;
+}
+
+const EmployeeAcademicTabs = ({ employee }: EmployeeAcademicTabsProps) => {
   const tabs = useTabs('timetable');
   const currentIndex = React.useMemo(
     () => TABS.findIndex((tab) => tab.value === tabs.value),
@@ -53,7 +58,9 @@ const EmployeeAcademicTabs = () => {
             }}
           >
             <Box sx={{ p: 1, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
-              {tabs.value === 'timetable' && <TeacherSchedule />}
+              {tabs.value === 'timetable' && (
+                <TeacherSchedule employeeId={employee?.id || employee?._id} />
+              )}
               {tabs.value === 'subjectPerformace' && <CourseProgress />}
             </Box>
           </FormSlider>

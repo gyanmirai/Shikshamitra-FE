@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useState, useCallback } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDebounceEffect } from 'src/hooks/use-debounce';
 import { useSelector, useDispatch } from 'react-redux';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -20,6 +21,8 @@ import { SubjectAssignmentStatus } from '../enum/subjectType';
 
 import type { ISubjectFormValues } from '../component/type';
 
+const TEACHER_SEARCH_DEBOUNCE_MS = 400;
+
 export function useSubjectAssignment() {
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -32,7 +35,22 @@ export function useSubjectAssignment() {
     pageSize: 10,
     teacherSearch: '',
   });
-  const trimmedTeacherSearch = query.teacherSearch.trim();
+  const [debouncedTeacherSearch, setDebouncedTeacherSearch] = useState('');
+  const trimmedTeacherSearch = debouncedTeacherSearch.trim();
+
+  useDebounceEffect(
+    () => {
+      const nextSearch = query.teacherSearch.trim();
+
+      setDebouncedTeacherSearch((previousSearch) =>
+        previousSearch === nextSearch ? previousSearch : nextSearch
+      );
+
+      setQuery((prev) => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+    },
+    TEACHER_SEARCH_DEBOUNCE_MS,
+    [query.teacherSearch]
+  );
 
   const {
     data: subjectTableData = [],
@@ -221,10 +239,10 @@ export function useSubjectAssignment() {
   /**
    * Memoization Justification:
    * Passed to SubjectActionBar (React.memo) as `onTeacherSearchChange`.
-   * Keeps toolbar input changes from recreating the handler while resetting pagination.
+   * Keeps toolbar input changes from recreating the handler while debounce commits the filter.
    */
   const handleTeacherSearchChange = useCallback((value: string) => {
-    setQuery((prev) => ({ ...prev, page: 0, teacherSearch: value }));
+    setQuery((prev) => ({ ...prev, teacherSearch: value }));
   }, []);
 
   const handleBackFromView = useCallback(() => {

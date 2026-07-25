@@ -24,6 +24,7 @@ export interface IAssignment {
   createdBy: TeacherProfile;
   assignmentTypeId: string;
   assignmentsType: string;
+  chapterIds?: string[];
 
   // isScheduled: boolean;
   // scheduleDate: Dayjs | null | string;

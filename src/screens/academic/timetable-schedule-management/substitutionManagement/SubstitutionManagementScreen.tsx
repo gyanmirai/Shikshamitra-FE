@@ -17,6 +17,7 @@ import type {
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
@@ -404,8 +405,7 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
 });
 
 const formatLectureLabel = (item: ApiSubstitutionLecture) =>
-  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${
-    item.originalTeacherName || 'Teacher not assigned'
+  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${item.originalTeacherName || 'Teacher not assigned'
   }`;
 
 const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
@@ -588,12 +588,12 @@ const acknowledgementColor: Record<
 };
 
 const conflictColor: Record<ConflictStatus, 'default' | 'success' | 'error' | 'warning' | 'info'> =
-  {
-    Clear: 'success',
-    'Hard Block': 'error',
-    Warning: 'warning',
-    Info: 'info',
-  };
+{
+  Clear: 'success',
+  'Hard Block': 'error',
+  Warning: 'warning',
+  Info: 'info',
+};
 
 const priorityColor: Record<SubstitutionPriority, 'default' | 'primary' | 'error' | 'warning'> = {
   Low: 'default',
@@ -669,6 +669,8 @@ const SubstitutionManagementScreen = () => {
   const [assignRemarks, setAssignRemarks] = useState('');
   const [formError, setFormError] = useState('');
   const [availabilityError, setAvailabilityError] = useState('');
+  const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
+  const [createSubmitType, setCreateSubmitType] = useState<'draft' | 'assign' | null>(null);
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
   const [settingsForm, setSettingsForm] = useState(settingsResultDefaults);
@@ -846,30 +848,30 @@ const SubstitutionManagementScreen = () => {
   const classSelectOptions: SelectOption[] = academicStandards.length
     ? academicStandards.map((item: Standards) => ({ value: item.id, label: item.name }))
     : uniqueLookupOptions(metadataStandards).map((item) => ({
-        value: item.id,
-        label: item.name,
-      }));
+      value: item.id,
+      label: item.name,
+    }));
   const divisionSelectOptions: SelectOption[] = selectedAcademicStandard?.divisions?.length
     ? selectedAcademicStandard.divisions.map((item: Standards['divisions'][number]) => ({
-        value: item.id,
-        label: item.name,
-      }))
+      value: item.id,
+      label: item.name,
+    }))
     : metadataDivisions.length > 0
       ? uniqueLookupOptions(metadataDivisions)
-          .filter(
-            (item) =>
-              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-          )
-          .map((item) => ({ value: item.id, label: item.name }))
+        .filter(
+          (item) =>
+            !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+        )
+        .map((item) => ({ value: item.id, label: item.name }))
       : [];
   const subjectSelectOptions: SelectOption[] =
     metadataSubjects.length > 0
       ? metadataSubjects
-          .filter(
-            (item) =>
-              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-          )
-          .map((item) => ({ value: item.id, label: item.name }))
+        .filter(
+          (item) =>
+            !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+        )
+        .map((item) => ({ value: item.id, label: item.name }))
       : subjectOptions;
   const teacherSelectOptions: SelectOption[] =
     metadataTeachers.length > 0
@@ -882,9 +884,9 @@ const SubstitutionManagementScreen = () => {
   const lectureSelectOptions =
     createLectureResult.length > 0
       ? createLectureResult.map((item) => ({
-          value: item.slotSubjectId,
-          label: formatLectureLabel(item),
-        }))
+        value: item.slotSubjectId,
+        label: formatLectureLabel(item),
+      }))
       : lectureSlotOptions;
 
   const filteredSubstitutions = useMemo(() => {
@@ -958,11 +960,11 @@ const SubstitutionManagementScreen = () => {
   const availableTeacherSelectOptions =
     suggestedTeacherRows.length > 0
       ? suggestedTeacherRows
-          .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
-          .map((teacher) => ({
-            value: teacher.teacherId,
-            label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
-          }))
+        .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
+        .map((teacher) => ({
+          value: teacher.teacherId,
+          label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
+        }))
       : [];
 
   const affectedLectures = useMemo<AffectedLectureRow[]>(() => {
@@ -1006,6 +1008,9 @@ const SubstitutionManagementScreen = () => {
     const unavailable =
       dashboardResult?.teacherUnavailable ??
       teacherAvailability.filter((item) => item.availabilityDate === todayIso).length;
+    const changeRequested =
+      dashboardResult?.changeRequested ??
+      todayRows.filter((item) => item.acknowledgementStatus === 'Change Requested').length;
     const nextRisk =
       (dashboardResult?.nextRisk ? mapApiSubstitution(dashboardResult.nextRisk) : undefined) ??
       todayRows.find((item) => ['Pending', 'Conflict'].includes(item.status));
@@ -1036,6 +1041,17 @@ const SubstitutionManagementScreen = () => {
         color: acknowledged === todayRows.length ? 'success' : 'warning',
         progress: todayRows.length ? Math.round((acknowledged / todayRows.length) * 100) : 0,
         filterStatus: 'Waiting Ack',
+      },
+      {
+        label: 'Change Requested',
+        value: changeRequested,
+        helper: changeRequested
+          ? 'Teachers requested reassignment — action needed'
+          : 'No change requests',
+        icon: 'mdi:swap-horizontal-bold',
+        color: changeRequested ? 'error' : 'success',
+        progress: changeRequested ? 50 : 100,
+        filterStatus: 'Pending',
       },
       {
         label: 'Teachers Unavailable',
@@ -1245,18 +1261,20 @@ const SubstitutionManagementScreen = () => {
       }
 
       try {
+        setIsCreateSubmitting(true);
+        setCreateSubmitType(assignNow ? 'assign' : 'draft');
         const assignmentSegments = assignNow
           ? substitutionForm.selectedSubstitutes
           : [
-              {
-                teacherId: '',
-                teacherName: '',
-                startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
-                endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
-                score: 0,
-                isPartialCoverage: false,
-              },
-            ];
+            {
+              teacherId: '',
+              teacherName: '',
+              startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
+              endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
+              score: 0,
+              isPartialCoverage: false,
+            },
+          ];
         const createdRows = await Promise.all(
           assignmentSegments.map((segment) =>
             createSubstitution({
@@ -1304,6 +1322,9 @@ const SubstitutionManagementScreen = () => {
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unable to create substitution.';
         setFormError(message);
+      } finally {
+        setIsCreateSubmitting(false);
+        setCreateSubmitType(null);
       }
     },
     [
@@ -1490,7 +1511,7 @@ const SubstitutionManagementScreen = () => {
       reason: !availabilityForm.reason.trim() ? 'Reason is required.' : '',
       time:
         !availabilityForm.isFullDay &&
-        toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
+          toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
           ? 'End time must be later than start time.'
           : '',
     }),
@@ -1623,9 +1644,9 @@ const SubstitutionManagementScreen = () => {
             : action === 'reject'
               ? await rejectSubstitutionDuty({ id, reason: 'Rejected from My Duties.' }).unwrap()
               : await requestSubstitutionChange({
-                  id,
-                  reason: 'Change requested from My Duties.',
-                }).unwrap();
+                id,
+                reason: 'Change requested from My Duties.',
+              }).unwrap();
         updateSubstitution(id, () => mapApiSubstitution(updated));
         shikshaMitraToast.success({
           message:
@@ -1816,9 +1837,9 @@ const SubstitutionManagementScreen = () => {
         xs: '1fr',
         sm: 'repeat(2, 1fr)',
         md: 'repeat(3, 1fr)',
-        lg: 'repeat(6, 1fr)',
+        lg: 'repeat(4, 1fr)',
       }}
-      gap={1}
+      gap={1.5}
     >
       {metrics.map((item) => (
         <Card
@@ -1828,9 +1849,16 @@ const SubstitutionManagementScreen = () => {
             borderRadius: 2,
             boxShadow: 'none',
             border: (theme) => `1px solid ${theme.palette.divider}`,
+            borderLeft: (theme) =>
+              `4px solid ${theme.palette[item.color as 'success']?.main ?? theme.palette.divider}`,
             cursor: item.filterStatus ? 'pointer' : 'default',
-            transition: 'border-color 0.15s ease',
-            '&:hover': item.filterStatus ? { borderColor: `${item.color}.main` } : undefined,
+            transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
+            '&:hover': item.filterStatus
+              ? {
+                  boxShadow: (theme) =>
+                    `0 2px 8px ${alpha(theme.palette[item.color as 'success']?.main ?? '#000', 0.18)}`,
+                }
+              : undefined,
           }}
           onClick={() => {
             if (item.filterStatus) {
@@ -1839,36 +1867,41 @@ const SubstitutionManagementScreen = () => {
             }
           }}
         >
-          <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
-            <Stack direction="row" spacing={1} alignItems="flex-start">
+          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.25 }}>
               <Box
                 sx={{
-                  width: 34,
-                  height: 34,
+                  width: 40,
+                  height: 40,
                   display: 'grid',
-                  borderRadius: 1.5,
+                  borderRadius: 2,
                   placeItems: 'center',
                   color: `${item.color}.main`,
                   bgcolor: `${item.color}.lighter`,
                   flexShrink: 0,
                 }}
               >
-                <Iconify icon={item.icon} width={18} />
+                <Iconify icon={item.icon} width={22} />
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="h6" sx={{ lineHeight: 1.1 }}>
+                <Typography
+                  variant="h5"
+                  fontWeight={800}
+                  sx={{ lineHeight: 1, color: `${item.color}.main` }}
+                >
                   {item.value}
                 </Typography>
                 <Tooltip title={item.label}>
                   <Typography
                     variant="caption"
+                    fontWeight={700}
+                    color="text.primary"
                     sx={{
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
                       overflow: 'hidden',
-                      fontWeight: 600,
-                      lineHeight: 1.25,
+                      lineHeight: 1.3,
                       mt: 0.25,
                     }}
                   >
@@ -1885,19 +1918,18 @@ const SubstitutionManagementScreen = () => {
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
-                mt: 0.75,
                 fontSize: 11,
-                lineHeight: 1.3,
-                minHeight: '2.6em',
+                lineHeight: 1.4,
+                minHeight: '2.8em',
               }}
             >
               {item.helper}
             </Typography>
             <LinearProgress
               variant="determinate"
-              color={item.color}
+              color={item.color as any}
               value={item.progress}
-              sx={{ mt: 1.25, height: 5, borderRadius: 1 }}
+              sx={{ mt: 1.25, height: 4, borderRadius: 2 }}
             />
           </CardContent>
         </Card>
@@ -3725,10 +3757,10 @@ const SubstitutionManagementScreen = () => {
             <Alert severity="success">
               {substitutionForm.selectedSubstitutes.length > 0
                 ? `You are assigning ${substitutionForm.selectedSubstitutes
-                    .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
-                    .join(
-                      ', '
-                    )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
+                  .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
+                  .join(
+                    ', '
+                  )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
                 : 'Select a substitute teacher to preview the final notification.'}
             </Alert>
             <TextField
@@ -3754,22 +3786,26 @@ const SubstitutionManagementScreen = () => {
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="small"
             variant="outlined"
             startIcon={<Save />}
+            loading={isCreateSubmitting && createSubmitType === 'draft'}
+            disabled={isCreateSubmitting}
             onClick={() => handleCreateSubstitution(false)}
           >
             Save Draft
-          </Button>
-          <Button
+          </LoadingButton>
+          <LoadingButton
             size="small"
             variant="contained"
             startIcon={<Send />}
+            loading={isCreateSubmitting && createSubmitType === 'assign'}
+            disabled={isCreateSubmitting}
             onClick={() => handleCreateSubstitution(true)}
           >
             Assign & Notify
-          </Button>
+          </LoadingButton>
         </Stack>
       </CustomDialog>
 
@@ -3818,9 +3854,9 @@ const SubstitutionManagementScreen = () => {
                     bgcolor: (theme) =>
                       selected
                         ? alpha(
-                            theme.palette.primary.main,
-                            theme.palette.mode === 'dark' ? 0.22 : 0.1
-                          )
+                          theme.palette.primary.main,
+                          theme.palette.mode === 'dark' ? 0.22 : 0.1
+                        )
                         : 'background.paper',
                     boxShadow: selected ? 'inset 3px 0 0 currentColor' : 'none',
                     color: selected ? 'primary.main' : 'text.primary',
@@ -3937,10 +3973,10 @@ const SubstitutionManagementScreen = () => {
                 value={
                   availabilityForm.teacherId
                     ? {
-                        id: availabilityForm.teacherId,
-                        label: availabilityForm.teacherName,
-                        departmentName: availabilityForm.departmentName,
-                      }
+                      id: availabilityForm.teacherId,
+                      label: availabilityForm.teacherName,
+                      departmentName: availabilityForm.departmentName,
+                    }
                     : null
                 }
                 onChange={(_, value) =>

@@ -1,3 +1,4 @@
+import { setNestedObjectValues } from 'formik';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -568,9 +569,11 @@ const FamilyMemberSection = ({
   const isEditable = useBoolean(!!isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
+    if (Object.keys(validation).length > 0) {
+      formik.setTouched(setNestedObjectValues(validation, true));
+      return false;
+    }
     await formik?.submitForm?.();
-    if (Object.keys(validation).length > 0) return false;
-
     formik.resetForm({ values: formik.values });
     return undefined;
   };

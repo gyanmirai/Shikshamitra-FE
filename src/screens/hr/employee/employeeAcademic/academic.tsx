@@ -2,6 +2,12 @@ import React from 'react';
 
 import EmployeeAcademicTabs from './employeeAcademicTabs';
 
-const EmployeeAcademic = ({ employee }: any) => <EmployeeAcademicTabs />;
+interface EmployeeAcademicProps {
+  employee?: any;
+}
+
+const EmployeeAcademic = ({ employee }: EmployeeAcademicProps) => (
+  <EmployeeAcademicTabs employee={employee} />
+);
 
 export default EmployeeAcademic;

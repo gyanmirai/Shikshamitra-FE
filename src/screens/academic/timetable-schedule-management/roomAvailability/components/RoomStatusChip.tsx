@@ -105,7 +105,6 @@ export const ApprovalStatusChip = ({ status, size = 'small' }: ApprovalStatusChi
       label={config.label}
       color={config.color}
       variant="soft"
-      icon={<Iconify icon={config.icon} width={14} />}
     />
   );
 };

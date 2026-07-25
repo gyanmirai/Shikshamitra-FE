@@ -56,6 +56,7 @@ export const RoomAvailabilityTable = ({
   onCancelReservation,
 }: RoomAvailabilityTableProps) => (
   <CustomizableTable
+    tableContainerProps={{ sx: { height: '100%' } }}
     tableId="room-availability-enhanced-table"
     tableTitle="Room Availability"
     data={data}
@@ -125,13 +126,21 @@ export const RoomAvailabilityTable = ({
       {
         id: 'status',
         label: 'Status',
-        minWidth: 140,
+        minWidth: 80,
+        filterType: 'enum',
+        sticky: true,
+        enumOptions: [
+          { label: 'Available', value: 'available' },
+          { label: 'Occupied', value: 'occupied' },
+          { label: 'Pending Approval', value: 'pendingApproval' },
+          { label: 'Maintenance', value: 'maintenance' },
+        ],
         render: (_v, row) => <RoomStatusChip status={row.status} />,
       },
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: 160,
+        minWidth: 90,
         isSort: false,
         isFilter: false,
         sticky: true,
@@ -145,11 +154,17 @@ export const RoomAvailabilityTable = ({
             </Tooltip>
 
             {canReserve && (
-              <Tooltip title={row.status !== 'available' ? 'Room not available' : 'Reserve Room'}>
+              <Tooltip
+                title={
+                  row.status === 'maintenance'
+                    ? 'Room under maintenance — reservations blocked'
+                    : 'Reserve Room'
+                }
+              >
                 <span>
                   <IconButton
                     size="small"
-                    disabled={row.status !== 'available'}
+                    disabled={row.status === 'maintenance'}
                     onClick={() => onReserveRoom?.(row as RoomAvailabilityItem)}
                     color="primary"
                   >

@@ -20,6 +20,21 @@ export const timetableManagementApi = academicApi.injectEndpoints({
       providesTags: [academicType.timetableManagement],
     }),
 
+    getTimetableByEmployee: builder.query({
+      query: ({
+        employeeId,
+        academicYearId,
+      }: {
+        employeeId: string;
+        academicYearId?: string;
+      }) => ({
+        url: `academics/timetable/by-employee/${employeeId}`,
+        method: 'GET',
+        params: academicYearId ? { academicYearId } : undefined,
+      }),
+      providesTags: [academicType.timetableManagement],
+    }),
+
     createTimetable: builder.mutation({
       query: ({ standardId, divisionId, body }) => ({
         url: `academics/timetable/by-standard/${standardId}/division/${divisionId}`,
@@ -79,6 +94,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
 export const {
   useGetTimetableManagementByStandardQuery,
   useGetTimetableByStandardDivisionQuery,
+  useGetTimetableByEmployeeQuery,
   useCreateTimetableMutation,
   useValidateTimetableMutation,
   useAssignTeachersMutation,

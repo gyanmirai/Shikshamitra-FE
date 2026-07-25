@@ -98,8 +98,8 @@ const SubjectActionBar = ({
 
 /**
  * Memoization Justification:
- * Contains a dropdown and button that only depend on class list and classId.
- * React.memo avoids re-renders from table data loading, dialog state, or
- * selected subject changes that are frequent in the parent.
+ * Receives stable toolbar props from the parent hook, including the teacher
+ * search handler. React.memo keeps table loading, dialog, and selected-subject
+ * state changes from repainting the filter toolbar.
  */
 export default React.memo(SubjectActionBar);

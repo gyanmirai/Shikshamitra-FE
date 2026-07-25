@@ -13,6 +13,31 @@ interface UseStickyColumnsProps {
   tableUniqId: string;
 }
 
+/**
+ * Pre-compute left sticky offsets from column config widths so columns are
+ * sticky from the very first render (before DOM measurement fires).
+ * Right-sticky offsets require the table's rendered width to compute accurately,
+ * so they are left empty here and corrected after DOM measurement.
+ */
+const computeInitialStickyMap = (
+  cols: IColumn[],
+  visibility: Record<string, boolean>,
+  mobile: boolean
+): { left: Record<string, number>; right: Record<string, number> } => {
+  const visibleCols = cols.filter((c) => visibility[c.id] !== false);
+  const leftOffsets: Record<string, number> = {};
+  let leftAccum = 0;
+
+  visibleCols.forEach((col) => {
+    if (col.sticky && (!mobile || col.stickyOnMobile !== false) && col.stickyPosition === 'left') {
+      leftOffsets[col.id] = leftAccum;
+      leftAccum += (col.width as number) || (col.minWidth as number) || 100;
+    }
+  });
+
+  return { left: leftOffsets, right: {} };
+};
+
 export const useStickyColumns = ({
   columns,
   columnVisibility,
@@ -26,11 +51,12 @@ export const useStickyColumns = ({
   const [stickyMap, setStickyMap] = useState<{
     left: Record<string, number>;
     right: Record<string, number>;
-  }>({ left: {}, right: {} });
+  }>(() => computeInitialStickyMap(columns, columnVisibility, false));
+
   useEffect(() => {
     setTimeout(() => {
       const table = document.getElementById(`${tableUniqId}`);
-      if (!table && !isLoading) return;
+      if (!table) return;
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const leftSticky: { col: IColumn; idx: number }[] = [];
@@ -56,24 +82,24 @@ export const useStickyColumns = ({
 
           const leftOffsets: Record<string, number> = {};
           let left = 0;
-          leftSticky.forEach(({ col, idx }) => {
+          leftSticky.forEach(({ col }) => {
             const el = table
-              ?.querySelector(`#${tableUniqId}-column-${col.id}`)
+              .querySelector(`#${tableUniqId}-column-${col.id}`)
               ?.getBoundingClientRect()?.width;
 
-            const width = el ?? 100;
+            const width = el ?? (col.width as number) ?? (col.minWidth as number) ?? 100;
             leftOffsets[col.id as string] = left;
             left += width;
           });
 
           const rightOffsets: Record<string, number> = {};
           let right = 0;
-          [...rightSticky].reverse().forEach(({ col, idx }) => {
+          [...rightSticky].reverse().forEach(({ col }) => {
             const el = table
-              ?.querySelector(`#${tableUniqId}-column-${col.id}`)
+              .querySelector(`#${tableUniqId}-column-${col.id}`)
               ?.getBoundingClientRect()?.width;
 
-            const width = el ?? 100;
+            const width = el ?? (col.width as number) ?? (col.minWidth as number) ?? 100;
 
             rightOffsets[col.id as string] = right;
             right += width;

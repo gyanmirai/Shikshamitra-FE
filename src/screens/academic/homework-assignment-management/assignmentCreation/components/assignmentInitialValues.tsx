@@ -36,6 +36,9 @@ export const getAssignmentInitialValues = (editData: IAssignment | null, classes
   // Assignment specific fields
   assignmentTypeId: editData?.assignmentTypeId || '',
 
+  // Chapter linking
+  chapterIds: (editData as any)?.chapterIds || [],
+
   // Scheduling
   // isScheduled: editData?.isScheduled || false,
   // scheduleDate: dayjs(editData?.scheduleDate) || null,

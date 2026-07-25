@@ -6,15 +6,21 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
+
+import { Box, Card, Chip, Stack, IconButton, Typography } from '@mui/material';
+
 import { formatDateOnly } from 'src/utils/date-only';
+
+import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Card, Chip, Stack, Avatar, IconButton, Typography } from '@mui/material';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import type { ISubject, ISubjectTableProps } from './type';
+
+import SubjectNameCell from './subjectNameCell';
 
 const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
   open,
@@ -69,28 +75,16 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         align: 'left',
         width: 320,
         minWidth: 320,
+        sticky: true,
+        stickyPosition: 'left',
+        headerSx: {
+          boxShadow: '2px 0 5px -2px rgba(0, 0, 0, 0.12)',
+        },
+        cellSx: {
+          boxShadow: '2px 0 5px -2px rgba(0, 0, 0, 0.12)',
+        },
         render: (value, row) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Avatar
-              sx={{ width: 34, height: 34, bgcolor: row.color || 'primary.main', fontSize: 13 }}
-            >
-              {row.icon ? (
-                <Iconify icon={iconMap[row.icon] || 'lucide:book-open'} width={18} height={18} />
-              ) : (
-                String(value || '')
-                  .slice(0, 2)
-                  .toUpperCase()
-              )}
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle2" fontSize="13px">
-                {value}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Display: {row.displayName || value}
-              </Typography>
-            </Box>
-          </Box>
+          <SubjectNameCell value={String(value || '')} subject={row as ISubject} />
         ),
       },
       {
@@ -157,8 +151,8 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 176,
-        width: 176,
+        minWidth: 152,
+        width: 152,
         align: 'center',
         isSort: false,
         sticky: true,
@@ -289,16 +283,6 @@ const getStatusLabel = (status?: ISubject['status']) => {
   return 'Active';
 };
 
-const iconMap: Record<string, string> = {
-  book: 'lucide:book-open',
-  calculator: 'lucide:calculator',
-  flask: 'lucide:flask-conical',
-  monitor: 'lucide:monitor',
-  music: 'lucide:music',
-  trophy: 'lucide:trophy',
-  palette: 'lucide:palette',
-};
-
 const SubjectActionButton = ({
   title,
   icon,
@@ -320,7 +304,7 @@ const SubjectActionButton = ({
         disabled={disabled}
         aria-label={title}
         onClick={onClick}
-        sx={{ width: 34, height: 34 }}
+        sx={{ width: 30, height: 30 }}
       >
         <Iconify icon={icon} width={18} height={18} />
       </IconButton>

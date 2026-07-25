@@ -235,24 +235,12 @@ const TransportAddingStopDialog: React.FC<ITransportAddingStopDialogProps> = ({
                   >
                     <Box>
                       <Typography variant="body2">{marker.stopName}</Typography>
-                      {/* <Typography variant="caption" color="text.secondary">
-                                                {`Lat: ${marker.lat}, Lon: ${marker.lng}`}
-                                            </Typography> */}
                     </Box>
                     <Iconify
                       onClick={() => handleDeleteStop(index)}
                       icon="mynaui:trash"
                       color="red"
                     />
-                    {/* 
-                                        <Button
-                                            variant="outlined"
-                                            color="error"
-                                            size="small"
-                                            onClick={() => handleDeleteStop(index)}
-                                        >
-                                            Remove
-                                        </Button> */}
                   </Box>
                 ))
               ) : (

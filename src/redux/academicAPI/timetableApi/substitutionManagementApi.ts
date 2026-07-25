@@ -103,6 +103,7 @@ export type ApiSubstitutionDashboard = {
   conflict: number;
   teacherUnavailable: number;
   uncovered: number;
+  changeRequested: number;
   nextRisk?: ApiSubstitutionRow | null;
   riskAlerts: string[];
   workloadSnapshot: ApiSuggestedTeacher[];
