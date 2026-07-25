@@ -583,6 +583,9 @@ export type AdmissionCrmLeadDto = {
   email?: string | null;
   admissionIntent: string;
   intendedRouteType?: AdmissionCrmRouteType | null;
+  intendedRouteDefinitionId?: string | null;
+  intendedRouteDefinitionVersion?: number | null;
+  intendedRouteNameSnapshot?: string | null;
   targetStandardId?: string | null;
   desiredClassName?: string | null;
   stage: AdmissionInquiryStage;
@@ -633,13 +636,41 @@ export type CreateAdmissionCrmLeadDto = {
   primaryContactNo?: string | null;
   email?: string | null;
   admissionIntent: string;
+  intendedRouteDefinitionId?: string | null;
   intendedRouteType?: AdmissionCrmRouteType | null;
   targetStandardId?: string | null;
   academicBoardId?: string | null;
   academicMediumId?: string | null;
+  academicMediumStageId?: string | null;
   desiredClassName?: string | null;
   notes?: string | null;
   duplicateContinueReason?: string | null;
+};
+
+export type AdmissionCrmQuickInquiryChannelOptionDto = {
+  channel: AdmissionInquiryChannel;
+  label: string;
+  displayOrder: number;
+  isDefault: boolean;
+};
+
+export type AdmissionCrmQuickInquiryRouteOptionDto = {
+  routeDefinitionId: string;
+  name: string;
+  routeType: AdmissionCrmRouteType;
+  version: number;
+  isDefault: boolean;
+};
+
+export type AdmissionCrmQuickInquiryOptionsDto = {
+  academicYearId: string;
+  cycleName: string;
+  isAdmissionCycleActive: boolean;
+  registrationFormRequiredBeforeExam: boolean;
+  entranceExamRequired: boolean;
+  journeyLocked: boolean;
+  channels: AdmissionCrmQuickInquiryChannelOptionDto[];
+  routes: AdmissionCrmQuickInquiryRouteOptionDto[];
 };
 
 export type ChangeAdmissionCrmLeadStageDto = {
@@ -2567,6 +2598,15 @@ export const buildCreateAdmissionCrmLeadRequest = ({
   body,
 });
 
+export const buildAdmissionCrmQuickInquiryOptionsRequest = ({
+  academicYearId,
+}: {
+  academicYearId: string;
+}): FetchArgs => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/quick-inquiry-options`,
+  method: 'GET',
+});
+
 export const buildPreviewAdmissionCrmLeadDuplicatesRequest = ({
   academicYearId,
   body,
@@ -4171,6 +4211,13 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         studentAdmissionsCrmType.timeline,
         studentAdmissionsCrmType.analytics,
       ],
+    }),
+    getAdmissionCrmQuickInquiryOptions: builder.query<
+      AdmissionCrmQuickInquiryOptionsDto,
+      { academicYearId: string }
+    >({
+      query: buildAdmissionCrmQuickInquiryOptionsRequest,
+      providesTags: [studentAdmissionsCrmType.configuration],
     }),
     previewAdmissionCrmLeadDuplicates: builder.mutation<
       AdmissionCrmLeadDuplicateDto[],
@@ -6974,6 +7021,7 @@ export const {
   useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   useGetAdmissionCrmGeneratedDocumentAvailabilityQuery,
   useCreateAdmissionCrmLeadMutation,
+  useGetAdmissionCrmQuickInquiryOptionsQuery,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
   useAssignAdmissionCrmLeadOwnerMutation,
   useChangeAdmissionCrmLeadPriorityMutation,

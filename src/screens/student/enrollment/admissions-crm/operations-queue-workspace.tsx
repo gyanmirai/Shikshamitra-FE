@@ -15,8 +15,8 @@ import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import BookmarkAddOutlined from '@mui/icons-material/BookmarkAddOutlined';
 import DeleteOutlineRounded from '@mui/icons-material/DeleteOutlineRounded';
 import {
@@ -62,8 +62,9 @@ import {
 import { formatEnumLabel } from './enrollment-display';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
-import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
+import { createApplicantRowNavigationProps } from './applicant-row-navigation';
 import { IntegrationCapabilitiesPanel } from './integration-capabilities-panel';
+import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import {
   buildOperationsQueueColumns,
   type EnrollmentQueueVariant,
@@ -77,7 +78,7 @@ import {
   EnrollmentWorkspaceFilterPanel,
 } from './workspace-table-patterns';
 
-import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
+import type { ApplicantWorkspaceTab } from './applicant-workspace-page';
 
 const RteAllotmentImport = dynamic(() =>
   import('./rte-allotment-import').then((module) => module.RteAllotmentImport)
@@ -91,7 +92,7 @@ type Props = {
   description: string;
   defaultQueue: AdmissionCrmOperationsQueueType;
   allowedQueues?: AdmissionCrmOperationsQueueType[];
-  applicantTab?: ApplicantDrawerTab;
+  applicantTab?: ApplicantWorkspaceTab;
   variant?: EnrollmentQueueVariant;
   showOperationsUtilities?: boolean;
   headerActions?: ReactNode;
@@ -299,13 +300,26 @@ export function OperationsQueueWorkspace({
   showOperationsUtilities = false,
   headerActions,
 }: Props) {
-  const { academicYearId, state, updateState, openApplicant, closeApplicant } =
-    useEnrollmentWorkspace();
+  const {
+    academicYearId,
+    sessionIdentity,
+    state,
+    updateState,
+    getApplicantHref,
+    openApplicant,
+  } = useEnrollmentWorkspace();
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const selectedQueue =
     state.queue != null && allowedQueues.includes(state.queue) ? state.queue : defaultQueue;
   const page = Math.max(0, state.page - 1);
-  const [search, setSearch] = useState('');
+  const {
+    search,
+    setSearch,
+    filters: columnFilters,
+    setFilters: setColumnFilters,
+  } = useWorkspaceTableSessionState(
+    `operations-${variant}:${academicYearId || 'none'}:${sessionIdentity}`
+  );
   const [ownerSearch, setOwnerSearch] = useState('');
   const [assigneeSearch, setAssigneeSearch] = useState('');
   const [debouncedOwnerSearch, setDebouncedOwnerSearch] = useState('');
@@ -315,7 +329,6 @@ export function OperationsQueueWorkspace({
   const [savedViewName, setSavedViewName] = useState('');
   const [savedViewsOpen, setSavedViewsOpen] = useState(false);
   const [showUtilities, setShowUtilities] = useState(false);
-  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
   const [bulkStaff, setBulkStaff] = useState<AdmissionCrmStaffLookupDto | null>(null);
@@ -452,9 +465,12 @@ export function OperationsQueueWorkspace({
     state.activationStatus,
     state.serviceHandoffStatus,
   ]);
+  const previousSelectedQueueRef = useRef(selectedQueue);
   useEffect(() => {
+    if (previousSelectedQueueRef.current === selectedQueue) return;
+    previousSelectedQueueRef.current = selectedQueue;
     setColumnFilters([]);
-  }, [selectedQueue]);
+  }, [selectedQueue, setColumnFilters]);
 
   useEffect(() => {
     setOwner((ownerStaffQuery.data || []).find((item) => item.id === state.owner) || null);
@@ -510,6 +526,7 @@ export function OperationsQueueWorkspace({
       buildOperationsQueueColumns({
         variant,
         applicantTab,
+        getApplicantHref,
         openApplicant,
         staffById,
         items,
@@ -523,6 +540,7 @@ export function OperationsQueueWorkspace({
       }),
     [
       applicantTab,
+      getApplicantHref,
       items,
       openApplicant,
       seatPoolsQuery.data?.items,
@@ -1437,6 +1455,10 @@ export function OperationsQueueWorkspace({
             />
           }
           rowProps={(row) => ({
+            ...createApplicantRowNavigationProps({
+              applicantName: row.applicantName,
+              onOpen: () => openApplicant(row.leadId, applicantTab),
+            }),
             'data-testid': 'student-enrollment-operations-row',
             'data-queue-key': row.key,
           })}
@@ -1473,13 +1495,6 @@ export function OperationsQueueWorkspace({
         </Stack>
       )}
 
-      <ApplicantWorkspaceDrawer
-        leadId={state.applicant}
-        academicYearId={academicYearId}
-        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || applicantTab}
-        onTabChange={(tab) => updateState({ applicantTab: tab }, 'replace')}
-        onClose={closeApplicant}
-      />
     </Stack>
   );
 }

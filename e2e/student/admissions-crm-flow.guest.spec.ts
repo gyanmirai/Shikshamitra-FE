@@ -397,9 +397,10 @@ async function openExamRowInWorkspace(
   await expectOk(await filteredExamsResponse, 'filter CRM entrance exams');
   await expect(page.getByText(/1[–-]1 of 1/)).toBeVisible({ timeout: 15_000 });
 
-  const examRow = page.getByRole('row', {
-    name: new RegExp(`${escapeRegExp(applicantName)}.*${escapeRegExp(slotName)}`, 'i'),
-  });
+  const examRow = page
+    .locator('[data-testid="student-enrollment-exam-row"]')
+    .filter({ hasText: applicantName })
+    .filter({ hasText: slotName });
   await expect(examRow).toBeVisible({ timeout: 30_000 });
   return examRow;
 }
@@ -729,6 +730,7 @@ test.describe('Student admissions CRM E2E', () => {
     );
     await page.getByLabel('Search applicants').fill('Parent phone 9999999999');
     await expect(page).toHaveURL(new RegExp(`cycle=${academicYearId}`));
+    await expect(page).not.toHaveURL(/page=2/);
     expect(page.url()).not.toContain('Parent');
     expect(page.url()).not.toContain('9999999999');
 
@@ -945,7 +947,290 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page.getByRole('heading', { name: /Admissions (CRM|Pipeline)/i })).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByRole('button', { name: /Quick Inquiry/i })).toBeVisible();
+    await page.getByRole('button', { name: /Quick Inquiry/i }).click();
+    const quickInquiry = page.getByRole('dialog', { name: 'Quick Inquiry' });
+    await expect(quickInquiry).toBeVisible();
+    await expect(quickInquiry.getByLabel('First name')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Middle name (optional)')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Last name (optional)')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Academic stage')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Target class')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Admission pathway')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Inquiry channel')).toBeVisible();
+    await expect(quickInquiry.getByText('@', { exact: true })).toBeVisible();
+    await quickInquiry.getByLabel('Email address').fill('invalid-email');
+    await quickInquiry.getByLabel('Email address').blur();
+    await expect(
+      quickInquiry.getByText('Enter a valid email address, for example parent@example.com.')
+    ).toBeVisible();
+
+    const quickInquiryFirstName = `Ui${Date.now()}`;
+    const quickInquiryMiddleName = 'Journey';
+    const quickInquiryLastName = 'Smoke';
+    const quickInquiryPhone = uniquePhone();
+    const quickInquiryEmail = `playwright.quick.${Date.now()}@example.test`;
+    await quickInquiry.getByLabel('First name').fill(quickInquiryFirstName);
+    await quickInquiry.getByLabel('Middle name (optional)').fill(quickInquiryMiddleName);
+    await quickInquiry.getByLabel('Last name (optional)').fill(quickInquiryLastName);
+    await quickInquiry.getByLabel('Parent or guardian').fill('Playwright Guardian');
+    await quickInquiry.getByLabel('Contact number').fill(quickInquiryPhone);
+    await quickInquiry.getByLabel('Email address').fill(quickInquiryEmail);
+
+    await quickInquiry.getByLabel('Academic stage').click();
+    await page.getByRole('option', { name: /^Primary\b/i }).click();
+    await quickInquiry.getByLabel('Target class').click();
+    await page.getByRole('option', { name: 'Class 4', exact: true }).click();
+    await quickInquiry.getByLabel('Admission pathway').click();
+    await page.getByRole('option', { name: 'Fresh admission', exact: true }).click();
+    await quickInquiry.getByLabel('Inquiry channel').click();
+    await page.getByRole('option', { name: 'Quick inquiry', exact: true }).click();
+
+    const uiCreateResponsePromise = page.waitForResponse(
+      (candidate) =>
+        candidate.request().method() === 'POST' &&
+        new URL(candidate.url()).pathname.endsWith(
+          `/student-enrollment/admissions-crm/${academicYearId}/leads`
+        )
+    );
+    await quickInquiry.getByRole('button', { name: 'Create Inquiry' }).click();
+    const uiCreateResponse = await uiCreateResponsePromise;
+    await expectOk(uiCreateResponse, 'create quick inquiry through the UI');
+    const uiCreatedLead = await uiCreateResponse.json();
+    expect(uiCreatedLead?.stage, 'UI quick inquiry should start as New Inquiry.').toBe(0);
+    expect(uiCreatedLead?.firstName).toBe(quickInquiryFirstName);
+    expect(uiCreatedLead?.middleName).toBe(quickInquiryMiddleName);
+    expect(uiCreatedLead?.lastName).toBe(quickInquiryLastName);
+    expect(uiCreatedLead?.email).toBe(quickInquiryEmail);
+    expect(uiCreatedLead?.intendedRouteNameSnapshot).toBe('Fresh admission');
+    expect(uiCreatedLead?.intendedRouteDefinitionVersion).toBe(1);
+    await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/applicants/${uiCreatedLead.id}`)
+    );
+    let applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
+    await expect(applicantWorkspace).toContainText(
+      `${quickInquiryFirstName} ${quickInquiryMiddleName} ${quickInquiryLastName}`
+    );
+    const pathwaySummary = applicantWorkspace
+      .getByText('Admission pathway', { exact: true })
+      .locator('..');
+    await expect(pathwaySummary).toContainText('Fresh admission');
+    await expect(pathwaySummary).toContainText('Version 1 captured at inquiry');
+    await expect(
+      applicantWorkspace.locator('[aria-label="Admission journey"]').getByText('Inquiry', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await applicantWorkspace.getByRole('tab', { name: 'Activity' }).click();
+    await expect(applicantWorkspace.getByText('Activity & Audit')).toBeVisible();
+    const activityActor = applicantWorkspace.getByText(/^Actor:/).first();
+    await expect(activityActor).toBeVisible();
+    await expect(activityActor).not.toContainText('Loading staff');
+    await expect(activityActor).not.toContainText('Staff identity unavailable');
+    await applicantWorkspace.getByRole('button', { name: 'Back' }).click();
+    await expect(page).toHaveURL(/\/student\/enrollment\/pipeline/);
+
+    await page.getByRole('textbox', { name: 'Search applicants' }).fill(firstLead.firstName);
+    expect(decodeURIComponent(page.url())).not.toContain(firstLead.firstName);
+    const createdLeadRow = page.locator(
+      `[data-testid="student-enrollment-pipeline-row"][data-lead-id="${firstLead.id}"]`
+    );
+    await expect(createdLeadRow).toBeVisible({ timeout: 30_000 });
+    await createdLeadRow.click();
+    await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${firstLead.id}`));
+    applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
+    await expect(applicantWorkspace).toBeVisible();
+    const admissionJourney = applicantWorkspace.locator('[aria-label="Admission journey"]');
+    await expect(admissionJourney.getByText('Inquiry', { exact: true })).toBeVisible();
+    await expect(admissionJourney.getByText('Registration', { exact: true })).toBeVisible();
+    await expect(admissionJourney.getByText('Offer & Seat', { exact: true })).toBeVisible();
+    await expect(admissionJourney.getByText('Activation', { exact: true })).toBeVisible();
+    await applicantWorkspace.getByRole('tab', { name: 'Activity' }).click();
+    await expect(applicantWorkspace.getByText('Activity & Audit')).toBeVisible();
+    await applicantWorkspace.getByRole('button', { name: 'Back' }).click();
+    await expect(page).toHaveURL(/\/student\/enrollment\/pipeline/);
+    expect(decodeURIComponent(page.url())).not.toContain(firstLead.firstName);
+    await expect(page.getByRole('textbox', { name: 'Search applicants' })).toHaveValue(
+      firstLead.firstName
+    );
+  });
+
+  test('My Work preserves task context and protects an unsaved applicant edit', async ({
+    page,
+  }) => {
+    test.setTimeout(150_000);
+
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const applicationConfiguration = await getApplicationConfiguration(page);
+    const currentUserId = applicationConfiguration?.currentUser?.id as string;
+    expect(currentUserId, 'Authenticated user id is required for My Work.').toBeTruthy();
+
+    const lead = await createCrmLead(page, academicYearId, uniquePhone(), 'MyWork');
+    const taskTitle = uniqueToken('Call guardian ');
+    const taskResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/leads/${lead.id}/tasks`,
+      {
+        method: 'POST',
+        body: {
+          title: taskTitle,
+          dueAt: new Date(Date.now() + 24 * 60 * 60 * 1_000).toISOString(),
+          assignedUserId: currentUserId,
+          notes: 'Confirm the preferred follow-up time.',
+        },
+      }
+    );
+    await expectOk(taskResponse, 'create assigned My Work task');
+
+    await page.goto(workspaceUrl('/student/enrollment/overview', academicYearId), {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+    await expect(page.getByText(taskTitle, { exact: true })).toBeVisible({ timeout: 30_000 });
+    const workRow = page.locator('tr').filter({ hasText: taskTitle });
+    await expect(workRow).toBeVisible();
+    await workRow.getByRole('button', { name: 'Complete task' }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
+    const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
+    await expect(
+      applicantWorkspace.getByRole('complementary', { name: 'Current work' })
+    ).toContainText(taskTitle);
+    expect(decodeURIComponent(page.url())).not.toContain(taskTitle);
+    expect(decodeURIComponent(page.url())).not.toContain(lead.primaryContactNo);
+
+    await applicantWorkspace.getByRole('button', { name: 'Add note' }).click();
+    const note = applicantWorkspace.getByLabel('Note');
+    await note.fill('Unsaved My Work follow-up note');
+    await applicantWorkspace.getByRole('tab', { name: 'Activity' }).click();
+    const discardDialog = page
+      .getByRole('dialog')
+      .filter({ hasText: 'Discard unsaved changes?' });
+    await expect(discardDialog).toBeVisible();
+    await discardDialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(applicantWorkspace.getByRole('tab', { name: 'Overview' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    await expect(note).toHaveValue('Unsaved My Work follow-up note');
+    await applicantWorkspace.getByRole('button', { name: 'Cancel' }).click();
+  });
+
+  test('terminal inquiry stages do not unlock new downstream work', async ({ page }) => {
+    test.setTimeout(120_000);
+
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const lead = await createCrmLead(page, academicYearId, uniquePhone(), 'Archived');
+    const archiveResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/leads/${lead.id}/archive`,
+      {
+        method: 'POST',
+        body: {
+          reason: 'Applicant withdrew during the E2E terminal-stage check.',
+        },
+      }
+    );
+    await expectOk(archiveResponse, 'archive CRM lead');
+
+    await page.goto(
+      `${workspaceUrl(`/student/enrollment/applicants/${lead.id}`, academicYearId)}&tab=overview`,
+      { waitUntil: 'domcontentloaded', timeout: 60_000 }
+    );
+    const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
+    await expect(applicantWorkspace).toContainText(lead.firstName);
+    await expect(applicantWorkspace.getByText('Archived', { exact: true }).first()).toBeVisible();
+    await expect(applicantWorkspace.getByRole('tab', { name: 'Registration' })).toHaveCount(0);
+    await expect(applicantWorkspace.getByRole('tab', { name: 'Offer & Seat' })).toHaveCount(0);
+    await expect(applicantWorkspace.getByRole('tab', { name: 'Activation' })).toHaveCount(0);
+    await expect(applicantWorkspace.getByRole('tab', { name: 'Activity' })).toBeVisible();
+  });
+
+  test('direct registration uses configured academic and pathway options end to end', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const templateName = uniqueToken('Direct registration ');
+    const template = await createPublishedRegistrationTemplate(
+      page,
+      academicYearId,
+      'Class 4',
+      templateName
+    );
+
+    try {
+      await page.goto(workspaceUrl('/student/enrollment/registrations', academicYearId), {
+        waitUntil: 'domcontentloaded',
+        timeout: 60_000,
+      });
+      await page.getByRole('button', { name: 'Create Registration' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Create direct registration' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByText('@', { exact: true })).toBeVisible();
+      await dialog.getByLabel('Email address').fill('invalid-email');
+      await dialog.getByLabel('Email address').blur();
+      await expect(
+        dialog.getByText('Enter a valid email address, for example parent@example.com.')
+      ).toBeVisible();
+
+      const firstName = uniqueToken('Direct');
+      const email = `direct.${Date.now()}@example.test`;
+      await dialog.getByLabel('First name').fill(firstName);
+      await dialog.getByLabel('Last name').fill('Registration');
+      await dialog.getByLabel('Parent or guardian').fill('Direct Registration Guardian');
+      await dialog.getByLabel('Contact number').fill(uniquePhone());
+      await dialog.getByLabel('Email address').fill(email);
+      await dialog.getByRole('button', { name: 'Next' }).click();
+
+      await dialog.getByLabel('Academic stage').click();
+      await page.getByRole('option', { name: /^Primary\b/i }).click();
+      await dialog.getByLabel('Target class').click();
+      await page.getByRole('option', { name: 'Class 4', exact: true }).click();
+      await dialog.getByLabel('Admission pathway').click();
+      await page.getByRole('option', { name: 'Fresh admission', exact: true }).click();
+      await dialog.getByRole('button', { name: 'Next' }).click();
+
+      await dialog.getByLabel('Registration template').click();
+      await page.getByRole('option', { name: `${templateName} - v1`, exact: true }).click();
+      const paperFormNumber = `PW-DIRECT-${Date.now()}`;
+      await dialog.getByLabel('Paper form number').fill(paperFormNumber);
+      await dialog.getByRole('button', { name: 'Next' }).click();
+
+      const directResponsePromise = page.waitForResponse(
+        (candidate) =>
+          candidate.request().method() === 'POST' &&
+          new URL(candidate.url()).pathname.endsWith(
+            `/student-enrollment/admissions-crm/${academicYearId}/registrations/direct`
+          )
+      );
+      await dialog.getByRole('button', { name: 'Create and Enter Paper Form' }).click();
+      const directResponse = await directResponsePromise;
+      await expectOk(directResponse, 'create direct registration through the UI');
+      const directRegistration = await directResponse.json();
+
+      await expect(page).toHaveURL(
+        new RegExp(`/student/enrollment/applicants/${directRegistration.applicant.id}`)
+      );
+      const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
+      await expect(applicantWorkspace).toContainText(firstName);
+      await expect(applicantWorkspace).toContainText(paperFormNumber);
+      await applicantWorkspace.getByRole('tab', { name: 'Overview' }).click();
+      const pathwaySummary = applicantWorkspace
+        .getByText('Admission pathway', { exact: true })
+        .locator('..');
+      await expect(pathwaySummary).toContainText('Fresh admission');
+      await expect(applicantWorkspace).toContainText('Class 4');
+    } finally {
+      await crmApiRequest(
+        page,
+        `/student-enrollment/admissions-crm/configuration/registration-templates/${template.id}/retire`,
+        { method: 'POST' }
+      );
+    }
   });
 
   test('public form captures consent and creates status token', async ({ page }) => {
@@ -1206,11 +1491,13 @@ test.describe('Student admissions CRM E2E', () => {
       const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await expect(leadCard.getByText('Registration not issued')).toBeVisible();
       await leadCard.getByRole('button', { name: 'Registration' }).click();
-      await expect(page.getByText('Registration has not been issued')).toBeVisible();
-      await page.getByRole('button', { name: 'Issue registration' }).click();
-      await page.getByLabel('Registration template').click();
+      await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
+      const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
+      await expect(applicantWorkspace.getByText('Registration has not been issued')).toBeVisible();
+      await applicantWorkspace.getByRole('button', { name: 'Issue registration' }).click();
+      await applicantWorkspace.getByLabel('Registration template').click();
       await page.getByRole('option', { name: `${registrationTemplateName} - v1` }).click();
-      await page.getByRole('button', { name: 'Issue', exact: true }).click();
+      await applicantWorkspace.getByRole('button', { name: 'Issue', exact: true }).click();
 
       await expect
         .poll(async () => (await getCrmLead(page, lead.id)).registrationFormNumber, {
@@ -1221,7 +1508,9 @@ test.describe('Student admissions CRM E2E', () => {
       const issuedLead = await getCrmLead(page, lead.id);
       expect(issuedLead.registrationFormNumber).toBeTruthy();
       const issuedFormNumber = String(issuedLead.registrationFormNumber);
-      await expect(leadCard.getByText(new RegExp(escapeRegExp(issuedFormNumber)))).toBeVisible();
+      await expect(
+        applicantWorkspace.getByText(new RegExp(escapeRegExp(issuedFormNumber)))
+      ).toBeVisible();
 
       const timeline = await getCrmTimeline(page, lead.id);
       expect(
@@ -1509,17 +1798,18 @@ test.describe('Student admissions CRM E2E', () => {
 
       const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await leadCard.getByRole('button', { name: 'Manage' }).click();
-      const operationsDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
-      await operationsDialog.getByRole('tab', { name: 'Registration', exact: true }).click();
-      await expect(operationsDialog).toContainText(registration.formNumber);
-      await operationsDialog.getByRole('button', { name: 'Verify Registration' }).click();
-      await expect(operationsDialog.getByText('Verified', { exact: true })).toBeVisible({
+      await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
+      const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
+      await applicantWorkspace.getByRole('tab', { name: 'Registration', exact: true }).click();
+      await expect(applicantWorkspace).toContainText(registration.formNumber);
+      await applicantWorkspace.getByRole('button', { name: 'Verify Registration' }).click();
+      await expect(applicantWorkspace.getByText('Verified', { exact: true })).toBeVisible({
         timeout: 20_000,
       });
-      const documentReason = operationsDialog.getByLabel('Decision or waiver reason');
+      const documentReason = applicantWorkspace.getByLabel('Decision or waiver reason');
       await documentReason.fill('The first scan is unreadable.');
-      await operationsDialog.getByRole('button', { name: 'Reject' }).click();
-      await expect(operationsDialog.getByText('Rejected', { exact: true })).toBeVisible({
+      await applicantWorkspace.getByRole('button', { name: 'Reject' }).click();
+      await expect(applicantWorkspace.getByText('Rejected', { exact: true })).toBeVisible({
         timeout: 20_000,
       });
 
@@ -1539,21 +1829,24 @@ test.describe('Student admissions CRM E2E', () => {
       );
       await expectOk(replacementResponse, 'upload replacement document');
 
-      await operationsDialog
-        .getByRole('button', { name: 'Close applicant workspace' })
-        .click({ force: true });
-      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.goto(workspaceUrl('/student/enrollment/pipeline?view=board', academicYearId), {
+        waitUntil: 'domcontentloaded',
+        timeout: 60_000,
+      });
       const refreshedLeadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
-      const refreshedDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
-      await refreshedDialog.getByRole('tab', { name: 'Registration', exact: true }).click();
-      await refreshedDialog.getByRole('button', { name: 'Verify', exact: true }).click();
-      await expect(refreshedDialog.getByRole('button', { name: 'Original Seen' })).toBeVisible({
+      await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
+      const refreshedWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
+      await refreshedWorkspace.getByRole('tab', { name: 'Registration', exact: true }).click();
+      await refreshedWorkspace.getByRole('button', { name: 'Verify', exact: true }).click();
+      await expect(
+        refreshedWorkspace.getByRole('button', { name: 'Original Seen' })
+      ).toBeVisible({
         timeout: 20_000,
       });
-      await refreshedDialog.getByRole('button', { name: 'Original Seen' }).click();
-      await refreshedDialog.getByRole('button', { name: 'Confirm Readiness' }).click();
-      await expect(refreshedDialog.getByText('Readiness confirmed')).toBeVisible({
+      await refreshedWorkspace.getByRole('button', { name: 'Original Seen' }).click();
+      await refreshedWorkspace.getByRole('button', { name: 'Confirm Readiness' }).click();
+      await expect(refreshedWorkspace.getByText('Readiness confirmed')).toBeVisible({
         timeout: 20_000,
       });
 

@@ -5,8 +5,8 @@ import type { AdmissionCrmRouteImpactPreviewDto } from 'src/redux/student/admiss
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import { Chip, Alert, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import { Gavel, Route, Preview, FactCheck, ReportProblem } from '@mui/icons-material';
+import { Box, Chip, Alert, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmRouteType,
   AdmissionCrmRouteAppealStatus,
@@ -23,8 +23,20 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { ApplicantInlineNotice } from './applicant-workspace-primitives';
+import {
+  formatEvidenceCode,
+  getApplicantRouteFields,
+  getRequiredEvidenceCodes,
+  emptyApplicantRouteValues,
+  buildRouteEvidenceReferences,
+  isApplicantRouteInputComplete,
+} from './applicant-route-requirements';
 
-type Props = { leadId: string; academicYearId: string };
+type Props = {
+  leadId: string;
+  academicYearId: string;
+  capturedRouteDefinitionId?: string | null;
+};
 const routeNames = Object.entries(AdmissionCrmRouteType).filter(([key]) =>
   Number.isNaN(Number(key))
 ) as Array<[string, number]>;
@@ -38,23 +50,20 @@ const eligibility = [
   'Superseded',
 ];
 
-export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
+export function ApplicantRouteOperations({
+  leadId,
+  academicYearId,
+  capturedRouteDefinitionId,
+}: Props) {
   const definitions = useGetAdmissionCrmRouteDefinitionsQuery({ academicYearId });
   const history = useGetAdmissionCrmRouteHistoryQuery({ leadId });
   const appeals = useGetAdmissionCrmRouteAppealsQuery({ leadId });
   const [definitionId, setDefinitionId] = useState('');
   const [reason, setReason] = useState('Initial route assignment.');
-  const [evidence, setEvidence] = useState('');
-  const [reference, setReference] = useState('');
-  const [authority, setAuthority] = useState('');
-  const [allotment, setAllotment] = useState('');
-  const [round, setRound] = useState('');
-  const [previousSchool, setPreviousSchool] = useState('');
-  const [previousBoard, setPreviousBoard] = useState('');
-  const [lastClass, setLastClass] = useState('');
-  const [relatedStudentId, setRelatedStudentId] = useState('');
-  const [deadline, setDeadline] = useState('');
+  const [routeValues, setRouteValues] = useState(emptyApplicantRouteValues);
+  const [evidenceValues, setEvidenceValues] = useState<Record<string, string>>({});
   const [appealReason, setAppealReason] = useState('');
+  const [appealEvidence, setAppealEvidence] = useState('');
   const [appealStatus, setAppealStatus] = useState(AdmissionCrmRouteEligibilityStatus.Eligible);
   const [impactPreview, setImpactPreview] = useState<AdmissionCrmRouteImpactPreviewDto>();
   const [assign, assignState] = useAssignAdmissionCrmRouteMutation();
@@ -62,8 +71,34 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
   const [previewAssignment, previewState] = usePreviewAdmissionCrmRouteAssignmentMutation();
   const [requestAppeal, requestAppealState] = useRequestAdmissionCrmRouteAppealMutation();
   const [decideAppeal, decideAppealState] = useDecideAdmissionCrmRouteAppealMutation();
-  const selected = definitions.data?.find((x) => x.id === definitionId);
   const current = history.data?.find((x) => x.isPrimary);
+  const capturedDefinitionAvailable =
+    Boolean(history.data) &&
+    !current &&
+    Boolean(
+      capturedRouteDefinitionId &&
+        definitions.data?.some((definition) => definition.id === capturedRouteDefinitionId)
+    );
+  const selectedDefinitionId =
+    definitionId || (capturedDefinitionAvailable ? capturedRouteDefinitionId : '') || '';
+  const selected = definitions.data?.find((x) => x.id === selectedDefinitionId);
+  const routeFields = selected ? getApplicantRouteFields(selected.routeType) : [];
+  const requiredEvidenceCodes = getRequiredEvidenceCodes(
+    selected?.configuration.requiredEvidenceCodes
+  );
+  const routeInputComplete = selected
+    ? isApplicantRouteInputComplete(
+        selected.routeType,
+        routeValues,
+        requiredEvidenceCodes,
+        evidenceValues
+      )
+    : false;
+  const availableDefinitions = (definitions.data || []).filter(
+    (definition) =>
+      definition.status === AdmissionCrmRouteDefinitionStatus.Published ||
+      (!current && definition.id === capturedRouteDefinitionId)
+  );
   const pendingAppeal = appeals.data?.find(
     (x) =>
       x.status === AdmissionCrmRouteAppealStatus.Requested ||
@@ -87,33 +122,37 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
         routeData: {
           relatedStudentId:
             selected.routeType === AdmissionCrmRouteType.SiblingPriority
-              ? relatedStudentId || null
+              ? routeValues.relatedStudentId || null
               : null,
           formerStudentId:
             selected.routeType === AdmissionCrmRouteType.ReturningStudent
-              ? relatedStudentId || null
+              ? routeValues.relatedStudentId || null
               : null,
-          authoritativeReference: reference || null,
-          authorityName: authority || null,
-          allotmentNumber: allotment || null,
-          allotmentRound: round || null,
-          admissionDeadline: deadline ? new Date(`${deadline}T23:59:59Z`).toISOString() : null,
-          previousSchool: previousSchool || null,
-          previousBoard: previousBoard || null,
-          lastClassCompleted: lastClass || null,
+          authoritativeReference: routeValues.reference || null,
+          authorityName: routeValues.authority || null,
+          allotmentNumber: routeValues.allotment || null,
+          allotmentRound: routeValues.round || null,
+          admissionDeadline: routeValues.deadline
+            ? new Date(`${routeValues.deadline}T23:59:59Z`).toISOString()
+            : null,
+          previousSchool: routeValues.previousSchool || null,
+          previousBoard: routeValues.previousBoard || null,
+          lastClassCompleted: routeValues.lastClass || null,
           transferCertificateStatus:
             selected.routeType === AdmissionCrmRouteType.Transfer ? 'Pending verification' : null,
           equivalenceStatus:
             selected.routeType === AdmissionCrmRouteType.OverseasReturn
-              ? reference || 'Pending'
+              ? routeValues.reference || 'Pending'
               : null,
           country:
-            selected.routeType === AdmissionCrmRouteType.OverseasReturn ? authority || null : null,
+            selected.routeType === AdmissionCrmRouteType.OverseasReturn
+              ? routeValues.authority || null
+              : null,
         },
-        evidenceReferences: evidence
-          .split(',')
-          .map((x) => x.trim())
-          .filter(Boolean),
+        evidenceReferences: buildRouteEvidenceReferences(
+          requiredEvidenceCodes,
+          evidenceValues
+        ),
         reason,
       }
     : null;
@@ -149,21 +188,24 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
             size="small"
             select
             label="Published route"
-            value={definitionId}
+            value={selectedDefinitionId}
             onChange={(e) => {
               setDefinitionId(e.target.value);
+              setRouteValues(emptyApplicantRouteValues());
+              setEvidenceValues({});
               setImpactPreview(undefined);
             }}
             sx={{ minWidth: 220 }}
           >
             <MenuItem value="">Select route</MenuItem>
-            {(definitions.data || [])
-              .filter((x) => x.status === AdmissionCrmRouteDefinitionStatus.Published)
-              .map((x) => (
-                <MenuItem key={x.id} value={x.id}>
-                  {x.name} v{x.version}
-                </MenuItem>
-              ))}
+            {availableDefinitions.map((definition) => (
+              <MenuItem key={definition.id} value={definition.id}>
+                {definition.name} v{definition.version}
+                {definition.status === AdmissionCrmRouteDefinitionStatus.Retired
+                  ? ' — captured for this inquiry'
+                  : ''}
+              </MenuItem>
+            ))}
           </TextField>
           <TextField
             size="small"
@@ -175,86 +217,98 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
               setImpactPreview(undefined);
             }}
           />
-          <TextField
-            size="small"
-            fullWidth
-            label="Evidence references"
-            value={evidence}
-            onChange={(e) => {
-              setEvidence(e.target.value);
-              setImpactPreview(undefined);
-            }}
-          />
         </Stack>
         {selected && (
-          <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-            <TextField
-              size="small"
-              label={
-                selected.routeType === AdmissionCrmRouteType.ReturningStudent
-                  ? 'Former student ID'
-                  : 'Related student ID'
-              }
-              value={relatedStudentId}
-              onChange={(e) => setRelatedStudentId(e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Authority / country"
-              value={authority}
-              onChange={(e) => setAuthority(e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Authority / staff reference"
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Allotment number"
-              value={allotment}
-              onChange={(e) => setAllotment(e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Round"
-              value={round}
-              onChange={(e) => setRound(e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Previous school"
-              value={previousSchool}
-              onChange={(e) => setPreviousSchool(e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Previous board"
-              value={previousBoard}
-              onChange={(e) => setPreviousBoard(e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Last class"
-              value={lastClass}
-              onChange={(e) => setLastClass(e.target.value)}
-            />
-            <TextField
-              size="small"
-              type="date"
-              label="Admission deadline"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+          <Stack spacing={1.25}>
+            {routeFields.length > 0 && (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 1,
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, minmax(0, 1fr))',
+                    lg: 'repeat(3, minmax(0, 1fr))',
+                  },
+                }}
+              >
+                {routeFields.map((field) => (
+                  <TextField
+                    key={field.key}
+                    size="small"
+                    required
+                    type={field.type}
+                    label={field.label}
+                    value={routeValues[field.key]}
+                    helperText={field.helperText}
+                    onChange={(event) => {
+                      setRouteValues((currentValues) => ({
+                        ...currentValues,
+                        [field.key]: event.target.value,
+                      }));
+                      setImpactPreview(undefined);
+                    }}
+                    InputLabelProps={field.type === 'date' ? { shrink: true } : undefined}
+                  />
+                ))}
+              </Box>
+            )}
+            {requiredEvidenceCodes.length > 0 ? (
+              <Stack spacing={0.75}>
+                <Stack spacing={0.25}>
+                  <Typography variant="body2" fontWeight={600}>
+                    Required evidence
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Enter the verified document or record reference for each configured item.
+                  </Typography>
+                </Stack>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 1,
+                    gridTemplateColumns: {
+                      xs: '1fr',
+                      sm: 'repeat(2, minmax(0, 1fr))',
+                    },
+                  }}
+                >
+                  {requiredEvidenceCodes.map((code) => {
+                    const normalizedCode = code;
+                    return (
+                      <TextField
+                        key={normalizedCode}
+                        size="small"
+                        required
+                        label={`${formatEvidenceCode(normalizedCode)} reference`}
+                        value={evidenceValues[normalizedCode] || ''}
+                        helperText={`Configured evidence code: ${normalizedCode}`}
+                        onChange={(event) => {
+                          setEvidenceValues((currentValues) => ({
+                            ...currentValues,
+                            [normalizedCode]: event.target.value,
+                          }));
+                          setImpactPreview(undefined);
+                        }}
+                      />
+                    );
+                  })}
+                </Box>
+              </Stack>
+            ) : (
+              routeFields.length === 0 && (
+                <ApplicantInlineNotice>
+                  This pathway does not require additional route-specific information.
+                </ApplicantInlineNotice>
+              )
+            )}
           </Stack>
         )}
         <Stack direction="row" gap={1}>
           <LoadingButton
             startIcon={<Preview />}
             loading={previewState.isLoading}
-            disabled={!selected || !reason.trim()}
+            disabled={!selected || !reason.trim() || !routeInputComplete}
             onClick={previewRoute}
           >
             Preview impact
@@ -263,7 +317,7 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
             variant="contained"
             startIcon={<Route />}
             loading={assignState.isLoading}
-            disabled={!impactPreview || !selected || !reason.trim()}
+            disabled={!impactPreview || !selected || !reason.trim() || !routeInputComplete}
             onClick={save}
           >
             {current ? 'Confirm route change' : 'Assign route'}
@@ -388,6 +442,14 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
                   value={appealReason}
                   onChange={(e) => setAppealReason(e.target.value)}
                 />
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Appeal evidence reference"
+                  value={appealEvidence}
+                  helperText="Optional. Use EVIDENCE_CODE:reference when adding supporting evidence."
+                  onChange={(e) => setAppealEvidence(e.target.value)}
+                />
                 <LoadingButton
                   startIcon={<ReportProblem />}
                   loading={requestAppealState.isLoading}
@@ -399,10 +461,9 @@ export function ApplicantRouteOperations({ leadId, academicYearId }: Props) {
                           assignmentId: current.id,
                           requestedStatus: appealStatus,
                           reason: appealReason.trim(),
-                          evidenceReferences: evidence
-                            .split(',')
-                            .map((x) => x.trim())
-                            .filter(Boolean),
+                          evidenceReferences: appealEvidence.trim()
+                            ? [appealEvidence.trim()]
+                            : [],
                         }).unwrap(),
                       'Route appeal submitted.'
                     )

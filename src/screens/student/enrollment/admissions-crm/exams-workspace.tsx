@@ -18,6 +18,7 @@ import { memo, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Chip,
+  Link,
   Alert,
   Stack,
   Paper,
@@ -43,9 +44,9 @@ import {
   useGetAdmissionCrmEntranceExamsQuery,
   useUploadAdmissionCrmExamResultMutation,
   useDecideAdmissionCrmEligibilityMutation,
-  useGetAdmissionCrmCycleConfigurationQuery,
   useGetAdmissionCrmEligibilityHandoffQuery,
   useMarkAdmissionCrmExamAttendanceMutation,
+  useGetAdmissionCrmQuickInquiryOptionsQuery,
   useBulkUploadAdmissionCrmExamResultsMutation,
   useBulkMarkAdmissionCrmExamAttendanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
@@ -53,7 +54,11 @@ import {
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
-import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
+import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import {
+  createApplicantRowNavigationProps,
+  createApplicantLinkNavigationProps,
+} from './applicant-row-navigation';
 import {
   enrollmentActionsColumn,
   enrollmentTableWrapperSx,
@@ -63,7 +68,7 @@ import {
   EnrollmentWorkspaceErrorState,
 } from './workspace-table-patterns';
 
-import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
+import type { ApplicantWorkspaceTab } from './applicant-workspace-page';
 
 const pageSize = 50;
 const attendanceLabels: Record<AdmissionCrmExamAttendanceStatus, string> = {
@@ -170,7 +175,7 @@ const getDateFilterBounds = (filters: IParams['filters'], column: string) => {
 
 type ExamRowActionsProps = {
   exam: AdmissionCrmEntranceExamDto;
-  openApplicant: (leadId: string, tab?: ApplicantDrawerTab) => void;
+  openApplicant: (leadId: string, tab?: ApplicantWorkspaceTab) => void;
   setSelectedExam: (exam: AdmissionCrmEntranceExamDto) => void;
   setHandoffExamId: (examId: string) => void;
 };
@@ -225,11 +230,23 @@ const ExamRowActions = memo(
 
 export function ExamsWorkspace() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
-  const { academicYearId, state, updateState, openApplicant, closeApplicant } =
-    useEnrollmentWorkspace();
+  const {
+    academicYearId,
+    sessionIdentity,
+    state,
+    updateState,
+    getApplicantHref,
+    openApplicant,
+  } = useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
-  const [search, setSearch] = useState('');
-  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
+  const {
+    search,
+    setSearch,
+    filters: columnFilters,
+    setFilters: setColumnFilters,
+  } = useWorkspaceTableSessionState(
+    `exams:${academicYearId || 'none'}:${sessionIdentity}`
+  );
   const [selectedExamIds, setSelectedExamIds] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
   const [bulkMarksOpen, setBulkMarksOpen] = useState(false);
@@ -274,11 +291,11 @@ export function ExamsWorkspace() {
     { examRecordId: handoffExamId },
     { skip: !handoffExamId }
   );
-  const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
+  const operationalOptionsQuery = useGetAdmissionCrmQuickInquiryOptionsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
-  const entranceExamRequired = cycleConfigurationQuery.data?.entranceExamRequired !== false;
+  const entranceExamRequired = operationalOptionsQuery.data?.entranceExamRequired !== false;
 
   useEffect(() => {
     if (!selectedExam) return;
@@ -526,7 +543,17 @@ export function ExamsWorkspace() {
           return (
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
               <Typography variant="subtitle2" noWrap>
-                {value}
+                <Link
+                  {...createApplicantLinkNavigationProps({
+                    href: getApplicantHref(exam.leadId, 'exam'),
+                    onOpen: () => openApplicant(exam.leadId, 'exam'),
+                  })}
+                  color="inherit"
+                  underline="hover"
+                  sx={{ textAlign: 'left' }}
+                >
+                  {value}
+                </Link>
               </Typography>
               <Typography variant="caption" color="text.primary" noWrap>
                 {exam.slotNameSnapshot || 'Exam slot'}
@@ -648,7 +675,7 @@ export function ExamsWorkspace() {
         },
       },
     ],
-    [exams, openApplicant, selectedExamIds.length, selectedExamSet]
+    [exams, getApplicantHref, openApplicant, selectedExamIds.length, selectedExamSet]
   );
 
   if (!academicYearId) {
@@ -782,6 +809,10 @@ export function ExamsWorkspace() {
             />
           }
           rowProps={(row) => ({
+            ...createApplicantRowNavigationProps({
+              applicantName: row.applicantName,
+              onOpen: () => openApplicant(row.leadId, 'exam'),
+            }),
             'data-testid': 'student-enrollment-exam-row',
             'data-exam-id': row.id,
           })}
@@ -1187,13 +1218,6 @@ export function ExamsWorkspace() {
         </DialogActions>
       </Dialog>
 
-      <ApplicantWorkspaceDrawer
-        leadId={state.applicant}
-        academicYearId={academicYearId}
-        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || 'exam'}
-        onTabChange={(nextTab) => updateState({ applicantTab: nextTab }, 'replace')}
-        onClose={closeApplicant}
-      />
     </Stack>
   );
 }

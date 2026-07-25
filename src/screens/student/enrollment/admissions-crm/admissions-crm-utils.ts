@@ -23,7 +23,7 @@ export const admissionCrmStageLabels: Record<AdmissionInquiryStage, string> = {
 
 export const admissionCrmChannelLabels: Record<AdmissionInquiryChannel, string> = {
   [AdmissionInquiryChannel.ManualBackOffice]: 'Manual Back Office',
-  [AdmissionInquiryChannel.QuickCallEntry]: 'Quick Call',
+  [AdmissionInquiryChannel.QuickCallEntry]: 'Quick inquiry',
   [AdmissionInquiryChannel.WalkInReception]: 'Walk-in Reception',
   [AdmissionInquiryChannel.SchoolWebsiteForm]: 'Website Form',
   [AdmissionInquiryChannel.WhatsAppInquiry]: 'WhatsApp',

@@ -15,6 +15,7 @@ import {
 import {
   getAdmissionCrmKpis,
   getAdmissionCrmLeadName,
+  getAdmissionCrmChannelLabel,
   buildAdmissionCrmBoardColumns,
   canRetryAdmissionCrmDeliveryLog,
   getAdmissionCrmStageTooltipLines,
@@ -73,6 +74,12 @@ const makeExam = (
 });
 
 describe('admissions CRM workspace utilities', () => {
+  it('uses the configured quick inquiry language for the saved lead channel', () => {
+    expect(getAdmissionCrmChannelLabel(AdmissionInquiryChannel.QuickCallEntry)).toBe(
+      'Quick inquiry'
+    );
+  });
+
   it('groups leads by enabled pipeline stages in display order', () => {
     const columns = buildAdmissionCrmBoardColumns(
       [

@@ -12,6 +12,7 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
+  getWorkspaceFromPathname,
   areSearchParamsEquivalent,
   getPersonaWorkspaceDefaults,
   parseEnrollmentWorkspaceState,
@@ -67,6 +68,53 @@ describe('Enrollment workspace URL state', () => {
     expect(serializeEnrollmentWorkspaceState(state).get('tab')).toBe('exam');
     expect(serializeEnrollmentWorkspaceState(state).get('group')).toBe('decision');
     expect(serializeEnrollmentWorkspaceState(state).get('seatPool')).toBe('pool-1');
+  });
+
+  it('round trips an applicant return location and Activity tab', () => {
+    const returnTo = '/student/enrollment/pipeline?cycle=cycle-1&view=list&page=3';
+    const state = parseEnrollmentWorkspaceState(
+      new URLSearchParams({
+        applicant: 'lead-1',
+        return: returnTo,
+        tab: 'activity',
+      })
+    );
+
+    expect(state).toMatchObject({
+      applicant: 'lead-1',
+      returnTo,
+      applicantTab: 'activity',
+    });
+
+    const serialized = serializeEnrollmentWorkspaceState(state);
+    expect(serialized.get('applicant')).toBe('lead-1');
+    expect(serialized.get('return')).toBe(returnTo);
+    expect(serialized.get('tab')).toBe('activity');
+  });
+
+  it('keeps date-range state separate from the applicant return token', () => {
+    const state = parseEnrollmentWorkspaceState(
+      new URLSearchParams({
+        from: '2026-07-01',
+        to: '2026-07-31',
+        return: 'applicant-return-token',
+      })
+    );
+
+    expect(state).toMatchObject({
+      from: '2026-07-01',
+      to: '2026-07-31',
+      returnTo: 'applicant-return-token',
+    });
+
+    const serialized = serializeEnrollmentWorkspaceState(state);
+    expect(serialized.get('from')).toBe('2026-07-01');
+    expect(serialized.get('to')).toBe('2026-07-31');
+    expect(serialized.get('return')).toBe('applicant-return-token');
+  });
+
+  it('recognizes the dynamic applicant route as the applicant workspace', () => {
+    expect(getWorkspaceFromPathname('/student/enrollment/applicants/lead-1')).toBe('applicant');
   });
 
   it('rejects invalid enum, date, and pagination values', () => {

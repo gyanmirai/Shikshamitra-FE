@@ -20,6 +20,39 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(source).toContain(workspaceComponent);
   });
 
+  it('binds the dynamic applicant route and protects it with Pipeline view permission', () => {
+    const route = read(
+      'src',
+      'app',
+      '(auth-route)',
+      'student',
+      'enrollment',
+      'applicants',
+      '[leadId]',
+      'page.tsx'
+    );
+    const workspaces = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'workspace-pages.tsx'
+    );
+    const applicantWorkspace = workspaces.slice(
+      workspaces.indexOf('export const AdmissionsApplicantWorkspace'),
+      workspaces.indexOf('export const AdmissionsExamsWorkspace')
+    );
+
+    expect(route).toContain("params: Promise<{ leadId: string }>");
+    expect(route).toContain('const { leadId } = await params');
+    expect(route).toContain('<AdmissionsApplicantWorkspace leadId={leadId} />');
+    expect(applicantWorkspace).toContain(
+      '<StudentPermissionGuard permissionKey={studentPermissions.enrollment.pipeline}>'
+    );
+    expect(applicantWorkspace).toContain('<ApplicantWorkspace leadId={leadId} />');
+  });
+
   it('uses route-owned workspace components instead of a shared mode-driven screen', () => {
     const source = read(
       'src',
@@ -87,8 +120,24 @@ describe('Student Enrollment workspace route contracts', () => {
 
     expect(pipeline).toContain('const pageSize = 50');
     expect(pipeline).toContain('setSelectedLeadIds([])');
-    expect(pipeline).toContain("updateState({ page: 1 }, 'push')");
+    expect(pipeline).toContain('onSearchInputChange={(value)');
     expect(pipeline).toContain("updateState({ page: 1 }, 'replace')");
+    const context = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'enrollment-workspace-context.tsx'
+    );
+    expect(context).toContain("window.history.pushState(null, '', href)");
+    expect(context).toContain("window.history.replaceState(null, '', href)");
+    expect(context).not.toContain('window.history.state');
+    expect(context).toContain('useIsomorphicLayoutEffect(() =>');
+    expect(context).toContain('window.location.pathname !== pathname');
+    expect(context).toContain('pendingNavigationPathRef.current = applicantPath');
+    expect(context).toContain('pendingNavigationPathRef.current !== pathname');
+    expect(context).toContain('areSearchParamsEquivalent(liveSearchParams, current)');
     expect(operations).toContain('const pageSize = 50');
     expect(pipeline).toContain('setDebouncedStaffSearch');
     expect(operations).toContain('setDebouncedOwnerSearch');
@@ -337,7 +386,7 @@ describe('Student Enrollment workspace route contracts', () => {
     const workspaceSources = [
       'pipeline-workspace.tsx',
       'operations-queue-workspace.tsx',
-      'applicant-workspace-drawer.tsx',
+      'applicant-workspace-page.tsx',
     ]
       .map((file) => read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file))
       .join('\n');

@@ -19,6 +19,7 @@ import {
 export type EnrollmentWorkspace =
   | 'overview'
   | 'pipeline'
+  | 'applicant'
   | 'exams'
   | 'registrations'
   | 'offers'
@@ -39,6 +40,7 @@ export type PipelineStageGroup = 'active' | 'decision' | 'closed';
 export type ScoreBandFilter = 'all' | 'hot' | 'warm' | 'needsAttention';
 export type EnrollmentApplicantTab =
   | 'overview'
+  | 'activity'
   | 'exam'
   | 'registration'
   | 'offer'
@@ -64,6 +66,7 @@ export type EnrollmentWorkspaceState = {
   cycle?: string;
   board?: string;
   medium?: string;
+  returnTo?: string;
   applicant?: string;
   workItem?: string;
   applicantTab?: EnrollmentApplicantTab;
@@ -152,6 +155,7 @@ const scoreBands = new Set<ScoreBandFilter>(['all', 'hot', 'warm', 'needsAttenti
 const stageGroups = new Set<PipelineStageGroup>(['active', 'decision', 'closed']);
 const applicantTabs = new Set<EnrollmentApplicantTab>([
   'overview',
+  'activity',
   'exam',
   'registration',
   'offer',
@@ -193,6 +197,7 @@ const parsePositiveInteger = (value: string | null, maximum = 10_000) => {
 };
 
 export const getWorkspaceFromPathname = (pathname: string): EnrollmentWorkspace => {
+  if (pathname.includes('/applicants/')) return 'applicant';
   if (pathname.includes('/overview')) return 'overview';
   if (pathname.includes('/settings')) return 'settings';
   if (pathname.includes('/exams')) return 'exams';
@@ -246,6 +251,7 @@ export const parseEnrollmentWorkspaceState = (
     cycle: parseToken(searchParams.get('cycle')) ?? defaults.cycle,
     board: parseToken(searchParams.get('board')) ?? defaults.board,
     medium: parseToken(searchParams.get('medium')) ?? defaults.medium,
+    returnTo: parseToken(searchParams.get('return'), 2_000) ?? defaults.returnTo,
     applicant: parseToken(searchParams.get('applicant')) ?? defaults.applicant,
     workItem: parseToken(searchParams.get('workItem')) ?? defaults.workItem,
     applicantTab:
@@ -313,6 +319,7 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('cycle', state.cycle);
   set('board', state.board);
   set('medium', state.medium);
+  set('return', state.returnTo);
   set('applicant', state.applicant);
   set('workItem', state.workItem);
   set('tab', state.applicantTab);

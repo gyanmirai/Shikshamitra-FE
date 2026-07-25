@@ -22,19 +22,27 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  FormHelperText,
+  InputAdornment,
+  LinearProgress,
 } from '@mui/material';
 import {
-  AdmissionCrmRouteType,
   AdmissionInquiryChannel,
   AdmissionCrmRegistrationTemplateStatus,
   useGetAdmissionCrmStandardOptionsQuery,
   useGetAdmissionCrmFormNumberSeriesQuery,
+  useGetAdmissionCrmQuickInquiryOptionsQuery,
   useGetAdmissionCrmRegistrationTemplatesQuery,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
   useCreateDirectAdmissionCrmRegistrationMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
+import {
+  mapQuickInquiryOptions,
+  isValidQuickInquiryEmail,
+  getDefaultQuickInquiryOption,
+} from './quick-inquiry-options';
 
 type Props = {
   open: boolean;
@@ -52,7 +60,7 @@ type FormState = {
   email: string;
   mediumStageId: string;
   targetStandardId: string;
-  intendedRouteType: AdmissionCrmRouteType;
+  intendedRouteDefinitionId: string;
   registrationTemplateId: string;
   formNumberSeriesId: string;
   manualFormNumber: string;
@@ -70,16 +78,13 @@ const initialForm = (): FormState => ({
   email: '',
   mediumStageId: '',
   targetStandardId: '',
-  intendedRouteType: AdmissionCrmRouteType.RteEws,
+  intendedRouteDefinitionId: '',
   registrationTemplateId: '',
   formNumberSeriesId: '',
   manualFormNumber: '',
   notes: '',
   duplicateContinueReason: '',
 });
-
-const routeLabel = (value: AdmissionCrmRouteType) =>
-  AdmissionCrmRouteType[value]?.replace(/([a-z])([A-Z])/g, '$1 $2') || 'Admission pathway';
 
 const readError = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
@@ -104,7 +109,12 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [duplicateReviewed, setDuplicateReviewed] = useState(false);
   const [duplicateCount, setDuplicateCount] = useState(0);
+  const [emailTouched, setEmailTouched] = useState(false);
 
+  const quickInquiryOptionsQuery = useGetAdmissionCrmQuickInquiryOptionsQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !open || !academicYearId }
+  );
   const organizationOptionsQuery = useGetAcademicOrganizationOptionsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !open || !academicYearId }
@@ -127,6 +137,31 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
   );
   const [previewDuplicates, previewState] = usePreviewAdmissionCrmLeadDuplicatesMutation();
   const [createDirectRegistration, createState] = useCreateDirectAdmissionCrmRegistrationMutation();
+
+  const directRegistrationOptions = useMemo(
+    () => mapQuickInquiryOptions(quickInquiryOptionsQuery.data),
+    [quickInquiryOptionsQuery.data]
+  );
+  const selectedRoute = directRegistrationOptions.routes.find(
+    (route) => route.id === form.intendedRouteDefinitionId
+  );
+  const manualEntryEnabled = directRegistrationOptions.channels.some(
+    (channel) => channel.value === AdmissionInquiryChannel.ManualBackOffice
+  );
+  const optionConfigurationLoading =
+    quickInquiryOptionsQuery.isLoading || quickInquiryOptionsQuery.isFetching;
+  const optionConfigurationMissing =
+    !optionConfigurationLoading &&
+    !quickInquiryOptionsQuery.isError &&
+    Boolean(quickInquiryOptionsQuery.data) &&
+    (!manualEntryEnabled || !directRegistrationOptions.routes.length);
+  const optionConfigurationUnavailable =
+    optionConfigurationLoading ||
+    quickInquiryOptionsQuery.isError ||
+    optionConfigurationMissing ||
+    quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false ||
+    !quickInquiryOptionsQuery.data;
+  const emailInvalid = !isValidQuickInquiryEmail(form.email);
 
   const duplicateFingerprint = [
     form.firstName.trim().toLowerCase(),
@@ -162,6 +197,34 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
       ),
     [form.mediumStageId, standardOptionsQuery.data]
   );
+  const selectedStandard = standards.find((standard) => standard.id === form.targetStandardId);
+
+  useEffect(() => {
+    if (!open || !quickInquiryOptionsQuery.data) return;
+
+    setForm((current) => {
+      const currentRouteIsAvailable = directRegistrationOptions.routes.some(
+        (route) => route.id === current.intendedRouteDefinitionId
+      );
+      const intendedRouteDefinitionId = currentRouteIsAvailable
+        ? current.intendedRouteDefinitionId
+        : (getDefaultQuickInquiryOption(directRegistrationOptions.routes)?.id ?? '');
+
+      return intendedRouteDefinitionId === current.intendedRouteDefinitionId
+        ? current
+        : { ...current, intendedRouteDefinitionId };
+    });
+  }, [directRegistrationOptions.routes, open, quickInquiryOptionsQuery.data]);
+
+  useEffect(() => {
+    if (!open || form.mediumStageId || mediumStages.length !== 1) return;
+    setForm((current) => ({ ...current, mediumStageId: mediumStages[0].id }));
+  }, [form.mediumStageId, mediumStages, open]);
+
+  useEffect(() => {
+    if (!open || form.targetStandardId || standards.length !== 1) return;
+    setForm((current) => ({ ...current, targetStandardId: standards[0].id }));
+  }, [form.targetStandardId, open, standards]);
 
   useEffect(() => {
     if (!open) return;
@@ -176,6 +239,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     setActiveStep(0);
     setDuplicateReviewed(false);
     setDuplicateCount(0);
+    setEmailTouched(false);
   };
 
   const close = () => {
@@ -184,7 +248,10 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
   };
 
   const buildApplicant = (): CreateAdmissionCrmLeadDto => {
-    const standard = standards.find((item) => item.id === form.targetStandardId);
+    if (!selectedStandard || !selectedRoute) {
+      throw new Error('Direct registration academic options are incomplete.');
+    }
+
     return {
       channel: AdmissionInquiryChannel.ManualBackOffice,
       firstName: form.firstName.trim(),
@@ -194,12 +261,13 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
       parentGuardianName: form.parentGuardianName.trim() || null,
       primaryContactNo: form.primaryContactNo.trim() || null,
       email: form.email.trim() || null,
-      admissionIntent: `${routeLabel(form.intendedRouteType)} direct registration`,
-      intendedRouteType: form.intendedRouteType,
-      targetStandardId: standard?.id || null,
+      admissionIntent: `${selectedRoute.label} direct registration`,
+      intendedRouteDefinitionId: selectedRoute.id,
+      targetStandardId: selectedStandard.id,
       academicBoardId: academicBoardId || null,
       academicMediumId: academicMediumId || null,
-      desiredClassName: standard?.name || null,
+      academicMediumStageId: form.mediumStageId,
+      desiredClassName: selectedStandard.name,
       notes: form.notes.trim() || null,
       duplicateContinueReason: form.duplicateContinueReason.trim() || null,
     };
@@ -207,14 +275,34 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
 
   const submit = async () => {
     if (!academicYearId) return;
-    if (!form.firstName.trim() || !form.targetStandardId || !form.registrationTemplateId) {
+    setEmailTouched(true);
+    if (
+      !form.firstName.trim() ||
+      !form.mediumStageId ||
+      !selectedStandard ||
+      !selectedRoute ||
+      !form.registrationTemplateId
+    ) {
       shikshaMitraToast.error({
-        message: 'Student name, target class, and template are required.',
+        message:
+          'Student name, academic stage, target class, admission pathway, and template are required.',
       });
       return;
     }
     if (!form.primaryContactNo.trim() && !form.email.trim()) {
       shikshaMitraToast.error({ message: 'Contact number or email is required.' });
+      return;
+    }
+    if (emailInvalid) {
+      shikshaMitraToast.error({
+        message: 'Enter a valid email address, for example parent@example.com.',
+      });
+      return;
+    }
+    if (optionConfigurationUnavailable) {
+      shikshaMitraToast.error({
+        message: 'Direct registration options are unavailable. Review Enrollment Settings.',
+      });
       return;
     }
     if (!form.formNumberSeriesId && !form.manualFormNumber.trim()) {
@@ -260,18 +348,24 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     }
   };
 
-  const routeTypes = Object.values(AdmissionCrmRouteType).filter(
-    (value): value is AdmissionCrmRouteType => typeof value === 'number'
-  );
-
   const validateStep = (step: number) => {
     if (step === 0) {
       if (!form.firstName.trim()) return 'Student first name is required.';
       if (!form.primaryContactNo.trim() && !form.email.trim()) {
         return 'Contact number or email is required.';
       }
+      if (emailInvalid) {
+        return 'Enter a valid email address, for example parent@example.com.';
+      }
     }
-    if (step === 1 && !form.targetStandardId) return 'Target class is required.';
+    if (step === 1) {
+      if (!form.mediumStageId) return 'Academic stage is required.';
+      if (!selectedStandard) return 'Target class is required.';
+      if (!selectedRoute) return 'Admission pathway is required.';
+      if (optionConfigurationUnavailable) {
+        return 'Direct registration options are unavailable. Review Enrollment Settings.';
+      }
+    }
     if (step === 2) {
       if (!form.registrationTemplateId) return 'Registration template is required.';
       if (!form.formNumberSeriesId && !form.manualFormNumber.trim()) {
@@ -282,6 +376,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
   };
 
   const nextStep = () => {
+    if (activeStep === 0) setEmailTouched(true);
     const message = validateStep(activeStep);
     if (message) {
       shikshaMitraToast.error({ message });
@@ -324,6 +419,37 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
               </Box>
             </Stack>
           </Paper>
+
+          {optionConfigurationLoading ? (
+            <LinearProgress aria-label="Loading direct registration options" />
+          ) : null}
+          {quickInquiryOptionsQuery.isError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => quickInquiryOptionsQuery.refetch()}
+                >
+                  Retry
+                </Button>
+              }
+            >
+              Admission pathways and channel settings could not be loaded.
+            </Alert>
+          ) : null}
+          {optionConfigurationMissing ? (
+            <Alert severity="warning">
+              Direct registration needs the Manual entry channel and at least one published
+              admission pathway. Ask an administrator to update Enrollment Settings.
+            </Alert>
+          ) : null}
+          {quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false ? (
+            <Alert severity="warning">
+              Direct registration is unavailable because the admission cycle is not active.
+            </Alert>
+          ) : null}
 
           <Stepper activeStep={activeStep} alternativeLabel>
             {steps.map((label) => (
@@ -389,43 +515,151 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
               />
               <TextField
                 type="email"
-                label="Email"
+                label="Email address"
+                name="email"
+                autoComplete="email"
+                spellCheck={false}
                 value={form.email}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, email: event.target.value }))
+                error={emailTouched && emailInvalid}
+                helperText={
+                  emailTouched && emailInvalid
+                    ? 'Enter a valid email address, for example parent@example.com.'
+                    : 'Optional when a contact number is provided.'
                 }
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">@</InputAdornment>,
+                }}
+                onBlur={() => setEmailTouched(true)}
+                onChange={(event) => {
+                  setForm((current) => ({ ...current, email: event.target.value }));
+                  setDuplicateReviewed(false);
+                }}
               />
             </Box>
           ) : null}
 
           {activeStep === 1 ? (
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-                gap: 1,
-              }}
-            >
-              <TextField
-                required
-                select
-                label="Medium stage"
-                value={form.mediumStageId}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    mediumStageId: event.target.value,
-                    targetStandardId: '',
-                  }))
-                }
+            <Stack spacing={1}>
+              {organizationOptionsQuery.isError ? (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => organizationOptionsQuery.refetch()}
+                    >
+                      Retry
+                    </Button>
+                  }
+                >
+                  Academic stages could not be loaded for the selected board and medium.
+                </Alert>
+              ) : null}
+              {!organizationOptionsQuery.isFetching &&
+              organizationOptionsQuery.data &&
+              !mediumStages.length ? (
+                <Alert severity="warning">
+                  No academic stages are configured for the selected board and medium.
+                </Alert>
+              ) : null}
+              {form.mediumStageId && standardOptionsQuery.isError ? (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => standardOptionsQuery.refetch()}
+                    >
+                      Retry
+                    </Button>
+                  }
+                >
+                  Classes could not be loaded for the selected academic stage.
+                </Alert>
+              ) : null}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                  gap: 1,
+                }}
               >
-                {mediumStages.map((stage) => (
-                  <MenuItem key={stage.id} value={stage.id}>
-                    {stage.stageName || stage.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
+                <TextField
+                  required
+                  select
+                  label="Academic stage"
+                  value={form.mediumStageId}
+                  disabled={organizationOptionsQuery.isFetching}
+                  helperText="Derived from the selected board and medium."
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      mediumStageId: event.target.value,
+                      targetStandardId: '',
+                    }));
+                    setDuplicateReviewed(false);
+                  }}
+                >
+                  {mediumStages.map((stage) => (
+                    <MenuItem key={stage.id} value={stage.id}>
+                      {stage.stageName || stage.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  required
+                  select
+                  label="Target class"
+                  value={form.targetStandardId}
+                  disabled={!form.mediumStageId || standardOptionsQuery.isFetching}
+                  helperText="Available within the selected academic stage."
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      targetStandardId: event.target.value,
+                    }));
+                    setDuplicateReviewed(false);
+                  }}
+                >
+                  {standards.map((standard) => (
+                    <MenuItem key={standard.id} value={standard.id}>
+                      {standard.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  required
+                  select
+                  label="Admission pathway"
+                  value={form.intendedRouteDefinitionId}
+                  disabled={optionConfigurationUnavailable}
+                  helperText={
+                    selectedRoute
+                      ? `Published pathway version ${selectedRoute.version}.`
+                      : 'Loaded from the active enrollment configuration.'
+                  }
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      intendedRouteDefinitionId: event.target.value,
+                    }));
+                    setDuplicateReviewed(false);
+                  }}
+                >
+                  {directRegistrationOptions.routes.map((route) => (
+                    <MenuItem key={route.id} value={route.id}>
+                      {route.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+              <FormHelperText>
+                The selected academic stage and class are saved with the registration so the same
+                placement can be reused through activation.
+              </FormHelperText>
+            </Stack>
           ) : null}
 
           {activeStep === 2 ? (
@@ -436,40 +670,6 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
                 gap: 1,
               }}
             >
-              <TextField
-                required
-                select
-                label="Target class"
-                value={form.targetStandardId}
-                disabled={!form.mediumStageId}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, targetStandardId: event.target.value }))
-                }
-              >
-                {standards.map((standard) => (
-                  <MenuItem key={standard.id} value={standard.id}>
-                    {standard.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                required
-                select
-                label="Admission pathway"
-                value={form.intendedRouteType}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    intendedRouteType: Number(event.target.value),
-                  }))
-                }
-              >
-                {routeTypes.map((route) => (
-                  <MenuItem key={route} value={route}>
-                    {routeLabel(route)}
-                  </MenuItem>
-                ))}
-              </TextField>
               <TextField
                 required
                 select

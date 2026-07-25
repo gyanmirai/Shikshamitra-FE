@@ -21,6 +21,7 @@ Use this table for visible Student navigation.
 | ------------------------ | -------------------------------------- | ------------------------------------------------------------- |
 | Dashboard                | `/student/dashboard`                   | `ShikshaMitra.Module.Students`                                |
 | Pipeline                 | `/student/enrollment/pipeline`         | `Students.Enrollment.AdmissionsCrm.View`                      |
+| Applicant workspace      | `/student/enrollment/applicants/{leadId}` | `Students.Enrollment.AdmissionsCrm.View`                   |
 | Entrance Exams           | `/student/enrollment/exams`            | `Students.Enrollment.AdmissionsCrm.View`                      |
 | Registrations & Documents | `/student/enrollment/registrations`   | `Students.Enrollment.AdmissionsCrm.View`                      |
 | Offers & Seats           | `/student/enrollment/offers-seats`     | `Students.Enrollment.AdmissionsCrm.ViewSeatPlans`             |

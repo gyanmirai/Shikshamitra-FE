@@ -43,6 +43,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   serverSideFilter = false,
   onServerSort,
   onServerPagination,
+  onSearchInputChange,
   onServerSearch,
   onServerFilter,
   totalCount,
@@ -220,12 +221,18 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const newSearchTerm = event.target.value;
       handleChangeParams({ searchTerm: newSearchTerm, page: 0 });
+      onSearchInputChange?.(newSearchTerm);
       if (serverSideSearch && onServerSearch) {
         // Debounce managed by effect
       }
     },
-    [handleChangeParams, serverSideSearch, onServerSearch]
+    [handleChangeParams, onSearchInputChange, serverSideSearch, onServerSearch]
   );
+
+  const handleClearSearch = useCallback(() => {
+    handleChangeParams({ searchTerm: '', page: 0 });
+    onSearchInputChange?.('');
+  }, [handleChangeParams, onSearchInputChange]);
 
   // Re-implement debounce effect for server search
   useEffect(() => {
@@ -339,7 +346,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             isFilter={isFilter}
             searchValue={searchTerm}
             onSearch={handleSearch}
-            onClearSearch={() => handleChangeParams({ searchTerm: '', page: 0 })}
+            onClearSearch={handleClearSearch}
             columns={memoizedColumns}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={handleColumnVisibilityChange}
@@ -622,6 +629,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       isFilter,
       searchTerm,
       handleSearch,
+      handleClearSearch,
       memoizedColumns,
       columnVisibility,
       handleColumnVisibilityChange,
