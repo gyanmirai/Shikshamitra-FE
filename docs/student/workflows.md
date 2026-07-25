@@ -21,6 +21,7 @@ Use this map to find the first screen and client.
 | ---------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | Dashboard                    | `/student/dashboard`                                                             | `src/redux/student/index.ts`                                   |
 | Admissions pipeline          | `/student/enrollment/pipeline`                                                   | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
+| Applicant workspace          | `/student/enrollment/applicants/{leadId}`                                        | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Entrance exams               | `/student/enrollment/exams`                                                      | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Registrations and documents  | `/student/enrollment/registrations`                                              | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Offers and seats             | `/student/enrollment/offers-seats`                                               | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
@@ -47,13 +48,22 @@ Frontend workflows must respect backend data ownership.
 | Integration                    | Rule                                                                                            |
 | ------------------------------ | ----------------------------------------------------------------------------------------------- |
 | Inquiry Source label           | Product copy and CRM contracts use Inquiry Source                                                   |
+| Quick inquiry identity         | Quick inquiry captures the applicant as required first name plus optional middle and last names, validates email on both client and server, and carries the same structured identity into registration |
+| Quick inquiry configuration    | Quick inquiry shows only enabled inquiry channels and published effective admission pathways from the selected cycle, while campaign, intent, and notes remain optional details |
+| Quick inquiry academic scope   | Academic stage and target class are resolved inside the selected academic year, board, and medium hierarchy, and the backend rejects mismatched placement |
+| Direct registration            | Authorized direct registration uses the enabled Manual entry channel, a published effective admission pathway, validated contact details, and the same academic stage and target-class mapping as Quick Inquiry |
+| Applicant journey              | The full-page applicant workspace presents Inquiry, Entrance, Registration, Offer and Seat, and Activation as stage-aware steps, and skips Entrance when the cycle does not require an exam |
+| Applicant terminal stages      | Rejected, stale, and archived inquiries cannot start later journey work, while staff can still review artifacts that already exist |
+| Applicant pathway governance   | Governance shows only fields required by the selected pathway and captures one verified reference per configured evidence code; an inquiry can complete its first audited assignment against the exact pathway version captured at intake even if that version is later retired |
+| Applicant activity             | Applicant activity and audit evidence use a separate permission-safe section with retry and incremental older-event loading |
+| Applicant My Work context      | Opening an applicant from My Admissions Work carries the selected instruction, due state, priority, assignee, and recommended action into the full-page workspace |
 | Inquiry CRM to entrance exam   | CRM leads can schedule into entrance exam slots before a `Student` record exists                |
 | Inquiry CRM registration form  | Staff can issue a CRM-native registration form from an inquiry lead before exam scheduling when the cycle requires it |
 | Admissions CRM registration    | Applicant operations issue the applicable versioned registration template, manage correction and link lifecycle actions, record fee references, and verify submissions |
 | Admissions CRM documents       | Applicant operations assign the applicable checklist, show configured family upload instructions, use configured rejection-reason shortcuts, review or waive requirements, confirm originals, and enforce one-person or two-person readiness approval |
 | Admissions CRM document expiry | Each validity-aware requirement may define a reminder window; the backend `DocumentExpiring` journey trigger creates the configured deduplicated task or approved parent message when a current document enters that window |
 | Admissions CRM fee policy      | Admission Criteria offers supported quick starts, a live INR parent quotation preview, friendly Finance-owned payment gates, and collapsed campus, class, board, medium, route, date, and grace-period filters |
-| Admissions CRM operations      | Exception queues open the selected applicant workspace for owner, priority, checklist, task, registration, document, and readiness actions |
+| Admissions CRM operations      | Pipeline and exception-queue rows open the dedicated applicant page on the relevant section and preserve the exact table state for Back |
 | Inquiry CRM eligibility handoff | Exam view handoff uses CRM eligibility context and missing-admission-field review before the admission team creates student records |
 | Inquiry CRM exam management    | Exam view actions let staff mark attendance, enter marks, decide eligibility, and record override reasons before handoff |
 | Inquiry CRM filters            | Board and list views support search, stage, channel, campaign, owner, desired-class, score-band, and manual-priority filtering |
@@ -62,7 +72,7 @@ Frontend workflows must respect backend data ownership.
 | Inquiry CRM pipeline settings  | Settings can configure each fixed stage label, order, enabled state, color, SLA hours, owner responsibility, and enforced allowed next stages |
 | Inquiry CRM SLA automation     | SLA reminders use the current stage SLA target when configured, with cycle default as fallback |
 | Inquiry CRM bulk operations    | List view selection supports bulk owner assignment, follow-up task creation, operational stage movement, archive actions, and template messaging |
-| Inquiry CRM timeline           | Staff can open a lead timeline from board or list views to review lead, task, archive, and exam events |
+| Inquiry CRM timeline           | Staff can review lead, task, archive, and exam events from the applicant page Activity section |
 | Inquiry CRM notes              | Staff can add lead notes or call notes from board and list leads, and those notes appear in the CRM timeline |
 | Inquiry CRM owner, priority, checklist, and tasks | Staff can assign or clear a lead owner, set manual lead priority, update applicant checklist progress, and create, review, or complete follow-up tasks from board or list leads |
 | Inquiry CRM workload           | Staff workload comes from the CRM analytics summary and groups leads, tasks, stale pressure, and exams by owner |

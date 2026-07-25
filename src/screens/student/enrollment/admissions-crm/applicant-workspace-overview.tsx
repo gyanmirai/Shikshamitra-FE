@@ -38,7 +38,6 @@ import {
   AdmissionCrmLeadPriority,
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmTasksQuery,
-  useGetAdmissionCrmTimelineQuery,
   useCreateAdmissionCrmTaskMutation,
   useReopenAdmissionCrmLeadMutation,
   useAddAdmissionCrmLeadNoteMutation,
@@ -58,6 +57,7 @@ import {
   formatApplicantContact,
   joinEnrollmentMetadata,
   getApplicantUpdateError,
+  getDistinctAdmissionIntent,
 } from './enrollment-display';
 import {
   ApplicantSection,
@@ -139,7 +139,6 @@ export function ApplicantWorkspaceOverview({
   const [taskSearch, setTaskSearch] = useState('');
   const [debouncedTaskSearch, setDebouncedTaskSearch] = useState('');
   const [showAllTasks, setShowAllTasks] = useState(false);
-  const [showAllTimeline, setShowAllTimeline] = useState(false);
   const [governedAction, setGovernedAction] = useState<GovernedAction>(null);
   const [stage, setStage] = useState<AdmissionInquiryStage>(lead.stage);
   const [stageReason, setStageReason] = useState('');
@@ -150,17 +149,16 @@ export function ApplicantWorkspaceOverview({
   const [completionNotes, setCompletionNotes] = useState('');
 
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
+  const distinctAdmissionIntent = getDistinctAdmissionIntent(
+    lead.admissionIntent,
+    lead.intendedRouteNameSnapshot
+  );
   const allowedStages = useMemo(
     () => stages.find((item) => item.systemStage === lead.stage)?.allowedNextStages ?? [],
     [lead.stage, stages]
   );
 
   const tasksQuery = useGetAdmissionCrmTasksQuery({ leadId: lead.id, maxResultCount: 50 });
-  const timelineQuery = useGetAdmissionCrmTimelineQuery({
-    leadId: lead.id,
-    maxResultCount: 50,
-    sorting: 'OccurredAt DESC',
-  });
   const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
       filter: debouncedOwnerSearch || undefined,
@@ -262,8 +260,6 @@ export function ApplicantWorkspaceOverview({
     [tasksQuery.data?.items]
   );
   const visibleTasks = showAllTasks ? openTasks : openTasks.slice(0, 3);
-  const timelineEvents = timelineQuery.data?.items || [];
-  const visibleTimeline = showAllTimeline ? timelineEvents : timelineEvents.slice(0, 5);
 
   const closeActionDialog = () => {
     setGovernedAction(null);
@@ -367,7 +363,21 @@ export function ApplicantWorkspaceOverview({
 
       <ApplicantSection title="Applicant summary">
         <ApplicantSummaryGrid>
-          <ApplicantSummaryItem label="Admission intent" value={lead.admissionIntent} />
+          <ApplicantSummaryItem
+            label="Admission pathway"
+            value={lead.intendedRouteNameSnapshot?.trim() || 'Not captured'}
+            secondary={
+              lead.intendedRouteDefinitionVersion != null
+                ? `Version ${lead.intendedRouteDefinitionVersion} captured at inquiry`
+                : undefined
+            }
+          />
+          {distinctAdmissionIntent ? (
+            <ApplicantSummaryItem
+              label={lead.intendedRouteNameSnapshot?.trim() ? 'Intent notes' : 'Admission intent'}
+              value={distinctAdmissionIntent}
+            />
+          ) : null}
           <ApplicantSummaryItem label="Class" value={lead.desiredClassName || 'Not captured'} />
           <ApplicantSummaryItem
             label="Contact"
@@ -375,10 +385,17 @@ export function ApplicantWorkspaceOverview({
             secondary={lead.parentGuardianName || undefined}
           />
           <ApplicantSummaryItem
-            label="Source"
-            value={lead.inquirySourceSnapshot || getAdmissionCrmChannelLabel(lead.channel)}
-            secondary={lead.campaignName || undefined}
+            label="Inquiry channel"
+            value={getAdmissionCrmChannelLabel(lead.channel)}
+            secondary={!lead.inquirySourceSnapshot ? lead.campaignName || undefined : undefined}
           />
+          {lead.inquirySourceSnapshot ? (
+            <ApplicantSummaryItem
+              label="Inquiry source"
+              value={lead.inquirySourceSnapshot}
+              secondary={lead.campaignName || undefined}
+            />
+          ) : null}
           <ApplicantSummaryItem
             label="Owner"
             value={lead.ownerUserId ? owner?.displayName || 'Assigned' : 'Unassigned'}
@@ -530,7 +547,6 @@ export function ApplicantWorkspaceOverview({
                     if (saved) {
                       setNote('');
                       setNoteFormOpen(false);
-                      await timelineQuery.refetch();
                     }
                   }}
                 >
@@ -675,36 +691,6 @@ export function ApplicantWorkspaceOverview({
         {openTasks.length > 3 ? (
           <Button size="small" onClick={() => setShowAllTasks((current) => !current)}>
             {showAllTasks ? 'Show fewer tasks' : `Show ${openTasks.length - 3} more tasks`}
-          </Button>
-        ) : null}
-      </ApplicantSection>
-
-      <Divider />
-      <ApplicantSection title="Recent activity">
-        {timelineQuery.isFetching ? (
-          <LinearProgress aria-label="Loading applicant timeline" />
-        ) : null}
-        <Stack divider={<Divider flexItem />}>
-          {visibleTimeline.map((event) => (
-            <Box key={event.id} py={1}>
-              <Typography variant="body2" fontWeight={600}>
-                {event.title}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {formatEnrollmentDate(event.occurredAt, true)}
-              </Typography>
-              {event.details ? <Typography variant="body2">{event.details}</Typography> : null}
-            </Box>
-          ))}
-        </Stack>
-        {!timelineQuery.isFetching && timelineEvents.length === 0 ? (
-          <ApplicantInlineNotice>
-            No applicant activity has been recorded yet.
-          </ApplicantInlineNotice>
-        ) : null}
-        {timelineEvents.length > 5 ? (
-          <Button size="small" onClick={() => setShowAllTimeline((current) => !current)}>
-            {showAllTimeline ? 'Show recent activity only' : 'Show all loaded activity'}
           </Button>
         ) : null}
       </ApplicantSection>

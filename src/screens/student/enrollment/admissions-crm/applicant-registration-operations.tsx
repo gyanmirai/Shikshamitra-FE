@@ -56,6 +56,7 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { RegistrationResponseEditor } from './registration-response-editor';
+import { hasApplicantRegistrationDraft } from './applicant-registration-draft-state';
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
 import { ApplicantSwitchRow, ApplicantEmptyState } from './applicant-workspace-primitives';
 
@@ -147,8 +148,10 @@ export function ApplicantRegistrationOperations({
   const [checklistTemplateId, setChecklistTemplateId] = useState('');
   const [reason, setReason] = useState('');
   const [correctionFields, setCorrectionFields] = useState('');
-  const [newExpiry, setNewExpiry] = useState(dateInDays(14));
-  const [reissueDays, setReissueDays] = useState(14);
+  const [initialNewExpiry] = useState(() => dateInDays(14));
+  const [newExpiry, setNewExpiry] = useState(initialNewExpiry);
+  const initialReissueDays = 14;
+  const [reissueDays, setReissueDays] = useState(initialReissueDays);
   const [paymentReference, setPaymentReference] = useState('');
   const [overrideReadiness, setOverrideReadiness] = useState(false);
   const [documentReasonByKey, setDocumentReasonByKey] = useState<Record<string, string>>({});
@@ -158,8 +161,24 @@ export function ApplicantRegistrationOperations({
   );
 
   useApplicantWorkspaceDirtyState(
-    `registration-issue-${leadId}`,
-    issueFormOpen || Object.values(documentFileByKey).some(Boolean)
+    `registration-operations-${leadId}`,
+    hasApplicantRegistrationDraft({
+      issueFormOpen,
+      registrationTemplateId,
+      seriesId,
+      checklistTemplateId,
+      reason,
+      correctionFields,
+      newExpiry,
+      initialNewExpiry,
+      reissueDays,
+      initialReissueDays,
+      paymentReference,
+      overrideReadiness,
+      documentReasonByKey,
+      documentFileByKey,
+      documentValidUntilByKey,
+    })
   );
 
   const [issue, issueState] = useIssueAdmissionCrmRegistrationApplicationMutation();
@@ -194,16 +213,34 @@ export function ApplicantRegistrationOperations({
     waiveFeeState,
   ].some((state) => state.isLoading);
 
-  const perform = async (action: () => Promise<unknown>, success: string) => {
+  const perform = async (
+    action: () => Promise<unknown>,
+    success: string,
+    clearSharedReason = false
+  ) => {
     try {
       await action();
-      setReason('');
+      if (clearSharedReason) setReason('');
       shikshaMitraToast.success({ message: success });
       return true;
     } catch (error) {
       shikshaMitraToast.error({ message: readError(error, 'Unable to complete the action.') });
       return false;
     }
+  };
+
+  const closeIssueForm = () => {
+    setIssueFormOpen(false);
+    setRegistrationTemplateId('');
+    setSeriesId('');
+  };
+
+  const clearDocumentReason = (requirementKey: string) => {
+    setDocumentReasonByKey((current) => {
+      const next = { ...current };
+      delete next[requirementKey];
+      return next;
+    });
   };
 
   if (registrationQuery.isFetching) return <LinearProgress />;
@@ -283,12 +320,14 @@ export function ApplicantRegistrationOperations({
                         },
                       }).unwrap(),
                     'Registration issued.'
-                  )
+                  ).then((saved) => {
+                    if (saved) closeIssueForm();
+                  })
                 }
               >
                 Issue
               </LoadingButton>
-              <Button size="small" onClick={() => setIssueFormOpen(false)}>
+              <Button size="small" onClick={closeIssueForm}>
                 Cancel
               </Button>
             </Box>
@@ -356,8 +395,11 @@ export function ApplicantRegistrationOperations({
                       newExpiry: new Date(`${newExpiry}T23:59:59`).toISOString(),
                       reason: reason.trim(),
                     }).unwrap(),
-                  'Registration expiry extended.'
-                )
+                  'Registration expiry extended.',
+                  true
+                ).then((saved) => {
+                  if (saved) setNewExpiry(initialNewExpiry);
+                })
               }
             >
               Extend Link
@@ -387,8 +429,11 @@ export function ApplicantRegistrationOperations({
                         .filter(Boolean),
                       reason: reason.trim(),
                     }).unwrap(),
-                  'Registration returned for correction.'
-                )
+                  'Registration returned for correction.',
+                  true
+                ).then((saved) => {
+                  if (saved) setCorrectionFields('');
+                })
               }
             >
               Return for Correction
@@ -422,7 +467,8 @@ export function ApplicantRegistrationOperations({
               onClick={() =>
                 perform(
                   () => revoke({ applicationId: registration.id, reason: reason.trim() }).unwrap(),
-                  'Registration link revoked.'
+                  'Registration link revoked.',
+                  true
                 )
               }
             >
@@ -453,8 +499,11 @@ export function ApplicantRegistrationOperations({
                         linkExpiryDays: reissueDays,
                         reason: reason.trim(),
                       }).unwrap(),
-                    'Registration link reissued.'
-                  )
+                    'Registration link reissued.',
+                    true
+                  ).then((saved) => {
+                    if (saved) setReissueDays(initialReissueDays);
+                  })
                 }
               >
                 Reissue Link
@@ -485,7 +534,9 @@ export function ApplicantRegistrationOperations({
                         paymentReference: paymentReference.trim(),
                       }).unwrap(),
                     'Payment reference recorded.'
-                  )
+                  ).then((saved) => {
+                    if (saved) setPaymentReference('');
+                  })
                 }
               >
                 Record Reference
@@ -498,7 +549,8 @@ export function ApplicantRegistrationOperations({
                   perform(
                     () =>
                       waiveFee({ applicationId: registration.id, reason: reason.trim() }).unwrap(),
-                    'Registration fee waived.'
+                    'Registration fee waived.',
+                    true
                   )
                 }
               >
@@ -542,7 +594,9 @@ export function ApplicantRegistrationOperations({
                         checklistTemplateId,
                       }).unwrap(),
                     'Document checklist assigned.'
-                  )
+                  ).then((saved) => {
+                    if (saved) setChecklistTemplateId('');
+                  })
                 }
               >
                 Assign Checklist
@@ -728,6 +782,11 @@ export function ApplicantRegistrationOperations({
                                 ...current,
                                 [document.requirementKey]: undefined,
                               }));
+                              setDocumentValidUntilByKey((current) => {
+                                const next = { ...current };
+                                delete next[document.requirementKey];
+                                return next;
+                              });
                             })
                           }
                         >
@@ -790,7 +849,9 @@ export function ApplicantRegistrationOperations({
                                   reason: documentReasonByKey[document.requirementKey].trim(),
                                 }).unwrap(),
                               'Document rejected.'
-                            )
+                            ).then((saved) => {
+                              if (saved) clearDocumentReason(document.requirementKey);
+                            })
                           }
                         >
                           Reject
@@ -831,7 +892,9 @@ export function ApplicantRegistrationOperations({
                                 reason: documentReasonByKey[document.requirementKey].trim(),
                               }).unwrap(),
                             'Document requirement waived.'
-                          )
+                          ).then((saved) => {
+                            if (saved) clearDocumentReason(document.requirementKey);
+                          })
                         }
                       >
                         Waive
@@ -868,8 +931,11 @@ export function ApplicantRegistrationOperations({
                         checklist.requiredReadinessApprovalCount === 2 &&
                           checklist.receivedReadinessApprovalCount === 0
                           ? 'First readiness approval recorded.'
-                          : 'Admission readiness confirmed.'
-                      )
+                          : 'Admission readiness confirmed.',
+                        true
+                      ).then((saved) => {
+                        if (saved) setOverrideReadiness(false);
+                      })
                     }
                   >
                     {checklist.awaitingSecondReadinessApproval

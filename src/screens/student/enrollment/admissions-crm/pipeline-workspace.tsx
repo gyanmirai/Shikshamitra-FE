@@ -17,15 +17,16 @@ import EventRounded from '@mui/icons-material/EventRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import ViewColumnRounded from '@mui/icons-material/ViewColumnRounded';
 import ReceiptLongRounded from '@mui/icons-material/ReceiptLongRounded';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import FormatListBulletedRounded from '@mui/icons-material/FormatListBulletedRounded';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 import {
   Box,
   Chip,
+  Link,
   Card,
   Paper,
   Alert,
@@ -35,6 +36,7 @@ import {
   Select,
   Switch,
   Tooltip,
+  Collapse,
   Checkbox,
   MenuItem,
   MenuList,
@@ -48,6 +50,8 @@ import {
   ToggleButton,
   DialogContent,
   DialogActions,
+  InputAdornment,
+  FormHelperText,
   LinearProgress,
   CircularProgress,
   FormControlLabel,
@@ -67,17 +71,27 @@ import {
   useBulkCreateAdmissionCrmTasksMutation,
   useBulkChangeAdmissionCrmStagesMutation,
   useBulkArchiveAdmissionCrmLeadsMutation,
-  useGetAdmissionCrmCycleConfigurationQuery,
+  useGetAdmissionCrmQuickInquiryOptionsQuery,
   useScheduleAdmissionCrmEntranceExamMutation,
   useBulkAssignAdmissionCrmLeadOwnersMutation,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { formatEnrollmentDate } from './enrollment-display';
 import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
-import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
+import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import {
+  createApplicantRowNavigationProps,
+  createApplicantLinkNavigationProps,
+} from './applicant-row-navigation';
+import {
+  mapQuickInquiryOptions,
+  isValidQuickInquiryEmail,
+  getDefaultQuickInquiryOption,
+} from './quick-inquiry-options';
 import {
   getAdmissionCrmLeadName,
   getAdmissionCrmStageLabel,
@@ -95,7 +109,6 @@ import {
 } from './workspace-table-patterns';
 
 import type { PipelineStageGroup } from './enrollment-workspace-state';
-import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
 const pageSize = 50;
 const permissionRoot = 'Students.Enrollment.AdmissionsCrm';
@@ -179,14 +192,16 @@ const pipelineStageGroups: Record<PipelineStageGroup, AdmissionInquiryStage[]> =
 
 type QuickInquiryForm = {
   firstName: string;
+  middleName: string;
+  lastName: string;
   parentGuardianName: string;
   primaryContactNo: string;
   email: string;
   admissionIntent: string;
-  intendedRouteType: AdmissionCrmRouteType;
+  intendedRouteDefinitionId: string;
   mediumStageId: string;
   targetStandardId: string;
-  channel: AdmissionInquiryChannel;
+  channel: AdmissionInquiryChannel | '';
   campaignName: string;
   notes: string;
   duplicateContinueReason: string;
@@ -194,14 +209,16 @@ type QuickInquiryForm = {
 
 const emptyQuickInquiry: QuickInquiryForm = {
   firstName: '',
+  middleName: '',
+  lastName: '',
   parentGuardianName: '',
   primaryContactNo: '',
   email: '',
   admissionIntent: '',
-  intendedRouteType: AdmissionCrmRouteType.Fresh,
+  intendedRouteDefinitionId: '',
   mediumStageId: '',
   targetStandardId: '',
-  channel: AdmissionInquiryChannel.WalkInReception,
+  channel: '',
   campaignName: '',
   notes: '',
   duplicateContinueReason: '',
@@ -341,7 +358,7 @@ function PipelineLeadCard({
         ) : null}
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
           <Typography variant="caption" color="text.secondary">
-            {dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}
+            {formatEnrollmentDate(lead.lastActivityTime, true)}
           </Typography>
           <Stack direction="row" gap={1}>
             {canManageRegistration && !lead.archivedAt && (
@@ -374,28 +391,46 @@ export function PipelineWorkspace() {
     academicMediumId,
     academicMediumName,
     currentUserId,
+    sessionIdentity,
     state,
     updateState,
+    getApplicantHref,
     openApplicant,
-    closeApplicant,
   } = useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const {
+    search,
+    setSearch,
+    filters: columnFilters,
+    setFilters: setColumnFilters,
+  } = useWorkspaceTableSessionState(
+    `pipeline:${academicYearId || 'none'}:${sessionIdentity}`
+  );
+  const [debouncedSearch, setDebouncedSearch] = useState(() => search.trim());
   const [staffSearch, setStaffSearch] = useState('');
   const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
   const [quickDialogOpen, setQuickDialogOpen] = useState(false);
   const [quickForm, setQuickForm] = useState<QuickInquiryForm>(emptyQuickInquiry);
+  const [quickFormSubmitted, setQuickFormSubmitted] = useState(false);
+  const [quickEmailTouched, setQuickEmailTouched] = useState(false);
+  const [showOptionalQuickInquiryFields, setShowOptionalQuickInquiryFields] = useState(false);
   const [duplicateMatches, setDuplicateMatches] = useState<AdmissionCrmLeadDto['likelyDuplicates']>(
     []
   );
   const [duplicateReviewed, setDuplicateReviewed] = useState(false);
+  const firstNameInputRef = useRef<HTMLInputElement>(null);
+  const contactInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const mediumStageInputRef = useRef<HTMLInputElement>(null);
+  const targetStandardInputRef = useRef<HTMLInputElement>(null);
+  const routeInputRef = useRef<HTMLInputElement>(null);
+  const channelInputRef = useRef<HTMLInputElement>(null);
+  const duplicateReasonInputRef = useRef<HTMLInputElement>(null);
   const [scheduleLead, setScheduleLead] = useState<AdmissionCrmLeadDto | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [overrideCapacity, setOverrideCapacity] = useState(false);
   const [capacityOverrideReason, setCapacityOverrideReason] = useState('');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
-  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
   const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
   const [bulkOwner, setBulkOwner] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [bulkTitle, setBulkTitle] = useState('');
@@ -473,7 +508,7 @@ export function PipelineWorkspace() {
   );
   const isExamSlotsLoading = slotsQuery.isLoading || slotsQuery.isFetching;
   const activeExamSlots = (slotsQuery.data?.items || []).filter((slot) => slot.isActive);
-  const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
+  const quickInquiryOptionsQuery = useGetAdmissionCrmQuickInquiryOptionsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
@@ -501,10 +536,68 @@ export function PipelineWorkspace() {
       ),
     [quickForm.mediumStageId, standardOptionsQuery.data]
   );
-  const registrationRequiredBeforeExam = Boolean(
-    cycleConfigurationQuery.data?.registrationFormRequiredBeforeExam
+  const quickInquiryOptions = useMemo(
+    () => mapQuickInquiryOptions(quickInquiryOptionsQuery.data),
+    [quickInquiryOptionsQuery.data]
   );
-  const entranceExamRequired = cycleConfigurationQuery.data?.entranceExamRequired !== false;
+  const selectedQuickInquiryRoute = quickInquiryOptions.routes.find(
+    (route) => route.id === quickForm.intendedRouteDefinitionId
+  );
+  const quickInquiryOptionsLoading =
+    quickInquiryOptionsQuery.isLoading || quickInquiryOptionsQuery.isFetching;
+  const quickInquiryOptionsMissing =
+    !quickInquiryOptionsLoading &&
+    !quickInquiryOptionsQuery.isError &&
+    Boolean(quickInquiryOptionsQuery.data) &&
+    (!quickInquiryOptions.channels.length || !quickInquiryOptions.routes.length);
+
+  useEffect(() => {
+    if (!quickDialogOpen || !quickInquiryOptionsQuery.data) return;
+
+    setQuickForm((current) => {
+      const currentChannelIsAvailable = quickInquiryOptions.channels.some(
+        (option) => option.value === current.channel
+      );
+      const currentRouteIsAvailable = quickInquiryOptions.routes.some(
+        (option) => option.id === current.intendedRouteDefinitionId
+      );
+      const channel = currentChannelIsAvailable
+        ? current.channel
+        : (getDefaultQuickInquiryOption(quickInquiryOptions.channels)?.value ?? '');
+      const intendedRouteDefinitionId = currentRouteIsAvailable
+        ? current.intendedRouteDefinitionId
+        : (getDefaultQuickInquiryOption(quickInquiryOptions.routes)?.id ?? '');
+
+      if (
+        channel === current.channel &&
+        intendedRouteDefinitionId === current.intendedRouteDefinitionId
+      ) {
+        return current;
+      }
+
+      return { ...current, channel, intendedRouteDefinitionId };
+    });
+  }, [
+    quickDialogOpen,
+    quickInquiryOptions.channels,
+    quickInquiryOptions.routes,
+    quickInquiryOptionsQuery.data,
+  ]);
+
+  useEffect(() => {
+    if (!quickDialogOpen || quickForm.mediumStageId || mediumStages.length !== 1) return;
+    setQuickForm((current) => ({ ...current, mediumStageId: mediumStages[0].id }));
+  }, [mediumStages, quickDialogOpen, quickForm.mediumStageId]);
+
+  useEffect(() => {
+    if (!quickDialogOpen || quickForm.targetStandardId || standardOptions.length !== 1) return;
+    setQuickForm((current) => ({ ...current, targetStandardId: standardOptions[0].id }));
+  }, [quickDialogOpen, quickForm.targetStandardId, standardOptions]);
+
+  const registrationRequiredBeforeExam = Boolean(
+    quickInquiryOptionsQuery.data?.registrationFormRequiredBeforeExam
+  );
+  const entranceExamRequired = quickInquiryOptionsQuery.data?.entranceExamRequired !== false;
 
   const [createLead, createLeadState] = useCreateAdmissionCrmLeadMutation();
   const [previewDuplicates, previewDuplicatesState] =
@@ -749,9 +842,19 @@ export function PipelineWorkspace() {
           const lead = row as AdmissionCrmLeadDto;
           return (
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle2" noWrap>
+              <Link
+                {...createApplicantLinkNavigationProps({
+                  href: getApplicantHref(lead.id, 'overview'),
+                  onOpen: () => openApplicant(lead.id, 'overview'),
+                })}
+                variant="subtitle2"
+                color="inherit"
+                underline="hover"
+                noWrap
+                sx={{ textAlign: 'left' }}
+              >
                 {getAdmissionCrmLeadName(lead)}
-              </Typography>
+              </Link>
               <Typography variant="caption" color="text.secondary" noWrap>
                 {lead.primaryContactNo || lead.email || 'No contact'}
               </Typography>
@@ -800,6 +903,7 @@ export function PipelineWorkspace() {
         label: 'Registration',
         width: 180,
         minWidth: 165,
+        defaultHidden: true,
         filterType: 'string',
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
@@ -832,6 +936,7 @@ export function PipelineWorkspace() {
         label: 'Channel',
         width: 155,
         minWidth: 140,
+        defaultHidden: true,
         filterType: 'enum',
         enumOptions: channels.map((channel) => ({
           value: channel,
@@ -852,15 +957,31 @@ export function PipelineWorkspace() {
         label: 'Admission Pathway',
         width: 190,
         minWidth: 170,
+        defaultHidden: true,
         filterType: 'enum',
         enumOptions: routeTypes.map((routeType) => ({
           value: routeType,
           label: routeTypeLabel(routeType),
         })),
-        render: (value, row) =>
-          value == null
-            ? (row as AdmissionCrmLeadDto).admissionIntent
-            : routeTypeLabel(value as AdmissionCrmRouteType),
+        render: (value, row) => {
+          const lead = row as AdmissionCrmLeadDto;
+          const routeName = lead.intendedRouteNameSnapshot?.trim();
+          const routeLabel =
+            routeName ||
+            (value == null ? lead.admissionIntent : routeTypeLabel(value as AdmissionCrmRouteType));
+          return (
+            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+              <Typography variant="body2" noWrap title={routeLabel}>
+                {routeLabel}
+              </Typography>
+              {routeName && lead.intendedRouteDefinitionVersion != null ? (
+                <Typography variant="caption" color="text.secondary">
+                  Version {lead.intendedRouteDefinitionVersion}
+                </Typography>
+              ) : null}
+            </Stack>
+          );
+        },
       },
       {
         id: 'ownerUserId',
@@ -888,6 +1009,7 @@ export function PipelineWorkspace() {
         label: 'Score',
         width: 90,
         minWidth: 80,
+        defaultHidden: true,
         align: 'right',
         isFilter: false,
       },
@@ -897,7 +1019,7 @@ export function PipelineWorkspace() {
         width: 150,
         minWidth: 140,
         filterType: 'date',
-        render: (value) => dayjs(value).format('DD MMM, HH:mm'),
+        render: (value) => formatEnrollmentDate(value, true),
       },
       {
         id: 'actions',
@@ -956,6 +1078,7 @@ export function PipelineWorkspace() {
     ],
     [
       leads,
+      getApplicantHref,
       openApplicant,
       ownerFilterOptions,
       ownerName,
@@ -972,33 +1095,63 @@ export function PipelineWorkspace() {
     setQuickForm(emptyQuickInquiry);
     setDuplicateMatches([]);
     setDuplicateReviewed(false);
+    setQuickFormSubmitted(false);
+    setQuickEmailTouched(false);
+    setShowOptionalQuickInquiryFields(false);
+  };
+
+  const closeQuickInquiry = () => {
+    setQuickDialogOpen(false);
+    resetQuickInquiry();
   };
 
   const handleCreateInquiry = async () => {
     if (!academicYearId) return;
-    if (!quickForm.primaryContactNo.trim() && !quickForm.email.trim()) {
-      shikshaMitraToast.error({ message: 'Contact number or email is required.' });
+    setQuickFormSubmitted(true);
+    setQuickEmailTouched(true);
+
+    const contactMissing = !quickForm.primaryContactNo.trim() && !quickForm.email.trim();
+    const emailInvalid = !isValidQuickInquiryEmail(quickForm.email);
+    const optionConfigurationUnavailable =
+      quickInquiryOptionsLoading ||
+      quickInquiryOptionsQuery.isError ||
+      quickInquiryOptionsMissing ||
+      !quickInquiryOptionsQuery.data?.isAdmissionCycleActive;
+
+    const firstInvalidInput = [
+      !quickForm.firstName.trim() ? firstNameInputRef : null,
+      emailInvalid ? emailInputRef : null,
+      contactMissing ? contactInputRef : null,
+      !quickForm.mediumStageId ? mediumStageInputRef : null,
+      !quickForm.targetStandardId ? targetStandardInputRef : null,
+      !selectedQuickInquiryRoute ? routeInputRef : null,
+      quickForm.channel === '' ? channelInputRef : null,
+    ].find((input) => input !== null);
+
+    if (firstInvalidInput || optionConfigurationUnavailable) {
+      firstInvalidInput?.current?.focus();
       return;
     }
-    if (!quickForm.mediumStageId || !quickForm.targetStandardId) {
-      shikshaMitraToast.error({ message: 'Select the target stage and class.' });
-      return;
-    }
+
     const selectedStandard = standardOptions.find((item) => item.id === quickForm.targetStandardId);
-    if (!selectedStandard) return;
+    if (!selectedStandard || !selectedQuickInquiryRoute || quickForm.channel === '') return;
+
     const body: CreateAdmissionCrmLeadDto = {
       channel: quickForm.channel,
       campaignName: quickForm.campaignName.trim() || undefined,
-      firstName: quickForm.firstName.trim() || undefined,
+      firstName: quickForm.firstName.trim(),
+      middleName: quickForm.middleName.trim() || undefined,
+      lastName: quickForm.lastName.trim() || undefined,
       parentGuardianName: quickForm.parentGuardianName.trim() || undefined,
       primaryContactNo: quickForm.primaryContactNo.trim() || undefined,
       email: quickForm.email.trim() || undefined,
-      admissionIntent:
-        quickForm.admissionIntent.trim() || routeTypeLabel(quickForm.intendedRouteType),
-      intendedRouteType: quickForm.intendedRouteType,
+      admissionIntent: quickForm.admissionIntent.trim() || selectedQuickInquiryRoute.label,
+      intendedRouteDefinitionId: selectedQuickInquiryRoute.id,
+      intendedRouteType: selectedQuickInquiryRoute.routeType,
       targetStandardId: selectedStandard.id,
       academicBoardId,
       academicMediumId,
+      academicMediumStageId: quickForm.mediumStageId,
       desiredClassName: selectedStandard.name,
       notes: quickForm.notes.trim() || undefined,
       duplicateContinueReason: quickForm.duplicateContinueReason.trim() || undefined,
@@ -1011,14 +1164,11 @@ export function PipelineWorkspace() {
         if (duplicates.length) return;
       }
       if (duplicateMatches.length && !quickForm.duplicateContinueReason.trim()) {
-        shikshaMitraToast.error({
-          message: 'Enter a reason before creating a possible duplicate.',
-        });
+        duplicateReasonInputRef.current?.focus();
         return;
       }
       const created = await createLead({ academicYearId, body }).unwrap();
-      setQuickDialogOpen(false);
-      resetQuickInquiry();
+      closeQuickInquiry();
       openApplicant(created.id);
       shikshaMitraToast.success({ message: 'Inquiry created.' });
     } catch {
@@ -1156,6 +1306,18 @@ export function PipelineWorkspace() {
       onOpenRegistration={() => openApplicant(lead.id, 'registration')}
     />
   );
+
+  const quickInquiryContactMissing = !quickForm.primaryContactNo.trim() && !quickForm.email.trim();
+  const quickInquiryEmailInvalid = !isValidQuickInquiryEmail(quickForm.email);
+  const showQuickInquiryContactError = quickFormSubmitted && quickInquiryContactMissing;
+  const showQuickInquiryEmailError =
+    quickInquiryEmailInvalid && (quickEmailTouched || quickFormSubmitted);
+  const quickInquiryOptionsUnavailable =
+    quickInquiryOptionsLoading ||
+    quickInquiryOptionsQuery.isError ||
+    quickInquiryOptionsMissing ||
+    quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false ||
+    !quickInquiryOptionsQuery.data;
 
   return (
     <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
@@ -1412,11 +1574,16 @@ export function PipelineWorkspace() {
             rowsPerPage={pageSize}
             defaultRowsPerPage={pageSize}
             rowsPerPageOptions={[pageSize]}
-            onServerSearch={(value) => {
+            onSearchInputChange={(value) => {
               setSearch(value);
+              setSelectedLeadIds([]);
+              if (state.page !== 1) {
+                updateState({ page: 1 }, 'replace');
+              }
+            }}
+            onServerSearch={(value) => {
               setDebouncedSearch(value.trim());
               setSelectedLeadIds([]);
-              updateState({ page: 1 }, 'push');
             }}
             onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
             onServerSort={(_column, sorts) => {
@@ -1460,6 +1627,10 @@ export function PipelineWorkspace() {
               />
             }
             rowProps={(row) => ({
+              ...createApplicantRowNavigationProps({
+                applicantName: getAdmissionCrmLeadName(row as AdmissionCrmLeadDto),
+                onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'overview'),
+              }),
               'data-testid': 'student-enrollment-pipeline-row',
               'data-lead-id': row.id,
             })}
@@ -1468,17 +1639,13 @@ export function PipelineWorkspace() {
           />
         ))}
 
-      <Dialog
-        open={quickDialogOpen}
-        onClose={() => setQuickDialogOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
+      <Dialog open={quickDialogOpen} onClose={closeQuickInquiry} fullWidth maxWidth="md">
         <DialogTitle>Quick Inquiry</DialogTitle>
         <DialogContent>
-          <Stack spacing={1.25} sx={{ pt: 1 }}>
+          <Stack spacing={2} sx={{ pt: 1 }}>
             <Alert severity="info">
-              The selected academic context determines where this inquiry enters the pipeline.
+              New inquiries start in the New Inquiry stage. The selected academic context determines
+              the available academic stages and classes.
             </Alert>
             <Paper variant="outlined" sx={{ p: 1.25 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.5}>
@@ -1504,157 +1671,381 @@ export function PipelineWorkspace() {
                 </Box>
               </Stack>
             </Paper>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                fullWidth
-                label="Student name"
-                value={quickForm.firstName}
-                onChange={(event) => {
-                  setQuickForm((current) => ({ ...current, firstName: event.target.value }));
-                  setDuplicateReviewed(false);
-                }}
-              />
-              <TextField
-                fullWidth
-                label="Parent or guardian"
-                value={quickForm.parentGuardianName}
-                onChange={(event) => {
-                  setQuickForm((current) => ({
-                    ...current,
-                    parentGuardianName: event.target.value,
-                  }));
-                  setDuplicateReviewed(false);
-                }}
-              />
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                fullWidth
-                label="Contact number"
-                type="tel"
-                autoComplete="tel"
-                value={quickForm.primaryContactNo}
-                onChange={(event) => {
-                  setQuickForm((current) => ({ ...current, primaryContactNo: event.target.value }));
-                  setDuplicateReviewed(false);
-                }}
-              />
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                autoComplete="email"
-                spellCheck={false}
-                value={quickForm.email}
-                onChange={(event) => {
-                  setQuickForm((current) => ({ ...current, email: event.target.value }));
-                  setDuplicateReviewed(false);
-                }}
-              />
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                required
-                select
-                fullWidth
-                label="Medium stage"
-                value={quickForm.mediumStageId}
-                onChange={(event) => {
-                  setQuickForm((current) => ({
-                    ...current,
-                    mediumStageId: event.target.value,
-                    targetStandardId: '',
-                  }));
-                  setDuplicateReviewed(false);
-                }}
-              >
-                {mediumStages.map((stage) => (
-                  <MenuItem key={stage.id} value={stage.id}>
-                    {stage.stageName || stage.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                required
-                select
-                fullWidth
-                label="Target class"
-                value={quickForm.targetStandardId}
-                disabled={!quickForm.mediumStageId || standardOptionsQuery.isFetching}
-                onChange={(event) => {
-                  setQuickForm((current) => ({ ...current, targetStandardId: event.target.value }));
-                  setDuplicateReviewed(false);
-                }}
-              >
-                {standardOptions.map((standard) => (
-                  <MenuItem key={standard.id} value={standard.id}>
-                    {standard.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                required
-                select
-                fullWidth
-                label="Admission pathway"
-                value={quickForm.intendedRouteType}
-                onChange={(event) => {
-                  setQuickForm((current) => ({
-                    ...current,
-                    intendedRouteType: Number(event.target.value),
-                  }));
-                  setDuplicateReviewed(false);
-                }}
-              >
-                {routeTypes.map((routeType) => (
-                  <MenuItem key={routeType} value={routeType}>
-                    {routeTypeLabel(routeType)}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                fullWidth
-                label="Inquiry channel"
-                value={quickForm.channel}
-                onChange={(event) =>
-                  setQuickForm((current) => ({ ...current, channel: Number(event.target.value) }))
+
+            {quickInquiryOptionsLoading && <LinearProgress aria-label="Loading inquiry options" />}
+            {quickInquiryOptionsQuery.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={() => quickInquiryOptionsQuery.refetch()}
+                  >
+                    Retry
+                  </Button>
                 }
               >
-                {channels.map((channel) => (
-                  <MenuItem key={channel} value={channel}>
-                    {getAdmissionCrmChannelLabel(channel)}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Stack>
-            <TextField
-              label="Intent notes"
-              value={quickForm.admissionIntent}
-              onChange={(event) => {
-                setQuickForm((current) => ({ ...current, admissionIntent: event.target.value }));
-                setDuplicateReviewed(false);
-              }}
-              helperText="Optional context beyond the selected admission pathway."
-            />
-            <TextField
-              label="Campaign"
-              value={quickForm.campaignName}
-              onChange={(event) =>
-                setQuickForm((current) => ({ ...current, campaignName: event.target.value }))
-              }
-            />
-            <TextField
-              label="Notes"
-              value={quickForm.notes}
-              onChange={(event) =>
-                setQuickForm((current) => ({ ...current, notes: event.target.value }))
-              }
-              multiline
-              minRows={2}
-            />
+                Inquiry channels and admission pathways could not be loaded.
+              </Alert>
+            )}
+            {quickInquiryOptionsMissing && (
+              <Alert severity="warning">
+                Quick inquiry needs at least one active inquiry channel and one published admission
+                pathway. Ask an administrator to update Enrollment Settings.
+              </Alert>
+            )}
+            {quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false && (
+              <Alert severity="warning">
+                Quick inquiry is unavailable because the admission cycle is not active.
+              </Alert>
+            )}
+            {organizationOptionsQuery.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={() => organizationOptionsQuery.refetch()}
+                  >
+                    Retry
+                  </Button>
+                }
+              >
+                Academic stages could not be loaded for the selected board and medium.
+              </Alert>
+            )}
+            {!organizationOptionsQuery.isFetching &&
+              organizationOptionsQuery.data &&
+              !mediumStages.length && (
+                <Alert severity="warning">
+                  No academic stages are configured for the selected board and medium.
+                </Alert>
+              )}
+            {quickForm.mediumStageId && standardOptionsQuery.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={() => standardOptionsQuery.refetch()}
+                  >
+                    Retry
+                  </Button>
+                }
+              >
+                Classes could not be loaded for the selected academic stage.
+              </Alert>
+            )}
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Student details
+              </Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                <TextField
+                  required
+                  fullWidth
+                  inputRef={firstNameInputRef}
+                  name="firstName"
+                  autoComplete="given-name"
+                  label="First name"
+                  value={quickForm.firstName}
+                  error={quickFormSubmitted && !quickForm.firstName.trim()}
+                  helperText={
+                    quickFormSubmitted && !quickForm.firstName.trim()
+                      ? 'Enter the student’s first name.'
+                      : undefined
+                  }
+                  onChange={(event) => {
+                    setQuickForm((current) => ({ ...current, firstName: event.target.value }));
+                    setDuplicateReviewed(false);
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  name="middleName"
+                  autoComplete="additional-name"
+                  label="Middle name (optional)"
+                  value={quickForm.middleName}
+                  onChange={(event) => {
+                    setQuickForm((current) => ({ ...current, middleName: event.target.value }));
+                    setDuplicateReviewed(false);
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  name="lastName"
+                  autoComplete="family-name"
+                  label="Last name (optional)"
+                  value={quickForm.lastName}
+                  onChange={(event) => {
+                    setQuickForm((current) => ({ ...current, lastName: event.target.value }));
+                    setDuplicateReviewed(false);
+                  }}
+                />
+              </Stack>
+              <FormHelperText>
+                Keep middle and last names separate so registration can reuse them without asking
+                the family again. They remain optional for students with a single name.
+              </FormHelperText>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Family contact
+              </Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                <TextField
+                  fullWidth
+                  name="parentGuardianName"
+                  autoComplete="name"
+                  label="Parent or guardian"
+                  value={quickForm.parentGuardianName}
+                  onChange={(event) => {
+                    setQuickForm((current) => ({
+                      ...current,
+                      parentGuardianName: event.target.value,
+                    }));
+                    setDuplicateReviewed(false);
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  inputRef={contactInputRef}
+                  name="primaryContactNo"
+                  label="Contact number"
+                  type="tel"
+                  autoComplete="tel"
+                  value={quickForm.primaryContactNo}
+                  error={showQuickInquiryContactError}
+                  helperText={
+                    showQuickInquiryContactError
+                      ? 'Add a contact number or email address.'
+                      : 'Provide at least one way to contact the family.'
+                  }
+                  slotProps={{ htmlInput: { inputMode: 'tel' } }}
+                  onChange={(event) => {
+                    setQuickForm((current) => ({
+                      ...current,
+                      primaryContactNo: event.target.value,
+                    }));
+                    setDuplicateReviewed(false);
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  inputRef={emailInputRef}
+                  name="email"
+                  label="Email address"
+                  type="email"
+                  autoComplete="email"
+                  spellCheck={false}
+                  value={quickForm.email}
+                  error={showQuickInquiryEmailError || showQuickInquiryContactError}
+                  helperText={
+                    showQuickInquiryEmailError
+                      ? 'Enter a valid email address, for example parent@example.com.'
+                      : showQuickInquiryContactError
+                        ? 'Add an email address or contact number.'
+                        : 'Optional when a contact number is provided.'
+                  }
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">@</InputAdornment>,
+                  }}
+                  onBlur={() => setQuickEmailTouched(true)}
+                  onChange={(event) => {
+                    setQuickForm((current) => ({ ...current, email: event.target.value }));
+                    setDuplicateReviewed(false);
+                  }}
+                />
+              </Stack>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Admission context
+              </Typography>
+              <Stack spacing={1}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                  <TextField
+                    required
+                    select
+                    fullWidth
+                    inputRef={mediumStageInputRef}
+                    name="mediumStageId"
+                    label="Academic stage"
+                    value={quickForm.mediumStageId}
+                    disabled={organizationOptionsQuery.isFetching}
+                    error={quickFormSubmitted && !quickForm.mediumStageId}
+                    helperText={
+                      quickFormSubmitted && !quickForm.mediumStageId
+                        ? 'Select the student’s academic stage.'
+                        : 'Derived from the selected board and medium.'
+                    }
+                    onChange={(event) => {
+                      setQuickForm((current) => ({
+                        ...current,
+                        mediumStageId: event.target.value,
+                        targetStandardId: '',
+                      }));
+                      setDuplicateReviewed(false);
+                    }}
+                  >
+                    {mediumStages.map((stage) => (
+                      <MenuItem key={stage.id} value={stage.id}>
+                        {stage.stageName || stage.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    required
+                    select
+                    fullWidth
+                    inputRef={targetStandardInputRef}
+                    name="targetStandardId"
+                    label="Target class"
+                    value={quickForm.targetStandardId}
+                    disabled={!quickForm.mediumStageId || standardOptionsQuery.isFetching}
+                    error={quickFormSubmitted && !quickForm.targetStandardId}
+                    helperText={
+                      quickFormSubmitted && !quickForm.targetStandardId
+                        ? 'Select the student’s target class.'
+                        : 'Available within the selected academic stage.'
+                    }
+                    onChange={(event) => {
+                      setQuickForm((current) => ({
+                        ...current,
+                        targetStandardId: event.target.value,
+                      }));
+                      setDuplicateReviewed(false);
+                    }}
+                  >
+                    {standardOptions.map((standard) => (
+                      <MenuItem key={standard.id} value={standard.id}>
+                        {standard.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Stack>
+                <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                  <TextField
+                    required
+                    select
+                    fullWidth
+                    inputRef={routeInputRef}
+                    name="intendedRouteDefinitionId"
+                    label="Admission pathway"
+                    value={quickForm.intendedRouteDefinitionId}
+                    disabled={quickInquiryOptionsUnavailable}
+                    error={quickFormSubmitted && !selectedQuickInquiryRoute}
+                    helperText={
+                      quickFormSubmitted && !selectedQuickInquiryRoute
+                        ? 'Select a configured admission pathway.'
+                        : selectedQuickInquiryRoute
+                          ? `Published pathway version ${selectedQuickInquiryRoute.version}.`
+                          : 'Loaded from the active enrollment configuration.'
+                    }
+                    onChange={(event) => {
+                      setQuickForm((current) => ({
+                        ...current,
+                        intendedRouteDefinitionId: event.target.value,
+                      }));
+                      setDuplicateReviewed(false);
+                    }}
+                  >
+                    {quickInquiryOptions.routes.map((route) => (
+                      <MenuItem key={route.id} value={route.id}>
+                        {route.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    required
+                    select
+                    fullWidth
+                    inputRef={channelInputRef}
+                    name="channel"
+                    label="Inquiry channel"
+                    value={quickForm.channel}
+                    disabled={quickInquiryOptionsUnavailable}
+                    error={quickFormSubmitted && quickForm.channel === ''}
+                    helperText={
+                      quickFormSubmitted && quickForm.channel === ''
+                        ? 'Select an active inquiry channel.'
+                        : 'Only channels enabled for this admission cycle are shown.'
+                    }
+                    onChange={(event) => {
+                      setQuickForm((current) => ({
+                        ...current,
+                        channel:
+                          event.target.value === ''
+                            ? ''
+                            : (Number(event.target.value) as AdmissionInquiryChannel),
+                      }));
+                    }}
+                  >
+                    {quickInquiryOptions.channels.map((channel) => (
+                      <MenuItem key={channel.value} value={channel.value}>
+                        {channel.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Stack>
+              </Stack>
+            </Box>
+
+            <Box>
+              <Button
+                size="small"
+                onClick={() => setShowOptionalQuickInquiryFields((current) => !current)}
+                aria-expanded={showOptionalQuickInquiryFields}
+                aria-controls="quick-inquiry-optional-fields"
+              >
+                {showOptionalQuickInquiryFields ? 'Hide optional details' : 'Add optional details'}
+              </Button>
+              <Collapse in={showOptionalQuickInquiryFields}>
+                <Stack id="quick-inquiry-optional-fields" spacing={1} sx={{ pt: 1 }}>
+                  <TextField
+                    name="admissionIntent"
+                    label="Intent notes"
+                    value={quickForm.admissionIntent}
+                    onChange={(event) => {
+                      setQuickForm((current) => ({
+                        ...current,
+                        admissionIntent: event.target.value,
+                      }));
+                      setDuplicateReviewed(false);
+                    }}
+                    helperText="Optional context beyond the selected admission pathway."
+                  />
+                  <TextField
+                    name="campaignName"
+                    label="Campaign"
+                    value={quickForm.campaignName}
+                    onChange={(event) =>
+                      setQuickForm((current) => ({
+                        ...current,
+                        campaignName: event.target.value,
+                      }))
+                    }
+                  />
+                  <TextField
+                    name="notes"
+                    label="Internal notes"
+                    value={quickForm.notes}
+                    onChange={(event) =>
+                      setQuickForm((current) => ({ ...current, notes: event.target.value }))
+                    }
+                    multiline
+                    minRows={2}
+                  />
+                </Stack>
+              </Collapse>
+            </Box>
+
             {duplicateMatches.length > 0 && (
               <Alert severity="warning">
                 {duplicateMatches.length} likely duplicate inquiry record
@@ -1665,8 +2056,17 @@ export function PipelineWorkspace() {
             {duplicateMatches.length > 0 && (
               <TextField
                 required
+                fullWidth
+                inputRef={duplicateReasonInputRef}
+                name="duplicateContinueReason"
                 label="Reason to continue"
                 value={quickForm.duplicateContinueReason}
+                error={quickFormSubmitted && !quickForm.duplicateContinueReason.trim()}
+                helperText={
+                  quickFormSubmitted && !quickForm.duplicateContinueReason.trim()
+                    ? 'Explain why this possible duplicate should be created.'
+                    : 'This reason is stored for audit review.'
+                }
                 onChange={(event) =>
                   setQuickForm((current) => ({
                     ...current,
@@ -1681,16 +2081,15 @@ export function PipelineWorkspace() {
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={() => {
-              setQuickDialogOpen(false);
-              resetQuickInquiry();
-            }}
+            onClick={closeQuickInquiry}
+            disabled={createLeadState.isLoading || previewDuplicatesState.isLoading}
           >
             Cancel
           </Button>
           <LoadingButton
             variant="contained"
             loading={createLeadState.isLoading || previewDuplicatesState.isLoading}
+            disabled={quickInquiryOptionsUnavailable}
             onClick={handleCreateInquiry}
           >
             {duplicateReviewed && duplicateMatches.length ? 'Create Anyway' : 'Create Inquiry'}
@@ -1747,7 +2146,7 @@ export function PipelineWorkspace() {
                       value={slot.id}
                       disabled={slot.remainingCapacity <= 0 && !overrideCapacity}
                     >
-                      {slot.slotName} · {dayjs(slot.startDate).format('DD MMM, HH:mm')} ·{' '}
+                      {slot.slotName} · {formatEnrollmentDate(slot.startDate, true)} ·{' '}
                       {slot.remainingCapacity} seats
                     </MenuItem>
                   ))}
@@ -1915,16 +2314,6 @@ export function PipelineWorkspace() {
           </LoadingButton>
         </DialogActions>
       </Dialog>
-
-      <ApplicantWorkspaceDrawer
-        leadId={state.applicant}
-        academicYearId={academicYearId}
-        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || 'overview'}
-        onTabChange={(nextTab) => updateState({ applicantTab: nextTab }, 'replace')}
-        onClose={closeApplicant}
-        context="pipeline"
-        allowRegistrationBeforeExam={registrationRequiredBeforeExam}
-      />
     </Stack>
   );
 }

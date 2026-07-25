@@ -65,6 +65,7 @@ export interface ICustomizableTableProps {
     sortData: Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   ) => void;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
+  onSearchInputChange?: (searchTerm: string) => void;
   onServerSearch?: (searchTerm: string) => void;
   onServerFilter?: (filters: IParams['filters']) => void;
   totalCount?: number;

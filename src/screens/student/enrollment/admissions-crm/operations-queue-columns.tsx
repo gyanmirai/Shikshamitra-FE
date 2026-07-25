@@ -2,7 +2,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmOperationsQueueItemDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { Chip, Stack, Checkbox, Typography, LinearProgress } from '@mui/material';
+import { Chip, Link, Stack, Checkbox, Typography, LinearProgress } from '@mui/material';
 import {
   AdmissionCrmRouteType,
   AdmissionCrmSeatOfferStatus,
@@ -13,6 +13,7 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { enrollmentActionsColumn } from './workspace-table-patterns';
+import { createApplicantLinkNavigationProps } from './applicant-row-navigation';
 import {
   getRouteTypeLabel,
   getOfferStatusLabel,
@@ -24,14 +25,15 @@ import {
   getRegistrationStatusLabel,
 } from './enrollment-display';
 
-import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
+import type { ApplicantWorkspaceTab } from './applicant-workspace-page';
 
 export type EnrollmentQueueVariant = 'registration' | 'offer' | 'activation' | 'operations';
 
 type Options = {
   variant: EnrollmentQueueVariant;
-  applicantTab: ApplicantDrawerTab;
-  openApplicant: (leadId: string, tab?: ApplicantDrawerTab) => void;
+  applicantTab: ApplicantWorkspaceTab;
+  getApplicantHref: (leadId: string, tab?: ApplicantWorkspaceTab) => string;
+  openApplicant: (leadId: string, tab?: ApplicantWorkspaceTab) => void;
   staffById: ReadonlyMap<string, string>;
   items: AdmissionCrmOperationsQueueItemDto[];
   selectedLeadIds: ReadonlySet<string>;
@@ -83,7 +85,11 @@ const selectionColumn = (options: Options): IColumn => ({
   },
 });
 
-const applicantColumn: IColumn = {
+const applicantColumn = ({
+  applicantTab,
+  getApplicantHref,
+  openApplicant,
+}: Pick<Options, 'applicantTab' | 'getApplicantHref' | 'openApplicant'>): IColumn => ({
   id: 'applicantName',
   originalId: 'ApplicantName',
   label: 'Applicant',
@@ -93,12 +99,25 @@ const applicantColumn: IColumn = {
   stickyPosition: 'left',
   stickyOnMobile: false,
   filterType: 'string',
-  render: (value) => (
-    <Typography variant="subtitle2" noWrap>
-      {value}
-    </Typography>
-  ),
-};
+  render: (value, row) => {
+    const item = row as AdmissionCrmOperationsQueueItemDto;
+    return (
+      <Link
+        {...createApplicantLinkNavigationProps({
+          href: getApplicantHref(item.leadId, applicantTab),
+          onOpen: () => openApplicant(item.leadId, applicantTab),
+        })}
+        variant="subtitle2"
+        color="inherit"
+        underline="hover"
+        noWrap
+        sx={{ textAlign: 'left' }}
+      >
+        {value}
+      </Link>
+    );
+  },
+});
 
 const nextActionColumn: IColumn = {
   id: 'title',
@@ -161,7 +180,7 @@ const actionsColumn = ({ applicantTab, openApplicant }: Omit<Options, 'variant'>
 
 const registrationColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
-  applicantColumn,
+  applicantColumn(options),
   {
     id: 'registration',
     originalId: 'RegistrationStatus',
@@ -244,7 +263,7 @@ const registrationColumns = (options: Options): IColumn[] => [
 
 const offerColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
-  applicantColumn,
+  applicantColumn(options),
   {
     id: 'route',
     originalId: 'RouteType',
@@ -331,7 +350,7 @@ const offerColumns = (options: Options): IColumn[] => [
 
 const activationColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
-  applicantColumn,
+  applicantColumn(options),
   {
     id: 'activationStatus',
     originalId: 'ActivationStatus',
@@ -410,7 +429,7 @@ const activationColumns = (options: Options): IColumn[] => [
 
 const operationsColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
-  applicantColumn,
+  applicantColumn(options),
   nextActionColumn,
   {
     id: 'severity',

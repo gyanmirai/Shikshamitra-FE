@@ -11,6 +11,7 @@ export const studentPaths = {
     root: '',
     overview: '/student/enrollment/overview',
     pipeline: '/student/enrollment/pipeline',
+    applicant: (leadId: string) => `/student/enrollment/applicants/${encodeURIComponent(leadId)}`,
     exams: '/student/enrollment/exams',
     registrations: '/student/enrollment/registrations',
     offersSeats: '/student/enrollment/offers-seats',
@@ -68,6 +69,11 @@ export const studentPermissions = {
     operations: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
     analytics: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.Analytics`,
     settings: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ManageConfiguration`,
+    governance: {
+      routes: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ViewAdmissionRoutes`,
+      policies: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ViewPolicyPacks`,
+      households: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ViewHouseholds`,
+    },
   },
   records: {
     root: [

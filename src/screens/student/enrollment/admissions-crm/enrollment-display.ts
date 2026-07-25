@@ -80,5 +80,26 @@ export const joinEnrollmentMetadata = (...values: Array<string | null | undefine
 export const formatApplicantContact = (phone?: string | null, email?: string | null) =>
   phone || email || 'Contact not captured';
 
+const normalizeComparableText = (value: string) =>
+  value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase();
+
+export const getDistinctAdmissionIntent = (
+  admissionIntent?: string | null,
+  admissionPathway?: string | null
+) => {
+  const intent = admissionIntent?.trim();
+  if (!intent) return undefined;
+
+  const pathway = admissionPathway?.trim();
+  if (pathway && normalizeComparableText(intent) === normalizeComparableText(pathway)) {
+    return undefined;
+  }
+
+  return intent;
+};
+
 export const getApplicantUpdateError = (fallback: string) =>
   `${fallback} Check the information and try again.`;

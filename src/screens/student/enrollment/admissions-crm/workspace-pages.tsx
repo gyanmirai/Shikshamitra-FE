@@ -18,6 +18,11 @@ const AnalyticsWorkspace = dynamic(
   () => import('./analytics-workspace').then((module) => module.AnalyticsWorkspace),
   { loading }
 );
+const ApplicantWorkspace = dynamic(
+  () =>
+    import('./applicant-workspace-page').then((module) => module.ApplicantWorkspacePage),
+  { loading }
+);
 const RegistrationsWorkspace = dynamic(
   () => import('./registrations-workspace').then((module) => module.RegistrationsWorkspace),
   { loading }
@@ -39,6 +44,12 @@ const OperationsWorkspace = dynamic(
 export const AdmissionsPipelineWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.pipeline}>
     <PipelineWorkspace />
+  </StudentPermissionGuard>
+);
+
+export const AdmissionsApplicantWorkspace = ({ leadId }: { leadId: string }) => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.pipeline}>
+    <ApplicantWorkspace leadId={leadId} />
   </StudentPermissionGuard>
 );
 

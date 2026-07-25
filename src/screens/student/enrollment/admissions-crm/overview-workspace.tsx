@@ -46,8 +46,8 @@ import {
 import { formatEnrollmentDate } from './enrollment-display';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
-import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
+import { createApplicantRowNavigationProps } from './applicant-row-navigation';
 import {
   enrollmentTableWrapperSx,
   EnrollmentTableEmptyState,
@@ -56,7 +56,7 @@ import {
   EnrollmentWorkspaceErrorState,
 } from './workspace-table-patterns';
 
-import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
+import type { ApplicantWorkspaceTab } from './applicant-workspace-page';
 
 const actionLabels: Record<AdmissionCrmRecommendedAction, string> = {
   [AdmissionCrmRecommendedAction.OpenApplicant]: 'Open applicant',
@@ -124,7 +124,7 @@ const urgencyLabels: Record<AdmissionCrmWorkUrgency, string> = {
   [AdmissionCrmWorkUrgency.Overdue]: 'Overdue',
 };
 
-const sectionTabs: Record<AdmissionCrmWorkspaceSection, ApplicantDrawerTab> = {
+const sectionTabs: Record<AdmissionCrmWorkspaceSection, ApplicantWorkspaceTab> = {
   [AdmissionCrmWorkspaceSection.Overview]: 'overview',
   [AdmissionCrmWorkspaceSection.EntranceExam]: 'exam',
   [AdmissionCrmWorkspaceSection.Registration]: 'registration',
@@ -143,13 +143,12 @@ export function EnrollmentOverviewWorkspace() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { academicYearId, academicMediumId, currentUserId } = useEnrollmentWorkspace();
+  const { academicYearId, academicMediumId, currentUserId, openApplicant } =
+    useEnrollmentWorkspace();
   const page = Math.max(0, Number(searchParams.get('page') || '1') - 1);
   const pageSize = Math.min(100, Math.max(10, Number(searchParams.get('pageSize') || '25')));
   const search = searchParams.get('search') || '';
   const sorting = searchParams.get('sorting') || undefined;
-  const applicantId = searchParams.get('applicant') || undefined;
-  const workItemKey = searchParams.get('workItem') || undefined;
   const [selectedWorkKeys, setSelectedWorkKeys] = useState<string[]>([]);
   const [bulkTaskOpen, setBulkTaskOpen] = useState(false);
   const [bulkTaskTitle, setBulkTaskTitle] = useState('');
@@ -222,27 +221,13 @@ export function EnrollmentOverviewWorkspace() {
 
   const openItem = useCallback(
     (item: AdmissionCrmMyWorkItemDto) => {
-      updateUrl(
-        {
-          applicant: item.leadId,
-          workItem: item.key,
-          tab: sectionTabs[item.recommendedSection],
-        },
-        'push'
-      );
+      openApplicant(item.leadId, sectionTabs[item.recommendedSection], item);
     },
-    [updateUrl]
+    [openApplicant]
   );
 
-  const closeDrawer = useCallback(
-    () => updateUrl({ applicant: null, workItem: null, tab: null }, 'push'),
-    [updateUrl]
-  );
-
-  const selectedWorkItem = query.data?.items.find((item) => item.key === workItemKey);
   const workItems = useMemo(() => query.data?.items || [], [query.data?.items]);
   const selectedWorkSet = useMemo(() => new Set(selectedWorkKeys), [selectedWorkKeys]);
-  const activeTab = (searchParams.get('tab') as ApplicantDrawerTab | null) || 'overview';
 
   const metrics = useMemo(
     () => [
@@ -691,17 +676,13 @@ export function EnrollmentOverviewWorkspace() {
               });
             }}
             onServerFilter={handleFilters}
-            handleRowClick={(row) => openItem(row as AdmissionCrmMyWorkItemDto)}
-            rowProps={(row) => ({
-              tabIndex: 0,
-              'aria-label': `Open work for ${(row as AdmissionCrmMyWorkItemDto).applicantName}`,
-              onKeyDown: (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  openItem(row as AdmissionCrmMyWorkItemDto);
-                }
-              },
-            })}
+            rowProps={(row) => {
+              const item = row as AdmissionCrmMyWorkItemDto;
+              return createApplicantRowNavigationProps({
+                applicantName: item.applicantName,
+                onOpen: () => openItem(item),
+              });
+            }}
             noDataText={
               <EnrollmentTableEmptyState
                 title="Your work queue is clear"
@@ -753,15 +734,6 @@ export function EnrollmentOverviewWorkspace() {
           </LoadingButton>
         </DialogActions>
       </Dialog>
-      <ApplicantWorkspaceDrawer
-        leadId={applicantId}
-        academicYearId={academicYearId}
-        initialTab={activeTab}
-        onTabChange={(tab) => updateUrl({ tab }, 'replace')}
-        onClose={closeDrawer}
-        context="my-work"
-        workItem={selectedWorkItem}
-      />
     </Stack>
   );
 }

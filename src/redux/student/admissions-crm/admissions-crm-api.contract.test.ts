@@ -54,6 +54,7 @@ import {
   buildChangeAdmissionCrmLeadPriorityRequest,
   buildMergeAdmissionCrmDuplicateLeadRequest,
   buildAssignAdmissionCrmSpecialRouteRequest,
+  buildAdmissionCrmQuickInquiryOptionsRequest,
   buildAdmissionCrmMessageTemplateListRequest,
   buildSendAdmissionCrmTemplateMessageRequest,
   buildAdmissionCrmRouteDefinitionListRequest,
@@ -479,9 +480,12 @@ describe('admissions CRM API contracts', () => {
     const body = {
       channel: AdmissionInquiryChannel.QuickCallEntry,
       firstName: 'Riya',
+      middleName: 'Manoj',
+      lastName: 'Shah',
       dateOfBirth: '2018-05-12T00:00:00.000Z',
       primaryContactNo: '9988776655',
       admissionIntent: 'Admission inquiry for Grade 1',
+      intendedRouteDefinitionId: 'route-fresh-v2',
       campusBranchName: 'North Campus',
       preferredCommunicationLanguage: 'Hindi',
     };
@@ -490,6 +494,11 @@ describe('admissions CRM API contracts', () => {
       url: '/student-enrollment/admissions-crm/year-1/leads',
       method: 'POST',
       body,
+    });
+
+    expect(buildAdmissionCrmQuickInquiryOptionsRequest({ academicYearId: 'year-1' })).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/quick-inquiry-options',
+      method: 'GET',
     });
 
     expect(

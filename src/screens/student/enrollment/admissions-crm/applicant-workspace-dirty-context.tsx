@@ -4,7 +4,15 @@ import type { ReactNode } from 'react';
 
 import { Button } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useMemo, useState, useEffect, useContext, useCallback, createContext } from 'react';
+import {
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  createContext,
+} from 'react';
 
 type DirtyContextValue = {
   hasUnsavedChanges: boolean;
@@ -18,6 +26,24 @@ export function ApplicantWorkspaceDirtyProvider({ children }: { children: ReactN
   const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(() => new Set());
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const hasUnsavedChanges = dirtyKeys.size > 0;
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  const historyGuardActiveRef = useRef(false);
+  const allowNextPopRef = useRef(false);
+  const afterGuardRemovalRef = useRef<(() => void) | null>(null);
+
+  hasUnsavedChangesRef.current = hasUnsavedChanges;
+
+  const removeHistoryGuardThen = useCallback((action: () => void) => {
+    if (!historyGuardActiveRef.current) {
+      action();
+      return;
+    }
+
+    historyGuardActiveRef.current = false;
+    allowNextPopRef.current = true;
+    afterGuardRemovalRef.current = action;
+    window.history.back();
+  }, []);
 
   const registerDirtyState = useCallback((key: string, dirty: boolean) => {
     setDirtyKeys((current) => {
@@ -46,6 +72,50 @@ export function ApplicantWorkspaceDirtyProvider({ children }: { children: ReactN
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  useEffect(() => {
+    const handlePopState = () => {
+      if (allowNextPopRef.current) {
+        allowNextPopRef.current = false;
+        const action = afterGuardRemovalRef.current;
+        afterGuardRemovalRef.current = null;
+        if (action) queueMicrotask(action);
+        return;
+      }
+
+      if (!historyGuardActiveRef.current || !hasUnsavedChangesRef.current) return;
+
+      window.history.pushState(
+        { ...(window.history.state || {}), applicantWorkspaceDirtyGuard: true },
+        '',
+        window.location.href
+      );
+      historyGuardActiveRef.current = true;
+      setPendingAction(() => () => {
+        allowNextPopRef.current = true;
+        window.history.back();
+      });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (hasUnsavedChanges && !historyGuardActiveRef.current) {
+      window.history.pushState(
+        { ...(window.history.state || {}), applicantWorkspaceDirtyGuard: true },
+        '',
+        window.location.href
+      );
+      historyGuardActiveRef.current = true;
+      return;
+    }
+
+    if (!hasUnsavedChanges && historyGuardActiveRef.current) {
+      removeHistoryGuardThen(() => {});
+    }
+  }, [hasUnsavedChanges, removeHistoryGuardThen]);
+
   const value = useMemo(
     () => ({ hasUnsavedChanges, registerDirtyState, requestTransition }),
     [hasUnsavedChanges, registerDirtyState, requestTransition]
@@ -68,7 +138,7 @@ export function ApplicantWorkspaceDirtyProvider({ children }: { children: ReactN
               const action = pendingAction;
               setPendingAction(null);
               setDirtyKeys(new Set());
-              action?.();
+              removeHistoryGuardThen(() => action?.());
             }}
           >
             Discard changes
