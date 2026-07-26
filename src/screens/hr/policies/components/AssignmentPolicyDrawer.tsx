@@ -183,7 +183,15 @@ function AssignmentTargetPicker({
   ctx: HRPolicyWorkspaceContext;
   disabled?: boolean;
 }) {
-  const { assignmentForm, setAssignmentForm, employeeOptions, groupOptions } = ctx;
+  const {
+    assignmentForm,
+    setAssignmentForm,
+    employeeOptions,
+    groupOptions,
+    employeeLookupSearch,
+    setEmployeeLookupSearch,
+    employeeSearchLoading,
+  } = ctx;
 
   const setTarget = (key: string, displayName?: string) => {
     setAssignmentForm((current) => ({
@@ -199,8 +207,26 @@ function AssignmentTargetPicker({
         <Autocomplete
           options={employeeOptions}
           getOptionLabel={optionLabel}
+          inputValue={employeeLookupSearch}
+          onInputChange={(_event, value, reason) => {
+            if (reason === 'input') {
+              setEmployeeLookupSearch(value);
+              const selectedLabel = assignmentForm.targetDisplayName;
+              if (assignmentForm.targetKey && value !== selectedLabel) {
+                setTarget('');
+              }
+            } else if (reason === 'clear') {
+              setEmployeeLookupSearch('');
+              setTarget('');
+            }
+          }}
+          loading={employeeSearchLoading}
+          filterOptions={(options) => options}
           value={employeeOptions.find((item) => item.id === assignmentForm.targetKey) || null}
-          onChange={(_, value) => setTarget(value?.id || '', optionLabel(value))}
+          onChange={(_, value) => {
+            setTarget(value?.id || '', optionLabel(value));
+            setEmployeeLookupSearch(optionLabel(value));
+          }}
           disabled={disabled}
           renderInput={(params) => <TextField {...params} size="small" />}
         />
@@ -243,6 +269,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     assignmentConflict,
     assignmentDateError,
     setAssignmentDateError,
+    setEmployeeLookupSearch,
     activePayroll = [],
     activeAttendance = [],
     activeLeavePolicies = [],
@@ -316,14 +343,15 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               label="Target Type"
               value={assignmentForm.targetType}
               disabled={isViewMode}
-              onChange={(event) =>
+              onChange={(event) => {
                 setAssignmentForm((current) => ({
                   ...current,
                   targetType: event.target.value as PolicyAssignmentTargetType,
                   targetKey: '',
                   targetDisplayName: '',
-                }))
-              }
+                }));
+                setEmployeeLookupSearch('');
+              }}
             >
               <MenuItem value="employee">Employee</MenuItem>
               <MenuItem value="group">Group</MenuItem>

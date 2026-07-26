@@ -9,19 +9,15 @@ import { alpha } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
+import { skipToken } from '@reduxjs/toolkit/query';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { EmptyContent } from 'src/components/empty-content';
+import React, { useRef, useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import {
-  useLazyGetEmployeeSalarySlipQuery,
-  useLazyGetEmployeeSalarySlipPdfQuery,
-  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
-} from 'src/redux/runPayroll/runPayrollApi';
 import {
   Box,
   Card,
@@ -36,9 +32,19 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
+import {
+  useGetEmployeeSalarySlipQuery,
+  useLazyGetEmployeeSalarySlipPdfQuery,
+  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
+} from 'src/redux/runPayroll/runPayrollApi';
 
 import PaySlipPrintView from './payslip-print-view';
 import { usePayslipActions, isOfficialPayslipStatus } from './use-payslip-actions';
+import {
+  buildPayslipSelection,
+  isPayslipNotFoundError,
+  payslipMatchesSelection,
+} from './payslip-selection';
 
 // ---------------------------------------------------------------------------
 // Main screen
@@ -61,32 +67,37 @@ const PaySlipGenerationScreen = () => {
     currentQueryAndMutation: useLazyGetEmployeeQuery,
   });
 
-  const [
-    getEmployeeSalarySlip,
-    { data: employeeSalarySlip, isLoading: employeeSalarySlipLoading },
-  ] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetEmployeeSalarySlipQuery,
-    params: {
-      employeeId: employee?.id,
-      monthYear: monthYear?.format('MMMM-YYYY').toUpperCase(),
-    },
-    options: {
-      skip: !employee?.id || !monthYear,
-    },
-  });
+  const payslipSelection = buildPayslipSelection(employee?.id, monthYear);
+  const {
+    currentData: queriedEmployeeSalarySlip,
+    isLoading: employeeSalarySlipInitialLoading,
+    isFetching: employeeSalarySlipFetching,
+    isError: employeeSalarySlipIsError,
+    error: employeeSalarySlipError,
+    refetch: refetchEmployeeSalarySlip,
+  } = useGetEmployeeSalarySlipQuery(
+    payslipSelection
+      ? {
+          employeeId: payslipSelection.employeeId,
+          monthYear: payslipSelection.monthYear,
+        }
+      : skipToken,
+    {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    }
+  );
+  const employeeSalarySlip = payslipMatchesSelection(queriedEmployeeSalarySlip, payslipSelection)
+    ? queriedEmployeeSalarySlip
+    : undefined;
+  const employeeSalarySlipLoading = employeeSalarySlipInitialLoading || employeeSalarySlipFetching;
+  const payslipNotFound =
+    employeeSalarySlipIsError && isPayslipNotFoundError(employeeSalarySlipError);
+  const payslipLoadFailed = employeeSalarySlipIsError && !payslipNotFound;
 
   const [getEmployeeSalarySlipPdf] = useLazyGetEmployeeSalarySlipPdfQuery();
   const [getEmployeeSalarySlipPreviewPdf] = useLazyGetEmployeeSalarySlipPreviewPdfQuery();
-
-  useEffect(() => {
-    if (employee?.id && monthYear) {
-      getEmployeeSalarySlip({
-        employeeId: employee?.id,
-        monthYear: monthYear?.format('MMMM-YYYY').toUpperCase(),
-      });
-    }
-  }, [employee?.id, getEmployeeSalarySlip, monthYear]);
 
   const normalizedSalarySlip = employeeSalarySlip
     ? {
@@ -100,7 +111,7 @@ const PaySlipGenerationScreen = () => {
 
     return getEmployeeSalarySlipPdf({
       employeeId: employee.id,
-      monthYear: monthYear.format('MMMM-YYYY').toUpperCase(),
+      monthYear: monthYear.format('YYYY-MM'),
     }).unwrap();
   }, [employee?.id, getEmployeeSalarySlipPdf, monthYear]);
 
@@ -109,7 +120,7 @@ const PaySlipGenerationScreen = () => {
 
     return getEmployeeSalarySlipPreviewPdf({
       employeeId: employee.id,
-      monthYear: monthYear.format('MMMM-YYYY').toUpperCase(),
+      monthYear: monthYear.format('YYYY-MM'),
     }).unwrap();
   }, [employee?.id, getEmployeeSalarySlipPreviewPdf, monthYear]);
 
@@ -314,12 +325,14 @@ const PaySlipGenerationScreen = () => {
             <>
               {viewMode === 'dashboard' ? (
                 <PayslipDashboardPreview
+                  key={`${payslipSelection?.key}:dashboard`}
                   employee={employee}
                   monthYear={monthYear}
                   slip={normalizedSalarySlip}
                 />
               ) : (
                 <PayslipDocumentPreview
+                  key={`${payslipSelection?.key}:pdf`}
                   employee={employee}
                   monthYear={monthYear}
                   slip={normalizedSalarySlip}
@@ -361,7 +374,34 @@ const PaySlipGenerationScreen = () => {
                 border: (theme) => `1px solid ${theme.palette.divider}`,
               }}
             >
-              <EmptyContent title="Search an employee to view a finalized payslip" />
+              <EmptyContent
+                title={
+                  payslipLoadFailed
+                    ? 'Payslip could not be loaded'
+                    : payslipNotFound && payslipSelection
+                      ? 'No payslip found for the selected employee and pay period'
+                      : 'Search an employee to view a finalized payslip'
+                }
+                description={
+                  payslipLoadFailed
+                    ? 'Check your connection and access, then try again.'
+                    : undefined
+                }
+                action={
+                  payslipLoadFailed ? (
+                    <Button
+                      variant="outlined"
+                      startIcon={<Iconify icon="mdi:refresh" />}
+                      onClick={() => {
+                        refetchEmployeeSalarySlip();
+                      }}
+                      sx={{ mt: 2 }}
+                    >
+                      Retry
+                    </Button>
+                  ) : undefined
+                }
+              />
             </Card>
           )}
         </Stack>
@@ -370,6 +410,7 @@ const PaySlipGenerationScreen = () => {
       {/* Hidden print component */}
       <Box sx={{ display: 'none', displayPrint: 'block' }}>
         <PaySlipPrintView
+          key={`${payslipSelection?.key}:print`}
           ref={printRef}
           employee={employee}
           monthYear={monthYear}

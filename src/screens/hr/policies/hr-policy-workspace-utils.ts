@@ -581,8 +581,25 @@ export function formatNumber(value?: number | null): string {
 
 export function getErrorMessage(error: unknown, fallback: string): string {
   const value = error as
-    | { data?: { detail?: string; error?: { message?: string }; message?: string }; error?: string }
+    | {
+        data?: {
+          detail?: string;
+          error?: { code?: string; message?: string; data?: Record<string, unknown> };
+          message?: string;
+        };
+        error?: string;
+      }
     | undefined;
+  const errorCode = value?.data?.error?.code || '';
+  if (
+    errorCode.endsWith('PolicyNameAlreadyExists') ||
+    errorCode.endsWith('LeavePolicyNameAlreadyExists')
+  ) {
+    const policyName = value?.data?.error?.data?.policyName;
+    return `A non-archived policy${
+      typeof policyName === 'string' && policyName.trim() ? ` named "${policyName.trim()}"` : ''
+    } already exists for this academic year.`;
+  }
   return (
     value?.data?.detail ||
     value?.data?.error?.message ||
@@ -594,8 +611,7 @@ export function getErrorMessage(error: unknown, fallback: string): string {
 
 export function getAssignmentConflict(error: unknown): HrPolicyAssignmentConflict | null {
   const value = error as
-    | { data?: { error?: { data?: { conflict?: unknown } }; conflict?: unknown } }
-    | undefined;
+    { data?: { error?: { data?: { conflict?: unknown } }; conflict?: unknown } } | undefined;
   const raw = value?.data?.error?.data?.conflict || value?.data?.conflict;
   if (!raw) return null;
   if (typeof raw === 'object') return raw as HrPolicyAssignmentConflict;

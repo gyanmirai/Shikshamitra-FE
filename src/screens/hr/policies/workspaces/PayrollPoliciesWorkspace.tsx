@@ -40,7 +40,7 @@ export default function PayrollPoliciesWorkspace({ focus }: HRPolicyWorkspacePro
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Payroll Policies"
-        description={currentYear?.name || 'No academic year selected'}
+        description="Manage payroll day calculations, holiday treatment, and default payroll rules."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Policies & Rules' },

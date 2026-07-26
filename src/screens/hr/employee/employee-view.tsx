@@ -444,9 +444,13 @@ export function EmployeeCard({
         animate="show"
         style={{ transitionDelay: '80ms' }}
       >
-        <Paper elevation={2} sx={{ mb: 1 }}>
+        <Paper elevation={2} sx={{ mb: 1, overflow: 'hidden' }}>
           <Tabs
             value={tabs.value}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            aria-label="Employee profile sections"
             onChange={(...rest) => {
               const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
               if (currentIndex > newIndex) {
@@ -458,18 +462,31 @@ export function EmployeeCard({
               setSearchParams?.('tab', rest[1]);
             }}
             sx={{
-              px: 1.5,
-
-              '& .MuiTabs-flexContainer': { gap: 1.5 },
+              px: 0.5,
+              minHeight: 46,
+              '& .MuiTabs-flexContainer': { gap: 0.5, alignItems: 'stretch' },
+              '& .MuiTab-root': {
+                minWidth: 'auto',
+                minHeight: 46,
+                px: 1.25,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 0.75,
+                whiteSpace: 'nowrap',
+              },
+              '& .MuiTab-iconWrapper': {
+                mb: '0 !important',
+              },
             }}
             role="tablist"
           >
             {TABS.map((tab) => (
               <Tab
-                sx={{ fontSize: '12px' }}
+                sx={{ fontSize: '0.75rem' }}
                 key={tab.value}
                 value={tab.value}
                 icon={tab.icon}
+                iconPosition="start"
                 label={tab.label}
                 role="tab"
               />

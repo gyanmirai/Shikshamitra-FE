@@ -15,6 +15,7 @@ import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -400,6 +401,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     type: 'mutation',
     currentQueryAndMutation: useAddBasicInformationMutation,
     isThrowError: true,
+    popupConfig: { error: false },
   });
   // useQueryAndMutation({
   //   type: 'mutation',
@@ -410,21 +412,25 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     type: 'mutation',
     currentQueryAndMutation: useUpdateFamilyInformationMutation,
     isThrowError: true,
+    popupConfig: { error: false },
   });
   const [updateAdditionalInfo] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateAdditionalInformationMutation,
     isThrowError: true,
+    popupConfig: { error: false },
   });
   const [updateExperienceInfo] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateExperienceInformationMutation,
     isThrowError: true,
+    popupConfig: { error: false },
   });
   const [updateBankDetails] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateBankDetailsMutation,
     isThrowError: true,
+    popupConfig: { error: false },
   });
   const [previewPolicyAssignmentImpact] = usePreviewPolicyAssignmentImpactMutation();
   const {
@@ -505,12 +511,14 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeMutation,
     isThrowError: true,
+    popupConfig: { error: false },
   });
 
   const [updateReportingManager] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateReportingManagerByEmployeeIdMutation,
     isThrowError: true,
+    popupConfig: { error: false },
   });
 
   const [addAccessControl] = useQueryAndMutation({
@@ -1039,13 +1047,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           setActiveStep(activeStep + 1);
         }
       } catch (error) {
-        console.error(error, '============================');
+        const parsedError = parseApiProblemDetail(error);
         shikshaMitraToast.error({
-          message:
-            (error as any)?.data?.message ||
-            (error as any)?.error ||
-            (error as any)?.message ||
-            'Failed to save employee details',
+          message: parsedError.detail || 'Failed to save employee details',
         });
         setIsLoading(false);
         return;

@@ -31,7 +31,9 @@ import {
 import {
   toAttendanceTableTimeValue,
   isManualAttendanceRowDirty,
+  restoreManualAttendanceRows,
   getDirtyManualAttendanceRows,
+  canMutateManualAttendanceDay,
   applyManualAttendanceRowStatus,
   applyManualAttendanceBulkStatus,
   buildManualAttendanceSaveEntries,
@@ -106,7 +108,7 @@ const ManualAttendanceScreen = () => {
   });
 
   const {
-    data,
+    currentData: dayAttendanceData,
     isLoading,
     isFetching,
     isError,
@@ -123,9 +125,17 @@ const ManualAttendanceScreen = () => {
     options: { skip: !date },
   });
 
-  const isHoliday = Boolean(data?.isHoliday);
+  const canMutateCurrentDay = canMutateManualAttendanceDay({
+    hasDate: Boolean(date),
+    hasCurrentData: dayAttendanceData !== undefined,
+    isLoading,
+    isFetching,
+    isError,
+  });
+  const isHoliday = Boolean(dayAttendanceData?.isHoliday);
   const holidayReason =
-    data?.holidayReason || (data?.holidayName ? `Holiday: ${data.holidayName}` : null);
+    dayAttendanceData?.holidayReason ||
+    (dayAttendanceData?.holidayName ? `Holiday: ${dayAttendanceData.holidayName}` : null);
   const isFutureDate = Boolean(date && dayjs(date).isAfter(dayjs(), 'day'));
   const academicYearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
   const academicYearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
@@ -165,25 +175,31 @@ const ManualAttendanceScreen = () => {
     }
   }, [academicYearStart, academicYearEnd, isOutsideAcademicYear]);
 
-  const syncRowsFromDayResponse = useCallback((dayResponse: typeof data | null | undefined) => {
-    const mapped = mapManualAttendanceDayResponseToRows(dayResponse);
-    setEmployeeData(mapped);
-    originalDataRef.current = mapped;
-
-    if (dayResponse?.isDayLocked !== undefined) {
-      setIsLocked(dayResponse.isDayLocked);
-    }
+  const clearDaySpecificState = useCallback(() => {
+    setEmployeeData([]);
+    originalDataRef.current = [];
+    setEditingCell(null);
+    setIsLocked(false);
   }, []);
 
+  const syncRowsFromDayResponse = useCallback(
+    (dayResponse: typeof dayAttendanceData | null | undefined) => {
+      const mapped = mapManualAttendanceDayResponseToRows(dayResponse);
+      setEmployeeData(mapped);
+      originalDataRef.current = mapped;
+      setIsLocked(Boolean(dayResponse?.isDayLocked));
+    },
+    []
+  );
+
   useEffect(() => {
-    if (isError) {
-      setEmployeeData([]);
-      originalDataRef.current = [];
+    if (isError || dayAttendanceData === undefined) {
+      clearDaySpecificState();
       return;
     }
 
-    syncRowsFromDayResponse(data);
-  }, [data, isError, syncRowsFromDayResponse]);
+    syncRowsFromDayResponse(dayAttendanceData);
+  }, [clearDaySpecificState, dayAttendanceData, isError, syncRowsFromDayResponse]);
 
   // Detect unsaved changes by comparing current data with original
   const isDirty = useMemo(
@@ -211,9 +227,7 @@ const ManualAttendanceScreen = () => {
         setPendingDate(val);
         discardConfirmDialog.onTrue();
       } else {
-        setEmployeeData([]);
-        originalDataRef.current = [];
-        setEditingCell(null);
+        clearDaySpecificState();
         setDate(val);
         if (isDateOutsideAcademicYear(val) && academicYearStart && academicYearEnd) {
           shikshaMitraToast.warning({
@@ -222,7 +236,14 @@ const ManualAttendanceScreen = () => {
         }
       }
     },
-    [isDirty, discardConfirmDialog, isDateOutsideAcademicYear, academicYearStart, academicYearEnd]
+    [
+      academicYearEnd,
+      academicYearStart,
+      clearDaySpecificState,
+      discardConfirmDialog,
+      isDateOutsideAcademicYear,
+      isDirty,
+    ]
   );
 
   // -------------------------------------------------------------------------
@@ -233,26 +254,30 @@ const ManualAttendanceScreen = () => {
   }, []);
 
   const setRowStatus = (id: string, status: AttendanceStatusType) => {
-    if (isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) return;
+    if (!canMutateCurrentDay || isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) {
+      return;
+    }
     setEmployeeData((prev) =>
       prev.map((emp) => (emp.id === id ? applyManualAttendanceRowStatus(emp, status) : emp))
     );
   };
 
   const setAllStatus = (status: AttendanceStatusType) => {
-    if (isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) return;
+    if (!canMutateCurrentDay || isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) {
+      return;
+    }
     setEmployeeData((prev) => applyManualAttendanceBulkStatus(prev, status));
   };
 
   const isBulkStatusDisabled = useCallback(
     (status: AttendanceStatusType) =>
       isManualAttendanceBulkStatusDisabled(employeeData, status, {
-        isLocked,
+        isLocked: isLocked || !canMutateCurrentDay,
         isHoliday,
         isFutureDate,
         isOutsideAcademicYear,
       }),
-    [employeeData, isFutureDate, isHoliday, isLocked, isOutsideAcademicYear]
+    [canMutateCurrentDay, employeeData, isFutureDate, isHoliday, isLocked, isOutsideAcademicYear]
   );
 
   const showTimeColumns = useMemo(
@@ -264,6 +289,13 @@ const ManualAttendanceScreen = () => {
   // Save handler
   // -------------------------------------------------------------------------
   const handleSave = async (): Promise<boolean> => {
+    if (!canMutateCurrentDay) {
+      shikshaMitraToast.warning({
+        message: 'Wait for attendance to finish loading for the selected date.',
+      });
+      return false;
+    }
+
     if (isOutsideAcademicYear && academicYearStart && academicYearEnd) {
       shikshaMitraToast.error({
         message: `Attendance can only be marked between ${academicYearStart.format('DD-MM-YYYY')} and ${academicYearEnd.format('DD-MM-YYYY')}.`,
@@ -330,6 +362,13 @@ const ManualAttendanceScreen = () => {
   };
 
   const handleLockToggle = async () => {
+    if (!canMutateCurrentDay) {
+      shikshaMitraToast.warning({
+        message: 'Wait for attendance to finish loading for the selected date.',
+      });
+      return;
+    }
+
     if (isHoliday) {
       shikshaMitraToast.error({
         message: holidayReason || 'Holiday dates cannot be locked for attendance.',
@@ -455,6 +494,7 @@ const ManualAttendanceScreen = () => {
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     <TimePicker
                       value={editingCell.value}
+                      disabled={!canMutateCurrentDay}
                       onChange={(newVal) =>
                         setEditingCell((prev) => prev && { ...prev, value: newVal })
                       }
@@ -464,6 +504,9 @@ const ManualAttendanceScreen = () => {
                         textField: {
                           size: 'small',
                           autoFocus: true,
+                          inputProps: {
+                            'data-testid': `manual-attendance-${row.id}-${field}-input`,
+                          },
                           sx: { width: '120px', '& input': { fontSize: '0.8rem', p: '4px 6px' } },
                         },
                       }}
@@ -477,7 +520,13 @@ const ManualAttendanceScreen = () => {
                       <IconButton
                         size="small"
                         color="primary"
+                        aria-label={`Save ${field === 'timeIn' ? 'In-Time' : 'Out-Time'} for ${
+                          row.employeeCode || row.fullName || row.id
+                        }`}
+                        data-testid={`manual-attendance-${row.id}-${field}-save`}
+                        disabled={!canMutateCurrentDay}
                         onClick={() => {
+                          if (!canMutateCurrentDay) return;
                           const formatted = editingCell.value?.isValid()
                             ? editingCell.value.format('HH:mm')
                             : null;
@@ -490,7 +539,15 @@ const ManualAttendanceScreen = () => {
                       </IconButton>
                     </CustomTooltip>
                     <CustomTooltip title="Cancel" arrow placement="top">
-                      <IconButton size="small" onClick={() => setEditingCell(null)} sx={{ p: 0.4 }}>
+                      <IconButton
+                        size="small"
+                        aria-label={`Cancel ${
+                          field === 'timeIn' ? 'In-Time' : 'Out-Time'
+                        } edit for ${row.employeeCode || row.fullName || row.id}`}
+                        data-testid={`manual-attendance-${row.id}-${field}-cancel`}
+                        onClick={() => setEditingCell(null)}
+                        sx={{ p: 0.4 }}
+                      >
                         <Iconify icon="eva:close-fill" width={16} />
                       </IconButton>
                     </CustomTooltip>
@@ -508,28 +565,36 @@ const ManualAttendanceScreen = () => {
                   }}
                 >
                   <Typography variant="body2">{displayTime || '\u2014'}</Typography>
-                  {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
-                    <CustomTooltip
-                      title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
-                      arrow
-                      placement="top"
-                    >
-                      <IconButton
-                        className="edit-btn"
-                        size="small"
-                        onClick={() =>
-                          setEditingCell({
-                            rowId: row.id,
-                            field,
-                            value: displayTime ? dayjs(`1970-01-01T${displayTime}`) : null,
-                          })
-                        }
-                        sx={{ p: 0.3 }}
+                  {canMutateCurrentDay &&
+                    !isLocked &&
+                    !isHoliday &&
+                    !isFutureDate &&
+                    !isOutsideAcademicYear && (
+                      <CustomTooltip
+                        title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
+                        arrow
+                        placement="top"
                       >
-                        <Iconify icon="eva:edit-2-outline" width={14} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
+                        <IconButton
+                          className="edit-btn"
+                          size="small"
+                          aria-label={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'} for ${
+                            row.employeeCode || row.fullName || row.id
+                          }`}
+                          data-testid={`manual-attendance-${row.id}-${field}-edit`}
+                          onClick={() =>
+                            setEditingCell({
+                              rowId: row.id,
+                              field,
+                              value: displayTime ? dayjs(`1970-01-01T${displayTime}`) : null,
+                            })
+                          }
+                          sx={{ p: 0.3 }}
+                        >
+                          <Iconify icon="eva:edit-2-outline" width={14} />
+                        </IconButton>
+                      </CustomTooltip>
+                    )}
                 </Stack>
               );
             },
@@ -558,7 +623,13 @@ const ManualAttendanceScreen = () => {
             <TextField
               size="small"
               fullWidth
-              disabled={isLocked || isHoliday || isFutureDate || isOutsideAcademicYear}
+              disabled={
+                !canMutateCurrentDay ||
+                isLocked ||
+                isHoliday ||
+                isFutureDate ||
+                isOutsideAcademicYear
+              }
               value={val || ''}
               onChange={(e) =>
                 setEmployeeData((prev) =>
@@ -627,7 +698,7 @@ const ManualAttendanceScreen = () => {
           );
         },
       },
-      ...(isLocked || isHoliday || isFutureDate || isOutsideAcademicYear
+      ...(!canMutateCurrentDay || isLocked || isHoliday || isFutureDate || isOutsideAcademicYear
         ? [
             {
               id: 'status' as const,
@@ -1223,6 +1294,7 @@ const ManualAttendanceScreen = () => {
       editingCell,
       updateRow,
       isBulkStatusDisabled,
+      canMutateCurrentDay,
     ]
   );
 
@@ -1306,12 +1378,7 @@ const ManualAttendanceScreen = () => {
             variant="outlined"
             color="inherit"
             startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
-            disabled={
-              employeeData.length === 0 ||
-              employeeData
-                .filter((e) => e.status !== STATUS.OnLeave)
-                .every((e) => e.status === STATUS.Pending)
-            }
+            disabled={!canMutateCurrentDay || employeeData.length === 0 || !isDirty}
             onClick={() => resetConfirmDialog.onTrue()}
             sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
           >
@@ -1322,11 +1389,13 @@ const ManualAttendanceScreen = () => {
         {/* Lock / Unlock */}
         <CustomTooltip
           title={
-            isHoliday
-              ? holidayReason || 'Holiday dates cannot be locked'
-              : isLocked
-                ? 'Attendance is locked — click to unlock'
-                : 'Click to lock attendance'
+            !canMutateCurrentDay
+              ? 'Wait for attendance to finish loading'
+              : isHoliday
+                ? holidayReason || 'Holiday dates cannot be locked'
+                : isLocked
+                  ? 'Attendance is locked — click to unlock'
+                  : 'Click to lock attendance'
           }
           arrow
           placement="top"
@@ -1343,7 +1412,7 @@ const ManualAttendanceScreen = () => {
                 />
               }
               onClick={() => lockConfirmDialog.onTrue()}
-              disabled={isHoliday}
+              disabled={!canMutateCurrentDay || isHoliday || isLocking || isUnlocking || isUpdating}
               sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
             >
               {isLocked ? 'Locked' : 'Lock'}
@@ -1361,6 +1430,7 @@ const ManualAttendanceScreen = () => {
             onClick={handleSave}
             disabled={
               isHoliday ||
+              !canMutateCurrentDay ||
               isFutureDate ||
               isOutsideAcademicYear ||
               employeeData.length === 0 ||
@@ -1385,7 +1455,7 @@ const ManualAttendanceScreen = () => {
         data={isError ? [] : employeeData}
         rowProps={rowProps}
         serverSide
-        totalCount={isError ? 0 : data?.totalCount || 0}
+        totalCount={isError ? 0 : dayAttendanceData?.totalCount || 0}
         onServerPagination={(page, rowsPerPage) => {
           setQuery((prev) => ({
             ...prev,
@@ -1417,6 +1487,7 @@ const ManualAttendanceScreen = () => {
             color={isLocked ? 'error' : 'primary'}
             size="small"
             loading={isLocking || isUnlocking}
+            disabled={!canMutateCurrentDay || isHoliday || isLocking || isUnlocking || isUpdating}
             onClick={handleLockToggle}
           >
             Yes, {isLocked ? 'Unlock' : 'Lock'}
@@ -1434,7 +1505,7 @@ const ManualAttendanceScreen = () => {
             Are you sure you want to reset all attendance?
             <br />
             <strong>
-              Eligible non-leave employees will be marked as Pending and remarks will be cleared.
+              All unsaved changes will be restored to the last loaded attendance state.
             </strong>
           </>
         }
@@ -1442,15 +1513,13 @@ const ManualAttendanceScreen = () => {
           <Button
             variant="contained"
             size="small"
+            disabled={!canMutateCurrentDay}
             onClick={() => {
-              setEmployeeData((prev) =>
-                prev.map((emp) => {
-                  const next = applyManualAttendanceRowStatus(emp, STATUS.Pending);
-                  return next === emp ? emp : { ...next, remarks: '' };
-                })
-              );
+              if (!canMutateCurrentDay) return;
+              setEmployeeData(restoreManualAttendanceRows(originalDataRef.current));
+              setEditingCell(null);
               resetConfirmDialog.onFalse();
-              shikshaMitraToast.success({ message: 'Attendance reset successfully' });
+              shikshaMitraToast.success({ message: 'Unsaved attendance changes discarded' });
             }}
           >
             Yes, Reset
@@ -1481,9 +1550,7 @@ const ManualAttendanceScreen = () => {
             color="error"
             size="small"
             onClick={() => {
-              setEmployeeData([]);
-              originalDataRef.current = [];
-              setEditingCell(null);
+              clearDaySpecificState();
               setDate(pendingDate);
               if (isDateOutsideAcademicYear(pendingDate) && academicYearStart && academicYearEnd) {
                 shikshaMitraToast.warning({

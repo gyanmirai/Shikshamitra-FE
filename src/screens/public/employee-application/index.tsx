@@ -54,6 +54,7 @@ import {
   isEmptyWorkExperience,
   employeeApplicationValidationSchema,
   buildEmployeeApplicationSubmitPayload,
+  resolveEmployeeApplicationUploadError,
   createEmployeeApplicationInitialValues,
 } from './validation';
 
@@ -676,7 +677,7 @@ function PersonalStep({
           <TextField
             fullWidth
             size="small"
-            label="Family Caste"
+            label="Family Caste *"
             name={fp('familyCaste')}
             value={getIn(formik.values, fp('familyCaste')) || ''}
             onChange={(e) => {
@@ -1321,6 +1322,7 @@ function WorkExperienceStep({
                           value ? value.format('YYYY-MM-DD') : ''
                         );
                       }}
+                      disableFuture
                       format="DD-MM-YYYY"
                       slotProps={{
                         textField: {
@@ -1350,6 +1352,7 @@ function WorkExperienceStep({
                           value ? value.format('YYYY-MM-DD') : ''
                         );
                       }}
+                      disableFuture
                       format="DD-MM-YYYY"
                       slotProps={{
                         textField: {
@@ -1372,6 +1375,67 @@ function WorkExperienceStep({
 }
 
 // ── Step 5: Uploads & Review ──────────────────────────────────────────────────
+function SelectedUploadFile({
+  file,
+  label,
+  onRemove,
+  testId,
+}: {
+  file: File;
+  label: string;
+  onRemove: () => void;
+  testId: string;
+}) {
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [file]);
+
+  return (
+    <Paper variant="outlined" sx={{ p: 1.25 }} data-testid={testId}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="caption" color="text.secondary">
+            {label}
+          </Typography>
+          <Typography variant="body2" noWrap title={file.name}>
+            {file.name}
+          </Typography>
+        </Box>
+        <Stack direction="row" alignItems="center" spacing={0.5}>
+          <Button
+            component="a"
+            href={previewUrl || undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            size="small"
+            disabled={!previewUrl}
+            startIcon={<Iconify icon="mdi:open-in-new" />}
+            data-testid={`${testId}-view`}
+          >
+            View
+          </Button>
+          <IconButton
+            size="small"
+            color="error"
+            onClick={onRemove}
+            aria-label={`Remove ${label.toLowerCase()}`}
+            data-testid={`${testId}-remove`}
+          >
+            <Iconify icon="mdi:close-circle-outline" />
+          </IconButton>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
 function UploadsReviewStep({
   formik,
   resume,
@@ -1379,6 +1443,7 @@ function UploadsReviewStep({
   setResume,
   setPhoto,
   fileError,
+  setFileError,
 }: {
   formik: ReturnType<typeof useFormik<EmployeeApplicationFormValues>>;
   resume: File | null;
@@ -1386,6 +1451,7 @@ function UploadsReviewStep({
   setResume: (file: File | null) => void;
   setPhoto: (file: File | null) => void;
   fileError: string | null;
+  setFileError: (message: string | null) => void;
 }) {
   const father = formik.values.familyInfo.fatherDetails;
   const mother = formik.values.familyInfo.motherDetails;
@@ -1402,45 +1468,84 @@ function UploadsReviewStep({
       {fileError && <Alert severity="error">{fileError}</Alert>}
 
       <SectionCard title="Upload Documents">
-        <Grid size={{ xs: 12 }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} flexWrap="wrap">
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Stack spacing={1}>
             <Button
               component="label"
               variant="outlined"
               startIcon={<Iconify icon="mdi:file-upload-outline" />}
-              color={!resume ? 'error' : 'primary'}
+              color="primary"
             >
-              Upload Resume&nbsp;<span style={{ color: 'inherit' }}>*</span>
+              Upload Resume
               <input
                 hidden
                 type="file"
                 accept=".pdf,.doc,.docx"
                 data-testid="employee-application-resume-input"
-                onChange={(event) => setResume(event.target.files?.[0] || null)}
+                onChange={(event) => {
+                  const file = event.target.files?.[0] || null;
+                  const validationError = validateResumeFile(file);
+                  setResume(validationError ? null : file);
+                  setFileError(validationError);
+                  event.currentTarget.value = '';
+                }}
               />
             </Button>
-            <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
-              {resume?.name || 'PDF, DOC, DOCX up to 10MB'}
-            </Typography>
-
+            {resume ? (
+              <SelectedUploadFile
+                file={resume}
+                label="Resume"
+                onRemove={() => {
+                  setResume(null);
+                  setFileError(null);
+                }}
+                testId="employee-application-resume"
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                PDF, DOC, DOCX up to 10MB
+              </Typography>
+            )}
+          </Stack>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Stack spacing={1}>
             <Button
               component="label"
               variant="outlined"
               startIcon={<Iconify icon="mdi:image-plus-outline" />}
-              color={!photo ? 'error' : 'primary'}
+              color="primary"
             >
-              Upload Photo&nbsp;<span style={{ color: 'inherit' }}>*</span>
+              Upload Photo
               <input
                 hidden
                 type="file"
                 accept="image/*"
                 data-testid="employee-application-photo-input"
-                onChange={(event) => setPhoto(event.target.files?.[0] || null)}
+                onChange={(event) => {
+                  const file = event.target.files?.[0] || null;
+                  const validationError = validatePhotoFile(file);
+                  setPhoto(validationError ? null : file);
+                  setFileError(validationError);
+                  event.currentTarget.value = '';
+                }}
               />
             </Button>
-            <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
-              {photo?.name || 'Image up to 5MB'}
-            </Typography>
+            {photo ? (
+              <SelectedUploadFile
+                file={photo}
+                label="Photo"
+                onRemove={() => {
+                  setPhoto(null);
+                  setFileError(null);
+                }}
+                testId="employee-application-photo"
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Image up to 5MB
+              </Typography>
+            )}
           </Stack>
         </Grid>
       </SectionCard>
@@ -1534,7 +1639,7 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, helpers) => {
-      const uploadError = validateResumeFile(resume) || validatePhotoFile(photo);
+      const uploadError = resolveEmployeeApplicationUploadError(fileError, resume, photo);
       if (uploadError) {
         setFileError(uploadError);
         setError(null);
@@ -1667,6 +1772,7 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
             setResume={setResume}
             setPhoto={setPhoto}
             fileError={fileError}
+            setFileError={setFileError}
           />
         );
     }

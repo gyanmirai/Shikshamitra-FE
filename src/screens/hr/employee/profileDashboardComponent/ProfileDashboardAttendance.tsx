@@ -1,13 +1,24 @@
 import type { Dayjs } from 'dayjs';
+import type { EmployeeDashboardData } from 'src/redux/hr/employeeApi';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
 
-const ProfileDashboardAttendance = () => {
-  const [date] = useState<Dayjs | null>(dayjs());
+import {
+  employeeDashboardStatusCopy,
+  findEmployeeDashboardHoliday,
+  buildEmployeeAttendanceDayLookup,
+} from '../employee-dashboard-utils';
+
+const ProfileDashboardAttendance = ({ data }: { data: EmployeeDashboardData }) => {
+  const date = dayjs(data.date) as Dayjs;
+  const attendanceByDate = useMemo(
+    () => buildEmployeeAttendanceDayLookup(data.attendanceDays),
+    [data.attendanceDays]
+  );
 
   return (
     <Paper
@@ -30,6 +41,7 @@ const ProfileDashboardAttendance = () => {
 
       <DateCalendar
         value={date}
+        readOnly
         disableFuture
         showDaysOutsideCurrentMonth
         sx={{
@@ -38,9 +50,6 @@ const ProfileDashboardAttendance = () => {
           maxHeight: '100%',
           height: '100%',
           justifyContent: 'center',
-          '& .MuiPickersCalendarHeader-root': {
-            display: 'none', // Hides the header (Month, Year, and Arrows)
-          },
           '& .MuiDayCalendar-header': {
             justifyContent: 'space-around',
             '& .MuiDayCalendar-weekDayLabel': {
@@ -53,26 +62,16 @@ const ProfileDashboardAttendance = () => {
         slots={{
           day: (prop: any) => {
             const { day } = prop;
+            const key = day.format('YYYY-MM-DD');
+            const attendance = attendanceByDate.get(key);
+            const holiday = findEmployeeDashboardHoliday(data.holidays, key);
+            const status = attendance ? employeeDashboardStatusCopy[attendance.status] : null;
+            const toolTipTitle = attendance
+              ? `${status?.label}${attendance.remarks ? `: ${attendance.remarks}` : ''}`
+              : holiday
+                ? `Holiday: ${holiday.name}`
+                : '';
 
-            const absent = day.format('DD-MM-YYYY') === '10-06-2025';
-            const isSunday = day.day() === 0;
-            const isHalfDay = day.format('DD-MM-YYYY') === '11-06-2025';
-            const isHoliday = day.format('DD-MM-YYYY') === '09-06-2025';
-
-            const disabled = isSunday || isHoliday || prop.disabled;
-            let toolTipTitle = '';
-            let backgroundColor = '';
-
-            if (absent) {
-              backgroundColor = 'error.lighter';
-              toolTipTitle = 'Doctors Appointment';
-            }
-            if (isHalfDay) {
-              toolTipTitle = 'Half Day';
-            }
-            if (isHoliday) {
-              toolTipTitle = 'Public Holiday';
-            }
             return (
               <CustomTooltip title={toolTipTitle} arrow placement="top">
                 <Box>
@@ -85,20 +84,32 @@ const ProfileDashboardAttendance = () => {
                       overflow: 'hidden',
                       fontWeight: 500,
                       borderRadius: 1.5,
-                      bgcolor: backgroundColor,
-                      color: absent ? 'error.main' : 'text.primary',
+                      bgcolor: holiday ? 'background.neutral' : undefined,
+                      color: holiday ? 'text.secondary' : 'text.primary',
                       '&:hover': { bgcolor: 'action.hover' },
-                      ...(isHalfDay && {
+                      ...(attendance?.status === 'Present' && {
+                        bgcolor: 'success.lighter',
+                        color: 'success.dark',
+                      }),
+                      ...(attendance?.status === 'HalfDay' && {
                         background: (theme) =>
                           `linear-gradient(135deg, ${theme.palette.warning.lighter} 50%, transparent 50%)`,
                         color: 'warning.dark',
                       }),
-                      ...(isHoliday && {
-                        bgcolor: 'background.neutral',
-                        color: 'text.disabled',
+                      ...(attendance?.status === 'Absent' && {
+                        bgcolor: 'error.lighter',
+                        color: 'error.dark',
+                      }),
+                      ...(attendance?.status === 'HalfDayLeave' && {
+                        background: (theme) =>
+                          `linear-gradient(135deg, ${theme.palette.secondary.lighter} 50%, transparent 50%)`,
+                        color: 'secondary.dark',
+                      }),
+                      ...(attendance?.status === 'FullDayLeave' && {
+                        bgcolor: 'info.lighter',
+                        color: 'info.dark',
                       }),
                     }}
-                    disabled={disabled}
                   />
                 </Box>
               </CustomTooltip>
@@ -111,7 +122,8 @@ const ProfileDashboardAttendance = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 3,
+          gap: 2,
+          flexWrap: 'wrap',
           p: 2,
           borderTop: '1px solid',
           borderColor: 'divider',
@@ -126,13 +138,31 @@ const ProfileDashboardAttendance = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'warning.main' }} />
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            Holiday
+            Half day
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'error.main' }} />
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
             Absent
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'secondary.main' }} />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Half-day leave
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'info.main' }} />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Full-day leave
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'text.disabled' }} />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Holiday
           </Typography>
         </Box>
       </Box>

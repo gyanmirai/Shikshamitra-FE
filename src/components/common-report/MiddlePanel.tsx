@@ -73,7 +73,7 @@ export default function MiddlePanel({
     >
       <Box
         sx={{
-          p: 2,
+          p: 1.5,
           bgcolor: 'background.paper',
           borderBottom: '1px solid',
           borderColor: 'divider',
@@ -82,7 +82,7 @@ export default function MiddlePanel({
         <TextField
           fullWidth
           size="small"
-          placeholder="Search reports..."
+          label="Search reports"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -92,11 +92,10 @@ export default function MiddlePanel({
               </InputAdornment>
             ),
           }}
-          sx={{ mb: 1 }}
         />
       </Box>
 
-      <Scrollbar sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
+      <Scrollbar sx={{ flexGrow: 1, overflowY: 'auto', p: 1.5 }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedCategory + search} // ← triggers animation on category change
@@ -112,11 +111,10 @@ export default function MiddlePanel({
             ) : null}
             {visibleReports.map((subCat) => (
               <motion.div key={subCat.id} variants={itemVariants}>
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{ mb: 1 }}>
                   <Card
                     onClick={() => onSelectReport(subCat)}
                     sx={{
-                      mb: 1,
                       cursor: 'pointer',
                       border: '1px solid',
                       borderColor:
@@ -129,7 +127,7 @@ export default function MiddlePanel({
                       },
                     }}
                   >
-                    <CardContent sx={{ p: 1, '&:last-child': { pb: 2 } }}>
+                    <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
                       {/* Existing content stays same */}
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Box

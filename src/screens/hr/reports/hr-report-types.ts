@@ -40,7 +40,13 @@ export type HrReportScheduleFormState = {
 
 export type HrReportsCenterTab = 'exports' | 'templates' | 'schedules';
 
-export type HrReportExportAction = 'cancel' | 'retry' | 'regenerate' | 'share';
+export type HrReportExportAction = 'cancel' | 'retry' | 'regenerate' | 'share' | 'delete';
+
+export type HrReportExportDateFilter = {
+  preset: 'all' | 'today' | 'last7Days' | 'last30Days' | 'custom';
+  fromDate: string;
+  toDate: string;
+};
 
 export type HrReportTemplateAction = 'duplicate' | 'publish' | 'draft' | 'delete';
 

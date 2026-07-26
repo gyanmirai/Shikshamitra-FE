@@ -1,11 +1,12 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   useGetHrReportExportsQuery,
   useGetHrReportSourcesQuery,
@@ -23,12 +24,58 @@ import { HrReportRunTemplateDialog } from './components/center/HrReportRunTempla
 import { HrReportShareExportDialog } from './components/center/HrReportShareExportDialog';
 import { useHrReportPermissions, useHrReportCurrentUserId } from './hooks/useHrReportPermissions';
 
-import type { HrReportsCenterTab, HrReportCatalogSelection } from './hr-report-types';
+import type {
+  HrReportsCenterTab,
+  HrReportCatalogSelection,
+  HrReportExportDateFilter,
+} from './hr-report-types';
+
+const ALL_EXPORT_DATES: HrReportExportDateFilter = {
+  preset: 'all',
+  fromDate: '',
+  toDate: '',
+};
+
+const buildExportDateParams = (filter: HrReportExportDateFilter) => {
+  const tomorrow = dayjs().add(1, 'day').startOf('day');
+  if (filter.preset === 'today') {
+    return {
+      requestedFrom: dayjs().startOf('day').toISOString(),
+      requestedTo: tomorrow.toISOString(),
+    };
+  }
+  if (filter.preset === 'last7Days' || filter.preset === 'last30Days') {
+    const days = filter.preset === 'last7Days' ? 7 : 30;
+    return {
+      requestedFrom: dayjs()
+        .subtract(days - 1, 'day')
+        .startOf('day')
+        .toISOString(),
+      requestedTo: tomorrow.toISOString(),
+    };
+  }
+  if (filter.preset === 'custom') {
+    if (filter.fromDate && filter.toDate && filter.toDate < filter.fromDate) {
+      return {};
+    }
+    return {
+      requestedFrom: filter.fromDate
+        ? dayjs(filter.fromDate).startOf('day').toISOString()
+        : undefined,
+      requestedTo: filter.toDate
+        ? dayjs(filter.toDate).add(1, 'day').startOf('day').toISOString()
+        : undefined,
+    };
+  }
+  return {};
+};
 
 const ReportsScreen = () => {
   const openGenerateReport = useBoolean();
   const [directSelection, setDirectSelection] = useState<HrReportCatalogSelection | null>(null);
   const [activeCenterTab, setActiveCenterTab] = useState<HrReportsCenterTab>('exports');
+  const [exportDateFilter, setExportDateFilter] =
+    useState<HrReportExportDateFilter>(ALL_EXPORT_DATES);
   const [notifiedExportIds, setNotifiedExportIds] = useState<string[]>([]);
   const { shouldPollExports, highlightedExportId, highlightExportJob, observeExports } =
     useHrReportExportPollingGuard();
@@ -38,25 +85,50 @@ const ReportsScreen = () => {
   const { data: templatesData, isFetching: isFetchingTemplates } = useGetHrReportTemplatesQuery();
   const { data: schedulesData, isFetching: isFetchingSchedules } = useGetHrReportSchedulesQuery();
 
+  const exportDateParams = useMemo(
+    () => buildExportDateParams(exportDateFilter),
+    [exportDateFilter]
+  );
+  const isExportDateRangeInvalid =
+    exportDateFilter.preset === 'custom' &&
+    Boolean(
+      exportDateFilter.fromDate &&
+      exportDateFilter.toDate &&
+      exportDateFilter.toDate < exportDateFilter.fromDate
+    );
   const {
-    data: exportJobs = [],
+    currentData: currentExportJobs,
     refetch: refetchExports,
     isFetching: isFetchingExports,
     fulfilledTimeStamp: exportsFulfilledTimeStamp,
-  } = useGetHrReportExportsQuery(undefined, {
+  } = useGetHrReportExportsQuery(exportDateParams, {
     pollingInterval: shouldPollExports ? 5000 : 0,
+    skip: isExportDateRangeInvalid,
   });
+  const exportJobs = useMemo(
+    () => (isExportDateRangeInvalid ? [] : (currentExportJobs ?? [])),
+    [currentExportJobs, isExportDateRangeInvalid]
+  );
+  const exportActionsDisabled =
+    isExportDateRangeInvalid || isFetchingExports || currentExportJobs === undefined;
 
   const sources = useMemo(() => sourcesData?.sources ?? [], [sourcesData?.sources]);
   const templates = useMemo(() => templatesData?.items ?? [], [templatesData?.items]);
   const schedules = useMemo(() => schedulesData?.items ?? [], [schedulesData?.items]);
   const hasActiveExports = useMemo(() => exportJobs.some(isHrReportExportActive), [exportJobs]);
+  const revealQueuedExport = useCallback(
+    (jobId: string) => {
+      setExportDateFilter(ALL_EXPORT_DATES);
+      highlightExportJob(jobId);
+    },
+    [highlightExportJob]
+  );
   const actions = useHrReportsCenterActions({
     sources,
     exportJobs,
     setActiveCenterTab,
     setDirectSelection,
-    highlightExportJob,
+    highlightExportJob: revealQueuedExport,
     refetchExports,
     openGenerateReport: openGenerateReport.onTrue,
     closeGenerateReport: openGenerateReport.onFalse,
@@ -137,6 +209,7 @@ const ReportsScreen = () => {
             highlightedExportId={highlightedExportId}
             isLoading={isFetchingExports || isFetchingTemplates || isFetchingSchedules}
             isDownloading={actions.isDownloading}
+            exportActionsDisabled={exportActionsDisabled}
             currentUserId={currentUserId}
             onRefreshExports={refetchExports}
             onTabChange={setActiveCenterTab}
@@ -147,6 +220,8 @@ const ReportsScreen = () => {
             onTemplateAction={actions.handleTemplateAction}
             onScheduleAction={actions.handleScheduleAction}
             permissions={reportPermissions}
+            exportDateFilter={exportDateFilter}
+            onExportDateFilterChange={setExportDateFilter}
           />
         )}
       </Box>

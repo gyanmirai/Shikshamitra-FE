@@ -66,10 +66,10 @@ export default function CommonReport({
           boxShadow: theme.shadows[3],
         }}
       >
-        <Box sx={{ display: 'flex', width: '100%', height: '100%' }}>
+        <Box sx={{ display: 'flex', width: '100%', height: '100%', minWidth: 0 }}>
           <Box
             sx={{
-              width: 280,
+              width: { xs: 220, lg: 260 },
               flexShrink: 0,
               height: '100%',
               borderRight: '1px solid',
@@ -87,7 +87,7 @@ export default function CommonReport({
           </Box>
           <Box
             sx={{
-              width: 320,
+              width: { xs: 280, lg: 320 },
               flexShrink: 0,
               height: '100%',
               borderRight: '1px solid',

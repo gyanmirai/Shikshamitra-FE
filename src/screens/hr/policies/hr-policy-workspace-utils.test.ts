@@ -5,6 +5,7 @@ import { it, expect, describe } from 'vitest';
 import { WEEKLY_RULE_OPTIONS } from './hr-policy-workspace.constants';
 import {
   formatRange,
+  getErrorMessage,
   getAcademicYearMonthRanges,
   isSaturdayWorkingForCalendar,
   buildPayrollBasisPreviewRows,
@@ -31,6 +32,23 @@ describe('HR policy workspace date-only academic year handling', () => {
     holidays: [],
     version: 1,
     ...overrides,
+  });
+
+  it('preserves the policy name in a restore collision message', () => {
+    expect(
+      getErrorMessage(
+        {
+          data: {
+            error: {
+              code: 'ShikshaMitra:LeavePolicyNameAlreadyExists',
+              message: 'A leave policy with this name already exists.',
+              data: { policyName: 'Restored Draft' },
+            },
+          },
+        },
+        'Failed to restore leave policy'
+      )
+    ).toBe('A non-archived policy named "Restored Draft" already exists for this academic year.');
   });
 
   it('builds month ranges from academic-year date parts instead of timezone-shifted instants', () => {

@@ -1,8 +1,6 @@
 'use client';
 
 import React from 'react';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import {
   Box,
   Chip,
@@ -24,16 +22,12 @@ export function LeavePolicyImpactDrawer({
   review,
   loading,
   onClose,
-  onConfirm,
 }: {
   open: boolean;
   review: LeavePolicyImpactReview | null;
   loading: boolean;
   onClose: () => void;
-  onConfirm: () => void;
 }) {
-  const hasBlockingRisk = Boolean(review?.risks.some((risk) => risk.severity === 'blocking'));
-
   return (
     <Drawer
       anchor="right"
@@ -112,25 +106,8 @@ export function LeavePolicyImpactDrawer({
               spacing={1.5}
               sx={{ px: 2.5, py: 2, bgcolor: 'background.paper', flexShrink: 0 }}
             >
-              <Button
-                onClick={onClose}
-                disabled={loading}
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:close" />}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                color="warning"
-                disabled={hasBlockingRisk}
-                startIcon={<Iconify icon={GlobalIcons.submit} />}
-                loading={loading}
-                onClick={onConfirm}
-                size="small"
-              >
-                Confirm Archive
+              <Button onClick={onClose} disabled={loading} size="small" variant="outlined">
+                Close
               </Button>
             </Stack>
           </>

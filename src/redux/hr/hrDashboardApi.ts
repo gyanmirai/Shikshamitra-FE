@@ -14,6 +14,7 @@ export type HRDashboardSummary = {
     newJoinersThisMonth: number;
     inactiveStaff: number;
     recentEmployees: HRDashboardEmployeeSnapshot[];
+    newJoiners?: HRDashboardEmployeeSnapshot[];
   };
   attendanceToday: {
     present: number;
@@ -184,6 +185,7 @@ export type HRDashboardEmployeeSnapshot = {
   roleName?: string | null;
   department?: string | null;
   isTeaching: boolean;
+  dateOfJoining?: string | null;
 };
 
 export type HRDashboardLeaveRequest = {

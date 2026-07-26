@@ -11,13 +11,10 @@ export const isPdfBlob = async (blob: Blob) => {
 };
 
 export type ICardLayoutElementType =
-  | 'text'
-  | 'photo'
-  | 'logo'
-  | 'qr'
-  | 'barcode'
-  | 'shape'
-  | 'line';
+  'text' | 'photo' | 'logo' | 'qr' | 'barcode' | 'shape' | 'line';
+
+type ICardPaletteKey = 'themeColor' | 'backgroundColor';
+type ICardPaletteStyleKey = 'color' | 'backgroundColor' | 'borderColor';
 
 export type ICardFieldBinding =
   | 'name'
@@ -47,6 +44,7 @@ export type ICardLayoutElement = {
   z: number;
   visible: boolean;
   locked?: boolean;
+  paletteBindings?: Partial<Record<ICardPaletteStyleKey, ICardPaletteKey>>;
   style?: {
     color?: string;
     backgroundColor?: string;
@@ -98,6 +96,30 @@ export const DEFAULT_PRINT_SETTINGS: ICardPrintSettings = {
   showCutMarks: true,
 };
 export const DEFAULT_ICARD_TEXT_COLOR = '#111827';
+const paletteStyleKeys: ICardPaletteStyleKey[] = ['color', 'backgroundColor', 'borderColor'];
+
+export const getUniqueICardLayoutElementId = (
+  elements: ICardLayoutElement[],
+  preferredId: string
+) => {
+  const baseId = preferredId.trim() || 'element';
+  const existingIds = new Set(elements.map((element) => String(element.id || '').trim()));
+  if (!existingIds.has(baseId)) return baseId;
+
+  let suffix = 2;
+  while (existingIds.has(`${baseId}-${suffix}`)) {
+    suffix += 1;
+  }
+  return `${baseId}-${suffix}`;
+};
+
+const normalizeLayoutElementIds = (elements: ICardLayoutElement[]) =>
+  elements.reduce<ICardLayoutElement[]>((normalized, element, index) => {
+    const preferredId = String(element.id || '').trim() || `element-${index + 1}`;
+    const id = getUniqueICardLayoutElementId(normalized, preferredId);
+    normalized.push(id === element.id ? element : { ...element, id });
+    return normalized;
+  }, []);
 
 const normalizeTextElementStyle = (element: ICardLayoutElement): ICardLayoutElement =>
   element.type === 'text'
@@ -116,14 +138,14 @@ const normalizeLayoutTextStyles = (layout: ICardLayout): ICardLayout => {
     ...frontLayout,
     front: {
       ...layout.front,
-      elements: layout.front.elements.map(normalizeTextElementStyle),
+      elements: normalizeLayoutElementIds(layout.front.elements).map(normalizeTextElementStyle),
     },
   };
 
   if (back && Array.isArray(back.elements)) {
     normalized.back = {
       ...back,
-      elements: back.elements.map(normalizeTextElementStyle),
+      elements: normalizeLayoutElementIds(back.elements).map(normalizeTextElementStyle),
     };
   }
 
@@ -162,12 +184,36 @@ export const getDefaultICardDesignerElementId = (
   layout: ICardLayout,
   selectedElementId?: string | null
 ) => {
-  const selected = layout.front.elements.find(
-    (item) => item.id === selectedElementId && item.visible
-  );
+  const selected = layout.front.elements.find((item) => item.id === selectedElementId);
   if (selected) return selected.id;
 
   return layout.front.elements.find((item) => item.visible && item.type === 'text')?.id ?? null;
+};
+
+export const filterEmployeeICardPreviewRows = <
+  T extends {
+    fullName?: string | null;
+    employeeIdentifier?: string | null;
+    designation?: string | null;
+    department?: string | null;
+  },
+>(
+  employees: T[],
+  search: string
+) => {
+  const normalizedSearch = search.trim().toLocaleLowerCase();
+  if (!normalizedSearch) return employees;
+
+  return employees.filter((employee) =>
+    [employee.fullName, employee.employeeIdentifier, employee.designation, employee.department]
+      .filter(Boolean)
+      .some((value) => String(value).toLocaleLowerCase().includes(normalizedSearch))
+  );
+};
+
+export const clampEmployeeICardPreviewIndex = (index: number, employeeCount: number) => {
+  if (!Number.isFinite(index) || employeeCount <= 0) return 0;
+  return Math.min(Math.max(0, Math.trunc(index)), employeeCount - 1);
 };
 
 export const canNavigateEmployeeICardStep = (
@@ -186,15 +232,125 @@ export const updateICardLayoutElementStyle = (
   layout: ICardLayout,
   elementId: string,
   patch: NonNullable<ICardLayoutElement['style']>
-): ICardLayout => ({
-  ...layout,
-  front: {
-    ...layout.front,
-    elements: layout.front.elements.map((element) =>
-      element.id === elementId ? { ...element, style: { ...element.style, ...patch } } : element
-    ),
+): ICardLayout => {
+  const updateElement = (element: ICardLayoutElement) => {
+    if (element.id !== elementId) return element;
+
+    const paletteBindings = { ...element.paletteBindings };
+    paletteStyleKeys.forEach((styleKey) => {
+      if (Object.prototype.hasOwnProperty.call(patch, styleKey)) {
+        delete paletteBindings[styleKey];
+      }
+    });
+
+    return {
+      ...element,
+      paletteBindings,
+      style: { ...element.style, ...patch },
+    };
+  };
+
+  return {
+    ...layout,
+    front: {
+      ...layout.front,
+      elements: layout.front.elements.map(updateElement),
+    },
+  };
+};
+
+export const updateICardLayoutPaletteColor = (
+  layout: ICardLayout,
+  key: ICardPaletteKey,
+  value: string
+): ICardLayout => {
+  const previousValue = layout[key].trim().toLocaleLowerCase();
+  const updateElement = (element: ICardLayoutElement): ICardLayoutElement => {
+    if (!element.style) return element;
+
+    const nextStyle = { ...element.style };
+    const nextBindings = { ...element.paletteBindings };
+    const hasExplicitBindings = element.paletteBindings !== undefined;
+    let changed = false;
+    paletteStyleKeys.forEach((styleKey) => {
+      const isLegacyBoundStyle =
+        !hasExplicitBindings && nextStyle[styleKey]?.trim().toLocaleLowerCase() === previousValue;
+      if (nextBindings[styleKey] === key || isLegacyBoundStyle) {
+        nextStyle[styleKey] = value;
+        nextBindings[styleKey] = key;
+        changed = true;
+      }
+    });
+
+    return changed ? { ...element, paletteBindings: nextBindings, style: nextStyle } : element;
+  };
+  const nextLayout: ICardLayout = {
+    ...layout,
+    [key]: value,
+    front: {
+      ...layout.front,
+      elements: layout.front.elements.map(updateElement),
+    },
+  };
+
+  if (layout.back) {
+    nextLayout.back = {
+      ...layout.back,
+      elements: layout.back.elements.map(updateElement),
+    };
+  }
+
+  return nextLayout;
+};
+
+export const updateICardBuilderPaletteColor = <
+  TState extends {
+    themeColor: string;
+    backgroundColor: string;
+    layout: ICardLayout;
   },
-});
+>(
+  state: TState,
+  key: ICardPaletteKey,
+  value: string
+): TState =>
+  ({
+    ...state,
+    [key]: value,
+    layout: updateICardLayoutPaletteColor(state.layout, key, value),
+  }) as TState;
+
+const bindLayoutPaletteStyles = (layout: ICardLayout): ICardLayout => {
+  const bindElement = (element: ICardLayoutElement): ICardLayoutElement => {
+    const paletteBindings: Partial<Record<ICardPaletteStyleKey, ICardPaletteKey>> = {};
+    paletteStyleKeys.forEach((styleKey) => {
+      const color = element.style?.[styleKey]?.trim().toLocaleLowerCase();
+      if (color === layout.themeColor.trim().toLocaleLowerCase()) {
+        paletteBindings[styleKey] = 'themeColor';
+      } else if (color === layout.backgroundColor.trim().toLocaleLowerCase()) {
+        paletteBindings[styleKey] = 'backgroundColor';
+      }
+    });
+
+    return { ...element, paletteBindings };
+  };
+  const boundLayout: ICardLayout = {
+    ...layout,
+    front: {
+      ...layout.front,
+      elements: layout.front.elements.map(bindElement),
+    },
+  };
+
+  if (layout.back) {
+    boundLayout.back = {
+      ...layout.back,
+      elements: layout.back.elements.map(bindElement),
+    };
+  }
+
+  return boundLayout;
+};
 
 export const parsePrintSettingsJson = (value?: string | null): ICardPrintSettings => {
   if (!value?.trim()) return DEFAULT_PRINT_SETTINGS;
@@ -259,8 +415,13 @@ export const createICardLayoutPreset = (
   const barcodeEnabled = options.barcodeEnabled ?? true;
   const base = { orientation, width, height, backgroundColor, themeColor };
 
-  if (presetKey === 'vertical-badge') {
-    return {
+  if (orientation === 'Vertical') {
+    const photoFirst = presetKey === 'photo-first';
+    const photoWidth = photoFirst ? 116 : 104;
+    const photoHeight = photoFirst ? 126 : 114;
+    const photoX = Math.round((width - photoWidth) / 2);
+
+    return bindLayoutPaletteStyles({
       ...base,
       front: {
         elements: [
@@ -277,17 +438,27 @@ export const createICardLayoutPreset = (
             color: '#DBEAFE',
             fontSize: 9,
           }),
-          element('photo', 'photo', 'photo' as ICardFieldBinding, 85, 104, 110, 124, 4, {
-            borderColor: themeColor,
-            borderWidth: 2,
-            photoShape: 'rounded',
-          }),
-          element('name', 'text', 'name', 28, 240, width - 56, 28, 5, {
+          element(
+            'photo',
+            'photo',
+            'photo' as ICardFieldBinding,
+            photoX,
+            96,
+            photoWidth,
+            photoHeight,
+            4,
+            {
+              borderColor: themeColor,
+              borderWidth: 2,
+              photoShape: 'rounded',
+            }
+          ),
+          element('name', 'text', 'name', 24, 222, width - 48, 28, 5, {
             fontSize: 18,
             fontWeight: 800,
             textAlign: 'center',
           }),
-          element('designation', 'text', 'designation', 28, 270, width - 56, 20, 5, {
+          element('designation', 'text', 'designation', 24, 252, width - 48, 20, 5, {
             color: '#475569',
             fontSize: 11,
             textAlign: 'center',
@@ -296,38 +467,66 @@ export const createICardLayoutPreset = (
             'code',
             'text',
             'employeeCode',
-            40,
-            310,
-            width - 80,
-            20,
+            24,
+            278,
+            width - 48,
+            18,
             5,
             { showLabel: true, separator: ': ', fontSize: 10, textAlign: 'center' },
             'Code'
           ),
+          element(
+            'department',
+            'text',
+            'department',
+            24,
+            300,
+            width - 48,
+            18,
+            5,
+            { showLabel: true, separator: ': ', fontSize: 9, textAlign: 'center' },
+            'Dept'
+          ),
+          element(
+            'phone',
+            'text',
+            'contactNo',
+            24,
+            322,
+            width - 48,
+            18,
+            5,
+            { showLabel: true, separator: ': ', fontSize: 9, textAlign: 'center' },
+            'Phone'
+          ),
           {
-            ...element('qr', 'qr', undefined, width - 76, height - 76, 54, 54, 6),
+            ...element('qr', 'qr', undefined, width - 70, height - 70, 50, 50, 6),
             visible: qrCodeEnabled,
+          },
+          {
+            ...element('barcode', 'barcode', undefined, 20, height - 68, 142, 22, 6),
+            visible: barcodeEnabled,
           },
           element(
             'valid',
             'text',
             'validityYear',
-            24,
-            height - 52,
-            150,
             20,
+            height - 38,
+            142,
+            18,
             5,
             { showLabel: true, fontSize: 9 },
             'Valid'
           ),
         ],
       },
-    };
+    });
   }
 
   const photoFirst = presetKey === 'photo-first';
   const minimal = presetKey === 'minimal';
-  return {
+  return bindLayoutPaletteStyles({
     ...base,
     front: {
       elements: [
@@ -417,6 +616,74 @@ export const createICardLayoutPreset = (
           visible: barcodeEnabled,
         },
       ],
+    },
+  });
+};
+
+export const reflowICardLayout = (
+  layout: ICardLayout,
+  presetKey: string,
+  options: ICardLayoutPresetOptions
+): ICardLayout => {
+  const next = createICardLayoutPreset(presetKey, options);
+  const currentById = new Map(layout.front.elements.map((item) => [item.id, item]));
+  const nextIds = new Set(next.front.elements.map((item) => item.id));
+  const widthRatio = next.width / Math.max(1, layout.width);
+  const heightRatio = next.height / Math.max(1, layout.height);
+
+  const presetElements = next.front.elements.map((item) => {
+    const current = currentById.get(item.id);
+    if (!current) return item;
+
+    const visible =
+      item.type === 'qr'
+        ? (options.qrCodeEnabled ?? item.visible)
+        : item.type === 'barcode'
+          ? (options.barcodeEnabled ?? item.visible)
+          : current.visible;
+
+    const paletteBindings = { ...item.paletteBindings };
+    paletteStyleKeys.forEach((styleKey) => {
+      if (
+        current.style?.[styleKey] !== undefined &&
+        current.paletteBindings?.[styleKey] === undefined
+      ) {
+        delete paletteBindings[styleKey];
+      }
+    });
+
+    return {
+      ...item,
+      visible,
+      paletteBindings,
+      style: {
+        ...item.style,
+        ...current.style,
+      },
+      label: current.label ?? item.label,
+      value: current.value ?? item.value,
+    };
+  });
+
+  const customElements = layout.front.elements
+    .filter((item) => !nextIds.has(item.id))
+    .map((item) => {
+      const width = Math.min(next.width, Math.max(1, Math.round(item.w * widthRatio)));
+      const height = Math.min(next.height, Math.max(1, Math.round(item.h * heightRatio)));
+
+      return {
+        ...item,
+        x: Math.min(next.width - width, Math.max(0, Math.round(item.x * widthRatio))),
+        y: Math.min(next.height - height, Math.max(0, Math.round(item.y * heightRatio))),
+        w: width,
+        h: height,
+      };
+    });
+
+  return {
+    ...next,
+    front: {
+      elements: [...presetElements, ...customElements],
     },
   };
 };

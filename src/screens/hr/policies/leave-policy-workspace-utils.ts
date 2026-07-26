@@ -56,11 +56,24 @@ export function getLeavePolicyBucketSummary(policy: Partial<ILeavePolicy> | null
 }
 
 export function isLeavePolicyArchived(policy: Partial<ILeavePolicy> | null | undefined) {
-  return Boolean(
-    policy?.isDeleted ||
-    policy?.deletionTime ||
-    policy?.isActive === false ||
-    String(policy?.status || '').toLowerCase() === 'archived'
+  const status = String(policy?.status || '')
+    .trim()
+    .toLowerCase();
+  if (status) {
+    return status === 'archived' || Boolean(policy?.isDeleted || policy?.deletionTime);
+  }
+
+  return Boolean(policy?.isDeleted || policy?.deletionTime || policy?.isActive === false);
+}
+
+export function getCurrentLeavePolicyTitleSet(
+  policies: Array<Partial<ILeavePolicy>> | null | undefined
+): Set<string> {
+  return new Set(
+    (policies || [])
+      .filter((policy) => !isLeavePolicyArchived(policy))
+      .map((policy) => (policy.policyTitle || policy.title || '').trim().toLowerCase())
+      .filter(Boolean)
   );
 }
 

@@ -5,13 +5,19 @@ import {
   snapToGrid,
   parseLayoutJson,
   clampCardsPerPage,
+  reflowICardLayout,
   clampElementDimension,
   migrateFieldsToLayout,
   parsePrintSettingsJson,
-  DEFAULT_ICARD_TEXT_COLOR,
   createICardLayoutPreset,
+  DEFAULT_ICARD_TEXT_COLOR,
   canNavigateEmployeeICardStep,
+  getUniqueICardLayoutElementId,
+  updateICardLayoutPaletteColor,
   updateICardLayoutElementStyle,
+  filterEmployeeICardPreviewRows,
+  clampEmployeeICardPreviewIndex,
+  updateICardBuilderPaletteColor,
   markEmployeeICardStepCompleted,
   getDefaultICardDesignerElementId,
   hasPersistedEmployeeICardTemplate,
@@ -132,6 +138,181 @@ describe('Employee I-Card builder utilities', () => {
       layout.front.elements.find((element) => element.visible && element.type === 'text')?.id
     );
     expect(getDefaultICardDesignerElementId(layout, 'photo')).toBe('photo');
+  });
+
+  it('keeps an explicitly selected hidden palette element selected', () => {
+    const layout = createICardLayoutPreset('formal-staff', { qrCodeEnabled: false });
+
+    expect(getDefaultICardDesignerElementId(layout, 'qr')).toBe('qr');
+  });
+
+  it('reflows the photo-first preset inside vertical card bounds', () => {
+    const horizontal = createICardLayoutPreset('photo-first', {
+      orientation: 'Horizontal',
+      width: 420,
+      height: 260,
+      qrCodeEnabled: false,
+    });
+    const layout = reflowICardLayout(horizontal, 'photo-first', {
+      orientation: 'Vertical',
+      width: 280,
+      height: 420,
+      qrCodeEnabled: false,
+      barcodeEnabled: true,
+    });
+
+    expect(layout.orientation).toBe('Vertical');
+    expect(layout.front.elements.find((element) => element.type === 'qr')?.visible).toBe(false);
+    expect(layout.front.elements.find((element) => element.type === 'barcode')?.visible).toBe(true);
+    expect(layout.front.elements.every((element) => element.x >= 0 && element.y >= 0)).toBe(true);
+    expect(
+      layout.front.elements.every(
+        (element) => element.x + element.w <= layout.width && element.y + element.h <= layout.height
+      )
+    ).toBe(true);
+  });
+
+  it('filters selected-card previews by employee identity fields', () => {
+    const employees = [
+      {
+        fullName: 'Asha Patel',
+        employeeIdentifier: 'EMP-101',
+        designation: 'Teacher',
+        department: 'Science',
+      },
+      {
+        fullName: 'Ravi Shah',
+        employeeIdentifier: 'EMP-202',
+        designation: 'Accountant',
+        department: 'Finance',
+      },
+    ];
+
+    expect(filterEmployeeICardPreviewRows(employees, 'science')).toEqual([employees[0]]);
+    expect(filterEmployeeICardPreviewRows(employees, 'emp-202')).toEqual([employees[1]]);
+    expect(filterEmployeeICardPreviewRows(employees, '  ')).toEqual(employees);
+  });
+
+  it('keeps the selected-card preview index inside the current selection', () => {
+    expect(clampEmployeeICardPreviewIndex(4, 5)).toBe(4);
+    expect(clampEmployeeICardPreviewIndex(4, 2)).toBe(1);
+    expect(clampEmployeeICardPreviewIndex(-2, 2)).toBe(0);
+    expect(clampEmployeeICardPreviewIndex(Number.NaN, 2)).toBe(0);
+    expect(clampEmployeeICardPreviewIndex(2, 0)).toBe(0);
+  });
+
+  it('updates theme-bound preset colors without replacing inspector overrides', () => {
+    const layout = updateICardLayoutElementStyle(
+      createICardLayoutPreset('formal-staff', {
+        themeColor: '#1D4ED8',
+        backgroundColor: '#F8FAFC',
+      }),
+      'school',
+      { color: '#1D4ED8' }
+    );
+
+    const updatedTheme = updateICardLayoutPaletteColor(layout, 'themeColor', '#059669');
+    const updatedPalette = updateICardLayoutPaletteColor(
+      updatedTheme,
+      'backgroundColor',
+      '#FFFFFF'
+    );
+
+    expect(updatedPalette.themeColor).toBe('#059669');
+    expect(updatedPalette.backgroundColor).toBe('#FFFFFF');
+    expect(
+      updatedPalette.front.elements.find((element) => element.id === 'topline')?.style
+        ?.backgroundColor
+    ).toBe('#059669');
+    expect(
+      updatedPalette.front.elements.find((element) => element.id === 'photo')?.style?.borderColor
+    ).toBe('#059669');
+    expect(
+      updatedPalette.front.elements.find((element) => element.id === 'accent')?.style
+        ?.backgroundColor
+    ).toBe('#FFFFFF');
+    expect(
+      updatedPalette.front.elements.find((element) => element.id === 'school')?.style?.color
+    ).toBe('#1D4ED8');
+  });
+
+  it('keeps builder and layout palette colors synchronized for logo-derived colors', () => {
+    const initialState = {
+      themeColor: '#1D4ED8',
+      backgroundColor: '#F8FAFC',
+      layout: createICardLayoutPreset('formal-staff', {
+        themeColor: '#1D4ED8',
+        backgroundColor: '#F8FAFC',
+      }),
+      logoBlobName: 'old-logo',
+    };
+
+    const updatedState = updateICardBuilderPaletteColor(initialState, 'themeColor', '#059669');
+
+    expect(updatedState.themeColor).toBe('#059669');
+    expect(updatedState.logoBlobName).toBe('old-logo');
+    expect(updatedState.layout.themeColor).toBe('#059669');
+    expect(
+      updatedState.layout.front.elements.find((element) => element.id === 'topline')?.style
+        ?.backgroundColor
+    ).toBe('#059669');
+  });
+
+  it('normalizes duplicate saved IDs and allocates collision-free field IDs', () => {
+    const layout = createICardLayoutPreset('formal-staff');
+    const schoolAddress = layout.front.elements.find(
+      (element) => element.fieldKey === 'schoolAddress'
+    );
+    expect(schoolAddress).toBeDefined();
+
+    const employeeAddress = {
+      ...schoolAddress!,
+      id: 'address',
+      fieldKey: 'address' as const,
+      label: 'Address',
+    };
+    const parsed = parseLayoutJson(
+      JSON.stringify({
+        ...layout,
+        front: {
+          ...layout.front,
+          elements: [...layout.front.elements, employeeAddress],
+        },
+      })
+    );
+    const parsedIds = parsed?.front.elements.map((element) => element.id) || [];
+
+    expect(new Set(parsedIds).size).toBe(parsedIds.length);
+    expect(parsed?.front.elements.find((element) => element.fieldKey === 'address')?.id).toBe(
+      'address-2'
+    );
+    expect(getUniqueICardLayoutElementId(layout.front.elements, 'field-address')).toBe(
+      'field-address'
+    );
+  });
+
+  it('propagates the recommended light background to palette-bound elements', () => {
+    const layout = createICardLayoutPreset('formal-staff', {
+      themeColor: '#1D4ED8',
+      backgroundColor: '#F8FAFC',
+    });
+    const lowContrastLayout = updateICardLayoutPaletteColor(layout, 'backgroundColor', '#1D4ED8');
+
+    const recommendedLayout = updateICardLayoutPaletteColor(
+      lowContrastLayout,
+      'backgroundColor',
+      '#F8FAFC'
+    );
+
+    expect(recommendedLayout.backgroundColor).toBe('#F8FAFC');
+    expect(
+      recommendedLayout.front.elements.find((element) => element.id === 'accent')?.style
+        ?.backgroundColor
+    ).toBe('#F8FAFC');
+    expect(
+      recommendedLayout.front.elements.find((element) => element.id === 'topline')?.style
+        ?.backgroundColor
+    ).toBe('#1D4ED8');
   });
 
   it('tracks completed step navigation without allowing create-mode jumps ahead', () => {

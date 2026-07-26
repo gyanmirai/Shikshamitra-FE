@@ -5,12 +5,21 @@ import {
   type EmployeeApplicationFormValues,
   employeeApplicationValidationSchema,
   buildEmployeeApplicationSubmitPayload,
+  getEmployeeApplicationInstitutionDate,
+  resolveEmployeeApplicationUploadError,
   createEmployeeApplicationInitialValues,
+  isAfterEmployeeApplicationInstitutionDate,
 } from './validation';
 
 const dateYearsAgo = (years: number) => {
   const date = new Date();
   date.setFullYear(date.getFullYear() - years);
+  return date.toISOString().slice(0, 10);
+};
+
+const dateDaysFromNow = (days: number) => {
+  const [year, month, day] = getEmployeeApplicationInstitutionDate().split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + days));
   return date.toISOString().slice(0, 10);
 };
 
@@ -43,7 +52,7 @@ const validValues = (): EmployeeApplicationFormValues => ({
     secondaryMobileNo: '8876543210',
     dateOfBirth: dateYearsAgo(25),
     gender: '1',
-    religion: 'Hindu',
+    religion: '0',
     casteType: '0',
     familyCaste: 'General',
     maritalStatus: '0',
@@ -135,6 +144,33 @@ describe('employee application validation schema', () => {
     expect(paths).toContain('workExperiences[0].endDate');
   });
 
+  it('requires family caste wherever category is required', async () => {
+    const values = validValues();
+    values.personalInfo.familyCaste = ' ';
+
+    const paths = await validationPaths(values);
+
+    expect(paths).toContain('personalInfo.familyCaste');
+  });
+
+  it('rejects future work experience start and end dates', async () => {
+    const values = validValues();
+    values.workExperiences = [
+      {
+        ...emptyWorkExperience(),
+        mediumStageName: 'Future School',
+        designation: 'Teacher',
+        startDate: dateDaysFromNow(1),
+        endDate: dateDaysFromNow(2),
+      },
+    ];
+
+    const paths = await validationPaths(values);
+
+    expect(paths).toContain('workExperiences[0].startDate');
+    expect(paths).toContain('workExperiences[0].endDate');
+  });
+
   it('accepts partial family details without optional address fields', async () => {
     const values = validValues();
     values.familyInfo.fatherDetails = {
@@ -146,6 +182,41 @@ describe('employee application validation schema', () => {
     await expect(
       employeeApplicationValidationSchema.validate(values, { abortEarly: false })
     ).resolves.toBeTruthy();
+  });
+
+  it('requires a family member name when any other family detail is entered', async () => {
+    const values = validValues();
+    values.familyInfo.motherDetails.occupation = 'Teacher';
+
+    const paths = await validationPaths(values);
+
+    expect(paths).toContain('familyInfo.motherDetails.name');
+  });
+
+  it('requires organization, designation, and start date for a partial work row', async () => {
+    const values = validValues();
+    values.workExperiences = [{ ...emptyWorkExperience(), department: 'Academics' }];
+
+    const paths = await validationPaths(values);
+
+    expect(paths).toContain('workExperiences[0].mediumStageName');
+    expect(paths).toContain('workExperiences[0].designation');
+    expect(paths).toContain('workExperiences[0].startDate');
+  });
+
+  it('uses the institution date at the UTC-to-India midnight boundary', () => {
+    const reference = '2026-07-25T20:00:00Z';
+
+    expect(getEmployeeApplicationInstitutionDate(reference)).toBe('2026-07-26');
+    expect(isAfterEmployeeApplicationInstitutionDate('2026-07-26', reference)).toBe(false);
+    expect(isAfterEmployeeApplicationInstitutionDate('2026-07-27', reference)).toBe(true);
+  });
+
+  it('omits untouched work rows from the submission payload', () => {
+    const values = validValues();
+    values.workExperiences = [emptyWorkExperience()];
+
+    expect(buildEmployeeApplicationSubmitPayload(values).workExperiences).toEqual([]);
   });
 
   it('builds a valid public-safe employee profile payload', async () => {
@@ -165,5 +236,11 @@ describe('employee application validation schema', () => {
     expect(payloadText).not.toContain('adhar');
     expect(payloadText).not.toContain('pan');
     expect(payloadText).not.toContain('bpl');
+  });
+
+  it('preserves a selection-time upload error after rejecting the selected file', () => {
+    const uploadError = 'Resume must be a PDF, DOC, or DOCX file.';
+
+    expect(resolveEmployeeApplicationUploadError(uploadError, null, null)).toBe(uploadError);
   });
 });

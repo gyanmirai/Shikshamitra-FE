@@ -23,6 +23,7 @@ import {
   useDownloadHrReportExportMutation,
   useRegenerateHrReportExportMutation,
   useDuplicateHrReportTemplateMutation,
+  useDeleteFailedHrReportExportMutation,
 } from 'src/redux/hr/hrReportsApi';
 
 import { hrReportToast } from '../hr-report-notifications';
@@ -81,6 +82,7 @@ export function useHrReportsCenterActions({
     useCreateHrReportExportMutation();
   const [shareExport, { isLoading: isSharingExport }] = useShareHrReportExportMutation();
   const [cancelExport] = useCancelHrReportExportMutation();
+  const [deleteFailedExport] = useDeleteFailedHrReportExportMutation();
   const [retryExport] = useRetryHrReportExportMutation();
   const [regenerateExport] = useRegenerateHrReportExportMutation();
   const [duplicateTemplate] = useDuplicateHrReportTemplateMutation();
@@ -186,12 +188,17 @@ export function useHrReportsCenterActions({
           highlightExportJob(retry.jobId);
           hrReportToast.success('Export retry queued');
         }, 'Export retry could not be queued. Refresh and try again.');
-      } else {
+      } else if (action === 'regenerate') {
         actionSucceeded = await runCenterAction(async () => {
           const regenerated = await regenerateExport(jobId).unwrap();
           highlightExportJob(regenerated.jobId);
           hrReportToast.success('Export regeneration queued');
         }, 'Export regeneration could not be queued. Refresh and try again.');
+      } else {
+        actionSucceeded = await runCenterAction(async () => {
+          await deleteFailedExport(jobId).unwrap();
+          hrReportToast.success('Failed export removed');
+        }, 'Failed export could not be removed. Refresh and try again.');
       }
 
       if (!actionSucceeded) {
@@ -202,7 +209,14 @@ export function useHrReportsCenterActions({
         'Export action completed, but exports could not refresh. Use Refresh to check again.'
       );
     },
-    [cancelExport, highlightExportJob, refreshExportsWithWarning, regenerateExport, retryExport]
+    [
+      cancelExport,
+      deleteFailedExport,
+      highlightExportJob,
+      refreshExportsWithWarning,
+      regenerateExport,
+      retryExport,
+    ]
   );
 
   const handleShareExport = useCallback(

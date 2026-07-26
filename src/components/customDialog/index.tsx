@@ -10,6 +10,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Dialog, IconButton, Typography, DialogContent } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
+import { shouldBlockCustomDialogClose } from './close-guard';
 
 import type { ScrollbarProps } from '../scrollbar';
 
@@ -19,6 +20,7 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   children: React.ReactNode;
   paperProps?: PaperProps;
   hasForm?: boolean;
+  disableClose?: boolean;
 };
 
 const CustomDialog = ({
@@ -28,6 +30,7 @@ const CustomDialog = ({
   children,
   paperProps,
   hasForm = true,
+  disableClose = false,
   maxWidth = 'xs',
   ...props
 }: CustomDialogProps) => {
@@ -37,6 +40,7 @@ const CustomDialog = ({
   const dispatch = useDispatch();
 
   const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
+    if (shouldBlockCustomDialogClose(disableClose)) return;
     if (reason === 'backdropClick') return;
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
       handleClose(e, reason);
@@ -79,6 +83,7 @@ const CustomDialog = ({
         ...paper,
       }}
       {...props}
+      disableEscapeKeyDown={disableClose || props.disableEscapeKeyDown}
     >
       <FormComponent
         id="dialog-form"
@@ -102,6 +107,7 @@ const CustomDialog = ({
           </Typography>
           <IconButton
             aria-label="close"
+            disabled={disableClose}
             onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
             sx={{
               transition: 'all 0.2s',

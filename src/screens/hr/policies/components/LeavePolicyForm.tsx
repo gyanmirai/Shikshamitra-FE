@@ -36,9 +36,19 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { getErrorMessage } from '../hr-policy-workspace-utils';
+import { getCurrentLeavePolicyTitleSet } from '../leave-policy-workspace-utils';
+
 import type { ILeavePolicy, LeavePaidType, ILeavePolicyRule } from '../leave-policy-types';
 
 type EntitlementMode = 'Limited' | 'Unlimited';
+
+export const LEAVE_POLICY_FORM_STATUS_OPTIONS = ['Active', 'Draft'] as const;
+
+type LeavePolicyFormStatus = (typeof LEAVE_POLICY_FORM_STATUS_OPTIONS)[number];
+
+export const toLeavePolicyFormStatus = (value?: string | null): LeavePolicyFormStatus =>
+  value === 'Draft' ? 'Draft' : 'Active';
 
 type LeavePolicyRuleFormValue = {
   paidType: LeavePaidType;
@@ -59,7 +69,7 @@ type LeavePolicyRuleFormValue = {
 
 type LeavePolicyFormValues = {
   policyTitle: string;
-  status: 'Draft' | 'Active' | 'Archived';
+  status: LeavePolicyFormStatus;
   effectiveFrom: string;
   effectiveTo: string;
   isDefault: boolean;
@@ -235,17 +245,17 @@ export function LeavePolicyForm({
   const { data: leavePoliciesData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLeavePoliciesQuery,
-    params: { academicYearId: currentYear?.id, page: 1, pageSize: 500 },
+    params: {
+      academicYearId: currentYear?.id,
+      page: 1,
+      pageSize: 500,
+      archivedOnly: false,
+    },
     options: { skip: !currentYear?.id },
   });
 
   const existingTitles = useMemo<Set<string>>(
-    () =>
-      new Set<string>(
-        (leavePoliciesData?.items ?? []).map((p: ILeavePolicy) =>
-          (p.policyTitle || p.title || '').trim().toLowerCase()
-        )
-      ),
+    () => getCurrentLeavePolicyTitleSet(leavePoliciesData?.items),
     [leavePoliciesData]
   );
   // Stable ref so the formik onSubmit closure always reads the latest Set
@@ -255,7 +265,7 @@ export function LeavePolicyForm({
   const initialValues = useMemo<LeavePolicyFormValues>(
     () => ({
       policyTitle: editData?.policyTitle || editData?.title || '',
-      status: (editData?.status as LeavePolicyFormValues['status']) || 'Active',
+      status: toLeavePolicyFormStatus(editData?.status),
       effectiveFrom: toDateInput(editData?.effectiveFrom || (currentYear as any)?.startDate),
       effectiveTo: toDateInput(editData?.effectiveTo || (currentYear as any)?.endDate),
       isDefault: Boolean(editData?.isDefault),
@@ -323,13 +333,10 @@ export function LeavePolicyForm({
         formik.resetForm();
       } catch (error: any) {
         console.error('Failed to save leave policy:', error);
-        // Extract the actual message from the BE error response (RTK Query shape: { data: { detail, title } })
-        const beMessage =
-          error?.data?.detail || error?.data?.title || error?.data?.message || error?.message;
         const fallback = editData?.id
           ? 'Failed to update leave policy'
           : 'Failed to add leave policy';
-        shikshaMitraToast.error({ message: beMessage || fallback });
+        shikshaMitraToast.error({ message: getErrorMessage(error, fallback) });
       }
     },
   });
@@ -396,9 +403,11 @@ export function LeavePolicyForm({
                   value={formik.values.status}
                   onChange={(event) => formik.setFieldValue('status', event.target.value)}
                 >
-                  <MenuItem value="Active">Active</MenuItem>
-                  <MenuItem value="Draft">Draft</MenuItem>
-                  <MenuItem value="Archived">Archived</MenuItem>
+                  {LEAVE_POLICY_FORM_STATUS_OPTIONS.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>

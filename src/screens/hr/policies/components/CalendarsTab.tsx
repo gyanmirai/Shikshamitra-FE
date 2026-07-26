@@ -4,11 +4,12 @@ import type { LabelColor } from 'src/components/label';
 import type { WorkCalendarPolicy } from 'src/redux/hr/hr-policy-api';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useGetWorkCalendarPoliciesQuery } from 'src/redux/hr/hr-policy-api';
 import { Card, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 
 import { InfoTooltipIcon } from './HRPolicySharedUI';
@@ -51,10 +52,6 @@ function ArchiveToggle({
 export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
     academicYearId,
-    visibleCalendars,
-    calendarsLoading,
-    calendarsError,
-    archivedCalendarCount,
     policyArchiveView,
     setPolicyArchiveView,
     canCreatePolicy,
@@ -74,6 +71,26 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     unarchivePolicy,
     clonePolicy,
   } = ctx;
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
+  const isCurrent = policyArchiveView.calendar === 'current';
+  const listArgs = {
+    academicYearId,
+    maxResultCount: tableQuery.pageSize,
+    skipCount: (tableQuery.page - 1) * tableQuery.pageSize,
+    search: tableQuery.search || undefined,
+    isArchived: !isCurrent,
+  };
+  const {
+    data: policyPage,
+    isFetching: calendarsLoading,
+    error: calendarsError,
+  } = useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId });
+  const { data: archivedSummary } = useGetWorkCalendarPoliciesQuery(
+    { academicYearId, maxResultCount: 1, isArchived: true },
+    { skip: !academicYearId }
+  );
+  const visibleCalendars = policyPage?.items || [];
+  const archivedCalendarCount = archivedSummary?.totalCount || 0;
 
   const calendarColumns: IColumn[] = [
     { id: 'name', label: 'Name', minWidth: 160, sticky: true, stickyPosition: 'left' },
@@ -230,8 +247,6 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     updatedAt: formatDate(item.lastModificationTime || item.lastUpdatedAt || item.creationTime),
   }));
 
-  const isCurrent = policyArchiveView.calendar === 'current';
-
   return (
     <Stack spacing={1} sx={{ width: '100%' }}>
       <Card sx={{ p: 1 }}>
@@ -240,12 +255,14 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             <ArchiveToggle
               current={isCurrent}
               archivedCount={archivedCalendarCount}
-              onCurrent={() =>
-                setPolicyArchiveView((current) => ({ ...current, calendar: 'current' }))
-              }
-              onArchived={() =>
-                setPolicyArchiveView((current) => ({ ...current, calendar: 'archived' }))
-              }
+              onCurrent={() => {
+                setTableQuery((current) => ({ ...current, page: 1 }));
+                setPolicyArchiveView((current) => ({ ...current, calendar: 'current' }));
+              }}
+              onArchived={() => {
+                setTableQuery((current) => ({ ...current, page: 1 }));
+                setPolicyArchiveView((current) => ({ ...current, calendar: 'archived' }));
+              }}
             />
           </Stack>
           {isCurrent ? (
@@ -272,8 +289,18 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         columns={calendarColumns}
         data={calendarRows}
         isLoading={calendarsLoading}
-        isSearch={false}
-        isFilter
+        isSearch
+        serverSidePagination
+        serverSideSearch
+        totalCount={policyPage?.totalCount || 0}
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        searchTerm={tableQuery.search}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
+        isFilter={false}
         isPagination
         noDataText={
           policyArchiveView.calendar === 'archived'

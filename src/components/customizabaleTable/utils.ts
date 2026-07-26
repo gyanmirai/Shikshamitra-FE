@@ -146,3 +146,20 @@ export function getColumnDisplayText(row: IData, column: IColumn | undefined): s
   if (rawValue === null || rawValue === undefined) return '';
   return String(rawValue);
 }
+
+export const getExportableColumns = (
+  columns: readonly IColumn[],
+  columnVisibility: Record<string, boolean>
+): IColumn[] =>
+  columns.filter((column) => {
+    const normalizedId = column.id?.toLowerCase();
+    const normalizedLabel =
+      typeof column.label === 'string' ? column.label.toLowerCase() : undefined;
+    const isActionColumn =
+      normalizedId === 'action' ||
+      normalizedId === 'actions' ||
+      normalizedLabel === 'action' ||
+      normalizedLabel === 'actions';
+
+    return Boolean(columnVisibility[column.id]) && !isActionColumn && !column.excludeFromExport;
+  });

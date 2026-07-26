@@ -38,6 +38,7 @@ import {
   Button,
   Checkbox,
   TextField,
+  ButtonBase,
   IconButton,
   Typography,
   ToggleButton,
@@ -60,6 +61,7 @@ import {
   parseLayoutJson,
   type ICardLayout,
   clampCardsPerPage,
+  reflowICardLayout,
   clampElementDimension,
   migrateFieldsToLayout,
   DEFAULT_PRINT_SETTINGS,
@@ -70,7 +72,12 @@ import {
   createICardLayoutPreset,
   DEFAULT_ICARD_TEXT_COLOR,
   canNavigateEmployeeICardStep,
+  getUniqueICardLayoutElementId,
+  updateICardLayoutPaletteColor,
   updateICardLayoutElementStyle,
+  filterEmployeeICardPreviewRows,
+  clampEmployeeICardPreviewIndex,
+  updateICardBuilderPaletteColor,
   markEmployeeICardStepCompleted,
   getDefaultICardDesignerElementId,
   hasPersistedEmployeeICardTemplate,
@@ -617,6 +624,8 @@ const EmployeeICardBuilder = ({
   const [employeePage, setEmployeePage] = useState(1);
   const [employeeStatusFilter, setEmployeeStatusFilter] = useState('all');
   const [previewIndex, setPreviewIndex] = useState(0);
+  const [previewMode, setPreviewMode] = useState<'single' | 'scroll'>('single');
+  const [previewSearch, setPreviewSearch] = useState('');
   const [selectedEmployeesById, setSelectedEmployeesById] = useState<
     Record<string, EmployeeICardRow>
   >({});
@@ -631,6 +640,9 @@ const EmployeeICardBuilder = ({
     setSavedTemplateId(template?.id ?? null);
     setCompletedSteps(template?.id ? steps.map((_, index) => index) : []);
     setEmployeePage(1);
+    setPreviewIndex(0);
+    setPreviewMode('single');
+    setPreviewSearch('');
     setSelectedEmployeesById({});
   }, [academicYearName, template]);
 
@@ -705,35 +717,84 @@ const EmployeeICardBuilder = ({
   );
 
   const sampleEmployee = employees[0];
-  const previewEmployee = useMemo(() => {
-    const selected = state.selectedEmployeeIds
-      .map((id) => selectedEmployeesById[id])
-      .filter(Boolean);
-    const clamped = Math.min(previewIndex, Math.max(0, selected.length - 1));
-    return selected[clamped] || sampleEmployee;
-  }, [previewIndex, sampleEmployee, selectedEmployeesById, state.selectedEmployeeIds]);
+  const selectedPreviewEmployees = useMemo(
+    () =>
+      state.selectedEmployeeIds
+        .map((id) => selectedEmployeesById[id])
+        .filter((employee): employee is EmployeeICardRow => Boolean(employee)),
+    [selectedEmployeesById, state.selectedEmployeeIds]
+  );
+  const filteredPreviewEmployees = useMemo(
+    () => filterEmployeeICardPreviewRows(selectedPreviewEmployees, previewSearch),
+    [previewSearch, selectedPreviewEmployees]
+  );
+  const effectivePreviewIndex = clampEmployeeICardPreviewIndex(
+    previewIndex,
+    selectedPreviewEmployees.length
+  );
+  const previewEmployee = useMemo(
+    () => selectedPreviewEmployees[effectivePreviewIndex] || sampleEmployee,
+    [effectivePreviewIndex, sampleEmployee, selectedPreviewEmployees]
+  );
+
+  useEffect(() => {
+    setPreviewIndex((current) =>
+      clampEmployeeICardPreviewIndex(current, selectedPreviewEmployees.length)
+    );
+  }, [selectedPreviewEmployees.length]);
 
   const patchState = (patch: Partial<BuilderState>) => setState((prev) => ({ ...prev, ...patch }));
 
-  const patchLayout = (patch: Partial<ICardLayout>) =>
-    setState((prev) => ({
-      ...prev,
-      layout: { ...prev.layout, ...patch },
-    }));
-
   const patchLayoutElement = (id: string, patch: Partial<ICardLayoutElement>) =>
-    setState((prev) => ({
-      ...prev,
-      layout: {
-        ...prev.layout,
-        front: {
-          ...prev.layout.front,
-          elements: prev.layout.front.elements.map((element) =>
-            element.id === id ? { ...element, ...patch } : element
-          ),
+    setState((prev) => {
+      const target = prev.layout.front.elements.find((element) => element.id === id);
+      const nextState = {
+        ...prev,
+        layout: {
+          ...prev.layout,
+          front: {
+            ...prev.layout.front,
+            elements: prev.layout.front.elements.map((element) =>
+              element.id === id ? { ...element, ...patch } : element
+            ),
+          },
         },
-      },
-    }));
+      };
+
+      if (typeof patch.visible === 'boolean' && target?.type === 'qr') {
+        nextState.qrCodeEnabled = patch.visible;
+      }
+      if (typeof patch.visible === 'boolean' && target?.type === 'barcode') {
+        nextState.barcodeEnabled = patch.visible;
+      }
+
+      return nextState;
+    });
+
+  const patchBuilderColor = (key: 'themeColor' | 'backgroundColor', value: string) =>
+    setState((prev) => updateICardBuilderPaletteColor(prev, key, value));
+
+  const handleOrientationChange = (orientation: BuilderState['orientation']) =>
+    setState((prev) => {
+      const nextSize = CARD_DIMENSIONS[orientation];
+      const layout = reflowICardLayout(prev.layout, prev.presetKey, {
+        orientation,
+        width: nextSize.width,
+        height: nextSize.height,
+        themeColor: prev.themeColor,
+        backgroundColor: prev.backgroundColor,
+        qrCodeEnabled: prev.qrCodeEnabled,
+        barcodeEnabled: prev.barcodeEnabled,
+      });
+
+      return {
+        ...prev,
+        orientation,
+        width: nextSize.width,
+        height: nextSize.height,
+        layout,
+      };
+    });
 
   const patchSelectedElementStyle = (patch: NonNullable<ICardLayoutElement['style']>) => {
     if (!state.selectedElementId) return;
@@ -940,10 +1001,16 @@ const EmployeeICardBuilder = ({
         uploadAsset(file).unwrap(),
         extractDominantColor(file),
       ]);
-      patchState({
-        logoBlobName: result.blobName,
-        logoPreview: preview,
-        ...(dominantColor ? { themeColor: dominantColor } : {}),
+      setState((previous) => {
+        const updated = dominantColor
+          ? updateICardBuilderPaletteColor(previous, 'themeColor', dominantColor)
+          : previous;
+
+        return {
+          ...updated,
+          logoBlobName: result.blobName,
+          logoPreview: preview,
+        };
       });
       shikshaMitraToast.success({ message: 'School logo uploaded' });
     } catch {
@@ -979,7 +1046,7 @@ const EmployeeICardBuilder = ({
       };
       const isVertical = state.orientation === 'Vertical';
       const newElement: ICardLayoutElement = {
-        id: name,
+        id: getUniqueICardLayoutElementId(state.layout.front.elements, `field-${name}`),
         type: 'text',
         fieldKey: name as ICardFieldBinding,
         label: fieldLabels[name] || name,
@@ -1245,29 +1312,7 @@ const EmployeeICardBuilder = ({
                       value={state.orientation}
                       onChange={(_, value) => {
                         if (!value) return;
-                        const nextSize = CARD_DIMENSIONS[value as 'Horizontal' | 'Vertical'];
-                        patchState({
-                          orientation: value,
-                          width: nextSize.width,
-                          height: nextSize.height,
-                          layout: {
-                            ...state.layout,
-                            orientation: value,
-                            width: nextSize.width,
-                            height: nextSize.height,
-                            front: {
-                              elements: state.layout.front.elements.map((element) => ({
-                                ...element,
-                                visible:
-                                  element.type === 'qr'
-                                    ? state.qrCodeEnabled
-                                    : element.type === 'barcode'
-                                      ? state.barcodeEnabled
-                                      : element.visible,
-                              })),
-                            },
-                          },
-                        });
+                        handleOrientationChange(value as BuilderState['orientation']);
                       }}
                     >
                       <ToggleButton value="Horizontal" size="small">
@@ -1314,10 +1359,7 @@ const EmployeeICardBuilder = ({
                         label="Theme Color"
                         type="color"
                         value={state.themeColor}
-                        onChange={(event) => {
-                          patchState({ themeColor: event.target.value });
-                          patchLayout({ themeColor: event.target.value });
-                        }}
+                        onChange={(event) => patchBuilderColor('themeColor', event.target.value)}
                         size="small"
                         sx={{ width: 160 }}
                       />
@@ -1325,10 +1367,9 @@ const EmployeeICardBuilder = ({
                         label="Background"
                         type="color"
                         value={state.backgroundColor}
-                        onChange={(event) => {
-                          patchState({ backgroundColor: event.target.value });
-                          patchLayout({ backgroundColor: event.target.value });
-                        }}
+                        onChange={(event) =>
+                          patchBuilderColor('backgroundColor', event.target.value)
+                        }
                         size="small"
                         sx={{ width: 160 }}
                       />
@@ -1652,9 +1693,10 @@ const EmployeeICardBuilder = ({
                     }}
                   >
                     <Stack
-                      direction="row"
+                      direction={{ xs: 'column', sm: 'row' }}
                       justifyContent="space-between"
-                      alignItems="center"
+                      alignItems={{ xs: 'stretch', sm: 'center' }}
+                      spacing={1}
                       sx={{ mb: 1 }}
                     >
                       <Box>
@@ -1663,48 +1705,125 @@ const EmployeeICardBuilder = ({
                           Real-time card composition
                         </Typography>
                       </Box>
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`${state.orientation} ${state.width}x${state.height}`}
-                      />
-                    </Stack>
-                    <CardPreview
-                      state={state}
-                      employee={previewEmployee}
-                      academicYearName={academicYearName}
-                    />
-                    {state.selectedEmployeeIds.length > 1 && (
-                      <Stack
-                        direction="row"
-                        justifyContent="center"
-                        alignItems="center"
-                        spacing={1}
-                        sx={{ mt: 1 }}
-                      >
-                        <IconButton
+                      <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+                        <Chip
                           size="small"
-                          disabled={previewIndex === 0}
-                          onClick={() => setPreviewIndex((i) => Math.max(0, i - 1))}
-                        >
-                          <Iconify icon="mdi:chevron-left" />
-                        </IconButton>
-                        <Typography variant="caption" color="text.secondary">
-                          {Math.min(previewIndex + 1, state.selectedEmployeeIds.length)} /{' '}
-                          {state.selectedEmployeeIds.length}
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          disabled={previewIndex >= state.selectedEmployeeIds.length - 1}
-                          onClick={() =>
-                            setPreviewIndex((i) =>
-                              Math.min(state.selectedEmployeeIds.length - 1, i + 1)
-                            )
-                          }
-                        >
-                          <Iconify icon="mdi:chevron-right" />
-                        </IconButton>
+                          variant="outlined"
+                          label={`${state.orientation} ${state.width}x${state.height}`}
+                        />
+                        {selectedPreviewEmployees.length > 1 && (
+                          <ToggleButtonGroup
+                            exclusive
+                            size="small"
+                            value={previewMode}
+                            aria-label="Preview layout"
+                            onChange={(_, value) => {
+                              if (value) setPreviewMode(value);
+                            }}
+                          >
+                            <ToggleButton value="single" aria-label="Preview one card">
+                              One
+                            </ToggleButton>
+                            <ToggleButton value="scroll" aria-label="Preview all selected cards">
+                              All
+                            </ToggleButton>
+                          </ToggleButtonGroup>
+                        )}
                       </Stack>
+                    </Stack>
+                    {previewMode === 'scroll' && selectedPreviewEmployees.length > 1 ? (
+                      <Stack spacing={1}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          name="employee-card-preview-search"
+                          label="Find Selected Employee"
+                          placeholder="Search by name, code, role, or department…"
+                          value={previewSearch}
+                          autoComplete="off"
+                          onChange={(event) => setPreviewSearch(event.target.value)}
+                        />
+                        <Stack
+                          spacing={2}
+                          sx={{
+                            maxHeight: 560,
+                            overflowY: 'auto',
+                            overscrollBehavior: 'contain',
+                            pr: 0.5,
+                          }}
+                        >
+                          {filteredPreviewEmployees.length ? (
+                            filteredPreviewEmployees.map((employee) => (
+                              <Box key={employee.id}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ display: 'block', mb: 0.5 }}
+                                >
+                                  {employee.fullName || employee.employeeIdentifier || 'Employee'}
+                                </Typography>
+                                <CardPreview
+                                  state={state}
+                                  employee={employee}
+                                  academicYearName={academicYearName}
+                                />
+                              </Box>
+                            ))
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No selected cards match this search.
+                            </Typography>
+                          )}
+                        </Stack>
+                      </Stack>
+                    ) : (
+                      <>
+                        <CardPreview
+                          state={state}
+                          employee={previewEmployee}
+                          academicYearName={academicYearName}
+                        />
+                        {selectedPreviewEmployees.length > 1 && (
+                          <Stack
+                            direction="row"
+                            justifyContent="center"
+                            alignItems="center"
+                            spacing={1}
+                            sx={{ mt: 1 }}
+                          >
+                            <IconButton
+                              size="small"
+                              aria-label="Preview previous employee card"
+                              disabled={effectivePreviewIndex === 0}
+                              onClick={() =>
+                                setPreviewIndex(Math.max(0, effectivePreviewIndex - 1))
+                              }
+                            >
+                              <Iconify icon="mdi:chevron-left" />
+                            </IconButton>
+                            <Typography variant="caption" color="text.secondary">
+                              {effectivePreviewIndex + 1} / {selectedPreviewEmployees.length}
+                            </Typography>
+                            <IconButton
+                              size="small"
+                              aria-label="Preview next employee card"
+                              disabled={
+                                effectivePreviewIndex >= selectedPreviewEmployees.length - 1
+                              }
+                              onClick={() =>
+                                setPreviewIndex(
+                                  Math.min(
+                                    selectedPreviewEmployees.length - 1,
+                                    effectivePreviewIndex + 1
+                                  )
+                                )
+                              }
+                            >
+                              <Iconify icon="mdi:chevron-right" />
+                            </IconButton>
+                          </Stack>
+                        )}
+                      </>
                     )}
                   </Paper>
                 </Box>
@@ -1737,6 +1856,17 @@ const DesignerCanvas = ({
   const selected = state.layout.front.elements.find(
     (element) => element.id === state.selectedElementId
   );
+  const selectedCenterX = selected ? Math.round((state.layout.width - selected.w) / 2) : Number.NaN;
+  const selectedRightX = selected ? state.layout.width - selected.w - 16 : Number.NaN;
+  const selectedAlignment = selected
+    ? selected.x === 16
+      ? 'left'
+      : selected.x === selectedCenterX
+        ? 'center'
+        : selected.x === selectedRightX
+          ? 'right'
+          : null
+    : null;
 
   const [localColor, setLocalColor] = useState(selected?.style?.color || DEFAULT_ICARD_TEXT_COLOR);
   const colorDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1764,7 +1894,6 @@ const DesignerCanvas = ({
                 <Paper
                   key={element.id}
                   variant="outlined"
-                  onClick={() => onSelect(element.id)}
                   sx={{
                     display: 'grid',
                     gridTemplateColumns: 'minmax(0, 1fr) 34px',
@@ -1782,27 +1911,44 @@ const DesignerCanvas = ({
                         : 'background.paper',
                   }}
                 >
-                  <Typography
-                    variant="caption"
-                    title={String(element.label || element.fieldKey || element.type)}
+                  <ButtonBase
+                    onClick={() => onSelect(element.id)}
+                    aria-label={`Edit ${element.label || element.fieldKey || element.type}`}
+                    aria-pressed={state.selectedElementId === element.id}
                     sx={{
+                      justifyContent: 'flex-start',
+                      alignSelf: 'stretch',
                       minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      fontWeight: state.selectedElementId === element.id ? 800 : 600,
-                      color: 'text.primary',
+                      borderRadius: 0.75,
+                      px: 0.5,
+                      '&:focus-visible': {
+                        outline: '2px solid',
+                        outlineColor: 'primary.main',
+                        outlineOffset: 1,
+                      },
                     }}
                   >
-                    {element.label || element.fieldKey || element.type}
-                  </Typography>
+                    <Typography
+                      variant="caption"
+                      title={String(element.label || element.fieldKey || element.type)}
+                      sx={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontWeight: state.selectedElementId === element.id ? 800 : 600,
+                        color: 'text.primary',
+                      }}
+                    >
+                      {element.label || element.fieldKey || element.type}
+                    </Typography>
+                  </ButtonBase>
                   <Checkbox
                     size="small"
                     checked={element.visible}
                     inputProps={{
                       'aria-label': `Toggle ${element.label || element.fieldKey || element.type}`,
                     }}
-                    onClick={(event) => event.stopPropagation()}
                     onChange={(event) =>
                       onElementChange(element.id, { visible: event.target.checked })
                     }
@@ -1898,16 +2044,25 @@ const DesignerCanvas = ({
               </Stack>
               <Stack direction="row" spacing={1}>
                 <CustomTooltip title="Align left">
-                  <IconButton size="small" onClick={() => onElementChange(selected.id, { x: 16 })}>
+                  <IconButton
+                    size="small"
+                    aria-label="Align element left"
+                    aria-pressed={selectedAlignment === 'left'}
+                    color={selectedAlignment === 'left' ? 'primary' : 'default'}
+                    onClick={() => onElementChange(selected.id, { x: 16 })}
+                  >
                     <Iconify icon="mdi:format-align-left" width={18} />
                   </IconButton>
                 </CustomTooltip>
                 <CustomTooltip title="Align center">
                   <IconButton
                     size="small"
+                    aria-label="Align element center"
+                    aria-pressed={selectedAlignment === 'center'}
+                    color={selectedAlignment === 'center' ? 'primary' : 'default'}
                     onClick={() =>
                       onElementChange(selected.id, {
-                        x: Math.round((state.layout.width - selected.w) / 2),
+                        x: selectedCenterX,
                       })
                     }
                   >
@@ -1917,9 +2072,10 @@ const DesignerCanvas = ({
                 <CustomTooltip title="Align right">
                   <IconButton
                     size="small"
-                    onClick={() =>
-                      onElementChange(selected.id, { x: state.layout.width - selected.w - 16 })
-                    }
+                    aria-label="Align element right"
+                    aria-pressed={selectedAlignment === 'right'}
+                    color={selectedAlignment === 'right' ? 'primary' : 'default'}
+                    onClick={() => onElementChange(selected.id, { x: selectedRightX })}
                   >
                     <Iconify icon="mdi:format-align-right" width={18} />
                   </IconButton>
@@ -1943,10 +2099,10 @@ const DesignerCanvas = ({
                     value={localColor}
                     onChange={(event) => {
                       const color = event.target.value;
+                      setLocalColor(color);
 
                       if (colorDebounceRef.current) clearTimeout(colorDebounceRef.current);
                       colorDebounceRef.current = setTimeout(() => {
-                        setLocalColor(color);
                         onElementStyleChange({ color });
                       }, 80);
                     }}
@@ -2392,6 +2548,15 @@ const useRecommendations = (state: BuilderState, employees: any[]) =>
             fields: state.fields.map((field) =>
               field.name === 'address' ? { ...field, enabled: false } : field
             ),
+            layout: {
+              ...state.layout,
+              front: {
+                ...state.layout.front,
+                elements: state.layout.front.elements.map((element) =>
+                  element.fieldKey === 'address' ? { ...element, visible: false } : element
+                ),
+              },
+            },
           },
         },
       });
@@ -2407,6 +2572,15 @@ const useRecommendations = (state: BuilderState, employees: any[]) =>
             orientation: 'Horizontal',
             width: CARD_DIMENSIONS.Horizontal.width,
             height: CARD_DIMENSIONS.Horizontal.height,
+            layout: reflowICardLayout(state.layout, state.presetKey, {
+              orientation: 'Horizontal',
+              width: CARD_DIMENSIONS.Horizontal.width,
+              height: CARD_DIMENSIONS.Horizontal.height,
+              themeColor: state.themeColor,
+              backgroundColor: state.backgroundColor,
+              qrCodeEnabled: state.qrCodeEnabled,
+              barcodeEnabled: state.barcodeEnabled,
+            }),
           },
         },
       });
@@ -2416,7 +2590,13 @@ const useRecommendations = (state: BuilderState, employees: any[]) =>
         id: 'contrast',
         title: 'Improve color contrast',
         body: 'The theme and background colors are too close for print readability.',
-        action: { label: 'Use light background', patch: { backgroundColor: '#F8FAFC' } },
+        action: {
+          label: 'Use light background',
+          patch: {
+            backgroundColor: '#F8FAFC',
+            layout: updateICardLayoutPaletteColor(state.layout, 'backgroundColor', '#F8FAFC'),
+          },
+        },
       });
     }
     if (employees.some((employee) => !employee.thumbnailPicture)) {

@@ -30,6 +30,7 @@ const mocks = vi.hoisted(() => ({
   downloadExport: vi.fn(),
   shareExport: vi.fn(),
   cancelExport: vi.fn(),
+  deleteFailedExport: vi.fn(),
   retryExport: vi.fn(),
   regenerateExport: vi.fn(),
   duplicateTemplate: vi.fn(),
@@ -40,8 +41,11 @@ const mocks = vi.hoisted(() => ({
   runScheduleNow: vi.fn(),
   deleteSchedule: vi.fn(),
   exportJobs: [] as HrReportExportJob[],
+  hasCurrentExportJobs: true,
+  isFetchingExports: false,
   exportsFulfilledTimeStamp: 100 as number | undefined,
   getExportsQueryOptions: vi.fn(),
+  getExportsQueryArgs: vi.fn(),
   permissions: {
     canView: true,
     canBuild: true,
@@ -77,17 +81,32 @@ vi.mock('./components/HrReportsLandingTable', () => ({
     onTabChange,
     onRunTemplate,
     onExportAction,
+    exportDateFilter,
+    exportJobs,
+    exportActionsDisabled,
+    onExportDateFilterChange,
   }: {
     activeTab: string;
     highlightedExportId?: string | null;
     onTabChange: (tab: string) => void;
     onRunTemplate: (template: HrReportTemplate) => void;
     onExportAction: (action: 'share', jobId: string) => void;
+    exportDateFilter: { preset: string; fromDate: string; toDate: string };
+    exportJobs: HrReportExportJob[];
+    exportActionsDisabled: boolean;
+    onExportDateFilterChange: (filter: {
+      preset: 'all' | 'today' | 'custom';
+      fromDate: string;
+      toDate: string;
+    }) => void;
   }) => (
     <div
       data-testid="mock-landing"
       data-active-tab={activeTab}
       data-highlighted-export={highlightedExportId ?? ''}
+      data-export-date-preset={exportDateFilter.preset}
+      data-export-count={exportJobs.length}
+      data-export-actions-disabled={String(exportActionsDisabled)}
     >
       <button type="button" onClick={() => onTabChange('templates')}>
         Templates
@@ -97,6 +116,24 @@ vi.mock('./components/HrReportsLandingTable', () => ({
       </button>
       <button type="button" onClick={() => onExportAction('share', 'job-1')}>
         Open Share
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onExportDateFilterChange({
+            preset: 'custom',
+            fromDate: '2026-07-20',
+            toDate: '2026-07-10',
+          })
+        }
+      >
+        Invalid Date Range
+      </button>
+      <button
+        type="button"
+        onClick={() => onExportDateFilterChange({ preset: 'today', fromDate: '', toDate: '' })}
+      >
+        Today Filter
       </button>
     </div>
   ),
@@ -129,12 +166,16 @@ vi.mock('src/redux/hr/hrReportsApi', () => ({
     ],
     isFetching: false,
   }),
-  useGetHrReportExportsQuery: (_arg: unknown, options: { pollingInterval: number }) => {
+  useGetHrReportExportsQuery: (
+    arg: unknown,
+    options: { pollingInterval: number; skip?: boolean }
+  ) => {
+    mocks.getExportsQueryArgs(arg);
     mocks.getExportsQueryOptions(options);
 
     return {
-      data: mocks.exportJobs,
-      isFetching: false,
+      currentData: mocks.hasCurrentExportJobs ? mocks.exportJobs : undefined,
+      isFetching: mocks.isFetchingExports,
       refetch: mocks.refetchExports,
       fulfilledTimeStamp: mocks.exportsFulfilledTimeStamp,
     };
@@ -143,6 +184,7 @@ vi.mock('src/redux/hr/hrReportsApi', () => ({
   useCreateHrReportExportMutation: () => [mocks.createExport, { isLoading: false }],
   useShareHrReportExportMutation: () => [mocks.shareExport, { isLoading: false }],
   useCancelHrReportExportMutation: () => [mocks.cancelExport],
+  useDeleteFailedHrReportExportMutation: () => [mocks.deleteFailedExport],
   useRetryHrReportExportMutation: () => [mocks.retryExport],
   useRegenerateHrReportExportMutation: () => [mocks.regenerateExport],
   useDuplicateHrReportTemplateMutation: () => [mocks.duplicateTemplate],
@@ -175,6 +217,8 @@ describe('ReportsScreen template run workflow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.exportJobs = [];
+    mocks.hasCurrentExportJobs = true;
+    mocks.isFetchingExports = false;
     mocks.exportsFulfilledTimeStamp = 100;
     Object.assign(mocks.permissions, {
       canView: true,
@@ -188,6 +232,9 @@ describe('ReportsScreen template run workflow', () => {
     mocks.refetchExports.mockResolvedValue(undefined);
     mocks.createExport.mockReturnValue({
       unwrap: vi.fn().mockResolvedValue({ jobId: 'template-export-1', status: 'Queued' }),
+    });
+    mocks.deleteFailedExport.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue(undefined),
     });
     mocks.shareExport.mockReturnValue({
       unwrap: vi.fn().mockResolvedValue(exportJob({ id: 'job-1' })),
@@ -225,6 +272,57 @@ describe('ReportsScreen template run workflow', () => {
     );
     expect(hrReportToast.success).toHaveBeenCalledWith(
       'Template report queued. Track it in Exports.'
+    );
+  });
+
+  it('skips export history requests while a custom date range is inverted', async () => {
+    const user = userEvent.setup();
+
+    render(<ReportsScreen />);
+    await user.click(screen.getByRole('button', { name: 'Invalid Date Range' }));
+
+    await waitFor(() => {
+      const latestOptions = mocks.getExportsQueryOptions.mock.calls.at(-1)?.[0];
+      expect(latestOptions?.skip).toBe(true);
+    });
+    expect(screen.getByTestId('mock-landing')).toHaveAttribute('data-export-count', '0');
+    expect(screen.getByTestId('mock-landing')).toHaveAttribute(
+      'data-export-actions-disabled',
+      'true'
+    );
+  });
+
+  it('hides cached date A exports while date B is fetching', async () => {
+    const user = userEvent.setup();
+    mocks.exportJobs = [exportJob({ id: 'date-a-export' })];
+
+    render(<ReportsScreen />);
+    expect(screen.getByTestId('mock-landing')).toHaveAttribute('data-export-count', '1');
+
+    mocks.hasCurrentExportJobs = false;
+    mocks.isFetchingExports = true;
+    await user.click(screen.getByRole('button', { name: 'Today Filter' }));
+
+    expect(screen.getByTestId('mock-landing')).toHaveAttribute('data-export-count', '0');
+    expect(screen.getByTestId('mock-landing')).toHaveAttribute(
+      'data-export-actions-disabled',
+      'true'
+    );
+  });
+
+  it('clears the history date filter when a newly queued export must be revealed', async () => {
+    const user = userEvent.setup();
+
+    render(<ReportsScreen />);
+    await user.click(screen.getByRole('button', { name: 'Today Filter' }));
+    expect(screen.getByTestId('mock-landing')).toHaveAttribute('data-export-date-preset', 'today');
+
+    await user.click(screen.getByRole('button', { name: 'Templates' }));
+    await user.click(screen.getByRole('button', { name: 'Run Template' }));
+    await user.click(screen.getByTestId('hr-report-run-template-submit-button'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('mock-landing')).toHaveAttribute('data-export-date-preset', 'all')
     );
   });
 

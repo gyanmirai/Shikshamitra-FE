@@ -12,6 +12,13 @@ export type OnboardingAcademicPermissionScopeRowsResult = {
   isValid: boolean;
 };
 
+export type OnboardingAcademicPermissionValidationInput = {
+  isTeaching: boolean;
+  academicYearId?: string | null;
+  isLoading: boolean;
+  scopeRows: OnboardingAcademicPermissionScopeRowsResult;
+};
+
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0;
 
@@ -48,3 +55,11 @@ export const buildOnboardingAcademicPermissionScopeRows = (
     isValid: stageIds.length > 0 && unresolvedStageIds.length === 0,
   };
 };
+
+export const isOnboardingAcademicPermissionStepValid = ({
+  isTeaching,
+  academicYearId,
+  isLoading,
+  scopeRows,
+}: OnboardingAcademicPermissionValidationInput): boolean =>
+  !isTeaching || Boolean(academicYearId && !isLoading && scopeRows.isValid);

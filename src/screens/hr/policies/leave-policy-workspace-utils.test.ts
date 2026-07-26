@@ -5,6 +5,7 @@ import {
   isLeavePolicyArchived,
   getLeavePolicyBucketSummary,
   buildLeavePolicyImpactReview,
+  getCurrentLeavePolicyTitleSet,
 } from './leave-policy-workspace-utils';
 
 describe('leave policy workspace adapter', () => {
@@ -37,6 +38,24 @@ describe('leave policy workspace adapter', () => {
     expect(isLeavePolicyArchived({ isActive: false } as any)).toBe(true);
     expect(isLeavePolicyArchived({ deletionTime: '2026-06-06T00:00:00Z' } as any)).toBe(true);
     expect(isLeavePolicyArchived({ isActive: true } as any)).toBe(false);
+  });
+
+  it('keeps restored drafts in the current name set and excludes archived names', () => {
+    const titles = getCurrentLeavePolicyTitleSet([
+      {
+        policyTitle: 'Restored Draft',
+        status: 'Draft',
+        isActive: false,
+      },
+      {
+        policyTitle: 'Archived Name',
+        status: 'Archived',
+        isActive: false,
+      },
+    ] as any);
+
+    expect(isLeavePolicyArchived({ status: 'Draft', isActive: false } as any)).toBe(false);
+    expect(titles).toEqual(new Set(['restored draft']));
   });
 
   it('requires confirmation for archive impact and names historical preservation risks', () => {

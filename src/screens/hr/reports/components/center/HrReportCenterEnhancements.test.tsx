@@ -1,3 +1,4 @@
+import type React from 'react';
 import type {
   HrReportSchedule,
   HrReportTemplate,
@@ -11,6 +12,7 @@ import { render, screen, within, waitFor } from '@testing-library/react';
 import { HrReportExportsTab } from './HrReportExportsTab';
 import { HrReportSchedulesTab } from './HrReportSchedulesTab';
 import { HrReportTemplatesTab } from './HrReportTemplatesTab';
+import { HrReportsLandingTable } from '../HrReportsLandingTable';
 import { HrReportRunTemplateDialog } from './HrReportRunTemplateDialog';
 import { HrReportShareExportDialog } from './HrReportShareExportDialog';
 import { defaultHrReportPermissions } from '../../hr-report-permissions';
@@ -40,6 +42,10 @@ vi.mock('src/redux/hr/hrReportsApi', () => ({
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
+
+vi.mock('src/components/custom-tabs', () => ({
+  CustomTabs: ({ children }: { children: React.ReactNode }) => <div role="tablist">{children}</div>,
 }));
 
 vi.mock('src/components/customizabaleTable', () => ({
@@ -273,6 +279,212 @@ describe('HR report center enhancements', () => {
 
     await user.click(screen.getByTestId('hr-report-export-share-button'));
     expect(onExportAction).toHaveBeenCalledWith('share', 'owned-export');
+  });
+
+  it('shows failed-export removal only to the owner with delete permission', async () => {
+    const user = userEvent.setup();
+    const onExportAction = vi.fn();
+    const { rerender } = render(
+      <HrReportExportsTab
+        exportJobs={[
+          exportJob({
+            id: 'owned-failed-export',
+            status: 'Failed',
+            requestedByUserId: 'owner-user',
+          }),
+        ]}
+        highlightedExportId={null}
+        isLoading={false}
+        isDownloading={false}
+        currentUserId="owner-user"
+        permissions={{ ...defaultHrReportPermissions, canView: true, canDelete: true }}
+        onDownload={vi.fn()}
+        onExportAction={onExportAction}
+      />
+    );
+
+    await user.click(screen.getByTestId('hr-report-export-delete-button'));
+    expect(onExportAction).toHaveBeenCalledWith('delete', 'owned-failed-export');
+
+    rerender(
+      <HrReportExportsTab
+        exportJobs={[
+          exportJob({
+            id: 'shared-failed-export',
+            status: 'Failed',
+            requestedByUserId: 'owner-user',
+          }),
+        ]}
+        highlightedExportId={null}
+        isLoading={false}
+        isDownloading={false}
+        currentUserId="shared-user"
+        permissions={{ ...defaultHrReportPermissions, canView: true, canDelete: true }}
+        onDownload={vi.fn()}
+        onExportAction={onExportAction}
+      />
+    );
+    expect(screen.queryByTestId('hr-report-export-delete-button')).not.toBeInTheDocument();
+  });
+
+  it('emits requested-date preset changes and validates an inverted custom range', async () => {
+    const user = userEvent.setup();
+    const onDateFilterChange = vi.fn();
+    const { rerender } = render(
+      <HrReportExportsTab
+        exportJobs={[]}
+        highlightedExportId={null}
+        isLoading={false}
+        isDownloading={false}
+        currentUserId="owner-user"
+        permissions={{ ...defaultHrReportPermissions, canView: true }}
+        dateFilter={{ preset: 'all', fromDate: '', toDate: '' }}
+        onDateFilterChange={onDateFilterChange}
+        onDownload={vi.fn()}
+        onExportAction={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('combobox', { name: 'Date range' }));
+    await user.click(screen.getByRole('option', { name: 'Today' }));
+    expect(onDateFilterChange).toHaveBeenCalledWith({
+      preset: 'today',
+      fromDate: '',
+      toDate: '',
+    });
+
+    rerender(
+      <HrReportExportsTab
+        exportJobs={[]}
+        highlightedExportId={null}
+        isLoading={false}
+        isDownloading={false}
+        currentUserId="owner-user"
+        permissions={{ ...defaultHrReportPermissions, canView: true }}
+        dateFilter={{ preset: 'custom', fromDate: '2026-07-20', toDate: '2026-07-19' }}
+        onDateFilterChange={onDateFilterChange}
+        onDownload={vi.fn()}
+        onExportAction={vi.fn()}
+      />
+    );
+    expect(screen.getByText('To date must be on or after from date.')).toBeVisible();
+  });
+
+  it('closes export details when the requested-date query identity changes', async () => {
+    const user = userEvent.setup();
+    const job = exportJob({ id: 'date-a-export' });
+    const props = {
+      exportJobs: [job],
+      highlightedExportId: null,
+      isLoading: false,
+      isDownloading: false,
+      currentUserId: 'user-1',
+      permissions: { ...defaultHrReportPermissions, canView: true },
+      onDownload: vi.fn(),
+      onExportAction: vi.fn(),
+    };
+    const { rerender } = render(
+      <HrReportExportsTab {...props} dateFilter={{ preset: 'all', fromDate: '', toDate: '' }} />
+    );
+
+    await user.click(screen.getByTestId('hr-report-export-details-button'));
+    expect(screen.getByTestId('hr-report-export-detail-status')).toBeVisible();
+
+    rerender(
+      <HrReportExportsTab {...props} dateFilter={{ preset: 'today', fromDate: '', toDate: '' }} />
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByTestId('hr-report-export-detail-status')).not.toBeInTheDocument()
+    );
+  });
+
+  it('disables export row actions while the active query is pending', async () => {
+    const onExportAction = vi.fn();
+
+    render(
+      <HrReportExportsTab
+        exportJobs={[
+          exportJob({
+            id: 'pending-query-failed-export',
+            status: 'Failed',
+            requestedByUserId: 'user-1',
+          }),
+        ]}
+        highlightedExportId={null}
+        isLoading
+        isDownloading={false}
+        actionsDisabled
+        currentUserId="user-1"
+        permissions={{
+          ...defaultHrReportPermissions,
+          canView: true,
+          canExport: true,
+          canDelete: true,
+        }}
+        onDownload={vi.fn()}
+        onExportAction={onExportAction}
+      />
+    );
+
+    expect(screen.getByTestId('hr-report-export-delete-button')).toBeDisabled();
+    expect(screen.getByTestId('hr-report-export-retry-button')).toBeDisabled();
+    expect(screen.getByTestId('hr-report-export-details-button')).toBeDisabled();
+    expect(onExportAction).not.toHaveBeenCalled();
+  });
+
+  it('closes a failed-export delete confirmation when the date query changes', async () => {
+    const user = userEvent.setup();
+    const job = exportJob({
+      id: 'date-a-failed-export',
+      status: 'Failed',
+      requestedByUserId: 'user-1',
+    });
+    const sharedProps = {
+      templates: [],
+      schedules: [],
+      exportJobs: [job],
+      activeTab: 'exports' as const,
+      highlightedExportId: null,
+      isLoading: false,
+      isDownloading: false,
+      exportActionsDisabled: false,
+      currentUserId: 'user-1',
+      onRefreshExports: vi.fn(),
+      onTabChange: vi.fn(),
+      onOpenTemplate: vi.fn(),
+      onRunTemplate: vi.fn(),
+      onDownload: vi.fn(),
+      onExportAction: vi.fn(),
+      onTemplateAction: vi.fn(),
+      onScheduleAction: vi.fn(),
+      permissions: {
+        ...defaultHrReportPermissions,
+        canView: true,
+        canDelete: true,
+      },
+      onExportDateFilterChange: vi.fn(),
+    };
+    const { rerender } = render(
+      <HrReportsLandingTable
+        {...sharedProps}
+        exportDateFilter={{ preset: 'all', fromDate: '', toDate: '' }}
+      />
+    );
+
+    await user.click(screen.getByTestId('hr-report-export-delete-button'));
+    expect(screen.getByText('Remove failed export?')).toBeVisible();
+
+    rerender(
+      <HrReportsLandingTable
+        {...sharedProps}
+        exportDateFilter={{ preset: 'today', fromDate: '', toDate: '' }}
+      />
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByText('Remove failed export?')).not.toBeInTheDocument()
+    );
   });
 
   it('does not require export permission for completed export row downloads', async () => {

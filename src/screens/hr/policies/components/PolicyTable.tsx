@@ -4,19 +4,19 @@ import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { PayrollPolicy, AttendancePolicy } from 'src/redux/hr/hr-policy-api';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Card, Chip, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
+import {
+  useGetPayrollPoliciesQuery,
+  useGetAttendancePoliciesQuery,
+} from 'src/redux/hr/hr-policy-api';
 
 import { InfoTooltipIcon } from './HRPolicySharedUI';
-import {
-  formatDate,
-  getErrorMessage,
-  selectSingleActiveDefaultPolicy,
-} from '../hr-policy-workspace-utils';
+import { formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
@@ -56,14 +56,6 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     academicYearId,
     calendars,
     activeCalendars,
-    visiblePayroll,
-    visibleAttendance,
-    payrollLoading,
-    attendanceLoading,
-    payrollError,
-    attendanceError,
-    archivedPayrollCount,
-    archivedAttendanceCount,
     policyArchiveView,
     setPolicyArchiveView,
     canCreatePolicy,
@@ -92,14 +84,36 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     setDefaultWithImpact,
   } = ctx;
 
-  const items = type === 'payroll' ? visiblePayroll : visibleAttendance;
-  const error = type === 'payroll' ? payrollError : attendanceError;
-  const isLoading = type === 'payroll' ? payrollLoading : attendanceLoading;
-  const archivedCount = type === 'payroll' ? archivedPayrollCount : archivedAttendanceCount;
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
   const isCurrent = policyArchiveView[type] === 'current';
-  const currentDefaultPolicyId = selectSingleActiveDefaultPolicy(
-    items as Array<{ id: string; status?: string; isDefault?: boolean }>
-  )?.id;
+  const listArgs = {
+    academicYearId,
+    maxResultCount: tableQuery.pageSize,
+    skipCount: (tableQuery.page - 1) * tableQuery.pageSize,
+    search: tableQuery.search || undefined,
+    isArchived: !isCurrent,
+  };
+  const payrollPage = useGetPayrollPoliciesQuery(listArgs, {
+    skip: !academicYearId || type !== 'payroll',
+  });
+  const attendancePage = useGetAttendancePoliciesQuery(listArgs, {
+    skip: !academicYearId || type !== 'attendance',
+  });
+  const payrollArchiveSummary = useGetPayrollPoliciesQuery(
+    { academicYearId, maxResultCount: 1, isArchived: true },
+    { skip: !academicYearId || type !== 'payroll' }
+  );
+  const attendanceArchiveSummary = useGetAttendancePoliciesQuery(
+    { academicYearId, maxResultCount: 1, isArchived: true },
+    { skip: !academicYearId || type !== 'attendance' }
+  );
+  const pageResult = type === 'payroll' ? payrollPage : attendancePage;
+  const archiveSummary =
+    type === 'payroll' ? payrollArchiveSummary.data : attendanceArchiveSummary.data;
+  const items = (pageResult.data?.items || []) as Array<PayrollPolicy | AttendancePolicy>;
+  const { error } = pageResult;
+  const isLoading = pageResult.isFetching;
+  const archivedCount = archiveSummary?.totalCount || 0;
 
   const columns: IColumn[] = [
     { id: 'name', label: 'Name', minWidth: 160, sticky: true, stickyPosition: 'left' },
@@ -179,7 +193,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
       render: (_, row) => {
         const item = row.policyItem as PayrollPolicy | AttendancePolicy;
         const isPayroll = type === 'payroll';
-        const isCurrentDefault = row.isCurrentDefault;
+        const { isCurrentDefault } = row;
         return (
           <ThreeDotsActions
             showViewIcon={canPreviewImpact}
@@ -285,7 +299,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     policyItem: item,
     name: item.name,
     status: item.status,
-    isCurrentDefault: currentDefaultPolicyId === item.id,
+    isCurrentDefault: item.isDefault === true,
     calendar: calendars.find((c) => c.id === item.workCalendarPolicyId)?.name || '-',
     modeOrThresholds:
       'dayCalculationType' in item
@@ -313,8 +327,14 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
             <ArchiveToggle
               current={isCurrent}
               archivedCount={archivedCount}
-              onCurrent={() => setPolicyArchiveView((cur) => ({ ...cur, [type]: 'current' }))}
-              onArchived={() => setPolicyArchiveView((cur) => ({ ...cur, [type]: 'archived' }))}
+              onCurrent={() => {
+                setTableQuery((current) => ({ ...current, page: 1 }));
+                setPolicyArchiveView((cur) => ({ ...cur, [type]: 'current' }));
+              }}
+              onArchived={() => {
+                setTableQuery((current) => ({ ...current, page: 1 }));
+                setPolicyArchiveView((cur) => ({ ...cur, [type]: 'archived' }));
+              }}
             />
           </Stack>
           {isCurrent ? (
@@ -346,8 +366,18 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         columns={columns}
         data={rows}
         isLoading={isLoading}
-        isSearch={false}
-        isFilter
+        isSearch
+        serverSidePagination
+        serverSideSearch
+        totalCount={pageResult.data?.totalCount || 0}
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        searchTerm={tableQuery.search}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
+        isFilter={false}
         isPagination
         noDataText={noDataMessage}
       />

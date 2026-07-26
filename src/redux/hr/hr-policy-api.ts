@@ -477,13 +477,28 @@ export type HrPolicyVersionCompare = {
   }>;
 };
 
-type PolicyListArgs = {
+export type PolicyListArgs = {
   academicYearId?: string;
   maxResultCount?: number;
   skipCount?: number;
   search?: string;
   targetType?: string;
+  isArchived?: boolean;
 };
+
+export const buildPolicyListParams = ({
+  academicYearId,
+  maxResultCount = 50,
+  skipCount = 0,
+  search,
+  isArchived,
+}: PolicyListArgs) => ({
+  academicYearId,
+  maxResultCount,
+  skipCount,
+  search,
+  isArchived,
+});
 
 export const policyInvalidationTags = [
   employeeType.attendanceRule,
@@ -545,10 +560,10 @@ export const buildPolicyAssignmentPreviewParams = ({
 export const hrPolicyApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getWorkCalendarPolicies: builder.query<PagedResult<WorkCalendarPolicy>, PolicyListArgs>({
-      query: ({ academicYearId, maxResultCount = 50, skipCount = 0, search }) => ({
+      query: (args) => ({
         url: '/hr/work-calendar-policies',
         method: 'GET',
-        params: { academicYearId, maxResultCount, skipCount, search },
+        params: buildPolicyListParams(args),
       }),
       providesTags: policyTags,
     }),
@@ -635,10 +650,10 @@ export const hrPolicyApi = api.injectEndpoints({
       invalidatesTags: policyTags,
     }),
     getPayrollPolicies: builder.query<PagedResult<PayrollPolicy>, PolicyListArgs>({
-      query: ({ academicYearId, maxResultCount = 50, skipCount = 0, search }) => ({
+      query: (args) => ({
         url: '/hr/payroll/policies',
         method: 'GET',
-        params: { academicYearId, maxResultCount, skipCount, search },
+        params: buildPolicyListParams(args),
       }),
       providesTags: policyTags,
     }),
@@ -737,10 +752,10 @@ export const hrPolicyApi = api.injectEndpoints({
       invalidatesTags: policyTags,
     }),
     getAttendancePolicies: builder.query<PagedResult<AttendancePolicy>, PolicyListArgs>({
-      query: ({ academicYearId, maxResultCount = 50, skipCount = 0, search }) => ({
+      query: (args) => ({
         url: '/hr/attendance/policies',
         method: 'GET',
-        params: { academicYearId, maxResultCount, skipCount, search },
+        params: buildPolicyListParams(args),
       }),
       providesTags: policyTags,
     }),

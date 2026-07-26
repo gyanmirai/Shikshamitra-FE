@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   createExport: vi.fn(),
   shareExport: vi.fn(),
   cancelExport: vi.fn(),
+  deleteFailedExport: vi.fn(),
   retryExport: vi.fn(),
   regenerateExport: vi.fn(),
   duplicateTemplate: vi.fn(),
@@ -39,6 +40,7 @@ vi.mock('src/redux/hr/hrReportsApi', () => ({
   useCreateHrReportExportMutation: () => [mocks.createExport, { isLoading: false }],
   useShareHrReportExportMutation: () => [mocks.shareExport, { isLoading: false }],
   useCancelHrReportExportMutation: () => [mocks.cancelExport],
+  useDeleteFailedHrReportExportMutation: () => [mocks.deleteFailedExport],
   useRetryHrReportExportMutation: () => [mocks.retryExport],
   useRegenerateHrReportExportMutation: () => [mocks.regenerateExport],
   useDuplicateHrReportTemplateMutation: () => [mocks.duplicateTemplate],
@@ -136,6 +138,7 @@ describe('useHrReportsCenterActions', () => {
     mocks.createExport.mockReturnValue(unwrapResult({ jobId: 'new-job', status: 'Queued' }));
     mocks.shareExport.mockReturnValue(unwrapResult(exportJob()));
     mocks.cancelExport.mockReturnValue(unwrapResult(exportJob({ status: 'Cancelled' })));
+    mocks.deleteFailedExport.mockReturnValue(unwrapResult(undefined));
     mocks.retryExport.mockReturnValue(unwrapResult({ jobId: 'job-1', status: 'Queued' }));
     mocks.regenerateExport.mockReturnValue(unwrapResult({ jobId: 'new-job', status: 'Queued' }));
     mocks.duplicateTemplate.mockReturnValue(unwrapResult(template()));
@@ -174,6 +177,18 @@ describe('useHrReportsCenterActions', () => {
     expect(hrReportToast.error).toHaveBeenCalledWith(
       'Export could not be cancelled. Refresh and try again.'
     );
+  });
+
+  it('deletes a failed export and refreshes the export list', async () => {
+    const { result, refetchExports } = renderActions();
+
+    await act(async () => {
+      await result.current.handleExportAction('delete', 'job-1');
+    });
+
+    expect(mocks.deleteFailedExport).toHaveBeenCalledWith('job-1');
+    expect(refetchExports).toHaveBeenCalledTimes(1);
+    expect(hrReportToast.success).toHaveBeenCalledWith('Failed export removed');
   });
 
   it('keeps the current tab stable when schedule run now fails', async () => {

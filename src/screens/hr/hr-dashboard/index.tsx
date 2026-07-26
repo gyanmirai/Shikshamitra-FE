@@ -339,9 +339,11 @@ const CommandMetricRow = ({
 const WorkforceSnapshotCard = ({
   data,
   onOpenCelebrations,
+  onOpenNewJoiners,
 }: {
   data: HRDashboardSummary;
   onOpenCelebrations: () => void;
+  onOpenNewJoiners: () => void;
 }) => {
   const theme = useTheme();
   const teachingCount = data.workforce.teachingStaff;
@@ -452,7 +454,7 @@ const WorkforceSnapshotCard = ({
               helper="This month"
               icon="solar:user-plus-bold"
               tone="info"
-              href={hrPaths.employee.list}
+              onClick={onOpenNewJoiners}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -1499,6 +1501,76 @@ const UpcomingCelebrationsDialog = ({
   );
 };
 
+const NewJoinersDialog = ({
+  open,
+  onClose,
+  employees,
+  month,
+}: {
+  open: boolean;
+  onClose: () => void;
+  employees: HRDashboardSummary['workforce']['newJoiners'];
+  month: string;
+}) => {
+  const items = employees || [];
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>New Joiners · {dayjs(`${month}-01`).format('MMMM YYYY')}</DialogTitle>
+      <DialogContent dividers>
+        {items.length ? (
+          <Stack spacing={1}>
+            {items.map((employee) => (
+              <Box
+                key={employee.id}
+                sx={{
+                  p: 1.25,
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'background.paper',
+                }}
+              >
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  <Avatar sx={{ width: 40, height: 40 }}>{employee.name?.charAt(0) || '?'}</Avatar>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography variant="subtitle2" noWrap>
+                      {employee.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {employee.employeeIdentifier || 'No employee code'} ·{' '}
+                      {employee.department ||
+                        employee.roleName ||
+                        (employee.isTeaching ? 'Teaching' : 'Non-teaching')}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={
+                      employee.dateOfJoining
+                        ? dayjs(employee.dateOfJoining).format('DD MMM YYYY')
+                        : 'Joining date unavailable'
+                    }
+                  />
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        ) : (
+          <Alert severity="info">No employees joined during the selected month.</Alert>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Close</Button>
+        <Button component={Link} href={hrPaths.employee.list} variant="contained">
+          Open Directory
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 const StaffSnapshotCard = ({
   employees,
 }: {
@@ -1542,6 +1614,7 @@ const StaffSnapshotCard = ({
 
 const AdminDashboard = () => {
   const [isCelebrationsDialogOpen, setIsCelebrationsDialogOpen] = useState(false);
+  const [isNewJoinersDialogOpen, setIsNewJoinersDialogOpen] = useState(false);
   const {
     data: preview,
     isLoading,
@@ -1645,6 +1718,7 @@ const AdminDashboard = () => {
           <WorkforceSnapshotCard
             data={data}
             onOpenCelebrations={() => setIsCelebrationsDialogOpen(true)}
+            onOpenNewJoiners={() => setIsNewJoinersDialogOpen(true)}
           />
         </Grid>
         <Grid size={{ xs: 12, lg: 5 }}>
@@ -1687,6 +1761,12 @@ const AdminDashboard = () => {
         onClose={() => setIsCelebrationsDialogOpen(false)}
         celebrations={data.celebrations}
         dashboardDate={data.date}
+      />
+      <NewJoinersDialog
+        open={isNewJoinersDialogOpen}
+        onClose={() => setIsNewJoinersDialogOpen(false)}
+        employees={data.workforce.newJoiners}
+        month={data.month}
       />
     </HrDashboardPreviewShell>
   );

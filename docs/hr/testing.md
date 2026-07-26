@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-07-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -41,35 +41,39 @@ npx playwright test e2e/hr/hr-module-full-cycle.spec.ts --project=chromium --rep
 
 Use this table to choose validation:
 
-| Change area | First checks |
-|---|---|
-| Employee list, profile, documents, or status | `e2e/hr/employee/**`, employee Redux tests, employee screen tests |
-| Payroll run, readiness, adjustment, lock, or slips | `e2e/hr/hr-module-full-cycle.spec.ts`, run payroll client tests |
-| Attendance and imports | Attendance client tests, attendance import tests, focused Playwright flows |
-| Leave center, requests, approvals, or policies | Leave utility tests, leave screen tests, HR calendar E2E |
-| HR policies | `hr-policy-api.ts` tests, policy workspace tests, HR calendar E2E |
-| Professional management | Professional management client and screen tests |
-| Reports | `hrReportsApi.ts` tests and report screen checks |
+| Change area                                        | First checks                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Employee list, profile, documents, or status       | `e2e/hr/employee/**`, employee Redux tests, employee screen tests                                                                                                                                                                                                                                                              |
+| Employee profile dashboard                         | `employeeApi.contract.test.ts`, `employee-dashboard-utils.test.ts`, and the employee profile browser flow                                                                                                                                                                                                                      |
+| Employee onboarding and public applications        | Status graph, full finalization validation, academic permission, explicit role-approval and employee-group audience, incompatible role-selection clearing, forward-step opt-in, busy-dialog close, public validation, table export, and shared-toast unit tests, plus `e2e/hr/employee-onboarding/employee-onboarding.spec.ts` |
+| Employee I-card designer or export                 | `src/screens/hr/i-card/i-card-builder-utils.test.ts`, I-card client contract tests, and `e2e/hr/employee/employee-email-icard-regression.spec.ts`                                                                                                                                                                              |
+| Payroll settings and component dependencies        | Earning and deduction component utility tests, client tests, and focused settings flows                                                                                                                                                                                                                                        |
+| Payroll run, readiness, adjustment, lock, or slips | Payslip-selection tests, `e2e/hr/hr-module-full-cycle.spec.ts`, and run payroll client tests                                                                                                                                                                                                                                   |
+| Attendance and imports                             | Attendance status-mapper tests, attendance client contract tests, attendance import month tests, and focused Playwright flows                                                                                                                                                                                                  |
+| Leave center, requests, approvals, or policies     | Leave utility tests, leave API contract tests, leave policy archive and restore screen tests, and HR calendar E2E                                                                                                                                                                                                              |
+| HR policies                                        | `hr-audit-format.test.ts`, `PolicyAuditDrawer.audit.test.tsx`, server-paged policy workspace tests, and HR calendar E2E                                                                                                                                                                                                        |
+| Professional management                            | Professional management client and screen tests                                                                                                                                                                                                                                                                                |
+| Reports                                            | `HrReportCenterEnhancements.test.tsx`, `index.test.tsx`, `useHrReportsCenterActions.test.ts`, `TableBody.empty-state.test.tsx`, `hrReportsApi.ts` tests, and report screen checks                                                                                                                                              |
 
 ## E2E environment
 
 Use these environment variables for browser tests:
 
-| Variable | Use |
-|---|---|
-| `E2E_HR_EMAIL` | HR or admin login |
-| `E2E_HR_PASSWORD` | Password for HR or admin login |
+| Variable              | Use                                          |
+| --------------------- | -------------------------------------------- |
+| `E2E_HR_EMAIL`        | HR or admin login                            |
+| `E2E_HR_PASSWORD`     | Password for HR or admin login               |
 | `E2E_HR_FULL_CYCLE=1` | Enables the mutating payroll full-cycle spec |
 
 ## Acceptance gates
 
 Each frontend HR change should satisfy these gates:
 
-| Gate | Pass condition |
-|---|---|
-| Route | [routes.md](./routes.md) matches menu and page behavior |
-| Client | [clients.md](./clients.md) names the client and backend owner |
-| Workflow | [workflows.md](./workflows.md) covers the user path or marks it partial |
+| Gate             | Pass condition                                                                      |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| Route            | [routes.md](./routes.md) matches menu and page behavior                             |
+| Client           | [clients.md](./clients.md) names the client and backend owner                       |
+| Workflow         | [workflows.md](./workflows.md) covers the user path or marks it partial             |
 | Backend contract | Backend [api.md](../../../Shikshamitra-BE/docs/modules/hr/api.md) is still accurate |
-| Test | Focused test or documented residual risk exists |
-| Docs | `npm run docs:hr:check` passes |
+| Test             | Focused test or documented residual risk exists                                     |
+| Docs             | `npm run docs:hr:check` passes                                                      |

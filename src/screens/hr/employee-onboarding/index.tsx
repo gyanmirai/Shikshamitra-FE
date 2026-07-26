@@ -1,5 +1,6 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -9,6 +10,7 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import * as React from 'react';
 import { isNaN } from 'lodash';
+import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -17,12 +19,12 @@ import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { DatePicker } from '@mui/x-date-pickers';
 import PhoneInput from 'src/components/phone-input';
-import { useFormik, type FormikErrors } from 'formik';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { HrBloodGroupArray } from 'src/enums/blood-group';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -31,7 +33,6 @@ import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useAddAccessControlMutation } from 'src/redux/hr/employeeApi';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -40,19 +41,13 @@ import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
+import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
+  getEmployeeAssignableRoles,
+  shouldClearEmployeeRoleSelection,
+} from 'src/screens/hr/employee/employee-role-options';
 import {
   Box,
   Card,
@@ -85,18 +80,41 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
-import { buildOnboardingAcademicPermissionScopeRows } from './employeeOnboardingAcademicPermission';
+import { resolveCurrentEmployeeApplication } from './employee-application-query-state';
+import {
+  finalizeEmployeeFieldsSchema,
+  applyFinalizeEmployeeValidation,
+} from './finalize-validation';
+import {
+  isOnboardingAcademicPermissionStepValid,
+  buildOnboardingAcademicPermissionScopeRows,
+} from './employeeOnboardingAcademicPermission';
 import {
   getValidNextStatuses,
   EmployeeApplicationStatus,
   EMPLOYEE_APPLICATION_STATUSES,
+  isEmployeeApplicationTerminal,
   canFinalizeEmployeeApplication,
   getEmployeeApplicationStatusColor,
   getEmployeeApplicationStatusLabel,
   normalizeEmployeeApplicationStatus,
+  canRegenerateEmployeeApplicationLink,
 } from './status';
+
+import type { FinalizeFormState } from './finalize-validation';
 
 type InviteFormState = {
   firstName: string;
@@ -106,44 +124,6 @@ type InviteFormState = {
   mobileNo: string;
   positionAppliedFor: string;
   departmentAppliedFor: string;
-};
-
-type FinalizeFormState = {
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  dob: string;
-  gender: string;
-  religion: ReligionType | '';
-  casteType: string;
-  familyCaste: string;
-  maritalStatus: string;
-  bloodGroup: string;
-  email: string;
-  mobileNo: string;
-  secondaryMobileNo: string;
-  panNo: string;
-  adharNo: string;
-  doj: string;
-  isTeaching: boolean;
-  department: string;
-  designation: string;
-  qualification: string;
-  identificationMark1: string;
-  roleId: string;
-  shiftId: string;
-  academicPermissionStageIds: string;
-  address1: string;
-  address2: string;
-  address3: string;
-  countryName: string;
-  countryIsoCode: string;
-  stateName: string;
-  stateIsoCode: string;
-  city: string;
-  pinCode: string;
-  useSubmittedPhoto: boolean;
-  attachResumeAsDocument: boolean;
 };
 
 type EmployeeOnboardingListParams = {
@@ -198,8 +178,10 @@ const formatDate = (value?: string | null) => {
   return parsedDate.isValid() ? parsedDate.format('DD MMM YYYY') : '-';
 };
 
-const toDateInputValue = (value?: string | null) =>
-  value ? dayjs(value).format('YYYY-MM-DD') : '';
+const toDatePickerValue = (value?: string | null): Dayjs | null => {
+  const parsed = value ? dayjs(value) : null;
+  return parsed?.isValid() ? parsed : null;
+};
 
 const formatBoolean = (value?: boolean | null) => {
   if (value === true) return 'Yes';
@@ -225,101 +207,6 @@ const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.
 const isMobileValid = (value: string) => value && value.replace(/\D/g, '').length >= 10;
 
 // ── Yup validation schema for FinalizeDialog Step 1 ────────────────────────────
-
-const validateIndianMobile = (value?: string | null) => {
-  if (!value) return false;
-  const stripped = value.replace(/\s/g, '');
-  const normalized = stripped.includes('+') ? stripped : `+91${stripped}`;
-  return /^\+91[6-9][0-9]{9}$/.test(normalized);
-};
-
-const finalizeStep1Schema = Yup.object({
-  firstName: Yup.string().required('First Name is required'),
-  lastName: Yup.string().required('Last Name is required'),
-  middleName: Yup.string().nullable(),
-  dob: Yup.string().nullable(),
-  gender: Yup.string().nullable(),
-  religion: Yup.mixed().required('Religion is required'),
-  casteType: Yup.string().nullable(),
-  familyCaste: Yup.string().trim().required('Family Caste is required'),
-  maritalStatus: Yup.string().nullable(),
-  bloodGroup: Yup.string().nullable(),
-  email: Yup.string()
-    .matches(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Please enter a valid email')
-    .required('Email is required'),
-  mobileNo: Yup.string()
-    .test('valid-indian-mobile', 'Primary Contact No. is not valid', (value) =>
-      validateIndianMobile(value)
-    )
-    .required('Primary Contact No. is required'),
-  secondaryMobileNo: Yup.string()
-    .nullable()
-    .test('valid-indian-mobile', 'Secondary Contact No. is not valid', (value) => {
-      if (!value) return true;
-      return validateIndianMobile(value);
-    })
-    // eslint-disable-next-line func-names
-    .test('unique', 'Secondary Contact No. cannot be same as primary', function (value) {
-      const { mobileNo } = this.parent;
-      if (!value || !mobileNo) return true;
-      const strip = (v: string) => v.replace(/\s/g, '').replace(/^\+91/, '');
-      return strip(value) !== strip(mobileNo);
-    }),
-  adharNo: Yup.string()
-    .required('Aadhaar number is required')
-    .matches(/^\d{12}$/, 'Aadhaar number must be exactly 12 digits'),
-  panNo: Yup.string()
-    .required('PAN number is required')
-    .test(
-      'pan-format',
-      'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',
-      (value) => !!value && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
-    ),
-  doj: Yup.string().required('Date of Joining is required'),
-  isTeaching: Yup.boolean(),
-  department: Yup.string().nullable(),
-  designation: Yup.string().nullable(),
-  qualification: Yup.string().nullable(),
-  identificationMark1: Yup.string().nullable(),
-  roleId: Yup.string().required('Role is required'),
-  shiftId: Yup.string().required('Shift is required'),
-  address1: Yup.string().required('Building No./Flat/House No. is required'),
-  address2: Yup.string().required('Area/Locality/Road Name is required'),
-  address3: Yup.string().nullable(),
-  countryName: Yup.string().required('Country is required'),
-  countryIsoCode: Yup.string().nullable(),
-  stateName: Yup.string().required('State is required'),
-  stateIsoCode: Yup.string().nullable(),
-  city: Yup.string().required('City is required'),
-  pinCode: Yup.string()
-    .nullable()
-    .test('pincode', 'PIN Code must be exactly 6 digits', (v) => !v || /^\d{6}$/.test(v)),
-  academicPermissionStageIds: Yup.string().nullable(),
-  useSubmittedPhoto: Yup.boolean(),
-  attachResumeAsDocument: Yup.boolean(),
-});
-
-const validateFinalizeStep1Values = async (
-  values: FinalizeFormState
-): Promise<FormikErrors<FinalizeFormState>> => {
-  try {
-    await finalizeStep1Schema.validate(values, { abortEarly: false });
-    return {};
-  } catch (error) {
-    if (!(error instanceof Yup.ValidationError)) {
-      throw error;
-    }
-
-    const errors: FormikErrors<FinalizeFormState> = {};
-    error.inner.forEach((validationError) => {
-      const path = validationError.path as keyof FinalizeFormState | undefined;
-      if (path && !errors[path]) {
-        errors[path] = validationError.message as any;
-      }
-    });
-    return errors;
-  }
-};
 
 const showInviteEmailDeliveryToast = (
   emailDeliverySucceeded: boolean,
@@ -349,7 +236,7 @@ const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeF
     firstName: personalInfo?.firstName || application.firstName || '',
     middleName: personalInfo?.middleName || application.middleName || '',
     lastName: personalInfo?.lastName || application.lastName || '',
-    dob: toDateInputValue(personalInfo?.dateOfBirth || application.dateOfBirth),
+    dob: toDatePickerValue(personalInfo?.dateOfBirth || application.dateOfBirth),
     gender:
       personalInfo?.gender !== null && personalInfo?.gender !== undefined
         ? String(personalInfo.gender)
@@ -682,7 +569,7 @@ function EmployeeOnboardingDetailView({
   onFinalize: (application: EmployeeApplication) => void;
   onCopyInviteLink: (application: EmployeeApplication) => Promise<void>;
   onRegenerateLink: (application: EmployeeApplication) => Promise<void>;
-  onDelete: (application: EmployeeApplication, onDeleted?: () => void) => Promise<void>;
+  onDelete: (application: EmployeeApplication, onDeleted?: () => void) => void;
   regenerateLoading: boolean;
   deleteLoading: boolean;
 }) {
@@ -730,7 +617,10 @@ function EmployeeOnboardingDetailView({
   }
 
   const normalizedStatus = normalizeEmployeeApplicationStatus(application.status);
-  const canUpdateStatus = normalizedStatus !== EmployeeApplicationStatus.Finalized;
+  const canUpdateStatus = !isEmployeeApplicationTerminal(normalizedStatus);
+  const canRegenerateLink =
+    canRegenerateEmployeeApplicationLink(normalizedStatus) && !application.submittedAt;
+  const canDelete = normalizedStatus !== EmployeeApplicationStatus.Finalized;
   const hasStatusChanged = status !== normalizedStatus;
   const submittedPersonal = application.personalInfo;
   const { familyInfo } = application;
@@ -775,8 +665,10 @@ function EmployeeOnboardingDetailView({
     try {
       await updateStatus({ id: application.id, body: { status: nextStatus, reason } }).unwrap();
       shikshaMitraToast.success({ message: 'Status updated' });
-    } catch {
-      shikshaMitraToast.error({ message: 'Could not update status' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getOnboardingErrorMessage(error, 'Could not update status'),
+      });
     }
   };
 
@@ -839,7 +731,7 @@ function EmployeeOnboardingDetailView({
               size="small"
               variant="outlined"
               onClick={() => onRegenerateLink(application)}
-              disabled={regenerateLoading || !canUpdateStatus}
+              disabled={regenerateLoading || !canRegenerateLink}
               startIcon={<Iconify icon="mdi:link-variant-plus" />}
               data-testid="employee-onboarding-regenerate-link"
             >
@@ -861,7 +753,7 @@ function EmployeeOnboardingDetailView({
               variant="text"
               color="error"
               onClick={() => onDelete(application, onBack)}
-              disabled={deleteLoading || !canUpdateStatus}
+              disabled={deleteLoading || !canDelete}
               startIcon={<Iconify icon="mdi:delete-outline" />}
             >
               Delete
@@ -1111,6 +1003,7 @@ function EmployeeOnboardingDetailView({
                     <Select
                       label="Status"
                       value={status}
+                      disabled={!canUpdateStatus || statusLoading}
                       onChange={(event) =>
                         setStatus(Number(event.target.value) as EmployeeApplicationStatus)
                       }
@@ -1184,8 +1077,8 @@ function FinalizeDialog({
   const theme = useTheme();
   const [step, setStep] = useState(0);
   const [maxStepVisited, setMaxStepVisited] = useState(0);
-  const [finalizedUserId, setFinalizedUserId] = useState<string | null>(null);
   const [academicTouched, setAcademicTouched] = useState(false);
+  const [finalizeSaving, setFinalizeSaving] = useState(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: rolesData, isLoading: rolesLoading } = useGetRolesQuery(undefined);
   const { data: shiftsData, isLoading: shiftsLoading } = useGetShiftsQuery(undefined);
@@ -1195,7 +1088,6 @@ function FinalizeDialog({
     isLoading: organizationsLoading,
   } = useAcademicOrganizationOptions(currentYear?.id);
   const [finalizeApplication, { isLoading }] = useFinalizeEmployeeApplicationMutation();
-  const [addAccessControl, { isLoading: academicPermissionSaving }] = useAddAccessControlMutation();
 
   const initialValues = useMemo(
     () => (application ? buildFinalizeInitialValues(application) : null),
@@ -1214,15 +1106,33 @@ function FinalizeDialog({
 
   // convenience alias
   const form = formik.values;
-  const updateField = (field: keyof FinalizeFormState, value: string | boolean) =>
-    formik.setFieldValue(field as string, value);
+  const selectedEmployeeGroup = form.isTeaching ? 0 : 1;
+  const { setFieldValue } = formik;
+  const employeeRoleOptions = useMemo(
+    () => getEmployeeAssignableRoles(rolesData?.items ?? [], selectedEmployeeGroup),
+    [rolesData?.items, selectedEmployeeGroup]
+  );
+  const updateField = (field: keyof FinalizeFormState, value: string | boolean | Dayjs | null) =>
+    setFieldValue(field as string, value);
+
+  useEffect(() => {
+    if (
+      rolesLoading ||
+      !rolesData?.items ||
+      !shouldClearEmployeeRoleSelection(rolesData.items, form.roleId, selectedEmployeeGroup)
+    ) {
+      return;
+    }
+
+    setFieldValue('roleId', '');
+  }, [form.roleId, rolesData?.items, rolesLoading, selectedEmployeeGroup, setFieldValue]);
 
   useEffect(() => {
     if (application && open) {
       setStep(0);
       setMaxStepVisited(0);
-      setFinalizedUserId(null);
       setAcademicTouched(false);
+      setFinalizeSaving(false);
       formik.resetForm({ values: buildFinalizeInitialValues(application) });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1245,12 +1155,23 @@ function FinalizeDialog({
     organizationOptionsById
   );
 
-  const isStep2Valid = Boolean(
-    currentYear?.id &&
-    selectedStageIds.length > 0 &&
-    !organizationsLoading &&
-    academicPermissionScopeRows.isValid
-  );
+  const isStep2Valid = isOnboardingAcademicPermissionStepValid({
+    isTeaching: form.isTeaching,
+    academicYearId: currentYear?.id,
+    isLoading: organizationsLoading,
+    scopeRows: academicPermissionScopeRows,
+  });
+
+  const validateEmployeeFields = async () => {
+    const errors = await applyFinalizeEmployeeValidation(formik);
+    if (Object.keys(errors).length > 0) {
+      setStep(1);
+      focusFirstFormikError(errors);
+      return false;
+    }
+
+    return true;
+  };
 
   const handleStepperNext = async (
     isLastStep: boolean,
@@ -1259,32 +1180,7 @@ function FinalizeDialog({
     setIsLoading: (val: boolean) => void
   ) => {
     if (step === 1) {
-      // Mark all step-1 fields as touched so Yup errors appear
-      const allFields = Object.keys(finalizeStep1Schema.fields) as (keyof FinalizeFormState)[];
-      const touchedAll = allFields.reduce((acc, k) => ({ ...acc, [k]: true }), {});
-      formik.setTouched(touchedAll as any);
-      const errors = await validateFinalizeStep1Values(formik.values);
-      formik.setErrors(errors);
-      // Only check fields relevant to step 1 (ignore academicPermissionStageIds etc.)
-      const step1Fields = [
-        'firstName',
-        'lastName',
-        'email',
-        'mobileNo',
-        'adharNo',
-        'panNo',
-        'doj',
-        'roleId',
-        'shiftId',
-        'address1',
-        'address2',
-        'countryName',
-        'stateName',
-        'city',
-        'religion',
-      ];
-      const hasErrors = step1Fields.some((f) => !!errors[f as keyof typeof errors]);
-      if (hasErrors) return;
+      if (!(await validateEmployeeFields())) return;
     }
     if (step === 2 && !isStep2Valid) {
       setAcademicTouched(true);
@@ -1304,120 +1200,100 @@ function FinalizeDialog({
   };
 
   const isStepClickable = (index: number) => index <= maxStepVisited;
-  const handleStepClick = (index: number) => {
+  const handleStepClick = async (index: number) => {
+    if (index > step && index > 1 && !(await validateEmployeeFields())) {
+      return;
+    }
+    if (index > step && index > 2 && !isStep2Valid) {
+      setAcademicTouched(true);
+      setStep(2);
+      return;
+    }
+
+    setAcademicTouched(false);
     setStep(index);
   };
 
-  const canSubmit = Boolean(
-    form.firstName &&
-    form.lastName &&
-    form.email &&
-    form.mobileNo &&
-    form.panNo &&
-    form.adharNo &&
-    form.doj &&
-    form.roleId &&
-    form.shiftId &&
-    currentYear?.id &&
-    selectedStageIds.length > 0 &&
-    !organizationsLoading &&
-    academicPermissionScopeRows.isValid &&
-    form.address1 &&
-    form.address2 &&
-    form.countryName &&
-    form.stateName &&
-    form.city
-  );
+  const canSubmit =
+    finalizeEmployeeFieldsSchema.isValidSync(form, { abortEarly: false }) && isStep2Valid;
 
   const handleFinalize = async () => {
+    if (!(await validateEmployeeFields())) {
+      return;
+    }
+
+    if (form.isTeaching && !isStep2Valid) {
+      setAcademicTouched(true);
+      setStep(2);
+      shikshaMitraToast.warning({
+        message:
+          'Academic Permission could not be saved. Please wait for organization data to load and try again.',
+      });
+      return;
+    }
+
+    setFinalizeSaving(true);
     try {
-      if (!currentYear?.id || !academicPermissionScopeRows.isValid) {
-        setAcademicTouched(true);
-        shikshaMitraToast.warning({
-          message:
-            'Academic Permission could not be saved. Please wait for organization data to load and try again.',
-        });
-        return;
-      }
-
-      let userId = finalizedUserId;
-      if (!userId) {
-        const result = await finalizeApplication({
-          id: application.id,
-          body: {
-            personalInfo: {
-              firstName: form.firstName,
-              middleName: form.middleName,
-              lastName: form.lastName,
-              dob: form.dob || null,
-              gender: toNullableNumber(form.gender),
-              religion:
-                form.religion !== '' && form.religion !== null && form.religion !== undefined
-                  ? (ReligionType[Number(form.religion) as ReligionType] as any)
-                  : undefined,
-              casteType: toNullableNumber(form.casteType),
-              familyCaste: form.familyCaste || null,
-              maritalStatus: toNullableNumber(form.maritalStatus),
-              bloodGroup: toNullableNumber(form.bloodGroup),
-              email: form.email,
-              mobileNo: form.mobileNo,
-              secondaryMobileNo: form.secondaryMobileNo || null,
-              panNo: form.panNo,
-              adharNo: form.adharNo,
-              doj: form.doj,
-              isTeaching: form.isTeaching,
-              department: form.department || null,
-              designation: form.designation || null,
-              qualification: form.qualification || null,
-              identificationMark1: form.identificationMark1 || null,
-              roleId: form.roleId,
-              shiftId: form.shiftId,
-              address1: form.address1,
-              address2: form.address2,
-              address3: form.address3 || null,
-              country: { name: form.countryName, isoCode: form.countryIsoCode || 'IN' },
-              state: { name: form.stateName, isoCode: form.stateIsoCode },
-              city: form.city,
-              pinCode: form.pinCode || null,
-            },
-            familyInfo: application.familyInfo || null,
-            additionalInfo: application.additionalInfo || null,
-            workExperiences: application.workExperiences || [],
-            useSubmittedPhoto: form.useSubmittedPhoto,
-            attachResumeAsDocument: form.attachResumeAsDocument,
+      await finalizeApplication({
+        id: application.id,
+        body: {
+          personalInfo: {
+            firstName: form.firstName,
+            middleName: form.middleName,
+            lastName: form.lastName,
+            dob: form.dob?.isValid() ? form.dob.format('YYYY-MM-DD') : null,
+            gender: toNullableNumber(form.gender),
+            religion:
+              form.religion !== '' && form.religion !== null && form.religion !== undefined
+                ? (ReligionType[Number(form.religion) as ReligionType] as any)
+                : undefined,
+            casteType: toNullableNumber(form.casteType),
+            familyCaste: form.familyCaste || null,
+            maritalStatus: toNullableNumber(form.maritalStatus),
+            bloodGroup: toNullableNumber(form.bloodGroup),
+            email: form.email,
+            mobileNo: form.mobileNo,
+            secondaryMobileNo: form.secondaryMobileNo || null,
+            panNo: form.panNo,
+            adharNo: form.adharNo,
+            doj: form.doj,
+            isTeaching: form.isTeaching,
+            department: form.department || null,
+            designation: form.designation || null,
+            qualification: form.qualification || null,
+            identificationMark1: form.identificationMark1 || null,
+            roleId: form.roleId,
+            shiftId: form.shiftId,
+            address1: form.address1,
+            address2: form.address2,
+            address3: form.address3 || null,
+            country: { name: form.countryName, isoCode: form.countryIsoCode || 'IN' },
+            state: { name: form.stateName, isoCode: form.stateIsoCode },
+            city: form.city,
+            pinCode: form.pinCode || null,
           },
-        }).unwrap();
-        userId = (result.employee as any)?.userId || null;
-        if (userId) {
-          setFinalizedUserId(userId);
-        }
-      }
-
-      if (!userId) {
-        shikshaMitraToast.warning({
-          message: 'Employee finalized, but Academic Permission could not be saved.',
-        });
-        return;
-      }
-
-      try {
-        await addAccessControl({
-          academicYearId: currentYear.id,
-          userIds: [userId],
-          scopes: academicPermissionScopeRows.scopeRows,
-          clearExisting: false,
-        }).unwrap();
-      } catch {
-        shikshaMitraToast.warning({
-          message: 'Employee finalized, but Academic Permission could not be saved.',
-        });
-        return;
-      }
+          ...(form.isTeaching
+            ? {
+                academicYearId: currentYear!.id,
+                academicScopes: academicPermissionScopeRows.scopeRows,
+              }
+            : {}),
+          familyInfo: application.familyInfo || null,
+          additionalInfo: application.additionalInfo || null,
+          workExperiences: application.workExperiences || [],
+          useSubmittedPhoto: form.useSubmittedPhoto,
+          attachResumeAsDocument: form.attachResumeAsDocument,
+        },
+      }).unwrap();
 
       shikshaMitraToast.success({ message: 'Employee finalized' });
       onClose();
-    } catch {
-      shikshaMitraToast.error({ message: 'Could not finalize onboarding' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getOnboardingErrorMessage(error, 'Could not finalize onboarding'),
+      });
+    } finally {
+      setFinalizeSaving(false);
     }
   };
 
@@ -1427,6 +1303,7 @@ function FinalizeDialog({
     <CustomDialog
       open={open}
       handleClose={onClose}
+      disableClose={finalizeSaving || isLoading}
       maxWidth="lg"
       data-testid="employee-onboarding-finalize-dialog"
       hasForm={false}
@@ -1480,9 +1357,11 @@ function FinalizeDialog({
           }}
           isStepClickable={isStepClickable}
           onStepClick={handleStepClick}
+          validateForwardStepClick
           handleNext={handleStepperNext}
           validationSchema={Yup.object({})}
-          finalButtonLabel={finalizedUserId ? 'Save Academic Permission' : 'Finalize'}
+          finalButtonLabel="Finalize"
+          saveAndNextButtonProps={{ loading: finalizeSaving || isLoading }}
           disableSubmit={!canSubmit}
           renderItem={({ activeStep: currentStep }) => (
             <Box sx={{ p: 2 }}>
@@ -1871,15 +1750,19 @@ function FinalizeDialog({
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
                       <DatePicker
                         label="Date of Birth"
-                        value={form.dob ? dayjs(form.dob) : null}
-                        onChange={(value) => {
-                          formik.setFieldValue('dob', value ? value.format('YYYY-MM-DD') : '');
-                        }}
+                        value={form.dob}
+                        onChange={(value) => formik.setFieldValue('dob', value)}
                         disableFuture
                         minDate={dayjs('1947-01-01')}
                         format="DD-MM-YYYY"
                         slotProps={{
-                          textField: { size: 'small', fullWidth: true },
+                          textField: {
+                            name: 'dob',
+                            size: 'small',
+                            fullWidth: true,
+                            error: formik.touched.dob && Boolean(formik.errors.dob),
+                            helperText: formik.touched.dob && formik.errors.dob,
+                          },
                         }}
                       />
                     </Grid>
@@ -1925,11 +1808,20 @@ function FinalizeDialog({
                           })).find((item) => String(item.id) === form.casteType) || null
                         }
                         renderInput={(params) => (
-                          <TextField {...params} label="Category *" size="small" fullWidth />
+                          <TextField
+                            {...params}
+                            name="casteType"
+                            label="Category *"
+                            size="small"
+                            fullWidth
+                            error={formik.touched.casteType && Boolean(formik.errors.casteType)}
+                            helperText={formik.touched.casteType && formik.errors.casteType}
+                          />
                         )}
-                        onChange={(_e, value) =>
-                          formik.setFieldValue('casteType', value ? String(value.id) : '')
-                        }
+                        onChange={(_e, value) => {
+                          formik.setFieldValue('casteType', value ? String(value.id) : '');
+                          formik.setFieldTouched('casteType', true, false);
+                        }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
@@ -2412,7 +2304,7 @@ function FinalizeDialog({
                           label="Role *"
                           disabled={rolesLoading}
                         >
-                          {(rolesData?.items || []).map((role: any) => (
+                          {employeeRoleOptions.map((role: any) => (
                             <MenuItem key={role.id} value={role.id}>
                               {role.name}
                             </MenuItem>
@@ -2571,7 +2463,11 @@ function FinalizeDialog({
                 <Box>
                   <SectionCard title="Academic Permission">
                     <Grid size={{ xs: 12 }}>
-                      {!currentYear?.id ? (
+                      {!form.isTeaching ? (
+                        <Alert severity="info">
+                          Academic Permission is not required for non-teaching employees.
+                        </Alert>
+                      ) : !currentYear?.id ? (
                         <Alert severity="warning">
                           Academic year is not set. Please configure an academic year first.
                         </Alert>
@@ -2587,7 +2483,7 @@ function FinalizeDialog({
                             Select the organizations this employee should have access to:
                           </Typography>
                           {academicTouched && selectedStageIds?.length === 0 && (
-                            <FormHelperText error sx={{ mb: 40, ml: 0 }}>
+                            <FormHelperText error sx={{ mb: 1, ml: 0 }}>
                               At least one organization must be selected.
                             </FormHelperText>
                           )}
@@ -2713,7 +2609,9 @@ function FinalizeDialog({
                   </Stack>
                   {!canSubmit && (
                     <Typography variant="body2" color="error">
-                      Complete required employee fields and Academic Permission before finalizing.
+                      {form.isTeaching
+                        ? 'Complete required employee fields and Academic Permission before finalizing.'
+                        : 'Complete required employee fields before finalizing.'}
                     </Typography>
                   )}
                 </Stack>
@@ -2738,6 +2636,10 @@ export default function EmployeeOnboardingScreen() {
   });
   const [inviteOpen, setInviteOpen] = useState(false);
   const [finalizeApplication, setFinalizeApplication] = useState<EmployeeApplication | undefined>();
+  const [pendingDeletion, setPendingDeletion] = useState<{
+    application: EmployeeApplication;
+    onDeleted?: () => void;
+  }>();
   const finalizeApplicationId = finalizeApplication?.id;
   const [regenerateLink, { isLoading: regenerateLoading }] =
     useRegenerateEmployeeApplicationLinkMutation();
@@ -2762,18 +2664,31 @@ export default function EmployeeOnboardingScreen() {
   );
 
   const { data, isFetching } = useGetEmployeeApplicationsQuery(queryArgs);
-  const { data: detailData } = useGetEmployeeApplicationQuery(applicationId || '', {
+  const { currentData: detailData } = useGetEmployeeApplicationQuery(applicationId || '', {
     skip: !applicationId,
   });
-  const { data: finalizeDetailData } = useGetEmployeeApplicationQuery(finalizeApplicationId || '', {
-    skip: !finalizeApplicationId,
-  });
+  const { currentData: finalizeDetailData } = useGetEmployeeApplicationQuery(
+    finalizeApplicationId || '',
+    {
+      skip: !finalizeApplicationId,
+    }
+  );
 
   const applications = data?.items || [];
   const totalCount = data?.totalCount || 0;
-  const selectedApplication = applicationId
-    ? detailData || applications.find((item) => item.id === applicationId)
-    : undefined;
+  const selectedApplication = resolveCurrentEmployeeApplication(
+    applicationId,
+    detailData,
+    applications
+  );
+  const currentFinalizeApplication = resolveCurrentEmployeeApplication(
+    finalizeApplicationId,
+    finalizeDetailData
+  );
+
+  useEffect(() => {
+    setFinalizeApplication(undefined);
+  }, [applicationId]);
 
   const handleOpenApplication = useCallback(
     (id: string) => {
@@ -2812,17 +2727,59 @@ export default function EmployeeOnboardingScreen() {
     [regenerateLink]
   );
 
-  const handleDeleteApplication = useCallback(
-    async (application: EmployeeApplication, onDeleted?: () => void) => {
-      try {
-        await deleteApplication(application.id).unwrap();
-        shikshaMitraToast.success({ message: 'Application deleted' });
-        onDeleted?.();
-      } catch {
-        shikshaMitraToast.error({ message: 'Could not delete application' });
-      }
+  const requestDeleteApplication = useCallback(
+    (application: EmployeeApplication, onDeleted?: () => void) => {
+      setPendingDeletion({ application, onDeleted });
     },
-    [deleteApplication]
+    []
+  );
+
+  const handleDeleteApplication = useCallback(async () => {
+    if (!pendingDeletion) return;
+
+    try {
+      await deleteApplication(pendingDeletion.application.id).unwrap();
+      shikshaMitraToast.success({ message: 'Application deleted' });
+      const { onDeleted } = pendingDeletion;
+      setPendingDeletion(undefined);
+      onDeleted?.();
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getOnboardingErrorMessage(error, 'Could not delete application'),
+      });
+    }
+  }, [deleteApplication, pendingDeletion]);
+
+  const deleteConfirmation = (
+    <ConfirmDialog
+      open={Boolean(pendingDeletion)}
+      onClose={() => {
+        if (!deleteLoading) setPendingDeletion(undefined);
+      }}
+      title="Delete application?"
+      content={
+        <>
+          Delete the onboarding application for{' '}
+          <strong>
+            {pendingDeletion?.application.fullName ||
+              pendingDeletion?.application.email ||
+              pendingDeletion?.application.applicationNumber}
+          </strong>
+          ? This action cannot be undone.
+        </>
+      }
+      action={
+        <LoadingButton
+          color="error"
+          variant="contained"
+          loading={deleteLoading}
+          onClick={handleDeleteApplication}
+          data-testid="employee-onboarding-confirm-delete"
+        >
+          Delete
+        </LoadingButton>
+      }
+    />
   );
 
   const columns: IColumn[] = useMemo(
@@ -2929,7 +2886,9 @@ export default function EmployeeOnboardingScreen() {
           const application = row as EmployeeApplication;
           const canFinalize = canFinalizeEmployeeApplication(application.status);
           const normalizedStatus = normalizeEmployeeApplicationStatus(application.status);
-          const canMutate = normalizedStatus !== EmployeeApplicationStatus.Finalized;
+          const canRegenerate =
+            canRegenerateEmployeeApplicationLink(normalizedStatus) && !application.submittedAt;
+          const canDelete = normalizedStatus !== EmployeeApplicationStatus.Finalized;
 
           return (
             <Box
@@ -2969,7 +2928,7 @@ export default function EmployeeOnboardingScreen() {
                       </MenuItem>
                     )}
                     <MenuItem
-                      disabled={!canMutate}
+                      disabled={!canRegenerate}
                       onClick={() => {
                         popover.onClose();
                         handleRegenerateLink(application).catch(() => undefined);
@@ -2981,10 +2940,10 @@ export default function EmployeeOnboardingScreen() {
                       <ListItemText>Regenerate link</ListItemText>
                     </MenuItem>
                     <MenuItem
-                      disabled={!canMutate}
+                      disabled={!canDelete}
                       onClick={() => {
                         popover.onClose();
-                        handleDeleteApplication(application).catch(() => undefined);
+                        requestDeleteApplication(application);
                       }}
                     >
                       <ListItemIcon>
@@ -3002,9 +2961,9 @@ export default function EmployeeOnboardingScreen() {
     ],
     [
       handleCopyInviteLink,
-      handleDeleteApplication,
       handleOpenApplication,
       handleRegenerateLink,
+      requestDeleteApplication,
       setFinalizeApplication,
     ]
   );
@@ -3027,15 +2986,16 @@ export default function EmployeeOnboardingScreen() {
           onFinalize={(application) => setFinalizeApplication(application)}
           onCopyInviteLink={handleCopyInviteLink}
           onRegenerateLink={handleRegenerateLink}
-          onDelete={handleDeleteApplication}
+          onDelete={requestDeleteApplication}
           regenerateLoading={regenerateLoading}
           deleteLoading={deleteLoading}
         />
         <FinalizeDialog
-          open={Boolean(finalizeApplication && finalizeDetailData)}
-          application={finalizeDetailData}
+          open={Boolean(currentFinalizeApplication)}
+          application={currentFinalizeApplication}
           onClose={() => setFinalizeApplication(undefined)}
         />
+        {deleteConfirmation}
       </Box>
     );
   }
@@ -3134,10 +3094,11 @@ export default function EmployeeOnboardingScreen() {
 
         <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
         <FinalizeDialog
-          open={Boolean(finalizeApplication && finalizeDetailData)}
-          application={finalizeDetailData}
+          open={Boolean(currentFinalizeApplication)}
+          application={currentFinalizeApplication}
           onClose={() => setFinalizeApplication(undefined)}
         />
+        {deleteConfirmation}
       </Stack>
     </Box>
   );

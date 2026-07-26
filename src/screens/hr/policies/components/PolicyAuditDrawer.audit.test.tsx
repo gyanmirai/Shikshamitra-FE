@@ -1,5 +1,5 @@
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { PolicyAuditDrawer } from './PolicyAuditDrawer';
 
@@ -14,8 +14,12 @@ vi.mock('./HRPolicySharedUI', () => ({
   ),
 }));
 
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-testid="iconify" data-icon={icon} />,
+}));
+
 describe('PolicyAuditDrawer audit rendering', () => {
-  it('renders changed fields and context without raw JSON or GUIDs', () => {
+  it('renders changed fields and context without raw JSON or GUIDs', async () => {
     render(
       <PolicyAuditDrawer
         ctx={
@@ -42,9 +46,8 @@ describe('PolicyAuditDrawer audit rendering', () => {
                   actorUserId: '3a216aea-8273-8586-a1a3-3bffdc298e2e',
                   changedFields: [
                     {
-                      field: 'holidaySummary',
-                      oldValue:
-                        '{"totalCount":8,"includedCount":3,"removedCount":5,"manualCount":0}',
+                      field: 'holidays',
+                      oldValue: '[]',
                       newValue:
                         '[{"id":"3a2170d2-084c-e067-2a5c-0539716dd973","holidayName":"Annual day","date":"20250601T00:00:00+00:00","source":"manual"}]',
                     },
@@ -72,7 +75,9 @@ describe('PolicyAuditDrawer audit rendering', () => {
 
     expect(scope.getAllByText('Total 8').length).toBeGreaterThan(0);
     expect(scope.getAllByText('Included 3').length).toBeGreaterThan(0);
-    expect(scope.getByText('Annual day')).toBeInTheDocument();
+    fireEvent.click(scope.getByText('Edited source Linked record for calendar policy'));
+    fireEvent.click(await scope.findByRole('button', { name: 'Show 1 holiday' }));
+    expect(await scope.findByText('Annual day')).toBeInTheDocument();
     expect(scope.getAllByText('01 Jun 2025').length).toBeGreaterThan(0);
     expect(scope.getByText('02 Jun 2025')).toBeInTheDocument();
     expect(scope.getByText('Source Policy ID')).toBeInTheDocument();
@@ -124,5 +129,115 @@ describe('PolicyAuditDrawer audit rendering', () => {
     expect(drawer?.textContent).not.toContain('"totalCount"');
     expect(drawer?.textContent).not.toContain('3a216aea-8273-8586-a1a3-3bffdc298e2e');
     expect(drawer?.textContent).not.toContain('25 May 2026, 03:49 PM');
+  });
+
+  it('does not render a fabricated last-editor line for a newly created policy', () => {
+    render(
+      <PolicyAuditDrawer
+        ctx={
+          {
+            auditTarget: {
+              title: 'New Calendar',
+              entityType: 'work_calendar_policy',
+            },
+            auditSummary: {
+              name: 'New Calendar',
+              creationTime: '2026-05-25T10:47:00Z',
+              createdByName: 'Admin',
+              lastModificationTime: null,
+              lastModifiedByName: null,
+            },
+            auditEvents: { items: [] },
+            auditLoading: false,
+            setAuditTarget: vi.fn(),
+          } as any
+        }
+      />
+    );
+
+    const drawer = screen.getByText('New Calendar').closest('.MuiDrawer-paper');
+    expect(drawer).toBeTruthy();
+    expect(drawer?.textContent).toContain('Created by Admin');
+    expect(drawer?.textContent).not.toContain('Last edited');
+    expect(drawer?.textContent).not.toContain('Unknown user on -');
+  });
+
+  it('shows only the requested target title while its audit data is loading', () => {
+    render(
+      <PolicyAuditDrawer
+        ctx={
+          {
+            auditTarget: {
+              title: 'Replacement Calendar',
+              entityType: 'work_calendar_policy',
+            },
+            auditSummary: undefined,
+            auditEvents: undefined,
+            auditLoading: true,
+            setAuditTarget: vi.fn(),
+          } as any
+        }
+      />
+    );
+
+    const drawer = screen.getByText('Replacement Calendar').closest('.MuiDrawer-paper');
+    expect(drawer).toBeTruthy();
+    expect(drawer?.textContent).not.toContain('Created by');
+    expect(drawer?.textContent).not.toContain('Last edited');
+    expect(drawer?.querySelector('.MuiLinearProgress-root')).toBeTruthy();
+  });
+
+  it('reveals every semantic change when an event contains more than eight fields', async () => {
+    render(
+      <PolicyAuditDrawer
+        ctx={
+          {
+            auditTarget: {
+              title: 'Ten Change Policy',
+              entityType: 'attendance_policy',
+            },
+            auditSummary: {
+              name: 'Ten Change Policy',
+              creationTime: '2026-05-25T10:47:00Z',
+              createdByName: 'Admin',
+            },
+            auditEvents: {
+              items: [
+                {
+                  id: 'event-ten-changes',
+                  action: 'edited',
+                  actionLabel: 'Edited',
+                  occurredAt: '2026-05-25T15:49:00Z',
+                  summary: 'Updated ten settings',
+                  actorDisplayName: 'Admin',
+                  changedFields: Array.from({ length: 10 }, (_, index) => ({
+                    field: `setting${index + 1}`,
+                    oldValue: `before-${index + 1}`,
+                    newValue: `after-${index + 1}`,
+                  })),
+                },
+              ],
+            },
+            auditLoading: false,
+            setAuditTarget: vi.fn(),
+          } as any
+        }
+      />
+    );
+
+    fireEvent.click(screen.getByText('Updated ten settings'));
+
+    expect(await screen.findByText('after-1')).toBeInTheDocument();
+    expect(screen.getByText('after-8')).toBeInTheDocument();
+    expect(screen.queryByText('after-9')).not.toBeInTheDocument();
+    expect(screen.queryByText('after-10')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show 2 more' }));
+    expect(await screen.findByText('after-9')).toBeInTheDocument();
+    expect(screen.getByText('after-10')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
+    expect(screen.queryByText('after-9')).not.toBeInTheDocument();
+    expect(screen.queryByText('after-10')).not.toBeInTheDocument();
   });
 });

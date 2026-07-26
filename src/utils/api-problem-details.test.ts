@@ -43,6 +43,14 @@ describe('parseApiProblemDetail', () => {
     expect(parsed.detail).toBe('Document type name already exists.');
   });
 
+  it('preserves actionable locally thrown Error messages', () => {
+    const parsed = parseApiProblemDetail(
+      new Error('Current academic year is required before creating an employee.')
+    );
+
+    expect(parsed.detail).toBe('Current academic year is required before creating an employee.');
+  });
+
   it('uses timetable lecture-slot message when only generic detail and error code are returned', () => {
     const parsed = parseApiProblemDetail({
       data: {

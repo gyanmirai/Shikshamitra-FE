@@ -10,23 +10,32 @@ vi.mock('react-to-print', () => ({
   useReactToPrint: () => vi.fn(),
 }));
 
-vi.mock('jspdf', () => ({
-  jsPDF: vi.fn().mockImplementation(() => ({
-    internal: {
+vi.mock('jspdf', () => {
+  class JsPdfMock {
+    internal = {
       pageSize: {
         getWidth: () => 595,
         getHeight: () => 842,
       },
-    },
-    line: vi.fn(),
-    output,
-    setDrawColor: vi.fn(),
-    setFont: vi.fn(),
-    setFontSize: vi.fn(),
-    setTextColor: vi.fn(),
-    text: vi.fn(),
-  })),
-}));
+    };
+
+    line = vi.fn();
+
+    output = output;
+
+    setDrawColor = vi.fn();
+
+    setFont = vi.fn();
+
+    setFontSize = vi.fn();
+
+    setTextColor = vi.fn();
+
+    text = vi.fn();
+  }
+
+  return { jsPDF: JsPdfMock };
+});
 
 describe('usePayslipActions', () => {
   afterEach(() => {

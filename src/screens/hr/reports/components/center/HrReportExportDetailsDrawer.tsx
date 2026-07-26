@@ -36,6 +36,7 @@ import type { HrReportPermissions } from '../../hr-report-permissions';
 type HrReportExportDetailsDrawerProps = {
   job: HrReportExportJob | null;
   isDownloading: boolean;
+  actionsDisabled?: boolean;
   currentUserId?: string | null;
   permissions: HrReportPermissions;
   onClose: () => void;
@@ -57,6 +58,7 @@ const detailRows = (job: HrReportExportJob) => [
 export function HrReportExportDetailsDrawer({
   job,
   isDownloading,
+  actionsDisabled = false,
   currentUserId,
   permissions,
   onClose,
@@ -192,8 +194,12 @@ export function HrReportExportDetailsDrawer({
                   size="small"
                   variant="contained"
                   startIcon={<Iconify icon={GlobalIcons.download} />}
-                  disabled={!isDownloadable || isDownloading}
-                  onClick={() => onDownload(job.id, getHrReportExportFileName(job))}
+                  disabled={actionsDisabled || !isDownloadable || isDownloading}
+                  onClick={() => {
+                    if (!actionsDisabled) {
+                      onDownload(job.id, getHrReportExportFileName(job));
+                    }
+                  }}
                 >
                   Download
                 </Button>
@@ -202,24 +208,49 @@ export function HrReportExportDetailsDrawer({
             {permissions.canExport &&
             isOwnedByCurrentUser &&
             (job.status === 'Queued' || job.status === 'Running') ? (
-              <Button size="small" color="error" onClick={() => onExportAction('cancel', job.id)}>
+              <Button
+                size="small"
+                color="error"
+                disabled={actionsDisabled}
+                onClick={() => {
+                  if (!actionsDisabled) onExportAction('cancel', job.id);
+                }}
+              >
                 Cancel
               </Button>
             ) : null}
             {permissions.canExport &&
             isOwnedByCurrentUser &&
             (job.status === 'Failed' || job.status === 'Cancelled') ? (
-              <Button size="small" onClick={() => onExportAction('retry', job.id)}>
+              <Button
+                size="small"
+                disabled={actionsDisabled}
+                onClick={() => {
+                  if (!actionsDisabled) onExportAction('retry', job.id);
+                }}
+              >
                 Retry
               </Button>
             ) : null}
             {permissions.canExport && job.status === 'Completed' && job.isExpired ? (
-              <Button size="small" onClick={() => onExportAction('regenerate', job.id)}>
+              <Button
+                size="small"
+                disabled={actionsDisabled}
+                onClick={() => {
+                  if (!actionsDisabled) onExportAction('regenerate', job.id);
+                }}
+              >
                 Regenerate
               </Button>
             ) : null}
             {permissions.canShare && isOwnedByCurrentUser ? (
-              <Button size="small" onClick={() => onExportAction('share', job.id)}>
+              <Button
+                size="small"
+                disabled={actionsDisabled}
+                onClick={() => {
+                  if (!actionsDisabled) onExportAction('share', job.id);
+                }}
+              >
                 Share
               </Button>
             ) : null}

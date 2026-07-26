@@ -40,7 +40,7 @@ export default function AssignmentsWorkspace({ focus }: HRPolicyWorkspaceProps) 
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Policy Assignments"
-        description={currentYear?.name || 'No academic year selected'}
+        description="Assign attendance, leave, and payroll policies to employees and groups."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Policies & Rules' },

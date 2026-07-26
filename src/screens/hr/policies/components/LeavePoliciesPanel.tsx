@@ -9,6 +9,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -17,13 +18,14 @@ import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from
 import {
   useGetLeavePoliciesQuery,
   useDeleteLeavePolicyMutation,
+  useUnarchiveLeavePolicyMutation,
   useSetDefaultLeavePolicyMutation,
 } from 'src/redux/hr/leaveApi';
 
 import { LeavePolicyForm } from './LeavePolicyForm';
 import { InfoTooltipIcon } from './HRPolicySharedUI';
-import { formatDate } from '../hr-policy-workspace-utils';
 import { LeavePolicyImpactDrawer } from './LeavePolicyImpactDrawer';
+import { formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
 import { LeaveYearEndSettlementsPanel } from './LeaveYearEndSettlementsPanel';
 import {
   getLeavePolicyTitle,
@@ -55,17 +57,34 @@ export function LeavePoliciesPanel() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [impactReview, setImpactReview] = useState<LeavePolicyImpactReview | null>(null);
   const [impactOpen, setImpactOpen] = useState(false);
+  const [archiveTarget, setArchiveTarget] = useState<ILeavePolicy | null>(null);
+  const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
 
   const {
     data: leavePolicyData,
-    isLoading,
+    isFetching: isLoading,
     refetch,
     error,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLeavePoliciesQuery,
-    params: { academicYearId: currentYear?.id, page: 1, pageSize: 500 },
-  });
+  } = useGetLeavePoliciesQuery(
+    {
+      academicYearId: currentYear?.id,
+      page: tableQuery.page,
+      pageSize: tableQuery.pageSize,
+      search: tableQuery.search || undefined,
+      archivedOnly: archiveView === 'archived',
+    },
+    { skip: !currentYear?.id }
+  );
+  const { data: archivedSummary } = useGetLeavePoliciesQuery(
+    {
+      academicYearId: currentYear?.id,
+      page: 1,
+      pageSize: 1,
+      archivedOnly: true,
+    },
+    { skip: !currentYear?.id }
+  );
 
   const [archiveLeavePolicy, archiveState] = useQueryAndMutation({
     type: 'mutation',
@@ -77,20 +96,13 @@ export function LeavePoliciesPanel() {
     currentQueryAndMutation: useSetDefaultLeavePolicyMutation,
   });
 
-  const tableData = useMemo<ILeavePolicy[]>(
-    () =>
-      (leavePolicyData?.items || []).filter(
-        (policy: ILeavePolicy) => !isLeavePolicyArchived(policy)
-      ),
-    [leavePolicyData?.items]
-  );
+  const [unarchiveLeavePolicy, unarchiveState] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUnarchiveLeavePolicyMutation,
+  });
 
-  const archivedCount = useMemo(
-    () =>
-      (leavePolicyData?.items || []).filter((policy: ILeavePolicy) => isLeavePolicyArchived(policy))
-        .length,
-    [leavePolicyData?.items]
-  );
+  const tableData = (leavePolicyData?.items || []) as ILeavePolicy[];
+  const archivedCount = archivedSummary?.totalCount || 0;
 
   const openCreateDialog = () => {
     setEditData(null);
@@ -130,9 +142,7 @@ export function LeavePoliciesPanel() {
       });
       return;
     }
-    setEditData(policy);
-    setImpactReview(buildLeavePolicyImpactReview(policy, 'archive'));
-    setImpactOpen(true);
+    setArchiveTarget(policy);
   };
 
   const confirmSetDefault = useCallback(
@@ -165,22 +175,44 @@ export function LeavePoliciesPanel() {
   };
 
   const confirmArchive = async () => {
-    if (!editData?.id) {
+    if (!archiveTarget?.id) {
       return;
     }
 
     try {
-      await archiveLeavePolicy(editData.id).unwrap();
+      await archiveLeavePolicy(archiveTarget.id).unwrap();
       shikshaMitraToast.success({
-        message: `${getLeavePolicyTitle(editData)} archived successfully`,
+        message: `${getLeavePolicyTitle(archiveTarget)} archived successfully`,
       });
-      closeImpact();
+      setArchiveTarget(null);
       refetch();
     } catch (archiveError) {
       console.error('Failed to archive leave policy:', archiveError);
       shikshaMitraToast.error({ message: 'Failed to archive leave policy' });
     }
   };
+
+  const confirmUnarchive = useCallback(
+    async (policy: ILeavePolicy) => {
+      if (!policy.id) {
+        return;
+      }
+
+      try {
+        await unarchiveLeavePolicy(policy.id).unwrap();
+        shikshaMitraToast.success({
+          message: `${getLeavePolicyTitle(policy)} restored as draft`,
+        });
+        refetch();
+      } catch (restoreError) {
+        console.error('Failed to restore leave policy:', restoreError);
+        shikshaMitraToast.error({
+          message: getErrorMessage(restoreError, 'Failed to restore leave policy'),
+        });
+      }
+    },
+    [refetch, unarchiveLeavePolicy]
+  );
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -286,23 +318,35 @@ export function LeavePoliciesPanel() {
         label: 'Status',
         minWidth: 120,
         sticky: true,
-        render: (_value, row) => (
-          <Stack spacing={0.75}>
-            <Label color="success" variant="soft">
-              Active
-            </Label>
-            {row.policyItem?.isDefault ? (
-              <Label color="primary" variant="soft">
-                Default
+        stickyPosition: 'right',
+        render: (_value, row) => {
+          const policyStatus = String(row.policyItem?.status || 'Draft');
+          const normalizedStatus = policyStatus.toLowerCase();
+          const statusColor =
+            normalizedStatus === 'active'
+              ? 'success'
+              : normalizedStatus === 'archived'
+                ? 'default'
+                : 'warning';
+
+          return (
+            <Stack spacing={0.75}>
+              <Label color={statusColor} variant="soft">
+                {policyStatus}
               </Label>
-            ) : null}
-            {row.encashmentAllowed ? (
-              <Label color="warning" variant="soft">
-                Payroll impact
-              </Label>
-            ) : null}
-          </Stack>
-        ),
+              {row.policyItem?.isDefault ? (
+                <Label color="primary" variant="soft">
+                  Default
+                </Label>
+              ) : null}
+              {row.encashmentAllowed ? (
+                <Label color="warning" variant="soft">
+                  Payroll impact
+                </Label>
+              ) : null}
+            </Stack>
+          );
+        },
       },
       {
         id: 'actions',
@@ -314,6 +358,7 @@ export function LeavePoliciesPanel() {
         stickyPosition: 'right',
         render: (_value, row) => {
           const policy = row.policyItem as ILeavePolicy;
+          const isArchived = isLeavePolicyArchived(policy);
 
           return (
             <ThreeDotsActions
@@ -322,11 +367,23 @@ export function LeavePoliciesPanel() {
                 setImpactReview(buildLeavePolicyImpactReview(policy, 'update'));
                 setImpactOpen(true);
               }}
-              showEditIcon
+              showEditIcon={!isArchived}
               handleEditClick={() => openEditDialog(policy)}
               actions={({ popover }) => (
                 <MenuList>
-                  {!policy.isDefault ? (
+                  {isArchived ? (
+                    <MenuItem
+                      disabled={unarchiveState.isLoading}
+                      onClick={() => {
+                        popover.onClose();
+                        confirmUnarchive(policy);
+                      }}
+                    >
+                      <Iconify icon="mdi:archive-arrow-up-outline" />
+                      Restore as draft
+                    </MenuItem>
+                  ) : null}
+                  {!isArchived && !policy.isDefault ? (
                     <MenuItem
                       disabled={defaultState.isLoading}
                       onClick={() => {
@@ -338,25 +395,29 @@ export function LeavePoliciesPanel() {
                       Set as default
                     </MenuItem>
                   ) : null}
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      openDuplicateDialog(policy);
-                    }}
-                  >
-                    <Iconify icon="mdi:content-copy" />
-                    Duplicate
-                  </MenuItem>
-                  <MenuItem
-                    disabled={policy.isDefault}
-                    onClick={() => {
-                      popover.onClose();
-                      previewArchive(policy);
-                    }}
-                  >
-                    <Iconify icon="mdi:archive-outline" />
-                    Archive
-                  </MenuItem>
+                  {!isArchived ? (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        openDuplicateDialog(policy);
+                      }}
+                    >
+                      <Iconify icon="mdi:content-copy" />
+                      Duplicate
+                    </MenuItem>
+                  ) : null}
+                  {!isArchived ? (
+                    <MenuItem
+                      disabled={policy.isDefault}
+                      onClick={() => {
+                        popover.onClose();
+                        previewArchive(policy);
+                      }}
+                    >
+                      <Iconify icon="mdi:archive-outline" />
+                      Archive
+                    </MenuItem>
+                  ) : null}
                 </MenuList>
               )}
             />
@@ -364,7 +425,7 @@ export function LeavePoliciesPanel() {
         },
       },
     ],
-    [confirmSetDefault, defaultState.isLoading]
+    [confirmSetDefault, confirmUnarchive, defaultState.isLoading, unarchiveState.isLoading]
   );
 
   const rows = tableData.map((policy) => ({
@@ -384,23 +445,44 @@ export function LeavePoliciesPanel() {
           <Stack spacing={0.5}>
             <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
               <Chip size="small" label="Policies & Rules" color="primary" variant="outlined" />
-              <Chip size="small" label={`${archivedCount} archived`} variant="outlined" />
+              <Button
+                size="small"
+                variant={archiveView === 'current' ? 'contained' : 'outlined'}
+                onClick={() => {
+                  setTableQuery((current) => ({ ...current, page: 1 }));
+                  setArchiveView('current');
+                }}
+              >
+                Current
+              </Button>
+              <Button
+                size="small"
+                variant={archiveView === 'archived' ? 'contained' : 'outlined'}
+                onClick={() => {
+                  setTableQuery((current) => ({ ...current, page: 1 }));
+                  setArchiveView('archived');
+                }}
+              >
+                Archived ({archivedCount})
+              </Button>
             </Stack>
             <Typography variant="body2" color="text.secondary">
               Entitlements, accrual, carry-forward, encashment, and approval rules live here. Each
               policy contains one Paid bucket and one Unpaid bucket.
             </Typography>
           </Stack>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={openCreateDialog}
-            disabled={!currentYear?.id}
-            size="small"
-            sx={{ borderRadius: 1, flexShrink: 0 }}
-          >
-            New Leave Policy
-          </Button>
+          {archiveView === 'current' ? (
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={openCreateDialog}
+              disabled={!currentYear?.id}
+              size="small"
+              sx={{ borderRadius: 1, flexShrink: 0 }}
+            >
+              New Leave Policy
+            </Button>
+          ) : null}
         </Stack>
         {error ? (
           <Alert severity="error" sx={{ mt: 1 }}>
@@ -416,10 +498,24 @@ export function LeavePoliciesPanel() {
         columns={columns}
         data={rows}
         isLoading={isLoading}
-        isSearch={false}
-        isFilter
+        isSearch
+        serverSidePagination
+        serverSideSearch
+        totalCount={leavePolicyData?.totalCount || 0}
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        searchTerm={tableQuery.search}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
+        isFilter={false}
         isPagination
-        noDataText="No active leave policies. Create one from Policies & Rules."
+        noDataText={
+          archiveView === 'archived'
+            ? 'No archived leave policies.'
+            : 'No current leave policies. Create one from Policies & Rules.'
+        }
       />
 
       <CustomDialog
@@ -453,7 +549,24 @@ export function LeavePoliciesPanel() {
         review={impactReview}
         loading={archiveState.isLoading}
         onClose={closeImpact}
-        onConfirm={confirmArchive}
+      />
+      <ConfirmDialog
+        open={Boolean(archiveTarget)}
+        onClose={() => setArchiveTarget(null)}
+        title="Archive leave policy?"
+        icon="warning"
+        content={`Archive "${archiveTarget ? getLeavePolicyTitle(archiveTarget) : 'this leave policy'}"? Historical requests keep their policy and reporting context.`}
+        action={
+          <Button
+            color="warning"
+            variant="contained"
+            size="small"
+            loading={archiveState.isLoading}
+            onClick={confirmArchive}
+          >
+            Archive Policy
+          </Button>
+        }
       />
     </Stack>
   );

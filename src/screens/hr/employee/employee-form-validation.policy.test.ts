@@ -5,6 +5,7 @@ import {
   payrollValidationSchema,
   workExperienceValidationSchema,
   reportingManagerValidationSchema,
+  additionalDetailsValidationSchema,
   personalInformationValidationSchema,
   getPersonalInformationValidationSchema,
 } from './employee-form-validation';
@@ -127,6 +128,14 @@ describe('employee form contract validation', () => {
     ).resolves.toBeTruthy();
   });
 
+  it('shows the BPL card number length failure as a field validation error', async () => {
+    await expect(
+      additionalDetailsValidationSchema.validateAt('bplCardNo', {
+        bplCardNo: '1'.repeat(51),
+      })
+    ).rejects.toThrow('BPL Card No cannot exceed 50 characters');
+  });
+
   it('requires and validates PAN and Aadhaar numbers', async () => {
     await expect(
       personalInformationValidationSchema.validateAt('panNo', {
@@ -173,7 +182,7 @@ describe('employee form contract validation', () => {
       'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)'
     );
     await expect(editSchema.validateAt('adharNo', { adharNo: '123' })).rejects.toThrow(
-      'Aadhaar number must be 12 digits'
+      'Aadhaar number must be exactly 12 digits and cannot start with 0 or 1'
     );
   });
 
