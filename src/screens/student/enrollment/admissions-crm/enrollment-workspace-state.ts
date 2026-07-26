@@ -59,6 +59,7 @@ export type EnrollmentSettingsPanel =
   | 'routes'
   | 'policy-packs'
   | 'compliance'
+  | 'configuration-safety'
   | 'templates'
   | 'providers';
 
@@ -175,6 +176,7 @@ const settingsPanels = new Set<EnrollmentSettingsPanel>([
   'routes',
   'policy-packs',
   'compliance',
+  'configuration-safety',
   'templates',
   'providers',
 ]);

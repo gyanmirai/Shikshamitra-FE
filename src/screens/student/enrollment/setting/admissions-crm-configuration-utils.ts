@@ -11,6 +11,14 @@ export const buildPublicAdmissionInquiryPath = (
   )}`;
 };
 
+export const attachAdmissionCrmImpactFingerprint = <T extends object>(
+  body: T,
+  fingerprint: string
+): T & { impactPreviewFingerprint: string } => ({
+  ...body,
+  impactPreviewFingerprint: fingerprint,
+});
+
 export const buildPublicAdmissionInquiryUrl = ({
   origin,
   tenantId,

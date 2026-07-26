@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-07-23
+updated_on: 2026-07-25
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -31,7 +31,7 @@ Use these commands as the first validation set.
 | Risk area                                      | Command                                                                                                            |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Student route and permission gates             | `npm run test -- src/constants/student-menu.permissions.test.ts`                                                   |
-| Admissions CRM client, dynamic form templates, applicant-side conditional visibility, workspace utilities, inquiry channel defaults, condition-aware journey settings, document guidance, expiry windows, rejection shortcuts, fee-policy preview calculations, applicant checklist progress, public campaign and staff-shared owner tracking, and public status OTP | `npm run test -- src/screens/public/admissions-crm src/redux/student/admissions-crm src/screens/student/enrollment/admissions-crm src/screens/student/enrollment/setting` |
+| Admissions CRM client, multilingual registration, inquiry-form duplication and preview, QR download, result import, granular action permissions, configuration safety, workspace utilities, and public status | `npm run test -- src/screens/public/admissions-crm src/redux/student/admissions-crm src/screens/student/enrollment/admissions-crm src/screens/student/enrollment/setting` |
 | Production API contracts and mock guardrails   | `npm run test -- src/redux/student/student-api.production.test.ts src/screens/student/no-production-mocks.test.ts` |
 | Enrollment settings                            | `npm run test -- src/screens/student/enrollment/setting`                                                           |
 | Student management tabs and roll projections   | `npm run test -- src/screens/student/management`                                                                   |
@@ -75,6 +75,11 @@ Add or update tests when a change affects these areas.
 | Client endpoint shape                        | Student API contract test                        |
 | Admissions CRM board, filters, bulk actions, bulk messaging, opt-out controls, opt-out register, dynamic form template contracts, inquiry channel defaults, condition-aware journey settings, pipeline stage metadata settings, configured board stage colors, configured stage-transition enforcement, stage-specific SLA automation, applicant DOB capture, applicant-profile duplicate-preview payloads, duplicate confidence and matched-field evidence, conversion and first-response SLA analytics KPIs, registration-form issue, delivery-log provider ID review and search, message template preview, stage movement, notes, owner, priority, applicant checklist progress, task, score, automation runs, automation failures, exam states, eligibility handoff missing-field review, browser-driven exam entry, protected role denial, public campaign and staff-shared owner tracking, and public status OTP states | Admissions CRM utility, settings, client contract, public status tests, and gated Playwright CRM flow |
 | Inquiry Source, CRM owner selectors, CRM public link behavior, and structured CRM provider settings helpers | Enrollment setting utility or wiring test, including CRM channel default source selectors, owner selectors, unknown historical ID preservation, public inquiry, campaign, or staff-shared link builders, provider callback URL builders, provider response message ID path updates, callback secret, and callback mapping path updates |
+| Registration-template localization and public fallback | `src/screens/student/enrollment/setting/admissions-registration-configuration-utils.test.ts`, `src/screens/public/admissions-crm/registration-localization.test.ts`, and public registration component tests |
+| Inquiry-form duplication, language and device preview, and QR generation | `src/screens/student/enrollment/setting/inquiry-form-template-utils.test.ts`, `src/screens/student/enrollment/setting/inquiry-form-template-preview.test.tsx`, and `src/screens/student/enrollment/setting/inquiry-form-qr.test.ts` |
+| Inline, bulk, CSV, Excel, or OMR-export result entry and correction UI | `src/screens/student/enrollment/admissions-crm/exam-result-import.test.ts` plus the Admissions CRM client contract and browser exam flow |
+| Granular action visibility | `src/screens/student/enrollment/admissions-crm/admission-action-permissions.test.ts` plus restricted-role browser coverage |
+| Configuration references, impact preview, and preview-confirm clone wiring | `src/redux/student/admissions-crm/admissions-crm-api.contract.test.ts` and Enrollment settings tests |
 | Roll number or GR number behavior            | Management projection test                       |
 | Attendance save or lock behavior             | Attendance screen or query test                  |
 | Role visibility                              | Playwright role access test                      |

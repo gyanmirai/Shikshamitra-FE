@@ -10,6 +10,7 @@ import {
   parseAdmissionCrmProviderSettings,
   updateAdmissionCrmProviderAdapter,
   getAdmissionCrmProviderPayloadMode,
+  attachAdmissionCrmImpactFingerprint,
   updateAdmissionCrmProviderPayloadMode,
   getAdmissionCrmProviderCallbackSecret,
   getAdmissionCrmProviderKeyValueSettings,
@@ -24,6 +25,19 @@ import {
 } from './admissions-crm-configuration-utils';
 
 describe('Admissions CRM configuration helpers', () => {
+  it('binds a reviewed impact fingerprint to the exact mutation payload', () => {
+    expect(
+      attachAdmissionCrmImpactFingerprint(
+        { cycleName: '2027 admissions', entranceExamRequired: true },
+        'FINGERPRINT'
+      )
+    ).toEqual({
+      cycleName: '2027 admissions',
+      entranceExamRequired: true,
+      impactPreviewFingerprint: 'FINGERPRINT',
+    });
+  });
+
   it('builds public inquiry paths from tenant and template IDs', () => {
     expect(buildPublicAdmissionInquiryPath('tenant-1', 'template-1')).toBe(
       '/student/admissions/inquiry/tenant-1/template-1'

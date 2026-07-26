@@ -1,6 +1,7 @@
 'use client';
 
 import AdmissionsRouteConfiguration from './admissions-route-configuration';
+import AdmissionsConfigurationSafety from './admissions-configuration-safety';
 import AdmissionsGovernanceConfiguration from './admissions-governance-configuration';
 import AdmissionsPolicyPackConfiguration from './admissions-policy-pack-configuration';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
@@ -8,7 +9,9 @@ import { EnrollmentSettingsPage, EnrollmentSettingsPanelTabs } from './enrollmen
 
 export function GovernanceSettingsRoute() {
   const { state } = useEnrollmentWorkspace();
-  const panel = ['policy-packs', 'compliance'].includes(state.settingsPanel || '')
+  const panel = ['policy-packs', 'compliance', 'configuration-safety'].includes(
+    state.settingsPanel || ''
+  )
     ? state.settingsPanel
     : 'routes';
 
@@ -19,16 +22,18 @@ export function GovernanceSettingsRoute() {
     >
       <EnrollmentSettingsPanelTabs
         label="Enrollment governance settings"
-        value={panel as 'routes' | 'policy-packs' | 'compliance'}
+        value={panel as 'routes' | 'policy-packs' | 'compliance' | 'configuration-safety'}
         options={[
           { value: 'routes', label: 'Admission Routes' },
           { value: 'policy-packs', label: 'Policy Packs' },
           { value: 'compliance', label: 'Compliance & Privacy' },
+          { value: 'configuration-safety', label: 'Configuration Safety' },
         ]}
       />
       {panel === 'routes' ? <AdmissionsRouteConfiguration /> : null}
       {panel === 'policy-packs' ? <AdmissionsPolicyPackConfiguration /> : null}
       {panel === 'compliance' ? <AdmissionsGovernanceConfiguration /> : null}
+      {panel === 'configuration-safety' ? <AdmissionsConfigurationSafety /> : null}
     </EnrollmentSettingsPage>
   );
 }

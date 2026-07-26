@@ -10,7 +10,6 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -31,6 +30,7 @@ import {
   MenuList,
   TextField,
   Typography,
+  IconButton,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -55,6 +55,11 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import { resolveAdmissionCrmExamActionPermissions } from './admission-action-permissions';
+import {
+  readExamResultImportFile,
+  downloadExamResultTemplate,
+} from './exam-result-import';
 import {
   createApplicantRowNavigationProps,
   createApplicantLinkNavigationProps,
@@ -68,6 +73,7 @@ import {
   EnrollmentWorkspaceErrorState,
 } from './workspace-table-patterns';
 
+import type { ExamResultImportPreview } from './exam-result-import';
 import type { ApplicantWorkspaceTab } from './applicant-workspace-page';
 
 const pageSize = 50;
@@ -228,6 +234,131 @@ const ExamRowActions = memo(
   }
 );
 
+type InlineExamMarksProps = {
+  exam: AdmissionCrmEntranceExamDto;
+  canChange: boolean;
+  canCorrect: boolean;
+  onOpenCorrection: (exam: AdmissionCrmEntranceExamDto) => void;
+};
+
+const InlineExamMarks = memo(
+  ({ exam, canChange, canCorrect, onOpenCorrection }: InlineExamMarksProps) => {
+    const [value, setValue] = useState('');
+    const [uploadResult, uploadState] = useUploadAdmissionCrmExamResultMutation();
+    const totalMarks = exam.totalMarks || 100;
+    const passingMarks = exam.passingMarks ?? Math.min(40, totalMarks);
+    const parsedValue = Number(value);
+    const canSave =
+      canChange &&
+      exam.attendanceStatus === AdmissionCrmExamAttendanceStatus.Present &&
+      value.trim() !== '' &&
+      Number.isFinite(parsedValue) &&
+      parsedValue >= 0 &&
+      parsedValue <= totalMarks;
+
+    if (exam.obtainedMarks != null) {
+      return canCorrect ? (
+        <Button
+          size="small"
+          variant="text"
+          aria-label={`Edit marks for ${exam.applicantName}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenCorrection(exam);
+          }}
+          sx={{ minWidth: 0, px: 0.5, fontVariantNumeric: 'tabular-nums' }}
+        >
+          {exam.obtainedMarks}/{totalMarks}
+        </Button>
+      ) : (
+        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+          {exam.obtainedMarks}/{totalMarks}
+        </Typography>
+      );
+    }
+
+    return (
+      <Stack
+        direction="row"
+        gap={0.25}
+        alignItems="center"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <TextField
+          size="small"
+          type="number"
+          name={`marks-${exam.id}`}
+          value={value}
+          disabled={
+            !canChange ||
+            exam.attendanceStatus !== AdmissionCrmExamAttendanceStatus.Present ||
+            uploadState.isLoading
+          }
+          placeholder="0"
+          inputProps={{
+            'aria-label': `Marks for ${exam.applicantName}`,
+            min: 0,
+            max: totalMarks,
+          }}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && canSave) {
+              event.preventDefault();
+              event.currentTarget.blur();
+              uploadResult({
+                examRecordId: exam.id,
+                body: {
+                  totalMarks,
+                  passingMarks,
+                  obtainedMarks: parsedValue,
+                },
+              })
+                .unwrap()
+                .then(() => {
+                  setValue('');
+                  shikshaMitraToast.success({ message: 'Exam result recorded.' });
+                })
+                .catch(() =>
+                  shikshaMitraToast.error({
+                    message: 'Marks could not be saved. Review the value and retry.',
+                  })
+                );
+            }
+          }}
+          sx={{ width: 72 }}
+        />
+        <IconButton
+          size="small"
+          aria-label={`Save marks for ${exam.applicantName}`}
+          disabled={!canSave || uploadState.isLoading}
+          onClick={() => {
+            uploadResult({
+              examRecordId: exam.id,
+              body: {
+                totalMarks,
+                passingMarks,
+                obtainedMarks: parsedValue,
+              },
+            })
+              .unwrap()
+              .then(() => {
+                setValue('');
+                shikshaMitraToast.success({ message: 'Exam result recorded.' });
+              })
+              .catch(() =>
+                shikshaMitraToast.error({
+                  message: 'Marks could not be saved. Review the value and retry.',
+                })
+              );
+          }}
+        >
+          <Iconify icon="mdi:check" width={18} />
+        </IconButton>
+      </Stack>
+    );
+  }
+);
+
 export function ExamsWorkspace() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const {
@@ -250,12 +381,20 @@ export function ExamsWorkspace() {
   const [selectedExamIds, setSelectedExamIds] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
   const [bulkMarksOpen, setBulkMarksOpen] = useState(false);
+  const [resultImportOpen, setResultImportOpen] = useState(false);
+  const [resultImportMode, setResultImportMode] = useState<'spreadsheet' | 'omr'>('spreadsheet');
+  const [resultImportFileName, setResultImportFileName] = useState('');
+  const [resultImportPreview, setResultImportPreview] =
+    useState<ExamResultImportPreview | null>(null);
+  const [isReadingResultFile, setIsReadingResultFile] = useState(false);
+  const [bulkCorrectionReason, setBulkCorrectionReason] = useState('');
   const [handoffExamId, setHandoffExamId] = useState('');
   const [attendance, setAttendance] = useState(AdmissionCrmExamAttendanceStatus.NotMarked);
   const [totalMarks, setTotalMarks] = useState('100');
   const [passingMarks, setPassingMarks] = useState('40');
   const [obtainedMarks, setObtainedMarks] = useState('');
   const [meritRank, setMeritRank] = useState('');
+  const [resultCorrectionReason, setResultCorrectionReason] = useState('');
   const [eligibility, setEligibility] = useState(AdmissionCrmEligibilityDecision.Pending);
   const [decisionReason, setDecisionReason] = useState('');
   const [overrideDecision, setOverrideDecision] = useState(false);
@@ -296,6 +435,14 @@ export function ExamsWorkspace() {
     { skip: !academicYearId }
   );
   const entranceExamRequired = operationalOptionsQuery.data?.entranceExamRequired !== false;
+  const {
+    canChangeExamResult,
+    canOverrideExamResult,
+    canOverrideEligibility,
+    canBulkChangeExamResult,
+    canBulkChangeExamAttendance,
+    canCorrectExamResult,
+  } = resolveAdmissionCrmExamActionPermissions(permissions);
 
   useEffect(() => {
     if (!selectedExam) return;
@@ -304,6 +451,7 @@ export function ExamsWorkspace() {
     setPassingMarks(selectedExam.passingMarks?.toString() || '40');
     setObtainedMarks(selectedExam.obtainedMarks?.toString() || '');
     setMeritRank(selectedExam.meritRank?.toString() || '');
+    setResultCorrectionReason('');
     setEligibility(selectedExam.eligibilityDecision);
     setDecisionReason(selectedExam.eligibilityDecisionReason || '');
     setOverrideDecision(false);
@@ -377,6 +525,7 @@ export function ExamsWorkspace() {
   );
 
   const openBulkMarksDialog = () => {
+    setBulkCorrectionReason('');
     setBulkMarksByExamId(
       selectedExams.reduce<Record<string, BulkExamResultForm>>((acc, exam) => {
         acc[exam.id] = {
@@ -389,6 +538,36 @@ export function ExamsWorkspace() {
       }, {})
     );
     setBulkMarksOpen(true);
+  };
+
+  const selectedHasExistingResults = selectedExams.some(
+    (exam) => exam.obtainedMarks != null
+  );
+
+  const openResultImport = (mode: 'spreadsheet' | 'omr') => {
+    setResultImportMode(mode);
+    setResultImportFileName('');
+    setResultImportPreview(null);
+    setBulkCorrectionReason('');
+    setResultImportOpen(true);
+  };
+
+  const handleResultImportFile = async (file?: File) => {
+    if (!file) return;
+    setResultImportFileName(file.name);
+    setIsReadingResultFile(true);
+    try {
+      setResultImportPreview(
+        await readExamResultImportFile(file, new Set(selectedExams.map((exam) => exam.id)))
+      );
+    } catch {
+      setResultImportPreview({
+        items: [],
+        errors: ['The result file could not be read. Check its format and retry.'],
+      });
+    } finally {
+      setIsReadingResultFile(false);
+    }
   };
 
   const updateBulkExamResult = (examId: string, field: keyof BulkExamResultForm, value: string) => {
@@ -412,7 +591,9 @@ export function ExamsWorkspace() {
   const bulkMarksReady =
     selectedExams.length > 0 &&
     selectedExams.length === selectedExamIds.length &&
-    selectedExams.every((exam) => isValidBulkExamResultForm(bulkMarksByExamId[exam.id]));
+    selectedExams.every((exam) => isValidBulkExamResultForm(bulkMarksByExamId[exam.id])) &&
+    (!selectedHasExistingResults ||
+      (canOverrideExamResult && Boolean(bulkCorrectionReason.trim())));
 
   const markSelectedAttendance = async (value: AdmissionCrmExamAttendanceStatus) => {
     if (!academicYearId || selectedExamIds.length === 0) return;
@@ -459,6 +640,8 @@ export function ExamsWorkspace() {
             passingMarks: Number(form.passingMarks),
             obtainedMarks: Number(form.obtainedMarks),
             meritRank: bulkMeritRank,
+            correctionReason:
+              exam.obtainedMarks != null ? bulkCorrectionReason.trim() || undefined : undefined,
           };
         }),
       }).unwrap();
@@ -479,6 +662,51 @@ export function ExamsWorkspace() {
       });
     } catch {
       shikshaMitraToast.error({ message: 'The selected exam results could not be recorded.' });
+    }
+  };
+
+  const uploadImportedResults = async () => {
+    if (
+      !academicYearId ||
+      !resultImportPreview ||
+      resultImportPreview.items.length === 0 ||
+      resultImportPreview.errors.length > 0 ||
+      (selectedHasExistingResults &&
+        (!canOverrideExamResult || !bulkCorrectionReason.trim()))
+    ) {
+      return;
+    }
+    try {
+      const result = await bulkUploadResults({
+        academicYearId,
+        items: resultImportPreview.items.map((item) => ({
+          ...item,
+          correctionReason: selectedExams.some(
+            (exam) => exam.id === item.examRecordId && exam.obtainedMarks != null
+          )
+            ? bulkCorrectionReason.trim() || undefined
+            : undefined,
+        })),
+      }).unwrap();
+      if (result.failedCount > 0) {
+        setSelectedExamIds(
+          result.items.filter((item) => !item.success).map((item) => item.entityId)
+        );
+        shikshaMitraToast.error({
+          message: `${result.succeededCount} imported; ${result.failedCount} failed and remain selected.`,
+        });
+        return;
+      }
+      setResultImportOpen(false);
+      setResultImportPreview(null);
+      setSelectedExamIds([]);
+      shikshaMitraToast.success({
+        message: `${result.succeededCount} ${resultImportMode === 'omr' ? 'OMR ' : ''}result${result.succeededCount === 1 ? '' : 's'} imported.`,
+      });
+    } catch {
+      shikshaMitraToast.error({
+        message: 'The result file could not be applied. Review the preview and retry.',
+      });
     }
   };
 
@@ -624,12 +852,19 @@ export function ExamsWorkspace() {
       {
         id: 'obtainedMarks',
         label: 'Marks',
-        width: 80,
-        minWidth: 75,
+        width: 128,
+        minWidth: 120,
         isFilter: false,
-        render: (value, row) => {
+        render: (_value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
-          return value != null && exam.totalMarks != null ? `${value}/${exam.totalMarks}` : '-';
+          return (
+            <InlineExamMarks
+              exam={exam}
+              canChange={canChangeExamResult}
+              canCorrect={canCorrectExamResult}
+              onOpenCorrection={setSelectedExam}
+            />
+          );
         },
       },
       {
@@ -675,7 +910,15 @@ export function ExamsWorkspace() {
         },
       },
     ],
-    [exams, getApplicantHref, openApplicant, selectedExamIds.length, selectedExamSet]
+    [
+      canChangeExamResult,
+      canCorrectExamResult,
+      exams,
+      getApplicantHref,
+      openApplicant,
+      selectedExamIds.length,
+      selectedExamSet,
+    ]
   );
 
   if (!academicYearId) {
@@ -708,10 +951,7 @@ export function ExamsWorkspace() {
         <Paper variant="outlined" role="region" aria-label="Bulk exam actions" sx={{ p: 1 }}>
           <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
             <Chip color="primary" label={`${selectedExamIds.length} selected`} />
-            {hasGrantedPermission(
-              permissions,
-              'Students.Enrollment.AdmissionsCrm.BulkOperations'
-            ) ? (
+            {canBulkChangeExamAttendance ? (
               <>
                 <LoadingButton
                   size="small"
@@ -728,13 +968,17 @@ export function ExamsWorkspace() {
                 >
                   Mark absent
                 </LoadingButton>
+              </>
+            ) : null}
+            {canBulkChangeExamResult ? (
+              <>
                 <Button size="small" onClick={openBulkMarksDialog}>
                   Give Marks
                 </Button>
-                <Button size="small" disabled>
+                <Button size="small" onClick={() => openResultImport('spreadsheet')}>
                   Upload Results
                 </Button>
-                <Button size="small" disabled>
+                <Button size="small" onClick={() => openResultImport('omr')}>
                   OMR Import
                 </Button>
               </>
@@ -829,6 +1073,22 @@ export function ExamsWorkspace() {
               Enter individual marks for each selected applicant. Total and passing marks can stay
               shared unless a specific exam needs a different value.
             </Alert>
+            {selectedHasExistingResults && !canOverrideExamResult ? (
+              <Alert severity="error">
+                Your role cannot replace recorded results. Remove those exams from the selection or
+                ask an administrator for the exam-result override permission.
+              </Alert>
+            ) : selectedHasExistingResults ? (
+              <TextField
+                required
+                label="Correction Reason"
+                value={bulkCorrectionReason}
+                onChange={(event) => setBulkCorrectionReason(event.target.value)}
+                helperText="Required because at least 1 selected exam already has a recorded result."
+                multiline
+                minRows={2}
+              />
+            ) : null}
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 fullWidth
@@ -953,6 +1213,110 @@ export function ExamsWorkspace() {
       </Dialog>
 
       <Dialog
+        open={resultImportOpen}
+        onClose={() => setResultImportOpen(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>
+          {resultImportMode === 'omr' ? 'Import OMR Results' : 'Upload Exam Results'}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1.5}>
+            <Alert severity="info">
+              {resultImportMode === 'omr'
+                ? 'Upload the CSV or Excel result file exported by your OMR scanner. ShikshaMitra validates every selected applicant before saving.'
+                : 'Download the selected-exam template, enter individual marks, then upload the completed CSV or Excel file.'}
+            </Alert>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <Button
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:file-download-outline" />}
+                onClick={() => downloadExamResultTemplate(selectedExams)}
+              >
+                Download Template
+              </Button>
+              <Button
+                component="label"
+                variant="contained"
+                startIcon={<Iconify icon="mdi:file-upload-outline" />}
+                disabled={isReadingResultFile}
+              >
+                {isReadingResultFile ? 'Reading File…' : 'Choose Result File'}
+                <input
+                  hidden
+                  type="file"
+                  name="exam-result-file"
+                  accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  onChange={(event) => handleResultImportFile(event.target.files?.[0])}
+                />
+              </Button>
+            </Stack>
+            {resultImportFileName ? (
+              <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                Selected: {resultImportFileName}
+              </Typography>
+            ) : null}
+            {isReadingResultFile ? (
+              <LinearProgress aria-label="Reading exam result file" />
+            ) : null}
+            {resultImportPreview?.errors.length ? (
+              <Alert severity="error">
+                <Typography variant="subtitle2">Fix these rows before importing:</Typography>
+                <Box component="ul" sx={{ my: 0.5, pl: 2.5 }}>
+                  {resultImportPreview.errors.slice(0, 10).map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </Box>
+                {resultImportPreview.errors.length > 10
+                  ? `${resultImportPreview.errors.length - 10} more errors are not shown.`
+                  : null}
+              </Alert>
+            ) : null}
+            {resultImportPreview && resultImportPreview.errors.length === 0 ? (
+              <Alert severity="success">
+                {resultImportPreview.items.length} result
+                {resultImportPreview.items.length === 1 ? '' : 's'} validated and ready to import.
+              </Alert>
+            ) : null}
+            {selectedHasExistingResults && !canOverrideExamResult ? (
+              <Alert severity="error">
+                Your role cannot replace recorded results. Import a selection without existing
+                results or ask an administrator for the exam-result override permission.
+              </Alert>
+            ) : selectedHasExistingResults ? (
+              <TextField
+                required
+                label="Correction Reason"
+                value={bulkCorrectionReason}
+                onChange={(event) => setBulkCorrectionReason(event.target.value)}
+                helperText="Required because the selected set contains an existing result."
+                multiline
+                minRows={2}
+              />
+            ) : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResultImportOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={bulkResultsState.isLoading}
+            disabled={
+              !resultImportPreview ||
+              resultImportPreview.items.length === 0 ||
+              resultImportPreview.errors.length > 0 ||
+              (selectedHasExistingResults &&
+                (!canOverrideExamResult || !bulkCorrectionReason.trim()))
+            }
+            onClick={uploadImportedResults}
+          >
+            Import Results
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
         open={Boolean(selectedExam)}
         onClose={() => setSelectedExam(null)}
         fullWidth
@@ -977,17 +1341,32 @@ export function ExamsWorkspace() {
                   fullWidth
                   label="Attendance status"
                   value={attendance}
+                  disabled={!canChangeExamResult}
                   onChange={(event) => setAttendance(Number(event.target.value))}
                 >
-                  {Object.entries(attendanceLabels).map(([value, label]) => (
-                    <MenuItem key={value} value={Number(value)}>
-                      {label}
+                  {attendance === AdmissionCrmExamAttendanceStatus.NotMarked ? (
+                    <MenuItem value={AdmissionCrmExamAttendanceStatus.NotMarked} disabled>
+                      Not marked
                     </MenuItem>
-                  ))}
+                  ) : null}
+                  {Object.entries(attendanceLabels)
+                    .filter(
+                      ([value]) =>
+                        Number(value) !== AdmissionCrmExamAttendanceStatus.NotMarked
+                    )
+                    .map(([value, label]) => (
+                      <MenuItem key={value} value={Number(value)}>
+                        {label}
+                      </MenuItem>
+                    ))}
                 </TextField>
                 <LoadingButton
                   variant="outlined"
                   loading={markAttendanceState.isLoading}
+                  disabled={
+                    !canChangeExamResult ||
+                    attendance === AdmissionCrmExamAttendanceStatus.NotMarked
+                  }
                   onClick={() =>
                     selectedExam &&
                     run(
@@ -1014,51 +1393,95 @@ export function ExamsWorkspace() {
                   label="Total marks"
                   type="number"
                   value={totalMarks}
+                  disabled={
+                    !canChangeExamResult ||
+                    (selectedExam?.obtainedMarks != null && !canOverrideExamResult)
+                  }
                   onChange={(event) => setTotalMarks(event.target.value)}
                 />
                 <TextField
                   label="Passing marks"
                   type="number"
                   value={passingMarks}
+                  disabled={
+                    !canChangeExamResult ||
+                    (selectedExam?.obtainedMarks != null && !canOverrideExamResult)
+                  }
                   onChange={(event) => setPassingMarks(event.target.value)}
                 />
                 <TextField
                   label="Obtained marks"
                   type="number"
                   value={obtainedMarks}
+                  disabled={
+                    !canChangeExamResult ||
+                    (selectedExam?.obtainedMarks != null && !canOverrideExamResult)
+                  }
                   onChange={(event) => setObtainedMarks(event.target.value)}
                 />
                 <TextField
                   label="Merit rank"
                   type="number"
                   value={meritRank}
+                  disabled={
+                    !canChangeExamResult ||
+                    (selectedExam?.obtainedMarks != null && !canOverrideExamResult)
+                  }
                   onChange={(event) => setMeritRank(event.target.value)}
                 />
               </Stack>
-              <LoadingButton
-                variant="outlined"
-                loading={uploadResultState.isLoading}
-                disabled={!totalMarks || !passingMarks || !obtainedMarks}
-                onClick={() =>
-                  selectedExam &&
-                  run(
-                    () =>
-                      uploadResult({
-                        examRecordId: selectedExam.id,
-                        body: {
-                          totalMarks: Number(totalMarks),
-                          passingMarks: Number(passingMarks),
-                          obtainedMarks: Number(obtainedMarks),
-                          meritRank: meritRank ? Number(meritRank) : undefined,
-                        },
-                      }).unwrap(),
-                    'Exam result recorded.'
-                  )
-                }
-                sx={{ mt: 1.25 }}
-              >
-                Save Result
-              </LoadingButton>
+              {selectedExam?.obtainedMarks != null && !canOverrideExamResult ? (
+                <Alert severity="error" sx={{ mt: 1.25 }}>
+                  Your role can record new results but cannot replace an existing result.
+                </Alert>
+              ) : selectedExam?.obtainedMarks != null ? (
+                <TextField
+                  required
+                  fullWidth
+                  label="Correction Reason"
+                  value={resultCorrectionReason}
+                  onChange={(event) => setResultCorrectionReason(event.target.value)}
+                  helperText="Required when replacing a previously recorded result."
+                  multiline
+                  minRows={2}
+                  sx={{ mt: 1.25 }}
+                />
+              ) : null}
+              {canChangeExamResult &&
+              (selectedExam?.obtainedMarks == null || canOverrideExamResult) ? (
+                <LoadingButton
+                  variant="outlined"
+                  loading={uploadResultState.isLoading}
+                  disabled={
+                    !totalMarks ||
+                    !passingMarks ||
+                    !obtainedMarks ||
+                    (selectedExam?.obtainedMarks != null && !resultCorrectionReason.trim())
+                  }
+                  onClick={() =>
+                    selectedExam &&
+                    run(
+                      () =>
+                        uploadResult({
+                          examRecordId: selectedExam.id,
+                          body: {
+                            totalMarks: Number(totalMarks),
+                            passingMarks: Number(passingMarks),
+                            obtainedMarks: Number(obtainedMarks),
+                            meritRank: meritRank ? Number(meritRank) : undefined,
+                            correctionReason: resultCorrectionReason.trim() || undefined,
+                          },
+                        }).unwrap(),
+                      selectedExam.obtainedMarks == null
+                        ? 'Exam result recorded.'
+                        : 'Exam result correction recorded.'
+                    )
+                  }
+                  sx={{ mt: 1.25 }}
+                >
+                  Save Result
+                </LoadingButton>
+              ) : null}
             </Box>
             <Divider />
             <Box>
@@ -1070,18 +1493,30 @@ export function ExamsWorkspace() {
                   select
                   label="Decision"
                   value={eligibility}
+                  disabled={!canChangeExamResult}
                   onChange={(event) => setEligibility(Number(event.target.value))}
                 >
-                  {Object.entries(admissionCrmEligibilityLabels).map(([value, label]) => (
-                    <MenuItem key={value} value={Number(value)}>
-                      {label}
+                  {eligibility === AdmissionCrmEligibilityDecision.Pending ? (
+                    <MenuItem value={AdmissionCrmEligibilityDecision.Pending} disabled>
+                      Select a decision
                     </MenuItem>
-                  ))}
+                  ) : null}
+                  {Object.entries(admissionCrmEligibilityLabels)
+                    .filter(
+                      ([value]) =>
+                        Number(value) !== AdmissionCrmEligibilityDecision.Pending
+                    )
+                    .map(([value, label]) => (
+                      <MenuItem key={value} value={Number(value)}>
+                        {label}
+                      </MenuItem>
+                    ))}
                 </TextField>
                 <TextField
                   required
                   label="Decision reason"
                   value={decisionReason}
+                  disabled={!canChangeExamResult}
                   onChange={(event) => setDecisionReason(event.target.value)}
                   multiline
                   minRows={2}
@@ -1090,16 +1525,23 @@ export function ExamsWorkspace() {
                   control={
                     <Switch
                       checked={overrideDecision}
+                      disabled={!canChangeExamResult || !canOverrideEligibility}
                       onChange={(_, checked) => setOverrideDecision(checked)}
                     />
                   }
                   label="Override the calculated decision"
                 />
+                {canChangeExamResult && !canOverrideEligibility ? (
+                  <Typography variant="caption" color="text.secondary">
+                    Eligibility override permission is required to replace the calculated decision.
+                  </Typography>
+                ) : null}
                 {overrideDecision && (
                   <TextField
                     required
                     label="Override reason"
                     value={overrideReason}
+                    disabled={!canChangeExamResult || !canOverrideEligibility}
                     onChange={(event) => setOverrideReason(event.target.value)}
                     multiline
                     minRows={2}
@@ -1108,7 +1550,13 @@ export function ExamsWorkspace() {
                 <LoadingButton
                   variant="contained"
                   loading={decideEligibilityState.isLoading}
-                  disabled={!decisionReason.trim() || (overrideDecision && !overrideReason.trim())}
+                  disabled={
+                    !canChangeExamResult ||
+                    eligibility === AdmissionCrmEligibilityDecision.Pending ||
+                    !decisionReason.trim() ||
+                    (overrideDecision &&
+                      (!canOverrideEligibility || !overrideReason.trim()))
+                  }
                   onClick={() =>
                     selectedExam &&
                     run(

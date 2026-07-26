@@ -708,6 +708,7 @@ export type AdmissionCrmLeadDuplicatePreviewInput = Pick<
 >;
 
 export type AdmissionCrmCycleConfigurationDto = {
+  impactPreviewFingerprint?: string;
   id: string;
   academicYearId: string;
   cycleName: string;
@@ -732,6 +733,67 @@ export type AdmissionCrmCycleConfigurationDto = {
   journeyLockedByUserId?: string | null;
   journeyLockReason?: string | null;
   notes?: string | null;
+};
+
+export enum AdmissionCrmConfigurationReferenceKind {
+  Stage = 1,
+  Round = 2,
+  Exam = 3,
+  SeatPlan = 4,
+  Route = 5,
+}
+
+export type AdmissionCrmConfigurationReferenceFamilyDto = {
+  family: string;
+  referenceCount: number;
+  description: string;
+  sampleReferenceIds: string[];
+};
+
+export type AdmissionCrmConfigurationReferenceResultDto = {
+  academicYearId: string;
+  kind: AdmissionCrmConfigurationReferenceKind;
+  code: string;
+  totalReferenceCount: number;
+  families: AdmissionCrmConfigurationReferenceFamilyDto[];
+};
+
+export type AdmissionCrmConfigurationImpactPreviewDto = {
+  academicYearId: string;
+  affectedApplicantCount: number;
+  configurationReferenceCount: number;
+  changedFields: string[];
+  referenceFamilies: AdmissionCrmConfigurationReferenceFamilyDto[];
+  warnings: string[];
+  fingerprint: string;
+};
+
+export type AdmissionCrmConfigurationCloneFamilyDto = {
+  family: string;
+  sourceCount: number;
+  cloneableCount: number;
+  targetCount: number;
+  cloneBehavior: string;
+};
+
+export type AdmissionCrmConfigurationClonePreviewDto = {
+  sourceAcademicYearId: string;
+  targetAcademicYearId: string;
+  canConfirm: boolean;
+  targetApplicantActivityCount: number;
+  families: AdmissionCrmConfigurationCloneFamilyDto[];
+  conflicts: string[];
+  warnings: string[];
+  fingerprint: string;
+};
+
+export type AdmissionCrmConfigurationCloneResultDto = {
+  sourceAcademicYearId: string;
+  targetAcademicYearId: string;
+  alreadyApplied: boolean;
+  families: AdmissionCrmConfigurationCloneFamilyDto[];
+  warnings: string[];
+  previewFingerprint: string;
 };
 
 export type AdmissionCrmSettingsAccessMode = 0 | 1 | 2;
@@ -913,6 +975,7 @@ export type AdmissionCrmJourneyRunResultDto = {
 };
 
 export type AdmissionCrmPipelineStageDto = {
+  impactPreviewFingerprint?: string;
   id: string;
   academicYearId: string;
   systemStage: AdmissionInquiryStage;
@@ -1171,6 +1234,9 @@ export type AdmissionCrmRegistrationFieldDto = {
   minimumValue?: number | null;
   maximumValue?: number | null;
   options: string[];
+  localizedLabels?: Record<string, string>;
+  localizedHelpTexts?: Record<string, string>;
+  localizedOptions?: Record<string, string[]>;
 };
 
 export type AdmissionCrmRegistrationSectionDto = {
@@ -1180,6 +1246,8 @@ export type AdmissionCrmRegistrationSectionDto = {
   displayOrder: number;
   parentVisible: boolean;
   fields: AdmissionCrmRegistrationFieldDto[];
+  localizedTitles?: Record<string, string>;
+  localizedDescriptions?: Record<string, string>;
 };
 
 export type AdmissionCrmRegistrationTemplateUpsertDto = {
@@ -3044,6 +3112,7 @@ export const buildBulkAdmissionCrmExamResultsRequest = ({
     passingMarks: number;
     obtainedMarks: number;
     meritRank?: number;
+    correctionReason?: string;
   }>;
 }): FetchArgs => ({
   url: `/student-enrollment/admissions-crm/${academicYearId}/bulk/exam-results`,
@@ -4522,6 +4591,65 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       }),
       invalidatesTags: [studentAdmissionsCrmType.configuration, studentAdmissionsCrmType.analytics],
     }),
+    getAdmissionCrmConfigurationReferences: builder.query<
+      AdmissionCrmConfigurationReferenceResultDto,
+      {
+        academicYearId: string;
+        kind: AdmissionCrmConfigurationReferenceKind;
+        code: string;
+      }
+    >({
+      query: ({ academicYearId, kind, code }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/configuration-safety/references`,
+        method: 'GET',
+        params: { kind, code },
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    previewAdmissionCrmConfigurationImpact: builder.mutation<
+      AdmissionCrmConfigurationImpactPreviewDto,
+      {
+        academicYearId: string;
+        body: {
+          kind?: AdmissionCrmConfigurationReferenceKind;
+          code?: string;
+          proposedCycleConfiguration?: Partial<AdmissionCrmCycleConfigurationDto>;
+          pipelineStageId?: string;
+          proposedPipelineStage?: Partial<AdmissionCrmPipelineStageDto>;
+        };
+      }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/configuration-safety/impact-preview`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    previewAdmissionCrmConfigurationClone: builder.mutation<
+      AdmissionCrmConfigurationClonePreviewDto,
+      { sourceAcademicYearId: string; targetAcademicYearId: string }
+    >({
+      query: (body) => ({
+        url: '/student-enrollment/admissions-crm/configuration-safety/clone/preview',
+        method: 'POST',
+        body,
+      }),
+    }),
+    confirmAdmissionCrmConfigurationClone: builder.mutation<
+      AdmissionCrmConfigurationCloneResultDto,
+      {
+        sourceAcademicYearId: string;
+        targetAcademicYearId: string;
+        previewFingerprint: string;
+      }
+    >({
+      query: (body) => ({
+        url: '/student-enrollment/admissions-crm/configuration-safety/clone/confirm',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration, studentAdmissionsCrmType.analytics],
+    }),
     getAdmissionCrmPipelineStages: builder.query<
       AdmissionCrmPipelineStageDto[],
       { academicYearId: string }
@@ -5420,6 +5548,7 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
           passingMarks: number;
           obtainedMarks: number;
           meritRank?: number;
+          correctionReason?: string;
         };
       }
     >({
@@ -6891,6 +7020,7 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
           passingMarks: number;
           obtainedMarks: number;
           meritRank?: number;
+          correctionReason?: string;
         }>;
       }
     >({
@@ -7049,6 +7179,10 @@ export const {
   useGetAdmissionCrmCycleConfigurationQuery,
   useGetAdmissionCrmSetupStatusQuery,
   useUpdateAdmissionCrmCycleConfigurationMutation,
+  useLazyGetAdmissionCrmConfigurationReferencesQuery,
+  usePreviewAdmissionCrmConfigurationImpactMutation,
+  usePreviewAdmissionCrmConfigurationCloneMutation,
+  useConfirmAdmissionCrmConfigurationCloneMutation,
   useGetAdmissionCrmPipelineStagesQuery,
   useUpdateAdmissionCrmPipelineStageMutation,
   useCreateAdmissionCrmPipelineStageMutation,

@@ -11,6 +11,48 @@ const optionFieldTypes = new Set([
   AdmissionCrmFormFieldType.MultiSelect,
 ]);
 
+export const registrationSystemFields = [
+  'firstName',
+  'middleName',
+  'lastName',
+  'dateOfBirth',
+  'parentGuardianName',
+  'primaryContactNo',
+  'email',
+  'desiredClassName',
+  'campus',
+  'board',
+  'medium',
+  'admissionRound',
+  'applicantCategory',
+  'admissionRoute',
+] as const;
+
+const registrationSystemFieldByKey = new Map(
+  registrationSystemFields.map((systemField) => [systemField.toLowerCase(), systemField])
+);
+
+export const normalizeRegistrationSystemField = (systemField?: string | null): string | null => {
+  const trimmedSystemField = systemField?.trim();
+  if (!trimmedSystemField) return null;
+  return (
+    registrationSystemFieldByKey.get(trimmedSystemField.toLowerCase()) ?? trimmedSystemField
+  );
+};
+
+export const normalizeRegistrationTemplateSystemFields = (
+  value: AdmissionCrmRegistrationTemplateUpsertDto
+): AdmissionCrmRegistrationTemplateUpsertDto => ({
+  ...value,
+  sections: value.sections.map((section) => ({
+    ...section,
+    fields: section.fields.map((field) => ({
+      ...field,
+      systemField: normalizeRegistrationSystemField(field.systemField),
+    })),
+  })),
+});
+
 const systemFieldTypeRules: Record<string, AdmissionCrmFormFieldType[]> = {
   dateOfBirth: [AdmissionCrmFormFieldType.Date],
   primaryContactNo: [AdmissionCrmFormFieldType.Phone, AdmissionCrmFormFieldType.Text],
@@ -27,11 +69,12 @@ export const normalizeRegistrationFieldForType = (
   fieldType: AdmissionCrmFormFieldType
 ): AdmissionCrmRegistrationFieldDto => {
   const needsOptions = registrationFieldNeedsOptions(fieldType);
-  const systemTypes = field.systemField ? systemFieldTypeRules[field.systemField] : null;
+  const systemField = normalizeRegistrationSystemField(field.systemField);
+  const systemTypes = systemField ? systemFieldTypeRules[systemField] : null;
   return {
     ...field,
     fieldType,
-    systemField: systemTypes && !systemTypes.includes(fieldType) ? null : field.systemField,
+    systemField: systemTypes && !systemTypes.includes(fieldType) ? null : systemField,
     options: needsOptions ? field.options : [],
     minimumLength:
       fieldType === AdmissionCrmFormFieldType.Text ||
@@ -74,6 +117,9 @@ export const createRegistrationField = (): AdmissionCrmRegistrationFieldDto => (
   minimumValue: null,
   maximumValue: null,
   options: [],
+  localizedLabels: {},
+  localizedHelpTexts: {},
+  localizedOptions: {},
 });
 
 export const createRegistrationSection = (): AdmissionCrmRegistrationSectionDto => ({
@@ -83,6 +129,8 @@ export const createRegistrationSection = (): AdmissionCrmRegistrationSectionDto 
   displayOrder: 10,
   parentVisible: true,
   fields: [createRegistrationField()],
+  localizedTitles: {},
+  localizedDescriptions: {},
 });
 
 export const createBlankRegistrationTemplate = (): AdmissionCrmRegistrationTemplateUpsertDto => ({
@@ -215,7 +263,7 @@ export const createRegistrationTemplate = (): AdmissionCrmRegistrationTemplateUp
   notes: 'Starter template. Review fields, required rules, and applicability before publishing.',
 });
 
-export type RegistrationTemplateEditorStep = 0 | 1;
+export type RegistrationTemplateEditorStep = 0 | 1 | 2;
 
 export const validateRegistrationTemplateStep = (
   value: AdmissionCrmRegistrationTemplateUpsertDto,
@@ -227,6 +275,24 @@ export const validateRegistrationTemplateStep = (
     if (value.linkExpiryDays < 1 || value.linkExpiryDays > 365) {
       errors.push('Link expiry must be between 1 and 365 days.');
     }
+    return errors;
+  }
+  if (step === 2) {
+    value.sections.forEach((section) =>
+      section.fields.forEach((field) =>
+        Object.entries(field.localizedOptions || {}).forEach(([language, options]) => {
+          const translatedOptions = options.map((option) => option.trim()).filter(Boolean);
+          if (
+            translatedOptions.length > 0 &&
+            translatedOptions.length !== field.options.filter(Boolean).length
+          ) {
+            errors.push(
+              `Field "${field.label || field.key}" needs ${field.options.filter(Boolean).length} ${language} options.`
+            );
+          }
+        })
+      )
+    );
     return errors;
   }
 
@@ -258,7 +324,8 @@ export const validateRegistrationTemplateStep = (
           `Field "${field.label || field.key}" has options but its type does not use options.`
         );
       }
-      const allowedTypes = field.systemField ? systemFieldTypeRules[field.systemField] : null;
+      const systemField = normalizeRegistrationSystemField(field.systemField);
+      const allowedTypes = systemField ? systemFieldTypeRules[systemField] : null;
       if (allowedTypes && !allowedTypes.includes(field.fieldType)) {
         errors.push(`Field "${field.label || field.key}" type does not match its system mapping.`);
       }
@@ -289,13 +356,14 @@ export const validateRegistrationTemplate = (
 ): string[] => {
   const ruleErrors = validateRegistrationTemplateStep(value, 0);
   const structureErrors = validateRegistrationTemplateStep(value, 1);
-  return [...ruleErrors, ...structureErrors];
+  const localizationErrors = validateRegistrationTemplateStep(value, 2);
+  return [...ruleErrors, ...structureErrors, ...localizationErrors];
 };
 
 export const findRegistrationTemplateValidationIssue = (
   value: AdmissionCrmRegistrationTemplateUpsertDto
 ) => {
-  const steps: RegistrationTemplateEditorStep[] = [0, 1];
+  const steps: RegistrationTemplateEditorStep[] = [0, 1, 2];
   return steps
     .map((step) => ({ step, message: validateRegistrationTemplateStep(value, step)[0] }))
     .find((issue): issue is { step: RegistrationTemplateEditorStep; message: string } =>
@@ -318,20 +386,42 @@ export const normalizeRegistrationTemplate = (
     key: section.key.trim(),
     title: section.title.trim(),
     description: section.description?.trim() || null,
+    localizedTitles: normalizeLocalizedText(section.localizedTitles),
+    localizedDescriptions: normalizeLocalizedText(section.localizedDescriptions),
     displayOrder: (sectionIndex + 1) * 10,
-    fields: section.fields.map((field, fieldIndex) => ({
-      ...field,
-      key: field.key.trim(),
-      label: field.label.trim(),
-      systemField: field.systemField?.trim() || null,
-      helpText: field.helpText?.trim() || null,
-      visibleWhenFieldKey: field.visibleWhenFieldKey?.trim() || null,
-      visibleWhenValue: field.visibleWhenValue?.trim() || null,
-      requiredWhenFieldKey: field.requiredWhenFieldKey?.trim() || null,
-      requiredWhenValue: field.requiredWhenValue?.trim() || null,
-      validationPattern: field.validationPattern?.trim() || null,
-      displayOrder: (fieldIndex + 1) * 10,
-      options: field.options.map((option) => option.trim()).filter(Boolean),
-    })),
+    fields: section.fields.map((field, fieldIndex) => {
+      const systemField = normalizeRegistrationSystemField(field.systemField);
+      return {
+        ...field,
+        key: field.key.trim(),
+        label: field.label.trim(),
+        systemField,
+        helpText: field.helpText?.trim() || null,
+        visibleWhenFieldKey: field.visibleWhenFieldKey?.trim() || null,
+        visibleWhenValue: field.visibleWhenValue?.trim() || null,
+        requiredWhenFieldKey: field.requiredWhenFieldKey?.trim() || null,
+        requiredWhenValue: field.requiredWhenValue?.trim() || null,
+        validationPattern: field.validationPattern?.trim() || null,
+        localizedLabels: normalizeLocalizedText(field.localizedLabels),
+        localizedHelpTexts: normalizeLocalizedText(field.localizedHelpTexts),
+        localizedOptions: Object.fromEntries(
+          Object.entries(field.localizedOptions || {})
+            .map(([language, options]) => [
+              language.trim().toLowerCase(),
+              options.map((option) => option.trim()).filter(Boolean),
+            ])
+            .filter(([language, options]) => Boolean(language) && (options as string[]).length > 0)
+        ),
+        displayOrder: (fieldIndex + 1) * 10,
+        options: field.options.map((option) => option.trim()).filter(Boolean),
+      };
+    }),
   })),
 });
+
+const normalizeLocalizedText = (value?: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(value || {})
+      .map(([language, text]) => [language.trim().toLowerCase(), text.trim()])
+      .filter(([language, text]) => Boolean(language) && Boolean(text))
+  );
