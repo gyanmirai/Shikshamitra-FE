@@ -11,6 +11,59 @@ export type { BulkUserScopeAssignmentScope, BulkUserScopeAssignmentPayload };
 
 export const EMPLOYEE_LIST_MAX_PAGE_SIZE = 500;
 
+export type EmployeeDashboardStatus =
+  | 'Present'
+  | 'HalfDay'
+  | 'Absent'
+  | 'HalfDayLeave'
+  | 'FullDayLeave'
+  | 'Holiday'
+  | 'WeeklyOff'
+  | 'NotMarked'
+  | 'NotAvailable';
+
+export interface EmployeeDashboardAttendanceDay {
+  date: string;
+  status: EmployeeDashboardStatus;
+  timeIn?: string | null;
+  timeOut?: string | null;
+  remarks?: string | null;
+}
+
+export interface EmployeeDashboardAttendanceMonth {
+  month: string;
+  present: number;
+  halfDay: number;
+  absent: number;
+  halfDayLeave: number;
+  fullDayLeave: number;
+}
+
+export interface EmployeeDashboardHoliday {
+  name: string;
+  fromDate: string;
+  toDate: string;
+}
+
+export interface EmployeeDashboardData {
+  employeeId: string;
+  date: string;
+  academicYearId?: string | null;
+  academicYearName?: string | null;
+  dataNotice?: string | null;
+  todayStatus: EmployeeDashboardStatus;
+  attendancePercentage?: number | null;
+  recordedAttendanceDays: number;
+  leaveBalanceDays?: number | null;
+  hasUnlimitedLeave: boolean;
+  isLeaveBalanceAvailable: boolean;
+  pendingLeaveRequests: number;
+  upcomingHoliday?: EmployeeDashboardHoliday | null;
+  attendanceDays: EmployeeDashboardAttendanceDay[];
+  attendanceTrend: EmployeeDashboardAttendanceMonth[];
+  holidays: EmployeeDashboardHoliday[];
+}
+
 const compactParams = (params: Record<string, unknown>) =>
   Object.fromEntries(
     Object.entries(params).filter(
@@ -79,6 +132,9 @@ export const buildEmployeeSubresourceUrl = (input: any, resourceName: string): s
 export const buildReportingManagerUrl = (input: any): string =>
   buildEmployeeSubresourceUrl(input, 'reporting-manager');
 
+export const buildEmployeeDashboardUrl = (input: any): string =>
+  buildEmployeeSubresourceUrl(input, 'dashboard');
+
 export const employeePayrollInvalidationTags = [
   employeeType.employee,
   employeeType.attendanceRule,
@@ -104,6 +160,17 @@ export const employeeApi = api.injectEndpoints({
     getCurrentEmployee: builder.query({
       query: () => ({ url: '/employees/me', method: 'GET' }),
       providesTags: [employeeType.employee],
+    }),
+    getEmployeeDashboard: builder.query<
+      EmployeeDashboardData,
+      { employeeId: string; date?: string }
+    >({
+      query: ({ employeeId, date }) => ({
+        url: buildEmployeeDashboardUrl({ employeeId }),
+        method: 'GET',
+        params: date ? { date } : undefined,
+      }),
+      providesTags: [employeeType.employee, employeeType.attendance, employeeType.hrDashboard],
     }),
     // addEmployee: builder.mutation({
     //   query: (body) => ({
@@ -373,6 +440,7 @@ export const {
   useGetEmployeeByIdQuery,
   useLazyGetEmployeeByIdQuery,
   useGetCurrentEmployeeQuery,
+  useGetEmployeeDashboardQuery,
   useGetEmployeeQuery,
   useLazyGetEmployeeQuery,
   useUpdateEmployeeMutation,

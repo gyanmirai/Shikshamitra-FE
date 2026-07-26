@@ -273,7 +273,13 @@ function AuditTrailEventCard({
   actionTextColor: any;
 }) {
   const [expanded, setExpanded] = React.useState(false);
-  const hasTable = event.changedFields?.length > 0;
+  const [showAllChanges, setShowAllChanges] = React.useState(false);
+  const changedFields = (event.changedFields || []).filter(
+    (field: any) => String(field.oldValue ?? '').trim() !== String(field.newValue ?? '').trim()
+  );
+  const visibleChangedFields = showAllChanges ? changedFields : changedFields.slice(0, 8);
+  const hiddenChangeCount = Math.max(0, changedFields.length - 8);
+  const hasTable = changedFields.length > 0;
   const context = parseHrAuditContext(event.contextJson);
 
   return (
@@ -409,12 +415,22 @@ function AuditTrailEventCard({
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {event.changedFields.slice(0, 8).map((field: any) => (
+                      {visibleChangedFields.map((field: any) => (
                         <AuditFieldRow key={field.field} field={field} />
                       ))}
                     </TableBody>
                   </Table>
                 </Box>
+                {hiddenChangeCount > 0 ? (
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => setShowAllChanges((current) => !current)}
+                    sx={{ mt: 0.5 }}
+                  >
+                    {showAllChanges ? 'Show less' : `Show ${hiddenChangeCount} more`}
+                  </Button>
+                ) : null}
 
                 {/* Context metadata (if exists) inside the accordion details */}
                 {context ? (
@@ -544,20 +560,22 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                 </strong>{' '}
                 on {formatHrAuditDateTime(auditSummary.creationTime)}
               </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
-                Last edited by{' '}
-                <strong>
-                  {formatHrAuditActor(
-                    auditSummary.lastModifiedByName || auditSummary.lastModifierId,
-                    'Unknown user'
-                  )}
-                </strong>{' '}
-                on {formatHrAuditDateTime(auditSummary.lastModificationTime)}
-              </Typography>
+              {auditSummary.lastModificationTime ? (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  Last edited by{' '}
+                  <strong>
+                    {formatHrAuditActor(
+                      auditSummary.lastModifiedByName || auditSummary.lastModifierId,
+                      'Unknown user'
+                    )}
+                  </strong>{' '}
+                  on {formatHrAuditDateTime(auditSummary.lastModificationTime)}
+                </Typography>
+              ) : null}
             </Stack>
           ) : null}
         </Stack>

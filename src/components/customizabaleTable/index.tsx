@@ -20,7 +20,6 @@ import {
 import { Scrollbar } from '../scrollbar';
 import CustomDialog from '../customDialog';
 import { TableBody } from './components/TableBody';
-import { extractTextFromReactNode } from './utils';
 import { ComponentBlock } from '../component-block';
 import { useTableData } from './hooks/useTableData';
 import { TableHeader } from './components/TableHeader';
@@ -28,6 +27,7 @@ import { FilterChips } from './components/FilterChips';
 import { TableToolbar } from './components/TableToolbar';
 import { useStickyColumns } from './hooks/useStickyColumns';
 import { ColumnFilterMenu } from './components/ColumnFilterMenu';
+import { getExportableColumns, extractTextFromReactNode } from './utils';
 import { useTableConfig, reconcileColumnVisibility } from './hooks/useTableConfig';
 
 import type { IColumnFilterAnchor, ICustomizableTableProps } from './types';
@@ -357,17 +357,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 return;
               }
 
-              // Exclude action columns and hidden columns
-              const exportCols = memoizedColumns.filter((col) => {
-                const isVisible = columnVisibility[col.id];
-                const isActionCol =
-                  col.id?.toLowerCase() === 'action' ||
-                  col.id?.toLowerCase() === 'actions' ||
-                  (typeof col.label === 'string' &&
-                    (col.label.toLowerCase() === 'action' ||
-                      col.label.toLowerCase() === 'actions'));
-                return isVisible && !isActionCol && !col.excludeFromExport;
-              });
+              const exportCols = getExportableColumns(memoizedColumns, columnVisibility);
 
               const title = typeof tableTitle === 'string' ? tableTitle : 'Table_Export';
 

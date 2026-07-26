@@ -30,6 +30,14 @@ export type ManualAttendanceUiStatus =
 
 export type ManualAttendanceStatusWire = 'PRESENT' | 'HALF_DAY' | 'ABSENT' | 'NOT_MARKED';
 
+type ManualAttendanceTimeStatus =
+  typeof MANUAL_ATTENDANCE_UI_STATUS.Present | typeof MANUAL_ATTENDANCE_UI_STATUS.HalfDay;
+
+export type ManualAttendanceTimeSnapshot = {
+  timeIn: string;
+  timeOut: string;
+};
+
 export type ManualAttendanceSaveRow = {
   id?: string;
   employeeId?: string;
@@ -40,6 +48,7 @@ export type ManualAttendanceSaveRow = {
   timeIn?: string;
   timeOut?: string;
   remarks?: string;
+  timeByStatus?: Partial<Record<ManualAttendanceTimeStatus, ManualAttendanceTimeSnapshot>>;
 };
 
 export type ManualAttendanceShiftTimeRow = ManualAttendanceSaveRow & {
@@ -59,6 +68,14 @@ export type ManualAttendanceBulkStatusDisabledState = {
   isHoliday?: boolean;
   isFutureDate?: boolean;
   isOutsideAcademicYear?: boolean;
+};
+
+export type ManualAttendanceDayActionState = {
+  hasDate?: boolean;
+  hasCurrentData?: boolean;
+  isLoading?: boolean;
+  isFetching?: boolean;
+  isError?: boolean;
 };
 
 export type ManualAttendanceApiDayResponse = {
@@ -137,35 +154,90 @@ export const applyManualAttendanceStatusDefaults = <TRow extends ManualAttendanc
     return { ...row, status };
   }
 
+  const rowWithRememberedTime = rememberCurrentAttendanceTime(row);
+
   if (status === MANUAL_ATTENDANCE_UI_STATUS.Pending) {
-    return { ...row, status, timeIn: '', timeOut: '' };
+    return { ...rowWithRememberedTime, status, timeIn: '', timeOut: '' };
   }
 
   if (status === MANUAL_ATTENDANCE_UI_STATUS.Absent) {
-    return { ...row, status, timeIn: '00:00', timeOut: '00:00' };
+    return { ...rowWithRememberedTime, status, timeIn: '00:00', timeOut: '00:00' };
   }
 
   const shiftStart = toAttendanceTableTimeValue(row.shiftStartTime);
   const shiftEnd = toAttendanceTableTimeValue(row.shiftEndTime);
   if (!isValidShiftRange(shiftStart, shiftEnd)) {
-    return { ...row, status, timeIn: '', timeOut: '' };
+    return { ...rowWithRememberedTime, status, timeIn: '', timeOut: '' };
   }
 
+  const rememberedTime =
+    status === MANUAL_ATTENDANCE_UI_STATUS.Present || status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay
+      ? rowWithRememberedTime.timeByStatus?.[status]
+      : undefined;
+
   if (status === MANUAL_ATTENDANCE_UI_STATUS.Present) {
-    return { ...row, status, timeIn: shiftStart, timeOut: shiftEnd };
+    return {
+      ...rowWithRememberedTime,
+      status,
+      timeIn: toAttendanceTableTimeValue(rememberedTime?.timeIn) || shiftStart,
+      timeOut: toAttendanceTableTimeValue(rememberedTime?.timeOut) || shiftEnd,
+    };
   }
 
   if (status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay) {
     return {
-      ...row,
+      ...rowWithRememberedTime,
       status,
-      timeIn: shiftStart,
-      timeOut: calculateShiftMidpoint(shiftStart, shiftEnd)!,
+      timeIn: toAttendanceTableTimeValue(rememberedTime?.timeIn) || shiftStart,
+      timeOut:
+        toAttendanceTableTimeValue(rememberedTime?.timeOut) ||
+        calculateShiftMidpoint(shiftStart, shiftEnd)!,
     };
   }
 
-  return { ...row, status };
+  return { ...rowWithRememberedTime, status };
 };
+
+const rememberCurrentAttendanceTime = <TRow extends ManualAttendanceShiftTimeRow>(
+  row: TRow
+): TRow => {
+  if (
+    row.status !== MANUAL_ATTENDANCE_UI_STATUS.Present &&
+    row.status !== MANUAL_ATTENDANCE_UI_STATUS.HalfDay
+  ) {
+    return row;
+  }
+
+  const timeIn = toAttendanceTableTimeValue(row.timeIn);
+  const timeOut = toAttendanceTableTimeValue(row.timeOut);
+  if (!timeIn && !timeOut) {
+    return row;
+  }
+
+  return {
+    ...row,
+    timeByStatus: {
+      ...row.timeByStatus,
+      [row.status]: { timeIn, timeOut },
+    },
+  };
+};
+
+export const restoreManualAttendanceRows = <TRow extends ManualAttendanceSaveRow>(
+  originalRows: TRow[]
+): TRow[] =>
+  originalRows.map((row) => ({
+    ...row,
+    warnings: row.warnings ? [...row.warnings] : row.warnings,
+    timeByStatus: row.timeByStatus
+      ? Object.fromEntries(
+          Object.entries(row.timeByStatus).map(([status, time]) => [
+            status,
+            time ? { ...time } : time,
+          ])
+        )
+      : row.timeByStatus,
+  })) as TRow[];
 
 export const normalizeManualAttendanceRowsForSave = <TRow extends ManualAttendanceShiftTimeRow>(
   rows: TRow[]
@@ -363,6 +435,11 @@ export const isManualAttendanceBulkStatusDisabled = (
     state.isOutsideAcademicYear ||
     rows.length === 0 ||
     rows.every((row) => row.status === status)
+  );
+
+export const canMutateManualAttendanceDay = (state: ManualAttendanceDayActionState) =>
+  Boolean(
+    state.hasDate && state.hasCurrentData && !state.isLoading && !state.isFetching && !state.isError
   );
 
 export const applyManualAttendanceRowStatus = <TRow extends ManualAttendanceSaveRow>(

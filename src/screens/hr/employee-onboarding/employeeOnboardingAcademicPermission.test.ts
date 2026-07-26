@@ -1,6 +1,9 @@
 import { it, expect, describe } from 'vitest';
 
-import { buildOnboardingAcademicPermissionScopeRows } from './employeeOnboardingAcademicPermission';
+import {
+  isOnboardingAcademicPermissionStepValid,
+  buildOnboardingAcademicPermissionScopeRows,
+} from './employeeOnboardingAcademicPermission';
 
 describe('employee onboarding academic permission payload', () => {
   it('builds complete V2 scope rows from valid stage ids', () => {
@@ -76,5 +79,30 @@ describe('employee onboarding academic permission payload', () => {
     ]);
     expect(result.unresolvedStageIds).toEqual(['stage-2', 'stage-3']);
     expect(result.isValid).toBe(false);
+  });
+
+  it('requires complete academic scope only for teaching employees', () => {
+    const invalidScope = {
+      scopeRows: [],
+      unresolvedStageIds: [],
+      isValid: false,
+    };
+
+    expect(
+      isOnboardingAcademicPermissionStepValid({
+        isTeaching: true,
+        academicYearId: 'year-1',
+        isLoading: false,
+        scopeRows: invalidScope,
+      })
+    ).toBe(false);
+    expect(
+      isOnboardingAcademicPermissionStepValid({
+        isTeaching: false,
+        academicYearId: null,
+        isLoading: true,
+        scopeRows: invalidScope,
+      })
+    ).toBe(true);
   });
 });

@@ -19,6 +19,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -47,7 +48,6 @@ import {
 import {
   useGetEarningComponentsQuery,
   useAddEarningComponentMutation,
-  useGetDeductionComponentsQuery,
   useDeleteEarningComponentMutation,
   useUpdateEarningComponentMutation,
   usePreviewEarningComponentDeleteImpactQuery,
@@ -55,6 +55,10 @@ import {
 } from 'src/redux/hr/employee-payroll-api';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
+import {
+  isEarningComponentDependencyError,
+  getEligibleEarningDependencyOptions,
+} from './earning-component-dependency-options';
 
 interface PayElement {
   earningComponentName?: string;
@@ -493,7 +497,9 @@ const EarningComponentForm = ({
             ? 'Amount'
             : editData?.calculationType || editData?.componentType || '',
       selectedEarningComponent:
-        editData?.selectedEarningComponentId || editData?.customComponentId || null,
+        (editData?.selectedEarningComponentId || editData?.customComponentId) === editData?.id
+          ? null
+          : editData?.selectedEarningComponentId || editData?.customComponentId || null,
       amount:
         editData?.calculationType?.toLowerCase() === 'percentage'
           ? editData?.percentage || ''
@@ -535,7 +541,11 @@ const EarningComponentForm = ({
           handleClose(null, true);
         }
       } catch (error) {
-        console.error(error);
+        const parsed = parseApiProblemDetail(error);
+        if (isEarningComponentDependencyError(parsed.errorCode)) {
+          await formik.setFieldTouched('selectedEarningComponent', true, false);
+          formik.setFieldError('selectedEarningComponent', parsed.detail);
+        }
       }
     },
   });
@@ -543,19 +553,29 @@ const EarningComponentForm = ({
   const confirmUpdate = async (applyMode: 'SyncedOnly' | 'ForceApply') => {
     if (!editData || !pendingPayload || !impactPreview) return;
 
-    await updateEarningComponent({
-      id: editData.id,
-      body: {
-        ...pendingPayload,
-        applyMode,
-        effectiveMonth: impactPreview.effectiveMonth,
-        previewHash: impactPreview.previewHash,
-      },
-    }).unwrap();
-    setImpactPreview(null);
-    setPendingPayload(null);
-    shikshaMitraToast.success({ message: 'Earning Component updated successfully' });
-    handleClose(null, true);
+    try {
+      await updateEarningComponent({
+        id: editData.id,
+        body: {
+          ...pendingPayload,
+          applyMode,
+          effectiveMonth: impactPreview.effectiveMonth,
+          previewHash: impactPreview.previewHash,
+        },
+      }).unwrap();
+      setImpactPreview(null);
+      setPendingPayload(null);
+      shikshaMitraToast.success({ message: 'Earning Component updated successfully' });
+      handleClose(null, true);
+    } catch (error) {
+      const parsed = parseApiProblemDetail(error);
+      if (isEarningComponentDependencyError(parsed.errorCode)) {
+        setImpactPreview(null);
+        setPendingPayload(null);
+        await formik.setFieldTouched('selectedEarningComponent', true, false);
+        formik.setFieldError('selectedEarningComponent', parsed.detail);
+      }
+    }
   };
 
   const { data: getEarningComponentsData } = useQueryAndMutation({
@@ -563,31 +583,21 @@ const EarningComponentForm = ({
     currentQueryAndMutation: useGetEarningComponentsQuery,
     params: {
       academicYearId: currentYear?.id,
-    },
-  });
-
-  const { data: getDeductionComponentsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetDeductionComponentsQuery,
-    params: {
-      academicYearId: currentYear?.id,
+      pageSize: 200,
     },
   });
 
   const componentOptions = React.useMemo(
-    () => [
-      ...(getEarningComponentsData?.items || []).map((item: any) => ({
-        ...item,
-        componentName: item.earningComponentName || item.componentName, // Map earningName to componentName for unification
-        group: 'Earning Components',
-      })),
-      ...(getDeductionComponentsData?.items || []).map((item: any) => ({
-        ...item,
-        componentName: item.deductionName || item.componentName, // Map deductionName to componentName for unification
-        group: 'Deduction Components',
-      })),
-    ],
-    [getEarningComponentsData, getDeductionComponentsData]
+    () =>
+      getEligibleEarningDependencyOptions(
+        (getEarningComponentsData?.items || []).map((item: any) => ({
+          ...item,
+          componentName: item.earningComponentName || item.componentName,
+          group: 'Earning Components',
+        })),
+        editData?.id
+      ),
+    [editData?.id, getEarningComponentsData]
   );
 
   return (
@@ -737,8 +747,8 @@ const EarningComponentForm = ({
                 >
                   <Autocomplete
                     options={componentOptions}
-                    groupBy={(option) => option.group}
-                    getOptionLabel={(option) => option.componentName}
+                    groupBy={(option) => option.group || 'Earning Components'}
+                    getOptionLabel={(option) => option.componentName || ''}
                     filterOptions={(options) => options}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     value={

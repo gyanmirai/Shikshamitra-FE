@@ -237,7 +237,6 @@ const HrSetting = () => {
         }
         tableId="documents"
         isLoading={isLoading || isFetching}
-        isFilter={false}
         columns={columns}
         data={tableData || []}
       />

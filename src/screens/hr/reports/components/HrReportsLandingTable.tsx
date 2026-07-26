@@ -5,10 +5,10 @@ import type {
 } from 'src/redux/hr/hrReportsApi';
 
 import Tab from '@mui/material/Tab';
-import { useMemo, useState } from 'react';
 import { Stack, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -25,6 +25,7 @@ import type {
   HrReportExportAction,
   HrReportScheduleAction,
   HrReportTemplateAction,
+  HrReportExportDateFilter,
 } from '../hr-report-types';
 
 type HrReportsLandingTableProps = {
@@ -35,6 +36,7 @@ type HrReportsLandingTableProps = {
   highlightedExportId?: string | null;
   isLoading: boolean;
   isDownloading: boolean;
+  exportActionsDisabled: boolean;
   currentUserId?: string | null;
   onRefreshExports: () => void;
   onTabChange: (tab: HrReportsCenterTab) => void;
@@ -45,6 +47,8 @@ type HrReportsLandingTableProps = {
   onTemplateAction: (action: HrReportTemplateAction, template: HrReportTemplate) => void;
   onScheduleAction: (action: HrReportScheduleAction, schedule: HrReportSchedule) => void;
   permissions: HrReportPermissions;
+  exportDateFilter: HrReportExportDateFilter;
+  onExportDateFilterChange: (filter: HrReportExportDateFilter) => void;
 };
 
 export function HrReportsLandingTable({
@@ -55,6 +59,7 @@ export function HrReportsLandingTable({
   highlightedExportId,
   isLoading,
   isDownloading,
+  exportActionsDisabled,
   currentUserId,
   onRefreshExports,
   onTabChange,
@@ -65,13 +70,20 @@ export function HrReportsLandingTable({
   onTemplateAction,
   onScheduleAction,
   permissions,
+  exportDateFilter,
+  onExportDateFilterChange,
 }: HrReportsLandingTableProps) {
   const [templateToDelete, setTemplateToDelete] = useState<HrReportTemplate | null>(null);
   const [scheduleToDelete, setScheduleToDelete] = useState<HrReportSchedule | null>(null);
+  const [exportToDelete, setExportToDelete] = useState<HrReportExportJob | null>(null);
   const counts = useMemo(
     () => getHrReportsCenterCounts(exportJobs, templates, schedules),
     [exportJobs, schedules, templates]
   );
+
+  useEffect(() => {
+    setExportToDelete(null);
+  }, [exportDateFilter.fromDate, exportDateFilter.preset, exportDateFilter.toDate]);
 
   const handleTemplateAction = (action: HrReportTemplateAction, template: HrReportTemplate) => {
     if (action === 'delete') {
@@ -87,6 +99,16 @@ export function HrReportsLandingTable({
       return;
     }
     onScheduleAction(action, schedule);
+  };
+
+  const handleExportAction = (action: HrReportExportAction, jobId: string) => {
+    if (exportActionsDisabled) return;
+
+    if (action === 'delete') {
+      setExportToDelete(exportJobs.find((job) => job.id === jobId) ?? null);
+      return;
+    }
+    onExportAction(action, jobId);
   };
 
   return (
@@ -115,10 +137,13 @@ export function HrReportsLandingTable({
             highlightedExportId={highlightedExportId}
             isLoading={isLoading}
             isDownloading={isDownloading}
+            actionsDisabled={exportActionsDisabled}
             currentUserId={currentUserId}
             permissions={permissions}
+            dateFilter={exportDateFilter}
+            onDateFilterChange={onExportDateFilterChange}
             onDownload={onDownload}
-            onExportAction={onExportAction}
+            onExportAction={handleExportAction}
           />
         </>
       ) : null}
@@ -142,6 +167,32 @@ export function HrReportsLandingTable({
           onScheduleAction={handleScheduleAction}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(exportToDelete)}
+        onClose={() => setExportToDelete(null)}
+        title="Remove failed export?"
+        icon="warning"
+        content={`This removes "${exportToDelete?.reportType ?? 'this failed export'}" from your export history.`}
+        action={
+          <Button
+            color="error"
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            disabled={exportActionsDisabled}
+            onClick={() => {
+              if (exportActionsDisabled) return;
+              if (exportToDelete) {
+                onExportAction('delete', exportToDelete.id);
+              }
+              setExportToDelete(null);
+            }}
+          >
+            Remove Export
+          </Button>
+        }
+      />
 
       <ConfirmDialog
         open={Boolean(templateToDelete)}

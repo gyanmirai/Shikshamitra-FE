@@ -59,6 +59,9 @@ export const WEEKLY_RULE_OPTIONS = [
   { value: 'sunday', label: 'Sunday Off' },
   { value: 'custom', label: 'Custom' },
 ];
+
+export const HR_POLICY_MIN_YEAR = 1900;
+export const HR_POLICY_MAX_YEAR = 2100;
 // Payroll options
 // --- Payroll Options ----------------------------------------------------------
 

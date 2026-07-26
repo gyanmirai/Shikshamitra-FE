@@ -17,10 +17,10 @@ export default function LeavePoliciesWorkspace() {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Leave Policies"
-        description={currentYear?.name || 'No academic year selected'}
+        description="Manage leave entitlement, accrual, carry-forward, encashment, and approval rules."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Policies & Rules', href: hrPaths.policies.root },
+          { name: 'Policies & Rules', href: hrPaths.policies.calendars },
           { name: 'Leave Policies' },
         ]}
       />

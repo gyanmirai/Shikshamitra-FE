@@ -300,6 +300,7 @@ export function useHRPolicyWorkspace({
   const [compareVersionIds, setCompareVersionIds] = useState({ from: '', to: '' });
   const [versionFilters, setVersionFilters] = useState({ search: '', action: 'all' });
   const [restoreVersion, setRestoreVersion] = useState<RestoreVersionState>(null);
+  const [employeeLookupSearch, setEmployeeLookupSearch] = useState('');
 
   // --- Operation overlay state -----------------------------------------------
   const [activePolicyOperation, setActivePolicyOperation] = useState<PolicyOperationState>(null);
@@ -323,13 +324,22 @@ export function useHRPolicyWorkspace({
   });
 
   // --- API Queries ----------------------------------------------------------
-  const listArgs = { academicYearId, maxResultCount: 200 };
+  const listArgs = { academicYearId, maxResultCount: 200, isArchived: false };
   const assignmentListArgs = { academicYearId, maxResultCount: 1000 };
 
-  const { data: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
+  const { currentData: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
     { page: 1, pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE },
     { skip: !academicYearId }
   );
+  const { currentData: employeeSearchResults, isFetching: employeeSearchLoading } =
+    useGetEmployeeQuery(
+      {
+        page: 1,
+        pageSize: 100,
+        search: employeeLookupSearch.trim(),
+      },
+      { skip: !academicYearId || employeeLookupSearch.trim().length < 2 }
+    );
   const { data: groups, isFetching: groupsLoading } = useGetGroupsQuery(
     { academicYearId, maxResultCount: 200, includeDetails: false },
     { skip: !academicYearId }
@@ -367,38 +377,41 @@ export function useHRPolicyWorkspace({
     auditTarget?.policyType && auditTarget.policyId
       ? { policyType: auditTarget.policyType, id: auditTarget.policyId }
       : null;
-  const { data: auditSummary, isFetching: auditLoading } = useGetPolicyAuditSummaryQuery(
+  const { currentData: auditSummary, isFetching: auditLoading } = useGetPolicyAuditSummaryQuery(
     policyAuditTarget || { policyType: 'work_calendar', id: '' },
     { skip: !policyAuditTarget }
   );
-  const { data: auditEvents, isFetching: auditEventsLoading } = useGetHrEntityAuditEventsQuery(
-    auditTarget
-      ? { entityType: auditTarget.entityType, entityId: auditTarget.entityId, maxResultCount: 50 }
-      : { entityType: 'work_calendar_policy', entityId: '' },
-    { skip: !auditTarget }
-  );
-  const { data: versionHistory, isFetching: versionHistoryLoading } = useGetPolicyVersionsQuery(
-    versionTarget
-      ? {
-          policyType: versionTarget.policyType,
-          policyId: versionTarget.policyId,
-          maxResultCount: 30,
-        }
-      : { policyType: 'work_calendar', policyId: '' },
-    { skip: !versionTarget }
-  );
-  const { data: versionCompare, isFetching: versionCompareLoading } = useComparePolicyVersionsQuery(
-    versionTarget && compareVersionIds.from && compareVersionIds.to
-      ? {
-          policyType: versionTarget.policyType,
-          policyId: versionTarget.policyId,
-          fromVersionId: compareVersionIds.from,
-          toVersionId: compareVersionIds.to,
-        }
-      : { policyType: 'work_calendar', policyId: '', fromVersionId: '', toVersionId: '' },
-    { skip: !versionTarget || !compareVersionIds.from || !compareVersionIds.to }
-  );
-  const { data: restorePreview, isFetching: restorePreviewLoading } =
+  const { currentData: auditEvents, isFetching: auditEventsLoading } =
+    useGetHrEntityAuditEventsQuery(
+      auditTarget
+        ? { entityType: auditTarget.entityType, entityId: auditTarget.entityId, maxResultCount: 50 }
+        : { entityType: 'work_calendar_policy', entityId: '' },
+      { skip: !auditTarget }
+    );
+  const { currentData: versionHistory, isFetching: versionHistoryLoading } =
+    useGetPolicyVersionsQuery(
+      versionTarget
+        ? {
+            policyType: versionTarget.policyType,
+            policyId: versionTarget.policyId,
+            maxResultCount: 30,
+          }
+        : { policyType: 'work_calendar', policyId: '' },
+      { skip: !versionTarget }
+    );
+  const { currentData: versionCompare, isFetching: versionCompareLoading } =
+    useComparePolicyVersionsQuery(
+      versionTarget && compareVersionIds.from && compareVersionIds.to
+        ? {
+            policyType: versionTarget.policyType,
+            policyId: versionTarget.policyId,
+            fromVersionId: compareVersionIds.from,
+            toVersionId: compareVersionIds.to,
+          }
+        : { policyType: 'work_calendar', policyId: '', fromVersionId: '', toVersionId: '' },
+      { skip: !versionTarget || !compareVersionIds.from || !compareVersionIds.to }
+    );
+  const { currentData: restorePreview, isFetching: restorePreviewLoading } =
     useGetPolicyRestorePreviewQuery(
       versionTarget && restoreVersion
         ? {
@@ -443,7 +456,7 @@ export function useHRPolicyWorkspace({
   );
 
   const {
-    data: effectivePreview,
+    currentData: effectivePreview,
     isFetching: effectiveLoading,
     error: effectiveError,
   } = useGetPolicyAssignmentPreviewQuery(
@@ -592,7 +605,13 @@ export function useHRPolicyWorkspace({
   const defaultAttendancePolicy = selectSingleActiveDefaultPolicy(activeAttendance);
   const defaultLeavePolicy = selectSingleActiveDefaultPolicy(activeLeavePolicies);
 
-  const employeeOptions = getItems<LookupOption>(employees);
+  const employeeOptions = useMemo(() => {
+    const options = [
+      ...getItems<LookupOption>(employees),
+      ...getItems<LookupOption>(employeeSearchResults),
+    ];
+    return Array.from(new Map(options.map((option) => [option.id, option])).values());
+  }, [employeeSearchResults, employees]);
   const groupOptions = getItems<LookupOption>(groups);
 
   /**
@@ -1083,6 +1102,7 @@ export function useHRPolicyWorkspace({
       setFormError('');
       setAssignmentDateError('');
       setAssignmentConflict(null);
+      setEmployeeLookupSearch(item?.targetType === 'employee' ? item.targetDisplayName || '' : '');
       setAssignmentForm(
         item
           ? {
@@ -1359,10 +1379,26 @@ export function useHRPolicyWorkspace({
       setFormError('Effective to must be on or after effective from.');
       return;
     }
+    const policyDates = [calendarForm.effectiveFrom, calendarForm.effectiveTo].filter(Boolean);
+    if (
+      policyDates.some((date) => {
+        const year = dayjs(date).year();
+        return year < 1900 || year > 2100;
+      })
+    ) {
+      setFormError('Please enter a valid year between 1900 and 2100.');
+      return;
+    }
     const customWeeklyOffs = sortWeekDays(calendarForm.customWeeklyOffs);
     const weeklyOffs = getWeeklyOffsForRule(calendarForm.weeklyOffPattern, customWeeklyOffs);
     if (calendarForm.weeklyOffPattern === 'custom' && weeklyOffs.length === 0) {
       setFormError('Select at least one weekly off day for a custom weekly rule.');
+      return;
+    }
+    if (calendarForm.weeklyOffPattern === 'custom' && weeklyOffs.length >= 7) {
+      setFormError(
+        'Select at least one working day. A work calendar cannot mark all seven days as weekly offs.'
+      );
       return;
     }
     const invalidHoliday = calendarForm.holidays.find(
@@ -2261,6 +2297,9 @@ export function useHRPolicyWorkspace({
     assignments,
     assignmentRows,
     employeeOptions,
+    employeeLookupSearch,
+    setEmployeeLookupSearch,
+    employeeSearchLoading,
     groupOptions,
 
     // Derived
@@ -2286,6 +2325,7 @@ export function useHRPolicyWorkspace({
       leavePoliciesLoading ||
       assignmentsLoading ||
       employeesLoading ||
+      employeeSearchLoading ||
       groupsLoading,
     calendarsLoading,
     payrollLoading,

@@ -1,9 +1,29 @@
 import { api } from 'src/redux/service';
 import { roleType } from 'src/redux/tagTypes';
 
+export type IdentityRoleOption = {
+  id: string;
+  name: string;
+  roleAudience?: string | null;
+  employeeGroupAudience?: string | null;
+  employeeOnboardingAssignable?: boolean | null;
+  extraProperties?: {
+    color?: string;
+    roleAudience?: string | null;
+    employeeGroupAudience?: string | null;
+    employeeOnboardingAssignable?: boolean | null;
+    EmployeeOnboardingAssignable?: boolean | null;
+    [key: string]: unknown;
+  };
+};
+
+type IdentityRoleListResponse = {
+  items: IdentityRoleOption[];
+};
+
 export const roleApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getRoles: builder.query({
+    getRoles: builder.query<IdentityRoleListResponse, void>({
       query: () => ({ url: '/identity/roles/all' }),
       providesTags: [roleType.role],
     }),

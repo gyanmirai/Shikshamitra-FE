@@ -40,11 +40,11 @@ export default function LeftPanel({
         bgcolor: 'background.paper',
       }}
     >
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 1.5 }}>
         <TextField
           fullWidth
           size="small"
-          placeholder="Search categories..."
+          label="Search categories"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -56,8 +56,8 @@ export default function LeftPanel({
           }}
         />
       </Box>
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 2 }}>
-        <List sx={{ maxHeight: '100%', height: '100%' }}>
+      <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 1.5 }}>
+        <List disablePadding sx={{ maxHeight: '100%', height: '100%' }}>
           {filteredCategories.map((category) => (
             <ListItemButton
               key={category.id}

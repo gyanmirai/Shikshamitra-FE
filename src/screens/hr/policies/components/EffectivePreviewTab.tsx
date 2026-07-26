@@ -38,7 +38,13 @@ export function EffectivePreviewTab() {
     effectiveGroupOptions,
     employeeOptions,
     groupOptions,
+    employeeLookupSearch,
+    setEmployeeLookupSearch,
+    employeeSearchLoading,
   } = ctx;
+
+  const selectedEmployee =
+    employeeOptions.find((item) => item.id === effectiveFilters.employeeId) || null;
 
   return (
     <Card sx={{ p: 2, width: '100%' }}>
@@ -46,15 +52,33 @@ export function EffectivePreviewTab() {
         <Autocomplete
           options={effectiveEmployeeOptions}
           getOptionLabel={optionLabel}
+          inputValue={employeeLookupSearch}
+          onInputChange={(_event, value, reason) => {
+            if (reason === 'input' || reason === 'clear') {
+              setEmployeeLookupSearch(value);
+              if (
+                effectiveFilters.employeeId &&
+                (reason === 'clear' || value !== optionLabel(selectedEmployee))
+              ) {
+                setEffectiveFilters((current) => ({
+                  ...current,
+                  employeeId: '',
+                }));
+              }
+            }
+          }}
+          loading={employeeSearchLoading}
+          filterOptions={(options) => options}
           sx={{ minWidth: 220, flex: 1 }}
-          value={employeeOptions.find((item) => item.id === effectiveFilters.employeeId) || null}
-          onChange={(_, value) =>
+          value={selectedEmployee}
+          onChange={(_, value) => {
             setEffectiveFilters((current) => ({
               ...current,
               employeeId: value?.id || '',
               groupId: value?.id ? '' : current.groupId,
-            }))
-          }
+            }));
+            setEmployeeLookupSearch(optionLabel(value));
+          }}
           renderInput={(params) => <TextField {...params} label="Employee" size="small" />}
         />
         <Autocomplete
@@ -62,13 +86,16 @@ export function EffectivePreviewTab() {
           getOptionLabel={optionLabel}
           sx={{ minWidth: 220, flex: 1 }}
           value={groupOptions.find((item) => item.id === effectiveFilters.groupId) || null}
-          onChange={(_, value) =>
+          onChange={(_, value) => {
             setEffectiveFilters((current) => ({
               ...current,
               groupId: value?.id || '',
               employeeId: value?.id ? '' : current.employeeId,
-            }))
-          }
+            }));
+            if (value?.id) {
+              setEmployeeLookupSearch('');
+            }
+          }}
           renderInput={(params) => <TextField {...params} label="Group" size="small" />}
         />
         <DatePicker

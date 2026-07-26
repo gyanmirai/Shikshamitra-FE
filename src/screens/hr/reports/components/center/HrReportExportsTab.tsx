@@ -1,11 +1,21 @@
 import type { HrReportExportJob } from 'src/redux/hr/hrReportsApi';
 import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
-import { useMemo, useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Chip, Stack, Tooltip, IconButton, LinearProgress } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Stack,
+  Tooltip,
+  MenuItem,
+  TextField,
+  IconButton,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 
 import { HrReportCenterEmptyState } from './HrReportCenterEmptyState';
 import { HrReportExportDetailsDrawer } from './HrReportExportDetailsDrawer';
@@ -22,16 +32,19 @@ import {
   isHrReportExportOwnedByCurrentUser,
 } from '../../hr-report-center-utils';
 
-import type { HrReportExportAction } from '../../hr-report-types';
 import type { HrReportPermissions } from '../../hr-report-permissions';
+import type { HrReportExportAction, HrReportExportDateFilter } from '../../hr-report-types';
 
 type HrReportExportsTabProps = {
   exportJobs: HrReportExportJob[];
   highlightedExportId?: string | null;
   isLoading: boolean;
   isDownloading: boolean;
+  actionsDisabled?: boolean;
   currentUserId?: string | null;
   permissions: HrReportPermissions;
+  dateFilter?: HrReportExportDateFilter;
+  onDateFilterChange?: (filter: HrReportExportDateFilter) => void;
   onDownload: (jobId: string, fileName?: string) => void;
   onExportAction: (action: HrReportExportAction, jobId: string) => void;
 };
@@ -53,8 +66,11 @@ export function HrReportExportsTab({
   highlightedExportId,
   isLoading,
   isDownloading,
+  actionsDisabled = false,
   currentUserId,
   permissions,
+  dateFilter = { preset: 'all', fromDate: '', toDate: '' },
+  onDateFilterChange = () => {},
   onDownload,
   onExportAction,
 }: HrReportExportsTabProps) {
@@ -67,6 +83,10 @@ export function HrReportExportsTab({
     () => exportJobs.find((job) => job.id === selectedJobId) ?? null,
     [exportJobs, selectedJobId]
   );
+
+  useEffect(() => {
+    setSelectedJobId(null);
+  }, [dateFilter.fromDate, dateFilter.preset, dateFilter.toDate]);
 
   const columns = useMemo<IColumn[]>(
     () => [
@@ -136,9 +156,10 @@ export function HrReportExportsTab({
                   <IconButton
                     data-testid="hr-report-export-download-button"
                     size="small"
-                    disabled={!isDownloadable || isDownloading}
+                    disabled={actionsDisabled || !isDownloadable || isDownloading}
                     onClick={(event) => {
                       event.stopPropagation();
+                      if (actionsDisabled) return;
                       onDownload(row.id, getHrReportExportFileName(row));
                     }}
                   >
@@ -150,73 +171,113 @@ export function HrReportExportsTab({
               isOwnedByCurrentUser &&
               (row.status === 'Queued' || row.status === 'Running') ? (
                 <Tooltip title="Cancel export">
-                  <IconButton
-                    data-testid="hr-report-export-cancel-button"
-                    size="small"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onExportAction('cancel', row.id);
-                    }}
-                  >
-                    <Iconify icon="solar:close-circle-bold" />
-                  </IconButton>
+                  <span>
+                    <IconButton
+                      data-testid="hr-report-export-cancel-button"
+                      size="small"
+                      disabled={actionsDisabled}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (actionsDisabled) return;
+                        onExportAction('cancel', row.id);
+                      }}
+                    >
+                      <Iconify icon="solar:close-circle-bold" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              ) : null}
+              {permissions.canDelete && isOwnedByCurrentUser && row.status === 'Failed' ? (
+                <Tooltip title="Remove failed export">
+                  <span>
+                    <IconButton
+                      data-testid="hr-report-export-delete-button"
+                      aria-label="Remove failed export"
+                      size="small"
+                      color="error"
+                      disabled={actionsDisabled}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (actionsDisabled) return;
+                        onExportAction('delete', row.id);
+                      }}
+                    >
+                      <Iconify icon={GlobalIcons.delete} />
+                    </IconButton>
+                  </span>
                 </Tooltip>
               ) : null}
               {permissions.canExport &&
               isOwnedByCurrentUser &&
               (row.status === 'Failed' || row.status === 'Cancelled') ? (
                 <Tooltip title="Retry export">
-                  <IconButton
-                    data-testid="hr-report-export-retry-button"
-                    size="small"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onExportAction('retry', row.id);
-                    }}
-                  >
-                    <Iconify icon="solar:refresh-bold" />
-                  </IconButton>
+                  <span>
+                    <IconButton
+                      data-testid="hr-report-export-retry-button"
+                      size="small"
+                      disabled={actionsDisabled}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (actionsDisabled) return;
+                        onExportAction('retry', row.id);
+                      }}
+                    >
+                      <Iconify icon="solar:refresh-bold" />
+                    </IconButton>
+                  </span>
                 </Tooltip>
               ) : null}
               {permissions.canExport && row.status === 'Completed' && row.isExpired ? (
                 <Tooltip title="Regenerate export">
-                  <IconButton
-                    data-testid="hr-report-export-regenerate-button"
-                    size="small"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onExportAction('regenerate', row.id);
-                    }}
-                  >
-                    <Iconify icon="solar:restart-bold" />
-                  </IconButton>
+                  <span>
+                    <IconButton
+                      data-testid="hr-report-export-regenerate-button"
+                      size="small"
+                      disabled={actionsDisabled}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (actionsDisabled) return;
+                        onExportAction('regenerate', row.id);
+                      }}
+                    >
+                      <Iconify icon="solar:restart-bold" />
+                    </IconButton>
+                  </span>
                 </Tooltip>
               ) : null}
               {permissions.canShare && isOwnedByCurrentUser ? (
                 <Tooltip title="Share export">
-                  <IconButton
-                    data-testid="hr-report-export-share-button"
-                    size="small"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onExportAction('share', row.id);
-                    }}
-                  >
-                    <Iconify icon="solar:share-bold" />
-                  </IconButton>
+                  <span>
+                    <IconButton
+                      data-testid="hr-report-export-share-button"
+                      size="small"
+                      disabled={actionsDisabled}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (actionsDisabled) return;
+                        onExportAction('share', row.id);
+                      }}
+                    >
+                      <Iconify icon="solar:share-bold" />
+                    </IconButton>
+                  </span>
                 </Tooltip>
               ) : null}
               <Tooltip title="View export details">
-                <IconButton
-                  data-testid="hr-report-export-details-button"
-                  size="small"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setSelectedJobId(row.id);
-                  }}
-                >
-                  <Iconify icon="solar:info-circle-bold" />
-                </IconButton>
+                <span>
+                  <IconButton
+                    data-testid="hr-report-export-details-button"
+                    size="small"
+                    disabled={actionsDisabled}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (actionsDisabled) return;
+                      setSelectedJobId(row.id);
+                    }}
+                  >
+                    <Iconify icon="solar:info-circle-bold" />
+                  </IconButton>
+                </span>
               </Tooltip>
             </Stack>
           );
@@ -225,16 +286,93 @@ export function HrReportExportsTab({
     ],
     [
       currentUserId,
+      actionsDisabled,
       isDownloading,
       onDownload,
       onExportAction,
       permissions.canExport,
+      permissions.canDelete,
       permissions.canShare,
     ]
   );
 
   return (
     <>
+      <Box
+        sx={{
+          mb: 1.5,
+          p: 1.5,
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={1.5}
+          alignItems={{ xs: 'stretch', md: 'center' }}
+        >
+          <Typography variant="subtitle2" sx={{ minWidth: 110 }}>
+            Requested date
+          </Typography>
+          <TextField
+            select
+            size="small"
+            label="Date range"
+            value={dateFilter.preset}
+            onChange={(event) =>
+              onDateFilterChange({
+                ...dateFilter,
+                preset: event.target.value as HrReportExportDateFilter['preset'],
+              })
+            }
+            sx={{ minWidth: 180 }}
+          >
+            <MenuItem value="all">All dates</MenuItem>
+            <MenuItem value="today">Today</MenuItem>
+            <MenuItem value="last7Days">Last 7 days</MenuItem>
+            <MenuItem value="last30Days">Last 30 days</MenuItem>
+            <MenuItem value="custom">Custom range</MenuItem>
+          </TextField>
+          {dateFilter.preset === 'custom' ? (
+            <>
+              <TextField
+                size="small"
+                type="date"
+                label="From"
+                value={dateFilter.fromDate}
+                onChange={(event) =>
+                  onDateFilterChange({ ...dateFilter, fromDate: event.target.value })
+                }
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                size="small"
+                type="date"
+                label="To"
+                value={dateFilter.toDate}
+                onChange={(event) =>
+                  onDateFilterChange({ ...dateFilter, toDate: event.target.value })
+                }
+                slotProps={{ inputLabel: { shrink: true } }}
+                error={Boolean(
+                  dateFilter.fromDate &&
+                  dateFilter.toDate &&
+                  dateFilter.toDate < dateFilter.fromDate
+                )}
+                helperText={
+                  dateFilter.fromDate &&
+                  dateFilter.toDate &&
+                  dateFilter.toDate < dateFilter.fromDate
+                    ? 'To date must be on or after from date.'
+                    : undefined
+                }
+              />
+            </>
+          ) : null}
+        </Stack>
+      </Box>
       <CustomizableTable
         tableId="hr-report-exports"
         tableTitle="Exports"
@@ -250,7 +388,9 @@ export function HrReportExportsTab({
           />
         }
         rowProps={(row) => ({
-          onClick: () => setSelectedJobId(row.id),
+          onClick: () => {
+            if (!actionsDisabled) setSelectedJobId(row.id);
+          },
           sx: {
             cursor: 'pointer',
             ...(row.id === highlightedExportId
@@ -266,6 +406,7 @@ export function HrReportExportsTab({
       <HrReportExportDetailsDrawer
         job={selectedJob}
         isDownloading={isDownloading}
+        actionsDisabled={actionsDisabled}
         currentUserId={currentUserId}
         permissions={permissions}
         onClose={() => setSelectedJobId(null)}

@@ -1,83 +1,82 @@
-import type { ICardItem } from 'src/types/dashboard';
+import type { EmployeeDashboardData } from 'src/redux/hr/employeeApi';
 
-import { useState } from 'react';
+import dayjs from 'dayjs';
 import { Grid } from '@mui/material';
-import { fNumber } from 'src/utils/format-number';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
+
+import {
+  formatUpcomingHolidayDate,
+  formatEmployeeLeaveBalance,
+  employeeDashboardStatusCopy,
+} from '../employee-dashboard-utils';
 
 // ----------------------------------------------------------------------
 
-const EmployeeProfileOverview = () => {
-  const [cards, setCards] = useState<ICardItem[]>([
+const EmployeeProfileOverview = ({ data }: { data: EmployeeDashboardData }) => {
+  const status = employeeDashboardStatusCopy[data.todayStatus];
+  const cards = [
     {
       id: 'today-status',
       icon: 'solar:user-check-rounded-outline',
       title: "Today's Status",
-      count: 'Present',
-      color: 'success.main',
-      bgColor: 'success.lighter',
-      href: '',
-      labels: [],
-      width: 2.4,
+      count: status.label,
+      color: status.color,
+      bgColor: status.background,
+      description: dayjs(data.date).format('ddd, DD MMM YYYY'),
     },
     {
       id: 'attendance-percent',
       icon: 'solar:chart-square-outline',
       title: 'Attendance %',
-      count: '94%',
+      count: data.attendancePercentage == null ? '—' : `${data.attendancePercentage}%`,
       color: 'info.main',
       bgColor: 'info.lighter',
-      href: '',
-      labels: [],
-      width: 2.4,
+      description: `${data.recordedAttendanceDays} recorded day${
+        data.recordedAttendanceDays === 1 ? '' : 's'
+      }`,
     },
     {
       id: 'leave-balance',
       icon: 'solar:calendar-outline',
       title: 'Leave Balance',
-      count: fNumber(12),
+      count: formatEmployeeLeaveBalance(data),
       color: 'primary.main',
       bgColor: 'primary.lighter',
-      href: '',
-      labels: [],
-      width: 2.4,
+      description: data.isLeaveBalanceAvailable
+        ? 'Current accrued balance'
+        : 'No active leave policy',
     },
     {
       id: 'pending-requests',
       icon: 'solar:bell-bing-outline',
       title: 'Pending Requests',
-      count: fNumber(3),
+      count: data.pendingLeaveRequests,
       color: 'warning.main',
       bgColor: 'warning.lighter',
-      href: '',
-      labels: [],
-      width: 2.4,
+      description: 'Awaiting a decision',
     },
     {
       id: 'upcoming-holiday',
       icon: 'solar:star-outline',
       title: 'Upcoming Holiday',
-      count: 'Apr 14',
+      count: formatUpcomingHolidayDate(data.upcomingHoliday, data.date),
       color: 'secondary.main',
       bgColor: 'secondary.lighter',
-      href: '',
-      labels: [],
-      width: 2.4,
+      description: data.upcomingHoliday?.name ?? 'No upcoming holiday',
     },
-  ]);
+  ];
 
   return (
     <Grid container spacing={2}>
       {cards.map((card) => (
-        <Grid key={card.id} size={{ xs: 12, sm: 6, md: card.width }}>
+        <Grid key={card.id} size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <DashboardCard
             icon={card.icon}
             title={card.title}
             value={card.count}
             color={card.color}
             bgColor={card.bgColor}
-            href={card.href}
-            labels={card.labels}
+            description={card.description}
           />
         </Grid>
       ))}

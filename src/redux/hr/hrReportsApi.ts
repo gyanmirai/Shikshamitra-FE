@@ -108,6 +108,11 @@ export type HrReportExportJob = {
   expiresAt: string;
 };
 
+export type HrReportExportListParams = {
+  requestedFrom?: string;
+  requestedTo?: string;
+};
+
 export type HrReportOption = {
   id: string;
   label: string;
@@ -296,10 +301,11 @@ export const hrReportsApi = api.injectEndpoints({
         body: normalizeHrReportRequest(body),
       }),
     }),
-    getHrReportExports: builder.query<HrReportExportJob[], void>({
-      query: () => ({
+    getHrReportExports: builder.query<HrReportExportJob[], HrReportExportListParams | void>({
+      query: (params) => ({
         url: '/hr/reports/exports',
         method: 'GET',
+        params: params || undefined,
       }),
     }),
     getHrReportExport: builder.query<HrReportExportJob, string>({
@@ -312,6 +318,12 @@ export const hrReportsApi = api.injectEndpoints({
       query: (jobId) => ({
         url: `/hr/reports/exports/${jobId}/cancel`,
         method: 'POST',
+      }),
+    }),
+    deleteFailedHrReportExport: builder.mutation<void, string>({
+      query: (jobId) => ({
+        url: `/hr/reports/exports/${jobId}`,
+        method: 'DELETE',
       }),
     }),
     retryHrReportExport: builder.mutation<{ jobId: string; status: string }, string>({
@@ -422,6 +434,7 @@ export const {
   useGetHrReportExportsQuery,
   useGetHrReportExportQuery,
   useCancelHrReportExportMutation,
+  useDeleteFailedHrReportExportMutation,
   useRetryHrReportExportMutation,
   useRegenerateHrReportExportMutation,
   useShareHrReportExportMutation,

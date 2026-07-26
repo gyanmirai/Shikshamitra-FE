@@ -583,6 +583,7 @@ async function openApplicationDetails(
     }
   }
   await expect(page).toHaveURL(/application=/);
+  await expect(detailView).toContainText(candidate.email, { timeout: 30_000 });
   return detailView;
 }
 
@@ -612,7 +613,11 @@ async function withAnonymousPage(
   }
 }
 
-async function fillPublicApplication(page: Page, candidate: CandidateFixture) {
+async function fillPublicApplication(
+  page: Page,
+  candidate: CandidateFixture,
+  { advanceFromExperience = true }: { advanceFromExperience?: boolean } = {}
+) {
   const form = page.getByTestId('employee-application-public-form');
   await expect(form).toBeVisible({ timeout: 45_000 });
 
@@ -667,8 +672,10 @@ async function fillPublicApplication(page: Page, candidate: CandidateFixture) {
     .fill(candidate.experience.department);
   await fillDateField(page, form, 'Start Date', candidate.experience.startDate);
   await fillDateField(page, form, 'End Date', candidate.experience.endDate);
-  await page.getByTestId('employee-application-step-3-next').click();
-  await expect(form.getByTestId('employee-application-step-uploads-review')).toBeVisible();
+  if (advanceFromExperience) {
+    await page.getByTestId('employee-application-step-3-next').click();
+    await expect(form.getByTestId('employee-application-step-uploads-review')).toBeVisible();
+  }
 }
 
 async function uploadValidPublicFiles(page: Page, candidate: CandidateFixture) {
@@ -768,8 +775,16 @@ async function finalizeApplication(
   joiningDate: string
 ) {
   const row = applicationRow(page, candidate);
-  await row.getByTestId('employee-onboarding-row-details').getByTestId('table-action-more').click();
-  await page.getByTestId('employee-onboarding-row-finalize').click();
+  const moreActions = row
+    .getByTestId('employee-onboarding-row-details')
+    .getByTestId('table-action-more');
+  const finalizeAction = page.getByTestId('employee-onboarding-row-finalize');
+
+  await expect(async () => {
+    await moreActions.click();
+    await expect(finalizeAction).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
+  await finalizeAction.click();
 
   const dialog = page.getByTestId('employee-onboarding-finalize-dialog');
   await expect(dialog).toBeVisible();
@@ -830,29 +845,12 @@ async function finalizeApplication(
       response.url().includes(`/api/employee-applications/${applicationId}/finalize`) &&
       response.request().method() === 'POST'
   );
-  const accessControlRequestPromise = page.waitForRequest(
-    (request) =>
-      request.url().includes('/api/app/user-scope/bulk-assign') && request.method() === 'POST'
-  );
-  const accessControlResponsePromise = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/app/user-scope/bulk-assign') &&
-      response.request().method() === 'POST'
-  );
   await dialog.getByRole('button', { name: /^Finalize$/i }).click();
 
   const finalizeRequest = await finalizeRequestPromise;
   const finalizeResponse = await finalizeResponsePromise;
   if (!finalizeResponse.ok()) {
     throw new Error(`finalize: ${finalizeResponse.status()} ${await finalizeResponse.text()}`);
-  }
-  const accessControlRequest = await accessControlRequestPromise;
-  const accessControlResponse = await accessControlResponsePromise;
-  const accessControlForbidden = accessControlResponse.status() === 403;
-  if (!accessControlResponse.ok() && !accessControlForbidden) {
-    throw new Error(
-      `academic permission: ${accessControlResponse.status()} ${await accessControlResponse.text()}`
-    );
   }
   const result = await finalizeResponse.json();
   expect(isStatus(result.application?.status, EmployeeApplicationStatus.Finalized)).toBe(true);
@@ -864,15 +862,10 @@ async function finalizeApplication(
   expect(finalizePayload.personalInfo?.country?.isoCode).toBe(candidate.countryIsoCode);
   expect(finalizePayload.personalInfo?.state?.isoCode).toBe(candidate.stateIsoCode);
   expect(finalizePayload.personalInfo?.city).toBe(candidate.city);
-  const accessControlPayload = JSON.parse(accessControlRequest.postData() || '{}');
-  expect(accessControlPayload.scopes?.some((scope: any) => scope.educationMediumStageId)).toBe(
+  expect(finalizePayload.academicScopes?.some((scope: any) => scope.educationMediumStageId)).toBe(
     true
   );
-  expect(accessControlPayload).not.toHaveProperty('educationMediumStageIds');
-
-  if (accessControlForbidden) {
-    await dialog.getByRole('button', { name: /close/i }).click();
-  }
+  expect(finalizePayload).not.toHaveProperty('educationMediumStageIds');
   await expect(dialog).toBeHidden({ timeout: 30_000 });
 
   return {
@@ -1042,6 +1035,9 @@ test.describe('HR Employee onboarding E2E', () => {
 
     await filterApplicationsByStatus(page, 'Finalized');
     await expect(applicationRow(page, candidate)).toContainText('Finalized', { timeout: 30_000 });
+    const finalizedDetail = await openApplicationDetails(page, candidate, invite.application.id);
+    await expect(await selectControlByLabel(finalizedDetail, 'Status')).toBeDisabled();
+    await closeDetailView(page);
     await expectEmployeeCreated(page, candidate, finalizedEmployeeId);
     await expectFinalizedApiState(page, candidate, invite.application.id, finalizedEmployeeId);
   });
@@ -1058,6 +1054,13 @@ test.describe('HR Employee onboarding E2E', () => {
     await searchApplication(page, candidate.email);
     const detailView = await openApplicationDetails(page, candidate, invite.application.id);
     await expect(detailView.getByTestId('employee-onboarding-copy-link')).toBeVisible();
+    const statusSelect = await selectControlByLabel(detailView, 'Status');
+    await statusSelect.click();
+    await expect(
+      page.getByRole('option', { name: 'Ready for onboarding', exact: true })
+    ).toHaveCount(0);
+    await expect(page.getByRole('option', { name: 'Rejected', exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
 
     const regenerateResponsePromise = page.waitForResponse(
       (response) =>
@@ -1086,9 +1089,34 @@ test.describe('HR Employee onboarding E2E', () => {
         timeout: 30_000,
       });
     });
+
+    let deleteRequestCount = 0;
+    page.on('request', (request) => {
+      if (
+        request.method() === 'DELETE' &&
+        request.url().includes(`/api/employee-applications/${invite.application.id}`)
+      ) {
+        deleteRequestCount += 1;
+      }
+    });
+    await detailView.getByRole('button', { name: /^Delete$/i }).click();
+    await expect(page.getByRole('dialog', { name: 'Delete application?' })).toBeVisible();
+    expect(deleteRequestCount).toBe(0);
+
+    const deleteResponsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'DELETE' &&
+        response.url().includes(`/api/employee-applications/${invite.application.id}`)
+    );
+    await page.getByTestId('employee-onboarding-confirm-delete').click();
+    const deleteResponse = await deleteResponsePromise;
+    expect(deleteResponse.ok(), `delete application: ${deleteResponse.status()}`).toBe(true);
+    await expect(page.getByTestId('employee-onboarding-table')).toBeVisible();
+    await expect(applicationRow(page, candidate)).toBeHidden({ timeout: 30_000 });
+    expect(deleteRequestCount).toBe(1);
   });
 
-  test('blocks unsupported resume and photo files on the anonymous form', async ({
+  test('blocks unsupported files and supports previewing and removing selected uploads', async ({
     browser,
     page,
   }) => {
@@ -1117,6 +1145,19 @@ test.describe('HR Employee onboarding E2E', () => {
         mimeType: 'application/pdf',
         buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF'),
       });
+      const selectedResume = publicPage.getByTestId('employee-application-resume');
+      await expect(selectedResume).toContainText(candidate.resumeName);
+      await expect(publicPage.getByTestId('employee-application-resume-view')).toHaveAttribute(
+        'href',
+        /^blob:/
+      );
+      await publicPage.getByTestId('employee-application-resume-remove').click();
+      await expect(selectedResume).toBeHidden();
+      await publicPage.getByTestId('employee-application-resume-input').setInputFiles({
+        name: candidate.resumeName,
+        mimeType: 'application/pdf',
+        buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF'),
+      });
       await publicPage.getByTestId('employee-application-photo-input').setInputFiles({
         name: 'unsupported.txt',
         mimeType: 'text/plain',
@@ -1124,6 +1165,49 @@ test.describe('HR Employee onboarding E2E', () => {
       });
       await publicPage.getByTestId('employee-application-submit').click();
       await expect(publicPage.getByText(/Photo must be an image file/i).first()).toBeVisible();
+
+      await publicPage.getByTestId('employee-application-photo-input').setInputFiles({
+        name: candidate.photoName,
+        mimeType: 'image/png',
+        buffer: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lN8mxQAAAABJRU5ErkJggg==',
+          'base64'
+        ),
+      });
+      const selectedPhoto = publicPage.getByTestId('employee-application-photo');
+      await expect(selectedPhoto).toContainText(candidate.photoName);
+      await expect(publicPage.getByTestId('employee-application-photo-view')).toHaveAttribute(
+        'href',
+        /^blob:/
+      );
+      await publicPage.getByTestId('employee-application-photo-remove').click();
+      await expect(selectedPhoto).toBeHidden();
+    });
+  });
+
+  test('blocks future work-experience dates before anonymous submission', async ({
+    browser,
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const candidate = createCandidateFixture('Future Experience');
+    const tomorrow = toDateInputValue(addDays(new Date(), 1));
+    candidate.experience.startDate = tomorrow;
+    candidate.experience.endDate = tomorrow;
+
+    await gotoOnboarding(page);
+    const invite = await createInviteThroughUi(page, candidate);
+
+    await withAnonymousPage(browser, async (publicPage) => {
+      await publicPage.goto(invite.publicPath, { waitUntil: 'domcontentloaded' });
+      await fillPublicApplication(publicPage, candidate, { advanceFromExperience: false });
+      await publicPage.getByTestId('employee-application-step-3-next').click();
+
+      await expect(
+        publicPage.getByText(/Start date cannot be in the future/i).first()
+      ).toBeVisible();
+      await expect(publicPage.getByTestId('employee-application-step-experience')).toBeVisible();
+      await expect(publicPage.getByTestId('employee-application-step-uploads-review')).toBeHidden();
     });
   });
 });

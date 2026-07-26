@@ -267,8 +267,8 @@ const familyInformationValidationSchema = Yup.object({
     .nullable(),
 });
 
-const additionalDetailsValidationSchema = Yup.object({
-  bplCardNo: Yup.string().nullable(),
+export const additionalDetailsValidationSchema = Yup.object({
+  bplCardNo: Yup.string().nullable().max(50, 'BPL Card No cannot exceed 50 characters'),
   personWithDisability: Yup.string().nullable(),
   secondLanguage: Yup.string().nullable(),
   libraryMember: Yup.boolean(),

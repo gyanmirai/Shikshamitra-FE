@@ -23,6 +23,15 @@ const BUSINESS_DATE_KEYS = new Set(['date', 'fromDate', 'toDate', 'effectiveFrom
 const BUSINESS_DATE_SEPARATOR_KEY_PATTERN = /(^date$|[_-]date$)/i;
 const COUNT_KEY_PATTERN = /count$/i;
 const AUDIT_VALUE_SEPARATOR = '; ';
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 
 export type HrAuditRenderValue =
   | { kind: 'empty'; text: string }
@@ -158,6 +167,14 @@ function formatAuditValue(
   }
 
   if (Array.isArray(value)) {
+    if (parentKey === 'customWeeklyOffs') {
+      const days = value
+        .map((item) => Number(item))
+        .filter((day) => Number.isInteger(day) && day >= 0 && day < WEEKDAY_NAMES.length)
+        .map((day) => WEEKDAY_NAMES[day]);
+      return truncate(days.join(', '), maxLength) || '-';
+    }
+
     const visibleItems = value.slice(0, 4);
     const separator = visibleItems.some((item) => item && typeof item === 'object')
       ? AUDIT_VALUE_SEPARATOR
@@ -299,7 +316,13 @@ function buildAuditRenderValue(
   if (Array.isArray(value)) {
     if (!value.length) return { kind: 'empty', text: '-' };
 
-    const items = value.map((item) => buildAuditRenderValue(item, depth + 1, parentKey));
+    const items =
+      parentKey === 'customWeeklyOffs'
+        ? value
+            .map((item) => Number(item))
+            .filter((day) => Number.isInteger(day) && day >= 0 && day < WEEKDAY_NAMES.length)
+            .map((day) => ({ kind: 'scalar', text: WEEKDAY_NAMES[day] }) as HrAuditRenderValue)
+        : value.map((item) => buildAuditRenderValue(item, depth + 1, parentKey));
     return { kind: 'list', text: renderAuditValueText({ kind: 'list', text: '', items }), items };
   }
 

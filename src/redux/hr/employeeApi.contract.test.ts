@@ -4,6 +4,7 @@ import { employeeType } from 'src/redux/tagTypes';
 import {
   buildWorkExperienceUrl,
   buildReportingManagerUrl,
+  buildEmployeeDashboardUrl,
   buildEmployeeSubresourceUrl,
   EMPLOYEE_LIST_MAX_PAGE_SIZE,
   buildEmployeeListQueryParams,
@@ -34,6 +35,12 @@ describe('employeeApi contracts', () => {
   it('builds reporting manager URLs for assign mutation', () => {
     expect(buildReportingManagerUrl({ id: 'employee-4' })).toBe(
       '/employees/employee-4/reporting-manager'
+    );
+  });
+
+  it('builds the employee dashboard URL from the employee id contract', () => {
+    expect(buildEmployeeDashboardUrl({ employeeId: 'employee-5' })).toBe(
+      '/employees/employee-5/dashboard'
     );
   });
 

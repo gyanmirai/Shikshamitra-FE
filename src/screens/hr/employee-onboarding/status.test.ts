@@ -1,11 +1,13 @@
 import { it, expect, describe } from 'vitest';
 
 import {
+  getValidNextStatuses,
   EmployeeApplicationStatus,
   canFinalizeEmployeeApplication,
   getEmployeeApplicationStatusColor,
   getEmployeeApplicationStatusLabel,
   normalizeEmployeeApplicationStatus,
+  canRegenerateEmployeeApplicationLink,
 } from './status';
 
 describe('employee application status utilities', () => {
@@ -28,5 +30,29 @@ describe('employee application status utilities', () => {
     expect(canFinalizeEmployeeApplication(EmployeeApplicationStatus.InvitationSent)).toBe(false);
     expect(canFinalizeEmployeeApplication(EmployeeApplicationStatus.Applied)).toBe(true);
     expect(canFinalizeEmployeeApplication(EmployeeApplicationStatus.Finalized)).toBe(false);
+  });
+
+  it('does not offer workflow progress before candidate submission', () => {
+    expect(getValidNextStatuses(EmployeeApplicationStatus.InvitationSent)).toEqual([
+      EmployeeApplicationStatus.InvitationSent,
+      EmployeeApplicationStatus.Rejected,
+      EmployeeApplicationStatus.Withdrawn,
+    ]);
+  });
+
+  it.each([
+    EmployeeApplicationStatus.Finalized,
+    EmployeeApplicationStatus.Rejected,
+    EmployeeApplicationStatus.Withdrawn,
+  ])('keeps terminal status %s closed', (status) => {
+    expect(getValidNextStatuses(status)).toEqual([status]);
+  });
+
+  it('regenerates invitation links only before submission', () => {
+    expect(canRegenerateEmployeeApplicationLink(EmployeeApplicationStatus.InvitationSent)).toBe(
+      true
+    );
+    expect(canRegenerateEmployeeApplicationLink(EmployeeApplicationStatus.Applied)).toBe(false);
+    expect(canRegenerateEmployeeApplicationLink(EmployeeApplicationStatus.Rejected)).toBe(false);
   });
 });

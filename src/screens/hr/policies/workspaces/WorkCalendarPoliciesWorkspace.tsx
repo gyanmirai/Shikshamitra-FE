@@ -42,7 +42,7 @@ export default function WorkCalendarPoliciesWorkspace({ focus }: HRPolicyWorkspa
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Work Calendars"
-        description={currentYear?.name || 'No academic year selected'}
+        description="Manage working-day patterns and holiday calendars used by attendance and payroll."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Policies & Rules' },

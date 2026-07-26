@@ -1,5 +1,6 @@
 import type React from 'react';
 
+import { useState } from 'react';
 import { screen } from '@testing-library/react';
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -98,6 +99,9 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
             activePayroll: [{ id: 'payroll-1', name: 'Teacher Payroll' }],
             activeAttendance: [{ id: 'attendance-1', name: 'Teacher Attendance' }],
             employeeOptions: [{ id: 'employee-1', label: 'Asha Teacher' }],
+            employeeLookupSearch: 'Asha Teacher',
+            setEmployeeLookupSearch: vi.fn(),
+            employeeSearchLoading: false,
             groupOptions: [],
             academicYearId: 'ay-2026',
             activePolicyOperation: null,
@@ -117,6 +121,7 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
     );
 
     expect(screen.getByText('Precedence: Employee > Group > Default')).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toHaveValue('Asha Teacher');
     expect(screen.queryByText(/Shift > Role > Department/)).not.toBeInTheDocument();
   });
 
@@ -237,5 +242,87 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
     expect(await screen.findByText('Teaching Staff')).toBeInTheDocument();
     expect(screen.getByText('2 members')).toBeInTheDocument();
     expect(screen.queryByText('0 members')).not.toBeInTheDocument();
+  });
+
+  it('clears a selected employee when the visible search text changes', async () => {
+    const user = userEvent.setup();
+
+    function Harness() {
+      const [assignmentForm, setAssignmentForm] = useState({
+        targetType: 'employee',
+        targetKey: 'employee-1',
+        targetDisplayName: 'Asha Teacher',
+        payrollPolicyId: 'payroll-1',
+        attendancePolicyId: 'attendance-1',
+        leavePolicyId: 'leave-1',
+        effectiveFrom: '2026-06-01',
+        effectiveTo: '',
+        priority: '100',
+        assignmentReason: '',
+        isActive: true,
+      });
+      const [employeeLookupSearch, setEmployeeLookupSearch] = useState('Asha Teacher');
+
+      return (
+        <>
+          <output data-testid="selected-target">{assignmentForm.targetKey}</output>
+          <AssignmentPolicyDrawer
+            ctx={
+              {
+                drawer: { kind: 'assignment', mode: 'create' },
+                formError: '',
+                assignmentForm,
+                setAssignmentForm,
+                assignmentConflict: null,
+                assignmentDateError: '',
+                setAssignmentDateError: vi.fn(),
+                assignmentPreview: null,
+                assignmentPreviewLoading: false,
+                assignmentPreviewError: null,
+                payroll: [{ id: 'payroll-1', name: 'Teacher Payroll' }],
+                attendance: [{ id: 'attendance-1', name: 'Teacher Attendance' }],
+                activePayroll: [{ id: 'payroll-1', name: 'Teacher Payroll' }],
+                activeAttendance: [{ id: 'attendance-1', name: 'Teacher Attendance' }],
+                activeLeavePolicies: [{ id: 'leave-1', name: 'Default Leave' }],
+                defaultLeavePolicy: { id: 'leave-1', name: 'Default Leave' },
+                employeeOptions: [
+                  { id: 'employee-1', name: 'Asha Teacher' },
+                  { id: 'employee-2', name: 'Bina Teacher' },
+                ],
+                employeeLookupSearch,
+                setEmployeeLookupSearch,
+                employeeSearchLoading: false,
+                groupOptions: [],
+                academicYearId: 'ay-2026',
+                activePolicyOperation: null,
+                isPolicyOperationActive: false,
+                createAssignmentState: { isLoading: false },
+                updateAssignmentState: { isLoading: false },
+                previewPolicyAssignmentImpactState: { isLoading: false },
+                canAssignPolicy: true,
+                canPreviewImpact: true,
+                closeDrawer: vi.fn(),
+                saveAssignment: vi.fn(),
+                previewCurrentAssignmentImpact: vi.fn(),
+                previewAssignment: vi.fn(),
+              } as any
+            }
+          />
+        </>
+      );
+    }
+
+    renderWithProviders(<Harness />);
+
+    const employeePicker = screen.getByRole('combobox');
+    await user.clear(employeePicker);
+    await user.type(employeePicker, 'Bina');
+
+    expect(screen.getByTestId('selected-target')).toBeEmptyDOMElement();
+
+    await user.click(await screen.findByRole('option', { name: 'Bina Teacher' }));
+
+    expect(screen.getByTestId('selected-target')).toHaveTextContent('employee-2');
+    expect(employeePicker).toHaveValue('Bina Teacher');
   });
 });

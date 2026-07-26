@@ -1,5 +1,13 @@
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const INSTITUTION_TIME_ZONE = 'Asia/Kolkata';
 
 export type EmployeeApplicationLocation = {
   name: string;
@@ -216,23 +224,33 @@ const pincodeSchema = Yup.string()
   .max(10)
   .matches(/^$|^\d{6}$/, 'Pincode must be 6 digits.');
 
+export const getEmployeeApplicationInstitutionDate = (
+  reference: string | Date | dayjs.Dayjs = dayjs()
+) => dayjs(reference).tz(INSTITUTION_TIME_ZONE).format('YYYY-MM-DD');
+
+export const isAfterEmployeeApplicationInstitutionDate = (
+  value?: string | null,
+  reference: string | Date | dayjs.Dayjs = dayjs()
+) => {
+  if (!value || !dayjs(value).isValid()) return false;
+  return dayjs(value).format('YYYY-MM-DD') > getEmployeeApplicationInstitutionDate(reference);
+};
+
 const dateOfBirthSchema = Yup.string()
   .required('Date of birth is required.')
   .test('past-date', 'Date of birth must be in the past.', (value) => {
     if (!value) return false;
-    const date = new Date(value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Number.isFinite(date.getTime()) && date < today;
+    const date = dayjs(value);
+    const today = dayjs(getEmployeeApplicationInstitutionDate());
+    return date.isValid() && date.isBefore(today, 'day');
   })
   .test('adult', 'Applicant must be at least 18 years old.', (value) => {
     if (!value) return false;
-    const date = new Date(value);
-    if (!Number.isFinite(date.getTime())) return false;
-    const today = new Date();
-    let age = today.getFullYear() - date.getFullYear();
-    const birthdayThisYear = new Date(today.getFullYear(), date.getMonth(), date.getDate());
-    if (today < birthdayThisYear) age -= 1;
+    const date = dayjs(value);
+    if (!date.isValid()) return false;
+    const today = dayjs(getEmployeeApplicationInstitutionDate());
+    let age = today.year() - date.year();
+    if (today.isBefore(date.add(age, 'year'), 'day')) age -= 1;
     return age >= 18;
   });
 
@@ -249,7 +267,18 @@ const familyMemberSchema = () =>
     state: optionalLocationSchema('State'),
     city: Yup.string().trim().max(128),
     pincode: pincodeSchema,
-  });
+  }).test(
+    'name-required-when-entered',
+    'Name is required when family details are entered.',
+    function familyName(member) {
+      if (!member || isEmptyFamilyMember(member)) return true;
+      if (trimString(member.name)) return true;
+      return this.createError({
+        path: `${this.path}.name`,
+        message: 'Name is required when family details are entered.',
+      });
+    }
+  );
 
 export const employeeApplicationValidationSchema = Yup.object({
   personalInfo: Yup.object({
@@ -280,7 +309,7 @@ export const employeeApplicationValidationSchema = Yup.object({
         'Invalid religion selected.'
       ),
     casteType: Yup.string().required('Category is required.').oneOf(['0', '1', '2', '3']),
-    familyCaste: Yup.string().trim().max(128),
+    familyCaste: Yup.string().trim().required('Family caste is required.').max(128),
     maritalStatus: Yup.string().required('Marital status is required.').oneOf(['0', '1', '2', '3']),
     bloodGroup: Yup.string().oneOf(['', '1', '2', '3', '4', '5', '6', '7', '8']),
     isTeaching: Yup.boolean().required(),
@@ -310,22 +339,58 @@ export const employeeApplicationValidationSchema = Yup.object({
   // Work experience entries are fully optional — only validate end >= start if both provided
   workExperiences: Yup.array().of(
     Yup.object({
-      mediumStageName: Yup.string().trim().max(256),
-      designation: Yup.string().trim().max(256),
+      mediumStageName: Yup.string()
+        .trim()
+        .max(256)
+        .test(
+          'organization-required-when-entered',
+          'Organization is required.',
+          function organizationRequired(value) {
+            return isEmptyWorkExperience(this.parent) || Boolean(trimString(value));
+          }
+        ),
+      designation: Yup.string()
+        .trim()
+        .max(256)
+        .test(
+          'designation-required-when-entered',
+          'Designation is required.',
+          function designationRequired(value) {
+            return isEmptyWorkExperience(this.parent) || Boolean(trimString(value));
+          }
+        ),
       department: Yup.string().trim().max(256),
       country: optionalLocationSchema('Country'),
       state: optionalLocationSchema('State'),
       city: Yup.string().trim().max(128),
-      startDate: Yup.string(),
-      endDate: Yup.string().test(
-        'end-after-start',
-        'End date must be on or after start date.',
-        function endAfterStart(value) {
-          const { startDate } = this.parent;
-          if (!value || !startDate) return true;
-          return new Date(value) >= new Date(startDate);
-        }
-      ),
+      startDate: Yup.string()
+        .test(
+          'start-required-when-entered',
+          'Start date is required.',
+          function startRequired(value) {
+            return isEmptyWorkExperience(this.parent) || Boolean(value);
+          }
+        )
+        .test(
+          'start-not-future',
+          'Start date cannot be in the future.',
+          (value) => !isAfterEmployeeApplicationInstitutionDate(value)
+        ),
+      endDate: Yup.string()
+        .test(
+          'end-not-future',
+          'End date cannot be in the future.',
+          (value) => !isAfterEmployeeApplicationInstitutionDate(value)
+        )
+        .test(
+          'end-after-start',
+          'End date must be on or after start date.',
+          function endAfterStart(value) {
+            const { startDate } = this.parent;
+            if (!value || !startDate) return true;
+            return new Date(value) >= new Date(startDate);
+          }
+        ),
     })
   ),
 });
@@ -354,7 +419,18 @@ export const validatePhotoFile = (file: File | null) => {
   return null;
 };
 
-export const isEmptyFamilyMember = (member: EmployeeApplicationFamilyMemberValues) =>
+export const resolveEmployeeApplicationUploadError = (
+  currentError: string | null,
+  resume: File | null,
+  photo: File | null
+) => currentError || validateResumeFile(resume) || validatePhotoFile(photo);
+
+type PartialFamilyMember = {
+  [TKey in keyof EmployeeApplicationFamilyMemberValues]?:
+    EmployeeApplicationFamilyMemberValues[TKey] | null;
+};
+
+export const isEmptyFamilyMember = (member: PartialFamilyMember) =>
   !trimString(member.name) &&
   !trimString(member.occupation) &&
   !trimString(member.mobileNo) &&
@@ -453,14 +529,16 @@ export const buildEmployeeApplicationSubmitPayload = (values: EmployeeApplicatio
     isLibraryMember: values.additionalInfo.isLibraryMember,
     isTransportMember: values.additionalInfo.isTransportMember,
   },
-  workExperiences: values.workExperiences.map((experience) => ({
-    mediumStageName: experience.mediumStageName.trim(),
-    designation: experience.designation.trim(),
-    department: emptyToNull(experience.department),
-    country: locationPayload(experience.country),
-    state: locationPayload(experience.state),
-    city: emptyToNull(experience.city),
-    startDate: experience.startDate || null,
-    endDate: experience.endDate || null,
-  })),
+  workExperiences: values.workExperiences
+    .filter((experience) => !isEmptyWorkExperience(experience))
+    .map((experience) => ({
+      mediumStageName: experience.mediumStageName.trim(),
+      designation: experience.designation.trim(),
+      department: emptyToNull(experience.department),
+      country: locationPayload(experience.country),
+      state: locationPayload(experience.state),
+      city: emptyToNull(experience.city),
+      startDate: experience.startDate || null,
+      endDate: experience.endDate || null,
+    })),
 });

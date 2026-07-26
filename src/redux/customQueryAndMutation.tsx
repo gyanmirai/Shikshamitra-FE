@@ -19,13 +19,16 @@ interface IQueryAndMutation<T> {
     success?: boolean;
   };
 }
+
+export const shouldShowQueryMutationError = (isError: boolean, popupErrorEnabled: boolean) =>
+  isError && popupErrorEnabled;
+
 function useQueryAndMutation<T>({
   type = 'query',
   currentQueryAndMutation,
   params,
   options = {},
   popupConfig,
-  isThrowError = false,
 }: IQueryAndMutation<T>) {
   popupConfig = {
     error: true,
@@ -43,7 +46,7 @@ function useQueryAndMutation<T>({
   const { isSuccess, isError, error } = type === 'query' ? resp : resp[1];
 
   useEffect(() => {
-    if (isError && popupConfig.error) {
+    if (shouldShowQueryMutationError(isError, Boolean(popupConfig.error))) {
       const parsed = parseApiProblemDetail(error);
       shikshaMitraToast.error({ message: parsed.detail || popupConfig.errorMessage });
     }

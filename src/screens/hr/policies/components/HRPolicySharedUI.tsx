@@ -275,10 +275,7 @@ export function PolicyDrawerLayout({
         </Stack>
       </Box>
       <Divider />
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        spacing={1.5}
+      <Box
         sx={{
           px: { xs: 2, sm: 3 },
           py: 1.5,
@@ -288,30 +285,37 @@ export function PolicyDrawerLayout({
           zIndex: 1,
         }}
       >
-        <Button
-          variant="outlined"
-          startIcon={<Iconify icon="basil:cross-solid" />}
-          onClick={onClose}
-          disabled={Boolean(operation)}
-          size="small"
-        >
-          Cancel
-        </Button>
-        <Tooltip title={disabled && disabledReason ? disabledReason : ''}>
-          <span>
-            <Button
-              variant="contained"
-              disabled={disabled || Boolean(operation)}
-              loading={loading && !operation}
-              startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
-              onClick={onSave}
-              size="small"
-            >
-              {operation ? 'Saving...' : 'Submit'}
-            </Button>
-          </span>
-        </Tooltip>
-      </Stack>
+        {error ? (
+          <Alert severity="error" sx={{ mb: 1.25 }}>
+            {error}
+          </Alert>
+        ) : null}
+        <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon="basil:cross-solid" />}
+            onClick={onClose}
+            disabled={Boolean(operation)}
+            size="small"
+          >
+            Cancel
+          </Button>
+          <Tooltip title={disabled && disabledReason ? disabledReason : ''}>
+            <span>
+              <Button
+                variant="contained"
+                disabled={disabled || Boolean(operation)}
+                loading={loading && !operation}
+                startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
+                onClick={onSave}
+                size="small"
+              >
+                {operation ? 'Saving...' : 'Submit'}
+              </Button>
+            </span>
+          </Tooltip>
+        </Stack>
+      </Box>
     </Box>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -69,6 +70,10 @@ import {
   useDownloadAttendanceImportErrorReportMutation,
 } from 'src/redux/hr/attendanceImportApi';
 
+import {
+  toAttendanceImportPayrollMonth,
+  getDefaultAttendanceImportMonth,
+} from './attendance-import-month-filter';
 import {
   isSupportedAttendanceImportFile,
   hasDuplicateAttendanceImportFileName,
@@ -260,7 +265,9 @@ const AttendanceImportHistoryScreen = () => {
   }, [lockAttendanceImportBatch, lockConfirmRow, unlockAttendanceImportBatch]);
 
   // Month picker — null means "no filter"
-  const [selectedMonth, setSelectedMonth] = useState<any>(null);
+  const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(() =>
+    getDefaultAttendanceImportMonth()
+  );
 
   // The import ID to show in the detail dialog
   const [viewImportData, setViewImportData] = useState<AttendanceImportItem | null>(null);
@@ -296,9 +303,7 @@ const AttendanceImportHistoryScreen = () => {
   });
   const [downloadingRows, setDownloadingRows] = useState<Record<string, 'file' | 'error'>>({});
   // Build payrollMonth param: "YYYY-MM" from the dayjs picker value
-  const payrollMonthParam = selectedMonth
-    ? (dayjs(selectedMonth).format('YYYY-MM') as string)
-    : undefined;
+  const payrollMonthParam = toAttendanceImportPayrollMonth(selectedMonth);
 
   // ── API call 1: fetch list ─────────────────────────────────────────────────
   const {
@@ -882,14 +887,7 @@ const AttendanceImportHistoryScreen = () => {
             columns={columns}
             data={listData?.items || []}
             isLoading={listLoading || listFetching || isUploadBusy}
-            noDataText={
-              <Stack alignItems="center" spacing={1} py={4}>
-                {' '}
-                <Typography color="text.secondary" variant="body2">
-                  No biometric attendance found.
-                </Typography>
-              </Stack>
-            }
+            noDataText="No biometric attendance found."
           />
         </>
       ) : (

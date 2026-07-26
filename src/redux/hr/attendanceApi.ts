@@ -73,7 +73,11 @@ const compactParams = (params: Record<string, unknown>) =>
     )
   );
 
-export const attendancePayrollInvalidationTags = [employeeType.attendance, employeeType.runPayroll];
+export const attendancePayrollInvalidationTags = [
+  employeeType.attendance,
+  employeeType.runPayroll,
+  employeeType.hrDashboard,
+];
 
 export const buildGetDayAttendanceQueryParams = ({
   attendanceDate,

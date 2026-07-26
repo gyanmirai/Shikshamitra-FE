@@ -32,7 +32,12 @@ import {
 } from '@mui/material';
 
 import { getHolidayFromDate } from '../holiday-overlap-utils';
-import { WEEKDAY_OPTIONS, WEEKLY_RULE_OPTIONS } from '../hr-policy-workspace.constants';
+import {
+  WEEKDAY_OPTIONS,
+  HR_POLICY_MAX_YEAR,
+  HR_POLICY_MIN_YEAR,
+  WEEKLY_RULE_OPTIONS,
+} from '../hr-policy-workspace.constants';
 import {
   EmptyRows,
   DrawerField,
@@ -181,6 +186,8 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
             help="The first date this work calendar can be used for attendance and payroll calculations."
           >
             <DatePicker
+              minDate={dayjs(`${HR_POLICY_MIN_YEAR}-01-01`)}
+              maxDate={dayjs(`${HR_POLICY_MAX_YEAR}-12-31`)}
               value={calendarForm.effectiveFrom ? dayjs(calendarForm.effectiveFrom) : null}
               onChange={(val) =>
                 setCalendarForm((current) => ({
@@ -189,7 +196,13 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                 }))
               }
               format="DD/MM/YYYY"
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  helperText: `Supported years: ${HR_POLICY_MIN_YEAR}–${HR_POLICY_MAX_YEAR}.`,
+                },
+              }}
             />
           </DrawerField>
           <DrawerField
@@ -197,6 +210,8 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
             help="Optional end date. Leave blank when this calendar should remain available until replaced."
           >
             <DatePicker
+              minDate={dayjs(`${HR_POLICY_MIN_YEAR}-01-01`)}
+              maxDate={dayjs(`${HR_POLICY_MAX_YEAR}-12-31`)}
               value={calendarForm.effectiveTo ? dayjs(calendarForm.effectiveTo) : null}
               onChange={(val) =>
                 setCalendarForm((current) => ({
@@ -210,7 +225,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                   size: 'small',
                   fullWidth: true,
                   placeholder: 'No end date',
-                  helperText: 'Leave blank for no end date.',
+                  helperText: `Optional. Supported years: ${HR_POLICY_MIN_YEAR}–${HR_POLICY_MAX_YEAR}.`,
                 },
               }}
             />
@@ -314,6 +329,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                     label={day.short}
                     color={selected ? 'primary' : 'default'}
                     variant={selected ? 'filled' : 'outlined'}
+                    disabled={!selected && calendarForm.customWeeklyOffs.length >= 6}
                     onClick={() =>
                       setCalendarForm((current) => ({
                         ...current,
@@ -326,6 +342,12 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                 );
               })}
             </Stack>
+            {calendarForm.customWeeklyOffs.length >= 6 ? (
+              <Alert severity="info">
+                At least one working day is required, so the remaining day cannot be selected as a
+                weekly off.
+              </Alert>
+            ) : null}
           </Stack>
         ) : null}
       </PolicySection>

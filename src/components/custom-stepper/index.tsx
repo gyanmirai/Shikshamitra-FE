@@ -8,8 +8,8 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
-import { styled } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { alpha, styled } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
@@ -25,6 +25,8 @@ import {
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
+import { mergeStepperButtonProps } from './button-props';
+import { focusFirstFormikError, shouldValidateForwardStepClick } from './formik-validation';
 
 // const steps = ['Personal Information', 'Contact Information', 'Review'];
 
@@ -88,6 +90,7 @@ interface CustomStepperWithFormikProps {
   disableSubmit?: boolean;
   saveButtonProps?: LoadingButtonProps;
   saveAndNextButtonProps?: LoadingButtonProps;
+  validateForwardStepClick?: boolean;
   viewMode?: 'horizontal' | 'vertical'; // Add this line
 }
 
@@ -276,6 +279,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   finalButtonLabel = 'Submit',
   saveButtonProps = {},
   saveAndNextButtonProps = {},
+  validateForwardStepClick = false,
   viewMode = 'horizontal', // Default to horizontal
 }) => {
   const isMobile = useResponsive('down', 'lg');
@@ -293,6 +297,11 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     validateOnChange,
   });
   const formik = formikInstance ?? internalFormik;
+  const isBusy =
+    isSaveLoading.value ||
+    isLoading ||
+    Boolean(saveButtonProps.loading) ||
+    Boolean(saveAndNextButtonProps.loading);
 
   React.useEffect(() => {
     formik.setTouched({});
@@ -302,6 +311,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   const isVertical = viewMode === 'vertical' && !isMobile;
   const hasExplicitCompletedSteps = Array.isArray(completedSteps);
   const submitCurrentStep = async () => {
+    if (isBusy) return;
+
     setIsBackClick(false);
 
     const validationErrors = await formik.validateForm();
@@ -309,11 +320,57 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
 
     if (hasValidationErrors) {
       formik.setTouched(markTouchedFromErrors(validationErrors), true);
+      focusFirstFormikError(validationErrors);
       return;
     }
 
     handleNext(activeStep === steps.length - 1, formik.values, formik, setIsLoading);
   };
+  const saveCurrentStep = async () => {
+    if (isBusy) return;
+
+    const validationErrors = await formik.validateForm();
+    if (Object.keys(validationErrors).length <= 0) {
+      onSave?.(activeStep === steps.length - 1, formik.values, formik, isSaveLoading.setValue);
+    } else {
+      formik.setTouched(markTouchedFromErrors(validationErrors), true);
+      focusFirstFormikError(validationErrors);
+    }
+  };
+  const mergedSaveButtonProps = mergeStepperButtonProps(
+    {
+      variant: 'outlined',
+      size: 'small',
+      startIcon: <Iconify icon={GlobalIcons.submit} />,
+    },
+    saveButtonProps,
+    {
+      loading: isSaveLoading.value || Boolean(saveButtonProps.loading),
+      disabled: isBusy || Boolean(saveButtonProps.disabled),
+      onClick: saveCurrentStep,
+    }
+  );
+  const mergedSaveAndNextButtonProps = mergeStepperButtonProps(
+    {
+      variant: 'contained',
+      type: 'button',
+      size: 'small',
+      startIcon: activeStep === steps.length - 1 ? <Iconify icon={GlobalIcons.submit} /> : null,
+      endIcon:
+        activeStep !== steps.length - 1 ? (
+          <Iconify icon="ic:round-arrow-forward" width={20} />
+        ) : null,
+    },
+    saveAndNextButtonProps,
+    {
+      loading: isLoading || Boolean(saveAndNextButtonProps.loading),
+      disabled:
+        isBusy ||
+        Boolean(saveAndNextButtonProps.disabled) ||
+        (activeStep === steps.length - 1 && disableSubmit),
+      onClick: submitCurrentStep,
+    }
+  );
 
   const renderStepper = () => (
     <Stepper
@@ -397,7 +454,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         }}
       > */}
       {steps.map((label: string, index: number) => {
-        const isClickable = isStepClickable ? isStepClickable(index) : true;
+        const isClickable = !isBusy && (isStepClickable ? isStepClickable(index) : true);
         const isLabelDisabled = isStepClickable ? !isClickable : isDisabledLabel;
 
         return (
@@ -406,10 +463,19 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             id={`step-label-${index}`}
             completed={hasExplicitCompletedSteps ? completedSteps.includes(index) : undefined}
             sx={{ cursor: isClickable ? 'pointer' : 'no-drop' }}
-            onClick={() => {
-              if (isClickable) {
-                onStepClick?.(index, label, formik);
+            onClick={async () => {
+              if (!isClickable) return;
+
+              if (shouldValidateForwardStepClick(activeStep, index, validateForwardStepClick)) {
+                const validationErrors = await formik.validateForm();
+                if (Object.keys(validationErrors).length > 0) {
+                  formik.setTouched(markTouchedFromErrors(validationErrors), true);
+                  focusFirstFormikError(validationErrors);
+                  return;
+                }
               }
+
+              onStepClick?.(index, label, formik);
             }}
           >
             <CustomStepLabel
@@ -465,31 +531,6 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           },
         }}
       >
-        {(isSaveLoading.value || isLoading) && (
-          <div
-            className="loading-overlay"
-            style={{
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              position: 'absolute',
-              opacity: 0.7,
-              zIndex: 1,
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            }}
-          >
-            <CircularProgress size={40} />
-            <span style={{ fontSize: '14px', fontWeight: 500, color: 'rgba(0,0,0,0.7)' }}>
-              Saving...
-            </span>
-          </div>
-        )}
         {formik && renderItem({ formik, activeStep, isBackClick })}
       </Scrollbar>
 
@@ -509,7 +550,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         <Button
           size="small"
           variant="outlined"
-          disabled={activeStep === 0}
+          disabled={activeStep === 0 || isBusy}
           onClick={() => {
             setIsBackClick(true);
             handleBack();
@@ -519,49 +560,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           Back
         </Button>
         <Box display="flex" gap={1}>
-          {showSaveButton && (
-            <LoadingButton
-              variant="outlined"
-              size="small"
-              loading={isSaveLoading.value}
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              onClick={async () => {
-                const error = await formik.validateForm();
-                formik.setTouched({});
-
-                if (Object.keys(error).length <= 0) {
-                  onSave?.(
-                    activeStep === steps.length - 1,
-                    formik.values,
-                    formik,
-                    isSaveLoading.setValue
-                  );
-                } else {
-                  formik.handleSubmit();
-                }
-              }}
-              {...saveButtonProps}
-            >
-              Save
-            </LoadingButton>
-          )}
-          <LoadingButton
-            variant="contained"
-            type="button"
-            size="small"
-            loading={isLoading}
-            onClick={submitCurrentStep}
-            startIcon={
-              activeStep === steps.length - 1 ? <Iconify icon={GlobalIcons.submit} /> : null
-            }
-            endIcon={
-              activeStep !== steps.length - 1 ? (
-                <Iconify icon="ic:round-arrow-forward" width={20} />
-              ) : null
-            }
-            disabled={activeStep === steps.length - 1 ? disableSubmit : false}
-            {...saveAndNextButtonProps}
-          >
+          {showSaveButton && <LoadingButton {...mergedSaveButtonProps}>Save</LoadingButton>}
+          <LoadingButton {...mergedSaveAndNextButtonProps}>
             {activeStep === steps.length - 1 ? finalButtonLabel : nextButtonLabel}
           </LoadingButton>
         </Box>
@@ -578,9 +578,35 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         flexDirection: isVertical ? 'row' : 'column',
         position: 'relative',
       }}
+      aria-busy={isBusy}
     >
       {renderStepper()}
       {renderFormContent()}
+      {isBusy && (
+        <Box
+          className="loading-overlay"
+          role="status"
+          aria-live="polite"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: (theme) => theme.zIndex.modal + 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1.5,
+            color: 'text.primary',
+            bgcolor: (theme) => alpha(theme.palette.background.paper, 0.88),
+            cursor: 'wait',
+          }}
+        >
+          <CircularProgress size={40} />
+          <Box component="span" sx={{ typography: 'body2', fontWeight: 500 }}>
+            Saving...
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

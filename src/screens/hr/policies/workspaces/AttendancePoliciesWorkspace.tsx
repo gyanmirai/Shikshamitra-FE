@@ -40,7 +40,7 @@ export default function AttendancePoliciesWorkspace({ focus }: HRPolicyWorkspace
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Attendance Policies"
-        description={currentYear?.name || 'No academic year selected'}
+        description="Manage attendance capture, thresholds, exceptions, penalties, and overtime rules."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Policies & Rules' },

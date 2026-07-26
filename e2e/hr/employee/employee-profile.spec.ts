@@ -9,12 +9,22 @@ test.describe('HR Employee profile', () => {
     const assertNoErrors = await expectNoRuntimeErrors(page);
 
     await gotoEmployeeList(page);
+    const dashboardResponsePromise = page.waitForResponse(
+      (response) =>
+        /\/api\/employees\/[^/]+\/dashboard(?:\?|$)/.test(response.url()) &&
+        response.request().method() === 'GET'
+    );
     await openFirstRowProfile(page);
+    const dashboardResponse = await dashboardResponsePromise;
+    expect(dashboardResponse.ok()).toBeTruthy();
 
     await expect(page.getByTestId(testIds.profileHeader)).toBeVisible();
     await expect(page.getByText(/Employee Code/i)).toBeVisible();
     await expect(page.getByText(/Role/i)).toBeVisible();
     await expect(page.getByText(/Organization/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Attendance Calendar' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Upcoming Holidays' })).toBeVisible();
+    await expect(page.getByText('Attendance Trend', { exact: true })).toBeVisible();
 
     const profileUrl = new URL(page.url());
     profileUrl.searchParams.set('tab', 'attendance');

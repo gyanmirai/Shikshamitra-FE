@@ -5,7 +5,9 @@ import {
   toAttendanceTableTimeValue,
   MANUAL_ATTENDANCE_UI_STATUS,
   mapTakeAttendanceStatusToUi,
+  restoreManualAttendanceRows,
   getDirtyManualAttendanceRows,
+  canMutateManualAttendanceDay,
   applyManualAttendanceRowStatus,
   mapManualAttendanceStatusToWire,
   applyManualAttendanceBulkStatus,
@@ -19,6 +21,40 @@ import {
 } from 'src/screens/hr/attendance/manual-attendance/status-mapper';
 
 describe('manual attendance status mapper', () => {
+  it('keeps actions disabled while a newly selected date has no current response', () => {
+    expect(
+      canMutateManualAttendanceDay({
+        hasDate: true,
+        hasCurrentData: true,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+      })
+    ).toBe(true);
+
+    // A cached response may still exist in `data`, but date B is not actionable until
+    // RTK Query exposes B through `currentData`.
+    expect(
+      canMutateManualAttendanceDay({
+        hasDate: true,
+        hasCurrentData: false,
+        isLoading: false,
+        isFetching: true,
+        isError: false,
+      })
+    ).toBe(false);
+
+    expect(
+      canMutateManualAttendanceDay({
+        hasDate: true,
+        hasCurrentData: true,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+      })
+    ).toBe(true);
+  });
+
   it('maps numeric API statuses to UI statuses', () => {
     expect(mapTakeAttendanceStatusToUi(TAKE_ATTENDANCE_STATUS.Present)).toBe(
       MANUAL_ATTENDANCE_UI_STATUS.Present
@@ -445,6 +481,58 @@ describe('manual attendance status mapper', () => {
       expect.objectContaining({ timeIn: '09:15', timeOut: '16:45' }),
       expect.objectContaining({ timeIn: '10:00', timeOut: '13:00' }),
     ]);
+  });
+
+  it('restores deliberate times when toggling away from and back to a status', () => {
+    const halfDay = {
+      employeeId: 'employee-1',
+      status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+      captureMode: 'manual_with_time' as const,
+      shiftStartTime: '07:00:00',
+      shiftEndTime: '17:30:00',
+      timeIn: '07:00',
+      timeOut: '12:01',
+    };
+
+    const present = applyManualAttendanceRowStatus(halfDay, MANUAL_ATTENDANCE_UI_STATUS.Present);
+    const restoredHalfDay = applyManualAttendanceRowStatus(
+      present,
+      MANUAL_ATTENDANCE_UI_STATUS.HalfDay
+    );
+
+    expect(present).toMatchObject({
+      status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+      timeIn: '07:00',
+      timeOut: '17:30',
+    });
+    expect(restoredHalfDay).toMatchObject({
+      status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+      timeIn: '07:00',
+      timeOut: '12:01',
+    });
+  });
+
+  it('restores the loaded approved-leave snapshot when reset discards an override', () => {
+    const originalRows = mapManualAttendanceDayResponseToRows({
+      items: [
+        {
+          employeeId: 'employee-on-leave',
+          status: TAKE_ATTENDANCE_STATUS.OnLeave,
+          isApprovedLeave: true,
+          approvedLeaveLabel: 'On Leave',
+        },
+      ],
+    });
+    const overriddenRows = originalRows.map((row) =>
+      applyManualAttendanceRowStatus(row, MANUAL_ATTENDANCE_UI_STATUS.Present)
+    );
+
+    expect(overriddenRows[0].status).toBe(MANUAL_ATTENDANCE_UI_STATUS.Present);
+    expect(restoreManualAttendanceRows(originalRows)[0]).toMatchObject({
+      status: MANUAL_ATTENDANCE_UI_STATUS.OnLeave,
+      isApprovedLeave: true,
+      approvedLeaveLabel: 'On Leave',
+    });
   });
 
   it('fills only the missing side when save-normalizing partial manual time edits', () => {

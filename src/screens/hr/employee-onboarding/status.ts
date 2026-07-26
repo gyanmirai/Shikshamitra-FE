@@ -82,6 +82,17 @@ export const canFinalizeEmployeeApplication = (
     EmployeeApplicationStatus.Withdrawn,
   ].includes(normalizeEmployeeApplicationStatus(value));
 
+export const isEmployeeApplicationTerminal = (value: EmployeeApplicationStatus | string | number) =>
+  [
+    EmployeeApplicationStatus.Finalized,
+    EmployeeApplicationStatus.Rejected,
+    EmployeeApplicationStatus.Withdrawn,
+  ].includes(normalizeEmployeeApplicationStatus(value));
+
+export const canRegenerateEmployeeApplicationLink = (
+  value: EmployeeApplicationStatus | string | number
+) => normalizeEmployeeApplicationStatus(value) === EmployeeApplicationStatus.InvitationSent;
+
 // Returns statuses that are valid targets from `currentStatus`.
 // Rules:
 //   - Forward transitions only (no going backward in the workflow)
@@ -90,7 +101,20 @@ export const canFinalizeEmployeeApplication = (
 // The current status itself is always included so the Select can render the selected value.
 export const getValidNextStatuses = (
   currentStatus: EmployeeApplicationStatus
-): EmployeeApplicationStatus[] =>
-  EMPLOYEE_APPLICATION_STATUSES.filter(
-    (s) => s !== EmployeeApplicationStatus.Finalized && s >= currentStatus
+): EmployeeApplicationStatus[] => {
+  if (isEmployeeApplicationTerminal(currentStatus)) {
+    return [currentStatus];
+  }
+
+  if (currentStatus === EmployeeApplicationStatus.InvitationSent) {
+    return [
+      EmployeeApplicationStatus.InvitationSent,
+      EmployeeApplicationStatus.Rejected,
+      EmployeeApplicationStatus.Withdrawn,
+    ];
+  }
+
+  return EMPLOYEE_APPLICATION_STATUSES.filter(
+    (status) => status !== EmployeeApplicationStatus.Finalized && status >= currentStatus
   );
+};

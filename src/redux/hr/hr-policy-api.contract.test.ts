@@ -2,12 +2,31 @@ import { it, expect, describe } from 'vitest';
 import { employeeType } from 'src/redux/tagTypes';
 
 import {
+  buildPolicyListParams,
   policyInvalidationTags,
   buildPolicyAssignmentPreviewParams,
   buildPolicyHolidayImpactPreviewParams,
 } from './hr-policy-api';
 
 describe('hrPolicyApi contracts', () => {
+  it('sends the archive filter with server-side policy paging and search', () => {
+    expect(
+      buildPolicyListParams({
+        academicYearId: 'year-1',
+        maxResultCount: 25,
+        skipCount: 50,
+        search: 'standard',
+        isArchived: true,
+      })
+    ).toEqual({
+      academicYearId: 'year-1',
+      maxResultCount: 25,
+      skipCount: 50,
+      search: 'standard',
+      isArchived: true,
+    });
+  });
+
   it('builds holiday impact params with work calendar and month filters', () => {
     expect(
       buildPolicyHolidayImpactPreviewParams({

@@ -78,6 +78,33 @@ const invalidShiftDayResponse = {
   ],
 };
 
+const approvedLeaveDayResponse = {
+  ...dayResponse,
+  totalCount: 1,
+  items: [
+    {
+      employeeId: 'employee-on-leave',
+      fullName: 'Approved Leave Employee',
+      employeeCode: 'EMP-LEAVE',
+      department: 'HR',
+      dateIso: '2026-06-10T00:00:00Z',
+      inTime: null,
+      outTime: null,
+      shiftStartTime: '09:00:00',
+      shiftEndTime: '17:00:00',
+      captureMode: 'manual_with_time',
+      status: 4,
+      isApprovedLeave: true,
+      approvedLeaveId: 'leave-1',
+      approvedLeaveKind: 'FullDay',
+      approvedLeaveLabel: 'On Leave',
+      source: 'approved_leave',
+      warnings: [],
+      errors: [],
+    },
+  ],
+};
+
 async function gotoManualAttendance(page: Page) {
   await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded', timeout: 120_000 });
   await expect(page.getByRole('heading', { name: /Mark Attendance/i })).toBeVisible({
@@ -100,7 +127,6 @@ test.describe('HR manual attendance shift time automation', () => {
     await page.route('**/api/hr/attendance/take-attendance/day?**', async (route) => {
       await route.fulfill({ status: 200, json: dayResponse });
     });
-
     await gotoManualAttendance(page);
     await expect(page.getByRole('button', { name: /Apply Shift Time/i })).toHaveCount(0);
     await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
@@ -143,6 +169,50 @@ test.describe('HR manual attendance shift time automation', () => {
     await expect(
       page.getByText('Shift start and end time are required for Present or Half Day')
     ).toHaveCount(0);
+  });
+
+  test('restores an approved-leave row when Reset discards an unsaved override', async ({
+    page,
+  }) => {
+    await page.route('**/api/hr/attendance/take-attendance/day?**', async (route) => {
+      await route.fulfill({ status: 200, json: approvedLeaveDayResponse });
+    });
+
+    await gotoManualAttendance(page);
+    await expect(page.getByText('Approved Leave Employee')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText('On Leave')).toBeVisible();
+
+    await page.getByTestId('manual-attendance-employee-on-leave-present').click();
+    await expect(page.getByText('No remarks needed')).toBeVisible();
+
+    await page.getByRole('button', { name: /^Reset$/ }).click();
+    await page.getByRole('button', { name: /Yes, Reset/i }).click();
+
+    await expect(page.getByText('On Leave')).toBeVisible();
+    await expect(page.getByText('No remarks needed')).toHaveCount(0);
+  });
+
+  test('preserves a manually edited half-day time across status toggles', async ({ page }) => {
+    await page.route('**/api/hr/attendance/take-attendance/day?**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        json: { ...dayResponse, totalCount: 1, items: [dayResponse.items[0]] },
+      });
+    });
+
+    await gotoManualAttendance(page);
+    await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
+
+    await page.getByTestId('manual-attendance-employee-present-half-day').click();
+    await page.getByTestId('manual-attendance-employee-present-timeOut-edit').click();
+    await page.getByTestId('manual-attendance-employee-present-timeOut-input').fill('12:01');
+    await page.getByTestId('manual-attendance-employee-present-timeOut-save').click();
+    await expect(page.getByText('12:01')).toBeVisible();
+
+    await page.getByTestId('manual-attendance-employee-present-present').click();
+    await expect(page.getByText('17:00')).toBeVisible();
+    await page.getByTestId('manual-attendance-employee-present-half-day').click();
+    await expect(page.getByText('12:01')).toBeVisible();
   });
 
   test('clears shift-derived times when a row is moved back to pending', async ({ page }) => {

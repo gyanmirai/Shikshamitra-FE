@@ -14,6 +14,28 @@ type LeaveRequestQueryArgs = {
   employeeId?: string;
 };
 
+export type LeavePolicyQueryArgs = {
+  academicYearId?: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  archivedOnly?: boolean;
+};
+
+export const buildLeavePolicyQueryParams = ({
+  academicYearId,
+  page = 1,
+  pageSize = 10,
+  search,
+  archivedOnly,
+}: LeavePolicyQueryArgs) => ({
+  academicYearId,
+  page,
+  pageSize,
+  ...(search ? { search } : {}),
+  ...(archivedOnly !== undefined ? { archivedOnly } : {}),
+});
+
 export type LeaveYearEndSettlementItem = {
   id: string;
   runId: string;
@@ -99,10 +121,10 @@ export const leaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Leave Policies
     getLeavePolicies: builder.query({
-      query: ({ academicYearId, page = 1, pageSize = 10, search }) => ({
+      query: (args: LeavePolicyQueryArgs) => ({
         url: '/leave-policies',
         method: 'GET',
-        params: { academicYearId, page, pageSize, search },
+        params: buildLeavePolicyQueryParams(args),
       }),
       providesTags: [employeeType.employeeLeavePolicy],
     }),
@@ -156,6 +178,18 @@ export const leaveApi = api.injectEndpoints({
       query: (id) => ({
         url: `/leave-policies/${id}`,
         method: 'DELETE',
+      }),
+      invalidatesTags: [
+        employeeType.employeeLeavePolicy,
+        employeeType.employee,
+        employeeType.hrDashboard,
+        employeeType.runPayroll,
+      ],
+    }),
+    unarchiveLeavePolicy: builder.mutation({
+      query: (id) => ({
+        url: `/leave-policies/${id}/unarchive`,
+        method: 'POST',
       }),
       invalidatesTags: [
         employeeType.employeeLeavePolicy,
@@ -345,6 +379,7 @@ export const {
   useUpdateLeavePolicyMutation,
   useSetDefaultLeavePolicyMutation,
   useDeleteLeavePolicyMutation,
+  useUnarchiveLeavePolicyMutation,
   useGetLeaveRequestsQuery,
   useGetMyLeaveRequestsQuery,
   useLazyGetMyLeaveRequestsQuery,

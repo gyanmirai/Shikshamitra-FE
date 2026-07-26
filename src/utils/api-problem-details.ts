@@ -77,6 +77,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   addCandidate(candidates, data?.error?.message);
   addCandidate(candidates, data?.title);
   addCandidate(candidates, error?.error);
+  addCandidate(candidates, error?.message);
 
   const errorCode = data?.errorCode || data?.error?.code || data?.code;
   const knownMessage = typeof errorCode === 'string' ? KNOWN_ERROR_MESSAGES[errorCode] : undefined;

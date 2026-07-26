@@ -114,6 +114,22 @@ describe('HR audit formatting', () => {
     expect(rendered).not.toContain('"');
   });
 
+  it('renders custom weekly-off numbers as weekday names', () => {
+    expect(formatHrAuditValue('[0,2,6]', 120, 'customWeeklyOffs')).toBe(
+      'Sunday, Tuesday, Saturday'
+    );
+
+    const rendered = toHrAuditRenderValue('[1,5]', 'customWeeklyOffs');
+    expect(rendered).toEqual({
+      kind: 'list',
+      text: 'Monday, Friday',
+      items: [
+        { kind: 'scalar', text: 'Monday' },
+        { kind: 'scalar', text: 'Friday' },
+      ],
+    });
+  });
+
   it('builds structured render values for count summaries and references', () => {
     const summary = toHrAuditRenderValue(
       '{"totalCount":8,"includedCount":3,"removedCount":5,"manualCount":0}'

@@ -108,11 +108,15 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
   const [uploadDocument] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUploadDocumentsMutation,
+    isThrowError: true,
+    popupConfig: { error: false },
   });
 
   const [updateDocument] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useEmployeeUpdateDocumentMutation,
+    isThrowError: true,
+    popupConfig: { error: false },
   });
 
   const { data: documents, isLoading } = useQueryAndMutation({
@@ -234,6 +238,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             minWidth: '80px',
             align: 'left',
             isSort: false,
+            excludeFromExport: true,
             render(value, row) {
               const isUploading = uploadingRows[row.id];
               return (
@@ -285,6 +290,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             isSort: false,
             minWidth: '6vw',
             align: 'left',
+            excludeFromExport: true,
             render(value, row) {
               const isUploading = uploadingRows[row.id];
               const isDisabled = !row.uploadedDoc || isUploading;
@@ -319,6 +325,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             isSort: false,
             minWidth: '6vw',
             align: 'left',
+            excludeFromExport: true,
             render(value, row) {
               const isUploading = uploadingRows[row.id];
               const isDownloading = downloadingRows[row.id];

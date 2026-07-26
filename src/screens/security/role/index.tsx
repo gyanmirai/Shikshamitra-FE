@@ -37,14 +37,46 @@ import {
   Button,
   MenuList,
   MenuItem,
+  Checkbox,
   TextField,
   Typography,
   DialogActions,
+  FormControlLabel,
   CircularProgress,
 } from '@mui/material';
 
 import Visibility from './visibility';
 import Permission from './permission';
+import {
+  getEmployeeOnboardingAssignable,
+  isReservedEmployeeOnboardingRoleName,
+  normalizeEmployeeOnboardingAssignable,
+} from './employee-onboarding-role';
+
+type EmployeeGroupAudienceValue = 'Teaching' | 'NonTeaching' | 'Both';
+
+const EMPLOYEE_GROUP_AUDIENCE_OPTIONS: {
+  label: string;
+  value: EmployeeGroupAudienceValue;
+}[] = [
+  { label: 'Teaching only', value: 'Teaching' },
+  { label: 'Non Teaching only', value: 'NonTeaching' },
+  { label: 'Both groups', value: 'Both' },
+];
+
+const getRoleAudience = (role: any): string =>
+  role?.roleAudience ??
+  role?.RoleAudience ??
+  role?.extraProperties?.roleAudience ??
+  role?.extraProperties?.RoleAudience ??
+  'Employee';
+
+const getEmployeeGroupAudience = (role: any): EmployeeGroupAudienceValue =>
+  role?.employeeGroupAudience ??
+  role?.EmployeeGroupAudience ??
+  role?.extraProperties?.employeeGroupAudience ??
+  role?.extraProperties?.EmployeeGroupAudience ??
+  'Both';
 
 // Main component for managing roles and permissions in the system
 const RoleScreen = () => {
@@ -344,29 +376,50 @@ const RoleForm = ({ handleClose, editData }: any) => {
   });
 
   // Formik instance for form handling and validation
-  const formik = useFormik<{ role: string; color: string }>({
+  const formik = useFormik<{
+    role: string;
+    color: string;
+    employeeGroupAudience: EmployeeGroupAudienceValue;
+    employeeOnboardingAssignable: boolean;
+  }>({
     initialValues: {
-      role: editData ? editData.name : null,
+      role: editData ? editData.name : '',
       color: editData
         ? editData.extraProperties?.color || editData.extraProperties?.Color || editData.color
-        : null,
+        : '',
+      employeeGroupAudience: getEmployeeGroupAudience(editData),
+      employeeOnboardingAssignable: getEmployeeOnboardingAssignable(editData),
     },
     validationSchema: Yup.object().shape({
       role: Yup.string().required('Role is required'),
       color: Yup.string().required('Color is required'),
+      employeeGroupAudience: Yup.string()
+        .oneOf(['Teaching', 'NonTeaching', 'Both'])
+        .required('Employee group availability is required'),
     }),
     onSubmit: async (values) => {
       try {
+        const roleAudience = editData ? getRoleAudience(editData) : 'Employee';
+        const employeeOnboardingAssignable = normalizeEmployeeOnboardingAssignable({
+          roleName: values.role,
+          roleAudience,
+          requested: values.employeeOnboardingAssignable,
+        });
         if (editData) {
           await updateRole({
             id: editData.id,
             body: {
               name: values.role,
               color: values.color,
+              employeeGroupAudience: values.employeeGroupAudience,
+              employeeOnboardingAssignable,
               isDefault: true,
               isPublic: false,
               extraProperties: {
                 color: values.color,
+                roleAudience,
+                employeeGroupAudience: values.employeeGroupAudience,
+                employeeOnboardingAssignable,
               },
             },
           }).unwrap();
@@ -377,11 +430,16 @@ const RoleForm = ({ handleClose, editData }: any) => {
           await addRole({
             name: values.role,
             color: values.color,
+            employeeGroupAudience: values.employeeGroupAudience,
+            employeeOnboardingAssignable,
 
             isDefault: true,
             isPublic: false,
             extraProperties: {
               color: values.color,
+              roleAudience: 'Employee',
+              employeeGroupAudience: values.employeeGroupAudience,
+              employeeOnboardingAssignable,
             },
           }).unwrap();
           shikshaMitraToast.success({
@@ -422,6 +480,56 @@ const RoleForm = ({ handleClose, editData }: any) => {
               onBlur={formik.handleBlur}
             />
           </ShakingTextField>
+          <ShakingTextField
+            error={
+              formik.touched.employeeGroupAudience && Boolean(formik.errors.employeeGroupAudience)
+            }
+          >
+            <TextField
+              select
+              label="Employee Group Availability"
+              name="employeeGroupAudience"
+              size="small"
+              disabled={isSuccess}
+              value={formik.values.employeeGroupAudience}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                formik.touched.employeeGroupAudience && Boolean(formik.errors.employeeGroupAudience)
+              }
+              helperText={
+                (formik.touched.employeeGroupAudience && formik.errors.employeeGroupAudience) ||
+                'Controls which employee groups can select this role.'
+              }
+              fullWidth
+            >
+              {EMPLOYEE_GROUP_AUDIENCE_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </ShakingTextField>
+          <Box>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="employeeOnboardingAssignable"
+                  checked={
+                    !isReservedEmployeeOnboardingRoleName(formik.values.role) &&
+                    formik.values.employeeOnboardingAssignable
+                  }
+                  disabled={isSuccess || isReservedEmployeeOnboardingRoleName(formik.values.role)}
+                  onChange={formik.handleChange}
+                />
+              }
+              label="Available for employee onboarding"
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+              Allows HR users to assign this role when creating an employee. Reserved system roles
+              cannot be enabled.
+            </Typography>
+          </Box>
           <ShakingTextField error={!!(formik.touched.color && formik.errors.color) || false}>
             <Typography
               variant="subtitle2"
