@@ -1,7 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import { Add, Sync, Gavel, CheckCircle, AccountBalance } from '@mui/icons-material';
 import {
@@ -30,6 +34,8 @@ import {
   useOverrideAdmissionCrmPaymentGateMutation,
   useAcknowledgeAdmissionCrmConcessionFinanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { admissionCrmActionPermissions } from './admission-action-permissions';
 
 type Props = { leadId: string; academicYearId: string };
 
@@ -75,6 +81,27 @@ const inDays = (days: number) => {
 };
 
 export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
+  const canIssueQuotations = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.issueQuotations
+  );
+  const canRecordFinanceStatus = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.recordFinanceStatus
+  );
+  const canRequestConcession = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.requestConcession
+  );
+  const canApproveConcession = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.approveConcession
+  );
+  const canOverridePaymentGates = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.overridePaymentGates
+  );
   const [policyId, setPolicyId] = useState('');
   const [quotationExpiry, setQuotationExpiry] = useState(() => inDays(7));
   const [financeState, setFinanceState] = useState(AdmissionCrmFinanceState.PendingConfirmation);
@@ -108,6 +135,7 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
   const readiness = readinessQuery.data;
   const quotation = readiness?.currentQuotation;
   const policies = useMemo(() => policiesQuery.data?.items || [], [policiesQuery.data?.items]);
+  const financialQueriesFailed = readinessQuery.isError || policiesQuery.isError;
 
   useEffect(() => {
     if (!policyId && policies.length) setPolicyId(policies[0].id);
@@ -157,10 +185,34 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
           ) : null}
         </Stack>
         {(readinessQuery.isFetching || policiesQuery.isFetching) && <LinearProgress />}
+        {financialQueriesFailed ? (
+          <Alert
+            severity="error"
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  readinessQuery.refetch();
+                  policiesQuery.refetch();
+                }}
+              >
+                Retry
+              </Button>
+            }
+          >
+            Financial readiness could not be loaded. Retry before issuing a quotation or recording a
+            payment state.
+          </Alert>
+        ) : null}
         {readiness?.blockingReason ? (
           <Alert severity="warning">{readiness.blockingReason}</Alert>
         ) : null}
-        {!quotation && policies.length === 0 && !policiesQuery.isFetching ? (
+        {!quotation &&
+        policies.length === 0 &&
+        !policiesQuery.isFetching &&
+        !policiesQuery.isError &&
+        !readinessQuery.isError ? (
           <Alert severity="warning">
             No published fee policy is available. Payment is treated as not required until a policy
             and quotation are issued.
@@ -172,7 +224,7 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
           </Alert>
         )}
 
-        {!quotation ? (
+        {!quotation && canIssueQuotations && !policiesQuery.isError && !readinessQuery.isError ? (
           <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
             <TextField
               select
@@ -206,7 +258,9 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
               Issue quotation
             </LoadingButton>
           </Stack>
-        ) : (
+        ) : null}
+
+        {quotation ? (
           <Stack spacing={1}>
             <Stack direction="row" gap={1} flexWrap="wrap">
               <Chip size="small" label={quotation.quotationNumber} />
@@ -246,181 +300,187 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
                 ))}
               </Stack>
             </Box>
-            <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-              <TextField
-                select
-                size="small"
-                label="Finance state"
-                value={financeState}
-                onChange={(event) =>
-                  setFinanceState(Number(event.target.value) as AdmissionCrmFinanceState)
-                }
-                sx={{ minWidth: 180 }}
-              >
-                {Object.entries(financeLabels).map(([value, label]) => (
-                  <MenuItem key={value} value={Number(value)}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                size="small"
-                type="number"
-                label="Confirmed amount"
-                value={confirmedAmount}
-                onChange={(event) => setConfirmedAmount(event.target.value)}
-              />
-              <TextField
-                size="small"
-                label="Finance reference"
-                value={financeReference}
-                onChange={(event) => setFinanceReference(event.target.value)}
-              />
-              <LoadingButton
-                variant="outlined"
-                startIcon={<Sync />}
-                loading={financeMutationState.isLoading}
-                onClick={() =>
-                  run(
-                    () =>
-                      recordFinance({
-                        quotationId: quotation.id,
-                        body: {
-                          state: financeState,
-                          confirmedAmount: Number(confirmedAmount),
-                          financeReference: financeReference || undefined,
-                          source: 'Finance reconciliation',
-                          confirmedAt: new Date().toISOString(),
-                        },
-                      }).unwrap(),
-                    'Finance state recorded.',
-                    'Unable to record Finance state.'
-                  )
-                }
-              >
-                Record state
-              </LoadingButton>
-            </Stack>
-            <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Gate override reason"
-                value={gateOverrideReason}
-                onChange={(event) => setGateOverrideReason(event.target.value)}
-              />
-              <TextField
-                size="small"
-                type="datetime-local"
-                label="Override until"
-                value={gateOverrideUntil}
-                onChange={(event) => setGateOverrideUntil(event.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-              <LoadingButton
-                color="warning"
-                variant="outlined"
-                startIcon={<Gavel />}
-                loading={overrideState.isLoading}
-                disabled={!gateOverrideReason.trim()}
-                onClick={() =>
-                  run(
-                    () =>
-                      overrideGate({
-                        quotationId: quotation.id,
-                        body: {
-                          reason: gateOverrideReason,
-                          until: gateOverrideUntil
-                            ? new Date(gateOverrideUntil).toISOString()
-                            : null,
-                        },
-                      }).unwrap(),
-                    'Payment gate override recorded.',
-                    'Unable to override payment gate.'
-                  )
-                }
-              >
-                Override gate
-              </LoadingButton>
-            </Stack>
+            {canRecordFinanceStatus && !financialQueriesFailed ? (
+              <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                <TextField
+                  select
+                  size="small"
+                  label="Finance state"
+                  value={financeState}
+                  onChange={(event) =>
+                    setFinanceState(Number(event.target.value) as AdmissionCrmFinanceState)
+                  }
+                  sx={{ minWidth: 180 }}
+                >
+                  {Object.entries(financeLabels).map(([value, label]) => (
+                    <MenuItem key={value} value={Number(value)}>
+                      {label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  size="small"
+                  type="number"
+                  label="Confirmed amount"
+                  value={confirmedAmount}
+                  onChange={(event) => setConfirmedAmount(event.target.value)}
+                />
+                <TextField
+                  size="small"
+                  label="Finance reference"
+                  value={financeReference}
+                  onChange={(event) => setFinanceReference(event.target.value)}
+                />
+                <LoadingButton
+                  variant="outlined"
+                  startIcon={<Sync />}
+                  loading={financeMutationState.isLoading}
+                  onClick={() =>
+                    run(
+                      () =>
+                        recordFinance({
+                          quotationId: quotation.id,
+                          body: {
+                            state: financeState,
+                            confirmedAmount: Number(confirmedAmount),
+                            financeReference: financeReference || undefined,
+                            source: 'Finance reconciliation',
+                            confirmedAt: new Date().toISOString(),
+                          },
+                        }).unwrap(),
+                      'Finance state recorded.',
+                      'Unable to record Finance state.'
+                    )
+                  }
+                >
+                  Record state
+                </LoadingButton>
+              </Stack>
+            ) : null}
+            {canOverridePaymentGates && !financialQueriesFailed ? (
+              <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Gate override reason"
+                  value={gateOverrideReason}
+                  onChange={(event) => setGateOverrideReason(event.target.value)}
+                />
+                <TextField
+                  size="small"
+                  type="datetime-local"
+                  label="Override until"
+                  value={gateOverrideUntil}
+                  onChange={(event) => setGateOverrideUntil(event.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                />
+                <LoadingButton
+                  color="warning"
+                  variant="outlined"
+                  startIcon={<Gavel />}
+                  loading={overrideState.isLoading}
+                  disabled={!gateOverrideReason.trim()}
+                  onClick={() =>
+                    run(
+                      () =>
+                        overrideGate({
+                          quotationId: quotation.id,
+                          body: {
+                            reason: gateOverrideReason,
+                            until: gateOverrideUntil
+                              ? new Date(gateOverrideUntil).toISOString()
+                              : null,
+                          },
+                        }).unwrap(),
+                      'Payment gate override recorded.',
+                      'Unable to override payment gate.'
+                    )
+                  }
+                >
+                  Override gate
+                </LoadingButton>
+              </Stack>
+            ) : null}
           </Stack>
-        )}
+        ) : null}
 
         <Divider />
         <Typography variant="subtitle2">Concessions and scholarships</Typography>
-        <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-          <TextField
-            select
-            size="small"
-            label="Type"
-            value={concessionType}
-            onChange={(event) =>
-              setConcessionType(Number(event.target.value) as AdmissionCrmConcessionType)
-            }
-            sx={{ minWidth: 160 }}
-          >
-            {Object.entries(concessionLabels).map(([value, label]) => (
-              <MenuItem key={value} value={Number(value)}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            size="small"
-            type="number"
-            label="Amount"
-            value={concessionAmount}
-            onChange={(event) => setConcessionAmount(event.target.value)}
-          />
-          <TextField
-            size="small"
-            type="number"
-            label="Percentage"
-            value={concessionPercentage}
-            onChange={(event) => setConcessionPercentage(event.target.value)}
-          />
-          <TextField
-            size="small"
-            fullWidth
-            label="Reason"
-            value={concessionReason}
-            onChange={(event) => setConcessionReason(event.target.value)}
-          />
-          <TextField
-            size="small"
-            label="Evidence reference"
-            value={concessionEvidence}
-            onChange={(event) => setConcessionEvidence(event.target.value)}
-          />
-          <LoadingButton
-            variant="outlined"
-            loading={requestState.isLoading}
-            disabled={
-              !concessionReason.trim() ||
-              (Number(concessionAmount) <= 0 && Number(concessionPercentage) <= 0)
-            }
-            onClick={() =>
-              run(
-                () =>
-                  requestConcession({
-                    leadId,
-                    body: {
-                      quotationId: quotation?.id,
-                      type: concessionType,
-                      requestedAmount: Number(concessionAmount),
-                      requestedPercentage: Number(concessionPercentage),
-                      reason: concessionReason,
-                      evidenceReference: concessionEvidence || undefined,
-                    },
-                  }).unwrap(),
-                'Concession requested.',
-                'Unable to request concession.'
-              )
-            }
-          >
-            Request
-          </LoadingButton>
-        </Stack>
+        {canRequestConcession && !financialQueriesFailed ? (
+          <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+            <TextField
+              select
+              size="small"
+              label="Type"
+              value={concessionType}
+              onChange={(event) =>
+                setConcessionType(Number(event.target.value) as AdmissionCrmConcessionType)
+              }
+              sx={{ minWidth: 160 }}
+            >
+              {Object.entries(concessionLabels).map(([value, label]) => (
+                <MenuItem key={value} value={Number(value)}>
+                  {label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              size="small"
+              type="number"
+              label="Amount"
+              value={concessionAmount}
+              onChange={(event) => setConcessionAmount(event.target.value)}
+            />
+            <TextField
+              size="small"
+              type="number"
+              label="Percentage"
+              value={concessionPercentage}
+              onChange={(event) => setConcessionPercentage(event.target.value)}
+            />
+            <TextField
+              size="small"
+              fullWidth
+              label="Reason"
+              value={concessionReason}
+              onChange={(event) => setConcessionReason(event.target.value)}
+            />
+            <TextField
+              size="small"
+              label="Evidence reference"
+              value={concessionEvidence}
+              onChange={(event) => setConcessionEvidence(event.target.value)}
+            />
+            <LoadingButton
+              variant="outlined"
+              loading={requestState.isLoading}
+              disabled={
+                !concessionReason.trim() ||
+                (Number(concessionAmount) <= 0 && Number(concessionPercentage) <= 0)
+              }
+              onClick={() =>
+                run(
+                  () =>
+                    requestConcession({
+                      leadId,
+                      body: {
+                        quotationId: quotation?.id,
+                        type: concessionType,
+                        requestedAmount: Number(concessionAmount),
+                        requestedPercentage: Number(concessionPercentage),
+                        reason: concessionReason,
+                        evidenceReference: concessionEvidence || undefined,
+                      },
+                    }).unwrap(),
+                  'Concession requested.',
+                  'Unable to request concession.'
+                )
+              }
+            >
+              Request
+            </LoadingButton>
+          </Stack>
+        ) : null}
 
         {(readiness?.concessions || []).map((concession) => (
           <Stack
@@ -435,7 +495,9 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
                 Requested {concession.requestedAmount || `${concession.requestedPercentage}%`}
               </Typography>
             </Stack>
-            {concession.status === AdmissionCrmConcessionStatus.ApprovalPending ? (
+            {concession.status === AdmissionCrmConcessionStatus.ApprovalPending &&
+            canApproveConcession &&
+            !financialQueriesFailed ? (
               <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                 <TextField
                   size="small"
@@ -493,7 +555,9 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
                 </Button>
               </Stack>
             ) : null}
-            {concession.status === AdmissionCrmConcessionStatus.ApprovedPendingFinance ? (
+            {concession.status === AdmissionCrmConcessionStatus.ApprovedPendingFinance &&
+            canRecordFinanceStatus &&
+            !financialQueriesFailed ? (
               <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                 <TextField
                   size="small"

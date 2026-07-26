@@ -114,6 +114,9 @@ async function getAccessToken(page: Page) {
 }
 
 async function login(page: Page, email = principalEmail(), passwordValue = password()) {
+  await page.addInitScript(() => {
+    localStorage.setItem('onboarding_completed', 'true');
+  });
   await waitForBackend(page);
   await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 90_000 });
   await expect(page.getByLabel('School Code')).toBeVisible({ timeout: 60_000 });
@@ -127,7 +130,6 @@ async function login(page: Page, email = principalEmail(), passwordValue = passw
 
   await expect.poll(() => hasAccessToken(page), { timeout: 60_000 }).toBe(true);
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
-  await page.evaluate(() => localStorage.setItem('onboarding_completed', 'true'));
 }
 
 async function crmApiRequest(page: Page, path: string, init: JsonRequestInit = {}) {
@@ -324,14 +326,35 @@ async function updateCrmCycleRegistrationGate(
   currentConfiguration: Record<string, unknown>,
   registrationFormRequiredBeforeExam: boolean
 ) {
+  const proposedConfiguration = {
+    ...currentConfiguration,
+    registrationFormRequiredBeforeExam,
+  };
+  delete proposedConfiguration.impactPreviewFingerprint;
+
+  const impactPreviewResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/configuration-safety/impact-preview`,
+    {
+      method: 'POST',
+      body: { proposedCycleConfiguration: proposedConfiguration },
+    }
+  );
+  await expectOk(impactPreviewResponse, 'preview CRM cycle registration gate impact');
+  const impactPreview = await impactPreviewResponse.json();
+  expect(
+    impactPreview?.fingerprint,
+    'Cycle registration gate impact preview should return a fingerprint.'
+  ).toBeTruthy();
+
   const response = await crmApiRequest(
     page,
     `/student-enrollment/admissions-crm/${academicYearId}/configuration/cycle`,
     {
       method: 'PUT',
       body: {
-        ...currentConfiguration,
-        registrationFormRequiredBeforeExam,
+        ...proposedConfiguration,
+        impactPreviewFingerprint: impactPreview.fingerprint,
       },
     }
   );
@@ -352,6 +375,135 @@ async function getCrmTimeline(page: Page, leadId: string) {
   );
   await expectOk(response, 'get CRM lead timeline');
   return response.json();
+}
+
+async function getRegistrationOwnerUserId(page: Page, academicYearId: string) {
+  const response = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/workspace/staff?academicYearId=${encodeURIComponent(
+      academicYearId
+    )}&ownerOnly=true&maxResultCount=20`
+  );
+  await expectOk(response, 'list eligible registration owners');
+  const staff = await response.json();
+  const owner = staff?.find((item: { id?: string; isOwnerEligible?: boolean }) =>
+    Boolean(item.id && item.isOwnerEligible)
+  );
+  expect(owner, 'At least one configured owner is required to prepare registration.').toBeTruthy();
+  return owner.id as string;
+}
+
+async function prepareLeadForRegistration(
+  page: Page,
+  academicYearId: string,
+  leadId: string
+) {
+  const ownerUserId = await getRegistrationOwnerUserId(page, academicYearId);
+  const ownerResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/leads/${leadId}/owner`,
+    {
+      method: 'POST',
+      body: { ownerUserId },
+    }
+  );
+  await expectOk(ownerResponse, 'assign registration lead owner');
+  const ownedLead = await ownerResponse.json();
+  expect(ownedLead?.ownerUserId).toBe(ownerUserId);
+
+  const followUpTitle = uniqueToken('Registration follow-up ');
+  const taskResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/leads/${leadId}/tasks`,
+    {
+      method: 'POST',
+      body: {
+        title: followUpTitle,
+        dueAt: new Date(Date.now() + 24 * 60 * 60 * 1_000).toISOString(),
+        assignedUserId: ownerUserId,
+        notes: 'Confirm registration readiness with the parent or guardian.',
+      },
+    }
+  );
+  await expectOk(taskResponse, 'schedule registration follow-up');
+  const followUpTask = await taskResponse.json();
+  expect(followUpTask?.leadId).toBe(leadId);
+  expect(followUpTask?.assignedUserId).toBe(ownerUserId);
+  expect(followUpTask?.title).toBe(followUpTitle);
+
+  const stageResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/leads/${leadId}/stage`,
+    {
+      method: 'POST',
+      body: {
+        stage: 1,
+        reason: 'Initial follow-up completed before registration.',
+        overrideWorkflowGuards: false,
+      },
+    }
+  );
+  await expectOk(stageResponse, 'move registration lead to follow-up');
+  const preparedLead = await stageResponse.json();
+  expect(preparedLead?.stage).toBe(1);
+  expect(preparedLead?.ownerUserId).toBe(ownerUserId);
+}
+
+async function prepareEligibleExamResultForRegistration(
+  page: Page,
+  academicYearId: string,
+  leadId: string
+) {
+  const slot = await getAvailableEntranceExamSlot(page, academicYearId);
+  const scheduleResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/leads/${leadId}/exam/schedule`,
+    {
+      method: 'POST',
+      body: { entranceExamSlotId: slot.id },
+    }
+  );
+  await expectOk(scheduleResponse, 'schedule required registration entrance exam');
+  const scheduled = await scheduleResponse.json();
+
+  await expectOk(
+    await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/exams/${scheduled.id}/attendance`,
+      {
+        method: 'POST',
+        body: { attendanceStatus: 1 },
+      }
+    ),
+    'mark required registration entrance exam present'
+  );
+
+  const resultResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/exams/${scheduled.id}/result`,
+    {
+      method: 'POST',
+      body: {
+        totalMarks: 100,
+        passingMarks: 40,
+        obtainedMarks: 85,
+        meritRank: 1,
+      },
+    }
+  );
+  await expectOk(resultResponse, 'record eligible registration entrance exam result');
+  const result = await resultResponse.json();
+  expect(result?.eligibilityDecision).toBe(1);
+  expect(result?.percentage).toBe(85);
+
+  const handoffResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/exams/${scheduled.id}/eligibility-handoff`
+  );
+  await expectOk(handoffResponse, 'verify eligible registration entrance exam handoff');
+  const handoff = await handoffResponse.json();
+  expect(handoff?.leadId).toBe(leadId);
+  expect(handoff?.canStartAdmission).toBe(true);
 }
 
 async function getCrmExamRecord(page: Page, academicYearId: string, examRecordId: string) {
@@ -375,6 +527,17 @@ async function openExamRowInWorkspace(
   slotName: string,
   academicYearId: string
 ): Promise<Locator> {
+  await page.goto('about:blank');
+  const initialExamsResponse = page.waitForResponse(
+    (candidate) => {
+      if (candidate.request().method() !== 'GET') return false;
+      const url = new URL(candidate.url());
+      return url.pathname.endsWith(
+        `/student-enrollment/admissions-crm/${academicYearId}/exams`
+      );
+    },
+    { timeout: 60_000 }
+  );
   const response = await page.goto(workspaceUrl('/student/enrollment/exams', academicYearId), {
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
@@ -384,17 +547,31 @@ async function openExamRowInWorkspace(
   await expect(page.getByRole('heading', { name: 'Entrance Exams' })).toBeVisible({
     timeout: 30_000,
   });
+  const initialResponse = await initialExamsResponse;
+  await expectOk(initialResponse, 'load CRM entrance exams');
 
-  const filteredExamsResponse = page.waitForResponse((candidate) => {
-    if (candidate.request().method() !== 'GET') return false;
-    const url = new URL(candidate.url());
-    return (
-      /\/student-enrollment\/admissions-crm\/[^/]+\/exams$/.test(url.pathname) &&
-      url.searchParams.get('filterText') === applicantName
+  const search = page.getByRole('textbox', { name: 'Search entrance exams' });
+  await expect(search).toBeEditable();
+  const initialFilter = new URL(initialResponse.url()).searchParams.get('filterText');
+  if (initialFilter === applicantName) {
+    await expect(search).toHaveValue(applicantName);
+  } else {
+    const filteredExamsResponse = page.waitForResponse(
+      (candidate) => {
+        if (candidate.request().method() !== 'GET') return false;
+        const url = new URL(candidate.url());
+        return (
+          url.pathname.endsWith(
+            `/student-enrollment/admissions-crm/${academicYearId}/exams`
+          ) && url.searchParams.get('filterText') === applicantName
+        );
+      },
+      { timeout: 60_000 }
     );
-  });
-  await page.getByRole('textbox', { name: 'Search entrance exams' }).fill(applicantName);
-  await expectOk(await filteredExamsResponse, 'filter CRM entrance exams');
+    await search.fill(applicantName);
+    await expect(search).toHaveValue(applicantName);
+    await expectOk(await filteredExamsResponse, 'filter CRM entrance exams');
+  }
   await expect(page.getByText(/1[–-]1 of 1/)).toBeVisible({ timeout: 15_000 });
 
   const examRow = page
@@ -408,10 +585,14 @@ async function openExamRowInWorkspace(
 async function openLeadCardInWorkspace(
   page: Page,
   leadName: string,
-  academicYearId: string
+  academicYearId: string,
+  stageGroup: 'active' | 'decision' | 'closed' = 'active'
 ): Promise<Locator> {
   const response = await page.goto(
-    workspaceUrl('/student/enrollment/pipeline?view=board', academicYearId),
+    workspaceUrl(
+      `/student/enrollment/pipeline?view=board&group=${stageGroup}`,
+      academicYearId
+    ),
     {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
@@ -877,6 +1058,214 @@ test.describe('Student admissions CRM E2E', () => {
     expect(requestedPaths.some((path) => path.endsWith('/workspace/staff'))).toBe(false);
   });
 
+  test('principal can duplicate, preview, and download a public inquiry form QR code', async ({
+    page,
+  }) => {
+    test.setTimeout(150_000);
+
+    await login(page);
+    const configuration = await getApplicationConfiguration(page);
+    const tenantId = configuration?.currentTenant?.id;
+    expect(tenantId, 'Current tenant id is required for the public form QR code.').toBeTruthy();
+
+    const academicYearId = await resolveAcademicYearId(page);
+    const template = await createPublicInquiryTemplate(page, academicYearId);
+
+    await page.goto(
+      `/student/enrollment/settings/inquiry-capture?cycle=${academicYearId}&panel=forms`,
+      { waitUntil: 'networkidle', timeout: 60_000 }
+    );
+    await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
+
+    const templateCard = page.getByRole('article', {
+      name: `Inquiry form ${template.templateName}`,
+      exact: true,
+    });
+    await expect(templateCard).toBeVisible();
+    await expect(templateCard.getByRole('button', { name: 'Download QR' })).toBeEnabled();
+
+    await templateCard.getByRole('button', { name: 'Language Preview' }).click();
+    const preview = page.getByRole('dialog', { name: 'Parent Form Preview' });
+    await expect(preview).toBeVisible();
+    await expect(preview.getByLabel('Desktop parent form preview')).toBeVisible();
+
+    await preview.getByLabel('Preview Language').click();
+    await page.getByRole('option', { name: 'Gujarati' }).click();
+    await expect(preview.getByRole('status')).toContainText('English fallback text');
+
+    await preview.getByRole('button', { name: 'Mobile preview' }).click();
+    await expect(preview.getByLabel('Mobile parent form preview')).toBeVisible();
+    await preview.getByRole('button', { name: 'Close parent form preview' }).click();
+
+    const downloadPromise = page.waitForEvent('download');
+    await templateCard.getByRole('button', { name: 'Download QR' }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/-qr\.png$/);
+
+    await templateCard.getByRole('button', { name: 'Duplicate Form' }).click();
+    const duplicateDialog = page.getByRole('dialog', { name: 'Duplicate Inquiry Form?' });
+    await expect(duplicateDialog).toContainText(
+      'Create an inactive draft with the same fields, translations, consent, and visibility rules.'
+    );
+    const duplicateResponsePromise = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return (
+        response.request().method() === 'POST' &&
+        url.pathname.endsWith(
+          `/student-enrollment/admissions-crm/${academicYearId}/configuration/form-templates`
+        )
+      );
+    });
+    await duplicateDialog.getByRole('button', { name: 'Create Draft Copy' }).click();
+    const duplicateResponse = await duplicateResponsePromise;
+    await expectOk(duplicateResponse, 'duplicate public inquiry form');
+    const duplicate = await duplicateResponse.json();
+
+    expect(duplicate.templateName).toBe(`${template.templateName} Copy`);
+    expect(duplicate.isActive).toBe(false);
+    expect(duplicate.fields).toHaveLength(template.fields.length);
+    const duplicateCard = page.getByRole('article', {
+      name: `Inquiry form ${duplicate.templateName}`,
+      exact: true,
+    });
+    await expect(duplicateCard).toBeVisible({ timeout: 30_000 });
+    await expect(duplicateCard).toContainText('Inactive');
+  });
+
+  test('registration template builder previews localized parent content across three steps', async ({
+    page,
+  }) => {
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+
+    await page.goto(
+      `/student/enrollment/settings/registration-documents?cycle=${academicYearId}&panel=registration`,
+      { waitUntil: 'networkidle', timeout: 60_000 }
+    );
+    await expect(page.getByRole('heading', { name: 'Registration & Documents' })).toBeVisible();
+    await page.getByRole('button', { name: 'Use Starter Template' }).click();
+
+    const builder = page.getByRole('dialog', { name: 'New Registration Template' });
+    await expect(builder).toBeVisible();
+    await expect(builder.getByText('Template Rules', { exact: true })).toBeVisible();
+    await expect(builder.getByText('Sections & Fields', { exact: true })).toBeVisible();
+    await expect(builder.getByText('Languages & Preview', { exact: true })).toBeVisible();
+    await expect(builder.getByLabel('Template name')).toHaveValue('Standard School Registration');
+
+    await builder.getByRole('button', { name: 'Next' }).click();
+    await expect(builder.getByText('Sections and fields')).toBeVisible();
+    await expect(builder.getByLabel('Section title').first()).not.toHaveValue('');
+
+    await builder.getByRole('button', { name: 'Next' }).click();
+    await expect(builder.getByText('Parent Language Content')).toBeVisible();
+    await expect(builder.getByRole('tab', { name: 'Gujarati' })).toBeVisible();
+    await expect(builder.getByRole('tab', { name: 'Hindi' })).toBeVisible();
+
+    const localizedSectionTitle = uniqueToken('Gujarati section ');
+    await builder.getByLabel('Gujarati Section Title').first().fill(localizedSectionTitle);
+    await builder.getByRole('button', { name: 'Preview' }).click();
+
+    const preview = page.getByRole('dialog', { name: 'Registration form preview' });
+    await expect(preview).toBeVisible();
+    await preview.getByLabel('Parent Language').click();
+    await page.getByRole('option', { name: 'Gujarati' }).click();
+    await expect(preview.getByText(localizedSectionTitle)).toBeVisible();
+
+    const viewportSelector = preview.getByRole('combobox', { name: 'Viewport' });
+    await viewportSelector.click();
+    await page.getByRole('option', { name: 'Mobile' }).click();
+    await expect(viewportSelector).toHaveText('Mobile');
+
+    await preview.getByRole('tab', { name: 'Print Form' }).click();
+    await expect(preview.getByRole('button', { name: 'Print' })).toBeVisible();
+    await preview.getByRole('button', { name: 'Close' }).click();
+    await builder.getByRole('button', { name: 'Close' }).click();
+  });
+
+  test('configuration safety previews references, impact, and academic-year copy without applying it', async ({
+    page,
+  }) => {
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+
+    await page.goto(
+      `/student/enrollment/settings/governance?cycle=${academicYearId}&panel=configuration-safety`,
+      { waitUntil: 'networkidle', timeout: 60_000 }
+    );
+    await expect(
+      page.getByRole('heading', { name: 'View Configuration References' })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Copy Academic Year Configuration' })
+    ).toBeVisible();
+
+    const unusedStageCode = uniqueToken('PW-NOT-IN-USE-').toUpperCase();
+    await page.getByLabel('Stage code').fill(unusedStageCode);
+
+    const referencesResponsePromise = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return (
+        response.request().method() === 'GET' &&
+        url.pathname.endsWith(
+          `/student-enrollment/admissions-crm/${academicYearId}/configuration-safety/references`
+        ) &&
+        url.searchParams.get('code') === unusedStageCode
+      );
+    });
+    await page.getByRole('button', { name: 'View References' }).click();
+    await expectOk(await referencesResponsePromise, 'preview configuration references');
+    await expect(page.getByText('0 total references')).toBeVisible();
+    await expect(
+      page.getByRole('table', { name: 'Configuration reference families' })
+    ).toBeVisible();
+
+    const impactResponsePromise = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return (
+        response.request().method() === 'POST' &&
+        url.pathname.endsWith(
+          `/student-enrollment/admissions-crm/${academicYearId}/configuration-safety/impact-preview`
+        )
+      );
+    });
+    await page.getByRole('button', { name: 'Preview Impact' }).click();
+    await expectOk(await impactResponsePromise, 'preview configuration impact');
+    await expect(page.getByText('Impact Preview')).toBeVisible();
+    await expect(page.getByText(/^\d+ applicants$/)).toBeVisible();
+
+    const sourceAcademicYear = page.getByRole('combobox', { name: 'Source academic year' });
+    const targetAcademicYear = page.getByRole('combobox', { name: 'Target academic year' });
+    await expect(sourceAcademicYear).toHaveText(/\S/);
+    const sourceAcademicYearName = (await sourceAcademicYear.textContent())?.trim() || '';
+    const targetAcademicYearName = (await targetAcademicYear.textContent())?.trim() || '';
+    const previewCopyButton = page.getByRole('button', { name: 'Preview Copy' });
+
+    if (!targetAcademicYearName || targetAcademicYearName === sourceAcademicYearName) {
+      await expect(previewCopyButton).toBeDisabled();
+    } else {
+      const clonePreviewResponsePromise = page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          response.request().method() === 'POST' &&
+          url.pathname.endsWith(
+            '/student-enrollment/admissions-crm/configuration-safety/clone/preview'
+          )
+        );
+      });
+      await previewCopyButton.click();
+      await expectOk(await clonePreviewResponsePromise, 'preview academic-year configuration copy');
+      const clonePreview = page.getByRole('dialog', {
+        name: 'Review Academic Year Configuration Copy',
+      });
+      await expect(clonePreview).toBeVisible();
+      await expect(clonePreview).toContainText('configuration families');
+      await expect(
+        clonePreview.getByRole('button', { name: 'Confirm Configuration Copy' })
+      ).toBeVisible();
+      await clonePreview.getByRole('button', { name: 'Cancel' }).click();
+    }
+  });
+
   test('principal can create quick inquiry, review duplicate warning, and open CRM workspace', async ({
     page,
   }) => {
@@ -1003,9 +1392,7 @@ test.describe('Student admissions CRM E2E', () => {
     expect(uiCreatedLead?.email).toBe(quickInquiryEmail);
     expect(uiCreatedLead?.intendedRouteNameSnapshot).toBe('Fresh admission');
     expect(uiCreatedLead?.intendedRouteDefinitionVersion).toBe(1);
-    await expect(page).toHaveURL(
-      new RegExp(`/student/enrollment/applicants/${uiCreatedLead.id}`)
-    );
+    await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${uiCreatedLead.id}`));
     let applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
     await expect(applicantWorkspace).toContainText(
       `${quickInquiryFirstName} ${quickInquiryMiddleName} ${quickInquiryLastName}`
@@ -1103,9 +1490,7 @@ test.describe('Student admissions CRM E2E', () => {
     const note = applicantWorkspace.getByLabel('Note');
     await note.fill('Unsaved My Work follow-up note');
     await applicantWorkspace.getByRole('tab', { name: 'Activity' }).click();
-    const discardDialog = page
-      .getByRole('dialog')
-      .filter({ hasText: 'Discard unsaved changes?' });
+    const discardDialog = page.getByRole('dialog').filter({ hasText: 'Discard unsaved changes?' });
     await expect(discardDialog).toBeVisible();
     await discardDialog.getByRole('button', { name: 'Cancel' }).click();
     await expect(applicantWorkspace.getByRole('tab', { name: 'Overview' })).toHaveAttribute(
@@ -1451,6 +1836,102 @@ test.describe('Student admissions CRM E2E', () => {
     expect(waitlistHandoff?.eligibilityDecision).toBe(2);
   });
 
+  test('principal bulk result import validates correction files and OMR payloads', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const principalConfiguration = await getApplicationConfiguration(page);
+    const principalPolicies = principalConfiguration?.auth?.grantedPolicies ?? {};
+    expect(
+      principalPolicies['Students.Enrollment.AdmissionsCrm.BulkOperations'],
+      'Principal requires bulk-operations permission for the import flow.'
+    ).toBe(true);
+    expect(principalPolicies['Students.Enrollment.AdmissionsCrm.ChangeExamResult']).toBe(true);
+    expect(principalPolicies['Students.Enrollment.AdmissionsCrm.OverrideExamResult']).toBe(true);
+
+    const lead = await createCrmLead(page, academicYearId, uniquePhone(), 'BulkResult');
+    const slot = await getAvailableEntranceExamSlot(page, academicYearId);
+    const scheduleResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/leads/${lead.id}/exam/schedule`,
+      {
+        method: 'POST',
+        body: { entranceExamSlotId: slot.id },
+      }
+    );
+    await expectOk(scheduleResponse, 'schedule exam for bulk result import');
+    const scheduled = await scheduleResponse.json();
+
+    await expectOk(
+      await crmApiRequest(
+        page,
+        `/student-enrollment/admissions-crm/exams/${scheduled.id}/attendance`,
+        {
+          method: 'POST',
+          body: { attendanceStatus: 1 },
+        }
+      ),
+      'mark attendance before recording the existing result'
+    );
+    await expectOk(
+      await crmApiRequest(page, `/student-enrollment/admissions-crm/exams/${scheduled.id}/result`, {
+        method: 'POST',
+        body: {
+          totalMarks: 100,
+          passingMarks: 40,
+          obtainedMarks: 67,
+          meritRank: 3,
+        },
+      }),
+      'record existing result for correction import'
+    );
+
+    const examRow = await openExamRowInWorkspace(
+      page,
+      lead.firstName,
+      scheduled.slotNameSnapshot || slot.slotName,
+      academicYearId
+    );
+    await examRow.getByRole('checkbox', { name: `Select ${lead.firstName}` }).check();
+
+    const bulkActions = page.getByRole('region', { name: 'Bulk exam actions' });
+    await expect(bulkActions).toBeVisible();
+    await expect(bulkActions.getByRole('button', { name: 'Give Marks' })).toBeVisible();
+    await expect(bulkActions.getByRole('button', { name: 'Upload Results' })).toBeVisible();
+    await expect(bulkActions.getByRole('button', { name: 'OMR Import' })).toBeVisible();
+
+    await bulkActions.getByRole('button', { name: 'Upload Results' }).click();
+    const uploadDialog = page.getByRole('dialog', { name: 'Upload Exam Results' });
+    await expect(uploadDialog.getByLabel('Correction Reason')).toBeVisible();
+    await uploadDialog.locator('input[name="exam-result-file"]').setInputFiles({
+      name: 'corrected-exam-results.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(
+        [
+          'Exam Record ID,Total Marks,Passing Marks,Obtained Marks,Merit Rank',
+          `${scheduled.id},100,40,71,2`,
+        ].join('\n')
+      ),
+    });
+    await expect(uploadDialog.getByText('1 result validated and ready to import.')).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(uploadDialog.getByRole('button', { name: 'Import Results' })).toBeDisabled();
+    await uploadDialog
+      .getByLabel('Correction Reason')
+      .fill('Verified score correction from signed source sheet.');
+    await expect(uploadDialog.getByRole('button', { name: 'Import Results' })).toBeEnabled();
+    await uploadDialog.getByRole('button', { name: 'Cancel' }).click();
+
+    await bulkActions.getByRole('button', { name: 'OMR Import' }).click();
+    const omrDialog = page.getByRole('dialog', { name: 'Import OMR Results' });
+    await expect(omrDialog).toContainText('exported by your OMR scanner');
+    await omrDialog.getByRole('button', { name: 'Cancel' }).click();
+  });
+
   test('principal can issue registration form before a required exam schedule', async ({
     page,
   }) => {
@@ -1464,6 +1945,7 @@ test.describe('Student admissions CRM E2E', () => {
 
     try {
       const lead = await createCrmLead(page, academicYearId, uniquePhone(), 'FormGate');
+      await prepareLeadForRegistration(page, academicYearId, lead.id);
       const registrationTemplateName = uniqueToken('Playwright exam gate ');
       registrationTemplate = await createPublishedRegistrationTemplate(
         page,
@@ -1582,6 +2064,7 @@ test.describe('Student admissions CRM E2E', () => {
     );
     await expectOk(leadResponse, 'create registration journey lead');
     const lead = await leadResponse.json();
+    await prepareLeadForRegistration(page, academicYearId, lead.id);
 
     const registrationTemplateResponse = await crmApiRequest(
       page,
@@ -1631,6 +2114,7 @@ test.describe('Student admissions CRM E2E', () => {
           allowPartialSave: true,
           feeRequired: false,
           feeAmount: 0,
+          autoIssueAtStage: 5,
         },
       }
     );
@@ -1682,20 +2166,21 @@ test.describe('Student admissions CRM E2E', () => {
       'publish document checklist template'
     );
 
-    const issueResponse = await crmApiRequest(
+    await prepareEligibleExamResultForRegistration(page, academicYearId, lead.id);
+
+    const currentRegistrationResponse = await crmApiRequest(
       page,
-      `/student-enrollment/admissions-crm/leads/${lead.id}/registrations/issue`,
-      {
-        method: 'POST',
-        body: {
-          registrationTemplateId: registrationTemplate.id,
-          manualFormNumber: `PW-${unique.toUpperCase()}`,
-          waiveFee: false,
-        },
-      }
+      `/student-enrollment/admissions-crm/leads/${lead.id}/registrations/current`
     );
-    await expectOk(issueResponse, 'issue CRM registration');
-    const registration = await issueResponse.json();
+    await expectOk(currentRegistrationResponse, 'read auto-issued CRM registration');
+    const autoIssuedRegistration = await currentRegistrationResponse.json();
+    expect(autoIssuedRegistration?.id).toBeTruthy();
+    expect(autoIssuedRegistration?.leadId).toBe(lead.id);
+    expect(autoIssuedRegistration?.academicYearId).toBe(academicYearId);
+    expect(autoIssuedRegistration?.registrationTemplateId).toBe(registrationTemplate.id);
+    expect(autoIssuedRegistration?.formNumber).toBeTruthy();
+    expect(autoIssuedRegistration?.applicantStatusPath).toBeTruthy();
+    const registration = autoIssuedRegistration;
     const assignedChecklistResponse = await crmApiRequest(
       page,
       `/student-enrollment/admissions-crm/registrations/${registration.id}/document-checklist`
@@ -1796,7 +2281,12 @@ test.describe('Student admissions CRM E2E', () => {
         timeout: 20_000,
       });
 
-      const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
+      const leadCard = await openLeadCardInWorkspace(
+        page,
+        lead.firstName,
+        academicYearId,
+        'decision'
+      );
       await leadCard.getByRole('button', { name: 'Manage' }).click();
       await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
       const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
@@ -1833,15 +2323,18 @@ test.describe('Student admissions CRM E2E', () => {
         waitUntil: 'domcontentloaded',
         timeout: 60_000,
       });
-      const refreshedLeadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
+      const refreshedLeadCard = await openLeadCardInWorkspace(
+        page,
+        lead.firstName,
+        academicYearId,
+        'decision'
+      );
       await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
       await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
       const refreshedWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
       await refreshedWorkspace.getByRole('tab', { name: 'Registration', exact: true }).click();
       await refreshedWorkspace.getByRole('button', { name: 'Verify', exact: true }).click();
-      await expect(
-        refreshedWorkspace.getByRole('button', { name: 'Original Seen' })
-      ).toBeVisible({
+      await expect(refreshedWorkspace.getByRole('button', { name: 'Original Seen' })).toBeVisible({
         timeout: 20_000,
       });
       await refreshedWorkspace.getByRole('button', { name: 'Original Seen' }).click();

@@ -1,5 +1,6 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmFormNumberSeriesDto,
@@ -9,6 +10,7 @@ import type {
   AdmissionCrmRegistrationTemplateUpsertDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useSelector } from 'react-redux';
 import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
@@ -67,8 +69,11 @@ import {
 import { RegistrationTemplatePreview } from './registration-template-preview';
 import { getAdmissionCrmStageLabel } from '../admissions-crm/admissions-crm-utils';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { RegistrationTemplateLocalizationEditor } from './registration-template-localization-editor';
+import { resolveAdmissionCrmRegistrationSettingsPermissions } from '../admissions-crm/admission-action-permissions';
 import {
   createRegistrationField,
+  registrationSystemFields,
   createRegistrationSection,
   createRegistrationTemplate,
   normalizeRegistrationTemplate,
@@ -76,7 +81,10 @@ import {
   validateRegistrationTemplateStep,
   normalizeRegistrationFieldForType,
   findRegistrationTemplateValidationIssue,
+  normalizeRegistrationTemplateSystemFields,
 } from './admissions-registration-configuration-utils';
+
+import type { RegistrationTemplateEditorStep } from './admissions-registration-configuration-utils';
 
 type Props = { academicYearId?: string };
 
@@ -97,23 +105,6 @@ const fieldTypeLabel: Record<AdmissionCrmFormFieldType, string> = {
   [AdmissionCrmFormFieldType.MultiSelect]: 'Multi-select',
   [AdmissionCrmFormFieldType.Checkbox]: 'Checkbox',
 };
-
-const systemFields = [
-  'firstName',
-  'middleName',
-  'lastName',
-  'dateOfBirth',
-  'parentGuardianName',
-  'primaryContactNo',
-  'email',
-  'desiredClassName',
-  'campus',
-  'board',
-  'medium',
-  'admissionRound',
-  'applicantCategory',
-  'admissionRoute',
-];
 
 const blankSeries = (): AdmissionCrmFormNumberSeriesUpsertDto => ({
   name: '',
@@ -137,7 +128,7 @@ const toTemplateForm = (
     retiredAt: _retiredAt,
     ...form
   } = template;
-  return form;
+  return normalizeRegistrationTemplateSystemFields(form);
 };
 
 const toSeriesForm = (
@@ -156,8 +147,14 @@ const messageFromError = (error: unknown) => {
 };
 
 export default function AdmissionsRegistrationConfiguration({ academicYearId }: Props) {
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
+  const {
+    canManageRegistrationTemplates,
+    canPublishRegistrationTemplates,
+    canManageFormNumberSeries,
+  } = resolveAdmissionCrmRegistrationSettingsPermissions(permissions);
   const [tab, setTab] = useState(0);
-  const [templateStep, setTemplateStep] = useState(0);
+  const [templateStep, setTemplateStep] = useState<RegistrationTemplateEditorStep>(0);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] =
     useState<AdmissionCrmRegistrationTemplateUpsertDto | null>(null);
@@ -190,6 +187,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   const [updateSeries, updateSeriesState] = useUpdateAdmissionCrmFormNumberSeriesMutation();
 
   const openNewTemplate = () => {
+    if (!canManageRegistrationTemplates) return;
     setEditingTemplate(null);
     setTemplateForm(createRegistrationTemplate());
     setTemplateStep(0);
@@ -197,6 +195,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   };
 
   const openBlankTemplate = () => {
+    if (!canManageRegistrationTemplates) return;
     setEditingTemplate(null);
     setTemplateForm(createBlankRegistrationTemplate());
     setTemplateStep(0);
@@ -211,7 +210,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   }, []);
 
   const saveTemplate = async () => {
-    if (!academicYearId) return;
+    if (!academicYearId || !canManageRegistrationTemplates) return;
     const issue = findRegistrationTemplateValidationIssue(templateForm);
     if (issue) {
       setTemplateStep(issue.step);
@@ -238,6 +237,13 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
       action: 'publish' | 'retire' | 'version',
       template: AdmissionCrmRegistrationTemplateDto
     ) => {
+      const requiresPublishPermission = action === 'publish' || action === 'retire';
+      if (
+        (requiresPublishPermission && !canPublishRegistrationTemplates) ||
+        (!requiresPublishPermission && !canManageRegistrationTemplates)
+      ) {
+        return;
+      }
       try {
         if (action === 'publish') await publishTemplate({ templateId: template.id }).unwrap();
         if (action === 'retire') await retireTemplate({ templateId: template.id }).unwrap();
@@ -249,7 +255,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
         shikshaMitraToast.error({ message: messageFromError(error) });
       }
     },
-    [createTemplateVersion, openTemplate, publishTemplate, retireTemplate]
+    [
+      canManageRegistrationTemplates,
+      canPublishRegistrationTemplates,
+      createTemplateVersion,
+      openTemplate,
+      publishTemplate,
+      retireTemplate,
+    ]
   );
 
   const updateField = (
@@ -273,6 +286,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   };
 
   const openNewSeries = () => {
+    if (!canManageFormNumberSeries) return;
     setEditingSeries(null);
     setSeriesForm(blankSeries());
     setSeriesOpen(true);
@@ -285,7 +299,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   };
 
   const saveSeries = async () => {
-    if (!academicYearId || !seriesForm.name.trim()) return;
+    if (!academicYearId || !canManageFormNumberSeries || !seriesForm.name.trim()) return;
     try {
       if (editingSeries)
         await updateSeries({ seriesId: editingSeries.id, body: seriesForm }).unwrap();
@@ -297,8 +311,10 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   };
 
   const templateReadOnly =
-    editingTemplate?.status !== undefined &&
-    editingTemplate.status !== AdmissionCrmRegistrationTemplateStatus.Draft;
+    !canManageRegistrationTemplates ||
+    (editingTemplate?.status !== undefined &&
+      editingTemplate.status !== AdmissionCrmRegistrationTemplateStatus.Draft);
+  const seriesReadOnly = !canManageFormNumberSeries;
   const lifecycleBusy = publishState.isLoading || retireState.isLoading || versionState.isLoading;
   const templateBaseline = useMemo(
     () => (editingTemplate ? toTemplateForm(editingTemplate) : createRegistrationTemplate()),
@@ -312,7 +328,8 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
     templateOpen &&
     !templateReadOnly &&
     JSON.stringify(templateForm) !== JSON.stringify(templateBaseline);
-  const seriesDirty = seriesOpen && JSON.stringify(seriesForm) !== JSON.stringify(seriesBaseline);
+  const seriesDirty =
+    seriesOpen && !seriesReadOnly && JSON.stringify(seriesForm) !== JSON.stringify(seriesBaseline);
 
   useEnrollmentSettingsDirtyState({
     source: 'admissions-registration-editor',
@@ -329,12 +346,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   });
 
   const handleNextTemplateStep = () => {
-    const [message] = validateRegistrationTemplateStep(templateForm, 0);
+    const [message] = validateRegistrationTemplateStep(templateForm, templateStep);
     if (message) {
       shikshaMitraToast.error({ message });
       return;
     }
-    setTemplateStep(1);
+    setTemplateStep((current) =>
+      current < 2 ? ((current + 1) as RegistrationTemplateEditorStep) : current
+    );
   };
 
   const templateColumns: IColumn[] = useMemo(
@@ -446,7 +465,11 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
             <ThreeDotsActions
               placement="right-top"
               showEditIcon
-              editLabel="Open Registration Template"
+              editLabel={
+                canManageRegistrationTemplates
+                  ? 'Open Registration Template'
+                  : 'View Registration Template'
+              }
               handleEditClick={() => openTemplate(template)}
               actions={({ popover }) => (
                 <MenuList>
@@ -459,7 +482,8 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                     <Visibility fontSize="small" />
                     Preview online and print
                   </MenuItem>
-                  {template.status === AdmissionCrmRegistrationTemplateStatus.Draft ? (
+                  {template.status === AdmissionCrmRegistrationTemplateStatus.Draft &&
+                  canPublishRegistrationTemplates ? (
                     <MenuItem
                       disabled={lifecycleBusy}
                       onClick={() => {
@@ -470,7 +494,9 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                       <Publish fontSize="small" />
                       Publish
                     </MenuItem>
-                  ) : (
+                  ) : null}
+                  {template.status !== AdmissionCrmRegistrationTemplateStatus.Draft &&
+                  canManageRegistrationTemplates ? (
                     <MenuItem
                       disabled={lifecycleBusy}
                       onClick={() => {
@@ -481,8 +507,9 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                       <ContentCopy fontSize="small" />
                       Create New Version
                     </MenuItem>
-                  )}
-                  {template.status === AdmissionCrmRegistrationTemplateStatus.Published ? (
+                  ) : null}
+                  {template.status === AdmissionCrmRegistrationTemplateStatus.Published &&
+                  canPublishRegistrationTemplates ? (
                     <MenuItem
                       disabled={lifecycleBusy}
                       onClick={() => {
@@ -501,7 +528,13 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
         },
       },
     ],
-    [lifecycleBusy, openTemplate, runTemplateLifecycle]
+    [
+      canManageRegistrationTemplates,
+      canPublishRegistrationTemplates,
+      lifecycleBusy,
+      openTemplate,
+      runTemplateLifecycle,
+    ]
   );
 
   return (
@@ -540,25 +573,27 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
 
         {tab === 0 && !templatesQuery.isError ? (
           <Stack spacing={1.25}>
-            <Stack direction="row" justifyContent="flex-end" gap={1}>
-              <Button
-                size="small"
-                startIcon={<Add />}
-                disabled={!academicYearId}
-                onClick={openBlankTemplate}
-              >
-                Blank Template
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Add />}
-                disabled={!academicYearId}
-                onClick={openNewTemplate}
-              >
-                Use Starter Template
-              </Button>
-            </Stack>
+            {canManageRegistrationTemplates ? (
+              <Stack direction="row" justifyContent="flex-end" gap={1}>
+                <Button
+                  size="small"
+                  startIcon={<Add />}
+                  disabled={!academicYearId}
+                  onClick={openBlankTemplate}
+                >
+                  Blank Template
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Add />}
+                  disabled={!academicYearId}
+                  onClick={openNewTemplate}
+                >
+                  Use Starter Template
+                </Button>
+              </Stack>
+            ) : null}
             {templatesQuery.isFetching ? <LinearProgress /> : null}
             <CustomizableTable
               tableId="student-enrollment-registration-templates"
@@ -575,17 +610,19 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
 
         {tab === 1 && !seriesQuery.isError ? (
           <Stack spacing={1.25}>
-            <Stack direction="row" justifyContent="flex-end">
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<FormatListNumbered />}
-                disabled={!academicYearId}
-                onClick={openNewSeries}
-              >
-                New Series
-              </Button>
-            </Stack>
+            {canManageFormNumberSeries ? (
+              <Stack direction="row" justifyContent="flex-end">
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<FormatListNumbered />}
+                  disabled={!academicYearId}
+                  onClick={openNewSeries}
+                >
+                  New Series
+                </Button>
+              </Stack>
+            ) : null}
             {seriesQuery.isFetching ? <LinearProgress /> : null}
             {(seriesQuery.data?.items || []).map((series) => (
               <Stack
@@ -609,10 +646,18 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                   />
                   <IconButton
                     size="small"
-                    aria-label="Edit form number series"
+                    aria-label={
+                      canManageFormNumberSeries
+                        ? 'Edit form number series'
+                        : 'View form number series'
+                    }
                     onClick={() => openSeries(series)}
                   >
-                    <Edit fontSize="small" />
+                    {canManageFormNumberSeries ? (
+                      <Edit fontSize="small" />
+                    ) : (
+                      <Visibility fontSize="small" />
+                    )}
                   </IconButton>
                 </Stack>
               </Stack>
@@ -628,18 +673,19 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
             : 'New Registration Template'}
         </DialogTitle>
         <DialogContent dividers>
-          {!editingTemplate ? (
-            <Stepper activeStep={templateStep} sx={{ mb: 2 }}>
-              <Step>
-                <StepLabel>Template Rules</StepLabel>
-              </Step>
-              <Step>
-                <StepLabel>Sections & Fields</StepLabel>
-              </Step>
-            </Stepper>
-          ) : null}
+          <Stepper activeStep={templateStep} sx={{ mb: 2 }}>
+            <Step>
+              <StepLabel>Template Rules</StepLabel>
+            </Step>
+            <Step>
+              <StepLabel>Sections & Fields</StepLabel>
+            </Step>
+            <Step>
+              <StepLabel>Languages & Preview</StepLabel>
+            </Step>
+          </Stepper>
           <Stack spacing={2}>
-            {editingTemplate || templateStep === 0 ? (
+            {templateStep === 0 ? (
               <>
                 <Box
                   sx={{
@@ -797,7 +843,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 </Box>
               </>
             ) : null}
-            {editingTemplate || templateStep === 1 ? (
+            {templateStep === 1 ? (
               <>
                 <Divider />
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -944,7 +990,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                             }
                           >
                             <MenuItem value="">Custom field</MenuItem>
-                            {systemFields.map((item) => (
+                            {registrationSystemFields.map((item) => (
                               <MenuItem key={item} value={item}>
                                 {item}
                               </MenuItem>
@@ -1048,6 +1094,19 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 ))}
               </>
             ) : null}
+            {templateStep === 2 ? (
+              <>
+                <Alert severity="info">
+                  Add parent-facing Gujarati and Hindi content, then use Preview to check the
+                  desktop, mobile, online, and print experiences before saving.
+                </Alert>
+                <RegistrationTemplateLocalizationEditor
+                  value={templateForm}
+                  readOnly={templateReadOnly}
+                  onChange={setTemplateForm}
+                />
+              </>
+            ) : null}
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -1055,15 +1114,23 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           <Button startIcon={<Visibility />} onClick={() => setPreviewTemplate(templateForm)}>
             Preview
           </Button>
-          {!editingTemplate && templateStep > 0 ? (
-            <Button onClick={() => setTemplateStep(0)}>Back</Button>
+          {templateStep > 0 ? (
+            <Button
+              onClick={() =>
+                setTemplateStep((current) =>
+                  current > 0 ? ((current - 1) as RegistrationTemplateEditorStep) : current
+                )
+              }
+            >
+              Back
+            </Button>
           ) : null}
-          {!editingTemplate && templateStep === 0 ? (
+          {templateStep < 2 ? (
             <Button variant="contained" onClick={handleNextTemplateStep}>
               Next
             </Button>
           ) : null}
-          {!templateReadOnly && (Boolean(editingTemplate) || templateStep === 1) ? (
+          {!templateReadOnly && templateStep === 2 ? (
             <LoadingButton
               variant="contained"
               loading={createTemplateState.isLoading || updateTemplateState.isLoading}
@@ -1085,7 +1152,11 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
 
       <Dialog open={seriesOpen} onClose={() => setSeriesOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>
-          {editingSeries ? 'Edit Form Number Series' : 'New Form Number Series'}
+          {editingSeries
+            ? seriesReadOnly
+              ? 'View Form Number Series'
+              : 'Edit Form Number Series'
+            : 'New Form Number Series'}
         </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={1.5}>
@@ -1093,6 +1164,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
               size="small"
               label="Series name"
               value={seriesForm.name}
+              disabled={seriesReadOnly}
               onChange={(event) =>
                 setSeriesForm((current) => ({ ...current, name: event.target.value }))
               }
@@ -1102,6 +1174,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 size="small"
                 label="Prefix"
                 value={seriesForm.prefix}
+                disabled={seriesReadOnly}
                 onChange={(event) =>
                   setSeriesForm((current) => ({
                     ...current,
@@ -1113,6 +1186,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 size="small"
                 label="Suffix"
                 value={seriesForm.suffix}
+                disabled={seriesReadOnly}
                 onChange={(event) =>
                   setSeriesForm((current) => ({
                     ...current,
@@ -1125,6 +1199,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 type="number"
                 label="Padding"
                 value={seriesForm.padding}
+                disabled={seriesReadOnly}
                 onChange={(event) =>
                   setSeriesForm((current) => ({ ...current, padding: Number(event.target.value) }))
                 }
@@ -1134,6 +1209,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 type="number"
                 label="Next number"
                 value={seriesForm.nextNumber}
+                disabled={seriesReadOnly}
                 onChange={(event) =>
                   setSeriesForm((current) => ({
                     ...current,
@@ -1158,6 +1234,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                   size="small"
                   label={label}
                   value={seriesForm.applicability[key] || ''}
+                  disabled={seriesReadOnly}
                   onChange={(event) =>
                     setSeriesForm((current) => ({
                       ...current,
@@ -1174,6 +1251,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
               control={
                 <Switch
                   checked={seriesForm.isActive}
+                  disabled={seriesReadOnly}
                   onChange={(event) =>
                     setSeriesForm((current) => ({ ...current, isActive: event.target.checked }))
                   }
@@ -1184,15 +1262,19 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSeriesOpen(false)}>Cancel</Button>
-          <LoadingButton
-            variant="contained"
-            loading={createSeriesState.isLoading || updateSeriesState.isLoading}
-            disabled={!seriesForm.name.trim()}
-            onClick={saveSeries}
-          >
-            Save Series
-          </LoadingButton>
+          <Button onClick={() => setSeriesOpen(false)}>
+            {seriesReadOnly ? 'Close' : 'Cancel'}
+          </Button>
+          {!seriesReadOnly ? (
+            <LoadingButton
+              variant="contained"
+              loading={createSeriesState.isLoading || updateSeriesState.isLoading}
+              disabled={!seriesForm.name.trim()}
+              onClick={saveSeries}
+            >
+              Save Series
+            </LoadingButton>
+          ) : null}
         </DialogActions>
       </Dialog>
     </Box>

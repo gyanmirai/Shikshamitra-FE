@@ -948,6 +948,7 @@ describe('admissions CRM API contracts', () => {
             passingMarks: 40,
             obtainedMarks: 76,
             meritRank: 3,
+            correctionReason: 'Paper-two marks were omitted.',
           },
           {
             examRecordId: 'exam-2',
@@ -968,6 +969,7 @@ describe('admissions CRM API contracts', () => {
             passingMarks: 40,
             obtainedMarks: 76,
             meritRank: 3,
+            correctionReason: 'Paper-two marks were omitted.',
           },
           {
             examRecordId: 'exam-2',
@@ -987,6 +989,10 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.changeAdmissionCrmLeadPriority).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmCycleConfiguration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.updateAdmissionCrmCycleConfiguration).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmConfigurationReferences).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.previewAdmissionCrmConfigurationImpact).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.previewAdmissionCrmConfigurationClone).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.confirmAdmissionCrmConfigurationClone).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.getAdmissionCrmPipelineStages).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.createAdmissionCrmPipelineStage).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.lockAdmissionCrmJourney).toBeTruthy();

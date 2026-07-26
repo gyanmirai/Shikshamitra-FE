@@ -252,6 +252,12 @@ describe('Enrollment settings route contracts', () => {
     expect(configuration).toContain('Duplicate Form');
     expect(configuration).toContain('Language Preview');
     expect(configuration).toContain('Download QR');
+    expect(configuration).toContain('handleDuplicateFormTemplate');
+    expect(configuration).toContain('buildDuplicateInquiryFormTemplate');
+    expect(configuration).toContain('Create Draft Copy');
+    expect(configuration).toContain('The original form will not change.');
+    expect(configuration).toContain('setInquiryFormPreviewTemplate(template)');
+    expect(configuration).toContain('<InquiryFormTemplatePreviewDialog');
   });
 
   it('uses one edit event per project-table action and retains operational summary columns', () => {
@@ -373,5 +379,30 @@ describe('Enrollment settings route contracts', () => {
     expect(governance).toContain('label="Delegate staff"');
     expect(governance).not.toContain('label="Delegator user ID"');
     expect(governance).not.toContain('label="Delegate user ID"');
+  });
+
+  it('keeps registration configuration readable while gating each mutation family', () => {
+    const registration = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-registration-configuration.tsx'
+    );
+
+    expect(registration).toContain('resolveAdmissionCrmRegistrationSettingsPermissions');
+    expect(registration).toContain('canManageRegistrationTemplates');
+    expect(registration).toContain('canPublishRegistrationTemplates');
+    expect(registration).toContain('canManageFormNumberSeries');
+    expect(registration).toContain("action === 'publish' || action === 'retire'");
+    expect(registration).toContain('requiresPublishPermission && !canPublishRegistrationTemplates');
+    expect(registration).toContain('!requiresPublishPermission && !canManageRegistrationTemplates');
+    expect(registration).toMatch(
+      /template\.status === AdmissionCrmRegistrationTemplateStatus\.Published &&\s+canPublishRegistrationTemplates/
+    );
+    expect(registration).toContain("'View Registration Template'");
+    expect(registration).toContain("'Edit form number series'");
+    expect(registration).toContain("'View form number series'");
   });
 });

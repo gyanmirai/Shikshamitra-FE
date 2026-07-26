@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-07-23
+updated_on: 2026-07-25
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -60,12 +60,14 @@ Frontend workflows must respect backend data ownership.
 | Inquiry CRM to entrance exam   | CRM leads can schedule into entrance exam slots before a `Student` record exists                |
 | Inquiry CRM registration form  | Staff can issue a CRM-native registration form from an inquiry lead before exam scheduling when the cycle requires it |
 | Admissions CRM registration    | Applicant operations issue the applicable versioned registration template, manage correction and link lifecycle actions, record fee references, and verify submissions |
+| Admissions CRM registration languages | Registration-template settings capture Gujarati and Hindi section titles, descriptions, field labels, help text, and option labels, while the public registration route resolves the selected language with English fallback |
+| Admissions CRM registration preview | Registration-template settings preview online or print rendering at desktop or mobile width in English, Gujarati, or Hindi before publication |
 | Admissions CRM documents       | Applicant operations assign the applicable checklist, show configured family upload instructions, use configured rejection-reason shortcuts, review or waive requirements, confirm originals, and enforce one-person or two-person readiness approval |
 | Admissions CRM document expiry | Each validity-aware requirement may define a reminder window; the backend `DocumentExpiring` journey trigger creates the configured deduplicated task or approved parent message when a current document enters that window |
 | Admissions CRM fee policy      | Admission Criteria offers supported quick starts, a live INR parent quotation preview, friendly Finance-owned payment gates, and collapsed campus, class, board, medium, route, date, and grace-period filters |
 | Admissions CRM operations      | Pipeline and exception-queue rows open the dedicated applicant page on the relevant section and preserve the exact table state for Back |
 | Inquiry CRM eligibility handoff | Exam view handoff uses CRM eligibility context and missing-admission-field review before the admission team creates student records |
-| Inquiry CRM exam management    | Exam view actions let staff mark attendance, enter marks, decide eligibility, and record override reasons before handoff |
+| Inquiry CRM exam management    | Exam view actions let permitted staff mark attendance, enter first-time marks inline, give distinct marks in bulk, import CSV, XLS, XLSX, or OMR-scanner spreadsheet exports, correct existing results with a reason, decide eligibility, and review handoff |
 | Inquiry CRM filters            | Board and list views support search, stage, channel, campaign, owner, desired-class, score-band, and manual-priority filtering |
 | Inquiry CRM board              | Board columns use configured pipeline stage labels, ordering, and stage colors |
 | Inquiry CRM stage movement     | Staff can move active inquiry leads only through configured allowed next stages with reason while exam and eligibility stages remain exam-governed |
@@ -96,12 +98,19 @@ Frontend workflows must respect backend data ownership.
 | CRM inquiry channels           | Admissions CRM settings enable intake channels and set default Inquiry Source from the academic-year source selector, owner, form template, acknowledgement template, and display order per admission cycle |
 | CRM channel acknowledgements   | Backend lead capture uses the configured channel acknowledgement template to create delivery-log evidence for staff and public inquiries |
 | CRM form templates             | Admissions CRM settings create, edit, activate, and deactivate dynamic inquiry form fields with CRM mappings including applicant DOB, sections, helper text, placeholders, default values, conditional visibility, select options, required state, preview order, and channel-specific publishing state |
+| CRM form template duplication  | Duplicate creates an inactive deep copy with a unique Copy name so staff can review fields and localizations before activation |
+| CRM parent form preview        | Language Preview renders branding, validation hints, required state, conditional fields, and English, Gujarati, or Hindi fallback behavior at desktop or mobile width |
 | CRM public form links          | Admissions CRM settings copy active public inquiry form links, campaign-specific links, and staff-shared owner links using the current tenant context, template ID, campaign name, and configured staff owner |
+| CRM public form QR             | Download QR generates a PNG for an active public inquiry form only when tenant context is available |
 | CRM routing selectors          | Admissions CRM settings use staff and Inquiry Source selectors for channel defaults, routing defaults, owner pools, and routing rules while preserving unknown historical IDs |
 | CRM lead branch and language   | Quick inquiry can capture campus branch and preferred communication language for routing and template variables |
 | CRM template preview           | Admissions CRM settings can preview and copy rendered draft or approved message templates without sending provider messages |
 | CRM communication providers    | Communications settings configure adapter mode, webhook URL, payload mode, sender identity, headers, parameters, dispatch response message-ID mapping, callback secret, copyable callback URL, and callback field mappings through structured controls for each message channel |
 | CRM delivery callbacks         | Provider callbacks use public tenant-scoped routes with a provider callback secret and optional payload mappings to reconcile queued, sent, delivered, or failed delivery logs by delivery log ID or provider message ID |
+| CRM action permissions         | Offer, waitlist, decision, registration, document, government-readiness, financial, activation, identifier, and service-handoff actions are hidden or disabled from the exact backend permission grant rather than from route access alone |
+| CRM configuration references  | Configuration Safety lets authorized staff inspect Stage, Round, Exam, Seat Plan, or Route references by code before changing shared configuration |
+| CRM configuration impact      | Configuration Safety previews affected applicants, changed cycle fields, reference families, warnings, and a server fingerprint before a critical configuration change |
+| CRM academic-year clone       | Configuration Safety previews source, target, conflicts, warnings, and per-family clone behavior, then requires explicit confirmation with the returned fingerprint |
 | Enrollment to records          | Admission and registration changes must keep academic scope and identity data consistent        |
 | Records to Finance and reports | Student scope, roll number, GR number, and division changes affect downstream reports           |
 | Attendance to reporting        | Attendance saves must refresh day, dashboard, leave, and report assumptions                     |

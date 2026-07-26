@@ -30,6 +30,10 @@ import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
 import { formatPublicNumber, formatPublicDateTime } from './public-admissions-format';
 import {
+  resolveRegistrationText,
+  resolveRegistrationOptions,
+} from './registration-localization';
+import {
   getPublicRegistrationValue,
   isPublicRegistrationFieldVisible,
 } from './public-registration-utils';
@@ -47,6 +51,9 @@ type Field = {
   visibleWhenFieldKey?: string | null;
   visibleWhenValue?: string | null;
   options: string[];
+  localizedLabels?: Record<string, string>;
+  localizedHelpTexts?: Record<string, string>;
+  localizedOptions?: Record<string, string[]>;
 };
 
 export type PublicRegistrationApplication = {
@@ -59,6 +66,8 @@ export type PublicRegistrationApplication = {
     description?: string | null;
     parentVisible: boolean;
     fields: Field[];
+    localizedTitles?: Record<string, string>;
+    localizedDescriptions?: Record<string, string>;
   }>;
   prefill: Record<string, unknown>;
   responses: Record<string, unknown>;
@@ -191,7 +200,9 @@ export default function PublicRegistration({
         <Stepper activeStep={activeStep} alternativeLabel sx={{ overflowX: 'auto', pb: 1 }}>
           {visibleSections.map((section) => (
             <Step key={section.key}>
-              <StepLabel>{section.title}</StepLabel>
+              <StepLabel>
+                {resolveRegistrationText(section.title, section.localizedTitles, language)}
+              </StepLabel>
             </Step>
           ))}
         </Stepper>
@@ -200,10 +211,20 @@ export default function PublicRegistration({
       {activeSection ? (
         <Stack key={activeSection.key} spacing={1.25} sx={{ pt: 1 }}>
           <Box>
-            <Typography variant="subtitle2">{activeSection.title}</Typography>
-            {activeSection.description ? (
+            <Typography variant="subtitle2">
+              {resolveRegistrationText(activeSection.title, activeSection.localizedTitles, language)}
+            </Typography>
+            {resolveRegistrationText(
+              activeSection.description,
+              activeSection.localizedDescriptions,
+              language
+            ) ? (
               <Typography variant="caption" color="text.secondary">
-                {activeSection.description}
+                {resolveRegistrationText(
+                  activeSection.description,
+                  activeSection.localizedDescriptions,
+                  language
+                )}
               </Typography>
             ) : null}
           </Box>
@@ -222,6 +243,21 @@ export default function PublicRegistration({
                 const value = getPublicRegistrationValue(field, responses, application.prefill);
                 const editable = canEdit && field.parentEditable;
                 const error = application.correctionFieldKeys.includes(field.key);
+                const label = resolveRegistrationText(
+                  field.label,
+                  field.localizedLabels,
+                  language
+                );
+                const helpText = resolveRegistrationText(
+                  field.helpText,
+                  field.localizedHelpTexts,
+                  language
+                );
+                const options = resolveRegistrationOptions(
+                  field.options,
+                  field.localizedOptions,
+                  language
+                );
                 if (field.fieldType === 8) {
                   return (
                     <FormControlLabel
@@ -233,16 +269,17 @@ export default function PublicRegistration({
                           onChange={(event) => updateValue(field.key, event.target.checked)}
                         />
                       }
-                      label={`${field.label}${field.required ? ' *' : ''}`}
+                      label={`${label}${field.required ? ' *' : ''}`}
                     />
                   );
                 }
                 if (field.fieldType === 6 || field.fieldType === 7) {
                   return (
                     <FormControl key={field.key} size="small" error={error}>
-                      <InputLabel>{field.label}</InputLabel>
+                      <InputLabel>{label}</InputLabel>
                       <Select
-                        label={field.label}
+                        label={label}
+                        name={field.key}
                         multiple={field.fieldType === 7}
                         value={
                           field.fieldType === 7
@@ -254,9 +291,9 @@ export default function PublicRegistration({
                         disabled={!editable}
                         onChange={(event) => updateValue(field.key, event.target.value)}
                       >
-                        {field.options.map((option) => (
+                        {field.options.map((option, optionIndex) => (
                           <MenuItem key={option} value={option}>
-                            {option}
+                            {options[optionIndex] || option}
                           </MenuItem>
                         ))}
                       </Select>
@@ -280,12 +317,15 @@ export default function PublicRegistration({
                     }
                     multiline={field.fieldType === 1}
                     minRows={field.fieldType === 1 ? 3 : undefined}
-                    label={field.label}
+                    name={field.key}
+                    autoComplete={field.systemField || 'off'}
+                    spellCheck={field.fieldType === 4 ? false : undefined}
+                    label={label}
                     required={field.required}
                     value={String(value ?? '')}
                     disabled={!editable}
                     error={error}
-                    helperText={error ? copy.correctionRequested : field.helpText}
+                    helperText={error ? copy.correctionRequested : helpText}
                     InputLabelProps={field.fieldType === 3 ? { shrink: true } : undefined}
                     onChange={(event) => updateValue(field.key, event.target.value)}
                   />

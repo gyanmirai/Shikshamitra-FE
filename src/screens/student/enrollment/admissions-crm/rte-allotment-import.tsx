@@ -1,9 +1,12 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { useSelector } from 'react-redux';
 import { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FactCheck, CheckCircle, CloudUpload } from '@mui/icons-material';
@@ -16,6 +19,8 @@ import {
   usePreviewAdmissionCrmRteAllotmentsMutation,
   type AdmissionCrmRteAllotmentImportResultDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { admissionCrmActionPermissions } from './admission-action-permissions';
 
 type Props = {
   academicYearId: string;
@@ -111,6 +116,11 @@ const readError = (error: unknown) => {
 };
 
 export function RteAllotmentImport({ academicYearId }: Props) {
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
+  const canManageGovernmentReadiness = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.manageGovernmentReadiness
+  );
   const fileInput = useRef<HTMLInputElement>(null);
   const [routeDefinitionId, setRouteDefinitionId] = useState('');
   const [rows, setRows] = useState<AdmissionCrmRteAllotmentImportRowDto[]>([]);
@@ -121,7 +131,7 @@ export function RteAllotmentImport({ academicYearId }: Props) {
   const routesQuery = useGetAdmissionCrmRouteDefinitionsQuery(
     { academicYearId },
     {
-      skip: !academicYearId,
+      skip: !academicYearId || !canManageGovernmentReadiness,
     }
   );
   const publishedRteRoutes = useMemo(
@@ -185,6 +195,7 @@ export function RteAllotmentImport({ academicYearId }: Props) {
   };
 
   const run = async (commit: boolean) => {
+    if (!canManageGovernmentReadiness) return;
     if (!routeDefinitionId) {
       shikshaMitraToast.error({ message: 'Select the published RTE route first.' });
       return;
@@ -207,6 +218,14 @@ export function RteAllotmentImport({ academicYearId }: Props) {
     }
   };
 
+  if (!canManageGovernmentReadiness) {
+    return (
+      <Alert severity="info">
+        Government-readiness permission is required to preview or import RTE allotments.
+      </Alert>
+    );
+  }
+
   return (
     <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
       <Stack spacing={1.25}>
@@ -225,6 +244,23 @@ export function RteAllotmentImport({ academicYearId }: Props) {
           applicantReference, leadId, allotmentNumber, allotmentRound, authorityName,
           admissionDeadline, allottedClass, allottedCampus, evidenceReferences, and notes.
         </Typography>
+        {routesQuery.isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={() => routesQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Published RTE routes could not be loaded. Retry before selecting an import file.
+          </Alert>
+        ) : null}
+        {!routesQuery.isFetching && !routesQuery.isError && publishedRteRoutes.length === 0 ? (
+          <Alert severity="warning">
+            No published RTE route is available for this academic year.
+          </Alert>
+        ) : null}
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
           <TextField
             select
@@ -249,6 +285,7 @@ export function RteAllotmentImport({ academicYearId }: Props) {
           <Button
             variant="outlined"
             startIcon={<CloudUpload />}
+            disabled={routesQuery.isError || publishedRteRoutes.length === 0}
             onClick={() => fileInput.current?.click()}
           >
             Choose CSV
@@ -273,7 +310,7 @@ export function RteAllotmentImport({ academicYearId }: Props) {
           <LoadingButton
             startIcon={<FactCheck />}
             loading={previewState.isLoading}
-            disabled={!routeDefinitionId || !rows.length}
+            disabled={routesQuery.isError || !routeDefinitionId || !rows.length}
             onClick={() => run(false)}
           >
             Validate preview
@@ -282,7 +319,7 @@ export function RteAllotmentImport({ academicYearId }: Props) {
             variant="contained"
             startIcon={<CheckCircle />}
             loading={importState.isLoading}
-            disabled={!routeDefinitionId || !rows.length || !result}
+            disabled={routesQuery.isError || !routeDefinitionId || !rows.length || !result}
             onClick={() => run(true)}
           >
             Commit allotments

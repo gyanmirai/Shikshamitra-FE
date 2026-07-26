@@ -56,6 +56,7 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { RegistrationResponseEditor } from './registration-response-editor';
+import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { hasApplicantRegistrationDraft } from './applicant-registration-draft-state';
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
 import { ApplicantSwitchRow, ApplicantEmptyState } from './applicant-workspace-primitives';
@@ -113,7 +114,39 @@ export function ApplicantRegistrationOperations({
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const canUploadDocuments = hasGrantedPermission(
     permissions,
-    'Students.Enrollment.AdmissionsCrm.ReviewDocuments'
+    admissionCrmActionPermissions.reviewDocuments
+  );
+  const canIssueRegistration = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.issueRegistrationForm
+  );
+  const canVerifyRegistration = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.verifyRegistration
+  );
+  const canManageRegistrationLinks = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.manageRegistrationLinks
+  );
+  const canWaiveRegistrationFee = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.waiveRegistrationFee
+  );
+  const canAssignDocumentChecklist = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.manageDocumentConfiguration
+  );
+  const canWaiveDocuments = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.waiveDocuments
+  );
+  const canConfirmOriginalSeen = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.confirmOriginalSeen
+  );
+  const canConfirmAdmissionReadiness = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.confirmAdmissionReadiness
   );
   const registrationQuery = useGetCurrentAdmissionCrmRegistrationByLeadQuery(
     { leadId },
@@ -245,20 +278,55 @@ export function ApplicantRegistrationOperations({
 
   if (registrationQuery.isFetching) return <LinearProgress />;
 
+  if (registrationQuery.isError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button color="inherit" size="small" onClick={() => registrationQuery.refetch()}>
+            Retry
+          </Button>
+        }
+      >
+        Registration details could not be loaded. Retry before issuing or updating a registration.
+      </Alert>
+    );
+  }
+
   if (!registration) {
     return (
       <Box component="section">
         <Stack spacing={1.25}>
           <Typography variant="subtitle2">Registration</Typography>
+          {templatesQuery.isError || seriesQuery.isError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => {
+                    templatesQuery.refetch();
+                    seriesQuery.refetch();
+                  }}
+                >
+                  Retry
+                </Button>
+              }
+            >
+              Registration templates or number series could not be loaded.
+            </Alert>
+          ) : null}
           <ApplicantEmptyState
             title="Registration has not been issued"
             description="Select a template and expiry date to start the applicant registration."
             action={
-              !issueFormOpen ? (
+              !issueFormOpen && canIssueRegistration ? (
                 <Button
                   size="small"
                   variant="contained"
                   startIcon={<Description />}
+                  disabled={templatesQuery.isError || seriesQuery.isError}
                   onClick={() => setIssueFormOpen(true)}
                 >
                   Issue registration
@@ -266,7 +334,7 @@ export function ApplicantRegistrationOperations({
               ) : undefined
             }
           />
-          {issueFormOpen ? (
+          {issueFormOpen && canIssueRegistration ? (
             <Box
               sx={{
                 display: 'grid',
@@ -383,27 +451,29 @@ export function ApplicantRegistrationOperations({
               onChange={(event) => setNewExpiry(event.target.value)}
               slotProps={{ inputLabel: { shrink: true } }}
             />
-            <LoadingButton
-              variant="outlined"
-              loading={extendState.isLoading}
-              disabled={!reason.trim()}
-              onClick={() =>
-                perform(
-                  () =>
-                    extend({
-                      applicationId: registration.id,
-                      newExpiry: new Date(`${newExpiry}T23:59:59`).toISOString(),
-                      reason: reason.trim(),
-                    }).unwrap(),
-                  'Registration expiry extended.',
-                  true
-                ).then((saved) => {
-                  if (saved) setNewExpiry(initialNewExpiry);
-                })
-              }
-            >
-              Extend Link
-            </LoadingButton>
+            {canManageRegistrationLinks ? (
+              <LoadingButton
+                variant="outlined"
+                loading={extendState.isLoading}
+                disabled={!reason.trim()}
+                onClick={() =>
+                  perform(
+                    () =>
+                      extend({
+                        applicationId: registration.id,
+                        newExpiry: new Date(`${newExpiry}T23:59:59`).toISOString(),
+                        reason: reason.trim(),
+                      }).unwrap(),
+                    'Registration expiry extended.',
+                    true
+                  ).then((saved) => {
+                    if (saved) setNewExpiry(initialNewExpiry);
+                  })
+                }
+              >
+                Extend Link
+              </LoadingButton>
+            ) : null}
           </Box>
           <TextField
             size="small"
@@ -413,70 +483,78 @@ export function ApplicantRegistrationOperations({
             helperText={`Comma-separated fields. Available: ${allFieldKeys.join(', ') || 'none'}`}
           />
           <Stack direction="row" gap={1} flexWrap="wrap">
-            <LoadingButton
-              variant="outlined"
-              startIcon={<Replay />}
-              loading={correctionState.isLoading}
-              disabled={!reason.trim() || !correctionFields.trim()}
-              onClick={() =>
-                perform(
-                  () =>
-                    returnForCorrection({
-                      applicationId: registration.id,
-                      fieldKeys: correctionFields
-                        .split(',')
-                        .map((item) => item.trim())
-                        .filter(Boolean),
-                      reason: reason.trim(),
-                    }).unwrap(),
-                  'Registration returned for correction.',
-                  true
-                ).then((saved) => {
-                  if (saved) setCorrectionFields('');
-                })
-              }
-            >
-              Return for Correction
-            </LoadingButton>
-            <LoadingButton
-              variant="contained"
-              startIcon={<FactCheck />}
-              loading={verifyState.isLoading}
-              disabled={
-                ![
-                  AdmissionCrmRegistrationStatus.Submitted,
-                  AdmissionCrmRegistrationStatus.Resubmitted,
-                ].includes(registration.status)
-              }
-              onClick={() =>
-                perform(
-                  () => verify({ applicationId: registration.id }).unwrap(),
-                  'Registration verified.'
-                )
-              }
-            >
-              Verify Registration
-            </LoadingButton>
-            <LoadingButton
-              color="error"
-              variant="outlined"
-              loading={revokeState.isLoading}
-              disabled={
-                !reason.trim() || registration.status === AdmissionCrmRegistrationStatus.Revoked
-              }
-              onClick={() =>
-                perform(
-                  () => revoke({ applicationId: registration.id, reason: reason.trim() }).unwrap(),
-                  'Registration link revoked.',
-                  true
-                )
-              }
-            >
-              Revoke
-            </LoadingButton>
+            {canVerifyRegistration ? (
+              <LoadingButton
+                variant="outlined"
+                startIcon={<Replay />}
+                loading={correctionState.isLoading}
+                disabled={!reason.trim() || !correctionFields.trim()}
+                onClick={() =>
+                  perform(
+                    () =>
+                      returnForCorrection({
+                        applicationId: registration.id,
+                        fieldKeys: correctionFields
+                          .split(',')
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                        reason: reason.trim(),
+                      }).unwrap(),
+                    'Registration returned for correction.',
+                    true
+                  ).then((saved) => {
+                    if (saved) setCorrectionFields('');
+                  })
+                }
+              >
+                Return for Correction
+              </LoadingButton>
+            ) : null}
+            {canVerifyRegistration ? (
+              <LoadingButton
+                variant="contained"
+                startIcon={<FactCheck />}
+                loading={verifyState.isLoading}
+                disabled={
+                  ![
+                    AdmissionCrmRegistrationStatus.Submitted,
+                    AdmissionCrmRegistrationStatus.Resubmitted,
+                  ].includes(registration.status)
+                }
+                onClick={() =>
+                  perform(
+                    () => verify({ applicationId: registration.id }).unwrap(),
+                    'Registration verified.'
+                  )
+                }
+              >
+                Verify Registration
+              </LoadingButton>
+            ) : null}
+            {canManageRegistrationLinks ? (
+              <LoadingButton
+                color="error"
+                variant="outlined"
+                loading={revokeState.isLoading}
+                disabled={
+                  !reason.trim() || registration.status === AdmissionCrmRegistrationStatus.Revoked
+                }
+                onClick={() =>
+                  perform(
+                    () =>
+                      revoke({ applicationId: registration.id, reason: reason.trim() }).unwrap(),
+                    'Registration link revoked.',
+                    true
+                  )
+                }
+              >
+                Revoke
+              </LoadingButton>
+            ) : null}
           </Stack>
-          {registration.status === AdmissionCrmRegistrationStatus.Revoked ||
-          new Date(registration.linkExpiresAt) <= new Date() ? (
+          {canManageRegistrationLinks &&
+          (registration.status === AdmissionCrmRegistrationStatus.Revoked ||
+            new Date(registration.linkExpiresAt) <= new Date()) ? (
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 size="small"
@@ -522,40 +600,47 @@ export function ApplicantRegistrationOperations({
                 value={paymentReference}
                 onChange={(event) => setPaymentReference(event.target.value)}
               />
-              <LoadingButton
-                variant="outlined"
-                loading={paymentState.isLoading}
-                disabled={!paymentReference.trim()}
-                onClick={() =>
-                  perform(
-                    () =>
-                      recordPayment({
-                        applicationId: registration.id,
-                        paymentReference: paymentReference.trim(),
-                      }).unwrap(),
-                    'Payment reference recorded.'
-                  ).then((saved) => {
-                    if (saved) setPaymentReference('');
-                  })
-                }
-              >
-                Record Reference
-              </LoadingButton>
-              <LoadingButton
-                variant="text"
-                loading={waiveFeeState.isLoading}
-                disabled={!reason.trim()}
-                onClick={() =>
-                  perform(
-                    () =>
-                      waiveFee({ applicationId: registration.id, reason: reason.trim() }).unwrap(),
-                    'Registration fee waived.',
-                    true
-                  )
-                }
-              >
-                Waive Fee
-              </LoadingButton>
+              {canIssueRegistration ? (
+                <LoadingButton
+                  variant="outlined"
+                  loading={paymentState.isLoading}
+                  disabled={!paymentReference.trim()}
+                  onClick={() =>
+                    perform(
+                      () =>
+                        recordPayment({
+                          applicationId: registration.id,
+                          paymentReference: paymentReference.trim(),
+                        }).unwrap(),
+                      'Payment reference recorded.'
+                    ).then((saved) => {
+                      if (saved) setPaymentReference('');
+                    })
+                  }
+                >
+                  Record Reference
+                </LoadingButton>
+              ) : null}
+              {canWaiveRegistrationFee ? (
+                <LoadingButton
+                  variant="text"
+                  loading={waiveFeeState.isLoading}
+                  disabled={!reason.trim()}
+                  onClick={() =>
+                    perform(
+                      () =>
+                        waiveFee({
+                          applicationId: registration.id,
+                          reason: reason.trim(),
+                        }).unwrap(),
+                      'Registration fee waived.',
+                      true
+                    )
+                  }
+                >
+                  Waive Fee
+                </LoadingButton>
+              ) : null}
             </Stack>
           ) : null}
           {isRegistrationBusy ? <LinearProgress /> : null}
@@ -566,7 +651,31 @@ export function ApplicantRegistrationOperations({
         <Stack spacing={1.25}>
           <Typography variant="subtitle2">Document Verification</Typography>
           {checklistQuery.isFetching ? <LinearProgress /> : null}
-          {!checklist && !checklistQuery.isFetching ? (
+          {checklistQuery.isError || checklistTemplatesQuery.isError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => {
+                    checklistQuery.refetch();
+                    checklistTemplatesQuery.refetch();
+                  }}
+                >
+                  Retry
+                </Button>
+              }
+            >
+              Document requirements could not be loaded. Retry before assigning or reviewing a
+              checklist.
+            </Alert>
+          ) : null}
+          {!checklist &&
+          !checklistQuery.isFetching &&
+          !checklistQuery.isError &&
+          !checklistTemplatesQuery.isError &&
+          canAssignDocumentChecklist ? (
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 select
@@ -812,6 +921,7 @@ export function ApplicantRegistrationOperations({
                       sx={{ flex: 1 }}
                     />
                     {document.id &&
+                    canUploadDocuments &&
                     [
                       AdmissionCrmApplicantDocumentStatus.Uploaded,
                       AdmissionCrmApplicantDocumentStatus.UnderReview,
@@ -859,6 +969,7 @@ export function ApplicantRegistrationOperations({
                       </>
                     ) : null}
                     {document.id &&
+                    canConfirmOriginalSeen &&
                     document.requiresOriginal &&
                     document.status === AdmissionCrmApplicantDocumentStatus.Verified &&
                     !document.originalSeen ? (
@@ -877,6 +988,7 @@ export function ApplicantRegistrationOperations({
                       </LoadingButton>
                     ) : null}
                     {!checklist.readinessConfirmed &&
+                    canWaiveDocuments &&
                     document.status !== AdmissionCrmApplicantDocumentStatus.Waived ? (
                       <LoadingButton
                         size="small"
@@ -903,7 +1015,7 @@ export function ApplicantRegistrationOperations({
                   </Stack>
                 </Stack>
               ))}
-              {!checklist.readinessConfirmed ? (
+              {!checklist.readinessConfirmed && canConfirmAdmissionReadiness ? (
                 <Stack spacing={1}>
                   <ApplicantSwitchRow
                     label="Enable readiness override"

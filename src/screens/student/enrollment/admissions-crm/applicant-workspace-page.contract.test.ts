@@ -152,12 +152,16 @@ describe('Student Enrollment applicant workspace page contracts', () => {
 
   it('allows staff to upload registration checklist documents', () => {
     const registration = read('applicant-registration-operations.tsx');
+    const actionPermissions = read('admission-action-permissions.ts');
 
     expect(registration).toContain('useUploadAdmissionCrmRegistrationDocumentMutation');
     expect(registration).toContain('type="file"');
     expect(registration).toContain('registrationApplicationId: registration.id');
     expect(registration).toContain('document.validityDateRequired');
-    expect(registration).toContain('Students.Enrollment.AdmissionsCrm.ReviewDocuments');
+    expect(registration).toContain('admissionCrmActionPermissions.reviewDocuments');
+    expect(actionPermissions).toMatch(
+      /reviewDocuments: `\$\{admissionCrmPermissionRoot\}\.ReviewDocuments`/
+    );
     expect(registration).toContain('canUploadDocuments ?');
   });
 

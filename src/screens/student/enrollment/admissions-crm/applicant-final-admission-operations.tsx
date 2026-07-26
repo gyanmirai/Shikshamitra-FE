@@ -1,7 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import {
   Add,
@@ -54,6 +58,7 @@ import {
   useUpdateAdmissionCrmWaitlistGovernanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
 import {
   ApplicantSwitchRow,
@@ -124,6 +129,31 @@ function WaitlistHistory({ entryId }: { entryId: string }) {
 }
 
 export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Props) {
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
+  const canManageOffers = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.manageOffers
+  );
+  const canApproveOffers = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.approveOffers
+  );
+  const canManageWaitlist = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.manageWaitlist
+  );
+  const canMakeAdmissionDecision = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.makeAdmissionDecision
+  );
+  const canOverrideSeatCapacity = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.overrideSeatCapacity
+  );
+  const canCancelAdmission = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.cancelAdmission
+  );
   const [seatPoolId, setSeatPoolId] = useState('');
   const [offerFormOpen, setOfferFormOpen] = useState(false);
   const [offerType, setOfferType] = useState(AdmissionCrmSeatOfferType.Final);
@@ -210,7 +240,13 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
     validUntil: new Date(validUntil).toISOString(),
   });
 
-  const anyLoading = poolsQuery.isFetching || offersQuery.isFetching || decisionsQuery.isFetching;
+  const anyLoading =
+    poolsQuery.isFetching ||
+    offersQuery.isFetching ||
+    decisionsQuery.isFetching ||
+    waitlistQuery.isFetching;
+  const finalAdmissionQueriesFailed =
+    poolsQuery.isError || offersQuery.isError || decisionsQuery.isError;
 
   return (
     <Box component="section">
@@ -234,21 +270,55 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
           ) : null}
         </Stack>
         {anyLoading ? <LinearProgress /> : null}
-        {!poolsQuery.isFetching && !pools.length ? (
+        {finalAdmissionQueriesFailed ? (
+          <Alert
+            severity="error"
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  poolsQuery.refetch();
+                  offersQuery.refetch();
+                  decisionsQuery.refetch();
+                }}
+              >
+                Retry
+              </Button>
+            }
+          >
+            Offer and seat details could not be loaded. Retry before taking a final-admission
+            action.
+          </Alert>
+        ) : null}
+        {!poolsQuery.isFetching && !poolsQuery.isError && !pools.length ? (
           <Alert severity="warning">Configure an active seat pool before creating offers.</Alert>
         ) : null}
+        {waitlistQuery.isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={() => waitlistQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Waitlist details could not be loaded. Retry before taking a waitlist action.
+          </Alert>
+        ) : null}
 
-        {!offerFormOpen ? (
+        {canManageOffers && !finalAdmissionQueriesFailed && !offerFormOpen ? (
           <Button
             variant="contained"
             size="small"
             startIcon={<Add />}
+            disabled={poolsQuery.isError || offersQuery.isError || pools.length === 0}
             onClick={() => setOfferFormOpen(true)}
             sx={{ alignSelf: 'flex-start' }}
           >
             Create offer
           </Button>
-        ) : (
+        ) : canManageOffers && !finalAdmissionQueriesFailed ? (
           <ApplicantActionPanel>
             <Stack spacing={1.25}>
               <TextField
@@ -320,7 +390,11 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                 startIcon={<Add />}
                 loading={createOfferState.isLoading}
                 disabled={
-                  !seatPoolId || !offerTerms.trim() || new Date(validUntil) <= new Date(validFrom)
+                  poolsQuery.isError ||
+                  offersQuery.isError ||
+                  !seatPoolId ||
+                  !offerTerms.trim() ||
+                  new Date(validUntil) <= new Date(validFrom)
                 }
                 onClick={() =>
                   perform(
@@ -333,20 +407,24 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
               </LoadingButton>
 
               <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-                <ApplicantSwitchRow
-                  label="Enable capacity override"
-                  description="Allow this offer to exceed configured seat capacity."
-                  checked={capacityOverride}
-                  onChange={setCapacityOverride}
-                />
-                <TextField
-                  size="small"
-                  fullWidth
-                  label="Capacity override reason"
-                  value={capacityOverrideReason}
-                  disabled={!capacityOverride}
-                  onChange={(event) => setCapacityOverrideReason(event.target.value)}
-                />
+                {canOverrideSeatCapacity ? (
+                  <>
+                    <ApplicantSwitchRow
+                      label="Enable capacity override"
+                      description="Allow this offer to exceed configured seat capacity."
+                      checked={capacityOverride}
+                      onChange={setCapacityOverride}
+                    />
+                    <TextField
+                      size="small"
+                      fullWidth
+                      label="Capacity override reason"
+                      value={capacityOverrideReason}
+                      disabled={!capacityOverride}
+                      onChange={(event) => setCapacityOverrideReason(event.target.value)}
+                    />
+                  </>
+                ) : null}
                 <TextField
                   size="small"
                   fullWidth
@@ -364,7 +442,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
               </Button>
             </Stack>
           </ApplicantActionPanel>
-        )}
+        ) : null}
 
         <Stack spacing={1}>
           {offers.map((offer) => (
@@ -401,8 +479,9 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                     {new Date(offer.reservation.expiresAt).toLocaleString()}
                   </Typography>
                 ) : null}
-                <Stack direction="row" gap={1} flexWrap="wrap">
-                  {offer.status === AdmissionCrmSeatOfferStatus.Draft ? (
+                {!finalAdmissionQueriesFailed ? (
+                  <Stack direction="row" gap={1} flexWrap="wrap">
+                  {offer.status === AdmissionCrmSeatOfferStatus.Draft && canManageOffers ? (
                     <LoadingButton
                       size="small"
                       variant="outlined"
@@ -418,7 +497,8 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                       Submit
                     </LoadingButton>
                   ) : null}
-                  {offer.status === AdmissionCrmSeatOfferStatus.ApprovalPending ? (
+                  {offer.status === AdmissionCrmSeatOfferStatus.ApprovalPending &&
+                  canApproveOffers ? (
                     <LoadingButton
                       size="small"
                       variant="outlined"
@@ -434,21 +514,28 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                       Approve
                     </LoadingButton>
                   ) : null}
-                  {offer.status === AdmissionCrmSeatOfferStatus.Approved ? (
+                  {offer.status === AdmissionCrmSeatOfferStatus.Approved && canManageOffers ? (
                     <LoadingButton
                       size="small"
                       variant="contained"
                       startIcon={<Gavel />}
                       loading={issueState.isLoading}
-                      disabled={capacityOverride && !capacityOverrideReason.trim()}
+                      disabled={
+                        canOverrideSeatCapacity &&
+                        capacityOverride &&
+                        !capacityOverrideReason.trim()
+                      }
                       onClick={() =>
                         perform(
                           () =>
                             issueOffer({
                               offerId: offer.id,
                               body: {
-                                capacityOverride,
-                                capacityOverrideReason: capacityOverrideReason.trim() || undefined,
+                                capacityOverride: canOverrideSeatCapacity && capacityOverride,
+                                capacityOverrideReason:
+                                  canOverrideSeatCapacity && capacityOverride
+                                    ? capacityOverrideReason.trim() || undefined
+                                    : undefined,
                               },
                             }).unwrap(),
                           'Offer issued and seat reserved.'
@@ -461,7 +548,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                   {[
                     AdmissionCrmSeatOfferStatus.Issued,
                     AdmissionCrmSeatOfferStatus.Opened,
-                  ].includes(offer.status) ? (
+                  ].includes(offer.status) && canManageOffers ? (
                     <>
                       <LoadingButton
                         size="small"
@@ -511,7 +598,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                     AdmissionCrmSeatOfferStatus.Approved,
                     AdmissionCrmSeatOfferStatus.Issued,
                     AdmissionCrmSeatOfferStatus.Opened,
-                  ].includes(offer.status) ? (
+                  ].includes(offer.status) && canManageOffers ? (
                     <LoadingButton
                       size="small"
                       variant="text"
@@ -535,7 +622,9 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                   {[
                     AdmissionCrmSeatOfferStatus.Issued,
                     AdmissionCrmSeatOfferStatus.Opened,
-                  ].includes(offer.status) && new Date(offer.validUntil) <= new Date() ? (
+                  ].includes(offer.status) &&
+                  new Date(offer.validUntil) <= new Date() &&
+                  canManageOffers ? (
                     <LoadingButton
                       size="small"
                       variant="text"
@@ -557,7 +646,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                     AdmissionCrmSeatOfferStatus.Approved,
                     AdmissionCrmSeatOfferStatus.Issued,
                     AdmissionCrmSeatOfferStatus.Opened,
-                  ].includes(offer.status) ? (
+                  ].includes(offer.status) && canManageOffers ? (
                     <LoadingButton
                       size="small"
                       variant="text"
@@ -582,11 +671,12 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                       Supersede
                     </LoadingButton>
                   ) : null}
-                </Stack>
+                  </Stack>
+                ) : null}
               </Stack>
             </Paper>
           ))}
-          {!offersQuery.isFetching && !offers.length ? (
+          {!offersQuery.isFetching && !offersQuery.isError && !offers.length ? (
             <ApplicantEmptyState
               title="No seat offers"
               description="Create an offer draft after selecting an eligible seat pool."
@@ -599,69 +689,76 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
           <Typography variant="subtitle2" sx={{ flex: 1 }}>
             Waitlist
           </Typography>
-          <LoadingButton
-            size="small"
-            loading={runPromotionState.isLoading}
-            disabled={
-              !seatPoolId ||
-              !leadWaitlistEntries.some(
-                (entry) => entry.status === AdmissionCrmWaitlistStatus.Active
-              )
-            }
-            onClick={() =>
-              perform(
-                () =>
-                  runWaitlistPromotion({
-                    academicYearId,
-                    seatPoolId,
-                    maximumOffers: Math.max(1, selectedPool?.remainingCapacity || 1),
-                    offer: offerPayload(),
-                  }).unwrap(),
-                'Capacity-aware waitlist promotion drafts prepared.'
-              )
-            }
-          >
-            Prepare next offers
-          </LoadingButton>
+          {canManageWaitlist && !finalAdmissionQueriesFailed ? (
+            <LoadingButton
+              size="small"
+              loading={runPromotionState.isLoading}
+              disabled={
+                waitlistQuery.isError ||
+                !seatPoolId ||
+                !leadWaitlistEntries.some(
+                  (entry) => entry.status === AdmissionCrmWaitlistStatus.Active
+                )
+              }
+              onClick={() =>
+                perform(
+                  () =>
+                    runWaitlistPromotion({
+                      academicYearId,
+                      seatPoolId,
+                      maximumOffers: Math.max(1, selectedPool?.remainingCapacity || 1),
+                      offer: offerPayload(),
+                    }).unwrap(),
+                  'Capacity-aware waitlist promotion drafts prepared.'
+                )
+              }
+            >
+              Prepare next offers
+            </LoadingButton>
+          ) : null}
         </Stack>
         <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-          <TextField
-            size="small"
-            type="number"
-            label="Priority score"
-            value={waitlistPriority}
-            onChange={(event) => setWaitlistPriority(Number(event.target.value))}
-          />
-          <LoadingButton
-            variant="outlined"
-            loading={addWaitlistState.isLoading}
-            disabled={!seatPoolId}
-            onClick={() =>
-              perform(
-                () =>
-                  addToWaitlist({
-                    leadId,
-                    body: { seatPoolId, priorityScore: waitlistPriority },
-                  }).unwrap(),
-                'Applicant added to the waitlist.'
-              )
-            }
-          >
-            Add to Waitlist
-          </LoadingButton>
-          <ApplicantSwitchRow
-            label="Enable rank override"
-            checked={priorityOverride}
-            onChange={setPriorityOverride}
-          />
-          <TextField
-            size="small"
-            fullWidth
-            label="Priority override reason"
-            value={priorityOverrideReason}
-            disabled={!priorityOverride}
-            onChange={(event) => setPriorityOverrideReason(event.target.value)}
-          />
+          {canManageWaitlist && !finalAdmissionQueriesFailed ? (
+            <>
+              <TextField
+                size="small"
+                type="number"
+                label="Priority score"
+                value={waitlistPriority}
+                onChange={(event) => setWaitlistPriority(Number(event.target.value))}
+              />
+              <LoadingButton
+                variant="outlined"
+                loading={addWaitlistState.isLoading}
+                disabled={waitlistQuery.isError || !seatPoolId}
+                onClick={() =>
+                  perform(
+                    () =>
+                      addToWaitlist({
+                        leadId,
+                        body: { seatPoolId, priorityScore: waitlistPriority },
+                      }).unwrap(),
+                    'Applicant added to the waitlist.'
+                  )
+                }
+              >
+                Add to Waitlist
+              </LoadingButton>
+              <ApplicantSwitchRow
+                label="Enable rank override"
+                checked={priorityOverride}
+                onChange={setPriorityOverride}
+              />
+              <TextField
+                size="small"
+                fullWidth
+                label="Priority override reason"
+                value={priorityOverrideReason}
+                disabled={!priorityOverride}
+                onChange={(event) => setPriorityOverrideReason(event.target.value)}
+              />
+            </>
+          ) : null}
         </Stack>
         {leadWaitlistEntries.map((entry) => (
           <Stack
@@ -679,7 +776,10 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
             {entry.promotionPaused ? (
               <Chip size="small" color="warning" label="Promotion paused" />
             ) : null}
-            {entry.status === AdmissionCrmWaitlistStatus.Active ? (
+            {entry.status === AdmissionCrmWaitlistStatus.Active &&
+            canManageWaitlist &&
+            !finalAdmissionQueriesFailed &&
+            !waitlistQuery.isError ? (
               <>
                 <LoadingButton
                   size="small"
@@ -774,101 +874,111 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
 
         <Divider />
         <Typography variant="subtitle2">Final Decision</Typography>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-            gap: 1,
-          }}
-        >
-          <TextField
-            select
-            size="small"
-            label="Decision"
-            value={decisionStatus}
-            onChange={(event) => setDecisionStatus(Number(event.target.value))}
-          >
-            {Object.entries(decisionStatusLabels)
-              .filter(([value]) => Number(value) !== AdmissionCrmAdmissionDecisionStatus.Pending)
-              .map(([value, label]) => (
-                <MenuItem key={value} value={Number(value)}>
-                  {label}
-                </MenuItem>
-              ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Accepted offer"
-            value={decisionOfferId}
-            onChange={(event) => setDecisionOfferId(event.target.value)}
-          >
-            <MenuItem value="">No offer selected</MenuItem>
-            {offers.map((offer) => (
-              <MenuItem key={offer.id} value={offer.id}>
-                {offer.offerNumber} - {offerStatusLabels[offer.status]}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
-        <TextField
-          size="small"
-          fullWidth
-          label="Decision reason"
-          value={decisionReason}
-          onChange={(event) => setDecisionReason(event.target.value)}
-        />
-        <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-          <ApplicantSwitchRow
-            label="Enable governed override"
-            description="Record an exception to the configured admission decision rules."
-            checked={decisionOverride}
-            onChange={setDecisionOverride}
-          />
-          <TextField
-            size="small"
-            fullWidth
-            label="Override reason"
-            value={decisionOverrideReason}
-            disabled={!decisionOverride}
-            onChange={(event) => setDecisionOverrideReason(event.target.value)}
-          />
-          <LoadingButton
-            variant="contained"
-            startIcon={
-              decisionStatus === AdmissionCrmAdmissionDecisionStatus.Cancelled ? (
-                <Cancel />
-              ) : (
-                <Gavel />
-              )
-            }
-            loading={decisionState.isLoading}
-            disabled={
-              !decisionReason.trim() ||
-              (decisionOverride && !decisionOverrideReason.trim()) ||
-              (decisionStatus === AdmissionCrmAdmissionDecisionStatus.Cancelled && !decisionOfferId)
-            }
-            onClick={() =>
-              perform(
-                () =>
-                  recordDecision({
-                    leadId,
-                    body: {
-                      status: decisionStatus,
-                      seatPoolId: seatPoolId || undefined,
-                      offerId: decisionOfferId || undefined,
-                      reason: decisionReason.trim(),
-                      overrideUsed: decisionOverride,
-                      overrideReason: decisionOverrideReason.trim() || undefined,
-                    },
-                  }).unwrap(),
-                'Admission decision recorded.'
-              )
-            }
-          >
-            Record Decision
-          </LoadingButton>
-        </Stack>
+        {canMakeAdmissionDecision && !finalAdmissionQueriesFailed ? (
+          <>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                gap: 1,
+              }}
+            >
+              <TextField
+                select
+                size="small"
+                label="Decision"
+                value={decisionStatus}
+                onChange={(event) => setDecisionStatus(Number(event.target.value))}
+              >
+                {Object.entries(decisionStatusLabels)
+                  .filter(
+                    ([value]) =>
+                      Number(value) !== AdmissionCrmAdmissionDecisionStatus.Pending &&
+                      (Number(value) !== AdmissionCrmAdmissionDecisionStatus.Cancelled ||
+                        canCancelAdmission)
+                  )
+                  .map(([value, label]) => (
+                    <MenuItem key={value} value={Number(value)}>
+                      {label}
+                    </MenuItem>
+                  ))}
+              </TextField>
+              <TextField
+                select
+                size="small"
+                label="Accepted offer"
+                value={decisionOfferId}
+                onChange={(event) => setDecisionOfferId(event.target.value)}
+              >
+                <MenuItem value="">No offer selected</MenuItem>
+                {offers.map((offer) => (
+                  <MenuItem key={offer.id} value={offer.id}>
+                    {offer.offerNumber} - {offerStatusLabels[offer.status]}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
+            <TextField
+              size="small"
+              fullWidth
+              label="Decision reason"
+              value={decisionReason}
+              onChange={(event) => setDecisionReason(event.target.value)}
+            />
+            <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
+              <ApplicantSwitchRow
+                label="Enable governed override"
+                description="Record an exception to the configured admission decision rules."
+                checked={decisionOverride}
+                onChange={setDecisionOverride}
+              />
+              <TextField
+                size="small"
+                fullWidth
+                label="Override reason"
+                value={decisionOverrideReason}
+                disabled={!decisionOverride}
+                onChange={(event) => setDecisionOverrideReason(event.target.value)}
+              />
+              <LoadingButton
+                variant="contained"
+                startIcon={
+                  decisionStatus === AdmissionCrmAdmissionDecisionStatus.Cancelled ? (
+                    <Cancel />
+                  ) : (
+                    <Gavel />
+                  )
+                }
+                loading={decisionState.isLoading}
+                disabled={
+                  !decisionReason.trim() ||
+                  (decisionOverride && !decisionOverrideReason.trim()) ||
+                  (decisionStatus === AdmissionCrmAdmissionDecisionStatus.Cancelled &&
+                    (!decisionOfferId || !canCancelAdmission))
+                }
+                onClick={() =>
+                  perform(
+                    () =>
+                      recordDecision({
+                        leadId,
+                        body: {
+                          status: decisionStatus,
+                          seatPoolId: seatPoolId || undefined,
+                          offerId: decisionOfferId || undefined,
+                          reason: decisionReason.trim(),
+                          overrideUsed: decisionOverride,
+                          overrideReason: decisionOverrideReason.trim() || undefined,
+                        },
+                      }).unwrap(),
+                    'Admission decision recorded.'
+                  )
+                }
+              >
+                Record Decision
+              </LoadingButton>
+            </Stack>
+          </>
+        ) : null}
         {(decisionsQuery.data || []).length ? (
           <Stack spacing={0.75}>
             <Typography variant="caption" color="text.secondary">

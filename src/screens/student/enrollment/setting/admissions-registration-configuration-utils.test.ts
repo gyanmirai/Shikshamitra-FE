@@ -9,6 +9,7 @@ import {
   validateRegistrationTemplateStep,
   normalizeRegistrationFieldForType,
   findRegistrationTemplateValidationIssue,
+  normalizeRegistrationTemplateSystemFields,
 } from './admissions-registration-configuration-utils';
 
 describe('admissions registration configuration', () => {
@@ -66,6 +67,24 @@ describe('admissions registration configuration', () => {
     expect(normalized.sections[0].fields[0].key).toBe('firstName');
   });
 
+  it('canonicalizes case-insensitive backend system fields for editor selects', () => {
+    const template = createRegistrationTemplate();
+    const studentFields = template.sections[0].fields;
+    const contactFields = template.sections[1].fields;
+    studentFields[0].systemField = 'FirstName';
+    studentFields[3].systemField = ' DateOfBirth ';
+    contactFields[0].systemField = 'ParentGuardianName';
+    contactFields[1].systemField = 'PRIMARYCONTACTNO';
+
+    const normalized = normalizeRegistrationTemplateSystemFields(template);
+
+    expect(normalized.sections[0].fields[0].systemField).toBe('firstName');
+    expect(normalized.sections[0].fields[3].systemField).toBe('dateOfBirth');
+    expect(normalized.sections[1].fields[0].systemField).toBe('parentGuardianName');
+    expect(normalized.sections[1].fields[1].systemField).toBe('primaryContactNo');
+    expect(template.sections[0].fields[0].systemField).toBe('FirstName');
+  });
+
   it('resets incompatible field options and validation settings when type changes', () => {
     const field = createRegistrationTemplate().sections[0].fields[0];
     const normalized = normalizeRegistrationFieldForType(
@@ -99,5 +118,30 @@ describe('admissions registration configuration', () => {
     expect(errors.some((error) => error.includes('must start with a letter'))).toBe(true);
     expect(errors.some((error) => error.includes('does not use options'))).toBe(true);
     expect(errors.some((error) => error.includes('type does not match'))).toBe(true);
+  });
+
+  it('preserves localized registration text and validates translated option alignment', () => {
+    const template = createRegistrationTemplate();
+    const section = template.sections[0];
+    section.localizedTitles = { GU: 'વિદ્યાર્થીની વિગતો' };
+    const field = section.fields[0];
+    field.localizedLabels = { Gu: 'પ્રથમ નામ' };
+    field.fieldType = AdmissionCrmFormFieldType.Select;
+    field.systemField = null;
+    field.options = ['New', 'Returning'];
+    field.localizedOptions = { GU: ['નવું'] };
+
+    expect(validateRegistrationTemplateStep(template, 2)).toContain(
+      'Field "First name" needs 2 GU options.'
+    );
+
+    field.localizedOptions.GU = ['નવું', 'પાછું ફરતું'];
+    const normalized = normalizeRegistrationTemplate(template);
+    expect(normalized.sections[0].localizedTitles?.gu).toBe('વિદ્યાર્થીની વિગતો');
+    expect(normalized.sections[0].fields[0].localizedLabels?.gu).toBe('પ્રથમ નામ');
+    expect(normalized.sections[0].fields[0].localizedOptions?.gu).toEqual([
+      'નવું',
+      'પાછું ફરતું',
+    ]);
   });
 });

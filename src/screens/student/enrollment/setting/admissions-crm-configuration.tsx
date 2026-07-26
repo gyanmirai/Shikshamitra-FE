@@ -18,6 +18,7 @@ import type {
   AdmissionCrmCommunicationProviderDto,
   AdmissionCrmApplicantChecklistItemDto,
   AdmissionCrmMessageTemplatePreviewDto,
+  AdmissionCrmConfigurationImpactPreviewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useSelector } from 'react-redux';
@@ -92,13 +93,17 @@ import {
   useSetAdmissionCrmInquirySourceStatusMutation,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   useUpdateAdmissionCrmFormTemplateStatusMutation,
+  usePreviewAdmissionCrmConfigurationImpactMutation,
   useUpdateAdmissionCrmCommunicationProviderMutation,
   useUpdateAdmissionCrmMessageTemplateStatusMutation,
   useGetAdmissionCrmSchoolDefaultCycleConfigurationQuery,
   useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { downloadInquiryFormQr } from './inquiry-form-qr';
 import { buildInquirySourceSelectOptions } from './inquiry-source-utils';
+import { buildDuplicateInquiryFormTemplate } from './inquiry-form-template-utils';
+import { InquiryFormTemplatePreviewDialog } from './inquiry-form-template-preview';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
   getAdmissionCrmStageLabel,
@@ -111,6 +116,7 @@ import {
   buildPublicAdmissionInquiryUrl,
   updateAdmissionCrmProviderAdapter,
   getAdmissionCrmProviderPayloadMode,
+  attachAdmissionCrmImpactFingerprint,
   updateAdmissionCrmProviderPayloadMode,
   getAdmissionCrmProviderCallbackSecret,
   getAdmissionCrmProviderKeyValueSettings,
@@ -133,11 +139,7 @@ import type {
 } from './admissions-crm-configuration-model';
 
 export type AdmissionsCrmConfigurationFocusSection =
-  | 'journey'
-  | 'capture'
-  | 'routing'
-  | 'communications'
-  | 'automation';
+  'journey' | 'capture' | 'routing' | 'communications' | 'automation';
 
 type AdmissionsCrmConfigurationProps = {
   academicYearId?: string;
@@ -665,6 +667,21 @@ const AdmissionsCrmConfiguration = ({
   const [campaignLinkNames, setCampaignLinkNames] = useState<Record<string, string>>({});
   const [staffLinkOwnerIds, setStaffLinkOwnerIds] = useState<Record<string, string>>({});
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [duplicateInquiryFormTemplate, setDuplicateInquiryFormTemplate] =
+    useState<AdmissionCrmFormTemplateDto | null>(null);
+  const [inquiryFormPreviewTemplate, setInquiryFormPreviewTemplate] =
+    useState<AdmissionCrmFormTemplateDto | null>(null);
+  const [downloadingQrTemplateId, setDownloadingQrTemplateId] = useState<string | null>(null);
+  const [pendingCycleUpdate, setPendingCycleUpdate] = useState<{
+    body: Partial<AdmissionCrmCycleConfigurationDto>;
+    preview: AdmissionCrmConfigurationImpactPreviewDto;
+  } | null>(null);
+  const [pendingStageUpdate, setPendingStageUpdate] = useState<{
+    stageId: string;
+    stageName: string;
+    body: Partial<AdmissionCrmPipelineStageDto>;
+    preview: AdmissionCrmConfigurationImpactPreviewDto;
+  } | null>(null);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [messageTemplateForm, setMessageTemplateForm] = useState(defaultMessageTemplateForm);
   const [previewTemplate, setPreviewTemplate] = useState<AdmissionCrmMessageTemplateDto | null>(
@@ -832,6 +849,8 @@ const AdmissionsCrmConfiguration = ({
     useUpdateAdmissionCrmFormTemplateStatusMutation();
   const [updateCycle, { isLoading: isUpdatingCycle }] =
     useUpdateAdmissionCrmCycleConfigurationMutation();
+  const [previewCycleImpact, { isLoading: isPreviewingCycleImpact }] =
+    usePreviewAdmissionCrmConfigurationImpactMutation();
   const [updateSchoolDefaultCycle, { isLoading: isUpdatingSchoolDefaultCycle }] =
     useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation();
   const [updatePipelineStage, { isLoading: isUpdatingPipelineStage }] =
@@ -1305,12 +1324,45 @@ const AdmissionsCrmConfiguration = ({
     const journeyRules = getValidatedJourneyRules();
     if (!journeyRules) return;
 
+    const body = buildCycleUpdatePayload(journeyRules);
+    try {
+      const preview = await previewCycleImpact({
+        academicYearId,
+        body: { proposedCycleConfiguration: body },
+      }).unwrap();
+      if (
+        preview.changedFields.length ||
+        preview.affectedApplicantCount ||
+        preview.configurationReferenceCount ||
+        preview.warnings.length
+      ) {
+        setPendingCycleUpdate({ body, preview });
+        return;
+      }
+      await updateCycle({
+        academicYearId,
+        body: attachAdmissionCrmImpactFingerprint(body, preview.fingerprint),
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Admission cycle updated.' });
+    } catch (error) {
+      const message = getSettingsErrorMessage(error, 'Unable to update admission cycle.');
+      shikshaMitraToast.error({ message });
+    }
+  };
+
+  const handleConfirmCycleUpdate = async () => {
+    if (!academicYearId || !pendingCycleUpdate) return;
+
     try {
       await updateCycle({
         academicYearId,
-        body: buildCycleUpdatePayload(journeyRules),
+        body: attachAdmissionCrmImpactFingerprint(
+          pendingCycleUpdate.body,
+          pendingCycleUpdate.preview.fingerprint
+        ),
       }).unwrap();
-      shikshaMitraToast.success({ message: 'Admission cycle updated.' });
+      setPendingCycleUpdate(null);
+      shikshaMitraToast.success({ message: 'Admission cycle updated after impact review.' });
     } catch (error) {
       const message = getSettingsErrorMessage(error, 'Unable to update admission cycle.');
       shikshaMitraToast.error({ message });
@@ -1620,27 +1672,75 @@ const AdmissionsCrmConfiguration = ({
       return;
     }
 
+    const body: Partial<AdmissionCrmPipelineStageDto> = cycleForm.journeyLocked
+      ? {
+          stageName: stageForm.stageName,
+          colorHex,
+          slaTargetHours,
+          ownerResponsibility: stageForm.ownerResponsibility.trim(),
+        }
+      : {
+          stageName: stageForm.stageName,
+          displayOrder: stageForm.displayOrder,
+          isEnabled: stageForm.isEnabled,
+          colorHex,
+          slaTargetHours,
+          ownerResponsibility: stageForm.ownerResponsibility.trim(),
+          allowedNextStages: stageForm.allowedNextStages,
+        };
+
     try {
+      const stage = stages.find((item) => item.id === stageId);
+      if (!academicYearId || !stage) {
+        shikshaMitraToast.error({
+          message: 'Reload the academic year and pipeline stages before updating this stage.',
+        });
+        return;
+      }
+      const preview = await previewCycleImpact({
+        academicYearId,
+        body: {
+          pipelineStageId: stage.id,
+          proposedPipelineStage: body,
+        },
+      }).unwrap();
+      if (
+        preview.affectedApplicantCount ||
+        preview.configurationReferenceCount ||
+        preview.warnings.length
+      ) {
+        setPendingStageUpdate({
+          stageId,
+          stageName: stage.stageName,
+          body,
+          preview,
+        });
+        return;
+      }
       await updatePipelineStage({
         stageId,
-        body: cycleForm.journeyLocked
-          ? {
-              stageName: stageForm.stageName,
-              colorHex,
-              slaTargetHours,
-              ownerResponsibility: stageForm.ownerResponsibility.trim(),
-            }
-          : {
-              stageName: stageForm.stageName,
-              displayOrder: stageForm.displayOrder,
-              isEnabled: stageForm.isEnabled,
-              colorHex,
-              slaTargetHours,
-              ownerResponsibility: stageForm.ownerResponsibility.trim(),
-              allowedNextStages: stageForm.allowedNextStages,
-            },
+        body: attachAdmissionCrmImpactFingerprint(body, preview.fingerprint),
       }).unwrap();
       shikshaMitraToast.success({ message: 'Pipeline stage updated.' });
+    } catch (error) {
+      const message = getSettingsErrorMessage(error, 'Unable to update pipeline stage.');
+      shikshaMitraToast.error({ message });
+    }
+  };
+
+  const handleConfirmStageUpdate = async () => {
+    if (!pendingStageUpdate) return;
+
+    try {
+      await updatePipelineStage({
+        stageId: pendingStageUpdate.stageId,
+        body: attachAdmissionCrmImpactFingerprint(
+          pendingStageUpdate.body,
+          pendingStageUpdate.preview.fingerprint
+        ),
+      }).unwrap();
+      setPendingStageUpdate(null);
+      shikshaMitraToast.success({ message: 'Pipeline stage updated after impact review.' });
     } catch (error) {
       const message = getSettingsErrorMessage(error, 'Unable to update pipeline stage.');
       shikshaMitraToast.error({ message });
@@ -1807,6 +1907,35 @@ const AdmissionsCrmConfiguration = ({
     admissionsCrmConfigurationDialog.onTrue();
   };
 
+  const handleDuplicateFormTemplate = async (template: AdmissionCrmFormTemplateDto) => {
+    if (!academicYearId) {
+      shikshaMitraToast.error({
+        message: 'Select an academic year before duplicating an inquiry form.',
+      });
+      return;
+    }
+
+    const body = buildDuplicateInquiryFormTemplate(
+      template,
+      formTemplates.map((item) => item.templateName)
+    );
+
+    try {
+      await createTemplate({ academicYearId, body }).unwrap();
+      setDuplicateInquiryFormTemplate(null);
+      shikshaMitraToast.success({
+        message: `Inquiry form duplicated as "${body.templateName}". Review the draft before activating it.`,
+      });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getSettingsErrorMessage(
+          error,
+          'Unable to duplicate the inquiry form. Review the form and try again.'
+        ),
+      });
+    }
+  };
+
   const handleMessageTemplateChange = (
     field: keyof MessageTemplateForm,
     value: string | AdmissionCrmMessageChannel
@@ -1907,6 +2036,34 @@ const AdmissionsCrmConfiguration = ({
       shikshaMitraToast.success({ message: 'Public inquiry link copied.' });
     } catch {
       shikshaMitraToast.error({ message: 'Unable to copy public inquiry link.' });
+    }
+  };
+
+  const handleDownloadPublicFormQr = async (template: AdmissionCrmFormTemplateDto) => {
+    const publicUrl = buildPublicAdmissionInquiryUrl({
+      origin: typeof window === 'undefined' ? null : window.location.origin,
+      tenantId,
+      templateId: template.id,
+    });
+
+    if (!publicUrl) {
+      shikshaMitraToast.error({
+        message: 'Tenant context is required to download the public form QR code.',
+      });
+      return;
+    }
+
+    setDownloadingQrTemplateId(template.id);
+    try {
+      await downloadInquiryFormQr({
+        publicUrl,
+        templateName: template.templateName,
+      });
+      shikshaMitraToast.success({ message: 'Public inquiry QR code downloaded.' });
+    } catch {
+      shikshaMitraToast.error({ message: 'Unable to generate the public form QR code.' });
+    } finally {
+      setDownloadingQrTemplateId(null);
     }
   };
 
@@ -2028,6 +2185,21 @@ const AdmissionsCrmConfiguration = ({
           required: field.required,
           displayOrder: Number.isFinite(field.displayOrder) ? field.displayOrder : (index + 1) * 10,
           options,
+          localizedLabels: field.localizedLabels ? { ...field.localizedLabels } : undefined,
+          localizedHelperTexts: field.localizedHelperTexts
+            ? { ...field.localizedHelperTexts }
+            : undefined,
+          localizedPlaceholders: field.localizedPlaceholders
+            ? { ...field.localizedPlaceholders }
+            : undefined,
+          localizedOptions: field.localizedOptions
+            ? Object.fromEntries(
+                Object.entries(field.localizedOptions).map(([language, values]) => [
+                  language,
+                  [...values],
+                ])
+              )
+            : undefined,
         };
       });
 
@@ -3036,7 +3208,7 @@ const AdmissionsCrmConfiguration = ({
               <LoadingButton
                 size="small"
                 variant="contained"
-                loading={isUpdatingCycle}
+                loading={isUpdatingCycle || isPreviewingCycleImpact}
                 disabled={!academicYearId || isUpdatingSchoolDefaultCycle}
                 onClick={handleSaveCycle}
                 sx={{
@@ -3310,7 +3482,7 @@ const AdmissionsCrmConfiguration = ({
               <LoadingButton
                 size="small"
                 variant="contained"
-                loading={isUpdatingCycle}
+                loading={isUpdatingCycle || isPreviewingCycleImpact}
                 disabled={!academicYearId || isUpdatingSchoolDefaultCycle}
                 onClick={handleSaveCycle}
                 sx={{ alignSelf: 'flex-start' }}
@@ -3661,7 +3833,7 @@ const AdmissionsCrmConfiguration = ({
             <LoadingButton
               size="small"
               variant="contained"
-              loading={isUpdatingCycle}
+              loading={isUpdatingCycle || isPreviewingCycleImpact}
               disabled={!academicYearId}
               onClick={handleSaveCycle}
               sx={{ alignSelf: 'flex-start' }}
@@ -3976,7 +4148,7 @@ const AdmissionsCrmConfiguration = ({
             <LoadingButton
               size="small"
               variant="contained"
-              loading={isUpdatingCycle}
+              loading={isUpdatingCycle || isPreviewingCycleImpact}
               disabled={!academicYearId}
               onClick={handleSaveCycle}
               sx={{ alignSelf: 'flex-start' }}
@@ -4463,7 +4635,7 @@ const AdmissionsCrmConfiguration = ({
             <LoadingButton
               size="small"
               variant="contained"
-              loading={isUpdatingCycle}
+              loading={isUpdatingCycle || isPreviewingCycleImpact}
               disabled={!academicYearId}
               onClick={handleSaveCycle}
               sx={{ alignSelf: 'flex-start' }}
@@ -4504,7 +4676,13 @@ const AdmissionsCrmConfiguration = ({
               }}
             >
               {(templates?.items || []).map((template) => (
-                <Paper key={template.id} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+                <Paper
+                  key={template.id}
+                  component="article"
+                  aria-label={`Inquiry form ${template.templateName}`}
+                  variant="outlined"
+                  sx={{ p: 1.25, borderRadius: 1 }}
+                >
                   <Stack spacing={0.75}>
                     <Stack direction="row" justifyContent="space-between" gap={1}>
                       <Typography variant="subtitle2" sx={{ wordBreak: 'break-word' }}>
@@ -4532,13 +4710,32 @@ const AdmissionsCrmConfiguration = ({
                       >
                         Edit
                       </Button>
-                      <Button size="small" variant="outlined" disabled>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={isCreatingTemplate || isUpdatingTemplate}
+                        onClick={() => setDuplicateInquiryFormTemplate(template)}
+                      >
                         Duplicate Form
                       </Button>
-                      <Button size="small" variant="outlined" disabled>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => setInquiryFormPreviewTemplate(template)}
+                      >
                         Language Preview
                       </Button>
-                      <Button size="small" variant="outlined" disabled>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={
+                          !template.isPublic ||
+                          !template.isActive ||
+                          !tenantId ||
+                          downloadingQrTemplateId === template.id
+                        }
+                        onClick={() => handleDownloadPublicFormQr(template)}
+                      >
                         Download QR
                       </Button>
                       <Button
@@ -5135,6 +5332,205 @@ const AdmissionsCrmConfiguration = ({
       )}
 
       <Dialog
+        open={Boolean(pendingCycleUpdate)}
+        onClose={() => {
+          if (!isUpdatingCycle) setPendingCycleUpdate(null);
+        }}
+        fullWidth
+        maxWidth="md"
+        aria-labelledby="cycle-impact-preview-title"
+      >
+        <DialogTitle id="cycle-impact-preview-title">Review Admission Cycle Impact</DialogTitle>
+        <DialogContent dividers>
+          {pendingCycleUpdate ? (
+            <Stack spacing={1.5}>
+              <Alert severity="warning">
+                This is a consequential configuration change. Review the affected applicants,
+                dependent configuration, and warnings before saving.
+              </Alert>
+              <Stack direction="row" gap={1} flexWrap="wrap" useFlexGap>
+                <Chip
+                  color={pendingCycleUpdate.preview.affectedApplicantCount ? 'warning' : 'default'}
+                  label={`${pendingCycleUpdate.preview.affectedApplicantCount} affected applicants`}
+                />
+                <Chip
+                  label={`${pendingCycleUpdate.preview.configurationReferenceCount} configuration references`}
+                />
+                <Chip label={`${pendingCycleUpdate.preview.changedFields.length} changed fields`} />
+              </Stack>
+              {pendingCycleUpdate.preview.changedFields.length ? (
+                <Box>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Changed fields
+                  </Typography>
+                  <Stack direction="row" gap={0.75} flexWrap="wrap" useFlexGap>
+                    {pendingCycleUpdate.preview.changedFields.map((field) => (
+                      <Chip key={field} size="small" label={field} variant="outlined" />
+                    ))}
+                  </Stack>
+                </Box>
+              ) : null}
+              {pendingCycleUpdate.preview.warnings.map((warning) => (
+                <Alert key={warning} severity="warning">
+                  {warning}
+                </Alert>
+              ))}
+              {pendingCycleUpdate.preview.referenceFamilies.length ? (
+                <Stack spacing={0.75}>
+                  <Typography variant="subtitle2">Dependent configuration</Typography>
+                  {pendingCycleUpdate.preview.referenceFamilies.map((family) => (
+                    <Paper key={family.family} variant="outlined" sx={{ p: 1.25 }}>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        justifyContent="space-between"
+                        gap={1}
+                      >
+                        <Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {family.family}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {family.description}
+                          </Typography>
+                        </Box>
+                        <Chip size="small" label={`${family.referenceCount} references`} />
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              ) : null}
+            </Stack>
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={isUpdatingCycle} onClick={() => setPendingCycleUpdate(null)}>
+            Cancel
+          </Button>
+          <LoadingButton
+            variant="contained"
+            color="warning"
+            loading={isUpdatingCycle}
+            onClick={handleConfirmCycleUpdate}
+          >
+            Save Reviewed Changes
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(pendingStageUpdate)}
+        onClose={() => {
+          if (!isUpdatingPipelineStage) setPendingStageUpdate(null);
+        }}
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="stage-impact-preview-title"
+      >
+        <DialogTitle id="stage-impact-preview-title">Review Pipeline Stage Impact</DialogTitle>
+        <DialogContent dividers>
+          {pendingStageUpdate ? (
+            <Stack spacing={1.5}>
+              <Alert severity="warning">
+                Changes to {pendingStageUpdate.stageName} can affect active applicants, routing,
+                exams, seats, and reporting.
+              </Alert>
+              <Stack direction="row" gap={1} flexWrap="wrap" useFlexGap>
+                <Chip
+                  color={pendingStageUpdate.preview.affectedApplicantCount ? 'warning' : 'default'}
+                  label={`${pendingStageUpdate.preview.affectedApplicantCount} affected applicants`}
+                />
+                <Chip
+                  label={`${pendingStageUpdate.preview.configurationReferenceCount} configuration references`}
+                />
+              </Stack>
+              {pendingStageUpdate.preview.warnings.map((warning) => (
+                <Alert key={warning} severity="warning">
+                  {warning}
+                </Alert>
+              ))}
+              {pendingStageUpdate.preview.referenceFamilies.map((family) => (
+                <Paper key={family.family} variant="outlined" sx={{ p: 1.25 }}>
+                  <Stack direction="row" justifyContent="space-between" gap={1}>
+                    <Box>
+                      <Typography variant="body2" fontWeight={600}>
+                        {family.family}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {family.description}
+                      </Typography>
+                    </Box>
+                    <Chip size="small" label={family.referenceCount} />
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            disabled={isUpdatingPipelineStage}
+            onClick={() => setPendingStageUpdate(null)}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            variant="contained"
+            color="warning"
+            loading={isUpdatingPipelineStage}
+            onClick={handleConfirmStageUpdate}
+          >
+            Save Reviewed Stage
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(duplicateInquiryFormTemplate)}
+        onClose={() => {
+          if (!isCreatingTemplate) setDuplicateInquiryFormTemplate(null);
+        }}
+        fullWidth
+        maxWidth="xs"
+        aria-labelledby="duplicate-inquiry-form-title"
+      >
+        <DialogTitle id="duplicate-inquiry-form-title">Duplicate Inquiry Form?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Create an inactive draft with the same fields, translations, consent, and visibility
+            rules. The original form will not change.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            disabled={isCreatingTemplate}
+            onClick={() => setDuplicateInquiryFormTemplate(null)}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            variant="contained"
+            loading={isCreatingTemplate}
+            disabled={!duplicateInquiryFormTemplate}
+            onClick={() => {
+              if (duplicateInquiryFormTemplate) {
+                handleDuplicateFormTemplate(duplicateInquiryFormTemplate);
+              }
+            }}
+          >
+            Create Draft Copy
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
+      {inquiryFormPreviewTemplate ? (
+        <InquiryFormTemplatePreviewDialog
+          key={inquiryFormPreviewTemplate.id}
+          template={inquiryFormPreviewTemplate}
+          onClose={() => setInquiryFormPreviewTemplate(null)}
+        />
+      ) : null}
+
+      <Dialog
         open={admissionsCrmConfigurationDialog.value}
         onClose={handleCloseTemplateDialog}
         fullWidth
@@ -5225,7 +5621,14 @@ const AdmissionsCrmConfiguration = ({
                   { code: 'gu' as const, label: 'Gujarati' },
                   { code: 'hi' as const, label: 'Hindi' },
                 ].map((language) => (
-                  <Stack key={language.code} direction={{ xs: 'column', md: 'row' }} gap={1}>
+                  <Box
+                    key={language.code}
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+                      gap: 1,
+                    }}
+                  >
                     <TextField
                       size="small"
                       label={`${language.label} template name`}
@@ -5238,6 +5641,24 @@ const AdmissionsCrmConfiguration = ({
                             [language.code]: {
                               ...current.localizations[language.code],
                               templateName: event.target.value,
+                            },
+                          },
+                        }))
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      size="small"
+                      label={`${language.label} description`}
+                      value={templateForm.localizations[language.code].description}
+                      onChange={(event) =>
+                        setTemplateForm((current) => ({
+                          ...current,
+                          localizations: {
+                            ...current.localizations,
+                            [language.code]: {
+                              ...current.localizations[language.code],
+                              description: event.target.value,
                             },
                           },
                         }))
@@ -5262,7 +5683,7 @@ const AdmissionsCrmConfiguration = ({
                       }
                       fullWidth
                     />
-                  </Stack>
+                  </Box>
                 ))}
               </Stack>
             </Paper>
