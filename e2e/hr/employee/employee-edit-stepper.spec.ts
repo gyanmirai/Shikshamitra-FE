@@ -2,7 +2,11 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 
 import { createEmployeeFixture } from './employee-fixtures';
-import { employeeApiRequest, createEmployeeFromExistingDefaults } from './employee-api';
+import {
+  employeeApiRequest,
+  getEmployeeOnboardingRoleId,
+  createEmployeeFromExistingDefaults,
+} from './employee-api';
 import {
   fillDate,
   saveStep,
@@ -226,17 +230,7 @@ async function primeAcademicSelection(page: Page, selection: AcademicMediumSelec
 }
 
 async function firstNonAdminRoleId(page: Page) {
-  const rolesBody = await getJson<any>(page, '/identity/roles/all');
-  const role = asItems<any>(rolesBody).find((candidate) => {
-    const name = String(candidate.name || candidate.Name || '').toLowerCase();
-    return candidate.id && name !== 'admin' && !name.includes('admin');
-  });
-
-  if (!role?.id) {
-    throw new Error('Unable to resolve a non-admin employee role for Academic Permission E2E');
-  }
-
-  return role.id;
+  return getEmployeeOnboardingRoleId(page);
 }
 
 async function firstShiftId(page: Page) {

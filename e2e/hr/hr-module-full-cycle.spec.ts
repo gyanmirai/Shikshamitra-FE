@@ -20,17 +20,19 @@ const yyyyMmDd = (date: Date) =>
 const payrollMonth = (date: Date) =>
   `${date.toLocaleString('en-US', { month: 'long' }).toUpperCase()}-${date.getFullYear()}`;
 
-const firstElapsedWeekdayInMonth = (date: Date) => {
+const firstWeekdayInMonth = (date: Date) => {
   const candidate = new Date(date.getFullYear(), date.getMonth(), 1);
-
-  while (candidate <= date) {
-    const day = candidate.getDay();
-    if (day >= 1 && day <= 5) return candidate;
+  while ([0, 6].includes(candidate.getDay())) {
     candidate.setDate(candidate.getDate() + 1);
   }
-
-  return date;
+  return candidate;
 };
+
+const fullCyclePayrollMonthOffset = 8 + (Math.floor(Date.now() / 86_400_000) % 2);
+const fullCyclePayrollDate = () =>
+  firstWeekdayInMonth(
+    new Date(today.getFullYear(), today.getMonth() + fullCyclePayrollMonthOffset, 1)
+  );
 
 const grossEarningAmount = 30_000;
 const deductionAmount = 1_500;
@@ -79,21 +81,40 @@ function isPayrollMonthBusy(details: string) {
 }
 
 async function getPayrollRunPreview(page: Page, month: string) {
-  const path = `/payroll/run?month=${encodeURIComponent(month)}&page=0&pageSize=100&forceRefresh=true`;
+  const firstPagePath = `/payroll/run?month=${encodeURIComponent(
+    month
+  )}&page=0&pageSize=100&forceRefresh=true`;
+
   for (let attempt = 0; attempt < 12; attempt += 1) {
-    const response = await employeeApiRequest(page, path, { timeout: 120_000 });
+    const response = await employeeApiRequest(page, firstPagePath, { timeout: 120_000 });
     if (response.ok()) {
-      return response.json();
+      const preview = await response.json();
+      const allItems = [...itemsOf(preview)];
+      const totalPages = Math.max(1, Number(preview.totalPages) || 1);
+
+      for (let payrollPage = 1; payrollPage < totalPages; payrollPage += 1) {
+        const pagePath = `/payroll/run?month=${encodeURIComponent(
+          month
+        )}&page=${payrollPage}&pageSize=100`;
+        const pageResponse = await employeeApiRequest(page, pagePath, { timeout: 120_000 });
+        await expectOk(pageResponse, `GET ${pagePath}`);
+        allItems.push(...itemsOf(await pageResponse.json()));
+      }
+
+      return { ...preview, items: allItems };
     }
 
     const details = await response.text();
     if (response.status() !== 400 || !isPayrollMonthBusy(details) || attempt >= 11) {
-      expect(response.ok(), `GET ${path}: ${response.status()} ${details}`).toBe(true);
+      expect(
+        response.ok(),
+        `GET ${firstPagePath}: ${response.status()} ${details}`
+      ).toBe(true);
     }
     await page.waitForTimeout(5_000);
   }
 
-  throw new Error(`GET ${path}: payroll month stayed busy after retries`);
+  throw new Error(`GET ${firstPagePath}: payroll month stayed busy after retries`);
 }
 
 async function gotoAndExpectHeading(page: Page, path: string, headingName: RegExp) {
@@ -249,6 +270,7 @@ async function createShift(
 ) {
   const response = await employeeApiRequest(page, '/app/shift-management', {
     method: 'POST',
+    timeout: 120_000,
     body: JSON.stringify({
       shiftName: `E2E Overtime Shift ${Date.now()}`,
       startTime,
@@ -380,8 +402,9 @@ test.describe('HR module full cycle', () => {
     );
     await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id;
-    const attendanceDate = yyyyMmDd(firstElapsedWeekdayInMonth(today));
-    const month = payrollMonth(today);
+    const targetPayrollDate = fullCyclePayrollDate();
+    const attendanceDate = yyyyMmDd(targetPayrollDate);
+    const month = payrollMonth(targetPayrollDate);
 
     await setEmployeeSalaryStructure(page, employeeId);
 
@@ -472,8 +495,9 @@ test.describe('HR module full cycle', () => {
     );
     await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id;
-    const attendanceDate = yyyyMmDd(firstElapsedWeekdayInMonth(today));
-    const month = payrollMonth(today);
+    const targetPayrollDate = fullCyclePayrollDate();
+    const attendanceDate = yyyyMmDd(targetPayrollDate);
+    const month = payrollMonth(targetPayrollDate);
 
     await setEmployeeSalaryStructure(page, employeeId);
 
@@ -486,6 +510,15 @@ test.describe('HR module full cycle', () => {
       overtimePolicy.id,
       attendanceDate
     );
+    const resolvedOvertimePolicies = await getEffectivePolicies(
+      page,
+      employeeId,
+      attendanceDate
+    );
+    expect(
+      resolvedOvertimePolicies.attendancePolicy?.id,
+      'employee overtime policy override should be effective on the payroll date'
+    ).toBe(overtimePolicy.id);
 
     const attendanceResponse = await employeeApiRequest(page, '/hr/attendance/register/adjust', {
       method: 'POST',
@@ -505,9 +538,28 @@ test.describe('HR module full cycle', () => {
     const preview = await getPayrollRunPreview(page, month);
     const payrollRow = preview.items?.find((item: any) => item.employeeId === employeeId);
     expect(payrollRow, `payroll row for ${employee.email}`).toBeTruthy();
+    expect(
+      payrollRow.attendancePolicyId,
+      'payroll snapshot should use the employee overtime policy override'
+    ).toBe(overtimePolicy.id);
 
     const overtimeLine = componentByName(payrollRow.earningComponents, overtimeComponentName);
-    expect(overtimeLine, 'run payroll overtime earning line').toBeTruthy();
+    expect(
+      overtimeLine,
+      `run payroll overtime earning line; attendance=${JSON.stringify(
+        payrollRow.attendanceSummary ?? {
+          presentDays: payrollRow.presentDays,
+          payableDays: payrollRow.payableDays,
+        }
+      )}; policy=${JSON.stringify({
+        id: resolvedOvertimePolicies.attendancePolicy?.id,
+        overtimeEnabled: resolvedOvertimePolicies.attendancePolicy?.overtimeEnabled,
+        overtimeRate: resolvedOvertimePolicies.attendancePolicy?.overtimeRate,
+        minOvertimeMinutes: resolvedOvertimePolicies.attendancePolicy?.minOvertimeMinutes,
+      })}; earnings=${JSON.stringify(
+        payrollRow.earningComponents ?? []
+      )}; issues=${JSON.stringify(payrollRow.issueCodes ?? payrollRow.issues ?? [])}`
+    ).toBeTruthy();
     expect(Number(overtimeLine.amount)).toBeGreaterThan(moneyTolerance);
     expect(String(overtimeLine.description || '')).toContain('90');
     expectMoneyClose(

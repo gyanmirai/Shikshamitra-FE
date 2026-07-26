@@ -7,6 +7,7 @@ import {
   gotoEmployeeList,
   dismissAcademicYearTour,
 } from '../employee/employee-page';
+import { getEmployeeApplicationInstitutionDate } from '../../../src/screens/public/employee-application/validation';
 
 const EmployeeApplicationStatus = {
   InvitationSent: 0,
@@ -210,6 +211,12 @@ const addDays = (date: Date, days: number) => {
 
 const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10);
 
+const getInstitutionDateWithOffset = (days: number) => {
+  const date = new Date(`${getEmployeeApplicationInstitutionDate()}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return toDateInputValue(date);
+};
+
 const getInAcademicYearDate = (academicYear: AcademicYear) => {
   const start = academicYear.startDate ? new Date(academicYear.startDate) : new Date();
   const end = academicYear.endDate ? new Date(academicYear.endDate) : addDays(start, 180);
@@ -384,9 +391,14 @@ async function fillDateField(page: Page, scope: Page | Locator, label: string, v
   const dayField = field.getByRole('spinbutton', { name: /day/i });
   if (year && month && day && (await dayField.count())) {
     await dayField.fill(day);
-    await field.getByRole('spinbutton', { name: /month/i }).fill(month);
-    await field.getByRole('spinbutton', { name: /year/i }).fill(year);
+    const monthField = field.getByRole('spinbutton', { name: /month/i });
+    const yearField = field.getByRole('spinbutton', { name: /year/i });
+    await monthField.fill(month);
+    await yearField.fill(year);
     await page.keyboard.press('Tab');
+    await expect(dayField).toHaveText(day);
+    await expect(monthField).toHaveText(month);
+    await expect(yearField).toHaveText(year);
     return;
   }
 
@@ -1191,7 +1203,7 @@ test.describe('HR Employee onboarding E2E', () => {
   }) => {
     test.setTimeout(120_000);
     const candidate = createCandidateFixture('Future Experience');
-    const tomorrow = toDateInputValue(addDays(new Date(), 1));
+    const tomorrow = getInstitutionDateWithOffset(1);
     candidate.experience.startDate = tomorrow;
     candidate.experience.endDate = tomorrow;
 

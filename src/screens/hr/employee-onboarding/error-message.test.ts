@@ -18,6 +18,23 @@ describe('employee onboarding error messages', () => {
     ).toBe('An employee or open onboarding application already uses this email.');
   });
 
+  it('surfaces RFC 7807 problem details returned by the API middleware', () => {
+    expect(
+      getOnboardingErrorMessage(
+        {
+          data: {
+            type: 'https://httpstatuses.com/400',
+            title: 'Bad request',
+            status: 400,
+            detail: 'An employee or open onboarding application already uses this email.',
+            errorCode: 'HR:Employee:010409',
+          },
+        },
+        'Could not create invite'
+      )
+    ).toBe('An employee or open onboarding application already uses this email.');
+  });
+
   it('falls back when the backend error has no message', () => {
     expect(getOnboardingErrorMessage({}, 'Could not create invite')).toBe(
       'Could not create invite'

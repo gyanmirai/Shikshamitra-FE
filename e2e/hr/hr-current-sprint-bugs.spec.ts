@@ -663,13 +663,32 @@ async function adjustAttendance(
 }
 
 async function getPayrollRunRow(page: Page, employeeId: string, month: string) {
-  const path = `/payroll/run?month=${encodeURIComponent(month)}&page=0&pageSize=100&forceRefresh=true`;
+  const firstPagePath = `/payroll/run?month=${encodeURIComponent(
+    month
+  )}&page=0&pageSize=100&forceRefresh=true`;
+
   for (let attempt = 0; attempt < 12; attempt += 1) {
-    const response = await employeeApiRequest(page, path, { timeout: 120_000 });
+    const response = await employeeApiRequest(page, firstPagePath, { timeout: 120_000 });
     if (response.ok()) {
       const body = await response.json();
-      const row = asItems(body).find((item: any) => item.employeeId === employeeId);
-      expect(row, `payroll row ${employeeId} for ${month}`).toBeTruthy();
+      let row = asItems(body).find((item: any) => item.employeeId === employeeId);
+      const totalPages = Math.max(1, Number(body.totalPages) || 1);
+
+      for (let payrollPage = 1; !row && payrollPage < totalPages; payrollPage += 1) {
+        const pagePath = `/payroll/run?month=${encodeURIComponent(
+          month
+        )}&page=${payrollPage}&pageSize=100`;
+        const pageResponse = await employeeApiRequest(page, pagePath, { timeout: 120_000 });
+        await expectOk(pageResponse, `GET ${pagePath}`);
+        row = asItems(await pageResponse.json()).find(
+          (item: any) => item.employeeId === employeeId
+        );
+      }
+
+      expect(
+        row,
+        `payroll row ${employeeId} for ${month} across ${totalPages} page(s)`
+      ).toBeTruthy();
       return row;
     }
 
@@ -678,12 +697,15 @@ async function getPayrollRunRow(page: Page, employeeId: string, month: string) {
       response.status() === 400 &&
       (details.includes('HR:Payroll:030033') || details.includes('PayrollMonthLockBusy'));
     if (!isBusy || attempt >= 2) {
-      expect(response.ok(), `GET ${path}: ${response.status()} ${details}`).toBe(true);
+      expect(
+        response.ok(),
+        `GET ${firstPagePath}: ${response.status()} ${details}`
+      ).toBe(true);
     }
     await page.waitForTimeout(2_000);
   }
 
-  throw new Error(`GET ${path}: payroll month stayed busy after retries`);
+  throw new Error(`GET ${firstPagePath}: payroll month stayed busy after retries`);
 }
 
 async function lockPayroll(page: Page, employeeId: string, academicYearId: string, month: string) {
@@ -791,30 +813,38 @@ test.describe('HR current sprint bug regressions', () => {
     await expect(page.getByText('Active')).toHaveCount(0);
   });
 
-  test('5182 onboarding invite rejects duplicate open-application email', async ({ page }) => {
-    await page.goto('/dashboard/');
+  test('5241 onboarding invite shows the duplicate-email business message', async ({ page }) => {
+    await page.goto('/hr/employee/onboarding/');
     await dismissAcademicYearTour(page);
 
     const email = `e2e.duplicate.onboarding.${Date.now()}@example.com`;
     await createOnboardingInvite(page, email);
 
-    const duplicateResponse = await employeeApiRequest(page, '/employee-applications', {
-      method: 'POST',
-      body: JSON.stringify({
-        firstName: 'Duplicate',
-        middleName: '',
-        lastName: 'Candidate',
-        email: email.toUpperCase(),
-        mobileNo: `97${Date.now().toString().slice(-8)}`,
-        positionAppliedFor: 'Teacher',
-        departmentAppliedFor: 'Primary',
-      }),
-    });
-    const duplicateDetails = await duplicateResponse.text();
-    expect(duplicateResponse.status(), duplicateDetails).toBe(400);
-    expect(duplicateDetails).toMatch(
-      /HR:Employee:010409|Employee Application Email Already In Use|already uses this email/i
+    await page.getByTestId('employee-onboarding-create-invite').click();
+    const dialog = page.getByTestId('employee-onboarding-invite-dialog');
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel('First name', { exact: true }).fill('Duplicate');
+    await dialog.getByLabel('Last name', { exact: true }).fill('Candidate');
+    await dialog.getByRole('textbox', { name: /Email/i }).fill(email.toUpperCase());
+    await dialog
+      .getByLabel('Primary Contact No.', { exact: false })
+      .fill(`97${Date.now().toString().slice(-8)}`);
+    await dialog.getByLabel('Position', { exact: true }).fill('Teacher');
+    await dialog.getByLabel('Department', { exact: true }).fill('Primary');
+    const duplicateResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/employee-applications') &&
+        response.request().method() === 'POST'
     );
+    await dialog.getByRole('button', { name: /Create link/i }).click();
+    const duplicateResponse = await duplicateResponsePromise;
+    const duplicateProblem = await duplicateResponse.json();
+    expect(duplicateResponse.status(), JSON.stringify(duplicateProblem)).toBe(400);
+    expect(duplicateProblem.detail).toMatch(/already uses this email address/i);
+
+    await expect(page.getByText(duplicateProblem.detail, { exact: true })).toBeVisible();
+    await expect(page.getByText('Could not create invite')).toHaveCount(0);
+    await expect(dialog).toBeVisible();
   });
 
   test('5196 payroll settings policy link routes to concrete payroll policy page', async ({
