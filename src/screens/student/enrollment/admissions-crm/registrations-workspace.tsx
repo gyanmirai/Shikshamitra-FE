@@ -42,7 +42,7 @@ export function RegistrationsWorkspace() {
               startIcon={<AddRounded />}
               onClick={() => setDirectRegistrationOpen(true)}
             >
-              Create Registration
+              Enter Paper Registration
             </Button>
           ) : null
         }

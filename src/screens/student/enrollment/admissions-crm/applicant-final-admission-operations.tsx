@@ -326,7 +326,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
               <TextField
                 select
                 size="small"
-                label="Seat pool"
+                label="Class Placement Plan"
                 value={seatPoolId}
                 onChange={(event) => setSeatPoolId(event.target.value)}
               >

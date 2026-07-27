@@ -473,6 +473,20 @@ export enum AdmissionCrmRegistrationFeeStatus {
   ConfirmedExternally = 4,
 }
 
+export enum AdmissionCrmRegistrationProvenance {
+  OnlineParent = 0,
+  StaffEnteredFromPaper = 1,
+  StaffAssistedCounter = 2,
+  Imported = 3,
+}
+
+export enum AdmissionCrmRegistrationDataEntryState {
+  NotStarted = 0,
+  InProgress = 1,
+  Submitted = 2,
+  Verified = 3,
+}
+
 export enum AdmissionCrmDocumentChecklistTemplateStatus {
   Draft = 0,
   Published = 1,
@@ -1407,6 +1421,15 @@ export type CreateDirectAdmissionCrmRegistrationDto = {
   registration: IssueAdmissionCrmRegistrationApplicationDto;
 };
 
+export type CreatePaperAdmissionCrmRegistrationDto = {
+  applicant: CreateAdmissionCrmLeadDto;
+  registration: IssueAdmissionCrmRegistrationApplicationDto;
+  physicalFormNumber: string;
+  physicalFormReceivedDate: string;
+  physicalFormReceivedByUserId?: string | null;
+  scannedFormAttachmentReference?: string | null;
+};
+
 export type AdmissionCrmDirectRegistrationResultDto = {
   applicant: AdmissionCrmLeadDto;
   registration: AdmissionCrmRegistrationApplicationDto;
@@ -1424,6 +1447,12 @@ export type AdmissionCrmRegistrationApplicationDto = {
   registrationTemplateVersion: number;
   playbookId?: string | null;
   formNumber: string;
+  provenance: AdmissionCrmRegistrationProvenance;
+  dataEntryState: AdmissionCrmRegistrationDataEntryState;
+  physicalFormNumber?: string | null;
+  physicalFormReceivedDate?: string | null;
+  physicalFormReceivedByUserId?: string | null;
+  scannedFormAttachmentReference?: string | null;
   status: AdmissionCrmRegistrationStatus;
   sections: AdmissionCrmRegistrationSectionDto[];
   prefill: Record<string, unknown>;
@@ -2388,6 +2417,10 @@ export type AdmissionCrmRegistrationQueueContextDto = {
   registrationApplicationId?: string | null;
   status?: AdmissionCrmRegistrationStatus | null;
   formNumber?: string | null;
+  provenance?: AdmissionCrmRegistrationProvenance | null;
+  dataEntryState?: AdmissionCrmRegistrationDataEntryState | null;
+  physicalFormNumber?: string | null;
+  physicalFormReceivedDate?: string | null;
   completionPercentage: number;
   linkExpiresAt?: string | null;
   feeStatus?: AdmissionCrmRegistrationFeeStatus | null;
@@ -5044,6 +5077,21 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         studentAdmissionsCrmType.analytics,
       ],
     }),
+    createPaperAdmissionCrmRegistration: builder.mutation<
+      AdmissionCrmDirectRegistrationResultDto,
+      { academicYearId: string; body: CreatePaperAdmissionCrmRegistrationDto }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/registrations/from-paper`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        studentAdmissionsCrmType.lead,
+        studentAdmissionsCrmType.timeline,
+        studentAdmissionsCrmType.analytics,
+      ],
+    }),
     getAdmissionCrmRegistrationApplication: builder.query<
       AdmissionCrmRegistrationApplicationDto,
       { applicationId: string }
@@ -7367,6 +7415,7 @@ export const {
   useUpdateAdmissionCrmFormNumberSeriesMutation,
   useIssueAdmissionCrmRegistrationApplicationMutation,
   useCreateDirectAdmissionCrmRegistrationMutation,
+  useCreatePaperAdmissionCrmRegistrationMutation,
   useGetAdmissionCrmRegistrationApplicationQuery,
   useGetCurrentAdmissionCrmRegistrationByLeadQuery,
   useSaveAdmissionCrmStaffRegistrationResponsesMutation,

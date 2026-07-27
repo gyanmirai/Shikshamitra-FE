@@ -675,10 +675,10 @@ export function OperationsQueueWorkspace({
               type: 'equals',
               value: state.seatPoolId,
               valueType: 'enum',
-              label: 'Seat Pool',
+              label: 'Class Placement Plan',
               displayValue:
                 seatPoolsQuery.data?.items.find((pool) => pool.id === state.seatPoolId)?.name ||
-                'Selected seat pool',
+                'Selected class placement plan',
             },
           ]),
     ],
@@ -1042,13 +1042,13 @@ export function OperationsQueueWorkspace({
             <TextField
               select
               size="small"
-              label="Seat pool"
+              label="Class Placement Plan"
               value={state.seatPoolId || ''}
               onChange={(event) =>
                 updateState({ seatPoolId: event.target.value || undefined, page: 1 })
               }
             >
-              <MenuItem value="">All seat pools</MenuItem>
+              <MenuItem value="">All class placement plans</MenuItem>
               {(seatPoolsQuery.data?.items || []).map((pool) => (
                 <MenuItem key={pool.id} value={pool.id}>
                   {pool.name}
@@ -1242,7 +1242,7 @@ export function OperationsQueueWorkspace({
               <>
                 <TextField
                   select
-                  label="Seat pool"
+                  label="Class Placement Plan"
                   value={bulkSeatPoolId}
                   onChange={(event) => setBulkSeatPoolId(event.target.value)}
                 >

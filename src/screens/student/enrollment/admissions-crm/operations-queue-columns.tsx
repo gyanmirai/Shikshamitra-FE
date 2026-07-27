@@ -10,6 +10,8 @@ import {
   AdmissionCrmRegistrationStatus,
   AdmissionCrmServiceHandoffStatus,
   AdmissionCrmApplicantDocumentStatus,
+  AdmissionCrmRegistrationProvenance,
+  AdmissionCrmRegistrationDataEntryState,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { enrollmentActionsColumn } from './workspace-table-patterns';
@@ -23,6 +25,7 @@ import {
   getDecisionStatusLabel,
   getActivationStatusLabel,
   getRegistrationStatusLabel,
+  getRegistrationFeeStatusLabel,
 } from './enrollment-display';
 
 import type { ApplicantWorkspaceTab } from './applicant-workspace-page';
@@ -178,6 +181,22 @@ const actionsColumn = ({ applicantTab, openApplicant }: Omit<Options, 'variant'>
   },
 });
 
+const getRegistrationProvenanceLabel = (
+  value?: AdmissionCrmRegistrationProvenance | null
+) => {
+  if (value === AdmissionCrmRegistrationProvenance.StaffEnteredFromPaper) return 'Paper form';
+  if (value === AdmissionCrmRegistrationProvenance.StaffAssistedCounter) return 'Staff assisted';
+  if (value === AdmissionCrmRegistrationProvenance.Imported) return 'Imported';
+  return 'Online';
+};
+
+const getDataEntryStateLabel = (value?: AdmissionCrmRegistrationDataEntryState | null) => {
+  if (value === AdmissionCrmRegistrationDataEntryState.InProgress) return 'Entry in progress';
+  if (value === AdmissionCrmRegistrationDataEntryState.Submitted) return 'Entry submitted';
+  if (value === AdmissionCrmRegistrationDataEntryState.Verified) return 'Entry verified';
+  return 'Entry not started';
+};
+
 const registrationColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
   applicantColumn(options),
@@ -202,6 +221,15 @@ const registrationColumns = (options: Options): IColumn[] => [
           />
           <Typography variant="caption" color="text.secondary">
             {context?.formNumber || 'Form not issued'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {context?.provenance === AdmissionCrmRegistrationProvenance.StaffEnteredFromPaper &&
+            context.physicalFormNumber
+              ? `${getRegistrationProvenanceLabel(context.provenance)} ${context.physicalFormNumber}`
+              : getRegistrationProvenanceLabel(context?.provenance)}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {getDataEntryStateLabel(context?.dataEntryState)}
           </Typography>
         </Stack>
       );
@@ -244,6 +272,18 @@ const registrationColumns = (options: Options): IColumn[] => [
       return context?.documentTotalCount
         ? `${context.documentResolvedCount}/${context.documentTotalCount} resolved`
         : 'Not assigned';
+    },
+  },
+  {
+    id: 'fee',
+    originalId: 'FeeStatus',
+    label: 'Fee Readiness',
+    width: 155,
+    minWidth: 135,
+    isFilter: false,
+    render: (_value, row) => {
+      const context = (row as AdmissionCrmOperationsQueueItemDto).registration;
+      return getRegistrationFeeStatusLabel(context?.feeStatus);
     },
   },
   {
@@ -302,7 +342,7 @@ const offerColumns = (options: Options): IColumn[] => [
   {
     id: 'seatPool',
     originalId: 'SeatPoolName',
-    label: 'Seat Pool',
+    label: 'Class Placement Plan',
     width: 180,
     minWidth: 155,
     filterType: 'enum',
