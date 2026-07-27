@@ -32,17 +32,29 @@ export function StudentAcademicSummaryCards({
   onFilterChange,
 }: StudentAcademicSummaryCardsProps) {
   const attendanceAverage = average(
-    items.map((item) => getMetricPercentage(item.attendance)).filter((value): value is number => typeof value === 'number')
+    items
+      .map((item) => getMetricPercentage(item.attendance))
+      .filter((value): value is number => typeof value === 'number')
   );
   const homeworkAverage = average(
-    items.map((item) => getMetricPercentage(item.homework)).filter((value): value is number => typeof value === 'number')
+    items
+      .map((item) => getMetricPercentage(item.homework))
+      .filter((value): value is number => typeof value === 'number')
   );
   const examAverage = average(
-    items.map((item) => getMetricPercentage(item.examAverage)).filter((value): value is number => typeof value === 'number')
+    items
+      .map((item) => getMetricPercentage(item.examAverage))
+      .filter((value): value is number => typeof value === 'number')
   );
 
   const cards: SummaryCard[] = [
-    { key: 'all', label: 'Total Students', value: String(items.length), helper: 'Current class list', icon: 'mdi:account-group-outline' },
+    {
+      key: 'all',
+      label: 'Total Students',
+      value: String(items.length),
+      helper: 'Current class list',
+      icon: 'mdi:account-group-outline',
+    },
     {
       key: 'needsAttention',
       label: 'Needs Attention',
@@ -74,14 +86,23 @@ export function StudentAcademicSummaryCards({
     {
       key: 'activeIntervention',
       label: 'Active Interventions',
-      value: String(items.filter((item) => matchesAcademicFilter(item, 'activeIntervention')).length),
+      value: String(
+        items.filter((item) => matchesAcademicFilter(item, 'activeIntervention')).length
+      ),
       helper: 'Students with support plan',
       icon: 'mdi:hand-heart-outline',
     },
   ];
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', xl: 'repeat(6, 1fr)' }, gap: 1 }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+        gap: 1,
+        mb: 1,
+      }}
+    >
       {cards.map((card) => {
         const active = activeFilter === card.key;
 
@@ -95,12 +116,17 @@ export function StudentAcademicSummaryCards({
               sx={{
                 p: 1.5,
                 cursor: 'pointer',
-                border: (theme) => `1px solid ${active ? theme.palette.primary.main : theme.palette.divider}`,
+                border: (theme) =>
+                  `1px solid ${active ? theme.palette.primary.main : theme.palette.divider}`,
                 boxShadow: active ? 4 : 0,
               }}
             >
               <Stack direction="row" spacing={1} alignItems="center">
-                <Iconify icon={card.icon} width={20} sx={{ color: active ? 'primary.main' : 'text.secondary' }} />
+                <Iconify
+                  icon={card.icon}
+                  width={20}
+                  sx={{ color: active ? 'primary.main' : 'text.secondary' }}
+                />
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="caption" color="text.secondary" noWrap>
                     {card.label}

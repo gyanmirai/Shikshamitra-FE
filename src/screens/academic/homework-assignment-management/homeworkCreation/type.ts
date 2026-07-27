@@ -82,6 +82,7 @@ export interface IAssignGradeProps {
   onNext?: () => void;
   hasPrevious?: boolean;
   hasNext?: boolean;
+  requiresMarks?: boolean;
 }
 
 /**

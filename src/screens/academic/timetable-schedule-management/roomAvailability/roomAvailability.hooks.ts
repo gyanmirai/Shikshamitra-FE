@@ -142,14 +142,23 @@ export function useRoomReservations() {
     [cancelReservation, refetch]
   );
 
+  // Returns true on success, false on failure. Callers own the user-facing
+  // success/error messaging; we only surface the outcome so they can react.
   const handleUpdate = useCallback(
-    async (id: string, payload: any) => {
-      if (payload.approvalStatus === 'approved') {
-        await approveReservation(id).unwrap();
-      } else if (payload.approvalStatus === 'rejected') {
-        await rejectReservation({ id, reason: payload.remarks }).unwrap();
+    async (id: string, payload: any): Promise<boolean> => {
+      try {
+        if (payload.approvalStatus === 'approved') {
+          await approveReservation(id).unwrap();
+        } else if (payload.approvalStatus === 'rejected') {
+          await rejectReservation({ id, reason: payload.remarks }).unwrap();
+        } else {
+          return false;
+        }
+        refetch();
+        return true;
+      } catch {
+        return false;
       }
-      refetch();
     },
     [approveReservation, rejectReservation, refetch]
   );

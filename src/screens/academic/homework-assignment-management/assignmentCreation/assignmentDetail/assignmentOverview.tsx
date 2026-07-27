@@ -4,10 +4,7 @@ import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
-import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusTypeColors,
-} from 'src/enums/publishUnpublish-status';
+import { AssignmentStatus, ASSIGNMENT_STATUS_LABELS } from 'src/enums/assignment';
 import {
   Box,
   Grid,
@@ -22,6 +19,12 @@ import {
 import TeacherHoverProfile from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/TeacherHoverProfile';
 
 import type { IAssignment } from '../type';
+
+const ASSIGNMENT_STATUS_COLORS: Record<AssignmentStatus, LabelColor> = {
+  [AssignmentStatus.Draft]: 'default',
+  [AssignmentStatus.Published]: 'success',
+  [AssignmentStatus.Closed]: 'warning',
+};
 
 const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
   const { createdAt } = assignment as any;
@@ -71,17 +74,9 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                 </Typography>
                 <Label
                   variant="soft"
-                  color={
-                    PublishUnpublishStatusTypeColors[
-                      assignment?.status as PublishUnpublishStatusType
-                    ] as LabelColor
-                  }
+                  color={ASSIGNMENT_STATUS_COLORS[assignment.status]}
                 >
-                  {
-                    PublishUnpublishStatusType[
-                      assignment?.status as PublishUnpublishStatusType
-                    ] as string
-                  }
+                  {ASSIGNMENT_STATUS_LABELS[assignment.status]}
                 </Label>
               </Box>
 

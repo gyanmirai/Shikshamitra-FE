@@ -17,6 +17,14 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { AssignmentSubmissionStatusOptions } from 'src/enums/assignment-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
+import { SUBMISSION_TYPE_LABELS } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/learningTaskUi';
+import {
+  evaluationUsesMarks,
+  isEvaluationEnabled,
+  AssignmentStatus,
+  AssignmentSubmissionType,
+  AssignmentEvaluationMethod,
+} from 'src/enums/assignment';
 import {
   useGetAssignmentSubmissionsQuery,
   useUpdateSubmissionFeedbackMutation,
@@ -31,7 +39,6 @@ import {
   EvaluationActionButton,
   EvaluationSummaryCards,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
-import { SUBMISSION_TYPE_LABELS } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/learningTaskUi';
 
 import AssignGrade from './assignMarksForm';
 
@@ -129,10 +136,24 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     () => filteredData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
     [filteredData, selectedStudent?.studentId]
   );
-  const selectedSubmissionType = selectedStudent?.submissionType || selectedAssignment?.submissionType;
-  const selectedSubmissionTypeLabel = String(selectedSubmissionType || '').toLowerCase();
+  const evaluationMethod =
+    selectedAssignment?.evaluationMethod ??
+    selectedAssignment?.defaultEvaluationMethod ??
+    AssignmentEvaluationMethod.Marks;
+  const evaluationEnabled = isEvaluationEnabled(
+    selectedAssignment?.evaluationRequired,
+    evaluationMethod
+  );
+  const usesRubric = evaluationMethod === AssignmentEvaluationMethod.Rubric;
+  const requiresMarks = evaluationUsesMarks(
+    selectedAssignment?.evaluationRequired,
+    evaluationMethod
+  );
+  const selectedSubmissionType =
+    selectedStudent?.submissionType ?? selectedAssignment?.submissionType;
+  const selectedSubmissionTypeLabel = String(selectedSubmissionType ?? '').toLowerCase();
   const isSelectedInPerson =
-    Number(selectedSubmissionType) === 2 ||
+    Number(selectedSubmissionType) === AssignmentSubmissionType.InPerson ||
     selectedSubmissionTypeLabel.includes('inperson') ||
     selectedSubmissionTypeLabel.includes('in person');
   const hasRealSubmissionId = (id?: string) => Boolean(id && !id.startsWith('00000000'));
@@ -220,6 +241,26 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     },
     [resolveTotalMarks, viewSubmissionDialog]
   );
+
+  if (
+    selectedAssignment?.status !== AssignmentStatus.Published ||
+    selectedAssignment?.submissionType === AssignmentSubmissionType.NoSubmissionRequired ||
+    !evaluationEnabled
+  ) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography color="text.secondary">
+          {selectedAssignment?.status === AssignmentStatus.Closed
+            ? 'This assignment is closed. Evaluation controls are no longer available.'
+            : selectedAssignment?.status !== AssignmentStatus.Published
+              ? 'Publish this assignment before evaluating submissions.'
+              : selectedAssignment?.submissionType === AssignmentSubmissionType.NoSubmissionRequired
+                ? 'This assignment does not require student submissions.'
+                : 'This assignment does not require evaluation.'}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -327,28 +368,32 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               minWidth: 140,
               filterType: 'date',
             },
-            {
-              id: 'totalMarks',
-              label: 'Total Marks',
-              align: 'left',
-              minWidth: 130,
-              filterType: 'number',
-            },
-            {
-              id: 'marks',
-              label: 'Obtained Marks',
-              filterType: 'number',
-              minWidth: 150,
-              align: 'left',
-              render: (value, row) =>
-                value ? (
-                  <Typography variant="caption" fontSize="13px">
-                    {value}
-                  </Typography>
-                ) : (
-                  <Typography variant="caption">-</Typography>
-                ),
-            },
+            ...(requiresMarks
+              ? [
+                  {
+                    id: 'totalMarks',
+                    label: 'Total Marks',
+                    align: 'left' as const,
+                    minWidth: 130,
+                    filterType: 'number' as const,
+                  },
+                  {
+                    id: 'marks',
+                    label: 'Obtained Marks',
+                    filterType: 'number' as const,
+                    minWidth: 150,
+                    align: 'left' as const,
+                    render: (value: unknown) =>
+                      value !== null && value !== undefined ? (
+                        <Typography variant="caption" fontSize="13px">
+                          {String(value)}
+                        </Typography>
+                      ) : (
+                        <Typography variant="caption">-</Typography>
+                      ),
+                  },
+                ]
+              : []),
             {
               id: 'feedback',
               label: 'Feedback',
@@ -462,16 +507,22 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedStudent?.marks ? 'Edit Feedback & Marks' : 'Add Feedback & Marks'}
+              {usesRubric
+                ? 'Rubric Evaluation'
+                : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${
+                    requiresMarks ? 'Feedback & Marks' : 'Feedback'
+                  }`}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
               title={
-                selectedStudent?.marks
-                  ? 'You can modify the feedback & marks given to the student for their assignment submission.'
-                  : "You can provide feedback & marks for the student's assignment submission."
+                usesRubric
+                  ? "Evaluate the student's submission with the configured rubric."
+                  : requiresMarks
+                    ? "Provide feedback and marks for the student's assignment submission."
+                    : "Provide feedback for the student's assignment submission."
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -481,25 +532,30 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         maxWidth="sm"
         hasForm={false}
       >
-        {selectedStudent && selectedClass && selectedSubject && selectedAssignment?.id && (
-          <Box sx={{ p: 2, pb: 0 }}>
-            <RubricEvaluationPanel
-              mode="assignment"
-              standardId={selectedClass}
-              subjectId={selectedSubject}
-              taskId={selectedAssignment.id}
-              taskTitle={selectedAssignment.title}
-              studentRow={selectedStudent}
-              ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
-            />
-          </Box>
-        )}
-        {!isSelectedInPerson && (
+        {usesRubric &&
+          selectedStudent &&
+          selectedClass &&
+          selectedSubject &&
+          selectedAssignment?.id && (
+            <Box sx={{ p: 2 }}>
+              <RubricEvaluationPanel
+                mode="assignment"
+                standardId={selectedClass}
+                subjectId={selectedSubject}
+                taskId={selectedAssignment.id}
+                taskTitle={selectedAssignment.title}
+                studentRow={selectedStudent}
+                ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
+              />
+            </Box>
+          )}
+        {!usesRubric && (
           <AssignGrade
             data={selectedStudent}
             onClose={handleClose}
             isEdit
             assignmentId={selectedAssignment?.id}
+            requiresMarks={requiresMarks}
             hasPrevious={selectedIndex > 0}
             hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
             onPrevious={() => moveStudent(-1)}

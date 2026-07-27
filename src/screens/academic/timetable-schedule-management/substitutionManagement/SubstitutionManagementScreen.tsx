@@ -23,6 +23,7 @@ import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-p
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -644,6 +645,23 @@ const buildAudit = (action: string, actor = 'System') => ({
   action,
 });
 
+// Build a user-friendly message for a failed teacher duty action.
+// RTK Query rejects with a plain SerializedError/FetchBaseQueryError object
+// (never a real `Error`), so `error instanceof Error` never matches. Detect
+// network/CORS failures (status FETCH_ERROR or a raw fetch message) and
+// otherwise fall back to the backend ProblemDetails detail.
+const NETWORK_ERROR_PATTERN = /failed to fetch|networkerror|network error/i;
+const resolveDutyActionErrorMessage = (error: unknown, fallback = 'Unable to update duty.') => {
+  const anyError = error as { status?: unknown; message?: unknown };
+  const status = anyError?.status;
+  const message = typeof anyError?.message === 'string' ? anyError.message : '';
+  const isNetworkError = status === 'FETCH_ERROR' || NETWORK_ERROR_PATTERN.test(message);
+  if (isNetworkError) {
+    return 'Unable to reach the server. Please check your connection and try again.';
+  }
+  return parseApiProblemDetail(error).detail || fallback;
+};
+
 const uniqueLookupOptions = <T extends ApiLookupOption>(items: T[]): T[] => {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -676,6 +694,10 @@ const SubstitutionManagementScreen = () => {
   const [settingsForm, setSettingsForm] = useState(settingsResultDefaults);
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
+  const [dutyAction, setDutyAction] = useState<{
+    id: string;
+    action: 'accept' | 'reject' | 'change';
+  } | null>(null);
   const [createFormDirty, setCreateFormDirty] = useState(false);
   const [createUnsavedConfirmOpen, setCreateUnsavedConfirmOpen] = useState(false);
   const [availabilityFormDirty, setAvailabilityFormDirty] = useState(false);
@@ -1143,7 +1165,7 @@ const SubstitutionManagementScreen = () => {
         }
         shikshaMitraToast.success({ message: `Substitution marked as ${status}.` });
       } catch (error) {
-        const message = error instanceof Error ? error.message : `Unable to mark as ${status}.`;
+        const message = resolveDutyActionErrorMessage(error, `Unable to mark as ${status}.`);
         shikshaMitraToast.error({ message });
       }
     },
@@ -1637,6 +1659,7 @@ const SubstitutionManagementScreen = () => {
 
   const handleTeacherDutyAction = useCallback(
     async (id: string, action: 'accept' | 'reject' | 'change') => {
+      setDutyAction({ id, action });
       try {
         const updated =
           action === 'accept'
@@ -1657,8 +1680,10 @@ const SubstitutionManagementScreen = () => {
                 : 'Change request sent to admin.',
         });
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unable to update duty.';
+        const message = resolveDutyActionErrorMessage(error);
         shikshaMitraToast.error({ message });
+      } finally {
+        setDutyAction(null);
       }
     },
     [acknowledgeSubstitution, rejectSubstitutionDuty, requestSubstitutionChange, updateSubstitution]
@@ -2785,6 +2810,11 @@ const SubstitutionManagementScreen = () => {
           {myDutyRows.map((item) => {
             const isTerminal = ['Completed', 'Cancelled', 'Rejected'].includes(item.status);
             const isAccepted = item.acknowledgementStatus === 'Accepted';
+            const cardAction = dutyAction?.id === item.id ? dutyAction.action : null;
+            const isAccepting = cardAction === 'accept';
+            const isChanging = cardAction === 'change';
+            const isRejecting = cardAction === 'reject';
+            const isCardBusy = Boolean(cardAction);
 
             return (
               <Card
@@ -2895,33 +2925,39 @@ const SubstitutionManagementScreen = () => {
                       bgcolor: 'background.neutral',
                     }}
                   >
-                    <Button
+                    <LoadingButton
                       size="small"
                       variant="contained"
-                      disabled={isAccepted}
+                      color="success"
+                      disabled={isAccepted || isCardBusy}
+                      loading={isAccepting}
                       startIcon={<Iconify icon="mdi:check" width={16} />}
                       onClick={() => handleTeacherDutyAction(item.id, 'accept')}
                     >
-                      {isAccepted ? 'Accepted' : 'Accept Duty'}
-                    </Button>
-                    <Button
+                      {isAccepting ? 'Accepting…' : isAccepted ? 'Accepted' : 'Accept Duty'}
+                    </LoadingButton>
+                    <LoadingButton
                       size="small"
                       variant="outlined"
                       color="warning"
+                      disabled={isCardBusy}
+                      loading={isChanging}
                       startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
                       onClick={() => handleTeacherDutyAction(item.id, 'change')}
                     >
-                      Request Change
-                    </Button>
-                    <Button
+                      {isChanging ? 'Sending…' : 'Request Change'}
+                    </LoadingButton>
+                    <LoadingButton
                       size="small"
                       variant="outlined"
                       color="error"
+                      disabled={isCardBusy}
+                      loading={isRejecting}
                       startIcon={<Iconify icon="mdi:close" width={16} />}
                       onClick={() => handleTeacherDutyAction(item.id, 'reject')}
                     >
-                      Reject
-                    </Button>
+                      {isRejecting ? 'Rejecting…' : 'Reject'}
+                    </LoadingButton>
                   </Stack>
                 )}
               </Card>

@@ -80,7 +80,6 @@ const SubjectCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Subject Creation"
         description="Manage master subjects used across curriculum, timetable, exams, lesson plans, and reports."
         links={[
@@ -433,14 +432,24 @@ const UsageRow = ({
         <Typography variant="body2" sx={{ flex: 1 }}>
           {title}
         </Typography>
-        <Typography variant="caption" fontWeight={600} color={isEmpty ? 'text.disabled' : 'text.primary'}>
+        <Typography
+          variant="caption"
+          fontWeight={600}
+          color={isEmpty ? 'text.disabled' : 'text.primary'}
+        >
           {isEmpty ? 'Not used' : `${value} ${suffix || ''}`.trim()}
         </Typography>
       </Box>
       {hasItems && value > 0 && (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1, ml: '44px' }}>
           {items.map((item) => (
-            <Chip key={item} label={item} size="small" variant="outlined" sx={{ height: 22, fontSize: '11px' }} />
+            <Chip
+              key={item}
+              label={item}
+              size="small"
+              variant="outlined"
+              sx={{ height: 22, fontSize: '11px' }}
+            />
           ))}
         </Box>
       )}

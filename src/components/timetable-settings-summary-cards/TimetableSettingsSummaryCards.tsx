@@ -16,7 +16,7 @@ interface TimetableSettingsSummaryCardsProps {
 
 export function TimetableSettingsSummaryCards({ cards }: TimetableSettingsSummaryCardsProps) {
   return (
-    <Grid container spacing={2} sx={{ mb: 2 }}>
+    <Grid container spacing={1} sx={{ mb: 1 }}>
       {cards.map((card) => (
         <Grid key={card.label} size={{ xs: 6, sm: 4, md: 12 / cards.length }}>
           <Card
@@ -25,7 +25,7 @@ export function TimetableSettingsSummaryCards({ cards }: TimetableSettingsSummar
               display: 'flex',
               alignItems: 'center',
               gap: 1.5,
-              boxShadow: 'var(--shadows-4)',
+              boxShadow: 'var(--shadows-3)',
             }}
           >
             <Box

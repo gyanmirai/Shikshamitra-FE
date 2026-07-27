@@ -1,10 +1,10 @@
 'use client';
 
+import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Chip, Stack, Tooltip, IconButton, Typography } from '@mui/material';
 
@@ -12,12 +12,15 @@ import { ApprovalStatusChip } from './RoomStatusChip';
 
 import type { RoomReservation } from '../types';
 
+type PendingAction = { id: string; type: 'approve' | 'reject' } | null;
+
 interface RoomReservationsTabProps {
   reservations: RoomReservation[];
   canApprove?: boolean;
+  pendingAction?: PendingAction;
   onCancel?: (id: string) => void;
-  onApprove?: (id: string) => void;
-  onReject?: (id: string) => void;
+  onApprove?: (id: string) => Promise<boolean> | void;
+  onReject?: (id: string) => Promise<boolean> | void;
   onEdit?: (reservation: RoomReservation) => void;
   onViewRoom?: (roomId: string) => void;
 }
@@ -25,6 +28,7 @@ interface RoomReservationsTabProps {
 export const RoomReservationsTab = ({
   reservations,
   canApprove = false,
+  pendingAction,
   onCancel,
   onApprove,
   onReject,
@@ -32,6 +36,13 @@ export const RoomReservationsTab = ({
   onViewRoom,
 }: RoomReservationsTabProps) => {
   const [filter, setFilter] = useState<string>('all');
+
+  // True only for the specific row + action currently in flight; drives the
+  // active button's loading spinner. Sibling/other-row actions are gated by
+  // `isAnyActionPending` to prevent concurrent requests.
+  const isBusy = (id: string, type: 'approve' | 'reject') =>
+    pendingAction?.id === id && pendingAction?.type === type;
+  const isAnyActionPending = pendingAction !== null;
 
   const filtered = useMemo(() => {
     if (filter === 'all') return reservations;
@@ -212,56 +223,66 @@ export const RoomReservationsTab = ({
                 {canApprove && row.approvalStatus === 'pending' && (
                   <>
                     <Tooltip title="Approve">
-                      <IconButton
-                        size="small"
-                        color="success"
-                        onClick={() => {
-                          onApprove?.(row.id);
-                          shikshaMitraToast.success({
-                            message: `${row.roomName} reservation approved.`,
-                          });
-                        }}
-                        sx={{
-                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-                          '&:hover': {
-                            bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
-                          },
-                        }}
-                      >
-                        <Iconify icon="mdi:check-circle" width={16} />
-                      </IconButton>
+                      <span>
+                        <LoadingButton
+                          size="small"
+                          color="success"
+                          variant="text"
+                          loading={isBusy(row.id, 'approve')}
+                          disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
+                          onClick={() => onApprove?.(row.id)}
+                          sx={{
+                            minWidth: 32,
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
+                            '&:hover': {
+                              bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
+                            },
+                          }}
+                        >
+                          <Iconify icon="mdi:check-circle" width={16} />
+                        </LoadingButton>
+                      </span>
                     </Tooltip>
                     <Tooltip title="Reject">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => onReject?.(row.id)}
-                        sx={{
-                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-                          '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
-                        }}
-                      >
-                        <Iconify icon="mdi:close-circle" width={16} />
-                      </IconButton>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={isAnyActionPending}
+                          onClick={() => onReject?.(row.id)}
+                          sx={{
+                            bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                            '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
+                          }}
+                        >
+                          <Iconify icon="mdi:close-circle" width={16} />
+                        </IconButton>
+                      </span>
                     </Tooltip>
                   </>
                 )}
 
                 {onCancel && ['active', 'approved', 'pendingApproval'].includes(row.status) && (
                   <Tooltip title="Cancel Reservation">
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => {
-                        onCancel(row.id);
-                      }}
-                      sx={{
-                        bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-                        '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
-                      }}
-                    >
-                      <Iconify icon={GlobalIcons.cancel} width={16} />
-                    </IconButton>
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        disabled={isAnyActionPending}
+                        onClick={() => {
+                          onCancel(row.id);
+                        }}
+                        sx={{
+                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                          '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
+                        }}
+                      >
+                        <Iconify icon={GlobalIcons.cancel} width={16} />
+                      </IconButton>
+                    </span>
                   </Tooltip>
                 )}
               </Stack>

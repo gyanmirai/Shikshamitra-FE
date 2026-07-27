@@ -1,19 +1,10 @@
-export interface IAssignmentType {
-  id?: string;
-  assignmentTypeName: string;
-  description?: string;
-  defaultSubmissionType?: number;
-  defaultMarks?: number;
-  defaultDueDays?: number;
-  evaluationRequired?: boolean;
-  defaultEvaluationMethod?: number;
-  status?: number;
-  usageCount?: number;
-}
+import type { AssignmentTypeDto } from 'src/redux/academicAPI/HomeworkAssignmentApi/contracts';
+
+export type IAssignmentType = AssignmentTypeDto;
 
 export interface IAssignmentTypeFormProps {
   open: { value: boolean; onFalse: () => void };
-  onClose: (e: any, isSubmit: boolean) => void;
+  onClose: (event: unknown, isSubmit: boolean) => void;
   editData?: IAssignmentType | null;
   existingTypes?: IAssignmentType[];
 }

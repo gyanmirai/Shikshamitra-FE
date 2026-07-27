@@ -78,7 +78,7 @@ const WeeklyPlannerTab = ({
   };
 
   return (
-    <Card sx={{ p: 2 }}>
+    <Card sx={{ p: 2, height: '100%', overflow: 'auto' }}>
       {/* Week selector header */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}

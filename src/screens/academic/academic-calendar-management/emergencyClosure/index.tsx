@@ -6,9 +6,11 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Label } from 'src/components/label';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
@@ -389,9 +391,8 @@ const EmergencyClosureScreen = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}>
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Emergency Closure"
         description="Review declared emergency closures and add a new closure when school operations need to pause."
         links={[
@@ -402,7 +403,7 @@ const EmergencyClosureScreen = () => {
         action={
           <Button
             variant="contained"
-            color="error"
+            // color="error"
             disabled={!canDeclare}
             startIcon={<Iconify icon="mdi:alert-octagon-outline" width={18} />}
             onClick={addDialog.onTrue}
@@ -431,34 +432,7 @@ const EmergencyClosureScreen = () => {
         isShowedDense={false}
         columns={columns}
         data={tableData}
-        tableContainerProps={{
-          sx: {
-            '& table': {
-              tableLayout: 'fixed',
-              minWidth: 1004,
-            },
-          },
-        }}
-        noDataText={
-          <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                backgroundColor: alpha(theme.palette.error.main, 0.08),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Iconify icon="mdi:alert-octagon-outline" width={32} color="error.main" />
-            </Box>
-            <Typography variant="subtitle2" color="text.secondary">
-              No emergency closures declared yet
-            </Typography>
-          </Stack>
-        }
+        noDataText={' No emergency closures declared yet'}
       />
 
       <CustomDialog
