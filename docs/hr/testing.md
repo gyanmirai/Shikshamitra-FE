@@ -89,6 +89,6 @@ Each frontend HR change should satisfy these gates:
 | Route            | [routes.md](./routes.md) matches menu and page behavior                             |
 | Client           | [clients.md](./clients.md) names the client and backend owner                       |
 | Workflow         | [workflows.md](./workflows.md) covers the user path or marks it partial             |
-| Backend contract | Backend [api.md](../../../Shikshamitra-BE/docs/modules/hr/api.md) is still accurate |
+| Backend contract | Backend [api.md](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) is still accurate |
 | Test             | Focused test or documented residual risk exists                                     |
 | Docs             | `npm run docs:hr:check` passes                                                      |
