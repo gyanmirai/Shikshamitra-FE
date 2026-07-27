@@ -2,6 +2,7 @@ import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-cr
 
 export const registrationQueues = [
   AdmissionCrmOperationsQueueType.RegistrationInvitationPending,
+  AdmissionCrmOperationsQueueType.PendingPaperEntry,
   AdmissionCrmOperationsQueueType.ExpiringRegistrationLink,
   AdmissionCrmOperationsQueueType.IncompleteRegistration,
   AdmissionCrmOperationsQueueType.RejectedDocument,
@@ -25,6 +26,7 @@ export const activationQueues = [
 ];
 
 export const operationsQueues = [
+  AdmissionCrmOperationsQueueType.NoShow,
   AdmissionCrmOperationsQueueType.HouseholdResolution,
   AdmissionCrmOperationsQueueType.IdentityConflict,
   AdmissionCrmOperationsQueueType.TransferEvidencePending,

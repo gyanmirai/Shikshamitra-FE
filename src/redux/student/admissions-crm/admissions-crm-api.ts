@@ -137,6 +137,10 @@ export enum AdmissionCrmJourneyTrigger {
   ExamNoShow = 16,
   AdmissionReady = 17,
   DocumentExpiring = 18,
+  FeeFollowUp = 19,
+  OfferIssued = 20,
+  OfferAccepted = 21,
+  ActivationWelcome = 22,
 }
 
 export enum AdmissionCrmOperationsQueueType {
@@ -162,6 +166,7 @@ export enum AdmissionCrmOperationsQueueType {
   RouteAppealReview = 19,
   ServiceHandoffException = 20,
   RegistrationInvitationPending = 21,
+  PendingPaperEntry = 22,
 }
 
 export enum AdmissionCrmAutomationRunType {
@@ -873,6 +878,11 @@ export type AdmissionCrmCyclePolicySummaryDto = {
 export type AdmissionCrmCycleSummaryDto = {
   cycle: AdmissionCrmCycleListItemDto;
   policy: AdmissionCrmCyclePolicySummaryDto;
+  communications: {
+    journeyRuleCount: number;
+    activeMessageRuleCount: number;
+    templateBackedRuleCount: number;
+  };
   readiness: AdmissionCrmSetupStatusDto;
   applicationStagePolicy: AdmissionCrmApplicationStagePolicyDto;
 };

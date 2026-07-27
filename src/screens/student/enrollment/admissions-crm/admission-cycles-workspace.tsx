@@ -194,6 +194,12 @@ function CycleSummaryPanel({ academicYearId }: { academicYearId?: string }) {
             label="Last updated"
             value={summary.cycle.lastUpdatedAt ? fDateTime(summary.cycle.lastUpdatedAt) || '-' : '-'}
           />
+          <SummaryStat
+            label="Communication rules"
+            value={`${summary.communications.templateBackedRuleCount} active template ${
+              summary.communications.templateBackedRuleCount === 1 ? 'rule' : 'rules'
+            }`}
+          />
         </Box>
 
         <Stack spacing={1}>
@@ -238,6 +244,13 @@ function CycleSummaryPanel({ academicYearId }: { academicYearId?: string }) {
         ) : (
           <Alert severity="success">Core readiness checks are clear for this cycle.</Alert>
         )}
+
+        {summary.communications.templateBackedRuleCount > 0 ? (
+          <Alert severity="info">
+            Configured messages are triggered by admission journey rules. Delivery evidence remains in
+            the communication logs and provider status.
+          </Alert>
+        ) : null}
 
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Button

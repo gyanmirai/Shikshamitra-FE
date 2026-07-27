@@ -1308,6 +1308,10 @@ describe('admissions CRM API contracts', () => {
     expect(AdmissionCrmJourneyTrigger.ExamCompleted).toBe(5);
     expect(AdmissionCrmJourneyTrigger.EligibilityDecided).toBe(6);
     expect(AdmissionCrmJourneyTrigger.DocumentExpiring).toBe(18);
+    expect(AdmissionCrmJourneyTrigger.FeeFollowUp).toBe(19);
+    expect(AdmissionCrmJourneyTrigger.OfferIssued).toBe(20);
+    expect(AdmissionCrmJourneyTrigger.OfferAccepted).toBe(21);
+    expect(AdmissionCrmJourneyTrigger.ActivationWelcome).toBe(22);
   });
 
   it('keeps timeline event enum values aligned with the backend contract', () => {
@@ -1329,6 +1333,7 @@ describe('admissions CRM API contracts', () => {
 
   it('keeps the manual registration handoff queue aligned with the backend contract', () => {
     expect(AdmissionCrmOperationsQueueType.RegistrationInvitationPending).toBe(21);
+    expect(AdmissionCrmOperationsQueueType.PendingPaperEntry).toBe(22);
   });
 
   it('tracks automation run and failure analytics in the summary contract', () => {

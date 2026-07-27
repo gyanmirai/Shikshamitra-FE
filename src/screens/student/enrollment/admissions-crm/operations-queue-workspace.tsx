@@ -105,6 +105,7 @@ const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
   [AdmissionCrmOperationsQueueType.CapacityConflict]: 'Capacity Conflicts',
   [AdmissionCrmOperationsQueueType.NoShow]: 'Exam No-shows',
   [AdmissionCrmOperationsQueueType.RegistrationInvitationPending]: 'Ready to Invite',
+  [AdmissionCrmOperationsQueueType.PendingPaperEntry]: 'Paper Entry',
   [AdmissionCrmOperationsQueueType.ExpiringRegistrationLink]: 'Expiring Links',
   [AdmissionCrmOperationsQueueType.IncompleteRegistration]: 'Incomplete Registrations',
   [AdmissionCrmOperationsQueueType.RejectedDocument]: 'Rejected Documents',
