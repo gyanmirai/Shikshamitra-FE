@@ -111,7 +111,7 @@ describe('Enrollment settings route contracts', () => {
     expect(menu).toContain("title: 'Admission Journey'");
     expect(menu).toContain("title: 'Exam & Eligibility'");
     expect(menu).toContain('studentPaths.enrollment.settingsSections.automation');
-    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(19);
+    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(20);
   });
 
   it('uses URL-backed panels to progressively disclose dense settings', () => {

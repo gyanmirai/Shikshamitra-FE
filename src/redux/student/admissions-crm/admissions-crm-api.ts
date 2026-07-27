@@ -798,6 +798,7 @@ export type AdmissionCrmConfigurationCloneResultDto = {
 
 export type AdmissionCrmSettingsAccessMode = 0 | 1 | 2;
 export type AdmissionCrmSetupReadiness = 0 | 1 | 2 | 3 | 4;
+export type AdmissionCrmCycleStatus = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type AdmissionCrmSetupItemDto = {
   key: string;
@@ -816,6 +817,49 @@ export type AdmissionCrmSetupStatusDto = {
   appliedPresetVersion?: number | null;
   lastUpdatedAt?: string | null;
   items: AdmissionCrmSetupItemDto[];
+};
+
+export type AdmissionCrmCycleRequiredActionDto = {
+  key: string;
+  title: string;
+  path: string;
+  blockerCodes: string[];
+};
+
+export type AdmissionCrmCycleListItemDto = {
+  academicYearId: string;
+  cycleConfigurationId?: string | null;
+  cycleName: string;
+  academicYearName: string;
+  academicYearStartDate: string;
+  academicYearEndDate: string;
+  admissionWindowStart?: string | null;
+  admissionWindowEnd?: string | null;
+  status: AdmissionCrmCycleStatus;
+  readiness: AdmissionCrmSetupReadiness;
+  applicantCount: number;
+  ownerUserId?: string | null;
+  ownerDisplayName?: string | null;
+  lastUpdatedAt?: string | null;
+  requiredActions: AdmissionCrmCycleRequiredActionDto[];
+};
+
+export type AdmissionCrmCyclePolicySummaryDto = {
+  isActive: boolean;
+  registrationFormRequiredBeforeExam: boolean;
+  entranceExamRequired: boolean;
+  journeyLocked: boolean;
+  defaultLeadSlaHours: number;
+  staleAfterDays: number;
+  archiveAfterDays: number;
+  defaultExamPassingPercentage: number;
+  meritRankingMode: AdmissionCrmMeritRankingMode;
+};
+
+export type AdmissionCrmCycleSummaryDto = {
+  cycle: AdmissionCrmCycleListItemDto;
+  policy: AdmissionCrmCyclePolicySummaryDto;
+  readiness: AdmissionCrmSetupStatusDto;
 };
 
 export type AdmissionCrmSlaPolicyDto = {
@@ -4580,6 +4624,27 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       }),
       providesTags: [studentAdmissionsCrmType.configuration],
     }),
+    getAdmissionCrmCycles: builder.query<
+      PagedResult<AdmissionCrmCycleListItemDto>,
+      AdmissionCrmListParams | void
+    >({
+      query: (params) => ({
+        url: '/student-enrollment/admissions-crm/setup/cycles',
+        method: 'GET',
+        params: params ?? undefined,
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    getAdmissionCrmCycleSummary: builder.query<
+      AdmissionCrmCycleSummaryDto,
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: `/student-enrollment/admissions-crm/setup/cycles/${academicYearId}/summary`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
     updateAdmissionCrmCycleConfiguration: builder.mutation<
       AdmissionCrmCycleConfigurationDto,
       { academicYearId: string; body: Partial<AdmissionCrmCycleConfigurationDto> }
@@ -7178,6 +7243,8 @@ export const {
   useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation,
   useGetAdmissionCrmCycleConfigurationQuery,
   useGetAdmissionCrmSetupStatusQuery,
+  useGetAdmissionCrmCyclesQuery,
+  useGetAdmissionCrmCycleSummaryQuery,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   useLazyGetAdmissionCrmConfigurationReferencesQuery,
   usePreviewAdmissionCrmConfigurationImpactMutation,

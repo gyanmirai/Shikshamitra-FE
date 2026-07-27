@@ -20,11 +20,13 @@ Use this map to find the first screen and client.
 | Workflow                     | Screen entry                                                                     | Main client                                                    |
 | ---------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | Dashboard                    | `/student/dashboard`                                                             | `src/redux/student/index.ts`                                   |
+| Admission cycles             | `/student/enrollment`                                                            | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
+| My admissions work           | `/student/enrollment/overview`                                                   | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Admissions pipeline          | `/student/enrollment/pipeline`                                                   | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Applicant workspace          | `/student/enrollment/applicants/{leadId}`                                        | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Entrance exams               | `/student/enrollment/exams`                                                      | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
-| Registrations and documents  | `/student/enrollment/registrations`                                              | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
-| Offers and seats             | `/student/enrollment/offers-seats`                                               | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
+| Registration                 | `/student/enrollment/registrations`                                              | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
+| Offers and class placement   | `/student/enrollment/offers-seats`                                               | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Activation                   | `/student/enrollment/activation`                                                 | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Enrollment operations        | `/student/enrollment/operations`                                                 | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
 | Enrollment analytics         | `/student/enrollment/analytics`                                                  | `src/redux/student/admissions-crm/admissions-crm-api.ts`       |
@@ -53,6 +55,8 @@ Frontend workflows must respect backend data ownership.
 | Quick inquiry academic scope   | Academic stage and target class are resolved inside the selected academic year, board, and medium hierarchy, and the backend rejects mismatched placement |
 | Direct registration            | Authorized direct registration uses the enabled Manual entry channel, a published effective admission pathway, validated contact details, and the same academic stage and target-class mapping as Quick Inquiry |
 | Applicant journey              | The full-page applicant workspace presents Inquiry, Entrance, Registration, Offer and Seat, and Activation as stage-aware steps, and skips Entrance when the cycle does not require an exam |
+| Admission cycle entry point     | The Admission Cycles list is the Student Enrollment entry point for configuration managers and opens the existing setup URLs for the selected academic year |
+| Class Placement Plan            | User-facing setup copy uses Class Placement Plan for enrollment-owned placement planning while current internal APIs still use the existing seat-pool contract |
 | Applicant terminal stages      | Rejected, stale, and archived inquiries cannot start later journey work, while staff can still review artifacts that already exist |
 | Applicant pathway governance   | Governance shows only fields required by the selected pathway and captures one verified reference per configured evidence code; an inquiry can complete its first audited assignment against the exact pathway version captured at intake even if that version is later retired |
 | Applicant activity             | Applicant activity and audit evidence use a separate permission-safe section with retry and incremental older-event loading |
