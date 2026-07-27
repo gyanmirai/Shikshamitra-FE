@@ -57,6 +57,7 @@ Frontend workflows must respect backend data ownership.
 | Applicant journey              | The full-page applicant workspace presents Inquiry, Entrance, Registration, Offer and Seat, and Activation as stage-aware steps, and skips Entrance when the cycle does not require an exam |
 | Admission cycle entry point     | The Admission Cycles list is the Student Enrollment entry point for configuration managers and opens the existing setup URLs for the selected academic year |
 | Class Placement Plan            | User-facing setup copy uses Class Placement Plan for enrollment-owned placement planning while current internal APIs still use the existing seat-pool contract |
+| Admissions work insights        | My Admissions Work shows permission-aware operational counts for paper entry, documents, fee follow-up, exam no-shows, expiring offers, Class Placement Plan risk, activation, and handoff blockers from the operations overview endpoint |
 | Applicant terminal stages      | Rejected, stale, and archived inquiries cannot start later journey work, while staff can still review artifacts that already exist |
 | Applicant pathway governance   | Governance shows only fields required by the selected pathway and captures one verified reference per configured evidence code; an inquiry can complete its first audited assignment against the exact pathway version captured at intake even if that version is later retired |
 | Applicant activity             | Applicant activity and audit evidence use a separate permission-safe section with retry and incremental older-event loading |
@@ -64,6 +65,7 @@ Frontend workflows must respect backend data ownership.
 | Inquiry CRM to entrance exam   | CRM leads can schedule into entrance exam slots before a `Student` record exists                |
 | Inquiry CRM registration form  | Staff can issue a CRM-native registration form from an inquiry lead before exam scheduling when the cycle requires it |
 | Admissions CRM registration    | Applicant operations issue the applicable versioned registration template, manage correction and link lifecycle actions, record fee references, and verify submissions |
+| Admissions CRM paper registration | Staff can enter a physical registration form through the same CRM registration contract with paper provenance, physical form metadata, and data-entry state while OCR remains out of scope |
 | Admissions CRM registration languages | Registration-template settings capture Gujarati and Hindi section titles, descriptions, field labels, help text, and option labels, while the public registration route resolves the selected language with English fallback |
 | Admissions CRM registration preview | Registration-template settings preview online or print rendering at desktop or mobile width in English, Gujarati, or Hindi before publication |
 | Admissions CRM documents       | Applicant operations assign the applicable checklist, show configured family upload instructions, use configured rejection-reason shortcuts, review or waive requirements, confirm originals, and enforce one-person or two-person readiness approval |
@@ -91,6 +93,7 @@ Frontend workflows must respect backend data ownership.
 | Inquiry CRM opt-out controls   | Workspace send-message flow can record parent opt-out or clear opt-out with reason for the selected channel and recipient |
 | Inquiry CRM opt-out register   | Workspace opt-out register shows active and cleared opt-outs with channel, contact, and status filters |
 | Inquiry CRM delivery logs      | Workspace communication logs show recent delivery evidence, provider message IDs, provider ID search, channel and status filters, plus retry actions for failed or blocked logs |
+| Inquiry CRM journey messages   | Journey rules can trigger configured templates for inquiry, exam, registration, document, fee, offer, activation, and welcome moments, but delivery outcome must be read from communication logs |
 | Inquiry CRM journey automation | Settings journey rules can filter by channel, Inquiry Source, campaign, current stage, owner, target standard, desired class, branch, language, priority, score, idle days, and lead age before creating deduplicated tasks, message delivery logs, or failure timeline evidence from CRM events, document expiry windows, and manual runner invocations |
 | Public admissions links        | Public inquiry and status routes live outside authenticated Student navigation                   |
 | Public duplicate privacy       | Public inquiry submission never displays private duplicate match details to the applicant, including contact, parent-profile, or DOB-profile matches |
