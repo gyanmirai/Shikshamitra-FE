@@ -89,6 +89,7 @@ import type {
   AdmissionCrmChannelSettingDto,
   AdmissionCrmLeadRoutingRuleDto,
   AdmissionCrmAnalyticsSummaryDto,
+  AdmissionCrmEnrollmentOverviewDto,
   AdmissionCrmApplicantChecklistItemDto,
   AdmissionCrmApplicantChecklistProgressDto,
 } from './admissions-crm-api';
@@ -261,6 +262,31 @@ describe('admissions CRM API contracts', () => {
         registrationStatus: AdmissionCrmRegistrationStatus.AdmissionReady,
       },
     });
+  });
+
+  it('keeps enrollment overview operational insight fields in the contract', () => {
+    const overview = {
+      academicYearId: 'year-1',
+      generatedAt: '2026-07-27T00:00:00Z',
+      unassignedLeadCount: 1,
+      upcomingExamCount: 2,
+      examNoShowCount: 3,
+      pendingPaperEntryCount: 4,
+      expiringRegistrationCount: 5,
+      documentFollowUpCount: 6,
+      feeFollowUpCount: 7,
+      pendingApprovalCount: 8,
+      expiringOfferCount: 9,
+      classPlacementRiskCount: 10,
+      activationFailureCount: 11,
+      handoffBlockerCount: 12,
+      urgentCount: 13,
+      queues: [],
+      urgentItems: [],
+    } satisfies AdmissionCrmEnrollmentOverviewDto;
+
+    expect(overview.pendingPaperEntryCount).toBe(4);
+    expect(overview.classPlacementRiskCount).toBe(10);
   });
 
   it('builds versioned admissions playbook requests in the CRM route family', () => {

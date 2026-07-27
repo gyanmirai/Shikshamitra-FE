@@ -40,6 +40,7 @@ import {
   AdmissionCrmWorkspaceSection,
   AdmissionCrmRecommendedAction,
   useGetAdmissionCrmMyWorkQuery,
+  useGetAdmissionCrmEnrollmentOverviewQuery,
   useBulkCreateAdmissionCrmTasksMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -203,6 +204,10 @@ export function EnrollmentOverviewWorkspace() {
     },
     { skip: !academicYearId }
   );
+  const overviewQuery = useGetAdmissionCrmEnrollmentOverviewQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId }
+  );
 
   const updateUrl = useCallback(
     (
@@ -228,6 +233,47 @@ export function EnrollmentOverviewWorkspace() {
 
   const workItems = useMemo(() => query.data?.items || [], [query.data?.items]);
   const selectedWorkSet = useMemo(() => new Set(selectedWorkKeys), [selectedWorkKeys]);
+  const operationalInsights = useMemo(() => {
+    const overview = overviewQuery.data;
+    return [
+      {
+        key: 'paper',
+        label: 'Paper entry',
+        value: overview?.pendingPaperEntryCount || 0,
+        tone: 'warning' as const,
+      },
+      {
+        key: 'documents',
+        label: 'Document follow-up',
+        value: overview?.documentFollowUpCount || 0,
+        tone: 'warning' as const,
+      },
+      {
+        key: 'fees',
+        label: 'Fee follow-up',
+        value: overview?.feeFollowUpCount || 0,
+        tone: 'info' as const,
+      },
+      {
+        key: 'no-shows',
+        label: 'Exam no-shows',
+        value: overview?.examNoShowCount || 0,
+        tone: 'error' as const,
+      },
+      {
+        key: 'offers',
+        label: 'Expiring offers',
+        value: overview?.expiringOfferCount || 0,
+        tone: 'warning' as const,
+      },
+      {
+        key: 'placement',
+        label: 'Class Placement Plan risk',
+        value: overview?.classPlacementRiskCount || 0,
+        tone: 'error' as const,
+      },
+    ];
+  }, [overviewQuery.data]);
 
   const metrics = useMemo(
     () => [
@@ -558,6 +604,37 @@ export function EnrollmentOverviewWorkspace() {
         title="My Admissions Work"
         description="Tasks and operational blockers assigned to you for this admission cycle."
       />
+      {overviewQuery.isError ? (
+        <Alert severity="warning" action={<Button color="inherit" size="small" onClick={() => overviewQuery.refetch()}>Retry</Button>}>
+          Operational insights are unavailable.
+        </Alert>
+      ) : null}
+      <Paper
+        variant="outlined"
+        aria-label="Admissions operational insights"
+        sx={{
+          p: 1,
+          borderRadius: 1.5,
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(6, minmax(0, 1fr))' },
+          gap: 0.75,
+        }}
+      >
+        {operationalInsights.map((item) => (
+          <Box key={item.key} sx={{ minWidth: 0 }}>
+            <Typography variant="h6" sx={{ lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+              {item.value}
+            </Typography>
+            <Chip
+              size="small"
+              color={item.value > 0 ? item.tone : 'default'}
+              variant={item.value > 0 ? 'filled' : 'outlined'}
+              label={item.label}
+              sx={{ mt: 0.75, maxWidth: '100%' }}
+            />
+          </Box>
+        ))}
+      </Paper>
       {selectedWorkKeys.length > 0 ? (
         <Paper variant="outlined" role="region" aria-label="Bulk work actions" sx={{ p: 1 }}>
           <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">

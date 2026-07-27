@@ -2489,8 +2489,14 @@ export type AdmissionCrmEnrollmentOverviewDto = {
   generatedAt: string;
   unassignedLeadCount: number;
   upcomingExamCount: number;
+  examNoShowCount: number;
+  pendingPaperEntryCount: number;
   expiringRegistrationCount: number;
+  documentFollowUpCount: number;
+  feeFollowUpCount: number;
   pendingApprovalCount: number;
+  expiringOfferCount: number;
+  classPlacementRiskCount: number;
   activationFailureCount: number;
   handoffBlockerCount: number;
   urgentCount: number;
