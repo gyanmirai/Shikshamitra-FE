@@ -196,6 +196,23 @@ function CycleSummaryPanel({ academicYearId }: { academicYearId?: string }) {
           />
         </Box>
 
+        <Stack spacing={1}>
+          <Typography variant="subtitle2">Configured journey</Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {summary.applicationStagePolicy.stages.map((stage) => (
+              <Chip
+                key={stage.stageKey}
+                size="small"
+                color={stage.isEnabled ? (stage.isOperationallyBacked ? 'info' : 'default') : 'default'}
+                variant={stage.isEnabled ? 'filled' : 'outlined'}
+                label={`${stage.displayOrder}. ${stage.displayName}${
+                  stage.isEnabled ? '' : ' (hidden)'
+                }${stage.isOperationallyBacked ? '' : ' - policy only'}`}
+              />
+            ))}
+          </Stack>
+        </Stack>
+
         {summary.cycle.requiredActions.length > 0 ? (
           <Stack spacing={1}>
             <Typography variant="subtitle2">Required actions</Typography>

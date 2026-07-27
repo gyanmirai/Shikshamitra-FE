@@ -257,8 +257,14 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(api).toContain("url: '/student-enrollment/admissions-crm/setup/cycles'");
     expect(api).toContain('getAdmissionCrmCycleSummary');
     expect(api).toContain('/student-enrollment/admissions-crm/setup/cycles/${academicYearId}/summary');
+    expect(api).toContain('getAdmissionCrmApplicationStagePolicy');
+    expect(api).toContain('/student-enrollment/admissions-crm/setup/cycles/${academicYearId}/stage-policy');
+    expect(api).toContain('previewAdmissionCrmApplicationStagePolicy');
+    expect(api).toContain('updateAdmissionCrmApplicationStagePolicy');
     expect(workspace).toContain('useGetAdmissionCrmCyclesQuery');
     expect(workspace).toContain('useGetAdmissionCrmCycleSummaryQuery');
+    expect(workspace).toContain('Configured journey');
+    expect(workspace).toContain('policy only');
   });
 
   it('pins the entrance exam admission status beside the actions column', () => {

@@ -337,6 +337,22 @@ describe('Enrollment settings route contracts', () => {
       'setting',
       'admissions-crm-configuration.tsx'
     );
+    const coreRoute = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'core-settings-route.tsx'
+    );
+    const stagePolicy = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'application-stage-policy-panel.tsx'
+    );
 
     expect(guidance).toContain('Applicant journey');
     expect(guidance).toContain('gridTemplateColumns');
@@ -346,6 +362,10 @@ describe('Enrollment settings route contracts', () => {
     expect(configuration).toContain('<Accordion');
     expect(configuration).toContain('Staff can move applicants to');
     expect(configuration).not.toContain('Pipeline Stages');
+    expect(coreRoute).toContain('ApplicationStagePolicyPanel');
+    expect(stagePolicy).toContain('Cycle-owned journey policy');
+    expect(stagePolicy).toContain('Preview Impact');
+    expect(stagePolicy).toContain('Policy-only');
   });
 
   it('protects every exposed draft editor and uses staff selectors for delegation', () => {
