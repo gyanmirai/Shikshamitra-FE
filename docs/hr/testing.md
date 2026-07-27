@@ -37,6 +37,21 @@ $env:E2E_HR_FULL_CYCLE='1'
 npx playwright test e2e/hr/hr-module-full-cycle.spec.ts --project=chromium --reporter=list
 ```
 
+The payroll full-cycle spec uses a future non-current month so the background current-month worker cannot race the test.
+The spec aggregates every payroll preview page before selecting its fixture employee.
+Employee E2E helpers select only an explicitly onboarding-approved Employee-audience role that supports the requested employee group.
+
+## Deployment regression gate
+
+The frontend deployment workflow runs the HR documentation validator and the complete HR Vitest surface before the production build.
+Keep these commands aligned with `.github/workflows/deploy.yml`:
+
+```bash
+npm run docs:hr:check
+npx vitest run src/redux/hr src/screens/hr src/utils/hr-audit-format.test.ts
+npm run build
+```
+
 ## Coverage map
 
 Use this table to choose validation:

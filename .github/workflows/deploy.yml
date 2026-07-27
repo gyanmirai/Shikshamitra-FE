@@ -28,6 +28,12 @@ jobs:
       - name: Install dependencies
         run: npm ci # ✅ install ALL deps (IMPORTANT)
 
+      - name: Validate HR documentation
+        run: npm run docs:hr:check
+
+      - name: Run HR regression tests
+        run: npx vitest run src/redux/hr src/screens/hr src/utils/hr-audit-format.test.ts
+
       - name: Build Next.js
         run: npm run build
         env:

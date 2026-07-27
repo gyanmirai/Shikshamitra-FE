@@ -1,6 +1,8 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax */
 import type { Page, APIResponse } from '@playwright/test';
 
+import { getEmployeeAssignableRoles } from 'src/screens/hr/employee/employee-role-options';
+
 import type { EmployeeFixture } from './employee-fixtures';
 
 const apiBaseUrl = () => {
@@ -112,6 +114,36 @@ function asItems<T = Record<string, any>>(body: any): T[] {
   if (Array.isArray(payload?.items)) return payload.items;
   if (Array.isArray(payload?.Items)) return payload.Items;
   return [];
+}
+
+export async function getEmployeeOnboardingRoleId(
+  page: Page,
+  preferredRoleId?: string
+): Promise<string> {
+  const response = await employeeApiRequest(page, '/identity/roles/all');
+  if (!response.ok()) {
+    throw new Error(`Employee role lookup failed: ${response.status()} ${await response.text()}`);
+  }
+
+  const roles = asItems<any>(await response.json());
+  const assignableRoles = getEmployeeAssignableRoles(roles, 0);
+  const role = preferredRoleId
+    ? assignableRoles.find(
+        (candidate) =>
+          String(candidate.id || '').toLowerCase() === preferredRoleId.trim().toLowerCase()
+      )
+    : assignableRoles[0];
+
+  if (!role?.id) {
+    const detail = preferredRoleId
+      ? `Role ${preferredRoleId} is not explicitly approved for teaching-employee onboarding.`
+      : 'No role is explicitly approved for teaching-employee onboarding.';
+    throw new Error(
+      `${detail} Run the DDVS role metadata seeder or create an Employee role marked Available for employee onboarding.`
+    );
+  }
+
+  return role.id;
 }
 
 async function getJson<T = any>(page: Page, path: string): Promise<T> {
@@ -327,6 +359,7 @@ export async function createEmployeeFromExistingDefaults(
   const token = await getAccessToken(page);
   const tenant = process.env.E2E_TENANT || 'DDVS';
   const baseUrl = apiBaseUrl();
+  const resolvedRoleId = await getEmployeeOnboardingRoleId(page, overrides.roleId);
   const created = await page.evaluate(
     async ({
       baseUrl: evaluatedBaseUrl,
@@ -334,6 +367,7 @@ export async function createEmployeeFromExistingDefaults(
       tenant: evaluatedTenant,
       fixture: evaluatedFixture,
       overrides: evaluatedOverrides,
+      roleId: evaluatedRoleId,
     }) => {
       const headers = {
         accept: 'application/json',
@@ -365,17 +399,10 @@ export async function createEmployeeFromExistingDefaults(
       }
 
       const defaults = await detailResponse.json();
-      const rolesResponse = await fetch(`${evaluatedBaseUrl}/api/identity/roles/all`, {
-        headers,
-      });
-      const roles = rolesResponse.ok ? await rolesResponse.json() : [];
       const shiftsResponse = await fetch(`${evaluatedBaseUrl}/api/app/shift-management`, {
         headers,
       });
       const shifts = shiftsResponse.ok ? await shiftsResponse.json() : { items: [] };
-      const fallbackRole = (Array.isArray(roles) ? roles : roles?.items || []).find(
-        (role: any) => role?.id
-      );
       const fallbackShift = (Array.isArray(shifts) ? shifts : shifts?.items || []).find(
         (shift: any) => shift?.id
       );
@@ -383,11 +410,6 @@ export async function createEmployeeFromExistingDefaults(
         typeof value === 'string' &&
         value.trim() &&
         value !== '00000000-0000-0000-0000-000000000000';
-      const roleId = isUsableId(evaluatedOverrides.roleId)
-        ? evaluatedOverrides.roleId
-        : isUsableId(defaults.roleId)
-          ? defaults.roleId
-          : fallbackRole?.id;
       const shiftId = isUsableId(defaults.shiftId) ? defaults.shiftId : fallbackShift?.id;
       const body = {
         firstName: evaluatedFixture.firstName,
@@ -409,7 +431,7 @@ export async function createEmployeeFromExistingDefaults(
         department: defaults.department ?? 'Academics',
         doj: evaluatedOverrides.dateOfJoining ?? '2024-06-01',
         isTeaching: defaults.isTeaching ?? true,
-        roleId,
+        roleId: evaluatedRoleId,
         address1: evaluatedFixture.addressLine1,
         address2: evaluatedFixture.addressLine2,
         address3: evaluatedFixture.addressLine3,
@@ -441,7 +463,7 @@ export async function createEmployeeFromExistingDefaults(
 
       return JSON.parse(responseText);
     },
-    { baseUrl, token, tenant, fixture, overrides }
+    { baseUrl, token, tenant, fixture, overrides, roleId: resolvedRoleId }
   );
 
   return created;

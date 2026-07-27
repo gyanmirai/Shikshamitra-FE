@@ -52,7 +52,7 @@ async function openEmployeeReportBuilder(page: Page) {
   await page.goto('/hr/reports', { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('hr-reports-center')).toBeVisible({ timeout: 60_000 });
   await page.getByTestId('hr-reports-generate-button').click();
-  await expect(page.getByPlaceholder('Search categories...')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Search categories' })).toBeVisible();
   await page
     .getByText(/^Employee$/)
     .first()
