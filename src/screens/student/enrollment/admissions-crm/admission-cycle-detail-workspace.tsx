@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { fDateTime } from 'src/utils/format-time';
@@ -444,6 +444,7 @@ function ActivityTab({ summary }: { summary: AdmissionCrmCycleSummaryDto }) {
 }
 
 export function AdmissionCycleDetailWorkspace({ academicYearId }: { academicYearId: string }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const query = useGetAdmissionCrmCycleSummaryQuery({ academicYearId }, { skip: !academicYearId });
   const summary = query.data;
@@ -510,6 +511,7 @@ export function AdmissionCycleDetailWorkspace({ academicYearId }: { academicYear
           <Paper variant="outlined" sx={{ borderRadius: 2 }}>
             <Tabs
               value={activeTab}
+              onChange={(_, nextTab: CycleWorkspaceTab) => router.push(tabHref(nextTab))}
               variant="scrollable"
               scrollButtons="auto"
               allowScrollButtonsMobile
@@ -518,8 +520,6 @@ export function AdmissionCycleDetailWorkspace({ academicYearId }: { academicYear
               {tabs.map((tab) => (
                 <Tab
                   key={tab.value}
-                  component={RouterLink}
-                  href={tabHref(tab.value)}
                   value={tab.value}
                   label={tab.label}
                 />
