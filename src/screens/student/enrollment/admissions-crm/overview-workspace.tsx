@@ -232,6 +232,8 @@ export function EnrollmentOverviewWorkspace() {
   );
 
   const workItems = useMemo(() => query.data?.items || [], [query.data?.items]);
+  const showEmptyWorkQueue =
+    !query.isLoading && !query.isFetching && (query.data?.totalCount ?? 0) === 0;
   const selectedWorkSet = useMemo(() => new Set(selectedWorkKeys), [selectedWorkKeys]);
   const operationalInsights = useMemo(() => {
     const overview = overviewQuery.data;
@@ -776,6 +778,12 @@ export function EnrollmentOverviewWorkspace() {
             wrapperProps={{ sx: enrollmentTableWrapperSx }}
             tableContainerProps={{ sx: enrollmentTableContainerSx }}
           />
+          {showEmptyWorkQueue ? (
+            <Alert severity="info">
+              No work items in this cycle. Your assigned queue is clear for the selected admission
+              cycle; open Pipeline for all applicants or clear filters to widen the view.
+            </Alert>
+          ) : null}
           {query.data ? (
             <Typography variant="caption" color="text.secondary" textAlign="right">
               Updated {formatEnrollmentDate(query.data.generatedAt, true)}
