@@ -1,13 +1,12 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { fDateTime } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
 import {
   Box,
   Tab,
@@ -445,7 +444,6 @@ function ActivityTab({ summary }: { summary: AdmissionCrmCycleSummaryDto }) {
 }
 
 export function AdmissionCycleDetailWorkspace({ academicYearId }: { academicYearId: string }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const query = useGetAdmissionCrmCycleSummaryQuery({ academicYearId }, { skip: !academicYearId });
   const summary = query.data;
@@ -524,11 +522,6 @@ export function AdmissionCycleDetailWorkspace({ academicYearId }: { academicYear
                   href={tabHref(tab.value)}
                   value={tab.value}
                   label={tab.label}
-                  onClick={(event) => {
-                    if (!isPlainPrimaryNavigationClick(event)) return;
-                    event.preventDefault();
-                    router.push(tabHref(tab.value));
-                  }}
                 />
               ))}
             </Tabs>

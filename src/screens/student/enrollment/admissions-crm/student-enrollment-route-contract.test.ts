@@ -315,6 +315,8 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(detailWorkspace).toContain('ApplicationStagePolicyPanel');
     expect(detailWorkspace).toContain('getAdmissionCycleWorkspaceHref(academicYearId)');
     expect(detailWorkspace).toContain(['&tab=', '{encodeURIComponent(tab)}'].join('$'));
+    expect(detailWorkspace).not.toContain('event.preventDefault()');
+    expect(detailWorkspace).not.toContain('isPlainPrimaryNavigationClick');
     expect(detailWorkspace).toContain('Configured journey');
     expect(detailWorkspace).toContain('Fees and Class Placement Plan');
   });
