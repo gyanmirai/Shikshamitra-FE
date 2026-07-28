@@ -76,7 +76,7 @@ export function useRoomAvailability(filters?: Partial<RoomAvailabilityFilters>) 
     search: filters?.search,
   };
 
-  const { data, isLoading, isError, refetch } = useGetRoomAvailabilityQuery(params);
+  const { data, isLoading, isError, refetch, isFetching } = useGetRoomAvailabilityQuery(params);
   const roomAvailabilityData = (data || []) as RoomAvailabilityItem[];
 
   return {
@@ -85,6 +85,7 @@ export function useRoomAvailability(filters?: Partial<RoomAvailabilityFilters>) 
     error: isError ? 'Failed to load room availability.' : null,
     refetch,
     fetch: refetch,
+    isFetching,
   };
 }
 

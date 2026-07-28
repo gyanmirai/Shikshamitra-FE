@@ -74,7 +74,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
               ? currentDivision.status
               : currentDivision?.isPublished
                 ? 1
-              : (hw.status ?? 0),
+                : (hw.status ?? 0),
           divisions: hw.divisionSchedules || hw.divisions || [],
         };
       }),
@@ -82,7 +82,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
   );
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <LearningTaskSummaryCards tasks={filteredData} />
       <CustomizableTable
         tableId="homework-assignment-management"

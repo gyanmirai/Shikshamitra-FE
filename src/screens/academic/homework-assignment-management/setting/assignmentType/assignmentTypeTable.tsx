@@ -88,6 +88,14 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
         render: (_value, row) => row.defaultDueDays ?? '-',
       },
       {
+        id: 'usageCount',
+        label: 'Usage',
+        align: 'right',
+        minWidth: 100,
+        filterType: 'number',
+        render: (_value, row) => row.usageCount ?? 0,
+      },
+      {
         id: 'evaluationRequired',
         label: 'Evaluation Required',
         align: 'center',
@@ -126,8 +134,8 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
       {
         id: 'status',
         label: 'Status',
-        align: 'center',
         minWidth: 110,
+        sticky: true,
         filterType: 'enum',
         enumOptions: [
           { label: 'Active', value: 0 },
@@ -141,14 +149,6 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
             </Label>
           );
         },
-      },
-      {
-        id: 'usageCount',
-        label: 'Usage',
-        align: 'right',
-        minWidth: 100,
-        filterType: 'number',
-        render: (_value, row) => row.usageCount ?? 0,
       },
       {
         id: 'action',

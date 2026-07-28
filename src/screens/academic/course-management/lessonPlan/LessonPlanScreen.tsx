@@ -165,15 +165,15 @@ const normalizeSlotTime = (value: unknown) => {
 const getPlannedSlotTime = (plan: any) => {
   const start = normalizeSlotTime(
     plan.startTime ||
-      plan.slotStartTime ||
-      plan.timetableSlot?.startTime ||
-      plan.timetableSlot?.slotStartTime
+    plan.slotStartTime ||
+    plan.timetableSlot?.startTime ||
+    plan.timetableSlot?.slotStartTime
   );
   const end = normalizeSlotTime(
     plan.endTime ||
-      plan.slotEndTime ||
-      plan.timetableSlot?.endTime ||
-      plan.timetableSlot?.slotEndTime
+    plan.slotEndTime ||
+    plan.timetableSlot?.endTime ||
+    plan.timetableSlot?.slotEndTime
   );
 
   return start && end ? `${start} - ${end}` : '';
@@ -1216,18 +1216,6 @@ const LessonPlanScreen = () => {
           { name: 'Curriculum', href: '/academic/curriculumSubjects' },
           { name: 'Lesson Plan / Teacher Diary' },
         ]}
-        action={
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              onClick={() => openAddLesson()}
-            >
-              Lesson Plan
-            </Button>
-          </Stack>
-        }
       />
 
       {/* Teaching KPI Cards */}

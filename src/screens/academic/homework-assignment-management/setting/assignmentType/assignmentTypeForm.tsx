@@ -143,7 +143,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       {/* <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}> */}
       <DialogScrollContent>
-        <Stack spacing={1} sx={{ pt: 1 }}>
+        <Stack spacing={2}>
           <ShakingTextField
             error={
               !!(formik.touched.assignmentTypeName && formik.errors.assignmentTypeName) || false

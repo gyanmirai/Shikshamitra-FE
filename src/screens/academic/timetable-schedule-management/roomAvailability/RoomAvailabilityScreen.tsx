@@ -367,7 +367,7 @@ const RoomAvailabilityScreen = () => {
 
             <RoomAvailabilityTable
               data={availability.data}
-              isLoading={availability.isLoading}
+              isLoading={availability.isLoading || availability.isFetching}
               canReserve
               canMaintenance
               canApprove

@@ -139,17 +139,17 @@ const WeeklyLectures = () => {
           { name: 'Settings' },
           { name: 'Weekly Lectures Slots' },
         ]}
-        // action={
-        //   <Button
-        //     startIcon={<Iconify icon="mdi:plus" />}
-        //     variant="contained"
-        //     size="small"
-        //     onClick={openCreate}
-        //     sx={{ px: '32px' }}
-        //   >
-        //     Weekly Lectures
-        //   </Button>
-        // }
+      // action={
+      //   <Button
+      //     startIcon={<Iconify icon="mdi:plus" />}
+      //     variant="contained"
+      //     size="small"
+      //     onClick={openCreate}
+      //     sx={{ px: '32px' }}
+      //   >
+      //     Weekly Lectures
+      //   </Button>
+      // }
       />
 
       <TimetableSettingsSummaryCards cards={summaryCards} />

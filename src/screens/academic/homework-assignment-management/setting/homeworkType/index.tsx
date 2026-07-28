@@ -23,6 +23,7 @@ import {
   useGetHomeworkTypesQuery,
   useDeleteHomeworkTypeMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import HomeworkTypeForm from './homeworkTypeForm';
 import HomeworkTypeTable from './homeworkTypeTable';
@@ -111,7 +112,7 @@ const HomeworkTypeCreation = () => {
   const totalTypes = homeworkTypes.length;
   const activeTypes = homeworkTypes.filter((t: any) => t.status === 0).length;
   const inactiveTypes = homeworkTypes.filter((t: any) => t.status === 1).length;
-  
+
   let mostUsedType = '-';
   let maxUsage = 0;
   homeworkTypes.forEach((t: any) => {
@@ -150,54 +151,15 @@ const HomeworkTypeCreation = () => {
       />
 
       {/* Summary Cards */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: 'repeat(2, minmax(0, 1fr))',
-            sm: 'repeat(3, minmax(0, 1fr))',
-            md: 'repeat(5, minmax(0, 1fr))',
-          },
-          gap: 1,
-          mb: 3,
-        }}
-      >
-        {[
-          { label: 'Total Types', value: totalTypes, color: 'text.primary' },
-          { label: 'Active Types', value: activeTypes, color: 'success.main' },
-          { label: 'Inactive Types', value: inactiveTypes, color: 'error.main' },
-          { label: 'Most Used Type', value: mostUsedType, color: 'warning.main' },
-          { label: 'Unused Types', value: unusedTypes, color: 'text.secondary' },
-        ].map((card) => (
-          <Paper
-            key={card.label}
-            variant="outlined"
-            sx={{
-              p: 1.25,
-              borderRadius: 1,
-              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
-            }}
-          >
-            <Stack spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                {card.label}
-              </Typography>
-              <Typography
-                variant="h6"
-                sx={{
-                  color: card.color,
-                  lineHeight: 1.1,
-                  textOverflow: 'ellipsis',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {card.value}
-              </Typography>
-            </Stack>
-          </Paper>
-        ))}
-      </Box>
+      <TimetableSettingsSummaryCards
+        cards={[
+          { label: 'Total Types', value: totalTypes, icon: 'solar:document-bold', color: 'primary' },
+          { label: 'Active Types', value: activeTypes, icon: 'mdi:check-circle-outline', color: 'success' },
+          { label: 'Inactive Types', value: inactiveTypes, icon: 'mdi:close-circle-outline', color: 'error' },
+          { label: 'Most Used Type', value: mostUsedType, icon: 'solar:star-bold', color: 'warning' },
+          { label: 'Unused Types', value: unusedTypes, icon: 'solar:ghost-bold', color: 'info' },
+        ]}
+      />
 
       <HomeworkTypeTable
         isLoading={isLoading || isFetching}
