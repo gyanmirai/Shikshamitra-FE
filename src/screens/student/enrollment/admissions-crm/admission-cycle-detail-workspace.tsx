@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { fDateTime } from 'src/utils/format-time';
@@ -38,7 +38,6 @@ import {
   formatDateRange,
   cycleStatusColor,
   cycleStatusLabels,
-  getAdmissionCycleWorkspaceHref,
 } from './admission-cycles-workspace';
 
 type CycleWorkspaceTab = 'overview' | 'setup' | 'journey-rules' | 'activity';
@@ -50,6 +49,16 @@ const tabs: Array<{ value: CycleWorkspaceTab; label: string }> = [
   { value: 'journey-rules', label: 'Journey rules' },
   { value: 'activity', label: 'Activity' },
 ];
+
+const getAdmissionCycleWorkspaceTabHref = (
+  academicYearId: string,
+  tab: CycleWorkspaceTab
+) => {
+  const encodedAcademicYearId = encodeURIComponent(academicYearId);
+  const basePath = `${studentPaths.enrollment.settingsSections.admissionCycles}/${encodedAcademicYearId}`;
+  const tabPath = tab === 'overview' ? basePath : `${basePath}/${encodeURIComponent(tab)}`;
+  return `${tabPath}?cycle=${encodedAcademicYearId}`;
+};
 
 const meritModeLabels: Record<AdmissionCrmMeritRankingMode, string> = {
   [AdmissionCrmMeritRankingMode.MarksThenInquiryDate]: 'Marks, then inquiry date',
@@ -264,7 +273,10 @@ function CompactJourneyMap({ summary }: { summary: AdmissionCrmCycleSummaryDto }
         </Stack>
         <Button
           component={RouterLink}
-          href={`${getAdmissionCycleWorkspaceHref(summary.cycle.academicYearId)}&tab=journey-rules`}
+          href={getAdmissionCycleWorkspaceTabHref(
+            summary.cycle.academicYearId,
+            'journey-rules'
+          )}
           size="small"
           sx={{ alignSelf: 'flex-start' }}
           endIcon={<Iconify icon="mdi:arrow-right" />}
@@ -443,20 +455,23 @@ function ActivityTab({ summary }: { summary: AdmissionCrmCycleSummaryDto }) {
   );
 }
 
-export function AdmissionCycleDetailWorkspace({ academicYearId }: { academicYearId: string }) {
+export function AdmissionCycleDetailWorkspace({
+  academicYearId,
+  initialTab,
+}: {
+  academicYearId: string;
+  initialTab?: CycleWorkspaceTab;
+}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const query = useGetAdmissionCrmCycleSummaryQuery({ academicYearId }, { skip: !academicYearId });
   const summary = query.data;
-  const requestedTab = searchParams.get('tab') as CycleWorkspaceTab | null;
   const defaultTab: CycleWorkspaceTab =
     summary?.cycle.status === 2 && (summary.cycle.readiness === 2 || summary.cycle.readiness === 3)
       ? 'overview'
       : 'setup';
-  const activeTab = tabs.some((tab) => tab.value === requestedTab) ? requestedTab! : defaultTab;
+  const activeTab = tabs.some((tab) => tab.value === initialTab) ? initialTab! : defaultTab;
   const tabHref = useMemo(
-    () => (tab: CycleWorkspaceTab) =>
-      `${getAdmissionCycleWorkspaceHref(academicYearId)}&tab=${encodeURIComponent(tab)}`,
+    () => (tab: CycleWorkspaceTab) => getAdmissionCycleWorkspaceTabHref(academicYearId, tab),
     [academicYearId]
   );
 

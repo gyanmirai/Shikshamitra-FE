@@ -61,9 +61,17 @@ export const AdmissionsCyclesWorkspace = () => (
   </StudentPermissionGuard>
 );
 
-export const AdmissionsCycleDetailWorkspace = ({ academicYearId }: { academicYearId: string }) => (
+type AdmissionCycleWorkspaceTab = 'overview' | 'setup' | 'journey-rules' | 'activity';
+
+export const AdmissionsCycleDetailWorkspace = ({
+  academicYearId,
+  initialTab,
+}: {
+  academicYearId: string;
+  initialTab?: AdmissionCycleWorkspaceTab;
+}) => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
-    <AdmissionCycleDetailWorkspace academicYearId={academicYearId} />
+    <AdmissionCycleDetailWorkspace academicYearId={academicYearId} initialTab={initialTab} />
   </StudentPermissionGuard>
 );
 

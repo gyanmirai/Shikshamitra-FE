@@ -285,6 +285,18 @@ describe('Student Enrollment workspace route contracts', () => {
       '[academicYearId]',
       'page.tsx'
     );
+    const detailTabRoute = read(
+      'src',
+      'app',
+      '(auth-route)',
+      'student',
+      'enrollment',
+      'settings',
+      'admission-cycles',
+      '[academicYearId]',
+      '[workspaceTab]',
+      'page.tsx'
+    );
     const academicYearToken = ['$', '{academicYearId}'].join('');
 
     expect(api).toContain('getAdmissionCrmCycles');
@@ -309,12 +321,18 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(detailRoute).toContain(
       '<AdmissionsCycleDetailWorkspace academicYearId={academicYearId} />'
     );
+    expect(detailTabRoute).toContain("type AdmissionCycleWorkspaceTab = 'setup' | 'journey-rules' | 'activity'");
+    expect(detailTabRoute).toContain("validTabs.has(workspaceTab as AdmissionCycleWorkspaceTab)");
+    expect(detailTabRoute).toContain('notFound()');
+    expect(detailTabRoute).toContain('initialTab={workspaceTab as AdmissionCycleWorkspaceTab}');
     expect(detailWorkspace).toContain('useGetAdmissionCrmCycleSummaryQuery');
     expect(detailWorkspace).toContain('Guided setup');
     expect(detailWorkspace).toContain('Journey rules');
     expect(detailWorkspace).toContain('ApplicationStagePolicyPanel');
-    expect(detailWorkspace).toContain('getAdmissionCycleWorkspaceHref(academicYearId)');
-    expect(detailWorkspace).toContain(['&tab=', '{encodeURIComponent(tab)}'].join('$'));
+    expect(detailWorkspace).toContain('getAdmissionCycleWorkspaceTabHref');
+    expect(detailWorkspace).toContain('const tabPath = tab ===');
+    expect(detailWorkspace).toContain('encodeURIComponent(tab)');
+    expect(detailWorkspace).not.toContain('&tab=');
     expect(detailWorkspace).toContain('useRouter()');
     expect(detailWorkspace).toContain(
       'onChange={(_, nextTab: CycleWorkspaceTab) => router.push(tabHref(nextTab))}'
