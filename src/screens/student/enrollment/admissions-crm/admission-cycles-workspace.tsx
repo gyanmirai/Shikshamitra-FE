@@ -1,10 +1,13 @@
 'use client';
 
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
+
 import { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
@@ -12,27 +15,26 @@ import {
   Alert,
   Stack,
   Paper,
-  Table,
   Button,
   Divider,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
   Typography,
-  TableContainer,
   LinearProgress,
 } from '@mui/material';
 import {
   AdmissionCrmMeritRankingMode,
-  useGetAdmissionCrmCyclesQuery,
-  useGetAdmissionCrmCycleSummaryQuery,
-  type AdmissionCrmCycleListItemDto,
   type AdmissionCrmCycleStatus,
+  useGetAdmissionCrmCyclesQuery,
   type AdmissionCrmSetupReadiness,
+  type AdmissionCrmCycleListItemDto,
+  useGetAdmissionCrmCycleSummaryQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
+import {
+  enrollmentTableWrapperSx,
+  EnrollmentTableEmptyState,
+  enrollmentTableContainerSx,
+} from './workspace-table-patterns';
 
 const readinessLabels: Record<AdmissionCrmSetupReadiness, string> = {
   0: 'Not started',
@@ -87,9 +89,7 @@ function CycleSummaryPanel({ academicYearId }: { academicYearId?: string }) {
   const summary = query.data;
 
   if (!academicYearId) {
-    return (
-      <Alert severity="info">Select an admission cycle to review its configuration.</Alert>
-    );
+    return <Alert severity="info">Select an admission cycle to review its configuration.</Alert>;
   }
 
   if (query.isFetching && !summary) {
@@ -192,7 +192,9 @@ function CycleSummaryPanel({ academicYearId }: { academicYearId?: string }) {
           />
           <SummaryStat
             label="Last updated"
-            value={summary.cycle.lastUpdatedAt ? fDateTime(summary.cycle.lastUpdatedAt) || '-' : '-'}
+            value={
+              summary.cycle.lastUpdatedAt ? fDateTime(summary.cycle.lastUpdatedAt) || '-' : '-'
+            }
           />
           <SummaryStat
             label="Communication rules"
@@ -209,7 +211,9 @@ function CycleSummaryPanel({ academicYearId }: { academicYearId?: string }) {
               <Chip
                 key={stage.stageKey}
                 size="small"
-                color={stage.isEnabled ? (stage.isOperationallyBacked ? 'info' : 'default') : 'default'}
+                color={
+                  stage.isEnabled ? (stage.isOperationallyBacked ? 'info' : 'default') : 'default'
+                }
                 variant={stage.isEnabled ? 'filled' : 'outlined'}
                 label={`${stage.displayOrder}. ${stage.displayName}${
                   stage.isEnabled ? '' : ' (hidden)'
@@ -247,8 +251,8 @@ function CycleSummaryPanel({ academicYearId }: { academicYearId?: string }) {
 
         {summary.communications.templateBackedRuleCount > 0 ? (
           <Alert severity="info">
-            Configured messages are triggered by admission journey rules. Delivery evidence remains in
-            the communication logs and provider status.
+            Configured messages are triggered by admission journey rules. Delivery evidence remains
+            in the communication logs and provider status.
           </Alert>
         ) : null}
 
@@ -288,61 +292,10 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CycleRow({
-  cycle,
-  selected,
-  onSelect,
-}: {
-  cycle: AdmissionCrmCycleListItemDto;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  const setupHref = getSettingsHref(studentPaths.enrollment.settings, cycle.academicYearId);
-
-  return (
-    <TableRow hover selected={selected} sx={{ cursor: 'pointer' }} onClick={onSelect}>
-      <TableCell>
-        <Typography variant="subtitle2">{cycle.cycleName}</Typography>
-        <Typography variant="caption" color="text.secondary">
-          {cycle.academicYearName}
-        </Typography>
-      </TableCell>
-      <TableCell>{formatDateRange(cycle.admissionWindowStart, cycle.admissionWindowEnd)}</TableCell>
-      <TableCell>
-        <Chip
-          size="small"
-          color={cycleStatusColor(cycle.status)}
-          label={cycleStatusLabels[cycle.status]}
-        />
-      </TableCell>
-      <TableCell>
-        <Chip
-          size="small"
-          color={readinessColor(cycle.readiness)}
-          label={readinessLabels[cycle.readiness]}
-        />
-      </TableCell>
-      <TableCell align="right">{cycle.applicantCount}</TableCell>
-      <TableCell>{cycle.ownerDisplayName || 'Not assigned'}</TableCell>
-      <TableCell>{cycle.lastUpdatedAt ? fDateTime(cycle.lastUpdatedAt) : '-'}</TableCell>
-      <TableCell align="right">
-        <Button
-          component={RouterLink}
-          href={setupHref}
-          size="small"
-          onClick={(event) => event.stopPropagation()}
-        >
-          Setup
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-}
-
 export function AdmissionCyclesWorkspace() {
   const { state, updateState } = useEnrollmentWorkspace();
-  const cyclesQuery = useGetAdmissionCrmCyclesQuery({ skipCount: 0, maxResultCount: 20 });
-  const cycles = cyclesQuery.data?.items ?? [];
+  const cyclesQuery = useGetAdmissionCrmCyclesQuery({ skipCount: 0, maxResultCount: 100 });
+  const cycles = useMemo(() => cyclesQuery.data?.items ?? [], [cyclesQuery.data?.items]);
   const selectedAcademicYearId = useMemo(
     () =>
       cycles.some((cycle) => cycle.academicYearId === state.cycle)
@@ -355,14 +308,142 @@ export function AdmissionCyclesWorkspace() {
     updateState({ cycle: academicYearId }, 'replace');
   };
 
+  const columns = useMemo<IColumn[]>(
+    () => [
+      {
+        id: 'cycleName',
+        label: 'Cycle',
+        isSort: true,
+        isFilter: true,
+        filterType: 'string',
+        minWidth: 220,
+        render: (_value, row) => {
+          const cycle = row as AdmissionCrmCycleListItemDto;
+          return (
+            <Box>
+              <Typography variant="subtitle2">{cycle.cycleName}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {cycle.academicYearName}
+              </Typography>
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'academicYearName',
+        label: 'Academic Year',
+        isSort: true,
+        isFilter: true,
+        filterType: 'string',
+        minWidth: 160,
+      },
+      {
+        id: 'admissionWindowStart',
+        label: 'Admission Window',
+        isSort: true,
+        filterType: 'date',
+        minWidth: 180,
+        render: (_value, row) => {
+          const cycle = row as AdmissionCrmCycleListItemDto;
+          return formatDateRange(cycle.admissionWindowStart, cycle.admissionWindowEnd);
+        },
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        isSort: true,
+        isFilter: true,
+        filterType: 'enum',
+        enumOptions: Object.entries(cycleStatusLabels).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        minWidth: 150,
+        render: (value) => (
+          <Chip
+            size="small"
+            color={cycleStatusColor(value as AdmissionCrmCycleStatus)}
+            label={cycleStatusLabels[value as AdmissionCrmCycleStatus]}
+          />
+        ),
+      },
+      {
+        id: 'readiness',
+        label: 'Readiness',
+        isSort: true,
+        isFilter: true,
+        filterType: 'enum',
+        enumOptions: Object.entries(readinessLabels).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        minWidth: 170,
+        render: (value) => (
+          <Chip
+            size="small"
+            color={readinessColor(value as AdmissionCrmSetupReadiness)}
+            label={readinessLabels[value as AdmissionCrmSetupReadiness]}
+          />
+        ),
+      },
+      {
+        id: 'applicantCount',
+        label: 'Applicants',
+        isSort: true,
+        filterType: 'number',
+        align: 'right',
+        minWidth: 120,
+      },
+      {
+        id: 'ownerDisplayName',
+        label: 'Owner',
+        isSort: true,
+        isFilter: true,
+        filterType: 'string',
+        minWidth: 160,
+        render: (value) => value || 'Not assigned',
+      },
+      {
+        id: 'lastUpdatedAt',
+        label: 'Last Updated',
+        isSort: true,
+        filterType: 'dateTime',
+        minWidth: 160,
+        render: (value) => (value ? fDateTime(value as string) : '-'),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        align: 'right',
+        minWidth: 112,
+        render: (_value, row) => {
+          const cycle = row as AdmissionCrmCycleListItemDto;
+          return (
+            <Button
+              component={RouterLink}
+              href={getSettingsHref(studentPaths.enrollment.settings, cycle.academicYearId)}
+              size="small"
+              onClick={(event) => event.stopPropagation()}
+            >
+              Setup
+            </Button>
+          );
+        },
+      },
+    ],
+    []
+  );
+
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
       <CustomBreadcrumbs
         heading="Admission Cycles"
-        description="Review admission-cycle readiness and open the existing setup sections for each academic year."
+        description="Configure the academic-year admission cycles that staff use in My Work, Pipeline, and other admissions workspaces."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
-          { name: 'Student Enrollment' },
+          { name: 'Student Enrollment', href: studentPaths.enrollment.overview },
+          { name: 'Settings', href: studentPaths.enrollment.settings },
+          { name: 'Admission Cycles' },
         ]}
         action={
           <Button
@@ -395,39 +476,38 @@ export function AdmissionCyclesWorkspace() {
         </Alert>
       ) : null}
 
-      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <TableContainer>
-          <Table size="small" aria-label="Admission cycles">
-            <TableHead>
-              <TableRow>
-                <TableCell>Cycle</TableCell>
-                <TableCell>Admission Window</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Readiness</TableCell>
-                <TableCell align="right">Applicants</TableCell>
-                <TableCell>Owner</TableCell>
-                <TableCell>Last Updated</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {cycles.map((cycle) => (
-                <CycleRow
-                  key={cycle.academicYearId}
-                  cycle={cycle}
-                  selected={cycle.academicYearId === selectedAcademicYearId}
-                  onSelect={() => selectCycle(cycle.academicYearId)}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {!cyclesQuery.isFetching && cycles.length === 0 ? (
-          <Box sx={{ p: 2 }}>
-            <Alert severity="info">No academic-year admission cycles are available.</Alert>
-          </Box>
-        ) : null}
-      </Paper>
+      <CustomizableTable
+        tableId="student-enrollment-admission-cycles"
+        tableTitle="Admission Cycles"
+        columns={columns}
+        data={cycles as unknown as IData[]}
+        isLoading={cyclesQuery.isLoading || cyclesQuery.isFetching}
+        isSearch
+        isFilter
+        isPagination
+        defaultRowsPerPage={10}
+        rowsPerPageOptions={[10, 25, 50]}
+        handleRowClick={(row) =>
+          selectCycle((row as unknown as AdmissionCrmCycleListItemDto).academicYearId)
+        }
+        rowProps={(row) => {
+          const cycle = row as unknown as AdmissionCrmCycleListItemDto;
+          return {
+            selected: cycle.academicYearId === selectedAcademicYearId,
+            sx: { cursor: 'pointer' },
+            'data-testid': 'student-enrollment-admission-cycle-row',
+            'data-academic-year-id': cycle.academicYearId,
+          };
+        }}
+        noDataText={
+          <EnrollmentTableEmptyState
+            title="No admission cycles"
+            description="Create or activate an academic year before configuring admissions."
+          />
+        }
+        wrapperProps={{ sx: enrollmentTableWrapperSx }}
+        tableContainerProps={{ sx: enrollmentTableContainerSx }}
+      />
 
       <CycleSummaryPanel academicYearId={selectedAcademicYearId} />
     </Stack>
