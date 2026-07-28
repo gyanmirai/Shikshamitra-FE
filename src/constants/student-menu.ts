@@ -9,6 +9,7 @@ export const studentPaths = {
   dashboard: '/student/dashboard',
   enrollment: {
     root: '',
+    admissionCycles: '/student/enrollment',
     overview: '/student/enrollment/overview',
     pipeline: '/student/enrollment/pipeline',
     applicant: (leadId: string) => `/student/enrollment/applicants/${encodeURIComponent(leadId)}`,
@@ -134,6 +135,14 @@ const studentModule = (isDdvs: boolean) => ({
 
           children: [
             {
+              title: 'Admission Cycles',
+              path: studentPaths.enrollment.admissionCycles,
+              _action: 'student-enrollment-admission-cycles',
+              permissionName: studentPermissions.enrollment.settings,
+              icon: menuIconView('mdi:calendar-sync-outline'),
+              preserveQueryParams: ['cycle'],
+            },
+            {
               title: 'My Work',
               path: studentPaths.enrollment.overview,
               _action: 'student-enrollment-overview',
@@ -166,7 +175,7 @@ const studentModule = (isDdvs: boolean) => ({
               preserveQueryParams: ['cycle'],
             },
             {
-              title: 'Offers & Seats',
+              title: 'Class Placement',
               path: studentPaths.enrollment.offersSeats,
               _action: 'student-enrollment-offers-seats',
               permissionName: studentPermissions.enrollment.offersSeats,
@@ -253,7 +262,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Offers & Seats',
+                  title: 'Class Placement Plan',
                   path: studentPaths.enrollment.settingsSections.offersSeats,
                   _action: 'student-enrollment-settings-offers-seats',
                   permissionName: studentPermissions.enrollment.settings,

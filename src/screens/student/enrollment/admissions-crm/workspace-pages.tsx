@@ -40,6 +40,16 @@ const OperationsWorkspace = dynamic(
     import('./operations-workspace').then((module) => module.AdmissionsOperationsWorkspaceContent),
   { loading }
 );
+const AdmissionCyclesWorkspace = dynamic(
+  () => import('./admission-cycles-workspace').then((module) => module.AdmissionCyclesWorkspace),
+  { loading }
+);
+
+export const AdmissionsCyclesWorkspace = () => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
+    <AdmissionCyclesWorkspace />
+  </StudentPermissionGuard>
+);
 
 export const AdmissionsPipelineWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.pipeline}>

@@ -50,9 +50,9 @@ const emptyForm = (): AdmissionCrmSeatPoolUpsertDto => ({
 const readError = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
     const { data } = error as { data?: { errorCode?: string; detail?: string } };
-    return data?.errorCode || data?.detail || 'Unable to save the seat pool.';
+    return data?.errorCode || data?.detail || 'Unable to save the class placement plan.';
   }
-  return 'Unable to save the seat pool.';
+  return 'Unable to save the class placement plan.';
 };
 
 const toForm = (pool: AdmissionCrmSeatPoolDto): AdmissionCrmSeatPoolUpsertDto => ({
@@ -152,14 +152,14 @@ export default function AdmissionsSeatPoolConfiguration() {
           <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
             <Box>
               <Typography variant="subtitle1">
-                {editing ? `Edit ${editing.code}` : 'New Seat Pool'}
+                {editing ? `Edit ${editing.code}` : 'New Class Placement Plan'}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Live capacity is tracked separately from reusable playbook targets.
               </Typography>
             </Box>
             <Tooltip title="Reset form">
-              <IconButton size="small" aria-label="Reset seat pool form" onClick={reset}>
+              <IconButton size="small" aria-label="Reset class placement plan form" onClick={reset}>
                 <RestartAlt fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -276,7 +276,7 @@ export default function AdmissionsSeatPoolConfiguration() {
             onClick={save}
             sx={{ alignSelf: 'flex-start' }}
           >
-            {editing ? 'Save Seat Pool' : 'Create Seat Pool'}
+            {editing ? 'Save Class Placement Plan' : 'Create Class Placement Plan'}
           </LoadingButton>
         </Stack>
       </Paper>
@@ -303,10 +303,10 @@ export default function AdmissionsSeatPoolConfiguration() {
                 />
                 <Chip size="small" label={`${pool.remainingCapacity} remaining`} />
                 <Chip size="small" label={`${pool.waitlistedApplicants} waitlisted`} />
-                <Tooltip title="Edit seat pool">
+                <Tooltip title="Edit class placement plan">
                   <IconButton
                     size="small"
-                    aria-label={`Edit seat pool ${pool.name}`}
+                    aria-label={`Edit class placement plan ${pool.name}`}
                     onClick={() => {
                       setEditing(pool);
                       setForm(toForm(pool));
@@ -320,7 +320,7 @@ export default function AdmissionsSeatPoolConfiguration() {
           </Paper>
         ))}
         {!poolsQuery.isFetching && !(poolsQuery.data?.items || []).length ? (
-          <Alert severity="info">No seat pools are configured for this academic year.</Alert>
+          <Alert severity="info">No class placement plans are configured for this academic year.</Alert>
         ) : null}
       </Stack>
     </Stack>

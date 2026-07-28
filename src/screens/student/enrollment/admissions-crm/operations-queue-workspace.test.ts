@@ -61,7 +61,24 @@ describe('Enrollment operations queue workspace', () => {
     const registrationQueue = config.slice(config.indexOf('export const registrationQueues'));
 
     expect(registrationQueue.indexOf('RegistrationInvitationPending')).toBeLessThan(
+      registrationQueue.indexOf('PendingPaperEntry')
+    );
+    expect(registrationQueue.indexOf('PendingPaperEntry')).toBeLessThan(
       registrationQueue.indexOf('ExpiringRegistrationLink')
     );
+  });
+
+  it('exposes exam no-shows and paper data-entry as operational queues', () => {
+    const config = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'operations-queue-config.ts'
+    );
+
+    expect(config).toContain('AdmissionCrmOperationsQueueType.PendingPaperEntry');
+    expect(config).toContain('AdmissionCrmOperationsQueueType.NoShow');
   });
 });

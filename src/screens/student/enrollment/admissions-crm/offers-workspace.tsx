@@ -8,7 +8,7 @@ import { OperationsQueueWorkspace } from './operations-queue-workspace';
 export function OffersWorkspace() {
   return (
     <OperationsQueueWorkspace
-      title="Offers & Seats"
+      title="Offers & Class Placement"
       description="Review approval, policy, payment, waitlist, and allotment decisions."
       defaultQueue={AdmissionCrmOperationsQueueType.FinalApproval}
       allowedQueues={offerQueues}

@@ -5,6 +5,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import AdmissionsCrmConfiguration from './admissions-crm-configuration';
 import { AdmissionJourneyOverview } from './admission-journey-guidance';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
+import { ApplicationStagePolicyPanel } from './application-stage-policy-panel';
 import {
   EnrollmentSettingsPage,
   EnrollmentSettingsPanelTabs,
@@ -102,6 +103,9 @@ export function CoreSettingsRoute({
   return (
     <EnrollmentSettingsPage title={definition.title} description={definition.description}>
       {section === 'journey' ? <AdmissionJourneyOverview /> : null}
+      {section === 'journey' && academicYearId ? (
+        <ApplicationStagePolicyPanel academicYearId={academicYearId} />
+      ) : null}
       {definition.panels && focusPanel ? (
         definition.panelNavigation === 'steps' ? (
           <EnrollmentSettingsSetupSteps

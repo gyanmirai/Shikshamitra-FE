@@ -19,7 +19,7 @@ const setupItems = [
     group: 'Essential',
   },
   {
-    key: 'capture',
+    key: 'inquiry-capture',
     title: 'Inquiry forms and sources',
     description: 'How families submit inquiries and what information is collected.',
     path: studentPaths.enrollment.settingsSections.inquiryCapture,
@@ -27,7 +27,7 @@ const setupItems = [
     group: 'Essential',
   },
   {
-    key: 'exam',
+    key: 'entrance-exams',
     title: 'Exam and eligibility',
     description: 'Assessment schedules, scoring, and eligibility rules.',
     path: studentPaths.enrollment.settingsSections.entranceExams,
@@ -35,7 +35,7 @@ const setupItems = [
     group: 'Essential',
   },
   {
-    key: 'registration',
+    key: 'registration-documents',
     title: 'Registration and documents',
     description: 'Registration templates and required document checks.',
     path: studentPaths.enrollment.settingsSections.registrationDocuments,
@@ -43,9 +43,9 @@ const setupItems = [
     group: 'Essential',
   },
   {
-    key: 'offers',
-    title: 'Offers and seats',
-    description: 'Seat pools, approvals, offers, and waitlists.',
+    key: 'offers-seats',
+    title: 'Class Placement Plan',
+    description: 'Class placement capacity, approvals, offers, and waitlists.',
     path: studentPaths.enrollment.settingsSections.offersSeats,
     icon: 'mdi:seat-outline',
     group: 'Essential',

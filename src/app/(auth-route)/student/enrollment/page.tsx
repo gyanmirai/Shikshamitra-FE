@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { AdmissionsCyclesWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
 
-const EnrollmentPage = () => redirect('/student/enrollment/overview');
+const EnrollmentPage = () => <AdmissionsCyclesWorkspace />;
 
 export default EnrollmentPage;
