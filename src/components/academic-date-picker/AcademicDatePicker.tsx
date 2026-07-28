@@ -64,6 +64,7 @@ export default function AcademicDatePicker({
           ? (AcademicCalendarPickersDay as NonNullable<DatePickerProps['slots']>['day'])
           : slots?.day,
       }}
+      format='DD/MM/YYYY'
       slotProps={{
         ...slotProps,
         day: {

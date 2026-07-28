@@ -57,16 +57,16 @@ const toActionQueue = (data: AdminAcademicDashboardData): AcademicActionItem[] =
   })),
   ...(data.conflictsCount > 0
     ? [
-        {
-          id: 'timetable-conflicts',
-          title: `${data.conflictsCount} timetable conflict${data.conflictsCount > 1 ? 's' : ''} need review`,
-          summary: 'Resolve teacher, room or lecture overlap before the next working day.',
-          severity: 'critical' as const,
-          source: 'timetable',
-          actionLabel: 'Resolve',
-          actionHref: academicPaths.timetable.management,
-        },
-      ]
+      {
+        id: 'timetable-conflicts',
+        title: `${data.conflictsCount} timetable conflict${data.conflictsCount > 1 ? 's' : ''} need review`,
+        summary: 'Resolve teacher, room or lecture overlap before the next working day.',
+        severity: 'critical' as const,
+        source: 'timetable',
+        actionLabel: 'Resolve',
+        actionHref: academicPaths.timetable.management,
+      },
+    ]
     : []),
 ];
 
@@ -207,12 +207,12 @@ const TopMetricTile = ({
       }),
     ...(href || onClick
       ? {
-          '&:hover': {
-            transform: 'translateY(-1px)',
-            bgcolor: (theme: any) => alpha(getToneMain(theme, tone), 0.1),
-            borderColor: (theme: any) => alpha(getToneMain(theme, tone), 0.28),
-          },
-        }
+        '&:hover': {
+          transform: 'translateY(-1px)',
+          bgcolor: (theme: any) => alpha(getToneMain(theme, tone), 0.1),
+          borderColor: (theme: any) => alpha(getToneMain(theme, tone), 0.28),
+        },
+      }
       : {}),
   };
 

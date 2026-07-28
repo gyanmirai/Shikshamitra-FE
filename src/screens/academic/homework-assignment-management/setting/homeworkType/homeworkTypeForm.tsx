@@ -137,7 +137,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       {/* <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}> */}
       <DialogScrollContent>
-        <Stack spacing={1} sx={{ pt: 1 }}>
+        <Stack spacing={2}>
           <ShakingTextField
             error={!!(formik.touched.homeworkTypeName && formik.errors.homeworkTypeName) || false}
           >
@@ -177,46 +177,44 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
             helperText={formik.touched.description && formik.errors.description}
           />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <TextField
-              fullWidth
-              select
-              size="small"
-              name="defaultSubmissionType"
-              label="Default Submission Type"
-              value={formik.values.defaultSubmissionType}
-              onChange={formik.handleChange}
-              error={formik.touched.defaultSubmissionType && Boolean(formik.errors.defaultSubmissionType)}
-              helperText={formik.touched.defaultSubmissionType && formik.errors.defaultSubmissionType}
-            >
-              <MenuItem value="">
-                <em>None</em>
+          <TextField
+            fullWidth
+            select
+            size="small"
+            name="defaultSubmissionType"
+            label="Default Submission Type"
+            value={formik.values.defaultSubmissionType}
+            onChange={formik.handleChange}
+            error={formik.touched.defaultSubmissionType && Boolean(formik.errors.defaultSubmissionType)}
+            helperText={formik.touched.defaultSubmissionType && formik.errors.defaultSubmissionType}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {SUBMISSION_TYPES.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
               </MenuItem>
-              {SUBMISSION_TYPES.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+            ))}
+          </TextField>
 
-            <TextField
-              fullWidth
-              select
-              size="small"
-              name="status"
-              label="Status"
-              value={formik.values.status}
-              onChange={formik.handleChange}
-              error={formik.touched.status && Boolean(formik.errors.status)}
-              helperText={formik.touched.status && formik.errors.status}
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
+          <TextField
+            fullWidth
+            select
+            size="small"
+            name="status"
+            label="Status"
+            value={formik.values.status}
+            onChange={formik.handleChange}
+            error={formik.touched.status && Boolean(formik.errors.status)}
+            helperText={formik.touched.status && formik.errors.status}
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
 
           <TextField
             fullWidth
@@ -232,7 +230,6 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
         </Stack>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        {' '}
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={() => {

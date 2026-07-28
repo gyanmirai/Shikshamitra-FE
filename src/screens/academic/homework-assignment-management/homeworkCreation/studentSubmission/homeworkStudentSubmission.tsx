@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -33,7 +33,6 @@ import {
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
 import AssignGrade from '../component/assignGradeForm';
-import AssignMarksForText from '../component/assignMarksForText';
 
 import type { TStudentGrade, IStudentSubmissionsProps } from '../type';
 
@@ -452,24 +451,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         }
         maxWidth="sm"
       >
-        {selectedStudent &&
-          selectedClass &&
-          selectedSubject &&
-          selectedHomework?.id &&
-          hasRubricAssessment && (
-            <Box sx={{ p: 2, pb: 0 }}>
-              <RubricEvaluationPanel
-                mode="homework"
-                standardId={selectedClass}
-                subjectId={selectedSubject}
-                taskId={selectedHomework.id}
-                taskTitle={selectedHomework.label}
-                studentRow={selectedStudent}
-                ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
-              />
-            </Box>
-          )}
-        {!isSelectedInPerson && Number(selectedHomework?.submissionType) === 1 ? (
+        {!isSelectedInPerson ? (
           <AssignGrade
             data={selectedStudent}
             onClose={() => {
@@ -484,17 +466,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
             onPrevious={() => moveStudent(-1)}
             onNext={() => moveStudent(1)}
-          />
-        ) : !isSelectedInPerson ? (
-          <AssignMarksForText
-            data={selectedStudent}
-            onClose={handleClose}
-            isEdit
-            homeworkId={selectedHomework?.id}
-            hasPrevious={selectedIndex > 0}
-            hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
-            onPrevious={() => moveStudent(-1)}
-            onNext={() => moveStudent(1)}
+            selectedClass={selectedClass}
+            selectedSubject={selectedSubject}
+            selectedHomework={selectedHomework}
+            hasRubricAssessment={hasRubricAssessment}
+            isSelectedInPerson={isSelectedInPerson}
+            ensureInPersonSubmissionId={ensureInPersonSubmissionId}
           />
         ) : null}
       </CustomDialog>

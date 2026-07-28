@@ -669,10 +669,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         (typeof formik.errors.divisions === 'string'
                           ? formik.errors.divisions
                           : formik.errors.divisions?.some(
-                                (divErr: any) =>
-                                  typeof divErr === 'object' &&
-                                  (divErr?.publishDate || divErr?.dueDate)
-                              )
+                            (divErr: any) =>
+                              typeof divErr === 'object' &&
+                              (divErr?.publishDate || divErr?.dueDate)
+                          )
                             ? 'Select schedule dates also'
                             : undefined)
                       }
@@ -746,8 +746,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       disableCloseOnSelect
                       options={
                         Array.isArray(chapterResponse)
-                           ? chapterResponse
-                           : chapterResponse?.data?.items || []
+                          ? chapterResponse
+                          : chapterResponse?.data?.items || []
                       }
                       disabled={!(formik.values.subjectId || formik.values.subject)}
                       loading={isChapterLoading || isChapterFetching}
@@ -973,7 +973,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             {formik.values.divisions.length > 0 && (
               <Grid size={{ xs: 12 }}>
                 <SectionCard
-                title="Publish Settings"
+                  title="Publish Settings"
                   paperProps={{ sx: cardStyle }}
                   headerContent={
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -1052,7 +1052,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                           !!formik.touched.divisions?.[idx]?.publishDate,
                                         helperText:
                                           formik.touched.divisions?.[idx]?.publishDate &&
-                                          typeof formik.errors.divisions?.[idx] === 'object'
+                                            typeof formik.errors.divisions?.[idx] === 'object'
                                             ? (formik.errors.divisions?.[idx] as any)?.publishDate
                                             : '',
                                       },
@@ -1091,7 +1091,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                           !!formik.touched.divisions?.[idx]?.dueDate,
                                         helperText:
                                           formik.touched.divisions?.[idx]?.dueDate &&
-                                          typeof formik.errors.divisions?.[idx] === 'object'
+                                            typeof formik.errors.divisions?.[idx] === 'object'
                                             ? (formik.errors.divisions?.[idx] as any)?.dueDate
                                             : '',
                                       },

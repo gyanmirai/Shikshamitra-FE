@@ -1,6 +1,7 @@
 export const GlobalIcons = {
   retrunIcon: 'famicons:return-down-back-outline',
   info: 'lucide:info',
+  copy: 'mdi:content-copy',
   addIcon: 'si:add-duotone',
   issueBook: 'mingcute:book-5-line',
   reservation: 'fluent-mdl2:reservation-orders',
@@ -16,6 +17,8 @@ export const GlobalIcons = {
   resetFilter: 'carbon:filter-reset',
   bell: 'mdi:bell-outline',
   calendar: 'mdi:calendar',
+  newversion: 'mingcute:version-line',
+  usage: 'solar:chart-2-bold-duotone',
   pdf: 'mdi:file-pdf-box',
   sendNotification: 'mynaui:send',
   alertIcon: 'fluent:alert-on-24-regular',

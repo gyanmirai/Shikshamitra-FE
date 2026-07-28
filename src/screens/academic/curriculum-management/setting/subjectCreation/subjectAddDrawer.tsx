@@ -94,7 +94,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           py: 2,
           display: 'flex',
           flexDirection: 'column',
-          gap: 1,
+          gap: 2,
         }}
       >
         {rows.map((row, index) => {
@@ -125,14 +125,16 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 borderColor: nameError || colorError || sortOrderError ? 'error.light' : 'divider',
                 bgcolor: 'background.paper',
                 transition: 'border-color 0.2s',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
               }}
             >
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
-                  mb: 1.5,
+                  justifyContent: 'space-between',
                   minHeight: 24,
                 }}
               >
@@ -165,7 +167,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 value={row.name}
                 autoFocus={index === rows.length - 1 && index > 0}
                 error={Boolean(nameError)}
-                helperText={nameError || ' '}
+                helperText={nameError}
                 disabled={isSaving}
                 onChange={(e) => {
                   const val = e.target.value
@@ -181,15 +183,13 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                   }
                 }}
                 inputProps={{ maxLength: 100 }}
-                sx={{ mb: 1.5 }}
               />
 
               <Box
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                  gap: 1,
-                  mb: 1.5,
+                  gap: 3,
                 }}
               >
                 <TextField
@@ -222,8 +222,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' },
-                  gap: 1,
-                  mb: 1.5,
+                  gap: 2,
                 }}
               >
                 <TextField
@@ -269,38 +268,40 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                   disabled={isSaving}
                   inputProps={{ min: 1, max: 999999 }}
                   error={Boolean(sortOrderError)}
-                  helperText={sortOrderError || ' '}
+                  helperText={sortOrderError}
                   onChange={(e) => updateRow(row.tempId, 'sortOrder', e.target.value)}
                 />
               </Box>
 
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                Class-wise codes, teachers, exam rules, and elective grouping are configured later.
-              </Typography>
-
-              <Box>
-                <Typography
-                  variant="caption"
-                  fontWeight={600}
-                  color={colorError ? 'error.main' : 'text.secondary'}
-                  sx={{ display: 'block', mb: 0.75 }}
-                >
-                  Subject Color *
-                  {colorError && (
-                    <Typography
-                      component="span"
-                      variant="caption"
-                      color="error.main"
-                      sx={{ ml: 0.5 }}
-                    >
-                      — Required
-                    </Typography>
-                  )}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Class-wise codes, teachers, exam rules, and elective grouping are configured later.
                 </Typography>
-                <ColorPickerCircle
-                  onSelect={(color) => updateRow(row.tempId, 'color', color)}
-                  initialColor={row.color}
-                />
+
+                <Box>
+                  <Typography
+                    variant="caption"
+                    fontWeight={600}
+                    color={colorError ? 'error.main' : 'text.secondary'}
+                    sx={{ display: 'block', mb: 0.75 }}
+                  >
+                    Subject Color *
+                    {colorError && (
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        color="error.main"
+                        sx={{ ml: 0.5 }}
+                      >
+                        — Required
+                      </Typography>
+                    )}
+                  </Typography>
+                  <ColorPickerCircle
+                    onSelect={(color) => updateRow(row.tempId, 'color', color)}
+                    initialColor={row.color}
+                  />
+                </Box>
               </Box>
             </Box>
           );

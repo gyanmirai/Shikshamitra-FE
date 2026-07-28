@@ -19,7 +19,6 @@ import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -27,21 +26,23 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Add,
   Save,
   Send,
   Print,
-  Close as CloseIcon,
   MoreVert,
   FactCheck,
   PersonOff,
   AutoAwesome,
   AssignmentInd,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import {
   Box,
@@ -673,6 +674,23 @@ const SubstitutionManagementScreen = () => {
   const [createSubmitType, setCreateSubmitType] = useState<'draft' | 'assign' | null>(null);
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
+
+  const availabilityStartTimeStr = useMemo(() => {
+    if (availabilityForm.isFullDay) return '09:00';
+    if (!availabilityForm.startTime) return '';
+    return typeof availabilityForm.startTime === 'string'
+      ? availabilityForm.startTime
+      : dayjs(availabilityForm.startTime).format('HH:mm');
+  }, [availabilityForm.isFullDay, availabilityForm.startTime]);
+
+  const availabilityEndTimeStr = useMemo(() => {
+    if (availabilityForm.isFullDay) return '14:15';
+    if (!availabilityForm.endTime) return '';
+    return typeof availabilityForm.endTime === 'string'
+      ? availabilityForm.endTime
+      : dayjs(availabilityForm.endTime).format('HH:mm');
+  }, [availabilityForm.isFullDay, availabilityForm.endTime]);
+
   const [settingsForm, setSettingsForm] = useState(settingsResultDefaults);
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
@@ -683,7 +701,7 @@ const SubstitutionManagementScreen = () => {
   const [availabilitySubmitted, setAvailabilitySubmitted] = useState(false);
   const createFormSnapshotRef = useRef<string>(JSON.stringify(defaultSubstitutionForm));
   const availabilityFormSnapshotRef = useRef<string>(JSON.stringify(defaultAvailabilityForm));
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: substitutionResult } = useSubstitutionsDataQuery({
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
@@ -749,8 +767,8 @@ const SubstitutionManagementScreen = () => {
       teacherId: availabilityForm.teacherId || undefined,
       teacherName: availabilityForm.teacherName || undefined,
       availabilityDate: toDateTimeOffset(availabilityForm.availabilityDate?.startOf('day')),
-      startTime: availabilityForm.isFullDay ? '09:00' : availabilityForm.startTime,
-      endTime: availabilityForm.isFullDay ? '14:15' : availabilityForm.endTime,
+      startTime: availabilityForm.isFullDay ? '09:00' : availabilityStartTimeStr,
+      endTime: availabilityForm.isFullDay ? '14:15' : availabilityEndTimeStr,
       isFullDay: availabilityForm.isFullDay,
       reason: availabilityForm.reason || 'Preview',
       maxResultCount: 100,
@@ -977,17 +995,17 @@ const SubstitutionManagementScreen = () => {
       const matchesTime =
         availabilityForm.isFullDay ||
         isOverlap(
-          availabilityForm.startTime,
-          availabilityForm.endTime,
+          availabilityStartTimeStr,
+          availabilityEndTimeStr,
           period.startTime,
           period.endTime
         );
       return matchesTeacher && matchesTime;
     });
   }, [
-    availabilityForm.endTime,
+    availabilityEndTimeStr,
     availabilityForm.isFullDay,
-    availabilityForm.startTime,
+    availabilityStartTimeStr,
     availabilityForm.teacherName,
     affectedLectureResult,
   ]);
@@ -1208,10 +1226,10 @@ const SubstitutionManagementScreen = () => {
     async (assignNow: boolean) => {
       if (
         !substitutionForm.date ||
-        !substitutionForm.className ||
-        !substitutionForm.divisionName ||
-        !substitutionForm.period ||
-        !substitutionForm.subjectName ||
+        !substitutionForm.standardId ||
+        !substitutionForm.divisionId ||
+        !substitutionForm.timetableSlotSubjectId ||
+        !substitutionForm.subjectId ||
         !substitutionForm.originalTeacherName ||
         !substitutionForm.roomName ||
         !substitutionForm.reason
@@ -1220,6 +1238,26 @@ const SubstitutionManagementScreen = () => {
           'Date, class, division, slot, subject, original teacher, room and reason are required.'
         );
         return;
+      }
+
+      if (substitutionForm.date) {
+        const dateVal = substitutionForm.date;
+        if (!dayjs(dateVal).isValid()) {
+          setFormError('Date must be a valid date.');
+          return;
+        }
+        if (dayjs(dateVal).isBefore(dayjs(), 'day')) {
+          setFormError('Date cannot be in the past.');
+          return;
+        }
+        if (currentYear?.startDate && dayjs(dateVal).isBefore(dayjs(currentYear.startDate), 'day')) {
+          setFormError(`Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`);
+          return;
+        }
+        if (currentYear?.endDate && dayjs(dateVal).isAfter(dayjs(currentYear.endDate), 'day')) {
+          setFormError(`Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`);
+          return;
+        }
       }
 
       if (assignNow && substitutionForm.selectedSubstitutes.length === 0) {
@@ -1333,6 +1371,7 @@ const SubstitutionManagementScreen = () => {
       substitutionForm,
       substitutions,
       suggestedTeacherRows,
+      currentYear,
     ]
   );
 
@@ -1501,13 +1540,25 @@ const SubstitutionManagementScreen = () => {
     }
   };
 
-  const availabilityStartTime = availabilityForm.isFullDay ? '09:00' : availabilityForm.startTime;
-  const availabilityEndTime = availabilityForm.isFullDay ? '14:15' : availabilityForm.endTime;
+  const availabilityStartTime = availabilityStartTimeStr;
+  const availabilityEndTime = availabilityEndTimeStr;
 
   const availabilityFieldErrors = useMemo(
     () => ({
       teacherName: !availabilityForm.teacherName ? 'Select a teacher.' : '',
-      availabilityDate: !availabilityForm.availabilityDate ? 'Select a date.' : '',
+      availabilityDate: (() => {
+        if (!availabilityForm.availabilityDate) return 'Select a date.';
+        const dateVal = availabilityForm.availabilityDate;
+        if (!dayjs(dateVal).isValid()) return 'Date must be a valid date.';
+        if (dayjs(dateVal).isBefore(dayjs(), 'day')) return 'Date cannot be in the past.';
+        if (currentYear?.startDate && dayjs(dateVal).isBefore(dayjs(currentYear.startDate), 'day')) {
+          return `Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`;
+        }
+        if (currentYear?.endDate && dayjs(dateVal).isAfter(dayjs(currentYear.endDate), 'day')) {
+          return `Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`;
+        }
+        return '';
+      })(),
       reason: !availabilityForm.reason.trim() ? 'Reason is required.' : '',
       time:
         !availabilityForm.isFullDay &&
@@ -1515,7 +1566,7 @@ const SubstitutionManagementScreen = () => {
           ? 'End time must be later than start time.'
           : '',
     }),
-    [availabilityForm, availabilityEndTime, availabilityStartTime]
+    [availabilityForm, availabilityEndTime, availabilityStartTime, currentYear]
   );
 
   const hasAvailabilityFieldErrors = Object.values(availabilityFieldErrors).some(Boolean);
@@ -2309,7 +2360,6 @@ const SubstitutionManagementScreen = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Substitution Management"
         description="Manage teacher unavailability, substitution duties and daily coverage."
         links={[
@@ -2512,8 +2562,8 @@ const SubstitutionManagementScreen = () => {
       )}
 
       {activeTab === 'board' && (
-        <Stack spacing={1}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
+        <Stack>
+          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between">
             <Typography variant="h6">Substitution Board</Typography>
             <ToggleButtonGroup
               exclusive
@@ -3359,6 +3409,9 @@ const SubstitutionManagementScreen = () => {
                 label="Date"
                 value={substitutionForm.date}
                 format={viewDateFormat}
+                disablePast
+                minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
                 onChange={(value) =>
                   setSubstitutionForm((current) => ({
                     ...current,
@@ -3380,7 +3433,19 @@ const SubstitutionManagementScreen = () => {
                     selectedSubstitutes: [],
                   }))
                 }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: !!formError && (
+                      !substitutionForm.date ||
+                      !dayjs(substitutionForm.date).isValid() ||
+                      dayjs(substitutionForm.date).isBefore(dayjs(), 'day') ||
+                      (!!currentYear?.startDate && dayjs(substitutionForm.date).isBefore(dayjs(currentYear.startDate), 'day')) ||
+                      (!!currentYear?.endDate && dayjs(substitutionForm.date).isAfter(dayjs(currentYear.endDate), 'day'))
+                    ),
+                  }
+                }}
               />
               <CustomSelect
                 label="Class"
@@ -3824,7 +3889,19 @@ const SubstitutionManagementScreen = () => {
 
       <CustomDialog
         open={assignDialogOpen}
-        title="Assign Substitute Teacher"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign Substitute Teacher</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Assign substitute teachers to classes."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
         handleClose={() => setAssignDialogOpen(false)}
       >
@@ -4000,6 +4077,9 @@ const SubstitutionManagementScreen = () => {
                 label="Date"
                 value={availabilityForm.availabilityDate}
                 format={viewDateFormat}
+                disablePast
+                minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
                 onChange={(value) =>
                   setAvailabilityForm((current) => ({ ...current, availabilityDate: value }))
                 }
@@ -4032,30 +4112,58 @@ const SubstitutionManagementScreen = () => {
               label="Full day unavailable"
             />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <TextField
-                size="small"
-                type="time"
+              <TimePicker
                 label="Start Time"
-                value={availabilityForm.startTime}
                 disabled={availabilityForm.isFullDay}
-                onChange={(event) =>
-                  setAvailabilityForm((current) => ({ ...current, startTime: event.target.value }))
+                value={
+                  availabilityForm.startTime
+                    ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
+                    : null
                 }
-                error={availabilitySubmitted && !!availabilityFieldErrors.time}
-                fullWidth
+                onChange={(newValue: Dayjs | null) => {
+                  setAvailabilityForm((current) => ({
+                    ...current,
+                    startTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                  }));
+                }}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: availabilitySubmitted && !!availabilityFieldErrors.time,
+                  },
+                }}
               />
-              <TextField
-                size="small"
-                type="time"
+              <TimePicker
                 label="End Time"
-                value={availabilityForm.endTime}
                 disabled={availabilityForm.isFullDay}
-                onChange={(event) =>
-                  setAvailabilityForm((current) => ({ ...current, endTime: event.target.value }))
+                value={
+                  availabilityForm.endTime
+                    ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
+                    : null
                 }
-                error={availabilitySubmitted && !!availabilityFieldErrors.time}
-                helperText={availabilitySubmitted ? availabilityFieldErrors.time : ''}
-                fullWidth
+                onChange={(newValue: Dayjs | null) => {
+                  setAvailabilityForm((current) => ({
+                    ...current,
+                    endTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                  }));
+                }}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: availabilitySubmitted && !!availabilityFieldErrors.time,
+                    helperText: availabilitySubmitted ? availabilityFieldErrors.time : '',
+                  },
+                }}
               />
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -4140,8 +4248,8 @@ const SubstitutionManagementScreen = () => {
                 <Alert severity="info" sx={{ mb: 1 }}>
                   {availabilityForm.teacherName} unavailable on{' '}
                   {availabilityForm.availabilityDate.format('DD/MM/YYYY')} from{' '}
-                  {availabilityForm.isFullDay ? '09:00' : availabilityForm.startTime} to{' '}
-                  {availabilityForm.isFullDay ? '14:15' : availabilityForm.endTime}.
+                  {availabilityForm.isFullDay ? '09:00' : availabilityStartTimeStr} to{' '}
+                  {availabilityForm.isFullDay ? '14:15' : availabilityEndTimeStr}.
                 </Alert>
               )}
               <Stack spacing={1}>
