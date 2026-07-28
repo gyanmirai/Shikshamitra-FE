@@ -222,7 +222,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Admission Journey',
+                  title: 'Journey rules',
                   path: studentPaths.enrollment.settingsSections.journey,
                   _action: 'student-enrollment-settings-journey',
                   permissionName: studentPermissions.enrollment.settings,

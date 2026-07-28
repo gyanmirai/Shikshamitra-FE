@@ -21,8 +21,8 @@ const setupItems = [
   },
   {
     key: 'journey',
-    title: 'Admission cycle and journey',
-    description: 'Calendar, stages, service targets, and handoffs.',
+    title: 'Journey rules',
+    description: 'Advanced cycle rules, stages, service targets, and handoffs.',
     path: studentPaths.enrollment.settingsSections.journey,
     icon: 'mdi:map-marker-path',
     group: 'Essential',

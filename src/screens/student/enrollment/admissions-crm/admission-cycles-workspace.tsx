@@ -3,30 +3,19 @@
 import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Chip, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import {
-  Box,
-  Chip,
-  Alert,
-  Stack,
-  Paper,
-  Button,
-  Divider,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
-import {
-  AdmissionCrmMeritRankingMode,
   type AdmissionCrmCycleStatus,
   useGetAdmissionCrmCyclesQuery,
   type AdmissionCrmSetupReadiness,
   type AdmissionCrmCycleListItemDto,
-  useGetAdmissionCrmCycleSummaryQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
@@ -36,7 +25,7 @@ import {
   enrollmentTableContainerSx,
 } from './workspace-table-patterns';
 
-const readinessLabels: Record<AdmissionCrmSetupReadiness, string> = {
+export const readinessLabels: Record<AdmissionCrmSetupReadiness, string> = {
   0: 'Not started',
   1: 'Needs attention',
   2: 'Ready',
@@ -44,7 +33,7 @@ const readinessLabels: Record<AdmissionCrmSetupReadiness, string> = {
   4: 'Locked',
 };
 
-const cycleStatusLabels: Record<AdmissionCrmCycleStatus, string> = {
+export const cycleStatusLabels: Record<AdmissionCrmCycleStatus, string> = {
   0: 'Draft',
   1: 'Readiness review',
   2: 'Open',
@@ -53,247 +42,36 @@ const cycleStatusLabels: Record<AdmissionCrmCycleStatus, string> = {
   5: 'Archived',
 };
 
-const meritModeLabels: Record<AdmissionCrmMeritRankingMode, string> = {
-  [AdmissionCrmMeritRankingMode.MarksThenInquiryDate]: 'Marks, then inquiry date',
-  [AdmissionCrmMeritRankingMode.MarksThenLeadScore]: 'Marks, then lead score',
-  [AdmissionCrmMeritRankingMode.LeadScoreThenMarks]: 'Lead score, then marks',
-};
-
-const readinessColor = (status: AdmissionCrmSetupReadiness) => {
+export const readinessColor = (status: AdmissionCrmSetupReadiness) => {
   if (status === 2 || status === 3) return 'success';
   if (status === 1) return 'warning';
   if (status === 4) return 'default';
   return 'info';
 };
 
-const cycleStatusColor = (status: AdmissionCrmCycleStatus) => {
+export const cycleStatusColor = (status: AdmissionCrmCycleStatus) => {
   if (status === 2) return 'success';
   if (status === 1 || status === 3) return 'warning';
   if (status === 4 || status === 5) return 'default';
   return 'info';
 };
 
-const formatDateRange = (start?: string | null, end?: string | null) => {
+export const formatDateRange = (start?: string | null, end?: string | null) => {
   if (!start || !end) return 'Not configured';
   return `${fDate(start)} - ${fDate(end)}`;
 };
 
-const getSettingsHref = (path: string, academicYearId: string) =>
+export const getSettingsHref = (path: string, academicYearId: string) =>
   `${path}?cycle=${encodeURIComponent(academicYearId)}`;
 
-function CycleSummaryPanel({ academicYearId }: { academicYearId?: string }) {
-  const query = useGetAdmissionCrmCycleSummaryQuery(
-    { academicYearId: academicYearId || '' },
-    { skip: !academicYearId }
-  );
-  const summary = query.data;
-
-  if (!academicYearId) {
-    return <Alert severity="info">Select an admission cycle to review its configuration.</Alert>;
-  }
-
-  if (query.isFetching && !summary) {
-    return <LinearProgress aria-label="Loading admission cycle summary" />;
-  }
-
-  if (query.isError) {
-    return (
-      <Alert
-        severity="error"
-        action={
-          <Button color="inherit" onClick={() => query.refetch()}>
-            Retry
-          </Button>
-        }
-      >
-        Admission cycle summary could not be loaded.
-      </Alert>
-    );
-  }
-
-  if (!summary) return null;
-
-  const setupHref = getSettingsHref(studentPaths.enrollment.settings, academicYearId);
-  const journeyHref = getSettingsHref(
-    studentPaths.enrollment.settingsSections.journey,
+export const getAdmissionCycleWorkspaceHref = (academicYearId: string) =>
+  `${studentPaths.enrollment.settingsSections.admissionCycles}/${encodeURIComponent(
     academicYearId
-  );
-
-  return (
-    <Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 2 }}>
-      <Stack spacing={2}>
-        <Stack direction={{ xs: 'column', md: 'row' }} gap={1.5} justifyContent="space-between">
-          <Box>
-            <Typography variant="overline" color="text.secondary">
-              Cycle summary
-            </Typography>
-            <Typography variant="h6">{summary.cycle.cycleName}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {summary.cycle.academicYearName} · Academic year{' '}
-              {formatDateRange(
-                summary.cycle.academicYearStartDate,
-                summary.cycle.academicYearEndDate
-              )}
-            </Typography>
-          </Box>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Chip
-              color={cycleStatusColor(summary.cycle.status)}
-              label={cycleStatusLabels[summary.cycle.status]}
-            />
-            <Chip
-              color={readinessColor(summary.cycle.readiness)}
-              label={readinessLabels[summary.cycle.readiness]}
-            />
-          </Stack>
-        </Stack>
-
-        <Divider />
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
-            gap: 1.25,
-          }}
-        >
-          <SummaryStat label="Applicants" value={summary.cycle.applicantCount.toString()} />
-          <SummaryStat
-            label="Admission window"
-            value={formatDateRange(
-              summary.cycle.admissionWindowStart,
-              summary.cycle.admissionWindowEnd
-            )}
-          />
-          <SummaryStat label="Owner" value={summary.cycle.ownerDisplayName || 'Not assigned'} />
-          <SummaryStat
-            label="Entrance exam"
-            value={summary.policy.entranceExamRequired ? 'Required' : 'Not required'}
-          />
-          <SummaryStat
-            label="Registration path"
-            value={
-              summary.policy.registrationFormRequiredBeforeExam
-                ? 'Registration before exam'
-                : 'Registration after inquiry/exam'
-            }
-          />
-          <SummaryStat
-            label="Lead SLA"
-            value={`${summary.policy.defaultLeadSlaHours || 0} hours`}
-          />
-          <SummaryStat
-            label="Exam passing"
-            value={`${summary.policy.defaultExamPassingPercentage || 0}%`}
-          />
-          <SummaryStat
-            label="Merit ranking"
-            value={meritModeLabels[summary.policy.meritRankingMode]}
-          />
-          <SummaryStat
-            label="Last updated"
-            value={
-              summary.cycle.lastUpdatedAt ? fDateTime(summary.cycle.lastUpdatedAt) || '-' : '-'
-            }
-          />
-          <SummaryStat
-            label="Communication rules"
-            value={`${summary.communications.templateBackedRuleCount} active template ${
-              summary.communications.templateBackedRuleCount === 1 ? 'rule' : 'rules'
-            }`}
-          />
-        </Box>
-
-        <Stack spacing={1}>
-          <Typography variant="subtitle2">Configured journey</Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {summary.applicationStagePolicy.stages.map((stage) => (
-              <Chip
-                key={stage.stageKey}
-                size="small"
-                color={
-                  stage.isEnabled ? (stage.isOperationallyBacked ? 'info' : 'default') : 'default'
-                }
-                variant={stage.isEnabled ? 'filled' : 'outlined'}
-                label={`${stage.displayOrder}. ${stage.displayName}${
-                  stage.isEnabled ? '' : ' (hidden)'
-                }${stage.isOperationallyBacked ? '' : ' - policy only'}`}
-              />
-            ))}
-          </Stack>
-        </Stack>
-
-        {summary.cycle.requiredActions.length > 0 ? (
-          <Stack spacing={1}>
-            <Typography variant="subtitle2">Required actions</Typography>
-            {summary.cycle.requiredActions.map((action) => (
-              <Alert
-                key={action.key}
-                severity="warning"
-                action={
-                  <Button
-                    component={RouterLink}
-                    href={getSettingsHref(action.path, academicYearId)}
-                    color="inherit"
-                    size="small"
-                  >
-                    Open
-                  </Button>
-                }
-              >
-                {action.title}
-              </Alert>
-            ))}
-          </Stack>
-        ) : (
-          <Alert severity="success">Core readiness checks are clear for this cycle.</Alert>
-        )}
-
-        {summary.communications.templateBackedRuleCount > 0 ? (
-          <Alert severity="info">
-            Configured messages are triggered by admission journey rules. Delivery evidence remains
-            in the communication logs and provider status.
-          </Alert>
-        ) : null}
-
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Button
-            component={RouterLink}
-            href={journeyHref}
-            variant="contained"
-            startIcon={<Iconify icon="mdi:map-marker-path" />}
-          >
-            Review Journey
-          </Button>
-          <Button
-            component={RouterLink}
-            href={setupHref}
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:cog-outline" />}
-          >
-            Open Setup Center
-          </Button>
-        </Stack>
-      </Stack>
-    </Paper>
-  );
-}
-
-function SummaryStat({ label, value }: { label: string; value: string }) {
-  return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={700} sx={{ mt: 0.5 }}>
-        {value}
-      </Typography>
-    </Paper>
-  );
-}
+  )}?cycle=${encodeURIComponent(academicYearId)}`;
 
 export function AdmissionCyclesWorkspace() {
   const { state, updateState } = useEnrollmentWorkspace();
+  const router = useRouter();
   const cyclesQuery = useGetAdmissionCrmCyclesQuery({ skipCount: 0, maxResultCount: 100 });
   const cycles = useMemo(() => cyclesQuery.data?.items ?? [], [cyclesQuery.data?.items]);
   const selectedAcademicYearId = useMemo(
@@ -304,8 +82,9 @@ export function AdmissionCyclesWorkspace() {
     [cycles, state.cycle]
   );
 
-  const selectCycle = (academicYearId: string) => {
+  const openCycle = (academicYearId: string) => {
     updateState({ cycle: academicYearId }, 'replace');
+    router.push(getAdmissionCycleWorkspaceHref(academicYearId));
   };
 
   const columns = useMemo<IColumn[]>(
@@ -415,17 +194,17 @@ export function AdmissionCyclesWorkspace() {
         id: 'actions',
         label: 'Actions',
         align: 'right',
-        minWidth: 112,
+        minWidth: 128,
         render: (_value, row) => {
           const cycle = row as AdmissionCrmCycleListItemDto;
           return (
             <Button
               component={RouterLink}
-              href={getSettingsHref(studentPaths.enrollment.settings, cycle.academicYearId)}
+              href={getAdmissionCycleWorkspaceHref(cycle.academicYearId)}
               size="small"
               onClick={(event) => event.stopPropagation()}
             >
-              Setup
+              Open setup
             </Button>
           );
         },
@@ -438,7 +217,7 @@ export function AdmissionCyclesWorkspace() {
     <Stack spacing={2} sx={{ minWidth: 0 }}>
       <CustomBreadcrumbs
         heading="Admission Cycles"
-        description="Configure the academic-year admission cycles that staff use in My Work, Pipeline, and other admissions workspaces."
+        description="Select an academic-year cycle, then complete setup in its focused workspace."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Enrollment', href: studentPaths.enrollment.overview },
@@ -450,13 +229,13 @@ export function AdmissionCyclesWorkspace() {
             component={RouterLink}
             href={
               selectedAcademicYearId
-                ? getSettingsHref(studentPaths.enrollment.settings, selectedAcademicYearId)
+                ? getAdmissionCycleWorkspaceHref(selectedAcademicYearId)
                 : studentPaths.enrollment.settings
             }
             variant="contained"
-            startIcon={<Iconify icon="mdi:cog-outline" />}
+            startIcon={<Iconify icon="mdi:arrow-right-circle-outline" />}
           >
-            Setup Center
+            Open Selected Cycle
           </Button>
         }
         sx={{ px: 2 }}
@@ -488,7 +267,7 @@ export function AdmissionCyclesWorkspace() {
         defaultRowsPerPage={10}
         rowsPerPageOptions={[10, 25, 50]}
         handleRowClick={(row) =>
-          selectCycle((row as unknown as AdmissionCrmCycleListItemDto).academicYearId)
+          openCycle((row as unknown as AdmissionCrmCycleListItemDto).academicYearId)
         }
         rowProps={(row) => {
           const cycle = row as unknown as AdmissionCrmCycleListItemDto;
@@ -508,8 +287,6 @@ export function AdmissionCyclesWorkspace() {
         wrapperProps={{ sx: enrollmentTableWrapperSx }}
         tableContainerProps={{ sx: enrollmentTableContainerSx }}
       />
-
-      <CycleSummaryPanel academicYearId={selectedAcademicYearId} />
     </Stack>
   );
 }
