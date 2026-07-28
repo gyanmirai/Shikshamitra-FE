@@ -40,8 +40,8 @@ import {
   AdmissionCrmWorkspaceSection,
   AdmissionCrmRecommendedAction,
   useGetAdmissionCrmMyWorkQuery,
-  useGetAdmissionCrmEnrollmentOverviewQuery,
   useBulkCreateAdmissionCrmTasksMutation,
+  useGetAdmissionCrmEnrollmentOverviewQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { formatEnrollmentDate } from './enrollment-display';
@@ -605,7 +605,14 @@ export function EnrollmentOverviewWorkspace() {
         description="Tasks and operational blockers assigned to you for this admission cycle."
       />
       {overviewQuery.isError ? (
-        <Alert severity="warning" action={<Button color="inherit" size="small" onClick={() => overviewQuery.refetch()}>Retry</Button>}>
+        <Alert
+          severity="warning"
+          action={
+            <Button color="inherit" size="small" onClick={() => overviewQuery.refetch()}>
+              Retry
+            </Button>
+          }
+        >
           Operational insights are unavailable.
         </Alert>
       ) : null}
@@ -762,8 +769,8 @@ export function EnrollmentOverviewWorkspace() {
             }}
             noDataText={
               <EnrollmentTableEmptyState
-                title="Your work queue is clear"
-                description="No assigned tasks or owned blockers match the current filters."
+                title="No work items in this cycle"
+                description="Your assigned queue is clear for the selected admission cycle. Open Pipeline for all applicants or clear filters to widen the view."
               />
             }
             wrapperProps={{ sx: enrollmentTableWrapperSx }}

@@ -403,9 +403,7 @@ export function PipelineWorkspace() {
     setSearch,
     filters: columnFilters,
     setFilters: setColumnFilters,
-  } = useWorkspaceTableSessionState(
-    `pipeline:${academicYearId || 'none'}:${sessionIdentity}`
-  );
+  } = useWorkspaceTableSessionState(`pipeline:${academicYearId || 'none'}:${sessionIdentity}`);
   const [debouncedSearch, setDebouncedSearch] = useState(() => search.trim());
   const [staffSearch, setStaffSearch] = useState('');
   const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
@@ -1622,8 +1620,8 @@ export function PipelineWorkspace() {
             }}
             noDataText={
               <EnrollmentTableEmptyState
-                title="No matching inquiries"
-                description="Change the table filters or create a new inquiry."
+                title="No applicants in this cycle view"
+                description="Create a real inquiry for this admission cycle or clear filters to show existing applicants."
               />
             }
             rowProps={(row) => ({

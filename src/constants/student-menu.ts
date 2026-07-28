@@ -9,7 +9,6 @@ export const studentPaths = {
   dashboard: '/student/dashboard',
   enrollment: {
     root: '',
-    admissionCycles: '/student/enrollment',
     overview: '/student/enrollment/overview',
     pipeline: '/student/enrollment/pipeline',
     applicant: (leadId: string) => `/student/enrollment/applicants/${encodeURIComponent(leadId)}`,
@@ -21,6 +20,7 @@ export const studentPaths = {
     analytics: '/student/enrollment/analytics',
     settings: '/student/enrollment/settings',
     settingsSections: {
+      admissionCycles: '/student/enrollment/settings/admission-cycles',
       journey: '/student/enrollment/settings/journey',
       inquiryCapture: '/student/enrollment/settings/inquiry-capture',
       routingScoring: '/student/enrollment/settings/routing-scoring',
@@ -135,14 +135,6 @@ const studentModule = (isDdvs: boolean) => ({
 
           children: [
             {
-              title: 'Admission Cycles',
-              path: studentPaths.enrollment.admissionCycles,
-              _action: 'student-enrollment-admission-cycles',
-              permissionName: studentPermissions.enrollment.settings,
-              icon: menuIconView('mdi:calendar-sync-outline'),
-              preserveQueryParams: ['cycle'],
-            },
-            {
               title: 'My Work',
               path: studentPaths.enrollment.overview,
               _action: 'student-enrollment-overview',
@@ -175,7 +167,7 @@ const studentModule = (isDdvs: boolean) => ({
               preserveQueryParams: ['cycle'],
             },
             {
-              title: 'Class Placement',
+              title: 'Class Placement Plan',
               path: studentPaths.enrollment.offersSeats,
               _action: 'student-enrollment-offers-seats',
               permissionName: studentPermissions.enrollment.offersSeats,
@@ -219,6 +211,14 @@ const studentModule = (isDdvs: boolean) => ({
                   _action: 'student-enrollment-settings-setup-center',
                   permissionName: studentPermissions.enrollment.settings,
                   icon: menuIconView('mdi:view-dashboard-outline'),
+                  preserveQueryParams: ['cycle'],
+                },
+                {
+                  title: 'Admission Cycles',
+                  path: studentPaths.enrollment.settingsSections.admissionCycles,
+                  _action: 'student-enrollment-settings-admission-cycles',
+                  permissionName: studentPermissions.enrollment.settings,
+                  icon: menuIconView('mdi:calendar-sync-outline'),
                   preserveQueryParams: ['cycle'],
                 },
                 {

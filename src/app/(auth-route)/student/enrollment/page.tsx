@@ -1,5 +1,5 @@
-import { AdmissionsCyclesWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
+import { AdmissionsOverviewWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
 
-const EnrollmentPage = () => <AdmissionsCyclesWorkspace />;
+const EnrollmentPage = () => <AdmissionsOverviewWorkspace />;
 
 export default EnrollmentPage;

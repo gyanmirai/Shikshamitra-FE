@@ -10,6 +10,10 @@ const PipelineWorkspace = dynamic(
   () => import('./pipeline-workspace').then((module) => module.PipelineWorkspace),
   { loading }
 );
+const OverviewWorkspace = dynamic(
+  () => import('./overview-workspace').then((module) => module.EnrollmentOverviewWorkspace),
+  { loading }
+);
 const ExamsWorkspace = dynamic(
   () => import('./exams-workspace').then((module) => module.ExamsWorkspace),
   { loading }
@@ -19,8 +23,7 @@ const AnalyticsWorkspace = dynamic(
   { loading }
 );
 const ApplicantWorkspace = dynamic(
-  () =>
-    import('./applicant-workspace-page').then((module) => module.ApplicantWorkspacePage),
+  () => import('./applicant-workspace-page').then((module) => module.ApplicantWorkspacePage),
   { loading }
 );
 const RegistrationsWorkspace = dynamic(
@@ -48,6 +51,12 @@ const AdmissionCyclesWorkspace = dynamic(
 export const AdmissionsCyclesWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
     <AdmissionCyclesWorkspace />
+  </StudentPermissionGuard>
+);
+
+export const AdmissionsOverviewWorkspace = () => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.overview}>
+    <OverviewWorkspace />
   </StudentPermissionGuard>
 );
 
