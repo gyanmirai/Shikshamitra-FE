@@ -39,6 +39,7 @@ import {
   formatDateRange,
   cycleStatusColor,
   cycleStatusLabels,
+  getAdmissionCycleWorkspaceHref,
 } from './admission-cycles-workspace';
 
 type CycleWorkspaceTab = 'overview' | 'setup' | 'journey-rules' | 'activity';
@@ -264,7 +265,7 @@ function CompactJourneyMap({ summary }: { summary: AdmissionCrmCycleSummaryDto }
         </Stack>
         <Button
           component={RouterLink}
-          href={`?cycle=${encodeURIComponent(summary.cycle.academicYearId)}&tab=journey-rules`}
+          href={`${getAdmissionCycleWorkspaceHref(summary.cycle.academicYearId)}&tab=journey-rules`}
           size="small"
           sx={{ alignSelf: 'flex-start' }}
           endIcon={<Iconify icon="mdi:arrow-right" />}
@@ -456,7 +457,7 @@ export function AdmissionCycleDetailWorkspace({ academicYearId }: { academicYear
   const activeTab = tabs.some((tab) => tab.value === requestedTab) ? requestedTab! : defaultTab;
   const tabHref = useMemo(
     () => (tab: CycleWorkspaceTab) =>
-      `?cycle=${encodeURIComponent(academicYearId)}&tab=${encodeURIComponent(tab)}`,
+      `${getAdmissionCycleWorkspaceHref(academicYearId)}&tab=${encodeURIComponent(tab)}`,
     [academicYearId]
   );
 
