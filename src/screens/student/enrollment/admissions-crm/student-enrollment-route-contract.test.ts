@@ -253,7 +253,7 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(menu).toContain("title: 'Class Placement Plan'");
     expect(menu).toContain("offersSeats: '/student/enrollment/offers-seats'");
     expect(setup).toContain("title: 'Class Placement Plan'");
-    expect(offers).toContain('title="Offers & Class Placement"');
+    expect(offers).toContain('title="Offers & Class Placement Plan"');
   });
 
   it('wires Admission Cycles through setup RTK Query endpoints', () => {
