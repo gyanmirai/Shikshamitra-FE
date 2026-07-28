@@ -3,7 +3,6 @@
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import AdmissionsCrmConfiguration from './admissions-crm-configuration';
-import { AdmissionJourneyOverview } from './admission-journey-guidance';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import { ApplicationStagePolicyPanel } from './application-stage-policy-panel';
 import {
@@ -25,20 +24,20 @@ type SectionDefinition = {
 
 const sectionDefinitions: Record<AdmissionsCrmConfigurationFocusSection, SectionDefinition> = {
   journey: {
-    title: 'Admission Journey',
+    title: 'Journey rules',
     description:
-      'Set the admission calendar, service targets, applicant stages, and team handoffs.',
+      'Manage advanced cycle rules, service targets, applicant stages, and team handoffs.',
     defaultPanel: 'cycle',
     panelNavigation: 'tabs',
     panels: [
       {
         value: 'cycle',
-        label: 'Admission Cycle',
+        label: 'Cycle Rules',
         description: 'Calendar, service levels, exam readiness, and inactivity rules.',
       },
       {
         value: 'pipeline',
-        label: 'Applicant Stages',
+        label: 'Stage Policy',
         description: 'Visible stage names, ownership, allowed next steps, and targets.',
       },
     ],
@@ -102,7 +101,6 @@ export function CoreSettingsRoute({
 
   return (
     <EnrollmentSettingsPage title={definition.title} description={definition.description}>
-      {section === 'journey' ? <AdmissionJourneyOverview /> : null}
       {section === 'journey' && academicYearId ? (
         <ApplicationStagePolicyPanel academicYearId={academicYearId} />
       ) : null}

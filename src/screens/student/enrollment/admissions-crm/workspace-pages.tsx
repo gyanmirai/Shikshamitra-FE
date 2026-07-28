@@ -47,10 +47,23 @@ const AdmissionCyclesWorkspace = dynamic(
   () => import('./admission-cycles-workspace').then((module) => module.AdmissionCyclesWorkspace),
   { loading }
 );
+const AdmissionCycleDetailWorkspace = dynamic(
+  () =>
+    import('./admission-cycle-detail-workspace').then(
+      (module) => module.AdmissionCycleDetailWorkspace
+    ),
+  { loading }
+);
 
 export const AdmissionsCyclesWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
     <AdmissionCyclesWorkspace />
+  </StudentPermissionGuard>
+);
+
+export const AdmissionsCycleDetailWorkspace = ({ academicYearId }: { academicYearId: string }) => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
+    <AdmissionCycleDetailWorkspace academicYearId={academicYearId} />
   </StudentPermissionGuard>
 );
 

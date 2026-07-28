@@ -108,7 +108,7 @@ describe('Enrollment settings route contracts', () => {
 
     expect(shell).not.toContain('Enrollment settings categories');
     expect(shell).not.toContain('<Drawer');
-    expect(menu).toContain("title: 'Admission Journey'");
+    expect(menu).toContain("title: 'Journey rules'");
     expect(menu).toContain("title: 'Exam & Eligibility'");
     expect(menu).toContain('studentPaths.enrollment.settingsSections.automation');
     expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(20);
@@ -215,7 +215,7 @@ describe('Enrollment settings route contracts', () => {
     expect(configuration).not.toContain('data: stages = []');
   });
 
-  it('adds administrator help and duplicate actions to dense Admission Journey settings', () => {
+  it('adds administrator help and duplicate actions to dense Journey rules settings', () => {
     const configuration = read(
       'src',
       'screens',
@@ -362,6 +362,8 @@ describe('Enrollment settings route contracts', () => {
     expect(configuration).toContain('<Accordion');
     expect(configuration).toContain('Staff can move applicants to');
     expect(configuration).not.toContain('Pipeline Stages');
+    expect(coreRoute).toContain("title: 'Journey rules'");
+    expect(coreRoute).not.toContain('AdmissionJourneyOverview');
     expect(coreRoute).toContain('ApplicationStagePolicyPanel');
     expect(stagePolicy).toContain('Cycle-owned journey policy');
     expect(stagePolicy).toContain('Preview Impact');

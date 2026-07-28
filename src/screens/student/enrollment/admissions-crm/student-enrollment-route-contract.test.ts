@@ -266,6 +266,25 @@ describe('Student Enrollment workspace route contracts', () => {
       'admissions-crm',
       'admission-cycles-workspace.tsx'
     );
+    const detailWorkspace = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'admission-cycle-detail-workspace.tsx'
+    );
+    const detailRoute = read(
+      'src',
+      'app',
+      '(auth-route)',
+      'student',
+      'enrollment',
+      'settings',
+      'admission-cycles',
+      '[academicYearId]',
+      'page.tsx'
+    );
     const academicYearToken = ['$', '{academicYearId}'].join('');
 
     expect(api).toContain('getAdmissionCrmCycles');
@@ -281,11 +300,21 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(api).toContain('previewAdmissionCrmApplicationStagePolicy');
     expect(api).toContain('updateAdmissionCrmApplicationStagePolicy');
     expect(workspace).toContain('useGetAdmissionCrmCyclesQuery');
-    expect(workspace).toContain('useGetAdmissionCrmCycleSummaryQuery');
     expect(workspace).toContain('CustomizableTable');
     expect(workspace).toContain('tableId="student-enrollment-admission-cycles"');
-    expect(workspace).toContain('Configured journey');
-    expect(workspace).toContain('policy only');
+    expect(workspace).toContain('getAdmissionCycleWorkspaceHref');
+    expect(workspace).not.toContain('useGetAdmissionCrmCycleSummaryQuery');
+    expect(workspace).not.toContain('CycleSummaryPanel');
+    expect(detailRoute).toContain('params: Promise<{ academicYearId: string }>');
+    expect(detailRoute).toContain(
+      '<AdmissionsCycleDetailWorkspace academicYearId={academicYearId} />'
+    );
+    expect(detailWorkspace).toContain('useGetAdmissionCrmCycleSummaryQuery');
+    expect(detailWorkspace).toContain('Guided setup');
+    expect(detailWorkspace).toContain('Journey rules');
+    expect(detailWorkspace).toContain('ApplicationStagePolicyPanel');
+    expect(detailWorkspace).toContain('Configured journey');
+    expect(detailWorkspace).toContain('Fees and Class Placement Plan');
   });
 
   it('pins the entrance exam admission status beside the actions column', () => {
