@@ -137,6 +137,8 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(context).not.toContain('window.history.state');
     expect(context).toContain('useIsomorphicLayoutEffect(() =>');
     expect(context).toContain('window.location.pathname !== pathname');
+    expect(context).toContain('const href = query ?');
+    expect(context).toContain('pathname}?');
     expect(context).toContain('pendingNavigationPathRef.current = applicantPath');
     expect(context).toContain('pendingNavigationPathRef.current !== pathname');
     expect(context).toContain('areSearchParamsEquivalent(liveSearchParams, current)');
@@ -333,10 +335,15 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(detailWorkspace).toContain('const tabPath = tab ===');
     expect(detailWorkspace).toContain('encodeURIComponent(tab)');
     expect(detailWorkspace).not.toContain('&tab=');
+    expect(detailWorkspace).not.toContain("searchParams.get('tab')");
     expect(detailWorkspace).toContain('useRouter()');
     expect(detailWorkspace).toContain(
       'onChange={(_, nextTab: CycleWorkspaceTab) => router.push(tabHref(nextTab))}'
     );
+    expect(detailWorkspace).toContain("activeTab === 'overview'");
+    expect(detailWorkspace).toContain("activeTab === 'setup'");
+    expect(detailWorkspace).toContain("activeTab === 'journey-rules'");
+    expect(detailWorkspace).toContain("activeTab === 'activity'");
     expect(detailWorkspace).not.toContain('event.preventDefault()');
     expect(detailWorkspace).not.toContain('isPlainPrimaryNavigationClick');
     expect(detailWorkspace).toContain('Configured journey');
