@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-07-25
+updated_on: 2026-07-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -56,6 +56,9 @@ Frontend workflows must respect backend data ownership.
 | Direct registration            | Authorized direct registration uses the enabled Manual entry channel, a published effective admission pathway, validated contact details, and the same academic stage and target-class mapping as Quick Inquiry |
 | Applicant journey              | The full-page applicant workspace presents Inquiry, Entrance, Registration, Offer and Seat, and Activation as stage-aware steps, and skips Entrance when the cycle does not require an exam |
 | Admission cycle entry point     | The Admission Cycles list is the Student Enrollment entry point for configuration managers and opens the existing setup URLs for the selected academic year |
+| Admission cycle setup workspace | Admission Cycles is a one-table settings list, and selecting a cycle opens `/student/enrollment/settings/admission-cycles/{academicYearId}` for Overview, Setup, Journey rules, and Activity |
+| Admission cycle setup sequence  | The selected-cycle Setup tab guides staff through Cycle basics, Inquiry intake, Assessment, Registration and documents, Fees and Class Placement Plan, and Confirm and activate |
+| Admission cycle setup boundary  | Assessment is skipped when no exam is required, Journey rules owns advanced stage policy, and the workspace must not invent Finance posting, Academic capacity synchronization, OCR, or delivery success evidence |
 | Class Placement Plan            | User-facing setup copy uses Class Placement Plan for enrollment-owned placement planning while current internal APIs still use the existing seat-pool contract |
 | Admissions work insights        | My Admissions Work shows permission-aware operational counts for paper entry, documents, fee follow-up, exam no-shows, expiring offers, Class Placement Plan risk, activation, and handoff blockers from the operations overview endpoint |
 | Applicant terminal stages      | Rejected, stale, and archived inquiries cannot start later journey work, while staff can still review artifacts that already exist |
