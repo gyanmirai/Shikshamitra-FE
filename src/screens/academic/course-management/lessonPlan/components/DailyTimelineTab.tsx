@@ -19,6 +19,7 @@ import {
   IconButton,
   LinearProgress,
 } from '@mui/material';
+import index from 'swr';
 
 const planStatusColor: Record<
   string,
@@ -142,39 +143,54 @@ const DailyTimelineTab = ({
       ) : (
         /* Timeline slots list */
         <Stack spacing={1}>
-          {slots.map((slot) => {
+          {slots.map((slot, index) => {
             const hasPlan = !!slot.lessonPlan;
             const plan = slot.lessonPlan;
             const planStatus = toPlanStatusLabel(plan?.status);
             const normalizedPlan = hasPlan
               ? {
-                  ...plan,
-                  status: planStatus,
-                  planStatus,
-                  className: plan.className || plan.standardName || slot.standardName,
-                  divisionName: plan.divisionName || slot.divisionName,
-                  subjectName: plan.subjectName || slot.subjectName,
-                }
+                ...plan,
+                status: planStatus,
+                planStatus,
+                className: plan.className || plan.standardName || slot.standardName,
+                divisionName: plan.divisionName || slot.divisionName,
+                subjectName: plan.subjectName || slot.subjectName,
+              }
               : null;
             const insightSeverity =
               slot.insightSeverity === 'error' || slot.insightSeverity === 'warning'
                 ? slot.insightSeverity
                 : 'info';
 
+            // Manual/unscheduled slot: no timetable slot id and no start time
+            const isManualSlot = !slot.timetableSlotId && !slot.startTime;
+
             return (
               <Box
-                key={slot.timetableSlotId}
+                key={slot.timetableSlotId ?? `manual-${plan?.id ?? plan?.Id ?? index}`}
                 sx={{
                   p: 2.5,
                   borderRadius: 1.5,
                   border: '1px solid',
+                  // Left accent border for NeedsChanges / Rejected
+                  borderLeft: hasPlan && (planStatus === 'NeedsChanges' || planStatus === 'Rejected')
+                    ? '4px solid'
+                    : '1px solid',
+                  borderLeftColor:
+                    planStatus === 'NeedsChanges'
+                      ? 'warning.main'
+                      : planStatus === 'Rejected'
+                        ? 'error.main'
+                        : undefined,
                   borderStyle: hasPlan ? 'solid' : 'dashed',
                   borderColor: hasPlan
                     ? planStatus === 'Approved'
                       ? 'success.light'
                       : planStatus === 'NeedsChanges'
                         ? 'warning.light'
-                        : 'divider'
+                        : planStatus === 'Rejected'
+                          ? 'error.light'
+                          : 'divider'
                     : 'divider',
                   bgcolor: hasPlan ? 'background.neutral' : 'transparent',
                   transition: 'all 0.2s',
@@ -186,30 +202,44 @@ const DailyTimelineTab = ({
                 <Grid container spacing={1} alignItems="center">
                   {/* Period & Time slot info */}
                   <Grid size={{ xs: 12, md: 3 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Box
-                        sx={{
-                          p: 1,
-                          borderRadius: 1,
-                          bgcolor: 'primary.lighter',
-                          color: 'primary.dark',
-                          textAlign: 'center',
-                          minWidth: 80,
-                        }}
-                      >
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          {slot.periodName}
+                    {isManualSlot ? (
+                      /* ── Manual / Unscheduled slot badge ── */
+                      <Stack spacing={0.75} alignItems="flex-start">
+                        <Label color="default" variant="soft">
+                          Manual Plan
+                        </Label>
+                        <Typography variant="caption" color="text.secondary">
+                          Grade {slot.standardName}
+                          {slot.divisionName ? `-${slot.divisionName}` : ''}
                         </Typography>
-                      </Box>
-                      <Box>
-                        <Typography variant="body2" fontWeight={600}>
-                          {slot.startTime} - {slot.endTime}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          Grade {slot.standardName}-{slot.divisionName}
-                        </Typography>
-                      </Box>
-                    </Stack>
+                      </Stack>
+                    ) : (
+                      /* ── Regular timetable period ── */
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Box
+                          sx={{
+                            p: 1,
+                            borderRadius: 1,
+                            bgcolor: 'primary.lighter',
+                            color: 'primary.dark',
+                            textAlign: 'center',
+                            minWidth: 80,
+                          }}
+                        >
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            {slot.periodName}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {slot.startTime} – {slot.endTime}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Grade {slot.standardName}-{slot.divisionName}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    )}
                   </Grid>
 
                   {/* Slot Details (Plan Info / Actions) */}
@@ -242,8 +272,17 @@ const DailyTimelineTab = ({
                           </Typography>
                         )}
                         {planStatus === 'NeedsChanges' && plan.reviewRemarks && (
-                          <Alert severity="warning" sx={{ py: 0.25, px: 1, mt: 0.5 }}>
-                            HOD Remarks: {plan.reviewRemarks}
+                          <Alert
+                            severity="warning"
+                            sx={{
+                              py: 0.5,
+                              px: 1.5,
+                              mt: 1,
+                              borderLeft: '3px solid',
+                              borderColor: 'warning.main',
+                            }}
+                          >
+                            <strong>HOD Remarks:</strong> {plan.reviewRemarks}
                           </Alert>
                         )}
                         {plan.insightMessage && (
@@ -299,25 +338,28 @@ const DailyTimelineTab = ({
                     )}
                   </Grid>
 
-                  {/* Actions Panel */}
-                  <Grid size={{ xs: 12, md: 3 }} sx={{ textAlign: { md: 'right' } }}>
+                  {/* Actions Panel — horizontal flex row, wraps on small screens */}
+                  <Grid size={{ xs: 12, md: 3 }}>
                     {hasPlan ? (
                       <Stack
-                        direction={{ xs: 'row', md: 'column' }}
+                        direction="row"
                         spacing={1}
+                        flexWrap="wrap"
                         justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
-                        alignItems={{ md: 'flex-end' }}
+                        alignItems="center"
+                        useFlexGap
                       >
+                        {/* View — always shown */}
                         <Button
                           variant="outlined"
                           size="small"
                           startIcon={<Iconify icon="mdi:eye-outline" />}
                           onClick={() => normalizedPlan && onViewDetails(normalizedPlan)}
-                          fullWidth
                         >
                           View
                         </Button>
 
+                        {/* Draft / NeedsChanges / Rejected: Submit (primary) + Edit (secondary) */}
                         {['Draft', 'NeedsChanges', 'Rejected'].includes(planStatus) && (
                           <>
                             <Button
@@ -326,7 +368,6 @@ const DailyTimelineTab = ({
                               color="primary"
                               startIcon={<Iconify icon="mdi:send-outline" />}
                               onClick={() => onSubmitPlan(plan.id || plan.Id)}
-                              fullWidth
                             >
                               Submit
                             </Button>
@@ -335,13 +376,13 @@ const DailyTimelineTab = ({
                               size="small"
                               startIcon={<Iconify icon="mdi:pencil-outline" />}
                               onClick={() => onEditLesson(plan)}
-                              fullWidth
                             >
                               Edit
                             </Button>
                           </>
                         )}
 
+                        {/* Approved: Record Diary (primary) + Homework (secondary) */}
                         {planStatus === 'Approved' && (
                           <>
                             <Button
@@ -350,7 +391,6 @@ const DailyTimelineTab = ({
                               color="success"
                               startIcon={<Iconify icon="mdi:notebook-edit-outline" />}
                               onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
-                              fullWidth
                             >
                               Record Diary
                             </Button>
@@ -359,20 +399,19 @@ const DailyTimelineTab = ({
                               size="small"
                               startIcon={<Iconify icon="mdi:book-plus-outline" />}
                               onClick={() => normalizedPlan && onCreateHomework?.(normalizedPlan)}
-                              fullWidth
                             >
                               Homework
                             </Button>
                           </>
                         )}
 
+                        {/* Submitted: pending badge */}
                         {planStatus === 'Submitted' && (
                           <Button
                             variant="outlined"
                             size="small"
                             disabled
                             startIcon={<Iconify icon="mdi:clock-outline" />}
-                            fullWidth
                           >
                             Pending HOD
                           </Button>

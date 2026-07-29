@@ -72,7 +72,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   );
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <LearningTaskSummaryCards tasks={filteredData} />
       <CustomizableTable
         tableId="assignment-management"

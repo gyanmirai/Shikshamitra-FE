@@ -108,9 +108,8 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
         }).unwrap();
 
         shikshaMitraToast.success({
-          message: `Feedback has been ${isUpdate ? 'updated' : 'added'} successfully for ${
-            data?.studentName ?? 'the student'
-          }.`,
+          message: `Feedback has been ${isUpdate ? 'updated' : 'added'} successfully for ${data?.studentName ?? 'the student'
+            }.`,
         });
         if (submitAndNextRef.current && hasNext && onNext) {
           submitAndNextRef.current = false;
@@ -139,7 +138,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
           onSubmit={formik.handleSubmit}
         >
-          <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
+          <Scrollbar sx={{ flex: '1 1 auto', maxHeight: 'calc(80vh - 140px)', p: 2 }}>
             <Grid container spacing={1}>
               {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
@@ -275,7 +274,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                   <Box sx={{ display: 'none' }}>
                     <Editor
                       editable={false}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       isToolbarShow={false}
                       value={`
 1. The sun rises in the east.

@@ -63,7 +63,7 @@ const CourseProgress = (props: TabComponentType) => {
   const actions = useCallback(
     (actionProps: { popover: { onClose: () => void }; row: ICourseDetail }) => (
       <MenuList>
-        <MenuItem onClick={() => {}}>
+        <MenuItem onClick={() => { }}>
           <Iconify icon={GlobalIcons.bell} />
           Reminder
         </MenuItem>

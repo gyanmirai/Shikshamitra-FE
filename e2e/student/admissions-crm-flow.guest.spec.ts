@@ -1532,14 +1532,14 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(applicantWorkspace.getByRole('tab', { name: 'Activity' })).toBeVisible();
   });
 
-  test('direct registration uses configured academic and pathway options end to end', async ({
+  test('paper registration uses configured academic and pathway options end to end', async ({
     page,
   }) => {
     test.setTimeout(180_000);
 
     await login(page);
     const academicYearId = await resolveAcademicYearId(page);
-    const templateName = uniqueToken('Direct registration ');
+    const templateName = uniqueToken('Paper registration ');
     const template = await createPublishedRegistrationTemplate(
       page,
       academicYearId,
@@ -1552,8 +1552,8 @@ test.describe('Student admissions CRM E2E', () => {
         waitUntil: 'domcontentloaded',
         timeout: 60_000,
       });
-      await page.getByRole('button', { name: 'Create Registration' }).click();
-      const dialog = page.getByRole('dialog', { name: 'Create direct registration' });
+      await page.getByRole('button', { name: 'Enter Paper Registration' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Enter Paper Registration' });
       await expect(dialog).toBeVisible();
       await expect(dialog.getByText('@', { exact: true })).toBeVisible();
       await dialog.getByLabel('Email address').fill('invalid-email');
@@ -1562,8 +1562,8 @@ test.describe('Student admissions CRM E2E', () => {
         dialog.getByText('Enter a valid email address, for example parent@example.com.')
       ).toBeVisible();
 
-      const firstName = uniqueToken('Direct');
-      const email = `direct.${Date.now()}@example.test`;
+      const firstName = uniqueToken('Paper');
+      const email = `paper.${Date.now()}@example.test`;
       await dialog.getByLabel('First name').fill(firstName);
       await dialog.getByLabel('Last name').fill('Registration');
       await dialog.getByLabel('Parent or guardian').fill('Direct Registration Guardian');
@@ -1581,24 +1581,24 @@ test.describe('Student admissions CRM E2E', () => {
 
       await dialog.getByLabel('Registration template').click();
       await page.getByRole('option', { name: `${templateName} - v1`, exact: true }).click();
-      const paperFormNumber = `PW-DIRECT-${Date.now()}`;
+      const paperFormNumber = `PW-PAPER-${Date.now()}`;
       await dialog.getByLabel('Paper form number').fill(paperFormNumber);
       await dialog.getByRole('button', { name: 'Next' }).click();
 
-      const directResponsePromise = page.waitForResponse(
+      const paperResponsePromise = page.waitForResponse(
         (candidate) =>
           candidate.request().method() === 'POST' &&
           new URL(candidate.url()).pathname.endsWith(
-            `/student-enrollment/admissions-crm/${academicYearId}/registrations/direct`
+            `/student-enrollment/admissions-crm/${academicYearId}/registrations/from-paper`
           )
       );
-      await dialog.getByRole('button', { name: 'Create and Enter Paper Form' }).click();
-      const directResponse = await directResponsePromise;
-      await expectOk(directResponse, 'create direct registration through the UI');
-      const directRegistration = await directResponse.json();
+      await dialog.getByRole('button', { name: 'Create From Paper Form' }).click();
+      const paperResponse = await paperResponsePromise;
+      await expectOk(paperResponse, 'create paper registration through the UI');
+      const paperRegistration = await paperResponse.json();
 
       await expect(page).toHaveURL(
-        new RegExp(`/student/enrollment/applicants/${directRegistration.applicant.id}`)
+        new RegExp(`/student/enrollment/applicants/${paperRegistration.applicant.id}`)
       );
       const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
       await expect(applicantWorkspace).toContainText(firstName);

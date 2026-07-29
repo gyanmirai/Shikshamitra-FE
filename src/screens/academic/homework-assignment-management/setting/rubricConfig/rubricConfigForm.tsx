@@ -284,7 +284,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
     initialValues: buildInitialValues(editData),
     validationSchema: stepValidationSchemas[activeStep],
     validateOnChange: false,
-    onSubmit: () => {},
+    onSubmit: () => { },
   });
 
   const submitRubric = async (
@@ -302,6 +302,15 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
         shikshaMitraToast.error({ message: publishErrors[0] });
         return;
       }
+
+      const validCriteria = values.criteria
+        .filter((criterion) => criterion.title.trim() && Number(criterion.maxMarks) > 0)
+        .map((criterion, index) => ({
+          title: criterion.title.trim(),
+          description: criterion.description.trim() || null,
+          maxMarks: Number(criterion.maxMarks),
+          displayOrder: index + 1,
+        }));
 
       const body = {
         standardId: null,
@@ -330,12 +339,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
           description: level.description.trim() || null,
           studentLabel: level.studentLabel.trim() || null,
         })),
-        criteria: values.criteria.map((criterion, index) => ({
-          title: criterion.title.trim(),
-          description: criterion.description.trim() || null,
-          maxMarks: Number(criterion.maxMarks),
-          displayOrder: index + 1,
-        })),
+        criteria: validCriteria,
       };
 
       const saved = editData
@@ -345,14 +349,17 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
       if (mode === 'publish' && saved.status !== RubricStatus.Published) {
         await publishRubric(saved.id).unwrap();
         shikshaMitraToast.success({ message: 'Rubric template published successfully.' });
+        onClose(null, true);
       } else {
         shikshaMitraToast.success({
           message: editData
             ? 'Rubric template updated as draft.'
             : 'Rubric template saved as draft.',
         });
+        if (mode === 'publish') {
+          onClose(null, true);
+        }
       }
-      onClose(null, true);
     } catch (error: unknown) {
       const apiError = error as { data?: { message?: string; detail?: string } };
       shikshaMitraToast.error({
@@ -403,7 +410,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
               onChange={formik.handleChange}
               error={hasFormikError(formik, 'title')}
               helperText={
-                getFormikError(formik, 'title') || 'Example: Class project presentation rubric'
+                getFormikError(formik, 'title') || ''
               }
             />
           </Grid>
@@ -836,7 +843,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
         <Alert
           severity={
             formik.values.scoringModel === RubricScoringModel.WeightedPercentage &&
-            totalScore !== 100
+              totalScore !== 100
               ? 'warning'
               : 'info'
           }
@@ -866,13 +873,16 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
           <Stack direction="row" flexWrap="wrap" gap={1}>
             <Chip
               variant="outlined"
-              label={`Model: ${
-                RUBRIC_SCORING_MODEL_LABELS[formik.values.scoringModel as RubricScoringModel]
-              }`}
+              label={`Model: ${RUBRIC_SCORING_MODEL_LABELS[formik.values.scoringModel as RubricScoringModel]
+                }`}
+              size='small'
             />
-            <Chip variant="outlined" label={`Criteria: ${formik.values.criteria.length}`} />
-            <Chip variant="outlined" label={`Maximum Score: ${totalScore}`} />
+            <Chip variant="outlined" size='small'
+              label={`Criteria: ${formik.values.criteria.length}`} />
+            <Chip variant="outlined" size='small'
+              label={`Maximum Score: ${totalScore}`} />
             <Chip
+              size='small'
               color={publishErrors.length ? 'warning' : 'success'}
               label={publishErrors.length ? 'Needs Review' : 'Ready to Publish'}
             />
@@ -928,9 +938,9 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
     );
   };
 
+
   return (
     <CustomStepperWithFormik
-      scrollbarHeight="calc(92vh - 240px)"
       initialValues={rubricFormik.initialValues}
       formikInstance={rubricFormik}
       steps={builderSteps}
@@ -944,6 +954,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
         loading: isSaving && submitMode === 'draft',
         disabled: isSaving,
         startIcon: <Iconify icon="solar:diskette-bold" />,
+        children: 'Save Draft',
       }}
       saveAndNextButtonProps={{
         loading: isSaving && submitMode === 'publish',
@@ -964,54 +975,15 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
         submitRubric('draft', values, setIsLoading)
       }
       renderItem={({ formik, activeStep: step }) => (
-        <Box sx={{ p: { xs: 1.5, md: 2 }, pb: 1 }}>
-          <Stack spacing={1.5}>
-            <Stack
-              direction={{ xs: 'column', md: 'row' }}
-              alignItems={{ xs: 'flex-start', md: 'center' }}
-              justifyContent="space-between"
-              gap={1}
-            >
-              <Box>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  {builderSteps[step]}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Complete the required details in this step to continue.
-                </Typography>
-              </Box>
-              <Stack direction="row" flexWrap="wrap" gap={0.75}>
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  label={`Criteria: ${formik.values.criteria.length}`}
-                />
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  label={`Max Score: ${formik.values.criteria.reduce(
-                    (sum: number, criterion: RubricCriterionFormValue) =>
-                      sum + (Number(criterion.maxMarks) || 0),
-                    0
-                  )}`}
-                />
-                <Button
-                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                  onClick={() => onClose(null, false)}
-                  variant="outlined"
-                  size="small"
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
-              </Stack>
-            </Stack>
+        <Box>
 
+          {/* Step content */}
+          <Box sx={{ p: { xs: 1.5, md: 2 } }}>
             {step === 0 ? renderBasicInformation(formik) : null}
             {step === 1 ? renderScoringModel(formik) : null}
             {step === 2 ? renderCriteria(formik) : null}
             {step === 3 ? renderPreview(formik) : null}
-          </Stack>
+          </Box>
         </Box>
       )}
     />

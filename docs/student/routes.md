@@ -20,14 +20,17 @@ Use this table for visible Student navigation.
 | Menu label               | Route                                  | Frontend permission                                           |
 | ------------------------ | -------------------------------------- | ------------------------------------------------------------- |
 | Dashboard                | `/student/dashboard`                   | `ShikshaMitra.Module.Students`                                |
+| Admission Cycles         | `/student/enrollment`                  | `Students.Enrollment.AdmissionsCrm.ManageConfiguration`       |
+| My Work                  | `/student/enrollment/overview`         | `Students.Enrollment.AdmissionsCrm.View`                      |
 | Pipeline                 | `/student/enrollment/pipeline`         | `Students.Enrollment.AdmissionsCrm.View`                      |
 | Applicant workspace      | `/student/enrollment/applicants/{leadId}` | `Students.Enrollment.AdmissionsCrm.View`                   |
 | Entrance Exams           | `/student/enrollment/exams`            | `Students.Enrollment.AdmissionsCrm.View`                      |
-| Registrations & Documents | `/student/enrollment/registrations`   | `Students.Enrollment.AdmissionsCrm.View`                      |
-| Offers & Seats           | `/student/enrollment/offers-seats`     | `Students.Enrollment.AdmissionsCrm.ViewSeatPlans`             |
+| Registration             | `/student/enrollment/registrations`    | `Students.Enrollment.AdmissionsCrm.View`                      |
+| Class Placement          | `/student/enrollment/offers-seats`     | `Students.Enrollment.AdmissionsCrm.ViewSeatPlans`             |
 | Activation               | `/student/enrollment/activation`       | `Students.Enrollment.AdmissionsCrm.ViewActivation`            |
 | Operations               | `/student/enrollment/operations`       | `Students.Enrollment.AdmissionsCrm.View`                      |
 | Analytics                | `/student/enrollment/analytics`        | `Students.Enrollment.AdmissionsCrm.Analytics`                 |
+| Enrollment Setup Center  | `/student/enrollment/settings`         | `Students.Enrollment.AdmissionsCrm.ManageConfiguration`       |
 | Admissions CRM Settings  | `/student/enrollment/settings/journey` | `Students.Enrollment.AdmissionsCrm.ManageConfiguration`       |
 | Student Management       | `/student/management`                                        | `Students.Records.StudentManagement`                                 |
 | Student List             | `/student/profile`                                           | `Students.Records.StudentList`                                       |
@@ -63,8 +66,9 @@ They are used by generated or shared admissions CRM links.
 
 ## Admissions settings routes
 
-`/student/enrollment/settings` remains a supported entry point and redirects to Journey while preserving the selected admission cycle.
-Dedicated settings URLs are available for Journey, Inquiry Capture, Routing and Scoring, Entrance Exams, Registration and Documents, Offers and Seats, Activation, Governance, Communications, and Automation.
+`/student/enrollment` is the Admission Cycles entry point.
+`/student/enrollment/settings` remains a supported Setup Center entry point and preserves the selected admission cycle.
+Dedicated settings URLs are available for Journey, Inquiry Capture, Routing and Scoring, Entrance Exams, Registration and Documents, Class Placement Plan, Activation, Governance, Communications, and Automation.
 
 ## Permission rule
 

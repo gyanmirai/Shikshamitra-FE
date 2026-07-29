@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import CourseProgressComponent from './courseProgress';
+import CourseProgressComponent from 'src/components/course-progress/courseProgress';
 
 const CourseProgress = () => {
   // State to store all classes/standards for the selected organization

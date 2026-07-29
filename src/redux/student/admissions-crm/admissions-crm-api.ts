@@ -137,6 +137,10 @@ export enum AdmissionCrmJourneyTrigger {
   ExamNoShow = 16,
   AdmissionReady = 17,
   DocumentExpiring = 18,
+  FeeFollowUp = 19,
+  OfferIssued = 20,
+  OfferAccepted = 21,
+  ActivationWelcome = 22,
 }
 
 export enum AdmissionCrmOperationsQueueType {
@@ -162,6 +166,7 @@ export enum AdmissionCrmOperationsQueueType {
   RouteAppealReview = 19,
   ServiceHandoffException = 20,
   RegistrationInvitationPending = 21,
+  PendingPaperEntry = 22,
 }
 
 export enum AdmissionCrmAutomationRunType {
@@ -471,6 +476,20 @@ export enum AdmissionCrmRegistrationFeeStatus {
   ReferenceRecorded = 2,
   Waived = 3,
   ConfirmedExternally = 4,
+}
+
+export enum AdmissionCrmRegistrationProvenance {
+  OnlineParent = 0,
+  StaffEnteredFromPaper = 1,
+  StaffAssistedCounter = 2,
+  Imported = 3,
+}
+
+export enum AdmissionCrmRegistrationDataEntryState {
+  NotStarted = 0,
+  InProgress = 1,
+  Submitted = 2,
+  Verified = 3,
 }
 
 export enum AdmissionCrmDocumentChecklistTemplateStatus {
@@ -798,6 +817,7 @@ export type AdmissionCrmConfigurationCloneResultDto = {
 
 export type AdmissionCrmSettingsAccessMode = 0 | 1 | 2;
 export type AdmissionCrmSetupReadiness = 0 | 1 | 2 | 3 | 4;
+export type AdmissionCrmCycleStatus = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type AdmissionCrmSetupItemDto = {
   key: string;
@@ -816,6 +836,109 @@ export type AdmissionCrmSetupStatusDto = {
   appliedPresetVersion?: number | null;
   lastUpdatedAt?: string | null;
   items: AdmissionCrmSetupItemDto[];
+};
+
+export type AdmissionCrmCycleRequiredActionDto = {
+  key: string;
+  title: string;
+  path: string;
+  blockerCodes: string[];
+};
+
+export type AdmissionCrmCycleListItemDto = {
+  academicYearId: string;
+  cycleConfigurationId?: string | null;
+  cycleName: string;
+  academicYearName: string;
+  academicYearStartDate: string;
+  academicYearEndDate: string;
+  admissionWindowStart?: string | null;
+  admissionWindowEnd?: string | null;
+  status: AdmissionCrmCycleStatus;
+  readiness: AdmissionCrmSetupReadiness;
+  applicantCount: number;
+  ownerUserId?: string | null;
+  ownerDisplayName?: string | null;
+  lastUpdatedAt?: string | null;
+  requiredActions: AdmissionCrmCycleRequiredActionDto[];
+};
+
+export type AdmissionCrmCyclePolicySummaryDto = {
+  isActive: boolean;
+  registrationFormRequiredBeforeExam: boolean;
+  entranceExamRequired: boolean;
+  journeyLocked: boolean;
+  defaultLeadSlaHours: number;
+  staleAfterDays: number;
+  archiveAfterDays: number;
+  defaultExamPassingPercentage: number;
+  meritRankingMode: AdmissionCrmMeritRankingMode;
+};
+
+export type AdmissionCrmCycleSummaryDto = {
+  cycle: AdmissionCrmCycleListItemDto;
+  policy: AdmissionCrmCyclePolicySummaryDto;
+  communications: {
+    journeyRuleCount: number;
+    activeMessageRuleCount: number;
+    templateBackedRuleCount: number;
+  };
+  readiness: AdmissionCrmSetupStatusDto;
+  applicationStagePolicy: AdmissionCrmApplicationStagePolicyDto;
+};
+
+export enum AdmissionCrmApplicationStageKey {
+  Inquiry = 0,
+  QualificationFollowUp = 1,
+  ExamScheduling = 2,
+  ExamResultEligibility = 3,
+  RegistrationDataEntry = 4,
+  DocumentsVerification = 5,
+  FeeVerification = 6,
+  ClassPlacement = 7,
+  AdmissionConfirmation = 8,
+  Activation = 9,
+  Closed = 10,
+}
+
+export type AdmissionCrmApplicationStagePolicyItemDto = {
+  stageKey: AdmissionCrmApplicationStageKey;
+  displayName: string;
+  displayOrder: number;
+  isEnabled: boolean;
+  isRequired: boolean;
+  isSystemLocked: boolean;
+  isExamStage: boolean;
+  isOperationallyBacked: boolean;
+  supportedOperationalStages: AdmissionInquiryStage[];
+  readinessNote: string;
+};
+
+export type AdmissionCrmApplicationStagePolicyDto = {
+  version: number;
+  entranceExamRequired: boolean;
+  journeyLocked: boolean;
+  applicantCount: number;
+  impactFingerprint: string;
+  stages: AdmissionCrmApplicationStagePolicyItemDto[];
+};
+
+export type UpdateAdmissionCrmApplicationStagePolicyItemDto = {
+  stageKey: AdmissionCrmApplicationStageKey;
+  displayOrder: number;
+  isEnabled: boolean;
+};
+
+export type UpdateAdmissionCrmApplicationStagePolicyDto = {
+  stages: UpdateAdmissionCrmApplicationStagePolicyItemDto[];
+  expectedImpactFingerprint?: string | null;
+};
+
+export type AdmissionCrmApplicationStagePolicyImpactDto = {
+  applicantCount: number;
+  impactFingerprint: string;
+  requiresConfirmation: boolean;
+  warnings: string[];
 };
 
 export type AdmissionCrmSlaPolicyDto = {
@@ -1308,6 +1431,15 @@ export type CreateDirectAdmissionCrmRegistrationDto = {
   registration: IssueAdmissionCrmRegistrationApplicationDto;
 };
 
+export type CreatePaperAdmissionCrmRegistrationDto = {
+  applicant: CreateAdmissionCrmLeadDto;
+  registration: IssueAdmissionCrmRegistrationApplicationDto;
+  physicalFormNumber: string;
+  physicalFormReceivedDate: string;
+  physicalFormReceivedByUserId?: string | null;
+  scannedFormAttachmentReference?: string | null;
+};
+
 export type AdmissionCrmDirectRegistrationResultDto = {
   applicant: AdmissionCrmLeadDto;
   registration: AdmissionCrmRegistrationApplicationDto;
@@ -1325,6 +1457,12 @@ export type AdmissionCrmRegistrationApplicationDto = {
   registrationTemplateVersion: number;
   playbookId?: string | null;
   formNumber: string;
+  provenance: AdmissionCrmRegistrationProvenance;
+  dataEntryState: AdmissionCrmRegistrationDataEntryState;
+  physicalFormNumber?: string | null;
+  physicalFormReceivedDate?: string | null;
+  physicalFormReceivedByUserId?: string | null;
+  scannedFormAttachmentReference?: string | null;
   status: AdmissionCrmRegistrationStatus;
   sections: AdmissionCrmRegistrationSectionDto[];
   prefill: Record<string, unknown>;
@@ -2289,6 +2427,10 @@ export type AdmissionCrmRegistrationQueueContextDto = {
   registrationApplicationId?: string | null;
   status?: AdmissionCrmRegistrationStatus | null;
   formNumber?: string | null;
+  provenance?: AdmissionCrmRegistrationProvenance | null;
+  dataEntryState?: AdmissionCrmRegistrationDataEntryState | null;
+  physicalFormNumber?: string | null;
+  physicalFormReceivedDate?: string | null;
   completionPercentage: number;
   linkExpiresAt?: string | null;
   feeStatus?: AdmissionCrmRegistrationFeeStatus | null;
@@ -2347,8 +2489,14 @@ export type AdmissionCrmEnrollmentOverviewDto = {
   generatedAt: string;
   unassignedLeadCount: number;
   upcomingExamCount: number;
+  examNoShowCount: number;
+  pendingPaperEntryCount: number;
   expiringRegistrationCount: number;
+  documentFollowUpCount: number;
+  feeFollowUpCount: number;
   pendingApprovalCount: number;
+  expiringOfferCount: number;
+  classPlacementRiskCount: number;
   activationFailureCount: number;
   handoffBlockerCount: number;
   urgentCount: number;
@@ -4580,6 +4728,59 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       }),
       providesTags: [studentAdmissionsCrmType.configuration],
     }),
+    getAdmissionCrmCycles: builder.query<
+      PagedResult<AdmissionCrmCycleListItemDto>,
+      AdmissionCrmListParams | void
+    >({
+      query: (params) => ({
+        url: '/student-enrollment/admissions-crm/setup/cycles',
+        method: 'GET',
+        params: params ?? undefined,
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    getAdmissionCrmCycleSummary: builder.query<
+      AdmissionCrmCycleSummaryDto,
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: `/student-enrollment/admissions-crm/setup/cycles/${academicYearId}/summary`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    getAdmissionCrmApplicationStagePolicy: builder.query<
+      AdmissionCrmApplicationStagePolicyDto,
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: `/student-enrollment/admissions-crm/setup/cycles/${academicYearId}/stage-policy`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    previewAdmissionCrmApplicationStagePolicy: builder.mutation<
+      AdmissionCrmApplicationStagePolicyImpactDto,
+      { academicYearId: string; body: UpdateAdmissionCrmApplicationStagePolicyDto }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: `/student-enrollment/admissions-crm/setup/cycles/${academicYearId}/stage-policy/preview`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [],
+    }),
+    updateAdmissionCrmApplicationStagePolicy: builder.mutation<
+      AdmissionCrmApplicationStagePolicyDto,
+      { academicYearId: string; body: UpdateAdmissionCrmApplicationStagePolicyDto }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: `/student-enrollment/admissions-crm/setup/cycles/${academicYearId}/stage-policy`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration],
+    }),
     updateAdmissionCrmCycleConfiguration: builder.mutation<
       AdmissionCrmCycleConfigurationDto,
       { academicYearId: string; body: Partial<AdmissionCrmCycleConfigurationDto> }
@@ -4883,6 +5084,21 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
     >({
       query: ({ academicYearId, body }) => ({
         url: `/student-enrollment/admissions-crm/${academicYearId}/registrations/direct`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        studentAdmissionsCrmType.lead,
+        studentAdmissionsCrmType.timeline,
+        studentAdmissionsCrmType.analytics,
+      ],
+    }),
+    createPaperAdmissionCrmRegistration: builder.mutation<
+      AdmissionCrmDirectRegistrationResultDto,
+      { academicYearId: string; body: CreatePaperAdmissionCrmRegistrationDto }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/registrations/from-paper`,
         method: 'POST',
         body,
       }),
@@ -7178,6 +7394,11 @@ export const {
   useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation,
   useGetAdmissionCrmCycleConfigurationQuery,
   useGetAdmissionCrmSetupStatusQuery,
+  useGetAdmissionCrmCyclesQuery,
+  useGetAdmissionCrmCycleSummaryQuery,
+  useGetAdmissionCrmApplicationStagePolicyQuery,
+  usePreviewAdmissionCrmApplicationStagePolicyMutation,
+  useUpdateAdmissionCrmApplicationStagePolicyMutation,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   useLazyGetAdmissionCrmConfigurationReferencesQuery,
   usePreviewAdmissionCrmConfigurationImpactMutation,
@@ -7210,6 +7431,7 @@ export const {
   useUpdateAdmissionCrmFormNumberSeriesMutation,
   useIssueAdmissionCrmRegistrationApplicationMutation,
   useCreateDirectAdmissionCrmRegistrationMutation,
+  useCreatePaperAdmissionCrmRegistrationMutation,
   useGetAdmissionCrmRegistrationApplicationQuery,
   useGetCurrentAdmissionCrmRegistrationByLeadQuery,
   useSaveAdmissionCrmStaffRegistrationResponsesMutation,

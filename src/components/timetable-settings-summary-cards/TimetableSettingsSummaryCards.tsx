@@ -5,7 +5,7 @@ import { Box, Card, Grid, Typography } from '@mui/material';
 
 export interface ITimetableSummaryCard {
   label: string;
-  value: number;
+  value: string | number;
   icon: string;
   color?: 'primary' | 'success' | 'warning' | 'error' | 'info';
 }

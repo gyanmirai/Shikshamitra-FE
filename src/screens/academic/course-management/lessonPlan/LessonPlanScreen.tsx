@@ -166,15 +166,15 @@ const normalizeSlotTime = (value: unknown) => {
 const getPlannedSlotTime = (plan: any) => {
   const start = normalizeSlotTime(
     plan.startTime ||
-      plan.slotStartTime ||
-      plan.timetableSlot?.startTime ||
-      plan.timetableSlot?.slotStartTime
+    plan.slotStartTime ||
+    plan.timetableSlot?.startTime ||
+    plan.timetableSlot?.slotStartTime
   );
   const end = normalizeSlotTime(
     plan.endTime ||
-      plan.slotEndTime ||
-      plan.timetableSlot?.endTime ||
-      plan.timetableSlot?.slotEndTime
+    plan.slotEndTime ||
+    plan.timetableSlot?.endTime ||
+    plan.timetableSlot?.slotEndTime
   );
 
   return start && end ? `${start} - ${end}` : '';
@@ -1066,7 +1066,7 @@ const LessonPlanScreen = () => {
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 180,
+      minWidth: 200,
       align: 'center' as const,
       isSort: false,
       isFilter: false,

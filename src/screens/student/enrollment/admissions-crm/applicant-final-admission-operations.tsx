@@ -292,7 +292,9 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
           </Alert>
         ) : null}
         {!poolsQuery.isFetching && !poolsQuery.isError && !pools.length ? (
-          <Alert severity="warning">Configure an active seat pool before creating offers.</Alert>
+          <Alert severity="warning">
+            Configure an active class placement plan before creating offers.
+          </Alert>
         ) : null}
         {waitlistQuery.isError ? (
           <Alert
@@ -324,7 +326,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
               <TextField
                 select
                 size="small"
-                label="Seat pool"
+                label="Class Placement Plan"
                 value={seatPoolId}
                 onChange={(event) => setSeatPoolId(event.target.value)}
               >
@@ -679,7 +681,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
           {!offersQuery.isFetching && !offersQuery.isError && !offers.length ? (
             <ApplicantEmptyState
               title="No seat offers"
-              description="Create an offer draft after selecting an eligible seat pool."
+              description="Create an offer draft after selecting an eligible class placement plan."
             />
           ) : null}
         </Stack>

@@ -15,7 +15,7 @@ const source = fs.readFileSync(
   'utf8'
 );
 
-describe('Admissions CRM direct registration contract', () => {
+describe('Admissions CRM paper registration contract', () => {
   it('uses published operational route definitions instead of static route enums', () => {
     expect(source).toContain('useGetAdmissionCrmQuickInquiryOptionsQuery');
     expect(source).toContain('mapQuickInquiryOptions(quickInquiryOptionsQuery.data)');
@@ -50,5 +50,14 @@ describe('Admissions CRM direct registration contract', () => {
     expect(source).toContain('channel.value === AdmissionInquiryChannel.ManualBackOffice');
     expect(source).toContain('quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false');
     expect(source).toContain('optionConfigurationUnavailable');
+  });
+
+  it('creates paper registrations through the paper endpoint contract', () => {
+    expect(source).toContain('useCreatePaperAdmissionCrmRegistrationMutation');
+    expect(source).toContain('physicalFormNumber');
+    expect(source).toContain('physicalFormReceivedDate');
+    expect(source).toContain('Create From Paper Form');
+    expect(source).toContain('OCR is not used in this workflow');
+    expect(source).not.toContain('useCreateDirectAdmissionCrmRegistrationMutation');
   });
 });

@@ -117,6 +117,32 @@ describe('Enrollment workspace URL state', () => {
     expect(getWorkspaceFromPathname('/student/enrollment/applicants/lead-1')).toBe('applicant');
   });
 
+  it('treats Admission Cycle workspace tab routes as settings paths without query-owned tab state', () => {
+    expect(
+      getWorkspaceFromPathname('/student/enrollment/settings/admission-cycles/cycle-1/setup')
+    ).toBe('settings');
+    expect(
+      getWorkspaceFromPathname('/student/enrollment/settings/admission-cycles/cycle-1/journey-rules')
+    ).toBe('settings');
+    expect(
+      getWorkspaceFromPathname('/student/enrollment/settings/admission-cycles/cycle-1/activity')
+    ).toBe('settings');
+
+    const state = parseEnrollmentWorkspaceState(
+      new URLSearchParams('cycle=cycle-1&board=board-1&medium=medium-1&tab=setup')
+    );
+
+    expect(state).toMatchObject({
+      cycle: 'cycle-1',
+      board: 'board-1',
+      medium: 'medium-1',
+    });
+    expect(state.applicantTab).toBeUndefined();
+    expect(serializeEnrollmentWorkspaceState(state).toString()).toBe(
+      'cycle=cycle-1&board=board-1&medium=medium-1'
+    );
+  });
+
   it('rejects invalid enum, date, and pagination values', () => {
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams('stage=999&queue=999&page=-2&from=12-07-2026&panel=unknown')

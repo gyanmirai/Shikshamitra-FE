@@ -61,7 +61,9 @@ const EmployeeAcademicTabs = ({ employee }: EmployeeAcademicTabsProps) => {
               {tabs.value === 'timetable' && (
                 <TeacherSchedule employeeId={employee?.id || employee?._id} />
               )}
-              {tabs.value === 'subjectPerformace' && <CourseProgress />}
+              {tabs.value === 'subjectPerformace' && (
+                <CourseProgress employeeId={employee?.id || employee?._id} />
+              )}
             </Box>
           </FormSlider>
         </Card>

@@ -41,9 +41,8 @@ const ChapterTable = ({
           ? dayjs(chapter.chapterEndTime).format('DD-MM-YYYY')
           : '',
         unitTerm: [chapter.unitName, chapter.termName].filter(Boolean).join(' / ') || '-',
-        plannedLoad: `${chapter.estimatedTeachingDays || '-'} days / ${
-          chapter.estimatedPeriods || '-'
-        } periods`,
+        plannedLoad: `${chapter.estimatedTeachingDays || '-'} days / ${chapter.estimatedPeriods || '-'
+          } periods`,
         outcomes: chapter.learningOutcomes || chapter.skillsCovered || '-',
         resources: chapter.documents?.length
           ? `${chapter.documents.length} file(s)`

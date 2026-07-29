@@ -10,6 +10,10 @@ const PipelineWorkspace = dynamic(
   () => import('./pipeline-workspace').then((module) => module.PipelineWorkspace),
   { loading }
 );
+const OverviewWorkspace = dynamic(
+  () => import('./overview-workspace').then((module) => module.EnrollmentOverviewWorkspace),
+  { loading }
+);
 const ExamsWorkspace = dynamic(
   () => import('./exams-workspace').then((module) => module.ExamsWorkspace),
   { loading }
@@ -19,8 +23,7 @@ const AnalyticsWorkspace = dynamic(
   { loading }
 );
 const ApplicantWorkspace = dynamic(
-  () =>
-    import('./applicant-workspace-page').then((module) => module.ApplicantWorkspacePage),
+  () => import('./applicant-workspace-page').then((module) => module.ApplicantWorkspacePage),
   { loading }
 );
 const RegistrationsWorkspace = dynamic(
@@ -39,6 +42,43 @@ const OperationsWorkspace = dynamic(
   () =>
     import('./operations-workspace').then((module) => module.AdmissionsOperationsWorkspaceContent),
   { loading }
+);
+const AdmissionCyclesWorkspace = dynamic(
+  () => import('./admission-cycles-workspace').then((module) => module.AdmissionCyclesWorkspace),
+  { loading }
+);
+const AdmissionCycleDetailWorkspace = dynamic(
+  () =>
+    import('./admission-cycle-detail-workspace').then(
+      (module) => module.AdmissionCycleDetailWorkspace
+    ),
+  { loading }
+);
+
+export const AdmissionsCyclesWorkspace = () => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
+    <AdmissionCyclesWorkspace />
+  </StudentPermissionGuard>
+);
+
+type AdmissionCycleWorkspaceTab = 'overview' | 'setup' | 'journey-rules' | 'activity';
+
+export const AdmissionsCycleDetailWorkspace = ({
+  academicYearId,
+  initialTab,
+}: {
+  academicYearId: string;
+  initialTab?: AdmissionCycleWorkspaceTab;
+}) => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
+    <AdmissionCycleDetailWorkspace academicYearId={academicYearId} initialTab={initialTab} />
+  </StudentPermissionGuard>
+);
+
+export const AdmissionsOverviewWorkspace = () => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.overview}>
+    <OverviewWorkspace />
+  </StudentPermissionGuard>
 );
 
 export const AdmissionsPipelineWorkspace = () => (

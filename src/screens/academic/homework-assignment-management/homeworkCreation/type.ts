@@ -83,6 +83,12 @@ export interface IAssignGradeProps {
   hasPrevious?: boolean;
   hasNext?: boolean;
   requiresMarks?: boolean;
+  selectedClass?: string;
+  selectedSubject?: string;
+  selectedHomework?: any;
+  hasRubricAssessment?: boolean;
+  isSelectedInPerson?: boolean;
+  ensureInPersonSubmissionId?: () => Promise<string | null>;
 }
 
 /**

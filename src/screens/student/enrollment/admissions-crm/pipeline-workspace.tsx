@@ -403,9 +403,7 @@ export function PipelineWorkspace() {
     setSearch,
     filters: columnFilters,
     setFilters: setColumnFilters,
-  } = useWorkspaceTableSessionState(
-    `pipeline:${academicYearId || 'none'}:${sessionIdentity}`
-  );
+  } = useWorkspaceTableSessionState(`pipeline:${academicYearId || 'none'}:${sessionIdentity}`);
   const [debouncedSearch, setDebouncedSearch] = useState(() => search.trim());
   const [staffSearch, setStaffSearch] = useState('');
   const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
@@ -640,6 +638,8 @@ export function PipelineWorkspace() {
       ? state.stage
       : '';
   const leads = useMemo(() => leadsQuery.data?.items || [], [leadsQuery.data?.items]);
+  const showEmptyPipeline =
+    !leadsQuery.isLoading && !leadsQuery.isFetching && (leadsQuery.data?.totalCount ?? 0) === 0;
   const rowOwnerIds = useMemo(
     () =>
       Array.from(
@@ -1551,92 +1551,102 @@ export function PipelineWorkspace() {
             onRetry={() => leadsQuery.refetch()}
           />
         ) : (
-          <CustomizableTable
-            tableId="student-enrollment-pipeline"
-            tableTitle="Admissions Pipeline"
-            columns={columns}
-            data={leads}
-            isLoading={leadsQuery.isLoading}
-            serverSide
-            serverSidePagination
-            serverSideSearch
-            serverSideSort
-            serverSideFilter
-            searchTerm={search}
-            defaultSearchTerm={search}
-            searchFieldProps={{
-              placeholder: 'Search applicants',
-              inputProps: { 'aria-label': 'Search applicants' },
-            }}
-            filters={[...tableFilters, ...columnFilters]}
-            totalCount={leadsQuery.data?.totalCount || 0}
-            page={page}
-            rowsPerPage={pageSize}
-            defaultRowsPerPage={pageSize}
-            rowsPerPageOptions={[pageSize]}
-            onSearchInputChange={(value) => {
-              setSearch(value);
-              setSelectedLeadIds([]);
-              if (state.page !== 1) {
-                updateState({ page: 1 }, 'replace');
+          <>
+            <CustomizableTable
+              tableId="student-enrollment-pipeline"
+              tableTitle="Admissions Pipeline"
+              columns={columns}
+              data={leads}
+              isLoading={leadsQuery.isLoading}
+              serverSide
+              serverSidePagination
+              serverSideSearch
+              serverSideSort
+              serverSideFilter
+              searchTerm={search}
+              defaultSearchTerm={search}
+              searchFieldProps={{
+                placeholder: 'Search applicants',
+                inputProps: { 'aria-label': 'Search applicants' },
+              }}
+              filters={[...tableFilters, ...columnFilters]}
+              totalCount={leadsQuery.data?.totalCount || 0}
+              page={page}
+              rowsPerPage={pageSize}
+              defaultRowsPerPage={pageSize}
+              rowsPerPageOptions={[pageSize]}
+              onSearchInputChange={(value) => {
+                setSearch(value);
+                setSelectedLeadIds([]);
+                if (state.page !== 1) {
+                  updateState({ page: 1 }, 'replace');
+                }
+              }}
+              onServerSearch={(value) => {
+                setDebouncedSearch(value.trim());
+                setSelectedLeadIds([]);
+              }}
+              onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
+              onServerSort={(_column, sorts) => {
+                const sort = sorts[0];
+                updateState(
+                  {
+                    sorting: sort
+                      ? `${sort.originalId || sort.column} ${sort.direction}`
+                      : undefined,
+                    page: 1,
+                  },
+                  'push'
+                );
+              }}
+              onServerFilter={(filters) => {
+                const stateColumns = new Set([
+                  'stage',
+                  'channel',
+                  'priority',
+                  'intendedRouteType',
+                  'desiredClassName',
+                  'ownerUserId',
+                ]);
+                setSelectedLeadIds([]);
+                setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
+                updateState(
+                  {
+                    stage: getLatestEnumFilter(filters, 'stage'),
+                    channel: getLatestEnumFilter(filters, 'channel'),
+                    priority: getLatestEnumFilter(filters, 'priority'),
+                    routeType: getLatestEnumFilter(filters, 'intendedRouteType'),
+                    className: getLatestStringFilter(filters, 'desiredClassName'),
+                    owner: getLatestStringFilter(filters, 'ownerUserId'),
+                    page: 1,
+                  },
+                  'push'
+                );
+              }}
+              noDataText={
+                <EnrollmentTableEmptyState
+                  title="No applicants in this cycle view"
+                  description="Create a real inquiry for this admission cycle or clear filters to show existing applicants."
+                />
               }
-            }}
-            onServerSearch={(value) => {
-              setDebouncedSearch(value.trim());
-              setSelectedLeadIds([]);
-            }}
-            onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
-            onServerSort={(_column, sorts) => {
-              const sort = sorts[0];
-              updateState(
-                {
-                  sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : undefined,
-                  page: 1,
-                },
-                'push'
-              );
-            }}
-            onServerFilter={(filters) => {
-              const stateColumns = new Set([
-                'stage',
-                'channel',
-                'priority',
-                'intendedRouteType',
-                'desiredClassName',
-                'ownerUserId',
-              ]);
-              setSelectedLeadIds([]);
-              setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
-              updateState(
-                {
-                  stage: getLatestEnumFilter(filters, 'stage'),
-                  channel: getLatestEnumFilter(filters, 'channel'),
-                  priority: getLatestEnumFilter(filters, 'priority'),
-                  routeType: getLatestEnumFilter(filters, 'intendedRouteType'),
-                  className: getLatestStringFilter(filters, 'desiredClassName'),
-                  owner: getLatestStringFilter(filters, 'ownerUserId'),
-                  page: 1,
-                },
-                'push'
-              );
-            }}
-            noDataText={
-              <EnrollmentTableEmptyState
-                title="No matching inquiries"
-                description="Change the table filters or create a new inquiry."
-              />
-            }
-            rowProps={(row) => ({
-              ...createApplicantRowNavigationProps({
-                applicantName: getAdmissionCrmLeadName(row as AdmissionCrmLeadDto),
-                onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'overview'),
-              }),
-              'data-testid': 'student-enrollment-pipeline-row',
-              'data-lead-id': row.id,
-            })}
-            wrapperProps={{ sx: enrollmentTableWrapperSx }}
-            tableContainerProps={{ sx: enrollmentTableContainerSx }}
-          />
+              rowProps={(row) => ({
+                ...createApplicantRowNavigationProps({
+                  applicantName: getAdmissionCrmLeadName(row as AdmissionCrmLeadDto),
+                  onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'overview'),
+                }),
+                'data-testid': 'student-enrollment-pipeline-row',
+                'data-lead-id': row.id,
+              })}
+              wrapperProps={{ sx: enrollmentTableWrapperSx }}
+              tableContainerProps={{ sx: enrollmentTableContainerSx }}
+            />
+            {showEmptyPipeline ? (
+              <Alert severity="info">
+                No applicants in this cycle view. Create a real inquiry for this admission cycle or
+                clear filters to show existing applicants.
+              </Alert>
+            ) : null}
+          </>
         ))}
 
       <Dialog open={quickDialogOpen} onClose={closeQuickInquiry} fullWidth maxWidth="md">

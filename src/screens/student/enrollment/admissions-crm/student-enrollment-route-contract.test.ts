@@ -44,7 +44,7 @@ describe('Student Enrollment workspace route contracts', () => {
       workspaces.indexOf('export const AdmissionsExamsWorkspace')
     );
 
-    expect(route).toContain("params: Promise<{ leadId: string }>");
+    expect(route).toContain('params: Promise<{ leadId: string }>');
     expect(route).toContain('const { leadId } = await params');
     expect(route).toContain('<AdmissionsApplicantWorkspace leadId={leadId} />');
     expect(applicantWorkspace).toContain(
@@ -70,6 +70,7 @@ describe('Student Enrollment workspace route contracts', () => {
       'ActivationWorkspace',
       'OperationsWorkspace',
       'AnalyticsWorkspace',
+      'AdmissionCyclesWorkspace',
     ].forEach((workspace) => expect(source).toContain(workspace));
     expect(source).not.toContain('StudentAdmissionsCrmScreen');
     expect(
@@ -87,9 +88,10 @@ describe('Student Enrollment workspace route contracts', () => {
     ).toBe(false);
   });
 
-  it('redirects the Enrollment root to the role-focused overview', () => {
+  it('binds the Enrollment root to the operational My Work entry point', () => {
     const source = read('src', 'app', '(auth-route)', 'student', 'enrollment', 'page.tsx');
-    expect(source).toContain("redirect('/student/enrollment/overview')");
+    expect(source).toContain('AdmissionsOverviewWorkspace');
+    expect(source).not.toContain('redirect(');
   });
 
   it('keeps bounded server pagination and debounced staff search in owning workspaces', () => {
@@ -135,6 +137,8 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(context).not.toContain('window.history.state');
     expect(context).toContain('useIsomorphicLayoutEffect(() =>');
     expect(context).toContain('window.location.pathname !== pathname');
+    expect(context).toContain('const href = query ?');
+    expect(context).toContain('pathname}?');
     expect(context).toContain('pendingNavigationPathRef.current = applicantPath');
     expect(context).toContain('pendingNavigationPathRef.current !== pathname');
     expect(context).toContain('areSearchParamsEquivalent(liveSearchParams, current)');
@@ -199,6 +203,17 @@ describe('Student Enrollment workspace route contracts', () => {
 
   it('keeps the Enrollment navigation and registration title concise', () => {
     const menu = read('src', 'constants', 'student-menu.ts');
+    const root = read('src', 'app', '(auth-route)', 'student', 'enrollment', 'page.tsx');
+    const cyclesRoute = read(
+      'src',
+      'app',
+      '(auth-route)',
+      'student',
+      'enrollment',
+      'settings',
+      'admission-cycles',
+      'page.tsx'
+    );
     const registration = read(
       'src',
       'screens',
@@ -208,9 +223,131 @@ describe('Student Enrollment workspace route contracts', () => {
       'registrations-workspace.tsx'
     );
 
+    expect(menu).toContain("title: 'Admission Cycles'");
+    expect(menu).toContain("admissionCycles: '/student/enrollment/settings/admission-cycles'");
+    expect(menu).not.toContain('path: studentPaths.enrollment.admissionCycles');
+    expect(root).toContain('AdmissionsOverviewWorkspace');
+    expect(cyclesRoute).toContain('AdmissionsCyclesWorkspace');
     expect(menu).toContain("title: 'Registration'");
     expect(menu).not.toContain("title: 'Registrations & Documents'");
     expect(registration).toContain('title="Registration"');
+  });
+
+  it('keeps Class Placement Plan wording user-facing while preserving offers-seats URLs', () => {
+    const menu = read('src', 'constants', 'student-menu.ts');
+    const setup = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-setup-center.tsx'
+    );
+    const offers = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'offers-workspace.tsx'
+    );
+
+    expect(menu).toContain("title: 'Class Placement Plan'");
+    expect(menu).toContain("offersSeats: '/student/enrollment/offers-seats'");
+    expect(setup).toContain("title: 'Class Placement Plan'");
+    expect(offers).toContain('title="Offers & Class Placement Plan"');
+  });
+
+  it('wires Admission Cycles through setup RTK Query endpoints', () => {
+    const api = read('src', 'redux', 'student', 'admissions-crm', 'admissions-crm-api.ts');
+    const workspace = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'admission-cycles-workspace.tsx'
+    );
+    const detailWorkspace = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'admission-cycle-detail-workspace.tsx'
+    );
+    const detailRoute = read(
+      'src',
+      'app',
+      '(auth-route)',
+      'student',
+      'enrollment',
+      'settings',
+      'admission-cycles',
+      '[academicYearId]',
+      'page.tsx'
+    );
+    const detailTabRoute = read(
+      'src',
+      'app',
+      '(auth-route)',
+      'student',
+      'enrollment',
+      'settings',
+      'admission-cycles',
+      '[academicYearId]',
+      '[workspaceTab]',
+      'page.tsx'
+    );
+    const academicYearToken = ['$', '{academicYearId}'].join('');
+
+    expect(api).toContain('getAdmissionCrmCycles');
+    expect(api).toContain("url: '/student-enrollment/admissions-crm/setup/cycles'");
+    expect(api).toContain('getAdmissionCrmCycleSummary');
+    expect(api).toContain(
+      `/student-enrollment/admissions-crm/setup/cycles/${academicYearToken}/summary`
+    );
+    expect(api).toContain('getAdmissionCrmApplicationStagePolicy');
+    expect(api).toContain(
+      `/student-enrollment/admissions-crm/setup/cycles/${academicYearToken}/stage-policy`
+    );
+    expect(api).toContain('previewAdmissionCrmApplicationStagePolicy');
+    expect(api).toContain('updateAdmissionCrmApplicationStagePolicy');
+    expect(workspace).toContain('useGetAdmissionCrmCyclesQuery');
+    expect(workspace).toContain('CustomizableTable');
+    expect(workspace).toContain('tableId="student-enrollment-admission-cycles"');
+    expect(workspace).toContain('getAdmissionCycleWorkspaceHref');
+    expect(workspace).not.toContain('useGetAdmissionCrmCycleSummaryQuery');
+    expect(workspace).not.toContain('CycleSummaryPanel');
+    expect(detailRoute).toContain('params: Promise<{ academicYearId: string }>');
+    expect(detailRoute).toContain(
+      '<AdmissionsCycleDetailWorkspace academicYearId={academicYearId} />'
+    );
+    expect(detailTabRoute).toContain("type AdmissionCycleWorkspaceTab = 'setup' | 'journey-rules' | 'activity'");
+    expect(detailTabRoute).toContain("validTabs.has(workspaceTab as AdmissionCycleWorkspaceTab)");
+    expect(detailTabRoute).toContain('notFound()');
+    expect(detailTabRoute).toContain('initialTab={workspaceTab as AdmissionCycleWorkspaceTab}');
+    expect(detailWorkspace).toContain('useGetAdmissionCrmCycleSummaryQuery');
+    expect(detailWorkspace).toContain('Guided setup');
+    expect(detailWorkspace).toContain('Journey rules');
+    expect(detailWorkspace).toContain('ApplicationStagePolicyPanel');
+    expect(detailWorkspace).toContain('getAdmissionCycleWorkspaceTabHref');
+    expect(detailWorkspace).toContain('const tabPath = tab ===');
+    expect(detailWorkspace).toContain('encodeURIComponent(tab)');
+    expect(detailWorkspace).not.toContain('&tab=');
+    expect(detailWorkspace).not.toContain("searchParams.get('tab')");
+    expect(detailWorkspace).toContain('useRouter()');
+    expect(detailWorkspace).toContain(
+      'onChange={(_, nextTab: CycleWorkspaceTab) => router.push(tabHref(nextTab))}'
+    );
+    expect(detailWorkspace).toContain("activeTab === 'overview'");
+    expect(detailWorkspace).toContain("activeTab === 'setup'");
+    expect(detailWorkspace).toContain("activeTab === 'journey-rules'");
+    expect(detailWorkspace).toContain("activeTab === 'activity'");
+    expect(detailWorkspace).not.toContain('event.preventDefault()');
+    expect(detailWorkspace).not.toContain('isPlainPrimaryNavigationClick');
+    expect(detailWorkspace).toContain('Configured journey');
+    expect(detailWorkspace).toContain('Fees and Class Placement Plan');
   });
 
   it('pins the entrance exam admission status beside the actions column', () => {
@@ -283,6 +420,7 @@ describe('Student Enrollment workspace route contracts', () => {
   it('uses the shared project table and action patterns throughout Enrollment', () => {
     const tableFiles = [
       'overview-workspace.tsx',
+      'admission-cycles-workspace.tsx',
       'pipeline-workspace.tsx',
       'exams-workspace.tsx',
       'operations-queue-workspace.tsx',

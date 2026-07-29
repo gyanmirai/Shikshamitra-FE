@@ -197,7 +197,6 @@ export const RoomApprovalQueue = ({
                   </Typography>
                 ),
             },
-
             {
               id: 'createdAt',
               label: 'Requested On',
@@ -256,7 +255,7 @@ export const RoomApprovalQueue = ({
                         <Iconify icon="mdi:check-circle" width={16} />
                       </LoadingButton>
                     </span>
-                  </Tooltip>
+                  </Tooltip >
                   <Tooltip title="Reject">
                     <span>
                       <IconButton
@@ -273,15 +272,15 @@ export const RoomApprovalQueue = ({
                       </IconButton>
                     </span>
                   </Tooltip>
-                </Stack>
+                </Stack >
               ),
             },
           ]}
         />
-      </Stack>
+      </Stack >
 
       {/* Reject Dialog */}
-      <Dialog
+      < Dialog
         open={rejectDialogOpen}
         onClose={() => setRejectDialogOpen(false)}
         maxWidth="sm"
@@ -342,7 +341,7 @@ export const RoomApprovalQueue = ({
             Confirm Rejection
           </LoadingButton>
         </DialogActions>
-      </Dialog>
+      </Dialog >
     </>
   );
 };

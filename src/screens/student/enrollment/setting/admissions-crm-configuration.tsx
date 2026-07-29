@@ -541,6 +541,10 @@ const journeyTriggerLabel: Record<AdmissionCrmJourneyTrigger, string> = {
   [AdmissionCrmJourneyTrigger.ExamNoShow]: 'Exam no-show',
   [AdmissionCrmJourneyTrigger.AdmissionReady]: 'Admission ready',
   [AdmissionCrmJourneyTrigger.DocumentExpiring]: 'Document expiring',
+  [AdmissionCrmJourneyTrigger.FeeFollowUp]: 'Fee follow-up',
+  [AdmissionCrmJourneyTrigger.OfferIssued]: 'Offer issued',
+  [AdmissionCrmJourneyTrigger.OfferAccepted]: 'Offer accepted',
+  [AdmissionCrmJourneyTrigger.ActivationWelcome]: 'Activation welcome',
 };
 
 const leadPriorityLabel: Record<AdmissionCrmLeadPriority, string> = {

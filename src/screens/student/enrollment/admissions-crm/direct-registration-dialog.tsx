@@ -34,7 +34,7 @@ import {
   useGetAdmissionCrmQuickInquiryOptionsQuery,
   useGetAdmissionCrmRegistrationTemplatesQuery,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
-  useCreateDirectAdmissionCrmRegistrationMutation,
+  useCreatePaperAdmissionCrmRegistrationMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
@@ -64,9 +64,14 @@ type FormState = {
   registrationTemplateId: string;
   formNumberSeriesId: string;
   manualFormNumber: string;
+  physicalFormNumber: string;
+  physicalFormReceivedDate: string;
+  scannedFormAttachmentReference: string;
   notes: string;
   duplicateContinueReason: string;
 };
+
+const todayInputValue = () => new Date().toISOString().slice(0, 10);
 
 const initialForm = (): FormState => ({
   firstName: '',
@@ -82,6 +87,9 @@ const initialForm = (): FormState => ({
   registrationTemplateId: '',
   formNumberSeriesId: '',
   manualFormNumber: '',
+  physicalFormNumber: '',
+  physicalFormReceivedDate: todayInputValue(),
+  scannedFormAttachmentReference: '',
   notes: '',
   duplicateContinueReason: '',
 });
@@ -136,7 +144,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     { skip: !open || !academicYearId }
   );
   const [previewDuplicates, previewState] = usePreviewAdmissionCrmLeadDuplicatesMutation();
-  const [createDirectRegistration, createState] = useCreateDirectAdmissionCrmRegistrationMutation();
+  const [createPaperRegistration, createState] = useCreatePaperAdmissionCrmRegistrationMutation();
 
   const directRegistrationOptions = useMemo(
     () => mapQuickInquiryOptions(quickInquiryOptionsQuery.data),
@@ -249,7 +257,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
 
   const buildApplicant = (): CreateAdmissionCrmLeadDto => {
     if (!selectedStandard || !selectedRoute) {
-      throw new Error('Direct registration academic options are incomplete.');
+      throw new Error('Paper registration academic options are incomplete.');
     }
 
     return {
@@ -261,7 +269,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
       parentGuardianName: form.parentGuardianName.trim() || null,
       primaryContactNo: form.primaryContactNo.trim() || null,
       email: form.email.trim() || null,
-      admissionIntent: `${selectedRoute.label} direct registration`,
+      admissionIntent: `${selectedRoute.label} paper registration`,
       intendedRouteDefinitionId: selectedRoute.id,
       targetStandardId: selectedStandard.id,
       academicBoardId: academicBoardId || null,
@@ -301,13 +309,13 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     }
     if (optionConfigurationUnavailable) {
       shikshaMitraToast.error({
-        message: 'Direct registration options are unavailable. Review Enrollment Settings.',
+        message: 'Paper registration options are unavailable. Review Enrollment Settings.',
       });
       return;
     }
-    if (!form.formNumberSeriesId && !form.manualFormNumber.trim()) {
+    if (!form.physicalFormNumber.trim()) {
       shikshaMitraToast.error({
-        message: 'Select a form number series or enter the paper form number.',
+        message: 'Physical form number is required.',
       });
       return;
     }
@@ -326,20 +334,26 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
         });
         return;
       }
-      const result = await createDirectRegistration({
+      const physicalFormNumber = form.physicalFormNumber.trim().toUpperCase();
+      const result = await createPaperRegistration({
         academicYearId,
         body: {
           applicant,
           registration: {
             registrationTemplateId: form.registrationTemplateId,
             formNumberSeriesId: form.formNumberSeriesId || null,
-            manualFormNumber: form.manualFormNumber.trim().toUpperCase() || null,
+            manualFormNumber: form.formNumberSeriesId
+              ? form.manualFormNumber.trim().toUpperCase() || null
+              : physicalFormNumber,
             waiveFee: false,
           },
+          physicalFormNumber,
+          physicalFormReceivedDate: `${form.physicalFormReceivedDate || todayInputValue()}T00:00:00.000Z`,
+          scannedFormAttachmentReference: form.scannedFormAttachmentReference.trim() || null,
         },
       }).unwrap();
       shikshaMitraToast.success({
-        message: 'Direct registration created. Enter the paper form details next.',
+        message: 'Paper registration created. Enter the form responses next.',
       });
       reset();
       onCreated(result.applicant.id);
@@ -363,14 +377,12 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
       if (!selectedStandard) return 'Target class is required.';
       if (!selectedRoute) return 'Admission pathway is required.';
       if (optionConfigurationUnavailable) {
-        return 'Direct registration options are unavailable. Review Enrollment Settings.';
+        return 'Paper registration options are unavailable. Review Enrollment Settings.';
       }
     }
     if (step === 2) {
       if (!form.registrationTemplateId) return 'Registration template is required.';
-      if (!form.formNumberSeriesId && !form.manualFormNumber.trim()) {
-        return 'Select a form number series or enter the paper form number.';
-      }
+      if (!form.physicalFormNumber.trim()) return 'Physical form number is required.';
     }
     return null;
   };
@@ -387,13 +399,12 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
 
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="md">
-      <DialogTitle>Create direct registration</DialogTitle>
+      <DialogTitle>Enter Paper Registration</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
           <Alert severity="info">
-            Use this for RTE, walk-in, or paper registrations that legitimately bypass inquiry and
-            entrance-exam steps. The applicant still follows document, payment, offer, and admission
-            checks.
+            Use this when staff receive a physical registration form and need to create the
+            Enrollment record before entering the form responses. OCR is not used in this workflow.
           </Alert>
           <Paper variant="outlined" sx={{ p: 1.25 }}>
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
@@ -421,7 +432,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
           </Paper>
 
           {optionConfigurationLoading ? (
-            <LinearProgress aria-label="Loading direct registration options" />
+            <LinearProgress aria-label="Loading paper registration options" />
           ) : null}
           {quickInquiryOptionsQuery.isError ? (
             <Alert
@@ -441,13 +452,13 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
           ) : null}
           {optionConfigurationMissing ? (
             <Alert severity="warning">
-              Direct registration needs the Manual entry channel and at least one published
+              Paper registration needs the Manual entry channel and at least one published
               admission pathway. Ask an administrator to update Enrollment Settings.
             </Alert>
           ) : null}
           {quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false ? (
             <Alert severity="warning">
-              Direct registration is unavailable because the admission cycle is not active.
+              Paper registration is unavailable because the admission cycle is not active.
             </Alert>
           ) : null}
 
@@ -708,12 +719,35 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
               </TextField>
               <TextField
                 label="Paper form number"
-                value={form.manualFormNumber}
-                disabled={Boolean(form.formNumberSeriesId)}
+                value={form.physicalFormNumber}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    manualFormNumber: event.target.value.toUpperCase(),
+                    physicalFormNumber: event.target.value.toUpperCase(),
+                  }))
+                }
+              />
+              <TextField
+                type="date"
+                required
+                label="Received date"
+                value={form.physicalFormReceivedDate}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    physicalFormReceivedDate: event.target.value,
+                  }))
+                }
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Scan reference"
+                value={form.scannedFormAttachmentReference}
+                helperText="Optional reference only. Upload/OCR handling is future scope."
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    scannedFormAttachmentReference: event.target.value,
                   }))
                 }
               />
@@ -723,9 +757,9 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
           {activeStep === 3 ? (
             <Stack spacing={1.25}>
               <Alert severity="info">
-                Confirm this direct registration is operationally valid. It bypasses inquiry and
-                entrance exam only; document, payment, offer, and admission readiness checks still
-                apply.
+                Confirm this paper registration is operationally valid. It bypasses inquiry and
+                entrance exam only when the school accepts that path; document, fee, class
+                placement, and admission readiness checks still apply.
               </Alert>
               <TextField
                 label="Staff notes"
@@ -779,7 +813,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
             loading={previewState.isLoading || createState.isLoading}
             onClick={submit}
           >
-            {duplicateReviewed && duplicateCount ? 'Create Anyway' : 'Create and Enter Paper Form'}
+            {duplicateReviewed && duplicateCount ? 'Create Anyway' : 'Create From Paper Form'}
           </LoadingButton>
         )}
       </DialogActions>

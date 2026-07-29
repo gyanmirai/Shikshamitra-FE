@@ -11,15 +11,24 @@ import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-c
 
 const setupItems = [
   {
+    key: 'admission-cycles',
+    title: 'Admission Cycles',
+    description:
+      'Select, review, and ready each academic-year admission cycle before operations begin.',
+    path: studentPaths.enrollment.settingsSections.admissionCycles,
+    icon: 'mdi:calendar-sync-outline',
+    group: 'Foundation',
+  },
+  {
     key: 'journey',
-    title: 'Admission cycle and journey',
-    description: 'Calendar, stages, service targets, and handoffs.',
+    title: 'Journey rules',
+    description: 'Advanced cycle rules, stages, service targets, and handoffs.',
     path: studentPaths.enrollment.settingsSections.journey,
     icon: 'mdi:map-marker-path',
     group: 'Essential',
   },
   {
-    key: 'capture',
+    key: 'inquiry-capture',
     title: 'Inquiry forms and sources',
     description: 'How families submit inquiries and what information is collected.',
     path: studentPaths.enrollment.settingsSections.inquiryCapture,
@@ -27,7 +36,7 @@ const setupItems = [
     group: 'Essential',
   },
   {
-    key: 'exam',
+    key: 'entrance-exams',
     title: 'Exam and eligibility',
     description: 'Assessment schedules, scoring, and eligibility rules.',
     path: studentPaths.enrollment.settingsSections.entranceExams,
@@ -35,7 +44,7 @@ const setupItems = [
     group: 'Essential',
   },
   {
-    key: 'registration',
+    key: 'registration-documents',
     title: 'Registration and documents',
     description: 'Registration templates and required document checks.',
     path: studentPaths.enrollment.settingsSections.registrationDocuments,
@@ -43,9 +52,9 @@ const setupItems = [
     group: 'Essential',
   },
   {
-    key: 'offers',
-    title: 'Offers and seats',
-    description: 'Seat pools, approvals, offers, and waitlists.',
+    key: 'offers-seats',
+    title: 'Class Placement Plan',
+    description: 'Class placement capacity, approvals, offers, and waitlists.',
     path: studentPaths.enrollment.settingsSections.offersSeats,
     icon: 'mdi:seat-outline',
     group: 'Essential',
@@ -71,19 +80,21 @@ export function EnrollmentSetupCenter() {
   const setup = query.data;
   const configured = setup?.status === 2 || setup?.status === 3;
   const visibleItems = setup?.items.filter((item) => item.accessMode !== 0);
+  const admissionCyclesReady = Boolean(academicYearId);
+  const essentialKeys = [
+    'journey',
+    'inquiry-capture',
+    'entrance-exams',
+    'registration-documents',
+    'offers-seats',
+  ];
   const completedCount =
-    visibleItems?.filter((item) => item.status === 2 || item.status === 3).length ?? 0;
+    (visibleItems?.filter(
+      (item) => essentialKeys.includes(item.key) && (item.status === 2 || item.status === 3)
+    ).length ?? 0) + (admissionCyclesReady ? 1 : 0);
   const essentialCount = Math.max(
     1,
-    visibleItems?.filter((item) =>
-      [
-        'journey',
-        'inquiry-capture',
-        'entrance-exams',
-        'registration-documents',
-        'offers-seats',
-      ].includes(item.key)
-    ).length ?? 5
+    (visibleItems?.filter((item) => essentialKeys.includes(item.key)).length ?? 5) + 1
   );
 
   return (
@@ -175,6 +186,7 @@ export function EnrollmentSetupCenter() {
       >
         {setupItems
           .filter((item) => {
+            if (item.key === 'admission-cycles') return true;
             if (!setup) return true;
             if (item.key === 'advanced')
               return setup.items.some(
@@ -195,7 +207,9 @@ export function EnrollmentSetupCenter() {
             const statusItem = setup?.items.find((candidate) => candidate.key === item.key);
             const ready = statusItem
               ? statusItem.status === 2 || statusItem.status === 3
-              : configured && index < 2;
+              : item.key === 'admission-cycles'
+                ? admissionCyclesReady
+                : configured && index < 2;
             const readOnly = statusItem?.accessMode === 1;
             return (
               <Paper key={item.key} variant="outlined" sx={{ p: 1.75, borderRadius: 2 }}>

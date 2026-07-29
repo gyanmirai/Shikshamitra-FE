@@ -111,7 +111,7 @@ const AssignmentTypeForm = ({ onClose, editData, existingTypes = [] }: IAssignme
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Stack spacing={1} sx={{ pt: 1 }}>
+        <Stack spacing={2}>
           <ShakingTextField
             error={Boolean(formik.touched.assignmentTypeName && formik.errors.assignmentTypeName)}
           >

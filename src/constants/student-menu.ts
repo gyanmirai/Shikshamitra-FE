@@ -20,6 +20,7 @@ export const studentPaths = {
     analytics: '/student/enrollment/analytics',
     settings: '/student/enrollment/settings',
     settingsSections: {
+      admissionCycles: '/student/enrollment/settings/admission-cycles',
       journey: '/student/enrollment/settings/journey',
       inquiryCapture: '/student/enrollment/settings/inquiry-capture',
       routingScoring: '/student/enrollment/settings/routing-scoring',
@@ -166,7 +167,7 @@ const studentModule = (isDdvs: boolean) => ({
               preserveQueryParams: ['cycle'],
             },
             {
-              title: 'Offers & Seats',
+              title: 'Class Placement Plan',
               path: studentPaths.enrollment.offersSeats,
               _action: 'student-enrollment-offers-seats',
               permissionName: studentPermissions.enrollment.offersSeats,
@@ -213,7 +214,15 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Admission Journey',
+                  title: 'Admission Cycles',
+                  path: studentPaths.enrollment.settingsSections.admissionCycles,
+                  _action: 'student-enrollment-settings-admission-cycles',
+                  permissionName: studentPermissions.enrollment.settings,
+                  icon: menuIconView('mdi:calendar-sync-outline'),
+                  preserveQueryParams: ['cycle'],
+                },
+                {
+                  title: 'Journey rules',
                   path: studentPaths.enrollment.settingsSections.journey,
                   _action: 'student-enrollment-settings-journey',
                   permissionName: studentPermissions.enrollment.settings,
@@ -253,7 +262,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Offers & Seats',
+                  title: 'Class Placement Plan',
                   path: studentPaths.enrollment.settingsSections.offersSeats,
                   _action: 'student-enrollment-settings-offers-seats',
                   permissionName: studentPermissions.enrollment.settings,

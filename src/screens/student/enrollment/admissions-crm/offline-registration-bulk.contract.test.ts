@@ -6,7 +6,7 @@ const read = (...segments: string[]) =>
   fs.readFileSync(path.join(process.cwd(), ...segments), 'utf8');
 
 describe('Enrollment offline registration and bulk-operation contracts', () => {
-  it('offers permission-checked direct registration from the registration workspace', () => {
+  it('offers permission-checked paper registration from the registration workspace', () => {
     const workspace = read(
       'src',
       'screens',
@@ -24,10 +24,12 @@ describe('Enrollment offline registration and bulk-operation contracts', () => {
       'direct-registration-dialog.tsx'
     );
 
-    expect(workspace).toContain('Create Registration');
+    expect(workspace).toContain('Enter Paper Registration');
     expect(workspace).toContain('DirectRegistrationDialog');
     expect(workspace).toContain('IssueRegistrationForm');
-    expect(dialog).toContain('useCreateDirectAdmissionCrmRegistrationMutation');
+    expect(dialog).toContain('useCreatePaperAdmissionCrmRegistrationMutation');
+    expect(dialog).toContain('physicalFormNumber');
+    expect(dialog).toContain('physicalFormReceivedDate');
     expect(dialog).toContain('AdmissionInquiryChannel.ManualBackOffice');
     expect(dialog).toContain('duplicateFingerprint');
     expect(dialog).toContain('T00:00:00.000Z');

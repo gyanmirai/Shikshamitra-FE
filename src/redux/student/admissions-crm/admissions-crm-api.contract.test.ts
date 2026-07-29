@@ -89,6 +89,7 @@ import type {
   AdmissionCrmChannelSettingDto,
   AdmissionCrmLeadRoutingRuleDto,
   AdmissionCrmAnalyticsSummaryDto,
+  AdmissionCrmEnrollmentOverviewDto,
   AdmissionCrmApplicantChecklistItemDto,
   AdmissionCrmApplicantChecklistProgressDto,
 } from './admissions-crm-api';
@@ -261,6 +262,31 @@ describe('admissions CRM API contracts', () => {
         registrationStatus: AdmissionCrmRegistrationStatus.AdmissionReady,
       },
     });
+  });
+
+  it('keeps enrollment overview operational insight fields in the contract', () => {
+    const overview = {
+      academicYearId: 'year-1',
+      generatedAt: '2026-07-27T00:00:00Z',
+      unassignedLeadCount: 1,
+      upcomingExamCount: 2,
+      examNoShowCount: 3,
+      pendingPaperEntryCount: 4,
+      expiringRegistrationCount: 5,
+      documentFollowUpCount: 6,
+      feeFollowUpCount: 7,
+      pendingApprovalCount: 8,
+      expiringOfferCount: 9,
+      classPlacementRiskCount: 10,
+      activationFailureCount: 11,
+      handoffBlockerCount: 12,
+      urgentCount: 13,
+      queues: [],
+      urgentItems: [],
+    } satisfies AdmissionCrmEnrollmentOverviewDto;
+
+    expect(overview.pendingPaperEntryCount).toBe(4);
+    expect(overview.classPlacementRiskCount).toBe(10);
   });
 
   it('builds versioned admissions playbook requests in the CRM route family', () => {
@@ -1308,6 +1334,10 @@ describe('admissions CRM API contracts', () => {
     expect(AdmissionCrmJourneyTrigger.ExamCompleted).toBe(5);
     expect(AdmissionCrmJourneyTrigger.EligibilityDecided).toBe(6);
     expect(AdmissionCrmJourneyTrigger.DocumentExpiring).toBe(18);
+    expect(AdmissionCrmJourneyTrigger.FeeFollowUp).toBe(19);
+    expect(AdmissionCrmJourneyTrigger.OfferIssued).toBe(20);
+    expect(AdmissionCrmJourneyTrigger.OfferAccepted).toBe(21);
+    expect(AdmissionCrmJourneyTrigger.ActivationWelcome).toBe(22);
   });
 
   it('keeps timeline event enum values aligned with the backend contract', () => {
@@ -1329,6 +1359,7 @@ describe('admissions CRM API contracts', () => {
 
   it('keeps the manual registration handoff queue aligned with the backend contract', () => {
     expect(AdmissionCrmOperationsQueueType.RegistrationInvitationPending).toBe(21);
+    expect(AdmissionCrmOperationsQueueType.PendingPaperEntry).toBe(22);
   });
 
   it('tracks automation run and failure analytics in the summary contract', () => {
