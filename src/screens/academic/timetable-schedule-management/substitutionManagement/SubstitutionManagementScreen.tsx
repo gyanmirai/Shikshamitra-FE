@@ -43,6 +43,7 @@ import {
   AutoAwesome,
   AssignmentInd,
   Close as CloseIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import {
   Box,
@@ -59,6 +60,7 @@ import {
   Divider,
   MenuItem,
   TextField,
+  Accordion,
   Typography,
   IconButton,
   CardContent,
@@ -66,6 +68,8 @@ import {
   ListItemIcon,
   ListItemText,
   LinearProgress,
+  AccordionSummary,
+  AccordionDetails,
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -656,6 +660,7 @@ const uniqueLookupOptions = <T extends ApiLookupOption>(items: T[]): T[] => {
 
 const SubstitutionManagementScreen = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const isViewportTab = ['board', 'availability', 'dailySheet'].includes(activeTab);
   const [boardView, setBoardView] = useState<SubstitutionViewType>('table');
   const [filters, setFilters] = useState(DEFAULT_SUBSTITUTION_FILTERS);
   const [substitutions, setSubstitutions] = useState<SubstitutionRow[]>([]);
@@ -699,6 +704,8 @@ const SubstitutionManagementScreen = () => {
   const [availabilityFormDirty, setAvailabilityFormDirty] = useState(false);
   const [availabilityUnsavedConfirmOpen, setAvailabilityUnsavedConfirmOpen] = useState(false);
   const [availabilitySubmitted, setAvailabilitySubmitted] = useState(false);
+  const [dutyLoadingId, setDutyLoadingId] = useState<string | null>(null);
+  const [dutyLoadingAction, setDutyLoadingAction] = useState<'accept' | 'reject' | 'change' | null>(null);
   const createFormSnapshotRef = useRef<string>(JSON.stringify(defaultSubstitutionForm));
   const availabilityFormSnapshotRef = useRef<string>(JSON.stringify(defaultAvailabilityForm));
   const { currentMedium: medium, currentYear } = useSelector((state: RootState) => state.globalState);
@@ -1688,6 +1695,8 @@ const SubstitutionManagementScreen = () => {
 
   const handleTeacherDutyAction = useCallback(
     async (id: string, action: 'accept' | 'reject' | 'change') => {
+      setDutyLoadingId(id);
+      setDutyLoadingAction(action);
       try {
         const updated =
           action === 'accept'
@@ -1710,6 +1719,9 @@ const SubstitutionManagementScreen = () => {
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unable to update duty.';
         shikshaMitraToast.error({ message });
+      } finally {
+        setDutyLoadingId(null);
+        setDutyLoadingAction(null);
       }
     },
     [acknowledgeSubstitution, rejectSubstitutionDuty, requestSubstitutionChange, updateSubstitution]
@@ -1885,12 +1897,11 @@ const SubstitutionManagementScreen = () => {
     <Box
       display="grid"
       gridTemplateColumns={{
-        xs: '1fr',
-        sm: 'repeat(2, 1fr)',
-        md: 'repeat(3, 1fr)',
-        lg: 'repeat(4, 1fr)',
+        xs: 'repeat(2, 1fr)',
+        sm: 'repeat(4, 1fr)',
+        md: 'repeat(7, 1fr)',
       }}
-      gap={1.5}
+      gap={1}
     >
       {metrics.map((item) => (
         <Card
@@ -1900,15 +1911,13 @@ const SubstitutionManagementScreen = () => {
             borderRadius: 2,
             boxShadow: 'none',
             border: (theme) => `1px solid ${theme.palette.divider}`,
-            borderLeft: (theme) =>
-              `4px solid ${theme.palette[item.color as 'success']?.main ?? theme.palette.divider}`,
             cursor: item.filterStatus ? 'pointer' : 'default',
             transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
             '&:hover': item.filterStatus
               ? {
-                  boxShadow: (theme) =>
-                    `0 2px 8px ${alpha(theme.palette[item.color as 'success']?.main ?? '#000', 0.18)}`,
-                }
+                boxShadow: (theme) =>
+                  `0 2px 8px ${alpha(theme.palette[item.color as 'success']?.main ?? '#000', 0.18)}`,
+              }
               : undefined,
           }}
           onClick={() => {
@@ -1918,60 +1927,44 @@ const SubstitutionManagementScreen = () => {
             }
           }}
         >
-          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.25 }}>
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  display: 'grid',
-                  borderRadius: 2,
-                  placeItems: 'center',
-                  color: `${item.color}.main`,
-                  bgcolor: `${item.color}.lighter`,
-                  flexShrink: 0,
-                }}
+          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Box sx={{ mb: 1 }}>
+              <Typography
+                variant="h6"
+                fontWeight={800}
+                sx={{ lineHeight: 1, color: `${item.color}.main` }}
               >
-                <Iconify icon={item.icon} width={22} />
-              </Box>
-              <Box sx={{ minWidth: 0, flex: 1 }}>
+                {item.value}
+              </Typography>
+              <Tooltip title={item.label}>
                 <Typography
-                  variant="h5"
-                  fontWeight={800}
-                  sx={{ lineHeight: 1, color: `${item.color}.main` }}
+                  variant="caption"
+                  fontWeight={700}
+                  color="text.primary"
+                  sx={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    lineHeight: 1.2,
+                    mt: 0.5,
+                  }}
                 >
-                  {item.value}
+                  {item.label}
                 </Typography>
-                <Tooltip title={item.label}>
-                  <Typography
-                    variant="caption"
-                    fontWeight={700}
-                    color="text.primary"
-                    sx={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      lineHeight: 1.3,
-                      mt: 0.25,
-                    }}
-                  >
-                    {item.label}
-                  </Typography>
-                </Tooltip>
-              </Box>
-            </Stack>
+              </Tooltip>
+            </Box>
             <Typography
               variant="caption"
               color="text.secondary"
               sx={{
                 display: '-webkit-box',
-                WebkitLineClamp: 2,
+                WebkitLineClamp: 1,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
-                fontSize: 11,
-                lineHeight: 1.4,
-                minHeight: '2.8em',
+                fontSize: 10,
+                lineHeight: 1.3,
+                minHeight: '1.3em',
               }}
             >
               {item.helper}
@@ -1980,7 +1973,7 @@ const SubstitutionManagementScreen = () => {
               variant="determinate"
               color={item.color as any}
               value={item.progress}
-              sx={{ mt: 1.25, height: 4, borderRadius: 2 }}
+              sx={{ mt: 1, height: 3, borderRadius: 1.5 }}
             />
           </CardContent>
         </Card>
@@ -2018,21 +2011,32 @@ const SubstitutionManagementScreen = () => {
     </Stack>
   );
 
-  const renderTimeline = () => (
+  const renderTimeline = (isBoardView = false) => (
     <Card
       sx={{
         p: 2.5,
         borderRadius: 2,
         boxShadow: 'none',
         border: (theme) => `1px solid ${theme.palette.divider}`,
+        ...(isBoardView && {
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+        }),
       }}
     >
-      {renderSectionHeader(
-        'mdi:clock-time-four-outline',
-        'Today Timeline',
-        <Chip size="small" label={`${todayRows.length} periods`} variant="outlined" />
-      )}
-      <Stack spacing={1}>
+      <Box sx={isBoardView ? { flexShrink: 0 } : undefined}>
+        {renderSectionHeader(
+          'mdi:clock-time-four-outline',
+          'Today Timeline',
+          <Chip size="small" label={`${todayRows.length} periods`} variant="outlined" />
+        )}
+      </Box>
+      <Stack
+        spacing={1}
+        sx={isBoardView ? { flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 } : undefined}
+      >
         {todayRows.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
             No periods scheduled for today.
@@ -2054,6 +2058,7 @@ const SubstitutionManagementScreen = () => {
                     : `${statusColor[item.status]}.main`,
                 bgcolor: 'background.paper',
                 boxShadow: (theme) => `0 0 0 1px ${theme.palette.divider}`,
+                flexShrink: 0,
               }}
             >
               <Stack
@@ -2233,21 +2238,37 @@ const SubstitutionManagementScreen = () => {
     ];
 
     return (
-      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1} alignItems="stretch">
+      <Stack
+        direction={{ xs: 'column', lg: 'row' }}
+        spacing={1}
+        alignItems="stretch"
+        sx={{ flex: 1, minHeight: 0, overflowX: 'auto', pb: 1 }}
+      >
         {columns.map((column) => {
           const rows = filteredSubstitutions.filter((item) => item.status === column.key);
           return (
-            <Card key={column.key} sx={{ p: 1.5, borderRadius: 1, flex: 1, minWidth: 220 }}>
+            <Card
+              key={column.key}
+              sx={{
+                p: 1.5,
+                borderRadius: 1,
+                flex: 1,
+                minWidth: 220,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
+              }}
+            >
               <Stack
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
-                sx={{ mb: 1 }}
+                sx={{ mb: 1.5, flexShrink: 0 }}
               >
                 <Typography variant="subtitle1">{column.label}</Typography>
                 <Chip size="small" label={rows.length} variant="outlined" />
               </Stack>
-              <Stack spacing={1}>
+              <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
                 {rows.length === 0 && (
                   <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
                     <Typography variant="body2">No duties here</Typography>
@@ -2260,6 +2281,7 @@ const SubstitutionManagementScreen = () => {
                       p: 1.25,
                       borderRadius: 1,
                       border: (theme) => `1px solid ${theme.palette.divider}`,
+                      flexShrink: 0,
                     }}
                   >
                     <Typography variant="subtitle2">
@@ -2300,11 +2322,26 @@ const SubstitutionManagementScreen = () => {
   };
 
   const renderCalendarView = () => (
-    <Card sx={{ p: 2, borderRadius: 1 }}>
-      <Typography variant="h6" sx={{ mb: 1.5 }}>
+    <Card
+      sx={{
+        p: 2,
+        borderRadius: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+      }}
+    >
+      <Typography variant="h6" sx={{ mb: 1.5, flexShrink: 0 }}>
         Calendar View
       </Typography>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={1}
+        flexWrap="wrap"
+        useFlexGap
+        sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}
+      >
         {lectureSlotOptions.map((slot) => {
           const rows = filteredSubstitutions.filter((item) => item.period === slot.value);
           return (
@@ -2344,7 +2381,7 @@ const SubstitutionManagementScreen = () => {
 
   const renderBoardContent = () => {
     if (boardView === 'kanban') return renderKanban();
-    if (boardView === 'timeline') return renderTimeline();
+    if (boardView === 'timeline') return renderTimeline(true);
     if (boardView === 'calendar') return renderCalendarView();
 
     return (
@@ -2358,8 +2395,18 @@ const SubstitutionManagementScreen = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        height: 'calc(100vh - 100px)',
+        overflowY: isViewportTab ? 'hidden' : 'auto',
+        pr: isViewportTab ? 0 : 0.5,
+      }}
+    >
       <CustomBreadcrumbs
+        sx={{ flexShrink: 0 }}
         heading="Substitution Management"
         description="Manage teacher unavailability, substitution duties and daily coverage."
         links={[
@@ -2397,10 +2444,42 @@ const SubstitutionManagementScreen = () => {
         }
       />
 
-      {renderMetricCards()}
+      <Accordion
+        defaultExpanded
+        disableGutters
+        sx={{
+          borderRadius: '8px !important',
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+          boxShadow: 'none',
+          '&:before': { display: 'none' },
+          flexShrink: 0,
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            minHeight: 44,
+            '& .MuiAccordionSummary-content': { my: 0.75, alignItems: 'center' },
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="subtitle2" fontWeight={700}>
+              Substitution Overview & Metrics
+            </Typography>
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
+          {renderMetricCards()}
+        </AccordionDetails>
+      </Accordion>
 
       {/* ── Tabs & Filters ──────────────────────────────── */}
-      <Card sx={{ borderRadius: 1 }}>
+      <Card
+        sx={{
+          borderRadius: 1,
+          flexShrink: 0,
+        }}
+      >
         <Stack
           direction="row"
           alignItems="center"
@@ -2469,7 +2548,7 @@ const SubstitutionManagementScreen = () => {
       </Card>
 
       {activeTab === 'overview' && (
-        <Stack spacing={1}>
+        <Stack spacing={1} sx={{ flexShrink: 0 }}>
           <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1} alignItems="stretch">
             <Box sx={{ flex: 1.4 }}>{renderTimeline()}</Box>
             <Box sx={{ flex: 1 }}>{renderRiskPanel()}</Box>
@@ -2562,9 +2641,8 @@ const SubstitutionManagementScreen = () => {
       )}
 
       {activeTab === 'board' && (
-        <Stack>
-          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between">
-            <Typography variant="h6">Substitution Board</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1, minHeight: 0 }}>
+          <Stack direction="row" justifyContent="flex-end" sx={{ flexShrink: 0 }}>
             <ToggleButtonGroup
               exclusive
               size="small"
@@ -2579,105 +2657,118 @@ const SubstitutionManagementScreen = () => {
               <ToggleButton value="calendar">Calendar</ToggleButton>
             </ToggleButtonGroup>
           </Stack>
-          {renderBoardContent()}
-        </Stack>
+          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            {renderBoardContent()}
+          </Box>
+        </Box>
       )}
 
       {activeTab === 'availability' && (
-        <CustomizableTable
-          tableId="teacher-availability-table"
-          tableTitle="Teacher Availability"
-          data={teacherAvailability}
-          columns={[
-            {
-              id: 'teacherName',
-              label: 'Teacher',
-              filterType: 'string',
-              minWidth: 170,
-              sticky: true,
-            },
-            { id: 'departmentName', label: 'Department', filterType: 'string', minWidth: 140 },
-            {
-              id: 'availabilityDate',
-              label: 'Date',
-              filterType: 'date',
-              minWidth: 120,
-              render: (value: string) => formatViewDate(value),
-            },
-            { id: 'startTime', label: 'Start', filterType: 'string', minWidth: 90 },
-            { id: 'endTime', label: 'End', filterType: 'string', minWidth: 90 },
-            {
-              id: 'availabilityStatus',
-              label: 'Status',
-              filterType: 'string',
-              minWidth: 130,
-            },
-            { id: 'sourceType', label: 'Source', filterType: 'string', minWidth: 130 },
-            { id: 'reason', label: 'Reason', filterType: 'string', minWidth: 220 },
-            {
-              id: 'affectedLectureCount',
-              label: 'Affected Lectures',
-              filterType: 'number',
-              minWidth: 150,
-            },
-            {
-              id: 'autoCreateSubstitutions',
-              label: 'Auto Create',
-              filterType: 'string',
-              minWidth: 130,
-              render: (value: boolean) => (value ? 'Yes' : 'No'),
-            },
-            {
-              id: 'attachmentName',
-              label: 'Attachment',
-              filterType: 'string',
-              minWidth: 150,
-              render: (value: string) => value || '-',
-            },
-            {
-              id: 'remarks',
-              label: 'Remarks',
-              filterType: 'string',
-              minWidth: 180,
-              render: (value: string) => value || '-',
-            },
-            {
-              id: 'actions',
-              label: 'Action',
-              minWidth: 180,
-              isFilter: false,
-              sticky: true,
-              stickyPosition: 'right',
-              render: (_value, row) => {
-                const availability = row as TeacherAvailabilityRow;
-                const isDisabled =
-                  availability.affectedLectureCount <= 0 ||
-                  availability.canCreateSubstitution === false;
-
-                return (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={isDisabled}
-                    onClick={() => handleCreateSubstitutionFromAvailability(availability)}
-                  >
-                    {isDisabled ? 'Already created' : 'Create substitution'}
-                  </Button>
-                );
+        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <CustomizableTable
+            tableId="teacher-availability-table"
+            tableTitle="Teacher Availability"
+            data={teacherAvailability}
+            columns={[
+              {
+                id: 'teacherName',
+                label: 'Teacher',
+                filterType: 'string',
+                minWidth: 170,
+                sticky: true,
               },
-            },
-          ]}
-        />
+              { id: 'departmentName', label: 'Department', filterType: 'string', minWidth: 140 },
+              {
+                id: 'availabilityDate',
+                label: 'Date',
+                filterType: 'date',
+                minWidth: 120,
+                render: (value: string) => formatViewDate(value),
+              },
+              { id: 'startTime', label: 'Start', filterType: 'string', minWidth: 90 },
+              { id: 'endTime', label: 'End', filterType: 'string', minWidth: 90 },
+              {
+                id: 'availabilityStatus',
+                label: 'Status',
+                filterType: 'string',
+                minWidth: 130,
+              },
+              { id: 'sourceType', label: 'Source', filterType: 'string', minWidth: 130 },
+              { id: 'reason', label: 'Reason', filterType: 'string', minWidth: 220 },
+              {
+                id: 'affectedLectureCount',
+                label: 'Affected Lectures',
+                filterType: 'number',
+                minWidth: 150,
+              },
+              {
+                id: 'autoCreateSubstitutions',
+                label: 'Auto Create',
+                filterType: 'string',
+                minWidth: 130,
+                render: (value: boolean) => (value ? 'Yes' : 'No'),
+              },
+              {
+                id: 'attachmentName',
+                label: 'Attachment',
+                filterType: 'string',
+                minWidth: 150,
+                render: (value: string) => value || '-',
+              },
+              {
+                id: 'remarks',
+                label: 'Remarks',
+                filterType: 'string',
+                minWidth: 180,
+                render: (value: string) => value || '-',
+              },
+              {
+                id: 'actions',
+                label: 'Action',
+                minWidth: 180,
+                isFilter: false,
+                sticky: true,
+                stickyPosition: 'right',
+                render: (_value, row) => {
+                  const availability = row as TeacherAvailabilityRow;
+                  const isDisabled =
+                    availability.affectedLectureCount <= 0 ||
+                    availability.canCreateSubstitution === false;
+
+                  return (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={isDisabled}
+                      onClick={() => handleCreateSubstitutionFromAvailability(availability)}
+                    >
+                      {isDisabled ? 'Already created' : 'Create substitution'}
+                    </Button>
+                  );
+                },
+              },
+            ]}
+          />
+        </Box>
       )}
 
       {activeTab === 'dailySheet' && (
-        <Card sx={{ p: 2, borderRadius: 1 }}>
+        <Card
+          sx={{
+            p: 2,
+            borderRadius: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minHeight: 0,
+          }}
+        >
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             justifyContent="space-between"
             alignItems={{ sm: 'center' }}
-            spacing={1}
-            sx={{ mb: 2 }}
+            spacing={1.5}
+            sx={{ mb: 2, flexShrink: 0 }}
           >
             <Box>
               <Typography variant="h6">Daily Substitution Sheet</Typography>
@@ -2685,7 +2776,7 @@ const SubstitutionManagementScreen = () => {
                 Class-wise, teacher-wise, period-wise and room-wise printable coverage sheet.
               </Typography>
             </Box>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
               <Button
                 size="small"
                 variant="outlined"
@@ -2722,109 +2813,50 @@ const SubstitutionManagementScreen = () => {
               </Button>
             </Stack>
           </Stack>
-          <CustomizableTable
-            tableId="daily-substitution-sheet-table"
-            tableTitle="Daily Substitution Sheet"
-            data={dailySheetResult?.items.map(mapApiSubstitution) ?? filteredSubstitutions}
-            columns={[
-              ...substitutionColumns.filter((column) => column.id !== 'actions'),
-              {
-                id: 'signature',
-                label: 'Signature',
-                minWidth: 150,
-                isSort: false,
-                isFilter: false,
-                render: () => '____________',
-              },
-            ]}
-          />
+          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <CustomizableTable
+              tableId="daily-substitution-sheet-table"
+              tableTitle="Daily Substitution Sheet"
+              data={dailySheetResult?.items.map(mapApiSubstitution) ?? filteredSubstitutions}
+              columns={[
+                ...substitutionColumns.filter((column) => column.id !== 'actions'),
+                {
+                  id: 'signature',
+                  label: 'Signature',
+                  minWidth: 150,
+                  isSort: false,
+                  isFilter: false,
+                  render: () => '____________',
+                },
+              ]}
+            />
+          </Box>
         </Card>
       )}
 
       {activeTab === 'myDuties' && (
-        <Stack spacing={1}>
-          {(() => {
-            const terminalStatuses: SubstitutionStatus[] = ['Completed', 'Cancelled', 'Rejected'];
-            const needsActionCount = myDutyRows.filter(
-              (item) =>
-                !terminalStatuses.includes(item.status) && item.acknowledgementStatus !== 'Accepted'
-            ).length;
-            const acceptedCount = myDutyRows.filter(
-              (item) => item.acknowledgementStatus === 'Accepted' && item.status !== 'Completed'
-            ).length;
-            const completedCount = myDutyRows.filter((item) => item.status === 'Completed').length;
-            const dutyStats = [
-              {
-                label: 'Total Duties',
-                value: myDutyRows.length,
-                icon: 'mdi:clipboard-list-outline',
-              },
-              { label: 'Needs Action', value: needsActionCount, icon: 'mdi:clock-alert-outline' },
-              { label: 'Accepted', value: acceptedCount, icon: 'mdi:check-circle-outline' },
-              { label: 'Completed', value: completedCount, icon: 'mdi:check-decagram-outline' },
-            ];
-
-            return (
-              <Box
-                display="grid"
-                gridTemplateColumns={{ xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }}
-                gap={1}
-              >
-                {dutyStats.map((stat) => (
-                  <Card
-                    key={stat.label}
-                    sx={{
-                      p: 1.75,
-                      borderRadius: 2,
-                      boxShadow: 'none',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Box
-                        sx={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 1.5,
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: 'action.hover',
-                          color: 'text.secondary',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Iconify icon={stat.icon} width={18} />
-                      </Box>
-                      <Box>
-                        <Typography variant="h6" sx={{ lineHeight: 1.1 }}>
-                          {stat.value}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {stat.label}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Card>
-                ))}
-              </Box>
-            );
-          })()}
+        <Stack spacing={1.5} sx={{ flexShrink: 0 }}>
 
           {myDutyRows.length === 0 && (
             <Card
               sx={{
                 p: 4,
+                py: 6,
                 borderRadius: 2,
                 boxShadow: 'none',
                 border: (theme) => `1px solid ${theme.palette.divider}`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
                 textAlign: 'center',
               }}
             >
               <Iconify
                 icon="mdi:clipboard-check-outline"
-                width={32}
+                width={40}
                 color="text.disabled"
-                sx={{ mb: 1 }}
+                sx={{ mb: 1.5 }}
               />
               <Typography variant="body2" color="text.secondary">
                 No substitution duties are assigned to you.
@@ -2835,6 +2867,7 @@ const SubstitutionManagementScreen = () => {
           {myDutyRows.map((item) => {
             const isTerminal = ['Completed', 'Cancelled', 'Rejected'].includes(item.status);
             const isAccepted = item.acknowledgementStatus === 'Accepted';
+            const isChangeRequested = item.acknowledgementStatus === 'Change Requested';
 
             return (
               <Card
@@ -2852,66 +2885,153 @@ const SubstitutionManagementScreen = () => {
                   overflow: 'hidden',
                 }}
               >
-                <Box sx={{ p: 2 }}>
+                {/* ── Card Header ───────────────────────────────── */}
+                <Box sx={{ px: 2, pt: 2, pb: 1 }}>
+                  {/* Row 1 – date chip + status badges */}
                   <Stack
-                    direction={{ xs: 'column', md: 'row' }}
+                    direction="row"
                     justifyContent="space-between"
-                    alignItems={{ md: 'flex-start' }}
-                    spacing={1}
+                    alignItems="center"
+                    sx={{ mb: 0.75 }}
                   >
-                    <Box>
-                      {(() => {
-                        const dutyDate = dayjs(item.date);
-                        const isToday = item.date === todayIso;
-                        const isTomorrow = dutyDate.isSame(dayjs(todayIso).add(1, 'day'), 'day');
-                        const dateLabel = isToday
-                          ? 'Today'
-                          : isTomorrow
-                            ? 'Tomorrow'
-                            : dutyDate.format('ddd, DD MMM YYYY');
-                        return (
-                          <Chip
-                            size="small"
-                            icon={<Iconify icon="mdi:calendar-blank-outline" width={14} />}
-                            label={
-                              isToday || isTomorrow
-                                ? `${dateLabel} · ${dutyDate.format('DD MMM')}`
-                                : dateLabel
-                            }
-                            color={isToday ? 'primary' : 'default'}
-                            variant={isToday ? 'filled' : 'outlined'}
-                            sx={{ mb: 0.75 }}
-                          />
-                        );
-                      })()}
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        {item.period} · Class {item.className}-{item.divisionName}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-                        {item.subjectName} · {item.time} · Room{' '}
-                        {item.assignedRoomName || item.roomName}
-                      </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-                        <Iconify icon="mdi:account-outline" width={15} color="text.disabled" />
-                        <Typography variant="caption" color="text.secondary">
-                          Covering for {item.originalTeacherName}
-                        </Typography>
+                    {(() => {
+                      const dutyDate = dayjs(item.date);
+                      const isToday = item.date === todayIso;
+                      const isTomorrow = dutyDate.isSame(dayjs(todayIso).add(1, 'day'), 'day');
+                      const dateLabel = isToday
+                        ? 'Today'
+                        : isTomorrow
+                          ? 'Tomorrow'
+                          : dutyDate.format('ddd, DD MMM YYYY');
+                      return (
+                        <Chip
+                          size="small"
+                          icon={<Iconify icon="mdi:calendar-blank-outline" width={14} />}
+                          label={
+                            isToday || isTomorrow
+                              ? `${dateLabel} · ${dutyDate.format('DD MMM')}`
+                              : dateLabel
+                          }
+                          color={isToday ? 'primary' : 'default'}
+                          variant={isToday ? 'filled' : 'outlined'}
+                        />
+                      );
+                    })()}
+
+                    {/* Status badges – right side */}
+                    {isAccepted ? (
+                      <Chip
+                        size="small"
+                        color="success"
+                        variant="soft"
+                        icon={<Iconify icon="mdi:check-circle" width={14} />}
+                        label="Accepted"
+                      />
+                    ) : isChangeRequested ? (
+                      <Chip
+                        size="small"
+                        color="warning"
+                        variant="soft"
+                        icon={<Iconify icon="mdi:swap-horizontal" width={14} />}
+                        label="Change Requested"
+                      />
+                    ) : (
+                      <Stack direction="row" spacing={0.75} flexWrap="wrap" alignItems="center">
+                        {renderStatus(item.status)}
+                        {item.acknowledgementStatus !== 'Not Sent' &&
+                          renderAck(item.acknowledgementStatus)}
                       </Stack>
-                    </Box>
-                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                      {renderStatus(item.status)}
-                      {renderAck(item.acknowledgementStatus)}
-                    </Stack>
+                    )}
                   </Stack>
+
+                  {/* Row 2 – class / period / subject title */}
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    {item.period} · Class {item.className}-{item.divisionName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.2 }}>
+                    {item.subjectName} · {item.time} · Room{' '}
+                    {item.assignedRoomName || item.roomName}
+                  </Typography>
                 </Box>
 
+                {/* ── Card Body – detail metadata ────────────────── */}
+                <Box
+                  sx={{
+                    mx: 2,
+                    mb: 1.5,
+                    px: 1.5,
+                    py: 1,
+                    borderRadius: 1.5,
+                    bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.6),
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Box
+                    display="grid"
+                    gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)' }}
+                    gap={0.75}
+                  >
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <Iconify icon="mdi:account-outline" width={14} color="text.disabled" />
+                      <Typography variant="caption" color="text.secondary">
+                        Covering for{' '}
+                        <Box component="span" fontWeight={600} color="text.primary">
+                          {item.originalTeacherName}
+                        </Box>
+                      </Typography>
+                    </Stack>
+
+                    {item.reason && (
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        <Iconify icon="mdi:information-outline" width={14} color="text.disabled" />
+                        <Typography variant="caption" color="text.secondary">
+                          Reason:{' '}
+                          <Box component="span" fontWeight={600} color="text.primary">
+                            {item.reason}
+                          </Box>
+                        </Typography>
+                      </Stack>
+                    )}
+
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <Iconify icon="mdi:tag-outline" width={14} color="text.disabled" />
+                      <Typography variant="caption" color="text.secondary">
+                        Source:{' '}
+                        <Box component="span" fontWeight={600} color="text.primary">
+                          {item.source}
+                        </Box>
+                      </Typography>
+                    </Stack>
+
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <Iconify icon="mdi:flag-outline" width={14} color="text.disabled" />
+                      <Typography variant="caption" color="text.secondary">
+                        Priority:{' '}
+                        <Box
+                          component="span"
+                          fontWeight={600}
+                          color={
+                            item.priority === 'Urgent'
+                              ? 'error.main'
+                              : item.priority === 'High'
+                                ? 'warning.main'
+                                : 'text.primary'
+                          }
+                        >
+                          {item.priority}
+                        </Box>
+                      </Typography>
+                    </Stack>
+                  </Box>
+                </Box>
+
+                {/* ── Card Footer – actions ──────────────────────── */}
                 {isTerminal ? (
                   <Box
                     sx={{
                       px: 2,
                       py: 1.25,
                       borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-                      bgcolor: 'background.neutral',
                     }}
                   >
                     <Stack direction="row" spacing={1} alignItems="center">
@@ -2934,7 +3054,8 @@ const SubstitutionManagementScreen = () => {
                 ) : (
                   <Stack
                     direction="row"
-                    justifyContent="flex-end"
+                    alignItems="center"
+                    justifyContent="flex-start"
                     spacing={1}
                     flexWrap="wrap"
                     useFlexGap
@@ -2942,36 +3063,67 @@ const SubstitutionManagementScreen = () => {
                       px: 2,
                       py: 1.25,
                       borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-                      bgcolor: 'background.neutral',
                     }}
                   >
-                    <Button
-                      size="small"
-                      variant="contained"
-                      disabled={isAccepted}
-                      startIcon={<Iconify icon="mdi:check" width={16} />}
-                      onClick={() => handleTeacherDutyAction(item.id, 'accept')}
-                    >
-                      {isAccepted ? 'Accepted' : 'Accept Duty'}
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="warning"
-                      startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
-                      onClick={() => handleTeacherDutyAction(item.id, 'change')}
-                    >
-                      Request Change
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      startIcon={<Iconify icon="mdi:close" width={16} />}
-                      onClick={() => handleTeacherDutyAction(item.id, 'reject')}
-                    >
-                      Reject
-                    </Button>
+                    {isAccepted ? (
+                      <>
+                        <Chip
+                          size="small"
+                          color="success"
+                          variant="filled"
+                          icon={<Iconify icon="mdi:check" width={14} />}
+                          label="Accepted"
+                          sx={{ fontWeight: 600, py: 1.5, px: 0.5 }}
+                        />
+                        <LoadingButton
+                          size="small"
+                          variant="outlined"
+                          color="warning"
+                          startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
+                          loading={dutyLoadingId === item.id && dutyLoadingAction === 'change'}
+                          disabled={dutyLoadingId === item.id}
+                          onClick={() => handleTeacherDutyAction(item.id, 'change')}
+                        >
+                          Request Change
+                        </LoadingButton>
+                      </>
+                    ) : (
+                      <>
+                        <LoadingButton
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          startIcon={<Iconify icon="mdi:check" width={16} />}
+                          loading={dutyLoadingId === item.id && dutyLoadingAction === 'accept'}
+                          disabled={dutyLoadingId === item.id}
+                          onClick={() => handleTeacherDutyAction(item.id, 'accept')}
+                        >
+                          Accept Duty
+                        </LoadingButton>
+                        <LoadingButton
+                          size="small"
+                          variant="outlined"
+                          color="warning"
+                          startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
+                          loading={dutyLoadingId === item.id && dutyLoadingAction === 'change'}
+                          disabled={dutyLoadingId === item.id}
+                          onClick={() => handleTeacherDutyAction(item.id, 'change')}
+                        >
+                          Request Change
+                        </LoadingButton>
+                        <LoadingButton
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          startIcon={<Iconify icon="mdi:close" width={16} />}
+                          loading={dutyLoadingId === item.id && dutyLoadingAction === 'reject'}
+                          disabled={dutyLoadingId === item.id}
+                          onClick={() => handleTeacherDutyAction(item.id, 'reject')}
+                        >
+                          Reject
+                        </LoadingButton>
+                      </>
+                    )}
                   </Stack>
                 )}
               </Card>
@@ -2981,7 +3133,7 @@ const SubstitutionManagementScreen = () => {
       )}
 
       {activeTab === 'analytics' && (
-        <Stack spacing={1}>
+        <Stack spacing={1} sx={{ flexShrink: 0 }}>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             justifyContent="space-between"

@@ -63,20 +63,18 @@ export const getChapterValidationSchema = (
       )
       .test(
         'min-date',
-        (value) =>
-          `Start Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+        `Start Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} (academic year start)`,
+        (value) => !value || !dayjs(value as any).isBefore(dayjs(currentYear.startDate), 'day')
+      )
+      .test(
+        'max-date',
+        `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')} (academic year end)`,
+        (value) => !value || !dayjs(value as any).isAfter(dayjs(currentYear.endDate), 'day')
       )
       .test(
         'no-past-date',
         'Start Date cannot be in the past',
-        (value) => !value || dayjs(value as any).isSameOrAfter(dayjs(), 'day')
-      )
-      .test(
-        'max-date',
-        (value) =>
-          `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+        (value) => !value || !dayjs(value as any).isBefore(dayjs(), 'day')
       ),
 
     endDate: Yup.mixed()
@@ -90,23 +88,21 @@ export const getChapterValidationSchema = (
       .test('is-after-start-date', 'End Date cannot be before Start Date', function (value) {
         const { startDate } = this.parent;
         if (!value || !startDate) return true;
-        return dayjs(value as any).isSameOrAfter(dayjs(startDate));
+        return !dayjs(value as any).isBefore(dayjs(startDate), 'day');
       })
       .test(
         'no-past-date',
         'End Date cannot be in the past',
-        (value) => !value || dayjs(value as any).isSameOrAfter(dayjs(), 'day')
+        (value) => !value || !dayjs(value as any).isBefore(dayjs(), 'day')
       )
       .test(
         'min-date',
-        (value) =>
-          `End Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+        `End Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} (academic year start)`,
+        (value) => !value || !dayjs(value as any).isBefore(dayjs(currentYear.startDate), 'day')
       )
       .test(
         'max-date',
-        (value) =>
-          `End Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+        `End Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')} (academic year end)`,
+        (value) => !value || !dayjs(value as any).isAfter(dayjs(currentYear.endDate), 'day')
       ),
   });

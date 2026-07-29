@@ -19,8 +19,10 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { LoadingButton } from '@mui/lab';
 
 import { ApprovalStatusChip, ConflictSeverityChip } from './RoomStatusChip';
 
@@ -29,7 +31,7 @@ import type { RoomReservation } from '../types';
 interface RoomApprovalQueueProps {
   reservations: RoomReservation[];
   onApprove?: (id: string, remarks?: string) => void | Promise<void>;
-  onReject?: (id: string, reason: string) => void;
+  onReject?: (id: string, reason: string) => void | Promise<void>;
 }
 
 export const RoomApprovalQueue = ({
@@ -43,6 +45,7 @@ export const RoomApprovalQueue = ({
   const [rejectReason, setRejectReason] = useState('');
   const [rejectError, setRejectError] = useState('');
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const handleOpenReject = (id: string) => {
     setRejectTargetId(id);
@@ -51,14 +54,19 @@ export const RoomApprovalQueue = ({
     setRejectDialogOpen(true);
   };
 
-  const handleConfirmReject = () => {
+  const handleConfirmReject = async () => {
     if (!rejectReason.trim()) {
       setRejectError('Rejection reason is mandatory.');
       return;
     }
-    onReject?.(rejectTargetId, rejectReason);
-    shikshaMitraToast.info({ message: 'Reservation rejected.' });
-    setRejectDialogOpen(false);
+    setIsRejecting(true);
+    try {
+      await onReject?.(rejectTargetId, rejectReason);
+      shikshaMitraToast.info({ message: 'Reservation rejected.' });
+      setRejectDialogOpen(false);
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   if (pending.length === 0) {
@@ -181,7 +189,6 @@ export const RoomApprovalQueue = ({
                   </Typography>
                 ),
             },
-
             {
               id: 'createdAt',
               label: 'Requested On',
@@ -221,11 +228,17 @@ export const RoomApprovalQueue = ({
                     <IconButton
                       size="small"
                       color="success"
-                      onClick={() => {
-                        onApprove?.(row.id);
-                        shikshaMitraToast.success({
-                          message: `${row.roomName} reservation approved.`,
-                        });
+                      disabled={approvingId !== null || isRejecting}
+                      onClick={async () => {
+                        setApprovingId(row.id);
+                        try {
+                          await onApprove?.(row.id);
+                          shikshaMitraToast.success({
+                            message: `${row.roomName} reservation approved.`,
+                          });
+                        } finally {
+                          setApprovingId(null);
+                        }
                       }}
                       sx={{
                         bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
@@ -234,13 +247,18 @@ export const RoomApprovalQueue = ({
                         },
                       }}
                     >
-                      <Iconify icon="mdi:check-circle" width={16} />
+                      {approvingId === row.id ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <Iconify icon="mdi:check-circle" width={16} />
+                      )}
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Reject">
                     <IconButton
                       size="small"
                       color="error"
+                      disabled={approvingId !== null || isRejecting}
                       onClick={() => handleOpenReject(row.id)}
                       sx={{
                         bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
@@ -304,18 +322,20 @@ export const RoomApprovalQueue = ({
             color="inherit"
             startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
             onClick={() => setRejectDialogOpen(false)}
+            disabled={isRejecting}
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="small"
             variant="contained"
             color="error"
             startIcon={<Iconify icon={GlobalIcons.delete} width={16} />}
+            loading={isRejecting}
             onClick={handleConfirmReject}
           >
             Confirm Rejection
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </Dialog>
     </>
