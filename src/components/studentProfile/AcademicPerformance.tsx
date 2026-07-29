@@ -1,9 +1,8 @@
 import React from 'react';
 import { Box, Grid, Typography } from '@mui/material';
-import ExamsList from 'src/screens/academic/student-progress-analytics/individualStudentPerformance/component/examList';
 import StudentPerformance from 'src/screens/academic/student-progress-analytics/comparativeAnalytics/component/studentPerformance';
-import AssignmentsList from 'src/screens/academic/student-progress-analytics/individualStudentPerformance/component/assignmentList';
 import { StudentSubjectPerformace } from 'src/screens/academic/student-progress-analytics/comparativeAnalytics/component/studentSubjectPerformance';
+import { Student360ActionPanels } from 'src/screens/academic/student-progress-analytics/individualStudentPerformance/components/Student360ActionPanels';
 
 const AcademicPerformance = () => (
   <Box>
@@ -20,11 +19,8 @@ const AcademicPerformance = () => (
       </Grid>
 
       {/* Assignments and Exams side by side */}
-      <Grid size={{ xs: 12, md: 6 }}>
-        <AssignmentsList />
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ExamsList />
+      <Grid size={{ xs: 12 }}>
+        <Student360ActionPanels />
       </Grid>
     </Grid>
   </Box>

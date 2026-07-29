@@ -1,4 +1,4 @@
-import { expect, type APIResponse, type Page, type TestInfo } from '@playwright/test';
+import { expect, type Page, type TestInfo } from '@playwright/test';
 
 import {
   type AcademicContext,
@@ -351,6 +351,11 @@ export async function selectFirstSubjectColor(page: Page) {
   await colorButton.click();
 }
 
-export async function expectOkResponse(response: APIResponse, label: string) {
+type OkResponse = {
+  ok(): boolean;
+  status(): number;
+};
+
+export async function expectOkResponse(response: OkResponse, label: string) {
   expect(response.ok(), `${label} failed with ${response.status()}`).toBe(true);
 }

@@ -3,18 +3,18 @@
 import type { RootState } from 'src/redux/store';
 import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
-import { useFormik } from 'formik';
 import { useRef } from 'react';
+import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
 import {
   Box,
@@ -23,14 +23,12 @@ import {
   Stack,
   Avatar,
   Button,
-  Divider,
   Tooltip,
   TextField,
   Typography,
   IconButton,
   DialogActions,
 } from '@mui/material';
-import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import {
   useUpdateHomeworkSubmissionStatusMutation,
   useUpdateHomeworkSubmissionFeedbackMutation,
@@ -64,6 +62,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
+  });
+  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkSubmissionStatusMutation,
   });
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
