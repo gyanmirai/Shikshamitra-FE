@@ -1,26 +1,22 @@
-import { notFound } from 'next/navigation';
-import { AdmissionsCycleDetailWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
-
-type AdmissionCycleWorkspaceTab = 'setup' | 'journey-rules' | 'activity';
-
-const validTabs = new Set<AdmissionCycleWorkspaceTab>(['setup', 'journey-rules', 'activity']);
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
 const AdmissionCycleWorkspaceTabPage = async ({
   params,
+  searchParams,
 }: {
   params: Promise<{ academicYearId: string; workspaceTab: string }>;
+  searchParams: EnrollmentRouteSearchParams;
 }) => {
-  const { academicYearId, workspaceTab } = await params;
+  const { academicYearId } = await params;
 
-  if (!validTabs.has(workspaceTab as AdmissionCycleWorkspaceTab)) {
-    notFound();
-  }
-
-  return (
-    <AdmissionsCycleDetailWorkspace
-      academicYearId={academicYearId}
-      initialTab={workspaceTab as AdmissionCycleWorkspaceTab}
-    />
+  return redirectEnrollmentRoute(
+    studentPaths.enrollment.settingsSections.admissionYear,
+    searchParams,
+    { cycle: academicYearId }
   );
 };
 

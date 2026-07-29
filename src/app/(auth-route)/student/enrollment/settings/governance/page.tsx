@@ -1,5 +1,13 @@
-import { GovernanceSettingsRoute } from 'src/screens/student/enrollment/setting/governance-settings-route';
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
-export default function GovernanceSettingsPage() {
-  return <GovernanceSettingsRoute />;
+export default async function LegacyGovernanceSettingsPage({
+  searchParams,
+}: {
+  searchParams: EnrollmentRouteSearchParams;
+}) {
+  return redirectEnrollmentRoute(studentPaths.enrollment.settings, searchParams);
 }

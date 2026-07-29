@@ -1,11 +1,13 @@
-import { studentPermissions } from 'src/constants/student-menu';
-import StudentPermissionGuard from 'src/components/student-permission-guard';
-import { EnrollmentOverviewWorkspace } from 'src/screens/student/enrollment/admissions-crm/overview-workspace';
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
-const EnrollmentOverviewPage = () => (
-  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.overview}>
-    <EnrollmentOverviewWorkspace />
-  </StudentPermissionGuard>
-);
+const EnrollmentOverviewPage = async ({
+  searchParams,
+}: {
+  searchParams: EnrollmentRouteSearchParams;
+}) => redirectEnrollmentRoute(studentPaths.enrollment.myWork, searchParams);
 
 export default EnrollmentOverviewPage;

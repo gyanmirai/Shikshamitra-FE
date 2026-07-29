@@ -13,6 +13,7 @@ import {
   attachAdmissionCrmImpactFingerprint,
   updateAdmissionCrmProviderPayloadMode,
   getAdmissionCrmProviderCallbackSecret,
+  buildAdmissionCrmProviderSettingsInput,
   getAdmissionCrmProviderKeyValueSettings,
   updateAdmissionCrmProviderCallbackSecret,
   updateAdmissionCrmProviderKeyValueSettings,
@@ -264,5 +265,26 @@ describe('Admissions CRM configuration helpers', () => {
     expect(parseAdmissionCrmProviderSettings(withoutMapping)).not.toHaveProperty(
       'callbackMappings'
     );
+  });
+
+  it('removes provider secret-presence flags from update input', () => {
+    const input = buildAdmissionCrmProviderSettingsInput(
+      JSON.stringify({
+        adapter: 'webhook',
+        headers: { Authorization: '' },
+        parameters: { apiKey: '' },
+        hasStoredHeaderValues: true,
+        hasStoredParameterValues: true,
+        hasCallbackSecret: true,
+      })
+    );
+
+    expect(input).toEqual({
+      adapter: 'webhook',
+      payloadMode: 'default',
+      headers: { Authorization: '' },
+      parameters: { apiKey: '' },
+      callbackMappings: {},
+    });
   });
 });

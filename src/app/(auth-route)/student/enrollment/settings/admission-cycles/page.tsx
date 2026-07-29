@@ -1,5 +1,13 @@
-import { AdmissionsCyclesWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
-const AdmissionCyclesSettingsPage = () => <AdmissionsCyclesWorkspace />;
+const AdmissionCyclesSettingsPage = async ({
+  searchParams,
+}: {
+  searchParams: EnrollmentRouteSearchParams;
+}) => redirectEnrollmentRoute(studentPaths.enrollment.settingsSections.admissionYear, searchParams);
 
 export default AdmissionCyclesSettingsPage;

@@ -21,16 +21,18 @@ describe('Admissions CRM paper registration contract', () => {
     expect(source).toContain('mapQuickInquiryOptions(quickInquiryOptionsQuery.data)');
     expect(source).toContain('directRegistrationOptions.routes.map');
     expect(source).toContain('getDefaultQuickInquiryOption(directRegistrationOptions.routes)');
-    expect(source).toContain('intendedRouteDefinitionId: selectedRoute.id');
+    expect(source).toContain('intendedRouteDefinitionId: selectedRoute.definitionId || null');
+    expect(source).toContain('intendedRouteType: selectedRoute.routeType');
     expect(source).not.toContain('Object.values(AdmissionCrmRouteType)');
-    expect(source).not.toContain('intendedRouteType:');
   });
 
-  it('submits the selected academic stage and keeps class selection in the academic step', () => {
-    expect(source).toContain('academicMediumStageId: form.mediumStageId');
-    expect(source).toContain('targetStandardId: selectedStandard.id');
+  it('submits one published hierarchy option and keeps the academic target in one step', () => {
+    expect(source).toContain('academicBoardId: selectedStandard.boardId');
+    expect(source).toContain('academicMediumId: selectedStandard.mediumId');
+    expect(source).toContain('academicMediumStageId: selectedStandard.mediumStageId');
+    expect(source).toContain('targetStandardId: selectedStandard.standardId');
     expect(source).toMatch(
-      /activeStep === 1[\s\S]*label="Academic stage"[\s\S]*label="Target class"[\s\S]*label="Admission pathway"/
+      /activeStep === 1[\s\S]*label="Board"[\s\S]*label="Medium"[\s\S]*label="Standard"[\s\S]*label="Admission pathway"/
     );
     expect(source).toMatch(
       /activeStep === 2[\s\S]*label="Registration template"[\s\S]*label="Form number series"/

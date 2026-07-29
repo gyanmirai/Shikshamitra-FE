@@ -304,13 +304,17 @@ const GlobalAcademicSearch = () => {
   // --- End of Onboarding Logic ---
 
   return (
-    <Box data-onboarding="academic-year">
+    <Box
+      data-onboarding="academic-year"
+      sx={{
+        flex: '1 1 160px',
+        minWidth: { xs: 0, md: isShowOnlyYearModule ? 200 : 300 },
+        width: '100%',
+        maxWidth: isShowOnlyYearModule ? 200 : 300,
+      }}
+    >
       {isYearLoading || isBoardLoading || isScopeLoading ? (
-        <Skeleton
-          variant="rounded"
-          height={56}
-          sx={{ minWidth: isShowOnlyYearModule ? '200px' : '300px', width: '100%' }}
-        />
+        <Skeleton variant="rounded" height={56} sx={{ minWidth: 0, width: '100%' }} />
       ) : (
         <>
           {ConfirmDialog}
@@ -319,7 +323,7 @@ const GlobalAcademicSearch = () => {
             title={!hasAcademicSelection ? 'Select Academic Year, Board and Medium' : undefined}
             placement="bottom"
           >
-            <AnimatedWrapper error={!hasAcademicSelection}>
+            <AnimatedWrapper error={!hasAcademicSelection} sx={{ minWidth: 0, width: '100%' }}>
               {isShowOnlyYearModule ? (
                 <Autocomplete
                   key="academic-year-only"
@@ -385,7 +389,7 @@ const GlobalAcademicSearch = () => {
                   renderInput={(params) => (
                     <TextField {...params} variant="filled" size="small" label="Academic Year" />
                   )}
-                  sx={{ minWidth: '200px', width: '100%', '& *': { fontSize: '14px !important' } }}
+                  sx={{ minWidth: 0, width: '100%', '& *': { fontSize: '14px !important' } }}
                 />
               ) : (
                 <Autocomplete
@@ -475,7 +479,17 @@ const GlobalAcademicSearch = () => {
                       label="Academic Year, Board and Medium"
                     />
                   )}
-                  sx={{ minWidth: '300px', width: '100%', '& *': { fontSize: '14px !important' } }}
+                  sx={{
+                    minWidth: 0,
+                    width: '100%',
+                    '& *': { fontSize: '14px !important' },
+                    '& .MuiInputLabel-root': {
+                      maxWidth: 'calc(100% - 32px)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
+                  }}
                 />
               )}
             </AnimatedWrapper>

@@ -1,5 +1,16 @@
-import { CoreSettingsRoute } from 'src/screens/student/enrollment/setting/core-settings-route';
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
-export default function CommunicationsSettingsPage() {
-  return <CoreSettingsRoute section="communications" />;
+export default async function LegacyCommunicationSettingsPage({
+  searchParams,
+}: {
+  searchParams: EnrollmentRouteSearchParams;
+}) {
+  return redirectEnrollmentRoute(
+    studentPaths.enrollment.settingsSections.communication,
+    searchParams
+  );
 }

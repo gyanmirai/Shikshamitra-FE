@@ -1,15 +1,16 @@
-import { EnrollmentSettingsPage } from 'src/screens/student/enrollment/setting/enrollment-settings-page';
-import { OfferActivationHandoffGuidance } from 'src/screens/student/enrollment/setting/admission-journey-guidance';
-import AdmissionsSeatPoolConfiguration from 'src/screens/student/enrollment/setting/admissions-seat-pool-configuration';
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
-export default function OfferSeatSettingsPage() {
-  return (
-    <EnrollmentSettingsPage
-      title="Offers & Seats"
-      description="Configure seat pools, reservation capacity, offer controls, and waitlist availability."
-    >
-      <OfferActivationHandoffGuidance />
-      <AdmissionsSeatPoolConfiguration />
-    </EnrollmentSettingsPage>
+export default async function LegacyClassPlacementSettingsPage({
+  searchParams,
+}: {
+  searchParams: EnrollmentRouteSearchParams;
+}) {
+  return redirectEnrollmentRoute(
+    studentPaths.enrollment.settingsSections.classPlacement,
+    searchParams
   );
 }

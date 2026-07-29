@@ -14,7 +14,6 @@ import { LoadingButton } from 'src/components/loading-button';
 import TaskAltRounded from '@mui/icons-material/TaskAltRounded';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-import WarningAmberRounded from '@mui/icons-material/WarningAmberRounded';
 import AssignmentIndRounded from '@mui/icons-material/AssignmentIndRounded';
 import ReportProblemRounded from '@mui/icons-material/ReportProblemRounded';
 import {
@@ -33,20 +32,17 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
-  AdmissionInquiryStage,
-  AdmissionCrmMyWorkType,
   AdmissionCrmWorkUrgency,
   AdmissionCrmLeadPriority,
+  AdmissionCrmApplicantStepKey,
   AdmissionCrmWorkspaceSection,
   AdmissionCrmRecommendedAction,
   useGetAdmissionCrmMyWorkQuery,
   useBulkCreateAdmissionCrmTasksMutation,
-  useGetAdmissionCrmEnrollmentOverviewQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { formatEnrollmentDate } from './enrollment-display';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
-import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { createApplicantRowNavigationProps } from './applicant-row-navigation';
 import {
@@ -125,6 +121,15 @@ const urgencyLabels: Record<AdmissionCrmWorkUrgency, string> = {
   [AdmissionCrmWorkUrgency.Overdue]: 'Overdue',
 };
 
+const stepLabels: Record<AdmissionCrmApplicantStepKey, string> = {
+  [AdmissionCrmApplicantStepKey.Inquiry]: 'Inquiry',
+  [AdmissionCrmApplicantStepKey.Exam]: 'Entrance exam',
+  [AdmissionCrmApplicantStepKey.Registration]: 'Registration',
+  [AdmissionCrmApplicantStepKey.Finance]: 'Finance verification',
+  [AdmissionCrmApplicantStepKey.Placement]: 'Class placement',
+  [AdmissionCrmApplicantStepKey.Activation]: 'Activation',
+};
+
 const sectionTabs: Record<AdmissionCrmWorkspaceSection, ApplicantWorkspaceTab> = {
   [AdmissionCrmWorkspaceSection.Overview]: 'overview',
   [AdmissionCrmWorkspaceSection.EntranceExam]: 'exam',
@@ -167,9 +172,6 @@ export function EnrollmentOverviewWorkspace() {
     sorting,
     searchParams.get('applicantSearch'),
     searchParams.get('targetClassSearch'),
-    searchParams.get('assignedSearch'),
-    searchParams.get('workType'),
-    searchParams.get('stage'),
     searchParams.get('priority'),
     searchParams.get('urgency'),
   ].join('|');
@@ -192,9 +194,6 @@ export function EnrollmentOverviewWorkspace() {
       search: search || undefined,
       applicantSearch: searchParams.get('applicantSearch') || undefined,
       targetClassSearch: searchParams.get('targetClassSearch') || undefined,
-      assignedSearch: searchParams.get('assignedSearch') || undefined,
-      workType: numberParam('workType') as AdmissionCrmMyWorkType | undefined,
-      stage: numberParam('stage') as AdmissionInquiryStage | undefined,
       priority: numberParam('priority') as AdmissionCrmLeadPriority | undefined,
       academicMediumId,
       urgency: numberParam('urgency') as AdmissionCrmWorkUrgency | undefined,
@@ -202,10 +201,6 @@ export function EnrollmentOverviewWorkspace() {
       skipCount: page * pageSize,
       maxResultCount: pageSize,
     },
-    { skip: !academicYearId }
-  );
-  const overviewQuery = useGetAdmissionCrmEnrollmentOverviewQuery(
-    { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
 
@@ -235,47 +230,6 @@ export function EnrollmentOverviewWorkspace() {
   const showEmptyWorkQueue =
     !query.isLoading && !query.isFetching && (query.data?.totalCount ?? 0) === 0;
   const selectedWorkSet = useMemo(() => new Set(selectedWorkKeys), [selectedWorkKeys]);
-  const operationalInsights = useMemo(() => {
-    const overview = overviewQuery.data;
-    return [
-      {
-        key: 'paper',
-        label: 'Paper entry',
-        value: overview?.pendingPaperEntryCount || 0,
-        tone: 'warning' as const,
-      },
-      {
-        key: 'documents',
-        label: 'Document follow-up',
-        value: overview?.documentFollowUpCount || 0,
-        tone: 'warning' as const,
-      },
-      {
-        key: 'fees',
-        label: 'Fee follow-up',
-        value: overview?.feeFollowUpCount || 0,
-        tone: 'info' as const,
-      },
-      {
-        key: 'no-shows',
-        label: 'Exam no-shows',
-        value: overview?.examNoShowCount || 0,
-        tone: 'error' as const,
-      },
-      {
-        key: 'offers',
-        label: 'Expiring offers',
-        value: overview?.expiringOfferCount || 0,
-        tone: 'warning' as const,
-      },
-      {
-        key: 'placement',
-        label: 'Class Placement Plan risk',
-        value: overview?.classPlacementRiskCount || 0,
-        tone: 'error' as const,
-      },
-    ];
-  }, [overviewQuery.data]);
 
   const metrics = useMemo(
     () => [
@@ -305,16 +259,6 @@ export function EnrollmentOverviewWorkspace() {
         color: 'warning.main',
         surface: 'warning.lighter',
         urgency: AdmissionCrmWorkUrgency.DueToday,
-      },
-      {
-        key: 'blockers',
-        label: 'Urgent blockers',
-        value: query.data?.urgentBlockerCount || 0,
-        icon: <WarningAmberRounded />,
-        color: 'secondary.main',
-        surface: 'secondary.lighter',
-        urgency: undefined,
-        workType: AdmissionCrmMyWorkType.OperationalBlocker,
       },
     ],
     [query.data]
@@ -390,48 +334,45 @@ export function EnrollmentOverviewWorkspace() {
         },
       },
       {
-        id: 'workType',
-        label: 'Work Item',
+        id: 'title',
+        label: 'Assigned work',
         width: 310,
         minWidth: 260,
-        isSort: false,
-        filterType: 'enum',
-        enumOptions: [
-          { label: 'Assigned task', value: AdmissionCrmMyWorkType.Task },
-          { label: 'Operational blocker', value: AdmissionCrmMyWorkType.OperationalBlocker },
-        ],
+        isSort: true,
+        isFilter: false,
         render: (_value, row) => {
           const item = row as AdmissionCrmMyWorkItemDto;
           return (
             <Stack spacing={0.15}>
               <Typography variant="body2">{item.title}</Typography>
               <Typography variant="caption" color="text.secondary" noWrap>
-                {item.details ||
-                  (item.workType === AdmissionCrmMyWorkType.Task
-                    ? 'Assigned task'
-                    : 'Operational blocker')}
+                {item.details || 'No additional note'}
               </Typography>
             </Stack>
           );
         },
       },
       {
-        id: 'stage',
-        label: 'Stage',
-        width: 145,
-        minWidth: 135,
+        id: 'currentStep',
+        label: 'Current step',
+        width: 155,
+        minWidth: 145,
         isSort: false,
-        filterType: 'enum',
-        enumOptions: Object.values(AdmissionInquiryStage)
-          .filter((value): value is number => typeof value === 'number')
-          .map((value) => ({ label: AdmissionInquiryStage[value], value })),
-        render: (_value, row) => (
-          <AdmissionCrmStageChip stage={(row as AdmissionCrmMyWorkItemDto).stage} />
-        ),
+        isFilter: false,
+        render: (value) => stepLabels[value as AdmissionCrmApplicantStepKey],
+      },
+      {
+        id: 'nextAction',
+        label: 'Next action',
+        width: 260,
+        minWidth: 220,
+        isSort: false,
+        isFilter: false,
+        render: (value) => value || 'Open the applicant to review the next step',
       },
       {
         id: 'targetClassName',
-        label: 'Target Class',
+        label: 'Standard',
         width: 145,
         minWidth: 125,
         isSort: false,
@@ -484,13 +425,13 @@ export function EnrollmentOverviewWorkspace() {
         render: (value) => <PriorityIndicator priority={value as AdmissionCrmLeadPriority} />,
       },
       {
-        id: 'assignedDisplayName',
-        label: 'Assigned To',
+        id: 'ownerDisplayName',
+        label: 'Applicant owner',
         width: 170,
         minWidth: 150,
         isSort: false,
-        filterType: 'string',
-        render: (value) => value || 'Me',
+        isFilter: false,
+        render: (value) => value || 'Unassigned',
       },
       {
         id: 'actions',
@@ -576,11 +517,6 @@ export function EnrollmentOverviewWorkspace() {
         targetClassSearch: byColumn.get('targetClassName')
           ? String(byColumn.get('targetClassName'))
           : undefined,
-        assignedSearch: byColumn.get('assignedDisplayName')
-          ? String(byColumn.get('assignedDisplayName'))
-          : undefined,
-        workType: enumValue(byColumn.get('workType')),
-        stage: enumValue(byColumn.get('stage')),
         urgency: enumValue(byColumn.get('urgency')),
         priority: enumValue(byColumn.get('priority')),
         page: 1,
@@ -593,8 +529,8 @@ export function EnrollmentOverviewWorkspace() {
     return (
       <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
         <EnrollmentWorkspaceHeader
-          title="My Admissions Work"
-          description="Urgent actions and handoff blockers for the selected admission cycle."
+          title="My Work"
+          description="Tasks assigned to you for the selected admission year."
         />
         <Alert severity="info">Select an academic year to open My Work.</Alert>
       </Stack>
@@ -603,47 +539,9 @@ export function EnrollmentOverviewWorkspace() {
   return (
     <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
-        title="My Admissions Work"
-        description="Tasks and operational blockers assigned to you for this admission cycle."
+        title="My Work"
+        description="Assigned tasks, due dates, the applicant's current step, and the next required action."
       />
-      {overviewQuery.isError ? (
-        <Alert
-          severity="warning"
-          action={
-            <Button color="inherit" size="small" onClick={() => overviewQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          Operational insights are unavailable.
-        </Alert>
-      ) : null}
-      <Paper
-        variant="outlined"
-        aria-label="Admissions operational insights"
-        sx={{
-          p: 1,
-          borderRadius: 1.5,
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(6, minmax(0, 1fr))' },
-          gap: 0.75,
-        }}
-      >
-        {operationalInsights.map((item) => (
-          <Box key={item.key} sx={{ minWidth: 0 }}>
-            <Typography variant="h6" sx={{ lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-              {item.value}
-            </Typography>
-            <Chip
-              size="small"
-              color={item.value > 0 ? item.tone : 'default'}
-              variant={item.value > 0 ? 'filled' : 'outlined'}
-              label={item.label}
-              sx={{ mt: 0.75, maxWidth: '100%' }}
-            />
-          </Box>
-        ))}
-      </Paper>
       {selectedWorkKeys.length > 0 ? (
         <Paper variant="outlined" role="region" aria-label="Bulk work actions" sx={{ p: 1 }}>
           <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
@@ -673,7 +571,7 @@ export function EnrollmentOverviewWorkspace() {
             variant="outlined"
             sx={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))',
+              gridTemplateColumns: 'repeat(3, minmax(150px, 1fr))',
               borderRadius: 1.5,
               overflowX: 'auto',
             }}
@@ -682,17 +580,13 @@ export function EnrollmentOverviewWorkspace() {
               const selected =
                 metric.urgency != null
                   ? numberParam('urgency') === metric.urgency
-                  : metric.workType != null
-                    ? numberParam('workType') === metric.workType
-                    : !numberParam('urgency') && !numberParam('workType');
+                  : !numberParam('urgency');
               return (
                 <Button
                   key={metric.key}
                   color="inherit"
                   aria-pressed={selected}
-                  onClick={() =>
-                    updateUrl({ urgency: metric.urgency, workType: metric.workType, page: 1 })
-                  }
+                  onClick={() => updateUrl({ urgency: metric.urgency, page: 1 })}
                   sx={{
                     justifyContent: 'flex-start',
                     px: 1.5,
@@ -771,8 +665,8 @@ export function EnrollmentOverviewWorkspace() {
             }}
             noDataText={
               <EnrollmentTableEmptyState
-                title="No work items in this cycle"
-                description="Your assigned queue is clear for the selected admission cycle. Open Pipeline for all applicants or clear filters to widen the view."
+                title="No assigned work"
+                description="You have no pending tasks for this admission year. Open Pipeline to review all applicants or clear filters to widen the view."
               />
             }
             wrapperProps={{ sx: enrollmentTableWrapperSx }}
@@ -780,8 +674,8 @@ export function EnrollmentOverviewWorkspace() {
           />
           {showEmptyWorkQueue ? (
             <Alert severity="info">
-              No work items in this cycle. Your assigned queue is clear for the selected admission
-              cycle; open Pipeline for all applicants or clear filters to widen the view.
+              You have no pending tasks for this admission year. Open Pipeline to review all
+              applicants or clear filters to widen the view.
             </Alert>
           ) : null}
           {query.data ? (

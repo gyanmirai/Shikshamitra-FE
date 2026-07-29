@@ -84,7 +84,7 @@ export function ApplicantPolicyReadiness({ leadId, academicYearId }: Props) {
         </Stack>
         {!adoptions.data?.length && (
           <Alert severity="warning">
-            Adopt a published policy pack for this admission cycle before evaluating this applicant.
+            Adopt a published policy pack for this admission year before evaluating this applicant.
           </Alert>
         )}
         <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>

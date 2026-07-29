@@ -35,9 +35,7 @@ const registrationSystemFieldByKey = new Map(
 export const normalizeRegistrationSystemField = (systemField?: string | null): string | null => {
   const trimmedSystemField = systemField?.trim();
   if (!trimmedSystemField) return null;
-  return (
-    registrationSystemFieldByKey.get(trimmedSystemField.toLowerCase()) ?? trimmedSystemField
-  );
+  return registrationSystemFieldByKey.get(trimmedSystemField.toLowerCase()) ?? trimmedSystemField;
 };
 
 export const normalizeRegistrationTemplateSystemFields = (
@@ -376,7 +374,8 @@ export const normalizeRegistrationTemplate = (
 ): AdmissionCrmRegistrationTemplateUpsertDto => ({
   ...value,
   name: value.name.trim(),
-  feeAmount: value.feeRequired ? value.feeAmount : 0,
+  feeRequired: false,
+  feeAmount: 0,
   notes: value.notes?.trim() || null,
   applicability: Object.fromEntries(
     Object.entries(value.applicability).map(([key, item]) => [key, item?.trim() || null])

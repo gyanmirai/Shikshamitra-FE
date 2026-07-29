@@ -102,10 +102,10 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     const page = read('applicant-workspace-page.tsx');
     const context = read('enrollment-workspace-context.tsx');
 
-    expect(page).toContain('useGetAdmissionCrmQuickInquiryOptionsQuery');
+    expect(page).toContain('useGetAdmissionCrmApplicantProgressQuery');
     expect(page).toContain('buildApplicantJourney');
-    expect(page).toContain('registrationFormRequiredBeforeExam');
-    expect(page).toContain('entranceExamRequired');
+    expect(page).toContain('buildApplicantJourney(progressQuery.data');
+    expect(page).toContain('journeyByTab');
     expect(page).toContain('canViewOffers');
     expect(page).toContain('canViewActivation');
     expect(page).toContain('canViewGovernance');
@@ -114,7 +114,7 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain('canViewHouseholds ?');
     expect(page).toContain('visibleSections');
     expect(page).toContain('{ skip: !leadId || !lead }');
-    expect(page).not.toContain('entranceExamRequired === true');
+    expect(page).not.toContain('useGetAdmissionCrmQuickInquiryOptionsQuery');
     expect(page).not.toContain('useGetAdmissionCrmCycleConfigurationQuery');
     expect(context).toContain('studentPaths.enrollment.applicant(leadId)');
     expect(context).toContain('window.sessionStorage.setItem');

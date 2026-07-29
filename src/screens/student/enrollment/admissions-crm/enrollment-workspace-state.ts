@@ -8,6 +8,7 @@ import {
   AdmissionCrmLeadPriority,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
+  AdmissionCrmPipelineColumnKey,
   AdmissionCrmRegistrationStatus,
   AdmissionCrmOperationsQueueType,
   AdmissionCrmEligibilityDecision,
@@ -29,20 +30,16 @@ export type EnrollmentWorkspace =
   | 'settings';
 
 export type EnrollmentPersona =
-  | 'administrator'
-  | 'receptionist'
-  | 'counselor'
-  | 'approver'
-  | 'restricted';
+  'administrator' | 'receptionist' | 'counselor' | 'approver' | 'restricted';
 
 export type PipelineView = 'board' | 'list';
-export type PipelineStageGroup = 'active' | 'decision' | 'closed';
 export type ScoreBandFilter = 'all' | 'hot' | 'warm' | 'needsAttention';
 export type EnrollmentApplicantTab =
   | 'overview'
   | 'activity'
   | 'exam'
   | 'registration'
+  | 'finance'
   | 'offer'
   | 'activation'
   | 'governance';
@@ -61,7 +58,8 @@ export type EnrollmentSettingsPanel =
   | 'compliance'
   | 'configuration-safety'
   | 'templates'
-  | 'providers';
+  | 'providers'
+  | 'reminders';
 
 export type EnrollmentWorkspaceState = {
   cycle?: string;
@@ -78,8 +76,7 @@ export type EnrollmentWorkspaceState = {
   workType?: AdmissionCrmMyWorkType;
   urgency?: AdmissionCrmWorkUrgency;
   view?: PipelineView;
-  stageGroup?: PipelineStageGroup;
-  stage?: AdmissionInquiryStage;
+  pipelineColumn?: AdmissionCrmPipelineColumnKey;
   channel?: AdmissionInquiryChannel;
   campaign?: string;
   owner?: string;
@@ -128,6 +125,7 @@ const enumValues = <T extends number>(source: Record<string, string | number>) =
   new Set(Object.values(source).filter((value): value is T => typeof value === 'number'));
 
 const stages = enumValues<AdmissionInquiryStage>(AdmissionInquiryStage);
+const pipelineColumns = enumValues<AdmissionCrmPipelineColumnKey>(AdmissionCrmPipelineColumnKey);
 const channels = enumValues<AdmissionInquiryChannel>(AdmissionInquiryChannel);
 const priorities = enumValues<AdmissionCrmLeadPriority>(AdmissionCrmLeadPriority);
 const queues = enumValues<AdmissionCrmOperationsQueueType>(AdmissionCrmOperationsQueueType);
@@ -153,12 +151,12 @@ const eligibilityDecisions = enumValues<AdmissionCrmEligibilityDecision>(
   AdmissionCrmEligibilityDecision
 );
 const scoreBands = new Set<ScoreBandFilter>(['all', 'hot', 'warm', 'needsAttention']);
-const stageGroups = new Set<PipelineStageGroup>(['active', 'decision', 'closed']);
 const applicantTabs = new Set<EnrollmentApplicantTab>([
   'overview',
   'activity',
   'exam',
   'registration',
+  'finance',
   'offer',
   'activation',
   'governance',
@@ -179,6 +177,7 @@ const settingsPanels = new Set<EnrollmentSettingsPanel>([
   'configuration-safety',
   'templates',
   'providers',
+  'reminders',
 ]);
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -200,13 +199,20 @@ const parsePositiveInteger = (value: string | null, maximum = 10_000) => {
 
 export const getWorkspaceFromPathname = (pathname: string): EnrollmentWorkspace => {
   if (pathname.includes('/applicants/')) return 'applicant';
+  if (/\/student\/enrollment\/?$/.test(pathname)) return 'overview';
+  if (pathname.includes('/my-work')) return 'overview';
   if (pathname.includes('/overview')) return 'overview';
   if (pathname.includes('/settings')) return 'settings';
+  if (pathname.includes('/entrance-exams')) return 'exams';
   if (pathname.includes('/exams')) return 'exams';
+  if (pathname.includes('/registration')) return 'registrations';
   if (pathname.includes('/registrations')) return 'registrations';
+  if (pathname.includes('/class-placement')) return 'offers';
   if (pathname.includes('/offers-seats')) return 'offers';
   if (pathname.includes('/activation')) return 'activation';
+  if (pathname.includes('/follow-ups-messages')) return 'operations';
   if (pathname.includes('/operations')) return 'operations';
+  if (pathname.includes('/reports')) return 'analytics';
   if (pathname.includes('/analytics')) return 'analytics';
   return 'pipeline';
 };
@@ -217,7 +223,7 @@ export const getPersonaWorkspaceDefaults = (
 ): Partial<EnrollmentWorkspaceState> => {
   if (workspace === 'pipeline') {
     if (persona === 'receptionist')
-      return { view: 'list', stage: AdmissionInquiryStage.NewInquiry };
+      return { view: 'list', pipelineColumn: AdmissionCrmPipelineColumnKey.NewInquiry };
     if (persona === 'counselor') return { view: 'board', owner: 'me' };
     return { view: 'list' };
   }
@@ -247,6 +253,7 @@ export const parseEnrollmentWorkspaceState = (
   const toValue = searchParams.get('to');
   const settingsPanelValue = searchParams.get('panel') as EnrollmentSettingsPanel | null;
   const applicantTabValue = searchParams.get('tab') as EnrollmentApplicantTab | null;
+  const legacyStage = parseEnum(searchParams.get('stage'), stages);
 
   return {
     ...defaults,
@@ -270,10 +277,10 @@ export const parseEnrollmentWorkspaceState = (
       viewValue === 'board' || viewValue === 'list'
         ? viewValue
         : (defaults.view as PipelineView | undefined),
-    stageGroup: stageGroups.has(searchParams.get('group') as PipelineStageGroup)
-      ? (searchParams.get('group') as PipelineStageGroup)
-      : defaults.stageGroup,
-    stage: parseEnum(searchParams.get('stage'), stages) ?? defaults.stage,
+    pipelineColumn:
+      parseEnum(searchParams.get('column'), pipelineColumns) ??
+      mapLegacyStageToPipelineColumn(legacyStage) ??
+      defaults.pipelineColumn,
     channel: parseEnum(searchParams.get('channel'), channels) ?? defaults.channel,
     campaign: parseToken(searchParams.get('campaign')) ?? defaults.campaign,
     owner: parseToken(searchParams.get('owner')) ?? defaults.owner,
@@ -332,8 +339,7 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('workType', state.workType);
   set('urgency', state.urgency);
   set('view', state.view);
-  set('group', state.stageGroup);
-  set('stage', state.stage);
+  set('column', state.pipelineColumn);
   set('channel', state.channel);
   set('campaign', state.campaign);
   set('owner', state.owner);
@@ -376,7 +382,10 @@ export const migrateLegacyWorkspaceFilters = (
   try {
     const legacy = JSON.parse(serialized) as LegacyWorkspaceFilters;
     return {
-      stage: legacy.stageFilter === 'all' ? undefined : legacy.stageFilter,
+      pipelineColumn:
+        legacy.stageFilter === 'all'
+          ? undefined
+          : mapLegacyStageToPipelineColumn(legacy.stageFilter),
       channel: legacy.channelFilter === 'all' ? undefined : legacy.channelFilter,
       campaign:
         legacy.campaignFilter === 'all' ? undefined : parseToken(legacy.campaignFilter || null),
@@ -391,5 +400,26 @@ export const migrateLegacyWorkspaceFilters = (
     };
   } catch {
     return {};
+  }
+};
+
+const mapLegacyStageToPipelineColumn = (
+  stage: AdmissionInquiryStage | undefined
+): AdmissionCrmPipelineColumnKey | undefined => {
+  switch (stage) {
+    case AdmissionInquiryStage.NewInquiry:
+      return AdmissionCrmPipelineColumnKey.NewInquiry;
+    case AdmissionInquiryStage.FollowUp:
+      return AdmissionCrmPipelineColumnKey.FollowUp;
+    case AdmissionInquiryStage.ExamReady:
+    case AdmissionInquiryStage.ExamScheduled:
+      return AdmissionCrmPipelineColumnKey.ExamPending;
+    case AdmissionInquiryStage.ExamCompleted:
+    case AdmissionInquiryStage.Waitlisted:
+      return AdmissionCrmPipelineColumnKey.ExamDone;
+    case AdmissionInquiryStage.Eligible:
+      return AdmissionCrmPipelineColumnKey.Eligible;
+    default:
+      return undefined;
   }
 };

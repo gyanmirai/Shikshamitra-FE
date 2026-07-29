@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Box,
   Chip,
@@ -18,13 +18,13 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import {
-  useGetAdmissionCrmApplicationStagePolicyQuery,
-  usePreviewAdmissionCrmApplicationStagePolicyMutation,
-  useUpdateAdmissionCrmApplicationStagePolicyMutation,
   type AdmissionCrmApplicationStagePolicyDto,
-  type AdmissionCrmApplicationStagePolicyImpactDto,
+  useGetAdmissionCrmApplicationStagePolicyQuery,
   type AdmissionCrmApplicationStagePolicyItemDto,
+  type AdmissionCrmApplicationStagePolicyImpactDto,
   type UpdateAdmissionCrmApplicationStagePolicyDto,
+  useUpdateAdmissionCrmApplicationStagePolicyMutation,
+  usePreviewAdmissionCrmApplicationStagePolicyMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 const toUpdate = (
@@ -132,7 +132,7 @@ export function ApplicationStagePolicyPanel({ academicYearId }: { academicYearId
             </Typography>
             <Typography variant="h6">Application Stages</Typography>
             <Typography variant="body2" color="text.secondary">
-              Configure the readable admission journey for this cycle using fixed safe stage keys.
+              Configure the readable admission journey for this admission year using fixed safe stage keys.
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

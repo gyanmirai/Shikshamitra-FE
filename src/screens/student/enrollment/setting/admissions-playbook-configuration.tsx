@@ -79,6 +79,7 @@ import {
 
 type Props = {
   academicYearId?: string;
+  mode?: 'full' | 'entrance-exam';
 };
 
 type QuickSetupKind = 'exam' | 'interaction' | 'no-exam';
@@ -277,7 +278,8 @@ const errorMessage = (error: unknown) => {
 
 const editorSteps = ['General', 'Stages', 'Rounds & Seats', 'Exams', 'Slots & Rules'] as const;
 
-const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
+const AdmissionsPlaybookConfiguration = ({ academicYearId, mode = 'full' }: Props) => {
+  const entranceExamMode = mode === 'entrance-exam';
   const [editorOpen, setEditorOpen] = useState(false);
   const [quickSetupOpen, setQuickSetupOpen] = useState(false);
   const [quickSetupKind, setQuickSetupKind] = useState<QuickSetupKind>('exam');
@@ -315,7 +317,7 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
   const handleQuickSetup = async () => {
     if (!academicYearId || !quickSetupName.trim()) return;
     try {
-      await createPlaybook({
+      const draft = await createPlaybook({
         academicYearId,
         body: prepareAdmissionPlaybookPayload(
           createQuickSetup(quickSetupName.trim(), quickSetupKind, quickSetupHallTicket)
@@ -323,8 +325,16 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
       }).unwrap();
       setQuickSetupOpen(false);
       shikshaMitraToast.success({
-        message: 'Admission setup draft created. Review and publish it when ready.',
+        message: entranceExamMode
+          ? 'Entrance exam policy draft created. Review and publish it when ready.'
+          : 'Admission setup draft created. Review and publish it when ready.',
       });
+      if (entranceExamMode) {
+        setEditing(draft);
+        setForm(toPlaybookForm(draft));
+        setEditorTab(0);
+        setEditorOpen(true);
+      }
     } catch (error) {
       shikshaMitraToast.error({ message: errorMessage(error) });
     }
@@ -432,11 +442,11 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
     setEditorTab((current) => Math.min(current + 1, editorSteps.length - 1));
   };
 
-  const columns: IColumn[] = useMemo(
-    () => [
+  const columns: IColumn[] = useMemo(() => {
+    const result: IColumn[] = [
       {
         id: 'name',
-        label: 'Playbook',
+        label: entranceExamMode ? 'Exam policy' : 'Playbook',
         minWidth: 220,
         render: (value, row) => (
           <Stack spacing={0.25}>
@@ -450,19 +460,8 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
         ),
       },
       {
-        id: 'registrationPath',
-        label: 'Registration Path',
-        minWidth: 160,
-        filterType: 'enum',
-        enumOptions: Object.entries(registrationPathLabel).map(([value, label]) => ({
-          value: Number(value),
-          label,
-        })),
-        render: (value) => registrationPathLabel[value as AdmissionCrmRegistrationPath],
-      },
-      {
         id: 'isFallback',
-        label: 'Scope',
+        label: entranceExamMode ? 'Applicability' : 'Scope',
         width: 120,
         filterType: 'enum',
         enumOptions: [
@@ -470,22 +469,6 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
           { value: false, label: 'Rule based' },
         ],
         render: (value) => (value ? 'Fallback' : 'Rule based'),
-      },
-      {
-        id: 'rounds',
-        label: 'Rounds',
-        width: 90,
-        align: 'right',
-        isFilter: false,
-        render: (value) => value.length,
-      },
-      {
-        id: 'seatPlans',
-        label: 'Seat Plans',
-        width: 105,
-        align: 'right',
-        isFilter: false,
-        render: (value) => value.length,
       },
       {
         id: 'examDefinitions',
@@ -532,7 +515,7 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
             <ThreeDotsActions
               placement="right-top"
               showEditIcon
-              editLabel="Open Playbook"
+              editLabel={entranceExamMode ? 'Open Exam Policy' : 'Open Playbook'}
               handleEditClick={() => openEditor(playbook)}
               actions={({ popover }) => (
                 <MenuList>
@@ -588,16 +571,53 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
           );
         },
       },
-    ],
-    [isLifecycleBusy, openEditor, runLifecycle]
-  );
+    ];
+
+    if (!entranceExamMode) {
+      result.splice(
+        1,
+        0,
+        {
+          id: 'registrationPath',
+          label: 'Registration Path',
+          minWidth: 160,
+          filterType: 'enum',
+          enumOptions: Object.entries(registrationPathLabel).map(([value, label]) => ({
+            value: Number(value),
+            label,
+          })),
+          render: (value) => registrationPathLabel[value as AdmissionCrmRegistrationPath],
+        },
+        {
+          id: 'rounds',
+          label: 'Rounds',
+          width: 90,
+          align: 'right',
+          isFilter: false,
+          render: (value) => value.length,
+        },
+        {
+          id: 'seatPlans',
+          label: 'Seat Plans',
+          width: 105,
+          align: 'right',
+          isFilter: false,
+          render: (value) => value.length,
+        }
+      );
+    }
+
+    return result;
+  }, [entranceExamMode, isLifecycleBusy, openEditor, runLifecycle]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <Stack spacing={1.25} sx={{ flex: 1, minHeight: 0 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
           <Box>
-            <Typography variant="subtitle1">Admission setups</Typography>
+            <Typography variant="subtitle1">
+              {entranceExamMode ? 'Entrance exam policies' : 'Admission setups'}
+            </Typography>
             <Typography variant="caption" color="text.secondary">
               {data?.totalCount || 0} configured versions
             </Typography>
@@ -610,11 +630,13 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
               disabled={!academicYearId}
               onClick={() => setQuickSetupOpen(true)}
             >
-              Quick setup
+              {entranceExamMode ? 'Add exam policy' : 'Quick setup'}
             </Button>
-            <Button size="small" variant="outlined" disabled={!academicYearId} onClick={openNew}>
-              Advanced setup
-            </Button>
+            {!entranceExamMode ? (
+              <Button size="small" variant="outlined" disabled={!academicYearId} onClick={openNew}>
+                Advanced setup
+              </Button>
+            ) : null}
           </Stack>
         </Stack>
         {isFetching ? <LinearProgress /> : <Divider />}
@@ -627,17 +649,23 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
               </Button>
             }
           >
-            Admissions playbooks could not be loaded.
+            {entranceExamMode
+              ? 'Entrance exam policies could not be loaded.'
+              : 'Admissions playbooks could not be loaded.'}
           </Alert>
         ) : null}
         <CustomizableTable
           tableId="student-enrollment-admissions-playbooks"
-          tableTitle="Admissions Playbooks"
+          tableTitle={entranceExamMode ? 'Entrance exam policies' : 'Admissions Playbooks'}
           columns={columns}
           data={data?.items || []}
           isLoading={isFetching}
           defaultRowsPerPage={10}
-          noDataText="No admission setup yet. Use Quick setup for the common school workflow."
+          noDataText={
+            entranceExamMode
+              ? 'No entrance exam policy is configured.'
+              : 'No admission setup yet. Use Quick setup for the common school workflow.'
+          }
           wrapperProps={{ sx: { minHeight: 320 } }}
           tableContainerProps={{ sx: { minHeight: 0 } }}
         />
@@ -649,12 +677,15 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Quick admission setup</DialogTitle>
+        <DialogTitle>
+          {entranceExamMode ? 'New entrance exam policy' : 'Quick admission setup'}
+        </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
             <Alert severity="info">
-              This creates a safe draft with the usual school defaults. Advanced rules remain
-              available later.
+              {entranceExamMode
+                ? 'Choose the assessment mode, then configure applicability, pass rules, and schedules.'
+                : 'This creates a safe draft with the usual school defaults. Advanced rules remain available later.'}
             </Alert>
             <TextField
               autoFocus
@@ -674,7 +705,9 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
             >
               <MenuItem value="exam">Written entrance exam</MenuItem>
               <MenuItem value="interaction">Student interaction only</MenuItem>
-              <MenuItem value="no-exam">No entrance assessment</MenuItem>
+              {!entranceExamMode ? (
+                <MenuItem value="no-exam">No entrance assessment</MenuItem>
+              ) : null}
             </TextField>
             {quickSetupKind === 'exam' ? (
               <FormControlLabel
@@ -688,8 +721,8 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
               />
             ) : null}
             <Typography variant="body2" color="text.secondary">
-              Exam dates and capacity are added later from slot operations. Registration, offers,
-              and activation keep their own settings.
+              Exam dates and capacity are added from slot operations. Registration, Class Placement,
+              and Activation keep their own settings.
             </Typography>
           </Stack>
         </DialogContent>
@@ -708,7 +741,11 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
 
       <Dialog open={editorOpen} onClose={() => setEditorOpen(false)} fullWidth maxWidth="lg">
         <DialogTitle>
-          {editing ? `${editing.name} - Version ${editing.version}` : 'New Admissions Playbook'}
+          {editing
+            ? `${editing.name} - Version ${editing.version}`
+            : entranceExamMode
+              ? 'New Entrance Exam Policy'
+              : 'New Admissions Playbook'}
         </DialogTitle>
         <DialogContent dividers sx={{ p: 0 }}>
           {editing ? (
@@ -720,11 +757,19 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
               sx={{ px: 2, borderBottom: 1, borderColor: 'divider' }}
               aria-label="Playbook editor sections"
             >
-              <Tab label="General" />
-              <Tab label={`Stages (${form.stages.length})`} />
-              <Tab label={`Rounds & Seats (${form.rounds.length}/${form.seatPlans.length})`} />
-              <Tab label={`Exams (${form.examDefinitions.length})`} />
+              <Tab value={0} label={entranceExamMode ? 'Applicability' : 'General'} />
+              {!entranceExamMode ? (
+                <Tab value={1} label={`Stages (${form.stages.length})`} />
+              ) : null}
+              {!entranceExamMode ? (
+                <Tab
+                  value={2}
+                  label={`Rounds & Seats (${form.rounds.length}/${form.seatPlans.length})`}
+                />
+              ) : null}
+              <Tab value={3} label={`Exams (${form.examDefinitions.length})`} />
               <Tab
+                value={4}
                 label={`Slots & Rules (${form.slotTemplates.length}/${form.assignmentRules.length})`}
               />
             </Tabs>
@@ -753,27 +798,29 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
                       setForm((current) => ({ ...current, name: event.target.value }))
                     }
                   />
-                  <FormControl fullWidth size="small" disabled={readOnly}>
-                    <InputLabel>Registration path</InputLabel>
-                    <Select
-                      label="Registration path"
-                      value={form.registrationPath}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          registrationPath: Number(
-                            event.target.value
-                          ) as AdmissionCrmRegistrationPath,
-                        }))
-                      }
-                    >
-                      {Object.entries(registrationPathLabel).map(([value, label]) => (
-                        <MenuItem key={value} value={Number(value)}>
-                          {label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  {!entranceExamMode ? (
+                    <FormControl fullWidth size="small" disabled={readOnly}>
+                      <InputLabel>Registration path</InputLabel>
+                      <Select
+                        label="Registration path"
+                        value={form.registrationPath}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            registrationPath: Number(
+                              event.target.value
+                            ) as AdmissionCrmRegistrationPath,
+                          }))
+                        }
+                      >
+                        {Object.entries(registrationPathLabel).map(([value, label]) => (
+                          <MenuItem key={value} value={Number(value)}>
+                            {label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : null}
                 </Stack>
                 <FormControlLabel
                   control={
@@ -789,7 +836,7 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
                       }
                     />
                   }
-                  label="Fallback playbook"
+                  label={entranceExamMode ? 'Use as the default exam policy' : 'Fallback playbook'}
                 />
                 <Box
                   sx={{
@@ -1554,9 +1601,8 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
                     <Alert severity="info">
                       Runtime outcome routing is fixed and auditable: a pass moves the applicant to
                       Eligible, a failed result moves to Rejected, and a waitlist requires an
-                      eligibility decision.
-                      Use Follow-up Automation to send the matching parent message or create a
-                      staff task.
+                      eligibility decision. Use Follow-up Automation to send the matching parent
+                      message or create a staff task.
                     </Alert>
                   </Box>
                 ))}

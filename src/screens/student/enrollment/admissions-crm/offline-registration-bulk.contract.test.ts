@@ -55,7 +55,7 @@ describe('Enrollment offline registration and bulk-operation contracts', () => {
     expect(api).toContain('/staff-submit');
   });
 
-  it('exposes backend-enforced admission criteria and online/print template previews', () => {
+  it('keeps registration focused on information capture and online/print previews', () => {
     const route = read(
       'src',
       'screens',
@@ -64,13 +64,21 @@ describe('Enrollment offline registration and bulk-operation contracts', () => {
       'setting',
       'registration-document-settings-route.tsx'
     );
-    const criteria = read(
+    const financeRoute = read(
       'src',
       'screens',
       'student',
       'enrollment',
       'setting',
-      'admission-criteria-configuration.tsx'
+      'finance-handoff-settings-route.tsx'
+    );
+    const finance = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'finance-handoff-configuration.tsx'
     );
     const registration = read(
       'src',
@@ -89,11 +97,14 @@ describe('Enrollment offline registration and bulk-operation contracts', () => {
       'registration-template-preview.tsx'
     );
 
-    expect(route).toContain("value: 'criteria'");
-    expect(criteria).toContain('AdmissionsFinancialConfiguration');
-    expect(criteria).toContain('Registration verified');
-    expect(criteria).toContain('Required documents resolved');
-    expect(criteria).toContain('Payment condition satisfied');
+    expect(route).not.toContain("value: 'criteria'");
+    expect(route).not.toContain('fee');
+    expect(financeRoute).toContain('FinanceHandoffConfiguration');
+    expect(finance).toContain('Finance remains the source of truth');
+    expect(finance).toContain('financeVerificationRequired');
+    expect(registration).toContain('feeRequired: false');
+    expect(registration).toContain('feeAmount: 0');
+    expect(registration).not.toContain('label="Registration fee"');
     expect(registration).toContain('Use Starter Template');
     expect(registration).toContain('Blank Template');
     expect(registration).toContain('RegistrationTemplatePreview');

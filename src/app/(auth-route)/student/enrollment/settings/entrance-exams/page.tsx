@@ -1,5 +1,16 @@
-import { ExamSettingsRoute } from 'src/screens/student/enrollment/setting/exam-settings-route';
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
-export default function EntranceExamSettingsPage() {
-  return <ExamSettingsRoute />;
+export default async function LegacyEntranceExamSettingsPage({
+  searchParams,
+}: {
+  searchParams: EnrollmentRouteSearchParams;
+}) {
+  return redirectEnrollmentRoute(
+    studentPaths.enrollment.settingsSections.entranceExam,
+    searchParams
+  );
 }

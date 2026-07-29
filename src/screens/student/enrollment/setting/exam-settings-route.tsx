@@ -11,13 +11,13 @@ export function ExamSettingsRoute() {
   const { academicYearId } = useEnrollmentWorkspace();
   return (
     <EnrollmentSettingsPage
-      title="Exam & Eligibility"
-      description="Choose whether applicants need an exam, how results are decided, and whether the school issues hall tickets."
+      title="Entrance Exam Settings"
+      description="Configure exam applicability, schedules, result rules, retests, and parent messages."
       fillAvailableHeight
     >
       <ExamRegistrationHandoffGuidance />
       {academicYearId ? (
-        <AdmissionsPlaybookConfiguration academicYearId={academicYearId} />
+        <AdmissionsPlaybookConfiguration academicYearId={academicYearId} mode="entrance-exam" />
       ) : (
         <Alert severity="info">Select an academic year to configure entrance exams.</Alert>
       )}

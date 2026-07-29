@@ -3,71 +3,97 @@
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { studentPaths } from 'src/constants/student-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Alert, Stack, Paper, Button, Typography, LinearProgress } from '@mui/material';
 import { useGetAdmissionCrmSetupStatusQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { EnrollmentWorkspaceHeader } from '../admissions-crm/workspace-header';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 
-const setupItems = [
+type SetupItem = {
+  key: string;
+  statusKeys: string[];
+  title: string;
+  description: string;
+  path: string;
+  icon: string;
+  group: string;
+};
+
+const setupItems: SetupItem[] = [
   {
-    key: 'admission-cycles',
-    title: 'Admission Cycles',
-    description:
-      'Select, review, and ready each academic-year admission cycle before operations begin.',
-    path: studentPaths.enrollment.settingsSections.admissionCycles,
+    key: 'admission-year',
+    statusKeys: ['admission-year'],
+    title: 'Admission Year Setup',
+    description: 'Connect enrollment to an academic year and control when admissions are open.',
+    path: studentPaths.enrollment.settingsSections.admissionYear,
     icon: 'mdi:calendar-sync-outline',
-    group: 'Foundation',
+    group: 'Admission year',
   },
   {
-    key: 'journey',
-    title: 'Journey rules',
-    description: 'Advanced cycle rules, stages, service targets, and handoffs.',
-    path: studentPaths.enrollment.settingsSections.journey,
-    icon: 'mdi:map-marker-path',
-    group: 'Essential',
+    key: 'pipeline',
+    statusKeys: ['pipeline'],
+    title: 'Pipeline Settings',
+    description: 'Configure inquiry sources, capture fields, ownership, and priority.',
+    path: studentPaths.enrollment.settingsSections.pipeline,
+    icon: 'mdi:view-column-outline',
+    group: 'Inquiry',
   },
   {
-    key: 'inquiry-capture',
-    title: 'Inquiry forms and sources',
-    description: 'How families submit inquiries and what information is collected.',
-    path: studentPaths.enrollment.settingsSections.inquiryCapture,
-    icon: 'mdi:form-select',
-    group: 'Essential',
-  },
-  {
-    key: 'entrance-exams',
-    title: 'Exam and eligibility',
-    description: 'Assessment schedules, scoring, and eligibility rules.',
-    path: studentPaths.enrollment.settingsSections.entranceExams,
+    key: 'entrance-exam',
+    statusKeys: ['entrance-exam'],
+    title: 'Entrance Exam Settings',
+    description: 'Configure exam applicability, schedules, result rules, and retests.',
+    path: studentPaths.enrollment.settingsSections.entranceExam,
     icon: 'mdi:clipboard-text-clock-outline',
-    group: 'Essential',
+    group: 'Evaluation',
   },
   {
-    key: 'registration-documents',
-    title: 'Registration and documents',
-    description: 'Registration templates and required document checks.',
-    path: studentPaths.enrollment.settingsSections.registrationDocuments,
+    key: 'registration',
+    statusKeys: ['registration'],
+    title: 'Registration Settings',
+    description: 'Choose the applicant details and documents the school must collect.',
+    path: studentPaths.enrollment.settingsSections.registration,
     icon: 'mdi:file-document-check-outline',
-    group: 'Essential',
+    group: 'Registration',
   },
   {
-    key: 'offers-seats',
-    title: 'Class Placement Plan',
-    description: 'Class placement capacity, approvals, offers, and waitlists.',
-    path: studentPaths.enrollment.settingsSections.offersSeats,
+    key: 'finance-handoff',
+    statusKeys: ['finance-handoff'],
+    title: 'Finance Handoff Settings',
+    description: 'Control when a fee request is sent to Finance and what status blocks activation.',
+    path: studentPaths.enrollment.settingsSections.financeHandoff,
+    icon: 'mdi:bank-transfer',
+    group: 'Finance',
+  },
+  {
+    key: 'class-placement',
+    statusKeys: ['class-placement'],
+    title: 'Class Placement Settings',
+    description:
+      'Configure placement timing and capacity handling for board, medium, and standard.',
+    path: studentPaths.enrollment.settingsSections.classPlacement,
     icon: 'mdi:seat-outline',
-    group: 'Essential',
+    group: 'Placement',
   },
   {
-    key: 'advanced',
-    title: 'Advanced controls',
-    description: 'Assignment, activation, policies, communications, and automation.',
-    path: studentPaths.enrollment.settingsSections.routingScoring,
-    icon: 'mdi:tune-variant',
-    group: 'Advanced',
+    key: 'activation',
+    statusKeys: ['activation'],
+    title: 'Activation Settings',
+    description: 'Define the checks required before creating the active student record.',
+    path: studentPaths.enrollment.settingsSections.activation,
+    icon: 'mdi:account-check-outline',
+    group: 'Activation',
   },
-] as const;
+  {
+    key: 'communication',
+    statusKeys: ['communication'],
+    title: 'Communication Settings',
+    description: 'Choose parent message templates, channels, and reminder timing.',
+    path: studentPaths.enrollment.settingsSections.communication,
+    icon: 'mdi:message-text-outline',
+    group: 'Communication',
+  },
+];
 
 export function EnrollmentSetupCenter() {
   const { academicYearId, state } = useEnrollmentWorkspace();
@@ -80,41 +106,27 @@ export function EnrollmentSetupCenter() {
   const setup = query.data;
   const configured = setup?.status === 2 || setup?.status === 3;
   const visibleItems = setup?.items.filter((item) => item.accessMode !== 0);
-  const admissionCyclesReady = Boolean(academicYearId);
-  const essentialKeys = [
-    'journey',
-    'inquiry-capture',
-    'entrance-exams',
-    'registration-documents',
-    'offers-seats',
-  ];
-  const completedCount =
-    (visibleItems?.filter(
-      (item) => essentialKeys.includes(item.key) && (item.status === 2 || item.status === 3)
-    ).length ?? 0) + (admissionCyclesReady ? 1 : 0);
-  const essentialCount = Math.max(
-    1,
-    (visibleItems?.filter((item) => essentialKeys.includes(item.key)).length ?? 5) + 1
-  );
+  const completedCount = setupItems.filter((item) => {
+    const statuses = visibleItems?.filter((candidate) => item.statusKeys.includes(candidate.key));
+    return Boolean(
+      statuses?.length &&
+      statuses.every((candidate) => candidate.status === 2 || candidate.status === 3)
+    );
+  }).length;
+  const essentialCount = setupItems.length;
 
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
-      <CustomBreadcrumbs
-        heading="Enrollment Setup Center"
+      <EnrollmentWorkspaceHeader
+        title="Enrollment Setup Center"
         description="Complete the essentials first. Advanced controls can stay on the recommended defaults."
-        links={[
-          { name: 'Student', href: studentPaths.dashboard },
-          { name: 'Student Enrollment', href: withCycle(studentPaths.enrollment.overview) },
-          { name: 'Settings' },
-        ]}
-        action={
+        actions={
           <Chip
             icon={<Iconify icon={configured ? 'mdi:check-circle-outline' : 'mdi:progress-alert'} />}
             color={configured ? 'success' : 'warning'}
             label={configured ? 'Core setup ready' : 'Setup needs attention'}
           />
         }
-        sx={{ px: 2 }}
       />
 
       {query.isFetching ? <LinearProgress aria-label="Loading enrollment setup" /> : null}
@@ -135,7 +147,7 @@ export function EnrollmentSetupCenter() {
         <Stack direction={{ xs: 'column', md: 'row' }} gap={2} justifyContent="space-between">
           <Stack spacing={0.75}>
             <Typography variant="overline" color="text.secondary">
-              Current admission cycle
+              Current admission year
             </Typography>
             <Typography variant="h6">
               {setup?.cycleName || 'Select an academic year to begin'}
@@ -160,8 +172,8 @@ export function EnrollmentSetupCenter() {
             />
             <Typography variant="caption" color="text.secondary">
               {setup?.appliedPresetName
-                ? `Platform managed · ${setup.appliedPresetName} v${setup.appliedPresetVersion}`
-                : 'School managed · no platform preset applied'}
+                ? `Platform managed | ${setup.appliedPresetName} v${setup.appliedPresetVersion}`
+                : 'School managed | no platform preset applied'}
             </Typography>
           </Stack>
         </Stack>
@@ -186,31 +198,23 @@ export function EnrollmentSetupCenter() {
       >
         {setupItems
           .filter((item) => {
-            if (item.key === 'admission-cycles') return true;
             if (!setup) return true;
-            if (item.key === 'advanced')
-              return setup.items.some(
-                (statusItem) =>
-                  [
-                    'routing-scoring',
-                    'activation',
-                    'governance',
-                    'communications',
-                    'automation',
-                  ].includes(statusItem.key) && statusItem.accessMode !== 0
-              );
             return setup.items.some(
-              (statusItem) => statusItem.key === item.key && statusItem.accessMode !== 0
+              (statusItem) =>
+                item.statusKeys.includes(statusItem.key) && statusItem.accessMode !== 0
             );
           })
-          .map((item, index) => {
-            const statusItem = setup?.items.find((candidate) => candidate.key === item.key);
-            const ready = statusItem
-              ? statusItem.status === 2 || statusItem.status === 3
-              : item.key === 'admission-cycles'
-                ? admissionCyclesReady
-                : configured && index < 2;
-            const readOnly = statusItem?.accessMode === 1;
+          .map((item) => {
+            const statusItems = setup?.items.filter((candidate) =>
+              item.statusKeys.includes(candidate.key)
+            );
+            const ready = Boolean(
+              statusItems?.length &&
+              statusItems.every((candidate) => candidate.status === 2 || candidate.status === 3)
+            );
+            const readOnly = Boolean(
+              statusItems?.length && statusItems.every((candidate) => candidate.accessMode === 1)
+            );
             return (
               <Paper key={item.key} variant="outlined" sx={{ p: 1.75, borderRadius: 2 }}>
                 <Stack direction="row" spacing={1.5} alignItems="flex-start">

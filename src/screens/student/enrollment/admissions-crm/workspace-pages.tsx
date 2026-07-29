@@ -43,38 +43,6 @@ const OperationsWorkspace = dynamic(
     import('./operations-workspace').then((module) => module.AdmissionsOperationsWorkspaceContent),
   { loading }
 );
-const AdmissionCyclesWorkspace = dynamic(
-  () => import('./admission-cycles-workspace').then((module) => module.AdmissionCyclesWorkspace),
-  { loading }
-);
-const AdmissionCycleDetailWorkspace = dynamic(
-  () =>
-    import('./admission-cycle-detail-workspace').then(
-      (module) => module.AdmissionCycleDetailWorkspace
-    ),
-  { loading }
-);
-
-export const AdmissionsCyclesWorkspace = () => (
-  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
-    <AdmissionCyclesWorkspace />
-  </StudentPermissionGuard>
-);
-
-type AdmissionCycleWorkspaceTab = 'overview' | 'setup' | 'journey-rules' | 'activity';
-
-export const AdmissionsCycleDetailWorkspace = ({
-  academicYearId,
-  initialTab,
-}: {
-  academicYearId: string;
-  initialTab?: AdmissionCycleWorkspaceTab;
-}) => (
-  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
-    <AdmissionCycleDetailWorkspace academicYearId={academicYearId} initialTab={initialTab} />
-  </StudentPermissionGuard>
-);
-
 export const AdmissionsOverviewWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.overview}>
     <OverviewWorkspace />

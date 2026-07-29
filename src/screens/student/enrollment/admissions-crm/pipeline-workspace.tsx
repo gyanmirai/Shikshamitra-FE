@@ -12,7 +12,6 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import AddRounded from '@mui/icons-material/AddRounded';
 import { shikshaMitraToast } from 'src/components/toast';
-import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import EventRounded from '@mui/icons-material/EventRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
@@ -22,7 +21,6 @@ import ViewColumnRounded from '@mui/icons-material/ViewColumnRounded';
 import ReceiptLongRounded from '@mui/icons-material/ReceiptLongRounded';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import FormatListBulletedRounded from '@mui/icons-material/FormatListBulletedRounded';
-import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 import {
   Box,
   Chip,
@@ -41,7 +39,6 @@ import {
   MenuItem,
   MenuList,
   TextField,
-  IconButton,
   Typography,
   InputLabel,
   DialogTitle,
@@ -64,10 +61,10 @@ import {
   AdmissionCrmLeadPriority,
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmLeadsQuery,
+  AdmissionCrmPipelineColumnKey,
   useGetAdmissionCrmExamSlotsQuery,
   useCreateAdmissionCrmLeadMutation,
   useGetAdmissionCrmPipelineStagesQuery,
-  useGetAdmissionCrmStandardOptionsQuery,
   useBulkCreateAdmissionCrmTasksMutation,
   useBulkChangeAdmissionCrmStagesMutation,
   useBulkArchiveAdmissionCrmLeadsMutation,
@@ -75,14 +72,15 @@ import {
   useScheduleAdmissionCrmEntranceExamMutation,
   useBulkAssignAdmissionCrmLeadOwnersMutation,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
+  useGetAdmissionCrmAdmissionYearStandardOptionsQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { formatEnrollmentDate } from './enrollment-display';
 import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
-import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import {
   createApplicantRowNavigationProps,
   createApplicantLinkNavigationProps,
@@ -93,12 +91,6 @@ import {
   getDefaultQuickInquiryOption,
 } from './quick-inquiry-options';
 import {
-  getAdmissionCrmLeadName,
-  getAdmissionCrmStageLabel,
-  getAdmissionCrmChannelLabel,
-  getAdmissionCrmStageTooltipLines,
-} from './admissions-crm-utils';
-import {
   enrollmentActionsColumn,
   enrollmentTableWrapperSx,
   enrollmentWorkspaceRootSx,
@@ -107,8 +99,6 @@ import {
   EnrollmentWorkspaceErrorState,
   EnrollmentWorkspaceFilterPanel,
 } from './workspace-table-patterns';
-
-import type { PipelineStageGroup } from './enrollment-workspace-state';
 
 const pageSize = 50;
 const permissionRoot = 'Students.Enrollment.AdmissionsCrm';
@@ -174,21 +164,74 @@ const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
   [AdmissionCrmLeadPriority.Low]: 'Low',
 };
 
-const pipelineStageGroups: Record<PipelineStageGroup, AdmissionInquiryStage[]> = {
-  active: [
-    AdmissionInquiryStage.NewInquiry,
-    AdmissionInquiryStage.FollowUp,
-    AdmissionInquiryStage.ExamReady,
-    AdmissionInquiryStage.ExamScheduled,
-    AdmissionInquiryStage.ExamCompleted,
-  ],
-  decision: [AdmissionInquiryStage.Eligible, AdmissionInquiryStage.Waitlisted],
-  closed: [
-    AdmissionInquiryStage.Rejected,
-    AdmissionInquiryStage.Stale,
-    AdmissionInquiryStage.Archived,
-  ],
-};
+const pipelineColumns = [
+  {
+    key: AdmissionCrmPipelineColumnKey.NewInquiry,
+    label: 'New Inquiry',
+    description: 'Newly captured applicants awaiting the first admissions action.',
+    color: '#455a64',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.FollowUp,
+    label: 'Follow-up',
+    description: 'Applicants with an open follow-up or a follow-up stage.',
+    color: '#00796b',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.ExamPending,
+    label: 'Exam Pending',
+    description: 'Entrance exam scheduling, attendance, or result entry is pending.',
+    color: '#1565c0',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.ExamDone,
+    label: 'Exam Done',
+    description: 'The exam is complete and an eligibility decision still needs attention.',
+    color: '#5e35b1',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.Eligible,
+    label: 'Eligible',
+    description: 'The applicant is eligible and registration has not started.',
+    color: '#2e7d32',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.RegistrationPending,
+    label: 'Registration Pending',
+    description: 'Registration is ready to start or is still in progress.',
+    color: '#ef6c00',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.RegistrationDone,
+    label: 'Registration Done',
+    description: 'Registration is verified and the next required handoff has not started.',
+    color: '#00838f',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.FinanceVerification,
+    label: 'Finance Verification',
+    description: 'Finance confirmation or an approved waiver is required.',
+    color: '#6d4c41',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.PlacementPending,
+    label: 'Placement Pending',
+    description: 'Class capacity and placement work is pending.',
+    color: '#ad1457',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.ReadyForActivation,
+    label: 'Ready for Activation',
+    description: 'All admission gates are complete and activation can proceed.',
+    color: '#558b2f',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.Activated,
+    label: 'Activated',
+    description: 'The student record has been activated and handed to Student Records.',
+    color: '#1b5e20',
+  },
+] as const;
 
 type QuickInquiryForm = {
   firstName: string;
@@ -199,7 +242,10 @@ type QuickInquiryForm = {
   email: string;
   admissionIntent: string;
   intendedRouteDefinitionId: string;
-  mediumStageId: string;
+  inquirySourceId: string;
+  inquiryTypeId: string;
+  academicBoardId: string;
+  academicMediumId: string;
   targetStandardId: string;
   channel: AdmissionInquiryChannel | '';
   campaignName: string;
@@ -216,7 +262,10 @@ const emptyQuickInquiry: QuickInquiryForm = {
   email: '',
   admissionIntent: '',
   intendedRouteDefinitionId: '',
-  mediumStageId: '',
+  inquirySourceId: '',
+  inquiryTypeId: '',
+  academicBoardId: '',
+  academicMediumId: '',
   targetStandardId: '',
   channel: '',
   campaignName: '',
@@ -386,10 +435,7 @@ export function PipelineWorkspace() {
   const {
     academicYearId,
     academicYearName,
-    academicBoardId,
-    academicBoardName,
     academicMediumId,
-    academicMediumName,
     currentUserId,
     sessionIdentity,
     state,
@@ -417,9 +463,13 @@ export function PipelineWorkspace() {
   );
   const [duplicateReviewed, setDuplicateReviewed] = useState(false);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
+  const guardianInputRef = useRef<HTMLInputElement>(null);
   const contactInputRef = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
-  const mediumStageInputRef = useRef<HTMLInputElement>(null);
+  const inquirySourceInputRef = useRef<HTMLInputElement>(null);
+  const inquiryTypeInputRef = useRef<HTMLInputElement>(null);
+  const boardInputRef = useRef<HTMLInputElement>(null);
+  const mediumInputRef = useRef<HTMLInputElement>(null);
   const targetStandardInputRef = useRef<HTMLInputElement>(null);
   const routeInputRef = useRef<HTMLInputElement>(null);
   const channelInputRef = useRef<HTMLInputElement>(null);
@@ -460,7 +510,7 @@ export function PipelineWorkspace() {
       registrationFormNumber: getLatestStringFilter(columnFilters, 'registrationFormNumber'),
       lastActivityFrom: getDateFilterBounds(columnFilters, 'lastActivityTime').from,
       lastActivityUntil: getDateFilterBounds(columnFilters, 'lastActivityTime').until,
-      stage: state.stage,
+      pipelineColumn: state.pipelineColumn,
       channel: state.channel,
       campaignName: state.campaign,
       ownerUserId: resolvedOwner,
@@ -510,29 +560,47 @@ export function PipelineWorkspace() {
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
-  const organizationOptionsQuery = useGetAcademicOrganizationOptionsQuery(
+  const admissionYearStandardOptionsQuery = useGetAdmissionCrmAdmissionYearStandardOptionsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !quickDialogOpen }
   );
-  const standardOptionsQuery = useGetAdmissionCrmStandardOptionsQuery(
-    { mediumId: academicMediumId || '' },
-    { skip: !academicMediumId || !quickDialogOpen }
+  const admissionYearStandardOptions = useMemo(
+    () => admissionYearStandardOptionsQuery.data || [],
+    [admissionYearStandardOptionsQuery.data]
   );
-  const mediumStages = useMemo(
+  const boardOptions = useMemo(
     () =>
-      (organizationOptionsQuery.data?.items || []).filter(
-        (option) =>
-          option.mediumId === academicMediumId &&
-          (!academicBoardId || option.boardId === academicBoardId)
-      ),
-    [academicBoardId, academicMediumId, organizationOptionsQuery.data?.items]
+      Array.from(
+        new Map(
+          admissionYearStandardOptions.map((option) => [
+            option.boardId,
+            { id: option.boardId, name: option.boardName },
+          ])
+        ).values()
+      ).sort((left, right) => left.name.localeCompare(right.name)),
+    [admissionYearStandardOptions]
+  );
+  const mediumOptions = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          admissionYearStandardOptions
+            .filter((option) => option.boardId === quickForm.academicBoardId)
+            .map((option) => [option.mediumId, { id: option.mediumId, name: option.mediumName }])
+        ).values()
+      ).sort((left, right) => left.name.localeCompare(right.name)),
+    [admissionYearStandardOptions, quickForm.academicBoardId]
   );
   const standardOptions = useMemo(
     () =>
-      (standardOptionsQuery.data || []).filter(
-        (standard) => standard.educationMediumStageId === quickForm.mediumStageId
-      ),
-    [quickForm.mediumStageId, standardOptionsQuery.data]
+      admissionYearStandardOptions
+        .filter(
+          (option) =>
+            option.boardId === quickForm.academicBoardId &&
+            option.mediumId === quickForm.academicMediumId
+        )
+        .sort((left, right) => left.standardName.localeCompare(right.standardName)),
+    [admissionYearStandardOptions, quickForm.academicBoardId, quickForm.academicMediumId]
   );
   const quickInquiryOptions = useMemo(
     () => mapQuickInquiryOptions(quickInquiryOptionsQuery.data),
@@ -541,13 +609,28 @@ export function PipelineWorkspace() {
   const selectedQuickInquiryRoute = quickInquiryOptions.routes.find(
     (route) => route.id === quickForm.intendedRouteDefinitionId
   );
+  const availableSourceOptions = useMemo(
+    () =>
+      quickInquiryOptions.sources.filter(
+        (source) => quickForm.channel === '' || source.allowedChannels.includes(quickForm.channel)
+      ),
+    [quickForm.channel, quickInquiryOptions.sources]
+  );
+  const selectedStandard = admissionYearStandardOptions.find(
+    (option) => option.standardId === quickForm.targetStandardId
+  );
   const quickInquiryOptionsLoading =
     quickInquiryOptionsQuery.isLoading || quickInquiryOptionsQuery.isFetching;
+  const admissionYearStandardsLoading =
+    admissionYearStandardOptionsQuery.isLoading || admissionYearStandardOptionsQuery.isFetching;
   const quickInquiryOptionsMissing =
     !quickInquiryOptionsLoading &&
     !quickInquiryOptionsQuery.isError &&
     Boolean(quickInquiryOptionsQuery.data) &&
-    (!quickInquiryOptions.channels.length || !quickInquiryOptions.routes.length);
+    (!quickInquiryOptions.channels.length ||
+      !quickInquiryOptions.sources.length ||
+      !quickInquiryOptions.inquiryTypes.length ||
+      !quickInquiryOptions.routes.length);
 
   useEffect(() => {
     if (!quickDialogOpen || !quickInquiryOptionsQuery.data) return;
@@ -565,31 +648,64 @@ export function PipelineWorkspace() {
       const intendedRouteDefinitionId = currentRouteIsAvailable
         ? current.intendedRouteDefinitionId
         : (getDefaultQuickInquiryOption(quickInquiryOptions.routes)?.id ?? '');
+      const availableSources = quickInquiryOptions.sources.filter(
+        (source) => channel === '' || source.allowedChannels.includes(channel)
+      );
+      const currentSourceIsAvailable = availableSources.some(
+        (source) => source.id === current.inquirySourceId
+      );
+      const inquirySourceId = currentSourceIsAvailable
+        ? current.inquirySourceId
+        : (getDefaultQuickInquiryOption(availableSources)?.id ?? '');
+      const currentTypeIsAvailable = quickInquiryOptions.inquiryTypes.some(
+        (type) => type.id === current.inquiryTypeId
+      );
+      const inquiryTypeId = currentTypeIsAvailable
+        ? current.inquiryTypeId
+        : (getDefaultQuickInquiryOption(quickInquiryOptions.inquiryTypes)?.id ?? '');
 
       if (
         channel === current.channel &&
-        intendedRouteDefinitionId === current.intendedRouteDefinitionId
+        intendedRouteDefinitionId === current.intendedRouteDefinitionId &&
+        inquirySourceId === current.inquirySourceId &&
+        inquiryTypeId === current.inquiryTypeId
       ) {
         return current;
       }
 
-      return { ...current, channel, intendedRouteDefinitionId };
+      return {
+        ...current,
+        channel,
+        intendedRouteDefinitionId,
+        inquirySourceId,
+        inquiryTypeId,
+      };
     });
   }, [
     quickDialogOpen,
     quickInquiryOptions.channels,
+    quickInquiryOptions.inquiryTypes,
     quickInquiryOptions.routes,
+    quickInquiryOptions.sources,
     quickInquiryOptionsQuery.data,
   ]);
 
   useEffect(() => {
-    if (!quickDialogOpen || quickForm.mediumStageId || mediumStages.length !== 1) return;
-    setQuickForm((current) => ({ ...current, mediumStageId: mediumStages[0].id }));
-  }, [mediumStages, quickDialogOpen, quickForm.mediumStageId]);
+    if (!quickDialogOpen || quickForm.academicBoardId || boardOptions.length !== 1) return;
+    setQuickForm((current) => ({ ...current, academicBoardId: boardOptions[0].id }));
+  }, [boardOptions, quickDialogOpen, quickForm.academicBoardId]);
+
+  useEffect(() => {
+    if (!quickDialogOpen || quickForm.academicMediumId || mediumOptions.length !== 1) return;
+    setQuickForm((current) => ({ ...current, academicMediumId: mediumOptions[0].id }));
+  }, [mediumOptions, quickDialogOpen, quickForm.academicMediumId]);
 
   useEffect(() => {
     if (!quickDialogOpen || quickForm.targetStandardId || standardOptions.length !== 1) return;
-    setQuickForm((current) => ({ ...current, targetStandardId: standardOptions[0].id }));
+    setQuickForm((current) => ({
+      ...current,
+      targetStandardId: standardOptions[0].standardId,
+    }));
   }, [quickDialogOpen, quickForm.targetStandardId, standardOptions]);
 
   const registrationRequiredBeforeExam = Boolean(
@@ -614,8 +730,8 @@ export function PipelineWorkspace() {
       state.channel,
       state.owner,
       state.page,
+      state.pipelineColumn,
       state.priority,
-      state.stage,
     ]
   );
 
@@ -623,20 +739,6 @@ export function PipelineWorkspace() {
     () => (stagesQuery.data || []).filter((stage) => stage.isEnabled),
     [stagesQuery.data]
   );
-  const stageGroup = state.stageGroup || 'active';
-  const visibleBoardStages = useMemo(
-    () =>
-      stages.filter((stageItem) =>
-        state.stage == null
-          ? pipelineStageGroups[stageGroup].includes(stageItem.systemStage)
-          : stageItem.systemStage === state.stage
-      ),
-    [stageGroup, stages, state.stage]
-  );
-  const stageSelectValue =
-    state.stage != null && stages.some((stage) => stage.systemStage === state.stage)
-      ? state.stage
-      : '';
   const leads = useMemo(() => leadsQuery.data?.items || [], [leadsQuery.data?.items]);
   const showEmptyPipeline =
     !leadsQuery.isLoading && !leadsQuery.isFetching && (leadsQuery.data?.totalCount ?? 0) === 0;
@@ -692,16 +794,18 @@ export function PipelineWorkspace() {
 
   const tableFilters = useMemo<IParams['filters']>(
     () => [
-      ...(state.stage == null
+      ...(state.pipelineColumn == null
         ? []
         : [
             {
-              column: 'stage',
+              column: 'pipelineColumn',
               type: 'equals',
-              value: state.stage,
+              value: state.pipelineColumn,
               valueType: 'enum',
-              label: 'Stage',
-              displayValue: getAdmissionCrmStageLabel(state.stage as AdmissionInquiryStage),
+              label: 'Current step',
+              displayValue:
+                pipelineColumns.find((column) => column.key === state.pipelineColumn)?.label ||
+                'Current step',
             },
           ]),
       ...(state.channel == null
@@ -770,9 +874,9 @@ export function PipelineWorkspace() {
       staffById,
       state.channel,
       state.className,
+      state.pipelineColumn,
       state.priority,
       state.routeType,
-      state.stage,
     ]
   );
 
@@ -863,38 +967,28 @@ export function PipelineWorkspace() {
         },
       },
       {
-        id: 'stage',
-        label: 'Stage',
-        width: 155,
-        minWidth: 145,
+        id: 'pipelineColumn',
+        label: 'Current step',
+        width: 190,
+        minWidth: 175,
         filterType: 'enum',
-        enumOptions: stages.map((stage) => ({
-          value: stage.systemStage,
-          label: stage.stageName,
+        enumOptions: pipelineColumns.map((column) => ({
+          value: column.key,
+          label: column.label,
         })),
         render: (value) => {
-          const stage = stages.find((item) => item.systemStage === value);
-          if (!stage) return <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />;
-          return (
-            <Stack direction="row" alignItems="center" gap={0.5}>
-              <AdmissionCrmStageChip stage={stage.systemStage} />
-              <Tooltip
-                arrow
-                title={
-                  <Stack spacing={0.25}>
-                    {getAdmissionCrmStageTooltipLines(stage).map((line) => (
-                      <Typography key={line} variant="caption" color="inherit">
-                        {line}
-                      </Typography>
-                    ))}
-                  </Stack>
-                }
-              >
-                <IconButton size="small" aria-label={`${stage.stageName} stage details`}>
-                  <InfoOutlined fontSize="inherit" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
+          const column = pipelineColumns.find((item) => item.key === value);
+          return column ? (
+            <Tooltip arrow title={column.description}>
+              <Chip
+                size="small"
+                variant="outlined"
+                label={column.label}
+                sx={{ color: column.color, borderColor: column.color }}
+              />
+            </Tooltip>
+          ) : (
+            <Chip size="small" variant="outlined" label="Needs review" />
           );
         },
       },
@@ -1087,7 +1181,6 @@ export function PipelineWorkspace() {
       registrationRequiredBeforeExam,
       selectedLeadIds.length,
       selectedLeadSet,
-      stages,
     ]
   );
 
@@ -1110,22 +1203,33 @@ export function PipelineWorkspace() {
     setQuickFormSubmitted(true);
     setQuickEmailTouched(true);
 
-    const contactMissing = !quickForm.primaryContactNo.trim() && !quickForm.email.trim();
+    const contactMissing = !quickForm.primaryContactNo.trim();
     const emailInvalid = !isValidQuickInquiryEmail(quickForm.email);
     const optionConfigurationUnavailable =
       quickInquiryOptionsLoading ||
       quickInquiryOptionsQuery.isError ||
       quickInquiryOptionsMissing ||
-      !quickInquiryOptionsQuery.data?.isAdmissionCycleActive;
+      !quickInquiryOptionsQuery.data?.isAdmissionCycleActive ||
+      admissionYearStandardsLoading ||
+      admissionYearStandardOptionsQuery.isError ||
+      !admissionYearStandardOptions.length;
 
     const firstInvalidInput = [
       !quickForm.firstName.trim() ? firstNameInputRef : null,
+      !quickForm.parentGuardianName.trim() ? guardianInputRef : null,
       emailInvalid ? emailInputRef : null,
       contactMissing ? contactInputRef : null,
-      !quickForm.mediumStageId ? mediumStageInputRef : null,
+      !quickForm.academicBoardId ? boardInputRef : null,
+      !quickForm.academicMediumId ? mediumInputRef : null,
       !quickForm.targetStandardId ? targetStandardInputRef : null,
       !selectedQuickInquiryRoute ? routeInputRef : null,
       quickForm.channel === '' ? channelInputRef : null,
+      availableSourceOptions.length > 0 && !quickForm.inquirySourceId
+        ? inquirySourceInputRef
+        : null,
+      quickInquiryOptions.inquiryTypes.length > 0 && !quickForm.inquiryTypeId
+        ? inquiryTypeInputRef
+        : null,
     ].find((input) => input !== null);
 
     if (firstInvalidInput || optionConfigurationUnavailable) {
@@ -1133,11 +1237,12 @@ export function PipelineWorkspace() {
       return;
     }
 
-    const selectedStandard = standardOptions.find((item) => item.id === quickForm.targetStandardId);
     if (!selectedStandard || !selectedQuickInquiryRoute || quickForm.channel === '') return;
 
     const body: CreateAdmissionCrmLeadDto = {
       channel: quickForm.channel,
+      inquirySourceId: quickForm.inquirySourceId || undefined,
+      inquiryTypeId: quickForm.inquiryTypeId || undefined,
       campaignName: quickForm.campaignName.trim() || undefined,
       firstName: quickForm.firstName.trim(),
       middleName: quickForm.middleName.trim() || undefined,
@@ -1146,13 +1251,13 @@ export function PipelineWorkspace() {
       primaryContactNo: quickForm.primaryContactNo.trim() || undefined,
       email: quickForm.email.trim() || undefined,
       admissionIntent: quickForm.admissionIntent.trim() || selectedQuickInquiryRoute.label,
-      intendedRouteDefinitionId: selectedQuickInquiryRoute.id,
+      intendedRouteDefinitionId: selectedQuickInquiryRoute.definitionId,
       intendedRouteType: selectedQuickInquiryRoute.routeType,
-      targetStandardId: selectedStandard.id,
-      academicBoardId,
-      academicMediumId,
-      academicMediumStageId: quickForm.mediumStageId,
-      desiredClassName: selectedStandard.name,
+      targetStandardId: selectedStandard.standardId,
+      academicBoardId: selectedStandard.boardId,
+      academicMediumId: selectedStandard.mediumId,
+      academicMediumStageId: selectedStandard.mediumStageId,
+      desiredClassName: selectedStandard.standardName,
       notes: quickForm.notes.trim() || undefined,
       duplicateContinueReason: quickForm.duplicateContinueReason.trim() || undefined,
     };
@@ -1307,7 +1412,7 @@ export function PipelineWorkspace() {
     />
   );
 
-  const quickInquiryContactMissing = !quickForm.primaryContactNo.trim() && !quickForm.email.trim();
+  const quickInquiryContactMissing = !quickForm.primaryContactNo.trim();
   const quickInquiryEmailInvalid = !isValidQuickInquiryEmail(quickForm.email);
   const showQuickInquiryContactError = quickFormSubmitted && quickInquiryContactMissing;
   const showQuickInquiryEmailError =
@@ -1317,13 +1422,16 @@ export function PipelineWorkspace() {
     quickInquiryOptionsQuery.isError ||
     quickInquiryOptionsMissing ||
     quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false ||
-    !quickInquiryOptionsQuery.data;
+    !quickInquiryOptionsQuery.data ||
+    admissionYearStandardsLoading ||
+    admissionYearStandardOptionsQuery.isError ||
+    !admissionYearStandardOptions.length;
 
   return (
     <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="Admissions Pipeline"
-        description="Capture, qualify, assign, and progress inquiries through exam readiness."
+        description="Capture and progress every applicant from inquiry through activation."
         actions={
           <Stack direction="row" alignItems="center" gap={1}>
             <ToggleButtonGroup
@@ -1366,32 +1474,12 @@ export function PipelineWorkspace() {
             setSearch('');
             setDebouncedSearch('');
             updateState({
-              stage: undefined,
               channel: undefined,
               priority: undefined,
               page: 1,
             });
           }}
-          clearDisabled={
-            state.stage == null && state.channel == null && state.priority == null && !search
-          }
-          actions={
-            <Stack direction="row" gap={0.75} flexWrap="wrap" justifyContent="flex-end">
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={stageGroup}
-                onChange={(_, value: PipelineStageGroup | null) =>
-                  value && updateState({ stageGroup: value, stage: undefined, page: 1 }, 'push')
-                }
-                aria-label="Pipeline stage group"
-              >
-                <ToggleButton value="active">Active</ToggleButton>
-                <ToggleButton value="decision">Decision</ToggleButton>
-                <ToggleButton value="closed">Closed</ToggleButton>
-              </ToggleButtonGroup>
-            </Stack>
-          }
+          clearDisabled={state.channel == null && state.priority == null && !search}
         >
           <>
             <TextField
@@ -1404,25 +1492,6 @@ export function PipelineWorkspace() {
               }}
               autoComplete="off"
             />
-            <TextField
-              select
-              size="small"
-              label="Stage"
-              value={stageSelectValue}
-              onChange={(event) =>
-                updateState({
-                  stage: event.target.value === '' ? undefined : Number(event.target.value),
-                  page: 1,
-                })
-              }
-            >
-              <MenuItem value="">All stages</MenuItem>
-              {stages.map((stageItem) => (
-                <MenuItem key={stageItem.id} value={stageItem.systemStage}>
-                  {stageItem.stageName}
-                </MenuItem>
-              ))}
-            </TextField>
             <TextField
               select
               size="small"
@@ -1498,51 +1567,46 @@ export function PipelineWorkspace() {
         </Paper>
       )}
 
-      {stagesQuery.isFetching && <LinearProgress aria-label="Loading pipeline stages" />}
-      {stagesQuery.isError && (
+      {(state.view || 'list') === 'list' && stagesQuery.isFetching && (
+        <LinearProgress aria-label="Loading pipeline stages" />
+      )}
+      {(state.view || 'list') === 'list' && stagesQuery.isError && (
         <EnrollmentWorkspaceErrorState
           message="Pipeline stages are unavailable. Review Enrollment configuration before continuing."
           onRetry={() => stagesQuery.refetch()}
         />
       )}
 
-      {state.view === 'board' &&
-        !stagesQuery.isError &&
-        (visibleBoardStages.length ? (
-          <Stack
-            direction={{ xs: 'column', lg: 'row' }}
-            spacing={1.25}
-            alignItems="stretch"
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              overflowX: { lg: 'auto' },
-              overflowY: { xs: 'auto', lg: 'hidden' },
-              pb: 1,
-            }}
-          >
-            {visibleBoardStages.map((stageItem) => (
-              <PipelineStageColumn
-                key={stageItem.id}
-                academicYearId={academicYearId}
-                stage={stageItem}
-                query={{
-                  filterText: debouncedSearch || undefined,
-                  channel: state.channel,
-                  campaignName: state.campaign,
-                  priority: state.priority,
-                }}
-                resetKey={`${state.channel}-${state.campaign}-${state.priority}-${debouncedSearch}`}
-                clientFilter={() => true}
-                renderLead={renderLeadCard}
-              />
-            ))}
-          </Stack>
-        ) : (
-          <Alert severity="info">
-            No enabled stages are configured for this pipeline group. Review Journey settings.
-          </Alert>
-        ))}
+      {state.view === 'board' && (
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          spacing={1.25}
+          alignItems="stretch"
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowX: { lg: 'auto' },
+            overflowY: { xs: 'auto', lg: 'hidden' },
+            pb: 1,
+          }}
+        >
+          {pipelineColumns.map((column) => (
+            <PipelineStageColumn
+              key={column.key}
+              academicYearId={academicYearId}
+              column={column}
+              query={{
+                filterText: debouncedSearch || undefined,
+                channel: state.channel,
+                campaignName: state.campaign,
+                priority: state.priority,
+              }}
+              resetKey={`${state.channel}-${state.campaign}-${state.priority}-${debouncedSearch}`}
+              renderLead={renderLeadCard}
+            />
+          ))}
+        </Stack>
+      )}
 
       {(state.view || 'list') === 'list' &&
         (leadsQuery.isError ? (
@@ -1601,7 +1665,7 @@ export function PipelineWorkspace() {
               }}
               onServerFilter={(filters) => {
                 const stateColumns = new Set([
-                  'stage',
+                  'pipelineColumn',
                   'channel',
                   'priority',
                   'intendedRouteType',
@@ -1612,7 +1676,7 @@ export function PipelineWorkspace() {
                 setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
                 updateState(
                   {
-                    stage: getLatestEnumFilter(filters, 'stage'),
+                    pipelineColumn: getLatestEnumFilter(filters, 'pipelineColumn'),
                     channel: getLatestEnumFilter(filters, 'channel'),
                     priority: getLatestEnumFilter(filters, 'priority'),
                     routeType: getLatestEnumFilter(filters, 'intendedRouteType'),
@@ -1625,8 +1689,8 @@ export function PipelineWorkspace() {
               }}
               noDataText={
                 <EnrollmentTableEmptyState
-                  title="No applicants in this cycle view"
-                  description="Create a real inquiry for this admission cycle or clear filters to show existing applicants."
+                  title="No applicants in this admission year view"
+                  description="Create a real inquiry for this admission year or clear filters to show existing applicants."
                 />
               }
               rowProps={(row) => ({
@@ -1642,7 +1706,7 @@ export function PipelineWorkspace() {
             />
             {showEmptyPipeline ? (
               <Alert severity="info">
-                No applicants in this cycle view. Create a real inquiry for this admission cycle or
+                No applicants in this admission year. Create a real inquiry for this admission year or
                 clear filters to show existing applicants.
               </Alert>
             ) : null}
@@ -1654,32 +1718,16 @@ export function PipelineWorkspace() {
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Alert severity="info">
-              New inquiries start in the New Inquiry stage. The selected academic context determines
-              the available academic stages and classes.
+              New applicants start in New Inquiry. Board, medium, and standard come from the
+              published Admission Year Setup.
             </Alert>
             <Paper variant="outlined" sx={{ p: 1.25 }}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.5}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Academic year
-                  </Typography>
-                  <Typography variant="body2">
-                    {academicYearName || 'Selected academic year'}
-                  </Typography>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Board
-                  </Typography>
-                  <Typography variant="body2">{academicBoardName || 'Selected board'}</Typography>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Medium
-                  </Typography>
-                  <Typography variant="body2">{academicMediumName || 'Selected medium'}</Typography>
-                </Box>
-              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                Admission year
+              </Typography>
+              <Typography variant="body2">
+                {academicYearName || 'Selected academic year'}
+              </Typography>
             </Paper>
 
             {quickInquiryOptionsLoading && <LinearProgress aria-label="Loading inquiry options" />}
@@ -1696,59 +1744,42 @@ export function PipelineWorkspace() {
                   </Button>
                 }
               >
-                Inquiry channels and admission pathways could not be loaded.
+                Inquiry sources, types, channels, and pathways could not be loaded.
               </Alert>
             )}
             {quickInquiryOptionsMissing && (
               <Alert severity="warning">
-                Quick inquiry needs at least one active inquiry channel and one published admission
-                pathway. Ask an administrator to update Enrollment Settings.
+                Quick Inquiry needs an active channel, source, inquiry type, and admission pathway.
               </Alert>
             )}
             {quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false && (
               <Alert severity="warning">
-                Quick inquiry is unavailable because the admission cycle is not active.
+                Quick inquiry is unavailable because the admission year is not active.
               </Alert>
             )}
-            {organizationOptionsQuery.isError && (
+            {admissionYearStandardOptionsQuery.isError && (
               <Alert
                 severity="error"
                 action={
                   <Button
                     color="inherit"
                     size="small"
-                    onClick={() => organizationOptionsQuery.refetch()}
+                    onClick={() => admissionYearStandardOptionsQuery.refetch()}
                   >
                     Retry
                   </Button>
                 }
               >
-                Academic stages could not be loaded for the selected board and medium.
+                Boards, mediums, and standards could not be loaded from Admission Year Setup.
               </Alert>
             )}
-            {!organizationOptionsQuery.isFetching &&
-              organizationOptionsQuery.data &&
-              !mediumStages.length && (
+            {!admissionYearStandardsLoading &&
+              admissionYearStandardOptionsQuery.data &&
+              !admissionYearStandardOptions.length && (
                 <Alert severity="warning">
-                  No academic stages are configured for the selected board and medium.
+                  No standards are available in the published Admission Year Setup.
                 </Alert>
               )}
-            {quickForm.mediumStageId && standardOptionsQuery.isError && (
-              <Alert
-                severity="error"
-                action={
-                  <Button
-                    color="inherit"
-                    size="small"
-                    onClick={() => standardOptionsQuery.refetch()}
-                  >
-                    Retry
-                  </Button>
-                }
-              >
-                Classes could not be loaded for the selected academic stage.
-              </Alert>
-            )}
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
@@ -1809,11 +1840,19 @@ export function PipelineWorkspace() {
               </Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                 <TextField
+                  required
                   fullWidth
+                  inputRef={guardianInputRef}
                   name="parentGuardianName"
                   autoComplete="name"
                   label="Parent or guardian"
                   value={quickForm.parentGuardianName}
+                  error={quickFormSubmitted && !quickForm.parentGuardianName.trim()}
+                  helperText={
+                    quickFormSubmitted && !quickForm.parentGuardianName.trim()
+                      ? 'Enter the parent or guardian name.'
+                      : undefined
+                  }
                   onChange={(event) => {
                     setQuickForm((current) => ({
                       ...current,
@@ -1823,6 +1862,7 @@ export function PipelineWorkspace() {
                   }}
                 />
                 <TextField
+                  required
                   fullWidth
                   inputRef={contactInputRef}
                   name="primaryContactNo"
@@ -1833,8 +1873,8 @@ export function PipelineWorkspace() {
                   error={showQuickInquiryContactError}
                   helperText={
                     showQuickInquiryContactError
-                      ? 'Add a contact number or email address.'
-                      : 'Provide at least one way to contact the family.'
+                      ? 'Add the parent or guardian mobile number.'
+                      : 'Used for admission follow-up and status messages.'
                   }
                   slotProps={{ htmlInput: { inputMode: 'tel' } }}
                   onChange={(event) => {
@@ -1854,13 +1894,11 @@ export function PipelineWorkspace() {
                   autoComplete="email"
                   spellCheck={false}
                   value={quickForm.email}
-                  error={showQuickInquiryEmailError || showQuickInquiryContactError}
+                  error={showQuickInquiryEmailError}
                   helperText={
                     showQuickInquiryEmailError
                       ? 'Enter a valid email address, for example parent@example.com.'
-                      : showQuickInquiryContactError
-                        ? 'Add an email address or contact number.'
-                        : 'Optional when a contact number is provided.'
+                      : 'Optional.'
                   }
                   InputProps={{
                     startAdornment: <InputAdornment position="start">@</InputAdornment>,
@@ -1879,34 +1917,171 @@ export function PipelineWorkspace() {
                 Admission context
               </Typography>
               <Stack spacing={1}>
+                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                  <TextField
+                    required
+                    select
+                    fullWidth
+                    inputRef={channelInputRef}
+                    name="channel"
+                    label="Inquiry channel"
+                    value={quickForm.channel}
+                    disabled={quickInquiryOptionsUnavailable}
+                    error={quickFormSubmitted && quickForm.channel === ''}
+                    helperText={
+                      quickFormSubmitted && quickForm.channel === ''
+                        ? 'Select an active inquiry channel.'
+                        : 'How the family contacted the school.'
+                    }
+                    onChange={(event) => {
+                      setQuickForm((current) => ({
+                        ...current,
+                        channel:
+                          event.target.value === ''
+                            ? ''
+                            : (Number(event.target.value) as AdmissionInquiryChannel),
+                        inquirySourceId: '',
+                      }));
+                    }}
+                  >
+                    {quickInquiryOptions.channels.map((channel) => (
+                      <MenuItem key={channel.value} value={channel.value}>
+                        {channel.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    required={availableSourceOptions.length > 0}
+                    select
+                    fullWidth
+                    inputRef={inquirySourceInputRef}
+                    name="inquirySourceId"
+                    label="Inquiry source"
+                    value={quickForm.inquirySourceId}
+                    disabled={quickInquiryOptionsUnavailable || quickForm.channel === ''}
+                    error={
+                      quickFormSubmitted &&
+                      availableSourceOptions.length > 0 &&
+                      !quickForm.inquirySourceId
+                    }
+                    helperText={
+                      quickFormSubmitted &&
+                      availableSourceOptions.length > 0 &&
+                      !quickForm.inquirySourceId
+                        ? 'Select where this inquiry came from.'
+                        : availableSourceOptions.length
+                          ? 'Available for the selected channel.'
+                          : 'No separate source is configured for this channel.'
+                    }
+                    onChange={(event) =>
+                      setQuickForm((current) => ({
+                        ...current,
+                        inquirySourceId: event.target.value,
+                      }))
+                    }
+                  >
+                    {availableSourceOptions.map((source) => (
+                      <MenuItem key={source.id} value={source.id}>
+                        {source.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    required={quickInquiryOptions.inquiryTypes.length > 0}
+                    select
+                    fullWidth
+                    inputRef={inquiryTypeInputRef}
+                    name="inquiryTypeId"
+                    label="Inquiry type"
+                    value={quickForm.inquiryTypeId}
+                    disabled={quickInquiryOptionsUnavailable}
+                    error={
+                      quickFormSubmitted &&
+                      quickInquiryOptions.inquiryTypes.length > 0 &&
+                      !quickForm.inquiryTypeId
+                    }
+                    helperText={
+                      quickFormSubmitted &&
+                      quickInquiryOptions.inquiryTypes.length > 0 &&
+                      !quickForm.inquiryTypeId
+                        ? 'Select the inquiry type.'
+                        : quickInquiryOptions.inquiryTypes.length
+                          ? 'Used for filtering and reporting.'
+                          : 'No inquiry types are configured.'
+                    }
+                    onChange={(event) =>
+                      setQuickForm((current) => ({
+                        ...current,
+                        inquiryTypeId: event.target.value,
+                      }))
+                    }
+                  >
+                    {quickInquiryOptions.inquiryTypes.map((type) => (
+                      <MenuItem key={type.id} value={type.id}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                   <TextField
                     required
                     select
                     fullWidth
-                    inputRef={mediumStageInputRef}
-                    name="mediumStageId"
-                    label="Academic stage"
-                    value={quickForm.mediumStageId}
-                    disabled={organizationOptionsQuery.isFetching}
-                    error={quickFormSubmitted && !quickForm.mediumStageId}
+                    inputRef={boardInputRef}
+                    name="academicBoardId"
+                    label="Board"
+                    value={quickForm.academicBoardId}
+                    disabled={admissionYearStandardsLoading}
+                    error={quickFormSubmitted && !quickForm.academicBoardId}
                     helperText={
-                      quickFormSubmitted && !quickForm.mediumStageId
-                        ? 'Select the student’s academic stage.'
-                        : 'Derived from the selected board and medium.'
+                      quickFormSubmitted && !quickForm.academicBoardId
+                        ? 'Select the board.'
+                        : 'Available in the published Admission Year Setup.'
                     }
                     onChange={(event) => {
                       setQuickForm((current) => ({
                         ...current,
-                        mediumStageId: event.target.value,
+                        academicBoardId: event.target.value,
+                        academicMediumId: '',
                         targetStandardId: '',
                       }));
                       setDuplicateReviewed(false);
                     }}
                   >
-                    {mediumStages.map((stage) => (
-                      <MenuItem key={stage.id} value={stage.id}>
-                        {stage.stageName || stage.label}
+                    {boardOptions.map((board) => (
+                      <MenuItem key={board.id} value={board.id}>
+                        {board.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    required
+                    select
+                    fullWidth
+                    inputRef={mediumInputRef}
+                    name="academicMediumId"
+                    label="Medium"
+                    value={quickForm.academicMediumId}
+                    disabled={!quickForm.academicBoardId || admissionYearStandardsLoading}
+                    error={quickFormSubmitted && !quickForm.academicMediumId}
+                    helperText={
+                      quickFormSubmitted && !quickForm.academicMediumId
+                        ? 'Select the medium.'
+                        : 'Available for the selected board.'
+                    }
+                    onChange={(event) => {
+                      setQuickForm((current) => ({
+                        ...current,
+                        academicMediumId: event.target.value,
+                        targetStandardId: '',
+                      }));
+                      setDuplicateReviewed(false);
+                    }}
+                  >
+                    {mediumOptions.map((medium) => (
+                      <MenuItem key={medium.id} value={medium.id}>
+                        {medium.name}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -1916,14 +2091,16 @@ export function PipelineWorkspace() {
                     fullWidth
                     inputRef={targetStandardInputRef}
                     name="targetStandardId"
-                    label="Target class"
+                    label="Standard"
                     value={quickForm.targetStandardId}
-                    disabled={!quickForm.mediumStageId || standardOptionsQuery.isFetching}
+                    disabled={!quickForm.academicMediumId || admissionYearStandardsLoading}
                     error={quickFormSubmitted && !quickForm.targetStandardId}
                     helperText={
                       quickFormSubmitted && !quickForm.targetStandardId
-                        ? 'Select the student’s target class.'
-                        : 'Available within the selected academic stage.'
+                        ? 'Select the target standard.'
+                        : selectedStandard
+                          ? selectedStandard.mediumStageName
+                          : 'Available for the selected board and medium.'
                     }
                     onChange={(event) => {
                       setQuickForm((current) => ({
@@ -1934,8 +2111,8 @@ export function PipelineWorkspace() {
                     }}
                   >
                     {standardOptions.map((standard) => (
-                      <MenuItem key={standard.id} value={standard.id}>
-                        {standard.name}
+                      <MenuItem key={standard.standardId} value={standard.standardId}>
+                        {standard.standardName}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -1953,10 +2130,10 @@ export function PipelineWorkspace() {
                     error={quickFormSubmitted && !selectedQuickInquiryRoute}
                     helperText={
                       quickFormSubmitted && !selectedQuickInquiryRoute
-                        ? 'Select a configured admission pathway.'
-                        : selectedQuickInquiryRoute
+                        ? 'Select an admission pathway.'
+                        : selectedQuickInquiryRoute?.version
                           ? `Published pathway version ${selectedQuickInquiryRoute.version}.`
-                          : 'Loaded from the active enrollment configuration.'
+                          : 'Allowed by the published Admission Year Setup.'
                     }
                     onChange={(event) => {
                       setQuickForm((current) => ({
@@ -1969,37 +2146,6 @@ export function PipelineWorkspace() {
                     {quickInquiryOptions.routes.map((route) => (
                       <MenuItem key={route.id} value={route.id}>
                         {route.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
-                    required
-                    select
-                    fullWidth
-                    inputRef={channelInputRef}
-                    name="channel"
-                    label="Inquiry channel"
-                    value={quickForm.channel}
-                    disabled={quickInquiryOptionsUnavailable}
-                    error={quickFormSubmitted && quickForm.channel === ''}
-                    helperText={
-                      quickFormSubmitted && quickForm.channel === ''
-                        ? 'Select an active inquiry channel.'
-                        : 'Only channels enabled for this admission cycle are shown.'
-                    }
-                    onChange={(event) => {
-                      setQuickForm((current) => ({
-                        ...current,
-                        channel:
-                          event.target.value === ''
-                            ? ''
-                            : (Number(event.target.value) as AdmissionInquiryChannel),
-                      }));
-                    }}
-                  >
-                    {quickInquiryOptions.channels.map((channel) => (
-                      <MenuItem key={channel.value} value={channel.value}>
-                        {channel.label}
                       </MenuItem>
                     ))}
                   </TextField>
