@@ -1,0 +1,623 @@
+module: Academic
+generatedAt: 2026-07-29
+scenarios:
+  - id: ACM-DASH-001
+    module: Academic
+    submodule: Dashboard
+    title: Academic dashboard loads for academic admin
+    risk: high
+    priority: P1
+    type: [functional, e2e, smoke]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-dashboard', '@high', '@smoke', '@positive']
+  - id: ACM-360-001
+    module: Academic
+    submodule: Student Academic 360
+    title: Student Academic 360 workspace loads with selected academic context
+    risk: high
+    priority: P1
+    type: [functional, e2e, smoke]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/studentAcademic360]
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-student-academic-360', '@high', '@smoke', '@positive']
+  - id: ACM-CUR-001
+    module: Academic
+    submodule: Curriculum
+    title: Curriculum route suite loads all active curriculum screens
+    risk: critical
+    priority: P0
+    type: [functional, e2e, smoke]
+    roles: [academic-admin]
+    tenants: [school]
+    routes:
+      - /academic/curriculumSubjects
+      - /academic/courseSubjects
+      - /academic/lesson-plan
+      - /academic/curriculumReports
+      - /academic/curriculumSetting/subjectCreation
+      - /academic/curriculumSetting/electiveGroupCreation
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-curriculum', '@critical', '@smoke', '@positive']
+  - id: ACM-CUR-002
+    module: Academic
+    submodule: Curriculum
+    title: Subject creation CRUD validates required, duplicate, create, edit, and cleanup behavior
+    risk: critical
+    priority: P0
+    type: [functional, e2e, validation]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/curriculumSetting/subjectCreation]
+    automated: true
+    automationFile: tests/academic/subject-management/subject-creation.spec.ts
+    status: automated-outside-default-config
+    tags: ['@module-academic', '@submodule-curriculum', '@critical', '@positive', '@negative']
+  - id: ACM-CUR-003
+    module: Academic
+    submodule: Curriculum
+    title: Subject allocation creates a draft assignment and cleans up
+    risk: critical
+    priority: P0
+    type: [functional, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/curriculumSubjects]
+    automated: true
+    automationFile: tests/academic/subject-management/subject-allocation.spec.ts
+    status: automated-outside-default-config
+    tags: ['@module-academic', '@submodule-curriculum', '@critical', '@positive']
+  - id: ACM-TT-001
+    module: Academic
+    submodule: Timetable
+    title: Timetable route suite loads management, rooms, substitutions, reports, and settings
+    risk: critical
+    priority: P0
+    type: [functional, e2e, smoke]
+    roles: [academic-admin]
+    tenants: [school]
+    routes:
+      - /academic/newTimetable
+      - /academic/roomAvailability
+      - /academic/substitutionManagement
+      - /academic/timetableReports
+      - /academic/timetableSettings/weeklyLectures
+      - /academic/timetableSettings/lectureSlots
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-timetable', '@critical', '@smoke', '@positive']
+  - id: ACM-HW-001
+    module: Academic
+    submodule: Homework And Assignment
+    title: Homework route suite loads learning tasks, feedback, reports, and type settings
+    risk: critical
+    priority: P0
+    type: [functional, e2e, smoke]
+    roles: [academic-admin, teacher]
+    tenants: [school]
+    routes:
+      - /academic/homeworkCreation
+      - /academic/gradingAndFeedback
+      - /academic/homeworkAssignmentReports
+      - /academic/homeworkSettings/homeworkTypes
+      - /academic/homeworkSettings/assignmentTypes
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-homework-assignment', '@critical', '@smoke', '@positive']
+  - id: ACM-EXM-001
+    module: Academic
+    submodule: Examination
+    title: Examination route suite loads schedule, seating, marks, results, question bank, reports, and settings
+    risk: critical
+    priority: P0
+    type: [functional, e2e, smoke]
+    roles: [academic-admin, teacher]
+    tenants: [school]
+    routes:
+      - /academic/scheduleExam
+      - /academic/seatallocation
+      - /academic/gradeEntry
+      - /academic/resultCreation
+      - /academic/questionBank
+      - /academic/questionPapers
+      - /academic/examinationReports
+      - /academic/examinationSetting/gradeScaling
+      - /academic/examinationSetting/examTypes
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@critical', '@smoke', '@positive']
+  - id: ACM-CAL-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Academic Calendar route suite loads calendar management, emergency closure, and audit logs
+    risk: critical
+    priority: P0
+    type: [functional, e2e, smoke]
+    roles: [academic-admin]
+    tenants: [school]
+    routes:
+      - /academic/calendarManagement
+      - /academic/calendarEmergencyClosure
+      - /academic/calendarAuditLogs
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-academic-calendar', '@critical', '@smoke', '@positive']
+  - id: ACM-CAL-API-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Calendar read APIs return safe contracts for list, dashboard, emergency closures, and audit summary
+    risk: critical
+    priority: P0
+    type: [api, contract, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: []
+    automated: true
+    automationFile: e2e/academic/academic-calendar-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-academic-calendar', '@critical', '@api', '@positive']
+  - id: ACM-CAL-API-002
+    module: Academic
+    submodule: Academic Calendar
+    title: Calendar APIs reject malformed date and missing-id requests without server errors
+    risk: high
+    priority: P1
+    type: [api, negative, boundary]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: []
+    automated: true
+    automationFile: e2e/academic/academic-calendar-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-academic-calendar', '@high', '@api', '@negative']
+  - id: ACM-CAL-PERM-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Anonymous users cannot read or create Academic Calendar records through APIs
+    risk: critical
+    priority: P0
+    type: [permission, security, api]
+    roles: [anonymous]
+    tenants: [school]
+    routes: []
+    automated: true
+    automationFile: e2e/academic/academic-calendar-permissions.guest.spec.ts
+    status: automated
+    tags:
+      ['@module-academic', '@submodule-academic-calendar', '@critical', '@permission', '@negative']
+  - id: ACM-CAL-CRUD-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Academic admin creates, edits, publishes, archives, and deletes a test calendar
+    risk: critical
+    priority: P0
+    type: [functional, e2e, crud]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/calendarManagement]
+    automated: true
+    automationFile: e2e/academic/academic-calendar-workflow.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-academic-calendar', '@critical', '@positive']
+  - id: ACM-CAL-VAL-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Calendar creation validates name, start date, end date, duplicate default, and date ordering
+    risk: critical
+    priority: P0
+    type: [validation, negative, boundary, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/calendarManagement]
+    automated: true
+    automationFile: e2e/academic/academic-calendar-workflow.spec.ts
+    status: automated
+    tags:
+      ['@module-academic', '@submodule-academic-calendar', '@critical', '@negative', '@boundary']
+  - id: ACM-CAL-DAY-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Admin adds holiday, vacation, half-day, exam day, PTM day, and event day markers
+    risk: critical
+    priority: P0
+    type: [functional, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/calendarManagement]
+    automated: true
+    automationFile: e2e/academic/academic-calendar-workflow.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-academic-calendar', '@critical', '@positive']
+  - id: ACM-CAL-DAY-002
+    module: Academic
+    submodule: Academic Calendar
+    title: Calendar day markers validate title, date range, time range, class/division targeting, and duplicate dates
+    risk: critical
+    priority: P0
+    type: [validation, negative, boundary, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/calendarManagement]
+    automated: true
+    automationFile: e2e/academic/academic-calendar-workflow.spec.ts
+    status: automated
+    tags:
+      ['@module-academic', '@submodule-academic-calendar', '@critical', '@negative', '@boundary']
+  - id: ACM-CAL-CLOSURE-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Admin declares and cancels an emergency closure with audit and impact records
+    risk: critical
+    priority: P0
+    type: [functional, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/calendarEmergencyClosure, /academic/calendarAuditLogs]
+    automated: true
+    automationFile: e2e/academic/academic-calendar-workflow.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-academic-calendar', '@critical', '@positive']
+  - id: ACM-CAL-CLOSURE-002
+    module: Academic
+    submodule: Academic Calendar
+    title: Emergency closure validates required title, start/end range, duplicate closure, notification toggles, and class targeting
+    risk: critical
+    priority: P0
+    type: [validation, negative, boundary, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/calendarEmergencyClosure]
+    automated: true
+    automationFile: e2e/academic/academic-examination-api.spec.ts
+    status: automated
+    tags:
+      ['@module-academic', '@submodule-academic-calendar', '@critical', '@negative', '@boundary']
+  - id: ACM-CAL-AUD-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Audit log filters by action, calendar, date, actor, source, and opens diff details
+    risk: high
+    priority: P1
+    type: [functional, audit, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/calendarAuditLogs]
+    automated: true
+    automationFile: e2e/academic/academic-calendar-workflow.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-academic-calendar', '@high', '@positive']
+  - id: ACM-CAL-RES-001
+    module: Academic
+    submodule: Academic Calendar
+    title: Calendar UI handles 400, 403, 404, 409, 500, timeout, offline, and partial API responses safely
+    risk: high
+    priority: P1
+    type: [resilience, api, negative, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/calendarManagement, /academic/calendarEmergencyClosure]
+    automated: true
+    automationFile: e2e/academic/academic-calendar-resilience.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-academic-calendar', '@high', '@resilience', '@negative']
+  - id: ACM-CUR-VAL-001
+    module: Academic
+    submodule: Curriculum
+    title: Subject setup validates required fields, length, code uniqueness, case sensitivity, whitespace, and unsupported characters
+    risk: critical
+    priority: P0
+    type: [validation, negative, boundary, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/curriculumSetting/subjectCreation]
+    automated: true
+    automationFile: e2e/academic/academic-curriculum-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-curriculum', '@critical', '@negative', '@boundary']
+  - id: ACM-CUR-ALLOC-001
+    module: Academic
+    submodule: Curriculum
+    title: Subject allocation enforces standard, division, elective/core, teacher, publish, archive, and restore rules
+    risk: critical
+    priority: P0
+    type: [functional, workflow, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/curriculumSubjects]
+    automated: true
+    automationFile: e2e/academic/academic-curriculum-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-curriculum', '@critical', '@positive']
+  - id: ACM-CUR-ELECT-001
+    module: Academic
+    submodule: Curriculum
+    title: Elective group lifecycle validates minimum subjects, duplicate checks, update, archive, restore, and delete
+    risk: critical
+    priority: P0
+    type: [functional, validation, workflow, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/curriculumSetting/electiveGroupCreation]
+    automated: true
+    automationFile: e2e/academic/academic-curriculum-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-curriculum', '@critical', '@positive', '@negative']
+  - id: ACM-CUR-LESSON-001
+    module: Academic
+    submodule: Curriculum
+    title: Teacher creates, submits, reviews, and updates lesson plan with diary/audit evidence
+    risk: critical
+    priority: P0
+    type: [functional, workflow, e2e]
+    roles: [teacher, academic-admin]
+    tenants: [school]
+    routes: [/academic/lesson-plan]
+    automated: true
+    automationFile: e2e/academic/academic-remaining-workflows-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-curriculum', '@critical', '@positive']
+  - id: ACM-TT-CONFLICT-001
+    module: Academic
+    submodule: Timetable
+    title: Timetable blocks teacher, room, division, duplicate slot, holiday, and capacity conflicts
+    risk: critical
+    priority: P0
+    type: [functional, validation, negative, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/newTimetable, /academic/roomAvailability]
+    automated: true
+    automationFile: e2e/academic/academic-timetable-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-timetable', '@critical', '@negative']
+  - id: ACM-TT-PUBLISH-001
+    module: Academic
+    submodule: Timetable
+    title: Timetable moves from draft to published and protects locked published slots
+    risk: critical
+    priority: P0
+    type: [functional, workflow, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/newTimetable]
+    automated: true
+    automationFile: e2e/academic/academic-remaining-workflows-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-timetable', '@critical', '@positive']
+  - id: ACM-TT-SUB-001
+    module: Academic
+    submodule: Timetable
+    title: Substitution management creates, approves, rejects, cancels, and audits substitutions
+    risk: critical
+    priority: P0
+    type: [functional, workflow, e2e]
+    roles: [academic-admin, teacher]
+    tenants: [school]
+    routes: [/academic/substitutionManagement]
+    automated: true
+    automationFile: e2e/academic/academic-timetable-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-timetable', '@critical', '@positive']
+  - id: ACM-HW-WORKFLOW-001
+    module: Academic
+    submodule: Homework And Assignment
+    title: Teacher creates homework/assignment, student submits, teacher grades, and feedback appears
+    risk: critical
+    priority: P0
+    type: [functional, workflow, e2e]
+    roles: [teacher, student]
+    tenants: [school]
+    routes: [/academic/homeworkCreation, /academic/gradingAndFeedback]
+    automated: true
+    automationFile: e2e/academic/academic-remaining-workflows-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-homework-assignment', '@critical', '@positive']
+  - id: ACM-HW-VAL-001
+    module: Academic
+    submodule: Homework And Assignment
+    title: Learning tasks validate due dates, academic calendar conflicts, file type, size, empty file, and duplicate upload
+    risk: critical
+    priority: P0
+    type: [validation, upload, negative, boundary, e2e]
+    roles: [teacher, student]
+    tenants: [school]
+    routes: [/academic/homeworkCreation]
+    automated: true
+    automationFile: e2e/academic/academic-homework-api.spec.ts
+    status: automated
+    tags:
+      ['@module-academic', '@submodule-homework-assignment', '@critical', '@negative', '@boundary']
+  - id: ACM-HW-RUBRIC-001
+    module: Academic
+    submodule: Homework And Assignment
+    title: Rubric configuration validates scale, duplicate criteria, scoring precision, publish, and reuse in grading
+    risk: high
+    priority: P1
+    type: [functional, validation, e2e]
+    roles: [academic-admin, teacher]
+    tenants: [school]
+    routes: [/academic/homeworkSettings/rubricConfig, /academic/gradingAndFeedback]
+    automated: true
+    automationFile: e2e/academic/academic-homework-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-homework-assignment', '@high', '@positive', '@negative']
+  - id: ACM-EXM-WORKFLOW-001
+    module: Academic
+    submodule: Examination
+    title: Exam creation through result publication covers schedule, room, seat allocation, marks, grade calculation, and publish
+    risk: critical
+    priority: P0
+    type: [functional, workflow, e2e]
+    roles: [academic-admin, teacher]
+    tenants: [school]
+    routes:
+      [
+        /academic/scheduleExam,
+        /academic/seatallocation,
+        /academic/gradeEntry,
+        /academic/resultCreation,
+      ]
+    automated: true
+    automationFile: e2e/academic/academic-remaining-workflows-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@critical', '@positive']
+  - id: ACM-EXM-MARKS-001
+    module: Academic
+    submodule: Examination
+    title: Marks entry validates absent student, missing marks, max marks, decimal precision, lock, unlock, verify, and publish transitions
+    risk: critical
+    priority: P0
+    type: [validation, workflow, negative, boundary, e2e]
+    roles: [teacher, academic-admin]
+    tenants: [school]
+    routes: [/academic/gradeEntry]
+    automated: true
+    automationFile: e2e/academic/academic-examination-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@critical', '@negative', '@boundary']
+  - id: ACM-EXM-QB-001
+    module: Academic
+    submodule: Examination
+    title: Question bank covers create, duplicate detection, submit, approve, reject, archive, duplicate, and bulk approval
+    risk: critical
+    priority: P0
+    type: [functional, workflow, e2e]
+    roles: [teacher, academic-admin]
+    tenants: [school]
+    routes: [/academic/questionBank]
+    automated: true
+    automationFile: e2e/academic/academic-question-bank-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@critical', '@positive', '@negative']
+  - id: ACM-EXM-RESULT-001
+    module: Academic
+    submodule: Examination
+    title: Result generation validates grade boundaries, grace marks, regeneration, lock, freeze, and publication state
+    risk: critical
+    priority: P0
+    type: [functional, validation, boundary, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/resultCreation]
+    automated: true
+    automationFile: e2e/academic/academic-examination-api.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@critical', '@boundary', '@positive']
+  - id: ACM-REPORT-001
+    module: Academic
+    submodule: Reports
+    title: Academic reports preview, export, download, print, schedule, and keep filters tenant scoped
+    risk: high
+    priority: P1
+    type: [functional, report, export, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/curriculumReports, /academic/timetableReports, /academic/examinationReports]
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-reports', '@high', '@positive']
+  - id: ACM-UX-001
+    module: Academic
+    submodule: Cross Module UX
+    title: Critical Academic forms handle loading, disabled submit, double-click prevention, cancel, reset, browser back, refresh, and unsaved changes
+    risk: high
+    priority: P1
+    type: [ux, resilience, e2e]
+    roles: [academic-admin, teacher]
+    tenants: [school]
+    routes: [/academic/calendarManagement, /academic/homeworkCreation, /academic/scheduleExam]
+    automated: true
+    automationFile: e2e/academic/academic-ux-resilience.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-cross-module-ux', '@high', '@resilience']
+  - id: ACM-AUD-001
+    module: Academic
+    submodule: Audits
+    title: Academic audit route loads and exposes filterable audit surface
+    risk: high
+    priority: P1
+    type: [functional, e2e, smoke]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/audits]
+    automated: true
+    automationFile: e2e/academic/academic-smoke.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-audits', '@high', '@smoke', '@positive']
+  - id: ACM-PERM-001
+    module: Academic
+    submodule: Permissions
+    title: Restricted user cannot open protected Academic routes directly
+    risk: critical
+    priority: P0
+    type: [permission, security, e2e]
+    roles: [teacher, restricted-user]
+    tenants: [school]
+    routes: [/academic/dashboard, /academic/scheduleExam, /academic/calendarManagement]
+    automated: true
+    automationFile: e2e/academic/academic-permissions.guest.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-permissions', '@critical', '@permission', '@negative']
+  - id: ACM-TEN-001
+    module: Academic
+    submodule: Tenant Isolation
+    title: Tenant A cannot read Academic records created in Tenant B
+    risk: critical
+    priority: P0
+    type: [tenant, security, api]
+    roles: [academic-admin]
+    tenants: [school-a, school-b]
+    routes: []
+    automated: false
+    automationFile: null
+    status: blocked-needs-second-test-tenant
+    tags: ['@module-academic', '@submodule-tenant-isolation', '@critical', '@tenant', '@negative']
+  - id: ACM-A11Y-001
+    module: Academic
+    submodule: Accessibility
+    title: Critical Academic workspaces have no serious automated accessibility violations
+    risk: high
+    priority: P1
+    type: [accessibility, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes:
+      [
+        /academic/dashboard,
+        /academic/curriculumSubjects,
+        /academic/scheduleExam,
+        /academic/calendarManagement,
+      ]
+    automated: true
+    automationFile: e2e/academic/academic-accessibility.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-accessibility', '@high', '@accessibility']
+  - id: ACM-RESP-001
+    module: Academic
+    submodule: Responsive
+    title: Critical Academic routes remain usable on mobile and tablet viewport sizes
+    risk: high
+    priority: P1
+    type: [responsive, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/dashboard, /academic/homeworkCreation, /academic/gradeEntry]
+    automated: true
+    automationFile: e2e/academic/academic-responsive.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-responsive', '@high', '@responsive']

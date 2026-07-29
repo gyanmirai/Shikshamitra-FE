@@ -1,9 +1,9 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
 
 import {
-  type AcademicContext,
-  academicApiRequest,
   getAcademicJson,
+  academicApiRequest,
+  type AcademicContext,
   primeAcademicSelection,
 } from '../../../e2e/academic/academic-api';
 
@@ -30,7 +30,11 @@ export function escapeRegExp(value: string) {
 }
 
 export function isAuthenticatedAdminProject(testInfo: TestInfo) {
-  const storageState = testInfo.project.use.storageState;
+  const {
+    project: {
+      use: { storageState },
+    },
+  } = testInfo;
   return (
     typeof storageState === 'string' &&
     storageState.replace(/\\/g, '/').endsWith('playwright/.auth/admin.json')
@@ -77,6 +81,97 @@ function currentAcademicYear(years: any[]) {
   );
 }
 
+async function resolveAcademicContextForOption(
+  page: Page,
+  academicYear: any,
+  options: any[],
+  optionIndex = 0
+): Promise<AcademicContext | undefined> {
+  const option = options[optionIndex];
+  if (!option) return undefined;
+
+  const mediumId = optionValue(
+    option,
+    'mediumId',
+    'academicMediumId',
+    'medium.id',
+    'academicMedium.id',
+    'id'
+  );
+  if (!mediumId) {
+    return resolveAcademicContextForOption(page, academicYear, options, optionIndex + 1);
+  }
+
+  const standardsPayload = await getAcademicJson(
+    page,
+    `/education-medium/${mediumId}/standards`
+  ).catch(() => []);
+  const standards = [
+    ...collectStandards(option),
+    ...collectStandards({ standards: standardsPayload }),
+  ];
+  if (standards.length === 0) {
+    return resolveAcademicContextForOption(page, academicYear, options, optionIndex + 1);
+  }
+
+  const stageId =
+    optionValue(
+      option,
+      'educationMediumStageId',
+      'mediumStageId',
+      'stageId',
+      'stage.id',
+      'educationMediumStage.id'
+    ) || `${mediumId}-stage`;
+
+  return {
+    academicYear,
+    currentBoard: {
+      id: optionValue(option, 'boardId', 'educationBoardId', 'board.id') || '',
+      name: optionValue(option, 'boardName', 'educationBoardName', 'board.name') || '',
+    },
+    currentMedium: {
+      id: mediumId,
+      name:
+        optionValue(option, 'mediumName', 'academicMediumName', 'medium.name') || 'E2E Medium',
+      educationMediumStages: [
+        {
+          id: stageId,
+          name:
+            optionValue(
+              option,
+              'educationMediumStageName',
+              'mediumStageName',
+              'stageName',
+              'stage.name',
+              'educationMediumStage.name'
+            ) || 'E2E Stage',
+          standards,
+          divisions: [],
+        } as any,
+      ],
+    },
+  };
+}
+
+async function resolveAcademicContextForYear(
+  page: Page,
+  yearsToProbe: any[],
+  yearIndex = 0
+): Promise<AcademicContext | undefined> {
+  const academicYear = yearsToProbe[yearIndex];
+  if (!academicYear) return undefined;
+
+  const options = pagedItems(
+    await getAcademicJson(
+      page,
+      `/app/academic-organization-options?academicYearId=${academicYear.id}`
+    )
+  );
+  const context = await resolveAcademicContextForOption(page, academicYear, options);
+  return context || resolveAcademicContextForYear(page, yearsToProbe, yearIndex + 1);
+}
+
 async function resolveAcademicContextWithStandards(page: Page): Promise<AcademicContext> {
   const years = pagedItems(await getAcademicJson(page, '/app/academic-year?Sorting=name'))
     .map((item) => item?.academicYear || item)
@@ -92,71 +187,8 @@ async function resolveAcademicContextWithStandards(page: Page): Promise<Academic
     ...years.filter((year) => year.id.toLowerCase() !== selectedYear.id.toLowerCase()),
   ];
 
-  for (const academicYear of yearsToProbe) {
-    const options = pagedItems(
-      await getAcademicJson(page, `/app/academic-organization-options?academicYearId=${academicYear.id}`)
-    );
-
-    for (const option of options) {
-      const mediumId = optionValue(
-        option,
-        'mediumId',
-        'academicMediumId',
-        'medium.id',
-        'academicMedium.id',
-        'id'
-      );
-      if (!mediumId) continue;
-
-      const standardsPayload = await getAcademicJson(page, `/education-medium/${mediumId}/standards`)
-        .catch(() => []);
-      const standards = [
-        ...collectStandards(option),
-        ...collectStandards({ standards: standardsPayload }),
-      ];
-      if (standards.length === 0) continue;
-
-      const stageId =
-        optionValue(
-          option,
-          'educationMediumStageId',
-          'mediumStageId',
-          'stageId',
-          'stage.id',
-          'educationMediumStage.id'
-        ) || `${mediumId}-stage`;
-
-      return {
-        academicYear,
-        currentBoard: {
-          id: optionValue(option, 'boardId', 'educationBoardId', 'board.id') || '',
-          name: optionValue(option, 'boardName', 'educationBoardName', 'board.name') || '',
-        },
-        currentMedium: {
-          id: mediumId,
-          name:
-            optionValue(option, 'mediumName', 'academicMediumName', 'medium.name') ||
-            'E2E Medium',
-          educationMediumStages: [
-            {
-              id: stageId,
-              name:
-                optionValue(
-                  option,
-                  'educationMediumStageName',
-                  'mediumStageName',
-                  'stageName',
-                  'stage.name',
-                  'educationMediumStage.name'
-                ) || 'E2E Stage',
-              standards,
-              divisions: [],
-            } as any,
-          ],
-        },
-      };
-    }
-  }
+  const context = await resolveAcademicContextForYear(page, yearsToProbe);
+  if (context) return context;
 
   throw new Error('Seeded academic medium with standards is required for subject-management E2E.');
 }
@@ -188,17 +220,24 @@ async function loginWithCandidate(page: Page, email: string) {
 export async function ensureAcademicAdmin(page: Page) {
   await page.goto('/academic/dashboard/', { waitUntil: 'domcontentloaded' });
   if (!(await sessionHasToken(page).catch(() => false))) {
-    let lastError: unknown;
-    for (const candidate of adminCandidates()) {
-      try {
-        await loginWithCandidate(page, candidate);
-        break;
-      } catch (error) {
-        lastError = error;
-      }
-    }
+    const loginResult = await adminCandidates().reduce<Promise<{ lastError?: unknown }>>(
+      async (previousAttempt, candidate) => {
+        const previous = await previousAttempt;
+        if (await sessionHasToken(page).catch(() => false)) return previous;
+
+        try {
+          await loginWithCandidate(page, candidate);
+          return previous;
+        } catch (error) {
+          return { lastError: error };
+        }
+      },
+      Promise.resolve({})
+    );
     if (!(await sessionHasToken(page).catch(() => false))) {
-      throw lastError instanceof Error ? lastError : new Error('Unable to authenticate admin.');
+      throw loginResult.lastError instanceof Error
+        ? loginResult.lastError
+        : new Error('Unable to authenticate admin.');
     }
   }
 

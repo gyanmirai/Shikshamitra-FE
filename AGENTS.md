@@ -11,14 +11,14 @@ ShikshaMitra frontend is a multi-tenant school operating UI built with Next.js, 
 
 ## Repository layout
 
-| Area | Path |
-|---|---|
-| App routes and screens | `src/screens/` |
-| Redux and API clients | `src/redux/` |
+| Area                    | Path                            |
+| ----------------------- | ------------------------------- |
+| App routes and screens  | `src/screens/`                  |
+| Redux and API clients   | `src/redux/`                    |
 | Shared UI and utilities | `src/components/`, `src/utils/` |
-| E2E tests | `e2e/` |
-| Module docs | `docs/<module>/` |
-| Docs validators | `scripts/docs/` |
+| E2E tests               | `e2e/`                          |
+| Module docs             | `docs/<module>/`                |
+| Docs validators         | `scripts/docs/`                 |
 
 ## Commands
 
@@ -31,6 +31,18 @@ npm run docs:hr:check
 ```
 
 Use focused unit, lint, and E2E commands when the touched module already has them.
+
+## Academic Playwright workflow
+
+When creating or updating Academic module automation:
+
+1. Read `docs/testing/module-inventory.json`.
+2. Read `tests/catalog/academic.yaml`.
+3. Update the catalogue before adding or changing tests.
+4. Run focused Academic commands first, such as `npm run test:e2e:academic:smoke -- --list`.
+5. Classify failures with `docs/testing/BUG_CLASSIFICATION_POLICY.md`.
+6. Generate reports with `npm run test:e2e:all-reports`.
+7. Never weaken assertions, skip tests without a tracked reason, update snapshots automatically, or expose secrets.
 
 ## Documentation practice
 

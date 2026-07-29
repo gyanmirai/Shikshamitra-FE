@@ -164,6 +164,7 @@ const MonthInner = ({
                 }}
               >
                 <Box
+                  data-testid={`academic-calendar-year-day-${key}`}
                   onClick={() => !isOutside && onDayClick(key)}
                   sx={{
                     width: 30,
