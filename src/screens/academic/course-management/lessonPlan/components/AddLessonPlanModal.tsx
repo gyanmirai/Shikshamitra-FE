@@ -291,6 +291,30 @@ const AddLessonPlanModal = ({
     { skip: isTimelinePrefill || !selectedTeacherId || !plannedDateStr }
   );
 
+  const isLocked = !!editData;
+  const isContextLocked = isLocked || isTimelinePrefill;
+
+  /**
+   * Identifies period slot IDs that already have a lesson plan created
+   * for the selected date and teacher, excluding the current plan being edited.
+   */
+  const disabledPeriodValues = React.useMemo(() => {
+    if (isLocked) return []; // When editing, context is locked
+    const formattedDate = form.plannedDate?.format('YYYY-MM-DD');
+    if (!formattedDate) return [];
+
+    return lessonPlans
+      .filter((plan) => {
+        const sameDate = dayjs(plan.plannedDate).format('YYYY-MM-DD') === formattedDate;
+        const sameTeacher =
+          !form.teacherId || !plan.teacherId || plan.teacherId === form.teacherId;
+        const notCurrentPlan = !form.id || plan.id !== form.id;
+        return sameDate && sameTeacher && notCurrentPlan;
+      })
+      .map((plan) => plan.timetableSlotId)
+      .filter(Boolean) as string[];
+  }, [form.id, form.plannedDate, form.teacherId, isLocked, lessonPlans]);
+
   /**
    * Memoization Justification:
    * - Keeps period options stable while users fill the lesson details.
@@ -442,9 +466,6 @@ const AddLessonPlanModal = ({
       }));
     }
   };
-
-  const isLocked = !!editData;
-  const isContextLocked = isLocked || isTimelinePrefill;
 
   React.useEffect(() => {
     if (open) {
@@ -642,6 +663,8 @@ const AddLessonPlanModal = ({
                   value={form.timetableSlotId || form.period}
                   onChange={(v) => handlePeriodChange(v as string)}
                   disabled={isContextLocked}
+                  disabledValues={disabledPeriodValues}
+                  disabledLabel="Already Created"
                 />
               </Stack>
 

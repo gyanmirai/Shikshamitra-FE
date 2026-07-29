@@ -1065,7 +1065,7 @@ const LessonPlanScreen = () => {
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 180,
+      minWidth: 200,
       align: 'center' as const,
       isSort: false,
       isFilter: false,
