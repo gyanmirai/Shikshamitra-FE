@@ -64,6 +64,7 @@ const DayCell = ({
 
   return (
     <Box
+      data-testid={`academic-calendar-month-day-${day.format('YYYY-MM-DD')}`}
       onClick={onClick}
       sx={{
         minHeight: 110,
