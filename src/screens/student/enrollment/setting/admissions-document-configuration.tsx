@@ -369,16 +369,15 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
                   <Button
                     color="inherit"
                     size="small"
-                    href={`${studentPaths.enrollment.settingsSections.automation}?cycle=${encodeURIComponent(academicYearId)}`}
+                    href={`${studentPaths.enrollment.settingsSections.communication}?cycle=${encodeURIComponent(academicYearId)}`}
                   >
                     Configure automation
                   </Button>
                 ) : null
               }
             >
-              Family instructions appear beside each upload.
-              Rejection and expiry SMS or email are sent through matching follow-up automation
-              rules and approved message content.
+              Family instructions appear beside each upload. Rejection and expiry SMS or email are
+              sent through matching follow-up automation rules and approved message content.
             </Alert>
             <TextField
               size="small"

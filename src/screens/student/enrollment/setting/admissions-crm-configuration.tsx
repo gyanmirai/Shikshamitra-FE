@@ -119,6 +119,7 @@ import {
   attachAdmissionCrmImpactFingerprint,
   updateAdmissionCrmProviderPayloadMode,
   getAdmissionCrmProviderCallbackSecret,
+  buildAdmissionCrmProviderSettingsInput,
   getAdmissionCrmProviderKeyValueSettings,
   updateAdmissionCrmProviderCallbackSecret,
   updateAdmissionCrmProviderKeyValueSettings,
@@ -1272,7 +1273,7 @@ const AdmissionsCrmConfiguration = ({
 
   const getValidatedJourneyRules = () => {
     if (!cycleForm.cycleName.trim()) {
-      shikshaMitraToast.error({ message: 'Cycle name is required.' });
+      shikshaMitraToast.error({ message: 'Admission setup name is required.' });
       return null;
     }
 
@@ -1347,9 +1348,9 @@ const AdmissionsCrmConfiguration = ({
         academicYearId,
         body: attachAdmissionCrmImpactFingerprint(body, preview.fingerprint),
       }).unwrap();
-      shikshaMitraToast.success({ message: 'Admission cycle updated.' });
+      shikshaMitraToast.success({ message: 'Admission year settings updated.' });
     } catch (error) {
-      const message = getSettingsErrorMessage(error, 'Unable to update admission cycle.');
+      const message = getSettingsErrorMessage(error, 'Unable to update admission year settings.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1366,9 +1367,11 @@ const AdmissionsCrmConfiguration = ({
         ),
       }).unwrap();
       setPendingCycleUpdate(null);
-      shikshaMitraToast.success({ message: 'Admission cycle updated after impact review.' });
+      shikshaMitraToast.success({
+        message: 'Admission year settings updated after impact review.',
+      });
     } catch (error) {
-      const message = getSettingsErrorMessage(error, 'Unable to update admission cycle.');
+      const message = getSettingsErrorMessage(error, 'Unable to update admission year settings.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -2559,7 +2562,7 @@ const AdmissionsCrmConfiguration = ({
           isEnabled: providerForm?.isEnabled ?? false,
           providerName: providerForm?.providerName || undefined,
           senderId: providerForm?.senderId || undefined,
-          settings: JSON.parse(providerForm?.settingsJson || '{}'),
+          settings: buildAdmissionCrmProviderSettingsInput(providerForm?.settingsJson || '{}'),
           webhookUrl: providerForm?.webhookUrl || undefined,
         },
       }).unwrap();
@@ -2657,7 +2660,7 @@ const AdmissionsCrmConfiguration = ({
               <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} justifyContent="space-between">
                 <Box>
                   <Typography component="h2" variant="subtitle1">
-                    Admission Cycle
+                    Admission Year
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     School defaults can be applied to the current form or saved from it.
@@ -2692,7 +2695,7 @@ const AdmissionsCrmConfiguration = ({
                   <Box>
                     <Typography variant="subtitle2">Basics</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Name and identify this admission cycle.
+                      Name and identify this admission setup.
                     </Typography>
                   </Box>
                 </AccordionSummary>
@@ -2700,7 +2703,7 @@ const AdmissionsCrmConfiguration = ({
                   <TextField
                     fullWidth
                     size="small"
-                    label="Cycle name"
+                    label="Admission setup name"
                     value={cycleForm.cycleName}
                     disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
                     onChange={(event) => handleCycleChange('cycleName', event.target.value)}
@@ -3027,7 +3030,7 @@ const AdmissionsCrmConfiguration = ({
                   </Stack>
                   {!cycleForm.entranceExamRequired && (
                     <Alert severity="warning" sx={{ mt: 1 }}>
-                      Exam scheduling is disabled for this cycle. Applicants use the exam-waived
+                      Exam scheduling is disabled for this admission year. Applicants use the exam-waived
                       registration and admission readiness path.
                     </Alert>
                   )}
@@ -5070,6 +5073,12 @@ const AdmissionsCrmConfiguration = ({
                           <Typography variant="caption" color="text.secondary">
                             Request headers
                           </Typography>
+                          {provider.settings.hasStoredHeaderValues && (
+                            <Typography variant="caption" color="text.secondary">
+                              Stored header values are hidden. Leave a value blank to keep it, or
+                              remove the row to delete it.
+                            </Typography>
+                          )}
                           {providerHeaders.map(([key, value]) => (
                             <Stack key={key} direction="row" spacing={0.75} alignItems="center">
                               <TextField
@@ -5139,6 +5148,12 @@ const AdmissionsCrmConfiguration = ({
                           <Typography variant="caption" color="text.secondary">
                             Payload parameters
                           </Typography>
+                          {provider.settings.hasStoredParameterValues && (
+                            <Typography variant="caption" color="text.secondary">
+                              Stored parameter values are hidden. Leave a value blank to keep it, or
+                              remove the row to delete it.
+                            </Typography>
+                          )}
                           {providerParameters.map(([key, value]) => (
                             <Stack key={key} direction="row" spacing={0.75} alignItems="center">
                               <TextField
@@ -5221,7 +5236,14 @@ const AdmissionsCrmConfiguration = ({
                       <TextField
                         size="small"
                         label="Callback secret"
+                        type="password"
+                        autoComplete="new-password"
                         value={getAdmissionCrmProviderCallbackSecret(providerForm.settingsJson)}
+                        helperText={
+                          provider.settings.hasCallbackSecret
+                            ? 'A callback secret is stored. Leave blank to keep it, or enter a value to replace it.'
+                            : 'Enter a secret to verify provider callbacks.'
+                        }
                         onChange={(event) =>
                           handleProviderCallbackSecretChange(provider.channel, event.target.value)
                         }
@@ -5344,7 +5366,7 @@ const AdmissionsCrmConfiguration = ({
         maxWidth="md"
         aria-labelledby="cycle-impact-preview-title"
       >
-        <DialogTitle id="cycle-impact-preview-title">Review Admission Cycle Impact</DialogTitle>
+        <DialogTitle id="cycle-impact-preview-title">Review Admission Year Impact</DialogTitle>
         <DialogContent dividers>
           {pendingCycleUpdate ? (
             <Stack spacing={1.5}>

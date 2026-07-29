@@ -1,3 +1,5 @@
+import type { AdmissionCrmCommunicationProviderSettingsDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
 export const buildPublicAdmissionInquiryPath = (
   tenantId?: string | null,
   templateId?: string | null
@@ -106,6 +108,9 @@ export type AdmissionCrmProviderSettingsJson = {
   payloadMode?: string;
   responseProviderMessageIdPath?: string;
   callbackSecret?: string;
+  hasStoredHeaderValues?: boolean;
+  hasStoredParameterValues?: boolean;
+  hasCallbackSecret?: boolean;
   callbackMappings?: AdmissionCrmProviderCallbackMappings;
   headers?: Record<string, string>;
   parameters?: Record<string, string>;
@@ -138,6 +143,23 @@ export const parseAdmissionCrmProviderSettings = (
 
 export const formatAdmissionCrmProviderSettings = (settings: AdmissionCrmProviderSettingsJson) =>
   JSON.stringify(settings, null, 2);
+
+export const buildAdmissionCrmProviderSettingsInput = (
+  settingsJson: string
+): AdmissionCrmCommunicationProviderSettingsDto => {
+  const settings = { ...parseAdmissionCrmProviderSettings(settingsJson) };
+  delete settings.hasStoredHeaderValues;
+  delete settings.hasStoredParameterValues;
+  delete settings.hasCallbackSecret;
+  return {
+    ...settings,
+    adapter: settings.adapter || 'webhook',
+    payloadMode: settings.payloadMode || 'default',
+    headers: settings.headers || {},
+    parameters: settings.parameters || {},
+    callbackMappings: settings.callbackMappings || {},
+  };
+};
 
 export const getAdmissionCrmProviderAdapter = (settingsJson: string) =>
   parseAdmissionCrmProviderSettings(settingsJson).adapter || 'webhook';

@@ -46,6 +46,7 @@ import {
   buildResolveAdmissionCrmPlaybookRequest,
   buildAdmissionCrmDecisionHistoryRequest,
   buildAdmissionCrmDataQualityListRequest,
+  buildAdmissionCrmAdmissionReportRequest,
   buildAdmissionCrmAnalyticsSummaryRequest,
   buildPublicAdmissionCrmDocumentUploadUrl,
   buildPreviewAdmissionCrmExamResultRequest,
@@ -633,6 +634,22 @@ describe('admissions CRM API contracts', () => {
       url: '/student-enrollment/admissions-crm/year-1/analytics/summary',
       method: 'GET',
       params: {},
+    });
+    expect(
+      buildAdmissionCrmAdmissionReportRequest({
+        academicYearId: 'year-1',
+        fromDate: '2026-07-01',
+        toDate: '2026-07-31',
+        targetStandardId: 'standard-1',
+      })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/reports/admissions',
+      method: 'GET',
+      params: {
+        fromDate: '2026-07-01',
+        toDate: '2026-07-31',
+        targetStandardId: 'standard-1',
+      },
     });
 
     expect(

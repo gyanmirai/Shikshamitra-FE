@@ -7,16 +7,14 @@ const read = (...segments: string[]) =>
 
 describe('Enrollment settings route contracts', () => {
   const sections = [
-    'journey',
-    'inquiry-capture',
-    'routing-scoring',
+    'admission-cycles',
+    'pipeline',
     'entrance-exams',
     'registration-documents',
+    'finance-handoff',
     'offers-seats',
     'activation',
-    'governance',
     'communications',
-    'automation',
   ];
 
   it.each(sections)('provides a dedicated %s settings route', (section) => {
@@ -58,9 +56,9 @@ describe('Enrollment settings route contracts', () => {
       'setting',
       'enrollment-setup-center.tsx'
     );
-    expect(setupCenter).toContain('<CustomBreadcrumbs');
-    expect(setupCenter).toContain('heading="Enrollment Setup Center"');
-    expect(setupCenter).toContain("{ name: 'Student Enrollment', href: withCycle");
+    expect(setupCenter).toContain('<EnrollmentWorkspaceHeader');
+    expect(setupCenter).toContain('title="Enrollment Setup Center"');
+    expect(setupCenter).toContain('actions={');
     expect(setupCenter).not.toContain('component="h1" variant="h4"');
   });
 
@@ -81,7 +79,6 @@ describe('Enrollment settings route contracts', () => {
 
   it('uses URL-backed admission-cycle context in every cycle-scoped settings surface', () => {
     const cycleScopedFiles = [
-      'admissions-seat-pool-configuration.tsx',
       'admissions-number-series-configuration.tsx',
       'admissions-route-configuration.tsx',
       'admissions-policy-pack-configuration.tsx',
@@ -108,10 +105,13 @@ describe('Enrollment settings route contracts', () => {
 
     expect(shell).not.toContain('Enrollment settings categories');
     expect(shell).not.toContain('<Drawer');
-    expect(menu).toContain("title: 'Journey rules'");
-    expect(menu).toContain("title: 'Exam & Eligibility'");
-    expect(menu).toContain('studentPaths.enrollment.settingsSections.automation');
-    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(20);
+    expect(menu).toContain("title: 'Admission Year Setup'");
+    expect(menu).toContain("title: 'Pipeline Settings'");
+    expect(menu).toContain("title: 'Entrance Exam Settings'");
+    expect(menu).toContain("title: 'Communication Settings'");
+    expect(menu).not.toContain("title: 'Journey rules'");
+    expect(menu).not.toContain('studentPaths.enrollment.settingsSections.automation');
+    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(16);
   });
 
   it('uses URL-backed panels to progressively disclose dense settings', () => {
@@ -176,9 +176,11 @@ describe('Enrollment settings route contracts', () => {
       'admissions-playbook-configuration.tsx'
     );
 
-    expect(settingsPage).toContain('<CustomBreadcrumbs');
-    expect(settingsPage).toContain("{ name: 'Settings', href:");
-    expect(settingsPage).toContain('sx={{ px: 2 }}');
+    expect(settingsPage).toContain('<EnrollmentWorkspaceHeader');
+    expect(settingsPage).toContain(
+      "section={{ name: 'Settings', href: studentPaths.enrollment.settings }}"
+    );
+    expect(settingsPage).not.toContain('<CustomBreadcrumbs');
     expect(settingsShell).toContain("flexDirection: 'column'");
     expect(examRoute).toContain('fillAvailableHeight');
     expect(playbooks).toContain('wrapperProps={{ sx: { minHeight: 320 } }}');
@@ -195,7 +197,12 @@ describe('Enrollment settings route contracts', () => {
     );
 
     expect(workspaceHeader).toContain('<CustomBreadcrumbs');
-    expect(workspaceHeader).toContain('sx={{ px: 2 }}');
+    expect(workspaceHeader).toContain('section?: {');
+    expect(workspaceHeader).toContain('section.href');
+    expect(workspaceHeader).toContain('cycleQuery');
+    expect(workspaceHeader).toContain('px: 2,');
+    expect(workspaceHeader).toContain("flexDirection: { xs: 'column', md: 'row' }");
+    expect(workspaceHeader).toContain("breadcrumbs: { display: { xs: 'none', sm: 'block' } }");
   });
 
   it('keeps skipped settings queries referentially stable', () => {
@@ -287,8 +294,9 @@ describe('Enrollment settings route contracts', () => {
     );
 
     expect(`${playbooks}${registrations}${documents}`).not.toContain('onEditMouseDown');
-    expect(playbooks).toContain("label: 'Scope'");
-    expect(registrations).toContain("label: 'Registration Fee'");
+    expect(playbooks).toContain("label: entranceExamMode ? 'Applicability' : 'Scope'");
+    expect(registrations).not.toContain("label: 'Registration Fee'");
+    expect(registrations).toContain('feeRequired: false');
     expect(registrations).toContain("label: 'Issue Method'");
   });
 
@@ -317,7 +325,7 @@ describe('Enrollment settings route contracts', () => {
     expect(playbooks).toContain('Generate hall tickets for this exam');
     expect(playbooks).toContain('Advanced setup');
     expect(playbooks).toContain('hallTicketEnabled: false');
-    expect(route).toContain('whether the school issues hall tickets');
+    expect(route).toContain('exam applicability, schedules, result rules, retests');
   });
 
   it('explains operational handoffs and progressively discloses applicant stage editing', () => {
@@ -376,7 +384,6 @@ describe('Enrollment settings route contracts', () => {
       'admissions-playbook-configuration.tsx',
       'admissions-registration-configuration.tsx',
       'admissions-document-configuration.tsx',
-      'admissions-seat-pool-configuration.tsx',
       'admissions-number-series-configuration.tsx',
       'admissions-route-configuration.tsx',
       'admissions-policy-pack-configuration.tsx',

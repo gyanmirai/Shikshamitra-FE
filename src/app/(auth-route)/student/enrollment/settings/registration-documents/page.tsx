@@ -1,5 +1,16 @@
-import { RegistrationDocumentSettingsRoute } from 'src/screens/student/enrollment/setting/registration-document-settings-route';
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
-export default function RegistrationDocumentSettingsPage() {
-  return <RegistrationDocumentSettingsRoute />;
+export default async function LegacyRegistrationSettingsPage({
+  searchParams,
+}: {
+  searchParams: EnrollmentRouteSearchParams;
+}) {
+  return redirectEnrollmentRoute(
+    studentPaths.enrollment.settingsSections.registration,
+    searchParams
+  );
 }

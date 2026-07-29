@@ -3,7 +3,7 @@
 import type {
   AdmissionCrmLeadDto,
   AdmissionCrmLeadListParams,
-  AdmissionCrmPipelineStageDto,
+  AdmissionCrmPipelineColumnKey,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
@@ -23,26 +23,29 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-import { getAdmissionCrmStageTooltipLines } from './admissions-crm-utils';
-
 const PAGE_SIZE = 25;
+
+export type PipelineColumnDefinition = {
+  key: AdmissionCrmPipelineColumnKey;
+  label: string;
+  description: string;
+  color: string;
+};
 
 type Props = {
   academicYearId: string;
-  stage: AdmissionCrmPipelineStageDto;
-  query: Omit<AdmissionCrmLeadListParams, 'stage' | 'skipCount' | 'maxResultCount'>;
+  column: PipelineColumnDefinition;
+  query: Omit<AdmissionCrmLeadListParams, 'pipelineColumn' | 'skipCount' | 'maxResultCount'>;
   resetKey: string;
   renderLead: (lead: AdmissionCrmLeadDto) => React.ReactNode;
-  clientFilter: (lead: AdmissionCrmLeadDto) => boolean;
 };
 
 export function PipelineStageColumn({
   academicYearId,
-  stage,
+  column,
   query,
   resetKey,
   renderLead,
-  clientFilter,
 }: Props) {
   const columnRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
@@ -52,7 +55,7 @@ export function PipelineStageColumn({
     {
       academicYearId,
       ...query,
-      stage: stage.systemStage,
+      pipelineColumn: column.key,
       skipCount: page * PAGE_SIZE,
       maxResultCount: PAGE_SIZE,
       sorting: 'LastActivityTime DESC',
@@ -93,19 +96,12 @@ export function PipelineStageColumn({
     });
   }, [data, page]);
 
-  const visibleLeads = useMemo(() => loadedLeads.filter(clientFilter), [clientFilter, loadedLeads]);
+  const visibleLeads = useMemo(() => loadedLeads, [loadedLeads]);
   const canLoadMore = loadedLeads.length < (data?.totalCount ?? 0);
-  const configuredColor = /^#[0-9a-f]{6}$/i.test(stage.colorHex || '')
-    ? stage.colorHex || undefined
-    : undefined;
   const tooltipTitle = (
-    <Stack spacing={0.25}>
-      {getAdmissionCrmStageTooltipLines(stage).map((line) => (
-        <Typography key={line} variant="caption" color="inherit">
-          {line}
-        </Typography>
-      ))}
-    </Stack>
+    <Typography variant="caption" color="inherit">
+      {column.description}
+    </Typography>
   );
 
   return (
@@ -124,7 +120,7 @@ export function PipelineStageColumn({
         flexDirection: 'column',
         overflow: 'hidden',
         bgcolor: 'background.neutral',
-        borderTop: configuredColor ? `3px solid ${configuredColor}` : undefined,
+        borderTop: `3px solid ${column.color}`,
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
@@ -132,13 +128,11 @@ export function PipelineStageColumn({
           <Chip
             size="small"
             variant="outlined"
-            label={stage.stageName}
-            sx={
-              configuredColor ? { borderColor: configuredColor, color: configuredColor } : undefined
-            }
+            label={column.label}
+            sx={{ borderColor: column.color, color: column.color }}
           />
           <Tooltip title={tooltipTitle} arrow>
-            <IconButton size="small" aria-label={`${stage.stageName} stage details`}>
+            <IconButton size="small" aria-label={`${column.label} column details`}>
               <InfoOutlined fontSize="inherit" />
             </IconButton>
           </Tooltip>
@@ -152,7 +146,7 @@ export function PipelineStageColumn({
         </Typography>
       </Stack>
       {!shouldLoad && (
-        <Stack spacing={1} aria-label={`${stage.stageName} loads when visible`}>
+        <Stack spacing={1} aria-label={`${column.label} loads when visible`}>
           <Skeleton variant="rounded" height={112} />
           <Skeleton variant="rounded" height={112} />
         </Stack>
@@ -167,7 +161,7 @@ export function PipelineStageColumn({
             </Button>
           }
         >
-          Stage unavailable
+          Column unavailable
         </Alert>
       ) : shouldLoad ? (
         <Stack
@@ -183,7 +177,7 @@ export function PipelineStageColumn({
             ? visibleLeads.map(renderLead)
             : !isFetching && (
                 <Typography variant="body2" color="text.secondary">
-                  No leads
+                  No applicants
                 </Typography>
               )}
           {canLoadMore && (

@@ -1,5 +1,13 @@
-import { CoreSettingsRoute } from 'src/screens/student/enrollment/setting/core-settings-route';
+import { studentPaths } from 'src/constants/student-menu';
+import {
+  redirectEnrollmentRoute,
+  type EnrollmentRouteSearchParams,
+} from 'src/routes/enrollment-redirect';
 
-export default function JourneySettingsPage() {
-  return <CoreSettingsRoute section="journey" />;
+export default async function LegacyJourneySettingsPage({
+  searchParams,
+}: {
+  searchParams: EnrollmentRouteSearchParams;
+}) {
+  return redirectEnrollmentRoute(studentPaths.enrollment.settingsSections.pipeline, searchParams);
 }

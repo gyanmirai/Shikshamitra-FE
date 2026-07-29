@@ -9,8 +9,8 @@ import {
   AdmissionCrmActivationStatus,
   AdmissionCrmRegistrationStatus,
   AdmissionCrmServiceHandoffStatus,
-  AdmissionCrmApplicantDocumentStatus,
   AdmissionCrmRegistrationProvenance,
+  AdmissionCrmApplicantDocumentStatus,
   AdmissionCrmRegistrationDataEntryState,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 

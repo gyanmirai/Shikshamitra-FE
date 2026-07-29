@@ -19,7 +19,7 @@ const journeySteps = [
     owner: 'Exam team',
     transition: 'Results and eligibility decisions update the applicant stage automatically.',
     mode: 'Automatic stage',
-    path: studentPaths.enrollment.exams,
+    path: studentPaths.enrollment.entranceExams,
   },
   {
     label: 'Registration & documents',
@@ -27,14 +27,14 @@ const journeySteps = [
     transition:
       'The system can issue a form at a milestone, or staff issue it from Ready to Invite.',
     mode: 'Configured handoff',
-    path: studentPaths.enrollment.registrations,
+    path: studentPaths.enrollment.registration,
   },
   {
     label: 'Offer & seat',
     owner: 'Admissions approver',
     transition: 'Verified applicants enter final approval before an offer reserves a seat.',
     mode: 'Approval',
-    path: studentPaths.enrollment.offersSeats,
+    path: studentPaths.enrollment.classPlacement,
   },
   {
     label: 'Student activation',

@@ -5,6 +5,7 @@ import {
   AdmissionInquiryChannel,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
+  AdmissionCrmPipelineColumnKey,
   AdmissionCrmRegistrationStatus,
   AdmissionCrmOperationsQueueType,
   AdmissionCrmServiceHandoffStatus,
@@ -39,16 +40,15 @@ describe('Enrollment workspace URL state', () => {
   it('round trips non-sensitive workspace state', () => {
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams(
-        `cycle=cycle-1&view=list&group=decision&page=3&stage=2&channel=1&owner=staff-1&urgent=1&applicant=lead-1&tab=exam&panel=forms&registrationStatus=${AdmissionCrmRegistrationStatus.Submitted}&documentStatus=${AdmissionCrmApplicantDocumentStatus.Verified}&offerStatus=${AdmissionCrmSeatOfferStatus.Accepted}&routeType=${AdmissionCrmRouteType.RteEws}&seatPool=pool-1&activationStatus=${AdmissionCrmActivationStatus.InProgress}&handoffStatus=${AdmissionCrmServiceHandoffStatus.Acknowledged}`
+        `cycle=cycle-1&view=list&page=3&column=${AdmissionCrmPipelineColumnKey.ExamPending}&channel=1&owner=staff-1&urgent=1&applicant=lead-1&tab=exam&panel=forms&registrationStatus=${AdmissionCrmRegistrationStatus.Submitted}&documentStatus=${AdmissionCrmApplicantDocumentStatus.Verified}&offerStatus=${AdmissionCrmSeatOfferStatus.Accepted}&routeType=${AdmissionCrmRouteType.RteEws}&seatPool=pool-1&activationStatus=${AdmissionCrmActivationStatus.InProgress}&handoffStatus=${AdmissionCrmServiceHandoffStatus.Acknowledged}`
       )
     );
 
     expect(state).toMatchObject({
       cycle: 'cycle-1',
       view: 'list',
-      stageGroup: 'decision',
       page: 3,
-      stage: AdmissionInquiryStage.ExamReady,
+      pipelineColumn: AdmissionCrmPipelineColumnKey.ExamPending,
       channel: AdmissionInquiryChannel.QuickCallEntry,
       owner: 'staff-1',
       urgent: true,
@@ -66,7 +66,9 @@ describe('Enrollment workspace URL state', () => {
     expect(serializeEnrollmentWorkspaceState(state).get('page')).toBe('3');
     expect(serializeEnrollmentWorkspaceState(state).get('panel')).toBe('forms');
     expect(serializeEnrollmentWorkspaceState(state).get('tab')).toBe('exam');
-    expect(serializeEnrollmentWorkspaceState(state).get('group')).toBe('decision');
+    expect(serializeEnrollmentWorkspaceState(state).get('column')).toBe(
+      String(AdmissionCrmPipelineColumnKey.ExamPending)
+    );
     expect(serializeEnrollmentWorkspaceState(state).get('seatPool')).toBe('pool-1');
   });
 
@@ -117,12 +119,14 @@ describe('Enrollment workspace URL state', () => {
     expect(getWorkspaceFromPathname('/student/enrollment/applicants/lead-1')).toBe('applicant');
   });
 
-  it('treats Admission Cycle workspace tab routes as settings paths without query-owned tab state', () => {
+  it('treats Admission Year workspace tab routes as settings paths without query-owned tab state', () => {
     expect(
       getWorkspaceFromPathname('/student/enrollment/settings/admission-cycles/cycle-1/setup')
     ).toBe('settings');
     expect(
-      getWorkspaceFromPathname('/student/enrollment/settings/admission-cycles/cycle-1/journey-rules')
+      getWorkspaceFromPathname(
+        '/student/enrollment/settings/admission-cycles/cycle-1/journey-rules'
+      )
     ).toBe('settings');
     expect(
       getWorkspaceFromPathname('/student/enrollment/settings/admission-cycles/cycle-1/activity')
@@ -147,7 +151,7 @@ describe('Enrollment workspace URL state', () => {
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams('stage=999&queue=999&page=-2&from=12-07-2026&panel=unknown')
     );
-    expect(state.stage).toBeUndefined();
+    expect(state.pipelineColumn).toBeUndefined();
     expect(state.queue).toBeUndefined();
     expect(state.page).toBe(1);
     expect(state.from).toBeUndefined();
@@ -165,7 +169,7 @@ describe('Enrollment workspace URL state', () => {
       })
     );
     expect(migrated).toEqual({
-      stage: AdmissionInquiryStage.FollowUp,
+      pipelineColumn: AdmissionCrmPipelineColumnKey.FollowUp,
       channel: AdmissionInquiryChannel.WalkInReception,
       queue: AdmissionCrmOperationsQueueType.RejectedDocument,
       urgent: true,
@@ -176,7 +180,7 @@ describe('Enrollment workspace URL state', () => {
   it('provides role-focused defaults without changing persisted business state', () => {
     expect(getPersonaWorkspaceDefaults('pipeline', 'receptionist')).toEqual({
       view: 'list',
-      stage: AdmissionInquiryStage.NewInquiry,
+      pipelineColumn: AdmissionCrmPipelineColumnKey.NewInquiry,
     });
     expect(getPersonaWorkspaceDefaults('pipeline', 'counselor')).toEqual({
       view: 'board',

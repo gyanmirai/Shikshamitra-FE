@@ -19,6 +19,21 @@ describe('Quick Inquiry options', () => {
       registrationFormRequiredBeforeExam: false,
       entranceExamRequired: true,
       journeyLocked: true,
+      sources: [
+        {
+          inquirySourceId: 'source-walk-in',
+          name: 'Walk-in',
+          allowedChannels: [AdmissionInquiryChannel.WalkInReception],
+          isDefault: true,
+        },
+      ],
+      inquiryTypes: [
+        {
+          inquiryTypeId: 'type-admission',
+          name: 'New admission',
+          isDefault: true,
+        },
+      ],
       channels: [
         {
           channel: AdmissionInquiryChannel.WalkInReception,
@@ -59,12 +74,53 @@ describe('Quick Inquiry options', () => {
     expect(options.routes).toEqual([
       {
         id: 'route-sibling-v3',
+        definitionId: 'route-sibling-v3',
         label: 'Sibling priority',
         routeType: AdmissionCrmRouteType.SiblingPriority,
         version: 3,
         isDefault: true,
       },
     ]);
+    expect(options.sources[0]).toEqual({
+      id: 'source-walk-in',
+      label: 'Walk-in',
+      allowedChannels: [AdmissionInquiryChannel.WalkInReception],
+      isDefault: true,
+    });
+    expect(options.inquiryTypes[0]).toEqual({
+      id: 'type-admission',
+      label: 'New admission',
+      isDefault: true,
+    });
+  });
+
+  it('keeps setup route types usable without legacy route definitions', () => {
+    const options = mapQuickInquiryOptions({
+      academicYearId: 'year-1',
+      cycleName: '2026-27 admissions',
+      isAdmissionCycleActive: true,
+      registrationFormRequiredBeforeExam: false,
+      entranceExamRequired: false,
+      journeyLocked: true,
+      channels: [],
+      sources: [],
+      inquiryTypes: [],
+      routes: [
+        {
+          routeDefinitionId: null,
+          name: 'Fresh admission',
+          routeType: AdmissionCrmRouteType.Fresh,
+          version: null,
+          isDefault: true,
+        },
+      ],
+    });
+
+    expect(options.routes[0]).toMatchObject({
+      id: `route-type:${AdmissionCrmRouteType.Fresh}`,
+      definitionId: undefined,
+      routeType: AdmissionCrmRouteType.Fresh,
+    });
   });
 
   it('prefers an explicit default and otherwise uses the first operational option', () => {

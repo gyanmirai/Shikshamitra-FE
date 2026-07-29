@@ -56,10 +56,7 @@ import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { resolveAdmissionCrmExamActionPermissions } from './admission-action-permissions';
-import {
-  readExamResultImportFile,
-  downloadExamResultTemplate,
-} from './exam-result-import';
+import { readExamResultImportFile, downloadExamResultTemplate } from './exam-result-import';
 import {
   createApplicantRowNavigationProps,
   createApplicantLinkNavigationProps,
@@ -361,31 +358,24 @@ const InlineExamMarks = memo(
 
 export function ExamsWorkspace() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
-  const {
-    academicYearId,
-    sessionIdentity,
-    state,
-    updateState,
-    getApplicantHref,
-    openApplicant,
-  } = useEnrollmentWorkspace();
+  const { academicYearId, sessionIdentity, state, updateState, getApplicantHref, openApplicant } =
+    useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
   const {
     search,
     setSearch,
     filters: columnFilters,
     setFilters: setColumnFilters,
-  } = useWorkspaceTableSessionState(
-    `exams:${academicYearId || 'none'}:${sessionIdentity}`
-  );
+  } = useWorkspaceTableSessionState(`exams:${academicYearId || 'none'}:${sessionIdentity}`);
   const [selectedExamIds, setSelectedExamIds] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
   const [bulkMarksOpen, setBulkMarksOpen] = useState(false);
   const [resultImportOpen, setResultImportOpen] = useState(false);
   const [resultImportMode, setResultImportMode] = useState<'spreadsheet' | 'omr'>('spreadsheet');
   const [resultImportFileName, setResultImportFileName] = useState('');
-  const [resultImportPreview, setResultImportPreview] =
-    useState<ExamResultImportPreview | null>(null);
+  const [resultImportPreview, setResultImportPreview] = useState<ExamResultImportPreview | null>(
+    null
+  );
   const [isReadingResultFile, setIsReadingResultFile] = useState(false);
   const [bulkCorrectionReason, setBulkCorrectionReason] = useState('');
   const [handoffExamId, setHandoffExamId] = useState('');
@@ -540,9 +530,7 @@ export function ExamsWorkspace() {
     setBulkMarksOpen(true);
   };
 
-  const selectedHasExistingResults = selectedExams.some(
-    (exam) => exam.obtainedMarks != null
-  );
+  const selectedHasExistingResults = selectedExams.some((exam) => exam.obtainedMarks != null);
 
   const openResultImport = (mode: 'spreadsheet' | 'omr') => {
     setResultImportMode(mode);
@@ -671,8 +659,7 @@ export function ExamsWorkspace() {
       !resultImportPreview ||
       resultImportPreview.items.length === 0 ||
       resultImportPreview.errors.length > 0 ||
-      (selectedHasExistingResults &&
-        (!canOverrideExamResult || !bulkCorrectionReason.trim()))
+      (selectedHasExistingResults && (!canOverrideExamResult || !bulkCorrectionReason.trim()))
     ) {
       return;
     }
@@ -942,7 +929,7 @@ export function ExamsWorkspace() {
 
       {!entranceExamRequired ? (
         <Alert severity="info">
-          Entrance exams are disabled for this admissions cycle. Applicants follow the exam-waived
+          Entrance exams are disabled for this admission year. Applicants follow the exam-waived
           registration and admission readiness path.
         </Alert>
       ) : null}
@@ -1257,9 +1244,7 @@ export function ExamsWorkspace() {
                 Selected: {resultImportFileName}
               </Typography>
             ) : null}
-            {isReadingResultFile ? (
-              <LinearProgress aria-label="Reading exam result file" />
-            ) : null}
+            {isReadingResultFile ? <LinearProgress aria-label="Reading exam result file" /> : null}
             {resultImportPreview?.errors.length ? (
               <Alert severity="error">
                 <Typography variant="subtitle2">Fix these rows before importing:</Typography>
@@ -1351,8 +1336,7 @@ export function ExamsWorkspace() {
                   ) : null}
                   {Object.entries(attendanceLabels)
                     .filter(
-                      ([value]) =>
-                        Number(value) !== AdmissionCrmExamAttendanceStatus.NotMarked
+                      ([value]) => Number(value) !== AdmissionCrmExamAttendanceStatus.NotMarked
                     )
                     .map(([value, label]) => (
                       <MenuItem key={value} value={Number(value)}>
@@ -1502,10 +1486,7 @@ export function ExamsWorkspace() {
                     </MenuItem>
                   ) : null}
                   {Object.entries(admissionCrmEligibilityLabels)
-                    .filter(
-                      ([value]) =>
-                        Number(value) !== AdmissionCrmEligibilityDecision.Pending
-                    )
+                    .filter(([value]) => Number(value) !== AdmissionCrmEligibilityDecision.Pending)
                     .map(([value, label]) => (
                       <MenuItem key={value} value={Number(value)}>
                         {label}
@@ -1554,8 +1535,7 @@ export function ExamsWorkspace() {
                     !canChangeExamResult ||
                     eligibility === AdmissionCrmEligibilityDecision.Pending ||
                     !decisionReason.trim() ||
-                    (overrideDecision &&
-                      (!canOverrideEligibility || !overrideReason.trim()))
+                    (overrideDecision && (!canOverrideEligibility || !overrideReason.trim()))
                   }
                   onClick={() =>
                     selectedExam &&
@@ -1665,7 +1645,6 @@ export function ExamsWorkspace() {
           <Button onClick={() => setHandoffExamId('')}>Close</Button>
         </DialogActions>
       </Dialog>
-
     </Stack>
   );
 }

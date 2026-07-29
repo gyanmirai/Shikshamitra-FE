@@ -217,7 +217,11 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
       shikshaMitraToast.error({ message: issue.message });
       return;
     }
-    const body = normalizeRegistrationTemplate(templateForm);
+    const body = normalizeRegistrationTemplate({
+      ...templateForm,
+      feeRequired: false,
+      feeAmount: 0,
+    });
     try {
       if (editingTemplate) await updateTemplate({ templateId: editingTemplate.id, body }).unwrap();
       else await createTemplate({ academicYearId, body }).unwrap();
@@ -399,18 +403,6 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           { value: false, label: 'Not allowed' },
         ],
         render: (value) => (value ? 'Allowed' : 'Not allowed'),
-      },
-      {
-        id: 'feeRequired',
-        label: 'Registration Fee',
-        width: 140,
-        filterType: 'enum',
-        enumOptions: [
-          { value: true, label: 'Required' },
-          { value: false, label: 'Not required' },
-        ],
-        render: (value, row) =>
-          value ? `${(row as AdmissionCrmRegistrationTemplateDto).feeAmount}` : 'Not required',
       },
       {
         id: 'autoIssueAtStage',
@@ -690,7 +682,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 <Box
                   sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr 1.5fr' },
+                    gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1.5fr' },
                     gap: 1.5,
                   }}
                 >
@@ -713,19 +705,6 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                       setTemplateForm((current) => ({
                         ...current,
                         linkExpiryDays: Number(event.target.value),
-                      }))
-                    }
-                  />
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Registration fee"
-                    value={templateForm.feeAmount}
-                    disabled={templateReadOnly || !templateForm.feeRequired}
-                    onChange={(event) =>
-                      setTemplateForm((current) => ({
-                        ...current,
-                        feeAmount: Number(event.target.value),
                       }))
                     }
                   />
@@ -788,21 +767,6 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                       />
                     }
                     label="Allow partial save"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={templateForm.feeRequired}
-                        disabled={templateReadOnly}
-                        onChange={(event) =>
-                          setTemplateForm((current) => ({
-                            ...current,
-                            feeRequired: event.target.checked,
-                          }))
-                        }
-                      />
-                    }
-                    label="Fee required"
                   />
                 </Stack>
                 <Box

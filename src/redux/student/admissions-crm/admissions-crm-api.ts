@@ -560,8 +560,10 @@ export type AdmissionCrmLeadListParams = AdmissionCrmListParams & {
   lastActivityFrom?: string;
   lastActivityUntil?: string;
   stage?: AdmissionInquiryStage;
+  pipelineColumn?: AdmissionCrmPipelineColumnKey;
   channel?: AdmissionInquiryChannel;
   inquirySourceId?: string;
+  inquiryTypeId?: string;
   campaignName?: string;
   ownerUserId?: string;
   priority?: AdmissionCrmLeadPriority;
@@ -583,12 +585,22 @@ export type AdmissionCrmAnalyticsSummaryParams = {
   maximumLeadScore?: number;
 };
 
+export type AdmissionCrmAdmissionReportParams = {
+  fromDate?: string;
+  toDate?: string;
+  targetStandardId?: string;
+};
+
 export type AdmissionCrmLeadDto = {
   id: string;
   academicYearId: string;
+  admissionYearSetupId?: string | null;
+  admissionYearSetupVersion?: number | null;
   studentId?: string | null;
   inquirySourceId?: string | null;
   inquirySourceSnapshot?: string | null;
+  inquiryTypeId?: string | null;
+  inquiryTypeSnapshot?: string | null;
   channel: AdmissionInquiryChannel;
   campaignName?: string | null;
   campusBranchName?: string | null;
@@ -621,6 +633,11 @@ export type AdmissionCrmLeadDto = {
   mergedAt?: string | null;
   mergeReason?: string | null;
   duplicateContinueReason?: string | null;
+  pipelineColumn?: AdmissionCrmPipelineColumnKey | null;
+  closedOutcome?: AdmissionCrmClosedOutcome | null;
+  currentStep?: AdmissionCrmApplicantStepKey | null;
+  nextAction?: string | null;
+  nextActionCode?: string | null;
   registrationFormNumber?: string | null;
   registrationFormAmount?: number | null;
   registrationFormIssuedAt?: string | null;
@@ -643,6 +660,7 @@ export type AdmissionCrmLeadDuplicateDto = {
 
 export type CreateAdmissionCrmLeadDto = {
   inquirySourceId?: string | null;
+  inquiryTypeId?: string | null;
   channel: AdmissionInquiryChannel;
   campaignName?: string | null;
   campusBranchName?: string | null;
@@ -674,10 +692,23 @@ export type AdmissionCrmQuickInquiryChannelOptionDto = {
 };
 
 export type AdmissionCrmQuickInquiryRouteOptionDto = {
-  routeDefinitionId: string;
+  routeDefinitionId?: string | null;
   name: string;
   routeType: AdmissionCrmRouteType;
-  version: number;
+  version?: number | null;
+  isDefault: boolean;
+};
+
+export type AdmissionCrmQuickInquirySourceOptionDto = {
+  inquirySourceId: string;
+  name: string;
+  allowedChannels: AdmissionInquiryChannel[];
+  isDefault: boolean;
+};
+
+export type AdmissionCrmQuickInquiryTypeOptionDto = {
+  inquiryTypeId: string;
+  name: string;
   isDefault: boolean;
 };
 
@@ -689,6 +720,8 @@ export type AdmissionCrmQuickInquiryOptionsDto = {
   entranceExamRequired: boolean;
   journeyLocked: boolean;
   channels: AdmissionCrmQuickInquiryChannelOptionDto[];
+  sources: AdmissionCrmQuickInquirySourceOptionDto[];
+  inquiryTypes: AdmissionCrmQuickInquiryTypeOptionDto[];
   routes: AdmissionCrmQuickInquiryRouteOptionDto[];
 };
 
@@ -818,6 +851,69 @@ export type AdmissionCrmConfigurationCloneResultDto = {
 export type AdmissionCrmSettingsAccessMode = 0 | 1 | 2;
 export type AdmissionCrmSetupReadiness = 0 | 1 | 2 | 3 | 4;
 export type AdmissionCrmCycleStatus = 0 | 1 | 2 | 3 | 4 | 5;
+
+export enum AdmissionCrmAdmissionYearSetupStatus {
+  Draft = 0,
+  Published = 1,
+  Closed = 2,
+  Superseded = 3,
+}
+
+export enum AdmissionCrmPlacementTiming {
+  StandardBeforeActivation = 0,
+  DivisionBeforeActivation = 1,
+}
+
+export type AdmissionCrmAdmissionYearSetupDto = {
+  id: string;
+  concurrencyStamp: string;
+  academicYearId: string;
+  version: number;
+  status: AdmissionCrmAdmissionYearSetupStatus;
+  inquiryOpenDate: string;
+  inquiryCloseDate: string;
+  registrationCloseDate: string;
+  activationTargetDate: string;
+  entranceExamRequired: boolean;
+  financeVerificationRequired: boolean;
+  placementTiming: AdmissionCrmPlacementTiming;
+  defaultOwnerUserId?: string | null;
+  targetStandardIds: string[];
+  routeTypes: AdmissionCrmRouteType[];
+  stepOwners: Record<string, string | null>;
+  publishedAt?: string | null;
+  publishedByUserId?: string | null;
+  closedAt?: string | null;
+  closedByUserId?: string | null;
+  closeReason?: string | null;
+};
+
+export type UpdateAdmissionCrmAdmissionYearSetupDto = Pick<
+  AdmissionCrmAdmissionYearSetupDto,
+  | 'inquiryOpenDate'
+  | 'concurrencyStamp'
+  | 'inquiryCloseDate'
+  | 'registrationCloseDate'
+  | 'activationTargetDate'
+  | 'entranceExamRequired'
+  | 'financeVerificationRequired'
+  | 'placementTiming'
+  | 'defaultOwnerUserId'
+  | 'targetStandardIds'
+  | 'routeTypes'
+  | 'stepOwners'
+>;
+
+export type AdmissionCrmAdmissionYearStandardOptionDto = {
+  standardId: string;
+  standardName: string;
+  mediumStageId: string;
+  mediumStageName: string;
+  mediumId: string;
+  mediumName: string;
+  boardId: string;
+  boardName: string;
+};
 
 export type AdmissionCrmSetupItemDto = {
   key: string;
@@ -2112,6 +2208,63 @@ export type AdmissionCrmAnalyticsSummaryDto = {
   dailyTrends: AdmissionCrmDailyTrendDto[];
 };
 
+export type AdmissionCrmAdmissionReportDto = {
+  academicYearId: string;
+  generatedAt: string;
+  fromDate?: string | null;
+  toDate?: string | null;
+  targetStandardId?: string | null;
+  isScopeRestricted: boolean;
+  totalApplicantCount: number;
+  openApplicantCount: number;
+  activatedApplicantCount: number;
+  rejectedApplicantCount: number;
+  withdrawnApplicantCount: number;
+  unassignedStandardApplicantCount: number;
+  lifecycle: AdmissionCrmAdmissionReportLifecycleDto[];
+  sources: AdmissionCrmAdmissionReportSourceDto[];
+  standards: AdmissionCrmAdmissionReportStandardDto[];
+  outcomes: AdmissionCrmAdmissionReportOutcomeDto[];
+};
+
+export type AdmissionCrmAdmissionReportLifecycleDto = {
+  column: AdmissionCrmPipelineColumnKey;
+  columnName: string;
+  applicantCount: number;
+  shareOfApplicants: number;
+};
+
+export type AdmissionCrmAdmissionReportSourceDto = {
+  sourceName: string;
+  inquiryCount: number;
+  examScheduledCount: number;
+  activatedCount: number;
+  activationRate: number;
+};
+
+export type AdmissionCrmAdmissionReportStandardDto = {
+  targetStandardId?: string | null;
+  standardName: string;
+  inquiryCount: number;
+  examScheduledCount: number;
+  examCompletedCount: number;
+  eligibleCount: number;
+  registrationPendingCount: number;
+  registrationVerifiedCount: number;
+  financePendingCount: number;
+  activationPendingCount: number;
+  activatedCount: number;
+  rejectedCount: number;
+  withdrawnCount: number;
+};
+
+export type AdmissionCrmAdmissionReportOutcomeDto = {
+  outcome: AdmissionCrmClosedOutcome;
+  outcomeName: string;
+  applicantCount: number;
+  shareOfApplicants: number;
+};
+
 export type AdmissionCrmPolicyAnalyticsDto = {
   activeAdoptionCount: number;
   evaluationCount: number;
@@ -2551,9 +2704,13 @@ export type AdmissionCrmMyWorkItemDto = {
   targetStandardId?: string | null;
   targetClassName?: string | null;
   stage: AdmissionInquiryStage;
+  pipelineColumn: AdmissionCrmPipelineColumnKey;
+  currentStep: AdmissionCrmApplicantStepKey;
   priority: AdmissionCrmLeadPriority;
   title: string;
   details?: string | null;
+  nextAction: string;
+  nextActionCode?: string | null;
   dueAt?: string | null;
   urgency: AdmissionCrmWorkUrgency;
   isUrgent: boolean;
@@ -2696,6 +2853,9 @@ export type AdmissionCrmCommunicationProviderSettingsDto = {
   headers: Record<string, string>;
   parameters: Record<string, string>;
   callbackSecret?: string | null;
+  hasStoredHeaderValues?: boolean;
+  hasStoredParameterValues?: boolean;
+  hasCallbackSecret?: boolean;
   callbackMappings: {
     statusPath?: string | null;
     statusDetailsPath?: string | null;
@@ -2885,6 +3045,15 @@ export const buildAdmissionCrmAnalyticsSummaryRequest = ({
   ...params
 }: { academicYearId: string } & AdmissionCrmAnalyticsSummaryParams): FetchArgs => ({
   url: `/student-enrollment/admissions-crm/${academicYearId}/analytics/summary`,
+  method: 'GET',
+  params,
+});
+
+export const buildAdmissionCrmAdmissionReportRequest = ({
+  academicYearId,
+  ...params
+}: { academicYearId: string } & AdmissionCrmAdmissionReportParams): FetchArgs => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/reports/admissions`,
   method: 'GET',
   params,
 });
@@ -3719,6 +3888,10 @@ export interface AdmissionCrmPlacementOptionDto {
   divisionId: string;
   divisionName: string;
   divisionStrength: number;
+  capacityConfigured: boolean;
+  activeStudentCount: number;
+  pendingActivationCount: number;
+  remainingCapacity?: number | null;
 }
 
 export interface AdmissionCrmActivationReadinessItemDto {
@@ -4191,6 +4364,24 @@ export type AdmissionCrmInquirySourceUpsertDto = {
   isRoutingEligible: boolean;
 };
 
+export type AdmissionCrmInquiryTypeDto = {
+  id: string;
+  academicYearId: string;
+  code: string;
+  displayName: string;
+  description?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  deactivationReason?: string | null;
+};
+
+export type AdmissionCrmInquiryTypeUpsertDto = {
+  code: string;
+  displayName: string;
+  description?: string | null;
+  displayOrder: number;
+};
+
 export type AdmissionCrmCatalogStatusDto = {
   isActive: boolean;
   reason?: string | null;
@@ -4240,6 +4431,71 @@ export type AdmissionCrmIntegrationCapabilityDto = {
   state: AdmissionCrmIntegrationCapabilityState;
   operationalMode: string;
   detail: string;
+};
+
+export enum AdmissionCrmApplicantStepKey {
+  Inquiry = 0,
+  Exam = 1,
+  Registration = 2,
+  Finance = 3,
+  Placement = 4,
+  Activation = 5,
+}
+
+export enum AdmissionCrmApplicantStepStatus {
+  NotStarted = 0,
+  InProgress = 1,
+  Complete = 2,
+  Skipped = 3,
+  Blocked = 4,
+  NeedsReview = 5,
+}
+
+export enum AdmissionCrmPipelineColumnKey {
+  NewInquiry = 0,
+  FollowUp = 1,
+  ExamPending = 2,
+  ExamDone = 3,
+  Eligible = 4,
+  RegistrationPending = 5,
+  RegistrationDone = 6,
+  FinanceVerification = 7,
+  PlacementPending = 8,
+  ReadyForActivation = 9,
+  Activated = 10,
+}
+
+export enum AdmissionCrmClosedOutcome {
+  Rejected = 0,
+  Withdrawn = 1,
+  Ineligible = 2,
+  Cancelled = 3,
+  Duplicate = 4,
+  NotInterested = 5,
+}
+
+export type AdmissionCrmApplicantStepDto = {
+  step: AdmissionCrmApplicantStepKey;
+  title: string;
+  status: AdmissionCrmApplicantStepStatus;
+  isRequired: boolean;
+  reasonCode: string;
+  reason: string;
+  actionCode?: string | null;
+  completedAt?: string | null;
+};
+
+export type AdmissionCrmApplicantProgressDto = {
+  leadId: string;
+  academicYearId: string;
+  admissionYearSetupId?: string | null;
+  admissionYearSetupVersion: number;
+  pipelineColumn: AdmissionCrmPipelineColumnKey;
+  closedOutcome?: AdmissionCrmClosedOutcome | null;
+  currentStep: AdmissionCrmApplicantStepKey;
+  nextAction: string;
+  nextActionCode?: string | null;
+  steps: AdmissionCrmApplicantStepDto[];
 };
 
 export type AdmissionCrmGeneratedDocumentDto = {
@@ -4321,6 +4577,50 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       }),
       invalidatesTags: [studentAdmissionsCrmType.configuration],
     }),
+    getAdmissionCrmInquiryTypes: builder.query<
+      PagedResult<AdmissionCrmInquiryTypeDto>,
+      { academicYearId: string; includeInactive?: boolean }
+    >({
+      query: ({ academicYearId, ...params }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/catalog/inquiry-types`,
+        method: 'GET',
+        params,
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    createAdmissionCrmInquiryType: builder.mutation<
+      AdmissionCrmInquiryTypeDto,
+      { academicYearId: string; body: AdmissionCrmInquiryTypeUpsertDto }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/catalog/inquiry-types`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    updateAdmissionCrmInquiryType: builder.mutation<
+      AdmissionCrmInquiryTypeDto,
+      { inquiryTypeId: string; body: AdmissionCrmInquiryTypeUpsertDto }
+    >({
+      query: ({ inquiryTypeId, body }) => ({
+        url: `/student-enrollment/admissions-crm/catalog/inquiry-types/${inquiryTypeId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    setAdmissionCrmInquiryTypeStatus: builder.mutation<
+      AdmissionCrmInquiryTypeDto,
+      { inquiryTypeId: string; body: AdmissionCrmCatalogStatusDto }
+    >({
+      query: ({ inquiryTypeId, body }) => ({
+        url: `/student-enrollment/admissions-crm/catalog/inquiry-types/${inquiryTypeId}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration],
+    }),
     getAdmissionCrmExamSlots: builder.query<
       PagedResult<AdmissionCrmExamSlotDto>,
       { academicYearId: string; from?: string; to?: string; includeInactive?: boolean }
@@ -4357,6 +4657,16 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         method: 'GET',
       }),
       providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    getAdmissionCrmApplicantProgress: builder.query<
+      AdmissionCrmApplicantProgressDto,
+      { leadId: string }
+    >({
+      query: ({ leadId }) => ({
+        url: `/student-enrollment/admissions-crm/workspace/applicants/${leadId}/progress`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.lead],
     }),
     getAdmissionCrmLeads: builder.query<
       PagedResult<AdmissionCrmLeadDto>,
@@ -4738,6 +5048,69 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         params: params ?? undefined,
       }),
       providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    getAdmissionCrmAdmissionYearVersions: builder.query<
+      AdmissionCrmAdmissionYearSetupDto[],
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: `/student-enrollment/admissions-crm/setup/admission-years/${academicYearId}/versions`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    getAdmissionCrmAdmissionYearStandardOptions: builder.query<
+      AdmissionCrmAdmissionYearStandardOptionDto[],
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: `/student-enrollment/admissions-crm/setup/admission-years/${academicYearId}/standard-options`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    createAdmissionCrmAdmissionYearDraft: builder.mutation<
+      AdmissionCrmAdmissionYearSetupDto,
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: `/student-enrollment/admissions-crm/setup/admission-years/${academicYearId}/draft`,
+        method: 'POST',
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    updateAdmissionCrmAdmissionYearDraft: builder.mutation<
+      AdmissionCrmAdmissionYearSetupDto,
+      { id: string; body: UpdateAdmissionCrmAdmissionYearSetupDto }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student-enrollment/admissions-crm/setup/admission-years/drafts/${id}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    publishAdmissionCrmAdmissionYear: builder.mutation<
+      AdmissionCrmAdmissionYearSetupDto,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `/student-enrollment/admissions-crm/setup/admission-years/${id}/publish`,
+        method: 'POST',
+        body: { concurrencyStamp },
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    closeAdmissionCrmAdmissionYear: builder.mutation<
+      AdmissionCrmAdmissionYearSetupDto,
+      { id: string; reason: string; concurrencyStamp: string }
+    >({
+      query: ({ id, reason, concurrencyStamp }) => ({
+        url: `/student-enrollment/admissions-crm/setup/admission-years/${id}/close`,
+        method: 'POST',
+        body: { reason, concurrencyStamp },
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.configuration],
     }),
     getAdmissionCrmCycleSummary: builder.query<
       AdmissionCrmCycleSummaryDto,
@@ -5616,6 +5989,17 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         studentAdmissionsCrmType.lead,
         studentAdmissionsCrmType.exam,
         studentAdmissionsCrmType.task,
+      ],
+    }),
+    getAdmissionCrmAdmissionReport: builder.query<
+      AdmissionCrmAdmissionReportDto,
+      { academicYearId: string } & AdmissionCrmAdmissionReportParams
+    >({
+      query: buildAdmissionCrmAdmissionReportRequest,
+      providesTags: [
+        studentAdmissionsCrmType.analytics,
+        studentAdmissionsCrmType.lead,
+        studentAdmissionsCrmType.exam,
       ],
     }),
     getAdmissionCrmOperationsQueueSummary: builder.query<
@@ -7357,9 +7741,14 @@ export const {
   useCreateAdmissionCrmInquirySourceMutation,
   useUpdateAdmissionCrmInquirySourceMutation,
   useSetAdmissionCrmInquirySourceStatusMutation,
+  useGetAdmissionCrmInquiryTypesQuery,
+  useCreateAdmissionCrmInquiryTypeMutation,
+  useUpdateAdmissionCrmInquiryTypeMutation,
+  useSetAdmissionCrmInquiryTypeStatusMutation,
   useGetAdmissionCrmExamSlotsQuery,
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmIntegrationCapabilitiesQuery,
+  useGetAdmissionCrmApplicantProgressQuery,
   useGetAdmissionCrmLeadsQuery,
   useGetAdmissionCrmLeadQuery,
   usePreviewAdmissionCrmGeneratedDocumentMutation,
@@ -7395,6 +7784,12 @@ export const {
   useGetAdmissionCrmCycleConfigurationQuery,
   useGetAdmissionCrmSetupStatusQuery,
   useGetAdmissionCrmCyclesQuery,
+  useGetAdmissionCrmAdmissionYearVersionsQuery,
+  useGetAdmissionCrmAdmissionYearStandardOptionsQuery,
+  useCreateAdmissionCrmAdmissionYearDraftMutation,
+  useUpdateAdmissionCrmAdmissionYearDraftMutation,
+  usePublishAdmissionCrmAdmissionYearMutation,
+  useCloseAdmissionCrmAdmissionYearMutation,
   useGetAdmissionCrmCycleSummaryQuery,
   useGetAdmissionCrmApplicationStagePolicyQuery,
   usePreviewAdmissionCrmApplicationStagePolicyMutation,
@@ -7478,6 +7873,7 @@ export const {
   useApplyPublicAdmissionCrmDeliveryCallbackMutation,
   useGetAdmissionCrmEntranceExamsQuery,
   useGetAdmissionCrmAnalyticsSummaryQuery,
+  useGetAdmissionCrmAdmissionReportQuery,
   useGetAdmissionCrmOperationsQueueSummaryQuery,
   useGetAdmissionCrmStandardOptionsQuery,
   useGetAdmissionCrmEnrollmentOverviewQuery,

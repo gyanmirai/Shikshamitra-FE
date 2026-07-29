@@ -8,11 +8,10 @@ import { Button } from '@mui/material';
 import { useSelector } from 'react-redux';
 import AddRounded from '@mui/icons-material/AddRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { registrationQueues } from './operations-queue-config';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
-import { OperationsQueueWorkspace } from './operations-queue-workspace';
+import { ApplicantWorklistWorkspace } from './applicant-worklist-workspace';
 
 const DirectRegistrationDialog = dynamic(() =>
   import('./direct-registration-dialog').then((module) => module.DirectRegistrationDialog)
@@ -28,13 +27,17 @@ export function RegistrationsWorkspace() {
 
   return (
     <>
-      <OperationsQueueWorkspace
+      <ApplicantWorklistWorkspace
         title="Registration"
         description="Invite eligible applicants, enter paper forms, verify documents, and confirm readiness."
-        defaultQueue={AdmissionCrmOperationsQueueType.RegistrationInvitationPending}
-        allowedQueues={registrationQueues}
+        tableId="student-enrollment-registration"
+        defaultColumn={AdmissionCrmPipelineColumnKey.RegistrationPending}
+        columns={[
+          { key: AdmissionCrmPipelineColumnKey.Eligible, label: 'Eligible' },
+          { key: AdmissionCrmPipelineColumnKey.RegistrationPending, label: 'Registration pending' },
+          { key: AdmissionCrmPipelineColumnKey.RegistrationDone, label: 'Registration done' },
+        ]}
         applicantTab="registration"
-        variant="registration"
         headerActions={
           canCreateDirectRegistration ? (
             <Button

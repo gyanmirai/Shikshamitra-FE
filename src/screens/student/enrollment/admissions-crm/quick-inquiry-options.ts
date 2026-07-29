@@ -12,14 +12,30 @@ export type QuickInquiryChannelOption = {
 
 export type QuickInquiryRouteOption = {
   id: string;
+  definitionId?: string;
   label: string;
   routeType: AdmissionCrmRouteType;
-  version: number;
+  version?: number;
+  isDefault: boolean;
+};
+
+export type QuickInquirySourceOption = {
+  id: string;
+  label: string;
+  allowedChannels: AdmissionInquiryChannel[];
+  isDefault: boolean;
+};
+
+export type QuickInquiryTypeOption = {
+  id: string;
+  label: string;
   isDefault: boolean;
 };
 
 export type QuickInquiryOptions = {
   channels: QuickInquiryChannelOption[];
+  sources: QuickInquirySourceOption[];
+  inquiryTypes: QuickInquiryTypeOption[];
   routes: QuickInquiryRouteOption[];
 };
 
@@ -38,11 +54,23 @@ export const mapQuickInquiryOptions = (
       label: option.label,
       isDefault: option.isDefault === true,
     })),
+  sources: (response?.sources || []).map((option) => ({
+    id: option.inquirySourceId,
+    label: option.name,
+    allowedChannels: option.allowedChannels,
+    isDefault: option.isDefault === true,
+  })),
+  inquiryTypes: (response?.inquiryTypes || []).map((option) => ({
+    id: option.inquiryTypeId,
+    label: option.name,
+    isDefault: option.isDefault === true,
+  })),
   routes: (response?.routes || []).map((option) => ({
-    id: option.routeDefinitionId,
+    id: option.routeDefinitionId || `route-type:${option.routeType}`,
+    definitionId: option.routeDefinitionId || undefined,
     label: option.name,
     routeType: option.routeType,
-    version: option.version,
+    version: option.version ?? undefined,
     isDefault: option.isDefault === true,
   })),
 });

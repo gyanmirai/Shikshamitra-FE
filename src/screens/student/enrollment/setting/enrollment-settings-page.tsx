@@ -7,10 +7,10 @@ import { useTheme } from '@mui/material/styles';
 import { RouterLink } from 'src/routes/components';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { studentPaths } from 'src/constants/student-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
 import { Box, Tab, Tabs, Step, Stack, Stepper, StepButton, Typography } from '@mui/material';
 
+import { EnrollmentWorkspaceHeader } from '../admissions-crm/workspace-header';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import { serializeEnrollmentWorkspaceState } from '../admissions-crm/enrollment-workspace-state';
 
@@ -41,9 +41,6 @@ export function EnrollmentSettingsPage({
   children,
   fillAvailableHeight = false,
 }: SettingsPageProps) {
-  const { state } = useEnrollmentWorkspace();
-  const cycleQuery = state.cycle ? `?cycle=${encodeURIComponent(state.cycle)}` : '';
-
   return (
     <Stack
       spacing={1.5}
@@ -54,19 +51,10 @@ export function EnrollmentSettingsPage({
       }}
     >
       <Box component="header">
-        <CustomBreadcrumbs
-          heading={title}
+        <EnrollmentWorkspaceHeader
+          title={title}
           description={description}
-          links={[
-            { name: 'Student', href: studentPaths.dashboard },
-            {
-              name: 'Student Enrollment',
-              href: `${studentPaths.enrollment.overview}${cycleQuery}`,
-            },
-            { name: 'Settings', href: `${studentPaths.enrollment.settings}${cycleQuery}` },
-            { name: title },
-          ]}
-          sx={{ px: 2 }}
+          section={{ name: 'Settings', href: studentPaths.enrollment.settings }}
         />
       </Box>
       <Box

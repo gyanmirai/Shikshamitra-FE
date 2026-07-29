@@ -34,12 +34,9 @@ import {
 } from '@mui/material';
 import {
   useGetAdmissionCrmLeadQuery,
-  useGetAdmissionCrmActivationQuery,
   AdmissionCrmGeneratedDocumentType,
-  useGetAdmissionCrmSeatOffersQuery,
   useGetAdmissionCrmPipelineStagesQuery,
-  useGetAdmissionCrmEntranceExamByLeadQuery,
-  useGetAdmissionCrmQuickInquiryOptionsQuery,
+  useGetAdmissionCrmApplicantProgressQuery,
   useGetCurrentAdmissionCrmRegistrationByLeadQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -49,10 +46,7 @@ import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantActivityTimeline } from './applicant-activity-timeline';
 import { ApplicantWorkspaceOverview } from './applicant-workspace-overview';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
-import {
-  buildApplicantJourney,
-  getApplicantNextJourneyStep,
-} from './applicant-journey-model';
+import { buildApplicantJourney, getApplicantNextJourneyStep } from './applicant-journey-model';
 import {
   formatEnrollmentDate,
   formatApplicantContact,
@@ -104,6 +98,7 @@ export type ApplicantWorkspaceTab =
   | 'overview'
   | 'exam'
   | 'registration'
+  | 'finance'
   | 'offer'
   | 'activation'
   | 'governance'
@@ -123,9 +118,10 @@ const sections: Array<{ value: ApplicantWorkspaceTab; label: string; icon: strin
   { value: 'overview', label: 'Overview', icon: 'solar:widget-2-bold-duotone' },
   { value: 'exam', label: 'Entrance Exam', icon: 'solar:clipboard-check-bold-duotone' },
   { value: 'registration', label: 'Registration', icon: 'solar:document-add-bold-duotone' },
-  { value: 'offer', label: 'Offer & Seat', icon: 'solar:ticket-sale-bold-duotone' },
+  { value: 'finance', label: 'Finance', icon: 'solar:wallet-money-bold-duotone' },
+  { value: 'offer', label: 'Class Placement', icon: 'solar:buildings-2-bold-duotone' },
   { value: 'activation', label: 'Activation', icon: 'solar:user-check-bold-duotone' },
-  { value: 'governance', label: 'Governance', icon: 'solar:shield-check-bold-duotone' },
+  { value: 'governance', label: 'Additional Checks', icon: 'solar:shield-check-bold-duotone' },
   { value: 'activity', label: 'Activity', icon: 'solar:history-bold-duotone' },
 ];
 
@@ -143,9 +139,11 @@ const activationDocumentTypes = [
 const disabledTabCopy: Record<ApplicantWorkspaceTab, string> = {
   overview: '',
   exam: 'Schedule an entrance exam first.',
-  registration: 'Issue registration first, or enable registration before exam for this cycle.',
-  offer: 'Complete eligibility and registration review before working on offers.',
-  activation: 'Approve an offer before activating admission.',
+  registration:
+    'Issue registration first, or enable registration before exam for this admission year.',
+  finance: 'Verify registration before requesting Finance review.',
+  offer: 'Complete registration and Finance review before assigning class placement.',
+  activation: 'Complete class placement before activating admission.',
   governance: 'Open governance checks after registration details are available.',
   activity: '',
 };
@@ -195,55 +193,14 @@ function ApplicantWorkspaceDrawerContent({
     { academicYearId: applicantAcademicYearId || '' },
     { skip: !applicantAcademicYearId || !leadId }
   );
-  const operationalOptionsQuery = useGetAdmissionCrmQuickInquiryOptionsQuery(
-    { academicYearId: applicantAcademicYearId || '' },
-    { skip: !applicantAcademicYearId || !leadId }
-  );
-  const canOpenRegistrationBeforeExam = Boolean(
-    operationalOptionsQuery.data?.registrationFormRequiredBeforeExam
-  );
-  const entranceExamRequired = operationalOptionsQuery.data?.entranceExamRequired;
-  const examQuery = useGetAdmissionCrmEntranceExamByLeadQuery(
+  const progressQuery = useGetAdmissionCrmApplicantProgressQuery(
     { leadId: leadId || '' },
     { skip: !leadId || !lead }
   );
   const registrationQuery = useGetCurrentAdmissionCrmRegistrationByLeadQuery(
     { leadId: leadId || '' },
     {
-      skip:
-        !leadId ||
-        !lead ||
-        (!lead.registrationFormIssuedAt && !lead.registrationFormNumber),
-    }
-  );
-  const offersQuery = useGetAdmissionCrmSeatOffersQuery(
-    {
-      academicYearId: applicantAcademicYearId || '',
-      leadId,
-      maxResultCount: 25,
-    },
-    {
-      skip:
-        !applicantAcademicYearId ||
-        !leadId ||
-        !canViewOffers ||
-        (!registrationQuery.data && !lead?.registrationFormNumber),
-    }
-  );
-  const currentOffer = useMemo(
-    () =>
-      [...(offersQuery.data?.items || [])].sort(
-        (left, right) => right.version - left.version
-      )[0],
-    [offersQuery.data?.items]
-  );
-  const activationQuery = useGetAdmissionCrmActivationQuery(
-    { leadId: leadId || '' },
-    {
-      skip:
-        !leadId ||
-        !canViewActivation ||
-        (!currentOffer && !lead?.registrationFormNumber),
+      skip: !leadId || !lead || (!lead.registrationFormIssuedAt && !lead.registrationFormNumber),
     }
   );
   const currentStage = useMemo(
@@ -256,30 +213,11 @@ function ApplicantWorkspaceDrawerContent({
       : null;
   const journeySteps = useMemo(
     () =>
-      lead
-        ? buildApplicantJourney({
-            lead,
-            allowRegistrationBeforeExam: canOpenRegistrationBeforeExam,
-            entranceExamRequired: entranceExamRequired !== false,
-            hasExam: Boolean(examQuery.data),
-            registrationStatus: registrationQuery.data?.status,
-            offerStatus: currentOffer?.status,
-            activationStatus: activationQuery.data?.status,
-            canViewOffers,
-            canViewActivation,
-          })
-        : [],
-    [
-      activationQuery.data?.status,
-      canOpenRegistrationBeforeExam,
-      canViewActivation,
-      canViewOffers,
-      currentOffer?.status,
-      examQuery.data,
-      lead,
-      entranceExamRequired,
-      registrationQuery.data?.status,
-    ]
+      buildApplicantJourney(progressQuery.data, {
+        canViewPlacement: canViewOffers,
+        canViewActivation,
+      }),
+    [canViewActivation, canViewOffers, progressQuery.data]
   );
   const nextJourneyStep = getApplicantNextJourneyStep(journeySteps);
   const journeyByTab = useMemo<ReadonlyMap<ApplicantWorkspaceTab, ApplicantJourneyStep>>(
@@ -289,52 +227,51 @@ function ApplicantWorkspaceDrawerContent({
       ),
     [journeySteps]
   );
-  const tabAvailability = useMemo(() => sections.reduce<Record<ApplicantWorkspaceTab, { disabled: boolean; reason: string }>>(
-      (acc, section) => {
-        let disabled = !lead && section.value !== 'overview';
-        let reason = disabled ? 'Load an applicant before opening this workspace section.' : '';
+  const tabAvailability = useMemo(
+    () =>
+      sections.reduce<Record<ApplicantWorkspaceTab, { disabled: boolean; reason: string }>>(
+        (acc, section) => {
+          let disabled = !lead && section.value !== 'overview';
+          let reason = disabled ? 'Load an applicant before opening this workspace section.' : '';
 
-        if (lead) {
-          if (journeyByTab.has(section.value)) {
-            const journeyStep = journeyByTab.get(section.value);
-            disabled = journeyStep?.state === 'locked' || journeyStep?.state === 'skipped';
-            reason = disabled ? journeyStep?.reason || disabledTabCopy[section.value] : '';
-          } else if (section.value === 'governance') {
-            const hasRegistration = Boolean(
-              registrationQuery.data ||
+          if (lead) {
+            if (journeyByTab.has(section.value)) {
+              const journeyStep = journeyByTab.get(section.value);
+              disabled = journeyStep?.state === 'blocked' || journeyStep?.state === 'skipped';
+              reason = disabled ? journeyStep?.reason || disabledTabCopy[section.value] : '';
+            } else if (section.value === 'governance') {
+              const hasRegistration = Boolean(
+                registrationQuery.data ||
                 lead.registrationFormIssuedAt ||
                 lead.registrationFormNumber
-            );
-            disabled = !hasRegistration || !canViewGovernance;
-            if (!hasRegistration) {
-              reason = disabledTabCopy.governance;
-            } else if (!canViewGovernance) {
-              reason = 'You do not have access to applicant governance details.';
-            } else {
+              );
+              disabled = !hasRegistration || !canViewGovernance;
+              if (!hasRegistration) {
+                reason = disabledTabCopy.governance;
+              } else if (!canViewGovernance) {
+                reason = 'You do not have access to applicant governance details.';
+              } else {
+                reason = '';
+              }
+            } else if (section.value === 'activity') {
+              disabled = false;
               reason = '';
             }
-          } else if (section.value === 'activity') {
-            disabled = false;
-            reason = '';
           }
-        }
 
-        acc[section.value] = { disabled, reason };
-        return acc;
-      },
-      {} as Record<ApplicantWorkspaceTab, { disabled: boolean; reason: string }>
-    ), [canViewGovernance, journeyByTab, lead, registrationQuery.data]);
+          acc[section.value] = { disabled, reason };
+          return acc;
+        },
+        {} as Record<ApplicantWorkspaceTab, { disabled: boolean; reason: string }>
+      ),
+    [canViewGovernance, journeyByTab, lead, registrationQuery.data]
+  );
   const visibleSections = useMemo(
     () => sections.filter((section) => !tabAvailability[section.value]?.disabled),
     [tabAvailability]
   );
   const isJourneyLoading =
-    operationalOptionsQuery.isLoading ||
-    operationalOptionsQuery.isFetching ||
-    examQuery.isFetching ||
-    registrationQuery.isFetching ||
-    offersQuery.isFetching ||
-    activationQuery.isFetching;
+    progressQuery.isLoading || progressQuery.isFetching || registrationQuery.isFetching;
   const selectedSection =
     visibleSections.find((section) => section.value === tab) || visibleSections[0] || sections[0];
   const selectedDisabledReason = tabAvailability[tab]?.reason;
@@ -346,23 +283,11 @@ function ApplicantWorkspaceDrawerContent({
     }
   }, [academicYearId, lead?.academicYearId, onAcademicYearResolved]);
   useEffect(() => {
-    if (
-      !lead ||
-      isJourneyLoading ||
-      operationalOptionsQuery.isError ||
-      !tabAvailability[tab]?.disabled
-    )
+    if (!lead || isJourneyLoading || progressQuery.isError || !tabAvailability[tab]?.disabled)
       return;
     setTab('overview');
     onTabChange?.('overview');
-  }, [
-    isJourneyLoading,
-    lead,
-    onTabChange,
-    operationalOptionsQuery.isError,
-    tab,
-    tabAvailability,
-  ]);
+  }, [isJourneyLoading, lead, onTabChange, progressQuery.isError, tab, tabAvailability]);
 
   const changeTab = (nextTab: ApplicantWorkspaceTab) => {
     if (nextTab === tab) return;
@@ -377,14 +302,14 @@ function ApplicantWorkspaceDrawerContent({
   const cycleQuery = applicantAcademicYearId
     ? `?cycle=${encodeURIComponent(applicantAcademicYearId)}`
     : '';
-  const enrollmentOverviewHref = `${studentPaths.enrollment.overview}${cycleQuery}`;
-  const navigateThroughGuard =
-    (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
-      event.preventDefault();
-      requestTransition(() => router.push(href));
-    };
+  const enrollmentMyWorkHref = `${studentPaths.enrollment.myWork}${cycleQuery}`;
+  const navigateThroughGuard = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    requestTransition(() => router.push(href));
+  };
   const activeJourneyStep = journeySteps.findIndex(
-    (step) => step.state === 'current' || step.state === 'available'
+    (step) =>
+      step.state === 'in-progress' || step.state === 'needs-review' || step.state === 'not-started'
   );
 
   return (
@@ -395,7 +320,7 @@ function ApplicantWorkspaceDrawerContent({
     >
       <CustomBreadcrumbs
         heading={lead ? getAdmissionCrmLeadName(lead) : 'Applicant workspace'}
-        description="Move this applicant through inquiry, entrance, registration, offer, and activation."
+        description="Move this applicant through inquiry, entrance exam, registration, Finance, class placement, and activation."
         isBack
         onBack={handleClose}
         links={[
@@ -406,8 +331,8 @@ function ApplicantWorkspaceDrawerContent({
           },
           {
             name: 'Student Enrollment',
-            href: enrollmentOverviewHref,
-            onClick: navigateThroughGuard(enrollmentOverviewHref),
+            href: enrollmentMyWorkHref,
+            onClick: navigateThroughGuard(enrollmentMyWorkHref),
           },
           { name: 'Applicant' },
         ]}
@@ -487,19 +412,16 @@ function ApplicantWorkspaceDrawerContent({
             sx={{ minWidth: { xs: 640, md: 0 } }}
           >
             {journeySteps.map((step) => {
-              const isLocked = step.state === 'locked' || step.state === 'skipped';
+              const isLocked = step.state === 'blocked' || step.state === 'skipped';
               return (
                 <Step
                   key={step.id}
                   completed={step.state === 'complete' || step.state === 'skipped'}
-                  active={step.state === 'current'}
+                  active={step.state === 'in-progress' || step.state === 'needs-review'}
                 >
                   <Tooltip title={step.reason || `${step.label}: ${step.state}`}>
                     <span>
-                      <StepButton
-                        disabled={isLocked}
-                        onClick={() => changeTab(step.workspaceTab)}
-                      >
+                      <StepButton disabled={isLocked} onClick={() => changeTab(step.workspaceTab)}>
                         {step.label}
                       </StepButton>
                     </span>
@@ -514,230 +436,205 @@ function ApplicantWorkspaceDrawerContent({
       <Divider />
 
       {isMobile ? (
-          <Box sx={{ px: 1.5, py: 1, flexShrink: 0 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              aria-haspopup="menu"
-              aria-expanded={Boolean(sectionMenuAnchor)}
-              startIcon={<Iconify icon={selectedSection.icon} />}
-              endIcon={<Iconify icon="eva:chevron-down-fill" />}
-              onClick={(event: MouseEvent<HTMLButtonElement>) =>
-                setSectionMenuAnchor(event.currentTarget)
-              }
-              sx={{ justifyContent: 'space-between', minHeight: 44 }}
-            >
-              {selectedSection.label}
-            </Button>
-            <Menu
-              anchorEl={sectionMenuAnchor}
-              open={Boolean(sectionMenuAnchor)}
-              onClose={() => setSectionMenuAnchor(null)}
-              MenuListProps={{ 'aria-label': 'Applicant workspace sections' }}
-              slotProps={{ paper: { sx: { width: 'calc(100vw - 24px)', maxWidth: 420 } } }}
-            >
-              {visibleSections.map((section) => (
-                <MenuItem
-                  key={section.value}
-                  selected={section.value === tab}
-                  onClick={() => {
-                    setSectionMenuAnchor(null);
-                    changeTab(section.value);
-                  }}
-                >
-                  <Iconify icon={section.icon} sx={{ mr: 1 }} />
-                  {section.label}
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-      ) : (
-          <CustomTabs
-            value={tab}
-            onChange={(_, value: ApplicantWorkspaceTab) => changeTab(value)}
-            variant="scrollable"
-            scrollButtons="auto"
-            aria-label="Applicant workspace sections"
-            sx={{ flexShrink: 0 }}
-            slotProps={{
-              scroller: { px: 1, py: 0.5 },
-              tab: { px: 1.25, minHeight: 40 },
-            }}
+        <Box sx={{ px: 1.5, py: 1, flexShrink: 0 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            aria-haspopup="menu"
+            aria-expanded={Boolean(sectionMenuAnchor)}
+            startIcon={<Iconify icon={selectedSection.icon} />}
+            endIcon={<Iconify icon="eva:chevron-down-fill" />}
+            onClick={(event: MouseEvent<HTMLButtonElement>) =>
+              setSectionMenuAnchor(event.currentTarget)
+            }
+            sx={{ justifyContent: 'space-between', minHeight: 44 }}
+          >
+            {selectedSection.label}
+          </Button>
+          <Menu
+            anchorEl={sectionMenuAnchor}
+            open={Boolean(sectionMenuAnchor)}
+            onClose={() => setSectionMenuAnchor(null)}
+            MenuListProps={{ 'aria-label': 'Applicant workspace sections' }}
+            slotProps={{ paper: { sx: { width: 'calc(100vw - 24px)', maxWidth: 420 } } }}
           >
             {visibleSections.map((section) => (
-                <Tab
-                  key={section.value}
-                  value={section.value}
-                  icon={<Iconify icon={section.icon} width={18} />}
-                  iconPosition="start"
-                  label={section.label}
-                />
+              <MenuItem
+                key={section.value}
+                selected={section.value === tab}
+                onClick={() => {
+                  setSectionMenuAnchor(null);
+                  changeTab(section.value);
+                }}
+              >
+                <Iconify icon={section.icon} sx={{ mr: 1 }} />
+                {section.label}
+              </MenuItem>
             ))}
-          </CustomTabs>
+          </Menu>
+        </Box>
+      ) : (
+        <CustomTabs
+          value={tab}
+          onChange={(_, value: ApplicantWorkspaceTab) => changeTab(value)}
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="Applicant workspace sections"
+          sx={{ flexShrink: 0 }}
+          slotProps={{
+            scroller: { px: 1, py: 0.5 },
+            tab: { px: 1.25, minHeight: 40 },
+          }}
+        >
+          {visibleSections.map((section) => (
+            <Tab
+              key={section.value}
+              value={section.value}
+              icon={<Iconify icon={section.icon} width={18} />}
+              iconPosition="start"
+              label={section.label}
+            />
+          ))}
+        </CustomTabs>
       )}
       <Divider />
 
-        <Box
-          component="section"
-          aria-label={`${selectedSection.label} workspace`}
-          sx={{
-            flex: 1,
-            minHeight: 0,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            px: { xs: 1.5, sm: 2 },
-            py: 1.5,
-            scrollBehavior: 'smooth',
-            '@media (prefers-reduced-motion: reduce)': { scrollBehavior: 'auto' },
-          }}
-        >
-          {leadQuery.isFetching && !lead ? <LinearProgress aria-label="Loading applicant" /> : null}
-          {leadQuery.isError ? (
-            <Alert
-              severity="error"
-              action={
-                <Button color="inherit" size="small" onClick={() => leadQuery.refetch()}>
-                  Retry
-                </Button>
-              }
-            >
-              Applicant details are unavailable. Check your connection and try again.
-            </Alert>
-          ) : null}
-          {operationalOptionsQuery.isError ? (
-            <Alert
-              severity="error"
-              sx={{ mb: 1.5 }}
-              action={
-                <Button
-                  color="inherit"
-                  size="small"
-                  onClick={() => operationalOptionsQuery.refetch()}
-                >
-                  Retry
-                </Button>
-              }
-            >
-              Admission journey settings are unavailable. Retry before continuing this applicant.
-            </Alert>
-          ) : null}
+      <Box
+        component="section"
+        aria-label={`${selectedSection.label} workspace`}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          px: { xs: 1.5, sm: 2 },
+          py: 1.5,
+          scrollBehavior: 'smooth',
+          '@media (prefers-reduced-motion: reduce)': { scrollBehavior: 'auto' },
+        }}
+      >
+        {leadQuery.isFetching && !lead ? <LinearProgress aria-label="Loading applicant" /> : null}
+        {leadQuery.isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={() => leadQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Applicant details are unavailable. Check your connection and try again.
+          </Alert>
+        ) : null}
+        {progressQuery.isError ? (
+          <Alert
+            severity="error"
+            sx={{ mb: 1.5 }}
+            action={
+              <Button color="inherit" size="small" onClick={() => progressQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Admission progress is unavailable. Retry before continuing this applicant.
+          </Alert>
+        ) : null}
 
-          {lead && selectedDisabledReason ? (
-            <Alert severity="info" sx={{ mb: 1.5 }}>
-              {selectedDisabledReason}
-            </Alert>
-          ) : null}
+        {lead && selectedDisabledReason ? (
+          <Alert severity="info" sx={{ mb: 1.5 }}>
+            {selectedDisabledReason}
+          </Alert>
+        ) : null}
 
-          {lead && tab === 'overview' && !selectedDisabledReason ? (
-            <ApplicantWorkspaceOverview
-              lead={lead}
-              academicYearId={applicantAcademicYearId}
-              stages={stagesQuery.data || []}
-              slaDueAt={slaDueAt}
-              refetchLead={() => leadQuery.refetch()}
+        {lead && tab === 'overview' && !selectedDisabledReason ? (
+          <ApplicantWorkspaceOverview
+            lead={lead}
+            academicYearId={applicantAcademicYearId}
+            stages={stagesQuery.data || []}
+            slaDueAt={slaDueAt}
+            refetchLead={() => leadQuery.refetch()}
+          />
+        ) : null}
+
+        {leadId && applicantAcademicYearId && tab === 'exam' && !selectedDisabledReason ? (
+          <Stack spacing={2}>
+            <ApplicantExamSummary leadId={leadId} academicYearId={applicantAcademicYearId} />
+            <GeneratedDocumentOperations
+              leadId={leadId}
+              allowedDocumentTypes={examDocumentTypes}
+              title="Exam documents"
+              description="Generate a hall ticket only when the school uses one for entrance exams."
             />
-          ) : null}
-
-          {leadId && applicantAcademicYearId && tab === 'exam' && !selectedDisabledReason ? (
-            <Stack spacing={2}>
-              <ApplicantExamSummary
+          </Stack>
+        ) : null}
+        {leadId && applicantAcademicYearId && tab === 'finance' && !selectedDisabledReason ? (
+          <ApplicantFinancialReadiness leadId={leadId} academicYearId={applicantAcademicYearId} />
+        ) : null}
+        {leadId && applicantAcademicYearId && tab === 'registration' && !selectedDisabledReason ? (
+          <Stack spacing={2}>
+            <ApplicantRegistrationOperations
+              leadId={leadId}
+              academicYearId={applicantAcademicYearId}
+              hasRegistration={Boolean(
+                lead?.registrationFormIssuedAt || lead?.registrationFormNumber
+              )}
+            />
+            <GeneratedDocumentOperations
+              leadId={leadId}
+              allowedDocumentTypes={registrationDocumentTypes}
+              title="Registration documents"
+              description="Generate registration acknowledgements and correction notices."
+            />
+          </Stack>
+        ) : null}
+        {leadId && applicantAcademicYearId && tab === 'offer' && !selectedDisabledReason ? (
+          <Stack spacing={2}>
+            <ApplicantFinalAdmissionOperations
+              leadId={leadId}
+              academicYearId={applicantAcademicYearId}
+            />
+            <ApplicantFinancialReadiness leadId={leadId} academicYearId={applicantAcademicYearId} />
+            <GeneratedDocumentOperations
+              leadId={leadId}
+              allowedDocumentTypes={offerDocumentTypes}
+              title="Placement documents"
+              description="Preview the placement confirmation prepared for this applicant."
+            />
+          </Stack>
+        ) : null}
+        {leadId && applicantAcademicYearId && tab === 'activation' && !selectedDisabledReason ? (
+          <Stack spacing={2}>
+            <ApplicantActivationOperations
+              leadId={leadId}
+              academicYearId={applicantAcademicYearId}
+            />
+            <GeneratedDocumentOperations
+              leadId={leadId}
+              allowedDocumentTypes={activationDocumentTypes}
+              title="Admission documents"
+              description="Issue admission or cancellation letters from the activation workflow."
+            />
+          </Stack>
+        ) : null}
+        {leadId && applicantAcademicYearId && tab === 'governance' && !selectedDisabledReason ? (
+          <Stack spacing={2}>
+            {canViewRoutes ? (
+              <ApplicantRouteOperations
                 leadId={leadId}
                 academicYearId={applicantAcademicYearId}
+                capturedRouteDefinitionId={lead?.intendedRouteDefinitionId}
               />
-              <GeneratedDocumentOperations
-                leadId={leadId}
-                allowedDocumentTypes={examDocumentTypes}
-                title="Exam documents"
-                description="Generate a hall ticket only when the school uses one for entrance exams."
-              />
-            </Stack>
-          ) : null}
-          {leadId &&
-          applicantAcademicYearId &&
-          tab === 'registration' &&
-          !selectedDisabledReason ? (
-            <Stack spacing={2}>
-              <ApplicantRegistrationOperations
-                leadId={leadId}
-                academicYearId={applicantAcademicYearId}
-                hasRegistration={Boolean(
-                  lead?.registrationFormIssuedAt || lead?.registrationFormNumber
-                )}
-              />
-              <GeneratedDocumentOperations
-                leadId={leadId}
-                allowedDocumentTypes={registrationDocumentTypes}
-                title="Registration documents"
-                description="Generate registration acknowledgements and correction notices."
-              />
-            </Stack>
-          ) : null}
-          {leadId && applicantAcademicYearId && tab === 'offer' && !selectedDisabledReason ? (
-            <Stack spacing={2}>
-              <ApplicantFinalAdmissionOperations
-                leadId={leadId}
-                academicYearId={applicantAcademicYearId}
-              />
-              <ApplicantFinancialReadiness
-                leadId={leadId}
-                academicYearId={applicantAcademicYearId}
-              />
-              <GeneratedDocumentOperations
-                leadId={leadId}
-                allowedDocumentTypes={offerDocumentTypes}
-                title="Offer documents"
-                description="Preview and issue the applicant's approved seat offer letter."
-              />
-            </Stack>
-          ) : null}
-          {leadId &&
-          applicantAcademicYearId &&
-          tab === 'activation' &&
-          !selectedDisabledReason ? (
-            <Stack spacing={2}>
-              <ApplicantFinancialReadiness
-                leadId={leadId}
-                academicYearId={applicantAcademicYearId}
-              />
-              <ApplicantActivationOperations
-                leadId={leadId}
-                academicYearId={applicantAcademicYearId}
-              />
-              <GeneratedDocumentOperations
-                leadId={leadId}
-                allowedDocumentTypes={activationDocumentTypes}
-                title="Admission documents"
-                description="Issue admission or cancellation letters from the activation workflow."
-              />
-            </Stack>
-          ) : null}
-          {leadId &&
-          applicantAcademicYearId &&
-          tab === 'governance' &&
-          !selectedDisabledReason ? (
-            <Stack spacing={2}>
-              {canViewRoutes ? (
-                <ApplicantRouteOperations
-                  leadId={leadId}
-                  academicYearId={applicantAcademicYearId}
-                  capturedRouteDefinitionId={lead?.intendedRouteDefinitionId}
-                />
-              ) : null}
-              {canViewPolicies ? (
-                <ApplicantPolicyReadiness
-                  leadId={leadId}
-                  academicYearId={applicantAcademicYearId}
-                />
-              ) : null}
-              {canViewHouseholds ? (
-                <ApplicantHouseholdIdentityOperations leadId={leadId} />
-              ) : null}
-            </Stack>
-          ) : null}
-          {leadId && tab === 'activity' && !selectedDisabledReason ? (
-            <ApplicantActivityTimeline leadId={leadId} />
-          ) : null}
-        </Box>
+            ) : null}
+            {canViewPolicies ? (
+              <ApplicantPolicyReadiness leadId={leadId} academicYearId={applicantAcademicYearId} />
+            ) : null}
+            {canViewHouseholds ? <ApplicantHouseholdIdentityOperations leadId={leadId} /> : null}
+          </Stack>
+        ) : null}
+        {leadId && tab === 'activity' && !selectedDisabledReason ? (
+          <ApplicantActivityTimeline leadId={leadId} />
+        ) : null}
+      </Box>
     </Stack>
   );
 }

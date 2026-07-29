@@ -1,19 +1,23 @@
 'use client';
 
-import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { activationQueues } from './operations-queue-config';
-import { OperationsQueueWorkspace } from './operations-queue-workspace';
+import { ApplicantWorklistWorkspace } from './applicant-worklist-workspace';
 
 export function ActivationWorkspace() {
   return (
-    <OperationsQueueWorkspace
-      title="Student Activation"
-      description="Repair pending activations and review controlled cancellation or service handoff exceptions."
-      defaultQueue={AdmissionCrmOperationsQueueType.ActivationRepair}
-      allowedQueues={activationQueues}
+    <ApplicantWorklistWorkspace
+      title="Activation"
+      description="Review admission gates, approvals, repair work, and the Student Records handoff."
+      tableId="student-enrollment-activation"
+      defaultColumn={AdmissionCrmPipelineColumnKey.ReadyForActivation}
+      columns={[
+        { key: AdmissionCrmPipelineColumnKey.FinanceVerification, label: 'Finance pending' },
+        { key: AdmissionCrmPipelineColumnKey.PlacementPending, label: 'Placement pending' },
+        { key: AdmissionCrmPipelineColumnKey.ReadyForActivation, label: 'Ready for activation' },
+        { key: AdmissionCrmPipelineColumnKey.Activated, label: 'Activated' },
+      ]}
       applicantTab="activation"
-      variant="activation"
     />
   );
 }

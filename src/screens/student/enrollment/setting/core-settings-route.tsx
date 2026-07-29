@@ -1,10 +1,13 @@
 'use client';
 
+import { Alert } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import AdmissionsCrmConfiguration from './admissions-crm-configuration';
-import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import { ApplicationStagePolicyPanel } from './application-stage-policy-panel';
+import { CommunicationTemplateSettings } from './communication-template-settings';
+import { CommunicationReminderSettings } from './communication-reminder-settings';
+import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import {
   EnrollmentSettingsPage,
   EnrollmentSettingsPanelTabs,
@@ -71,13 +74,14 @@ const sectionDefinitions: Record<AdmissionsCrmConfigurationFocusSection, Section
     ],
   },
   communications: {
-    title: 'Messages & Delivery',
-    description: 'Manage approved message content and the supported manual or webhook adapters.',
+    title: 'Communication Settings',
+    description: 'Manage approved messages, delivery channels, consent, and simple reminders.',
     defaultPanel: 'templates',
     panelNavigation: 'tabs',
     panels: [
       { value: 'templates', label: 'Message Content' },
       { value: 'providers', label: 'Delivery Setup' },
+      { value: 'reminders', label: 'Reminders' },
     ],
   },
   automation: {
@@ -119,12 +123,31 @@ export function CoreSettingsRoute({
           />
         )
       ) : null}
-      <AdmissionsCrmConfiguration
-        academicYearId={academicYearId}
-        admissionsCrmConfigurationDialog={configurationDialog}
-        focusSection={section}
-        focusPanel={focusPanel}
-      />
+      {section === 'communications' ? (
+        academicYearId ? (
+          focusPanel === 'templates' ? (
+            <CommunicationTemplateSettings academicYearId={academicYearId} />
+          ) : focusPanel === 'reminders' ? (
+            <CommunicationReminderSettings academicYearId={academicYearId} />
+          ) : (
+            <AdmissionsCrmConfiguration
+              academicYearId={academicYearId}
+              admissionsCrmConfigurationDialog={configurationDialog}
+              focusSection={section}
+              focusPanel={focusPanel}
+            />
+          )
+        ) : (
+          <Alert severity="info">Select an academic year to configure communications.</Alert>
+        )
+      ) : (
+        <AdmissionsCrmConfiguration
+          academicYearId={academicYearId}
+          admissionsCrmConfigurationDialog={configurationDialog}
+          focusSection={section}
+          focusPanel={focusPanel}
+        />
+      )}
     </EnrollmentSettingsPage>
   );
 }

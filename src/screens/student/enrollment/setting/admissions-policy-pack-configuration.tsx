@@ -646,7 +646,7 @@ export default function AdmissionsPolicyPackConfiguration() {
                                 effectiveUntil: pack.effectiveUntil,
                               },
                             }).unwrap(),
-                          'Policy adopted for this cycle.'
+                          'Policy adopted for this admission year.'
                         )
                       }
                     >

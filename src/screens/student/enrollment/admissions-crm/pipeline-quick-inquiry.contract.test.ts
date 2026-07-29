@@ -27,13 +27,21 @@ describe('Admissions Pipeline Quick Inquiry contract', () => {
     expect(pipelineSource).toContain('lastName: quickForm.lastName.trim() || undefined');
   });
 
-  it('uses operational options and sends the selected route definition', () => {
+  it('uses Admission Year Setup options and sends one consistent academic target', () => {
     expect(pipelineSource).toContain('useGetAdmissionCrmQuickInquiryOptionsQuery');
+    expect(pipelineSource).toContain('useGetAdmissionCrmAdmissionYearStandardOptionsQuery');
     expect(pipelineSource).toContain('mapQuickInquiryOptions(quickInquiryOptionsQuery.data)');
     expect(pipelineSource).toContain('quickInquiryOptions.routes.map');
     expect(pipelineSource).toContain('quickInquiryOptions.channels.map');
-    expect(pipelineSource).toContain('intendedRouteDefinitionId: selectedQuickInquiryRoute.id');
-    expect(pipelineSource).toContain('academicMediumStageId: quickForm.mediumStageId');
+    expect(pipelineSource).toContain('quickInquiryOptions.sources.filter');
+    expect(pipelineSource).toContain('quickInquiryOptions.inquiryTypes.map');
+    expect(pipelineSource).toContain(
+      'intendedRouteDefinitionId: selectedQuickInquiryRoute.definitionId'
+    );
+    expect(pipelineSource).toContain('academicBoardId: selectedStandard.boardId');
+    expect(pipelineSource).toContain('academicMediumId: selectedStandard.mediumId');
+    expect(pipelineSource).toContain('academicMediumStageId: selectedStandard.mediumStageId');
+    expect(pipelineSource).toContain('targetStandardId: selectedStandard.standardId');
     expect(pipelineSource).not.toContain('intendedRouteType: AdmissionCrmRouteType.Fresh');
     expect(pipelineSource).toContain(
       'quickInquiryOptionsQuery.data?.registrationFormRequiredBeforeExam'
@@ -42,10 +50,16 @@ describe('Admissions Pipeline Quick Inquiry contract', () => {
     expect(pipelineSource).not.toContain('useGetAdmissionCrmCycleConfigurationQuery');
   });
 
-  it('explains the academic mapping and progressively discloses optional fields', () => {
-    expect(pipelineSource).toContain('label="Academic stage"');
-    expect(pipelineSource).toContain('Derived from the selected board and medium.');
-    expect(pipelineSource).toContain('New inquiries start in the New Inquiry stage.');
+  it('uses school-facing academic fields and progressively discloses optional fields', () => {
+    expect(pipelineSource).toContain('label="Inquiry source"');
+    expect(pipelineSource).toContain('label="Inquiry type"');
+    expect(pipelineSource).toContain('label="Board"');
+    expect(pipelineSource).toContain('label="Medium"');
+    expect(pipelineSource).toContain('label="Standard"');
+    expect(pipelineSource).not.toContain('label="Academic stage"');
+    expect(pipelineSource).toContain('New applicants start in New Inquiry.');
+    expect(pipelineSource).toContain('name="parentGuardianName"');
+    expect(pipelineSource).toContain('name="primaryContactNo"');
     expect(pipelineSource).toContain('<Collapse in={showOptionalQuickInquiryFields}>');
     expect(pipelineSource).toContain('Add optional details');
   });
