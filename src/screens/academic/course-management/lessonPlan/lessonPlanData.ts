@@ -17,11 +17,7 @@ export type PlanStatus =
 export type DiaryStatus = 'NotSubmitted' | 'Draft' | 'Submitted' | 'Backdated' | 'EvidenceMissing';
 
 export type ApprovalStatus =
-  | 'Pending'
-  | 'Approved'
-  | 'Rejected'
-  | 'ChangesRequested'
-  | 'AutoApproved';
+  'Pending' | 'Approved' | 'Rejected' | 'ChangesRequested' | 'AutoApproved';
 
 export type LessonSource =
   | 'Manual'
@@ -71,26 +67,13 @@ export type MissedReason =
   | 'Other';
 
 export type RescheduleStatus =
-  | 'NotRequired'
-  | 'Pending'
-  | 'Suggested'
-  | 'Approved'
-  | 'Rejected'
-  | 'Completed';
+  'NotRequired' | 'Pending' | 'Suggested' | 'Approved' | 'Rejected' | 'Completed';
 
 export type ApprovalMode =
-  | 'NoApproval'
-  | 'HodApproval'
-  | 'PrincipalApproval'
-  | 'HodAndPrincipalApproval';
+  'NoApproval' | 'HodApproval' | 'PrincipalApproval' | 'HodAndPrincipalApproval';
 
 export type ExecutionStatus =
-  | 'OnTrack'
-  | 'Delayed'
-  | 'Missed'
-  | 'Rescheduled'
-  | 'ProgressUpdated'
-  | 'NeedsReview';
+  'OnTrack' | 'Delayed' | 'Missed' | 'Rescheduled' | 'ProgressUpdated' | 'NeedsReview';
 
 export type ReviewType = 'Plan' | 'Diary';
 
@@ -131,6 +114,7 @@ export type LessonPlanRow = {
   executionStatus: ExecutionStatus;
   reviewRemarks?: string;
   reviewedBy?: string;
+  reviewedByName?: string;
   reviewedAt?: string;
   teacherDiaryId?: string;
   insightType?: string | null;

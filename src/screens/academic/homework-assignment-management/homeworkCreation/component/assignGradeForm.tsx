@@ -66,11 +66,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
   });
 
-  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateHomeworkSubmissionStatusMutation,
-  });
-
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik({
@@ -102,8 +97,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         }).unwrap();
 
         shikshaMitraToast.success({
-          message: `Feedback has been ${isUpdate ? 'updated' : 'added'
-            } successfully for ${data?.studentName ?? 'the student'}.`,
+          message: `Feedback has been ${
+            isUpdate ? 'updated' : 'added'
+          } successfully for ${data?.studentName ?? 'the student'}.`,
         });
         if (submitAndNextRef.current && hasNext && onNext) {
           submitAndNextRef.current = false;
@@ -187,11 +183,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   variant="subtitle2"
                   sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                 >
-                  <Iconify
-                    icon="solar:document-text-bold"
-                    width={20}
-                    sx={{ color: 'info.main' }}
-                  />
+                  <Iconify icon="solar:document-text-bold" width={20} sx={{ color: 'info.main' }} />
                   Student Submission
                 </Typography>
               </Box>
@@ -223,7 +215,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                           {data.originalFileName || 'Submitted document'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {data.submissionDate ? `Submitted on ${data.submissionDate}` : 'Uploaded by student'}
+                          {data.submissionDate
+                            ? `Submitted on ${data.submissionDate}`
+                            : 'Uploaded by student'}
                         </Typography>
                       </Box>
                     </Box>

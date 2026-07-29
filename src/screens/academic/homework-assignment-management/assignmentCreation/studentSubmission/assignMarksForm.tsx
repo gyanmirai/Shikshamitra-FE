@@ -19,10 +19,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
-import {
-  useUpdateSubmissionStatusMutation,
-  useUpdateSubmissionFeedbackMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
+import { useUpdateSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import {
   Box,
   Grid,
@@ -95,11 +92,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     currentQueryAndMutation: useUpdateSubmissionFeedbackMutation,
   });
 
-  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateSubmissionStatusMutation,
-  });
-
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik({
@@ -128,15 +120,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             totalMarks: requiresMarks ? resolveTotalMarks(values.totalMarks) : null,
             feedback: values.feedback,
             status: 4,
-          },
-        }).unwrap();
-
-        await updateSubmissionStatus({
-          assignmentId: assignmentId || data?.id,
-          studentId: data?.studentId,
-          academicMediumId: (medium as any)?.id,
-          body: {
-            status: 4, // Reviewed
           },
         }).unwrap();
 
@@ -715,7 +698,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             </Button>
             <LoadingButton
               variant="outlined"
-              loading={isUpdateLoading || isStatusLoading}
+              loading={isUpdateLoading}
               disabled={!hasNext}
               size="small"
               onClick={(e: any) => {
@@ -728,7 +711,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             </LoadingButton>
             <LoadingButton
               variant="contained"
-              loading={isUpdateLoading || isStatusLoading}
+              loading={isUpdateLoading}
               size="small"
               onClick={(e: any) => {
                 submitAndNextRef.current = false;
