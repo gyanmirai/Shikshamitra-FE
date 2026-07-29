@@ -130,7 +130,6 @@ const WeeklyLectures = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Weekly Lectures Slots"
         description="Configure and manage weekly lecture slots for each class."
         links={[
@@ -139,17 +138,17 @@ const WeeklyLectures = () => {
           { name: 'Settings' },
           { name: 'Weekly Lectures Slots' },
         ]}
-        // action={
-        //   <Button
-        //     startIcon={<Iconify icon="mdi:plus" />}
-        //     variant="contained"
-        //     size="small"
-        //     onClick={openCreate}
-        //     sx={{ px: '32px' }}
-        //   >
-        //     Weekly Lectures
-        //   </Button>
-        // }
+      // action={
+      //   <Button
+      //     startIcon={<Iconify icon="mdi:plus" />}
+      //     variant="contained"
+      //     size="small"
+      //     onClick={openCreate}
+      //     sx={{ px: '32px' }}
+      //   >
+      //     Weekly Lectures
+      //   </Button>
+      // }
       />
 
       <TimetableSettingsSummaryCards cards={summaryCards} />

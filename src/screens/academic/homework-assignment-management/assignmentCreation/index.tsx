@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Box, Typography } from '@mui/material';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -19,7 +18,13 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
+import {
+  AssignmentStatus,
+  AssignmentSubmissionType,
+} from 'src/enums/assignment';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useGetAssignmentsQuery,
@@ -43,6 +48,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const deleteAssignmentDialog = useBoolean();
   // Dialog state for publish assignment confirmation
   const publishAssignmentDialog = useBoolean();
+  const closeAssignmentDialog = useBoolean();
   // Dialog state for viewing student assignment submissions
   const viewAssignmentSubmissionDialog = useBoolean();
   // Dialog state for viewing assignment details
@@ -148,7 +154,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
     currentQueryAndMutation: useDeleteAssignmentMutation,
   });
 
-  const [updateAssignmentStatus, { isLoading: isPublishLoading }] = useQueryAndMutation({
+  const [updateAssignmentStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateAssignmentStatusMutation,
   });
@@ -357,6 +363,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           setSelectedAssignment(row);
           publishAssignmentDialog.onTrue();
         }}
+        onClose={(row) => {
+          setSelectedAssignment(row);
+          closeAssignmentDialog.onTrue();
+        }}
         onEdit={(row) => {
           setSelectedAssignment(row);
           addAssignmentDialog.onTrue();
@@ -371,6 +381,12 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           viewAssignmentDetails.onTrue();
         }}
         onViewSubmission={(row) => {
+          if (
+            row.status !== AssignmentStatus.Published ||
+            row.submissionType === AssignmentSubmissionType.NoSubmissionRequired
+          ) {
+            return;
+          }
           viewAssignmentSubmissionDialog.onTrue();
           setSelectedAssignment(row);
         }}
@@ -438,13 +454,13 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           <LoadingButton
             variant="contained"
             size="small"
-            loading={isPublishLoading}
+            loading={isStatusLoading}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={async () => {
               try {
                 await updateAssignmentStatus({
                   assignmentId: selectedAssignment?.id,
-                  status: 1,
+                  status: AssignmentStatus.Published,
                 }).unwrap();
                 shikshaMitraToast.success({
                   message: `Assignment "${selectedAssignment?.title}" has been successfully published.`,
@@ -459,6 +475,50 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             }}
           >
             Publish
+          </LoadingButton>
+        }
+      />
+
+      <ConfirmDialog
+        open={closeAssignmentDialog.value}
+        onClose={() => {
+          closeAssignmentDialog.onFalse();
+          setSelectedAssignment(null);
+        }}
+        icon="warning"
+        title="Close Assignment"
+        content={
+          <>
+            Close assignment <strong>{selectedAssignment?.title}</strong>? Students will no longer be
+            able to submit work.
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            color="warning"
+            size="small"
+            loading={isStatusLoading}
+            onClick={async () => {
+              if (!selectedAssignment?.id) return;
+              try {
+                await updateAssignmentStatus({
+                  assignmentId: selectedAssignment.id,
+                  status: AssignmentStatus.Closed,
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: `Assignment "${selectedAssignment.title}" has been closed.`,
+                });
+              } catch (error: unknown) {
+                shikshaMitraToast.error({
+                  message: parseApiProblemDetail(error).detail || 'Failed to close assignment.',
+                });
+              }
+              closeAssignmentDialog.onFalse();
+              setSelectedAssignment(null);
+            }}
+          >
+            Close Assignment
           </LoadingButton>
         }
       />

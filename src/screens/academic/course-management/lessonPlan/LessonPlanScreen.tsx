@@ -33,6 +33,7 @@ import {
   Typography,
   IconButton,
   LinearProgress,
+  Paper,
 } from '@mui/material';
 import {
   useGetLessonPlansQuery,
@@ -45,6 +46,7 @@ import {
   useGetLessonPlanTimelineQuery,
   useCreateTeacherDiaryMutation,
   useUpdateTeacherDiaryMutation,
+  useSubmitTeacherDiaryMutation,
   useRequestPlanChangesMutation,
   useCreateHomeworkFromLessonPlanMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
@@ -165,15 +167,15 @@ const normalizeSlotTime = (value: unknown) => {
 const getPlannedSlotTime = (plan: any) => {
   const start = normalizeSlotTime(
     plan.startTime ||
-      plan.slotStartTime ||
-      plan.timetableSlot?.startTime ||
-      plan.timetableSlot?.slotStartTime
+    plan.slotStartTime ||
+    plan.timetableSlot?.startTime ||
+    plan.timetableSlot?.slotStartTime
   );
   const end = normalizeSlotTime(
     plan.endTime ||
-      plan.slotEndTime ||
-      plan.timetableSlot?.endTime ||
-      plan.timetableSlot?.slotEndTime
+    plan.slotEndTime ||
+    plan.timetableSlot?.endTime ||
+    plan.timetableSlot?.slotEndTime
   );
 
   return start && end ? `${start} - ${end}` : '';
@@ -281,7 +283,8 @@ const LessonPlanScreen = () => {
     useCreateHomeworkFromLessonPlanMutation();
   const [createTeacherDiary, { isLoading: isCreatingDiary }] = useCreateTeacherDiaryMutation();
   const [updateTeacherDiary, { isLoading: isUpdatingDiary }] = useUpdateTeacherDiaryMutation();
-  const isSavingDiary = isCreatingDiary || isUpdatingDiary;
+  const [submitTeacherDiary, { isLoading: isSubmittingDiary }] = useSubmitTeacherDiaryMutation();
+  const isSavingDiary = isCreatingDiary || isUpdatingDiary || isSubmittingDiary;
 
   const lessonPlans = useMemo<LessonPlanRow[]>(() => {
     if (!lessonPlanList) return [];
@@ -329,6 +332,8 @@ const LessonPlanScreen = () => {
         executionStatus: 'OnTrack',
         reviewStatus: p.status === 'Approved' ? 'Plan Approved' : 'Draft',
         reviewRemarks: p.reviewRemarks,
+        reviewedByName: p.reviewedByName,
+        reviewedAt: p.reviewedAt,
         timetableSlotId: p.timetableSlotId,
         teacherDiaryId: p.teacherDiaryId,
         insightType: p.insightType,
@@ -753,7 +758,9 @@ const LessonPlanScreen = () => {
           plannedDate,
           timetableSlotId: form.timetableSlotId || null,
           isAiGenerated: form.source === 'AiGenerated',
-          status: 0,
+          // LessonPlanStatus: Draft = 0, Submitted = 1. The create endpoint
+          // applies this transition atomically for the modal's primary action.
+          status: submitAfterSave ? 1 : 0,
           ...planDetailsPayload,
         };
 
@@ -765,8 +772,14 @@ const LessonPlanScreen = () => {
         }
 
         const resultId =
-          result?.id || result?.result?.id || (result as any)?.result?.Id || (result as any)?.Id;
-        if (submitAfterSave && resultId) {
+          result?.id ||
+          result?.result?.id ||
+          (result as any)?.result?.Id ||
+          (result as any)?.Id ||
+          form.id;
+        // New plans are submitted by the create payload. Existing plans still
+        // use the guarded submit endpoint after their editable fields update.
+        if (submitAfterSave && form.id && resultId) {
           await submitLessonPlan({ id: resultId }).unwrap();
         }
 
@@ -819,7 +832,7 @@ const LessonPlanScreen = () => {
   }, []);
 
   const handleSaveDiary = useCallback(
-    async (form: DiaryFormState) => {
+    async (form: DiaryFormState, submit: boolean) => {
       try {
         const existingDiary = getDiaryForLesson(form.lessonPlanId);
         const body = {
@@ -852,10 +865,17 @@ const LessonPlanScreen = () => {
           teacherRemarks: form.teacherRemarks,
         };
 
+        let diaryId = existingDiary?.id;
         if (existingDiary) {
           await updateTeacherDiary({ id: existingDiary.id, body }).unwrap();
         } else {
-          await createTeacherDiary(body).unwrap();
+          const createdDiary = await createTeacherDiary(body).unwrap();
+          diaryId = createdDiary.id;
+        }
+
+        if (submit) {
+          if (!diaryId) throw new Error('Teacher diary could not be identified after saving.');
+          await submitTeacherDiary({ id: diaryId }).unwrap();
         }
 
         await refetchTeacherDiaries();
@@ -863,7 +883,7 @@ const LessonPlanScreen = () => {
         await refetchTimeline();
         setDiaryModalOpen(false);
         shikshaMitraToast.success({
-          message: 'Teacher diary notes saved.',
+          message: submit ? 'Teacher diary submitted successfully.' : 'Teacher diary notes saved.',
         });
       } catch (err: any) {
         shikshaMitraToast.error({
@@ -877,6 +897,7 @@ const LessonPlanScreen = () => {
       refetchLessonPlans,
       refetchTeacherDiaries,
       refetchTimeline,
+      submitTeacherDiary,
       updateTeacherDiary,
     ]
   );
@@ -1065,7 +1086,7 @@ const LessonPlanScreen = () => {
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 180,
+      minWidth: 200,
       align: 'center' as const,
       isSort: false,
       isFilter: false,
@@ -1206,9 +1227,8 @@ const LessonPlanScreen = () => {
   });
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Lesson Plan / Teacher Diary"
         description="Plan lessons, record daily teaching evidence, review diary submissions, and track syllabus progress in one place."
         links={[
@@ -1216,18 +1236,6 @@ const LessonPlanScreen = () => {
           { name: 'Curriculum', href: '/academic/curriculumSubjects' },
           { name: 'Lesson Plan / Teacher Diary' },
         ]}
-        action={
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              onClick={() => openAddLesson()}
-            >
-              Lesson Plan
-            </Button>
-          </Stack>
-        }
       />
 
       {/* Teaching KPI Cards */}
@@ -1244,7 +1252,7 @@ const LessonPlanScreen = () => {
       />
 
       {/* Tab Navigation & Filters */}
-      <Card>
+      <Paper sx={{ mb: 1 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -1268,7 +1276,7 @@ const LessonPlanScreen = () => {
             ))}
           </Tabs>
         </Stack>
-      </Card>
+      </Paper>
 
       {/* Tab Content */}
       {activeTab === 'dailyTimeline' && (
@@ -1373,12 +1381,13 @@ const LessonPlanScreen = () => {
       {activeTab === 'reviewQueue' && (
         <ReviewQueueTab
           lessonPlans={lessonPlans}
-          diaryEntries={diaryEntries}
           canReviewSubmissions={canReviewSubmissions}
           currentTeacherId={currentTeacherOption?.value}
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
+          onViewDetails={openDetails}
+          onRevisePlan={openEditLesson}
           isApproving={isApproving}
           isRejecting={isRejecting}
           isRequesting={isRequestingPlanChanges}

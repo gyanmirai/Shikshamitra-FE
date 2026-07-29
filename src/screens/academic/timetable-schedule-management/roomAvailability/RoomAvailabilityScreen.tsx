@@ -9,8 +9,8 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AcademicDatePicker } from 'src/components/academic-date-picker';
+import { EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
-import { Add, EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import {
   Box,
   Tab,
@@ -33,10 +33,10 @@ import { RoomReservationsTab } from './components/RoomReservationsTab';
 import { RoomAvailabilityTable } from './components/RoomAvailabilityTable';
 import { RoomMaintenanceDrawer } from './components/RoomMaintenanceDrawer';
 import { DEFAULT_ROOM_AVAILABILITY_FILTERS } from './roomAvailability.constants';
+import { useRoomAvailability, useRoomReservations } from './roomAvailability.hooks';
 // Removed RoomAvailabilityKpiCards
 import { SmartRoomReservationDrawer } from './components/SmartRoomReservationDrawer';
 import { DirectRoomReservationDrawer } from './components/DirectRoomReservationDrawer';
-import { useRoomAvailability, useRoomReservations } from './roomAvailability.hooks';
 
 import type {
   TabType,
@@ -75,6 +75,13 @@ const RoomAvailabilityScreen = () => {
   );
   const [maintenanceRoom, setMaintenanceRoom] = useState<RoomAvailabilityItem | null>(null);
   const [showAudit, setShowAudit] = useState(false);
+  // Tracks the in-flight approve/reject action so the active row shows a
+  // loading spinner and sibling/other-row actions are disabled while the
+  // async request is in progress. `null` = no action pending.
+  const [pendingAction, setPendingAction] = useState<{
+    id: string;
+    type: 'approve' | 'reject';
+  } | null>(null);
 
   // ── Data Hooks ─────────────────────────────────────────────────────────────
   const { data: buildingsData } = useGetBuildingsQuery(undefined);
@@ -175,21 +182,54 @@ const RoomAvailabilityScreen = () => {
   );
 
   const handleApproveReservation = useCallback(
-    (id: string) => {
-      reservationsHook.updateReservation(id, { approvalStatus: 'approved', status: 'active' });
-      availability.fetch();
+    async (id: string): Promise<boolean> => {
+      setPendingAction({ id, type: 'approve' });
+      try {
+        const roomName =
+          reservationsHook.data.find((r) => r.id === id)?.roomName || 'Reservation';
+        const ok = await reservationsHook.updateReservation(id, {
+          approvalStatus: 'approved',
+          status: 'active',
+        });
+        if (ok) {
+          shikshaMitraToast.success({ message: `${roomName} reservation approved.` });
+        } else {
+          shikshaMitraToast.error({
+            message: `Failed to approve ${roomName} reservation. Please try again.`,
+          });
+        }
+        return ok;
+      } finally {
+        setPendingAction(null);
+        availability.fetch();
+      }
     },
     [availability, reservationsHook]
   );
 
   const handleRejectReservation = useCallback(
-    (id: string, reason?: string) => {
-      reservationsHook.updateReservation(id, {
-        approvalStatus: 'rejected',
-        status: 'rejected',
-        remarks: reason,
-      });
-      availability.fetch();
+    async (id: string, reason?: string): Promise<boolean> => {
+      setPendingAction({ id, type: 'reject' });
+      try {
+        const roomName =
+          reservationsHook.data.find((r) => r.id === id)?.roomName || 'Reservation';
+        const ok = await reservationsHook.updateReservation(id, {
+          approvalStatus: 'rejected',
+          status: 'rejected',
+          remarks: reason,
+        });
+        if (ok) {
+          shikshaMitraToast.info({ message: `${roomName} reservation rejected.` });
+        } else {
+          shikshaMitraToast.error({
+            message: `Failed to reject ${roomName} reservation. Please try again.`,
+          });
+        }
+        return ok;
+      } finally {
+        setPendingAction(null);
+        availability.fetch();
+      }
     },
     [availability, reservationsHook]
   );
@@ -367,7 +407,7 @@ const RoomAvailabilityScreen = () => {
 
             <RoomAvailabilityTable
               data={availability.data}
-              isLoading={availability.isLoading}
+              isLoading={availability.isLoading || availability.isFetching}
               canReserve
               canMaintenance
               canApprove
@@ -384,6 +424,7 @@ const RoomAvailabilityScreen = () => {
           <RoomReservationsTab
             reservations={reservationsHook.data}
             canApprove
+            pendingAction={pendingAction}
             onCancel={handleCancelReservation}
             onApprove={handleApproveReservation}
             onReject={handleRejectReservation}
@@ -395,6 +436,7 @@ const RoomAvailabilityScreen = () => {
         {activeTab === 'approvals' && (
           <RoomApprovalQueue
             reservations={reservationsHook.data}
+            pendingAction={pendingAction}
             onApprove={handleApproveReservation}
             onReject={handleRejectReservation}
           />

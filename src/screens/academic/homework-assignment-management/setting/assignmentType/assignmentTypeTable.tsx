@@ -4,24 +4,14 @@ import React from 'react';
 import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import {
+  AssignmentSubmissionType,
+  AssignmentEvaluationMethod,
+  ASSIGNMENT_SUBMISSION_TYPE_LABELS,
+  ASSIGNMENT_EVALUATION_METHOD_LABELS,
+} from 'src/enums/assignment';
 
 import type { IAssignmentType, IAssignmentTypeTableProps } from './type';
-
-const SUBMISSION_TYPE_MAP: Record<number, string> = {
-  0: 'Online Text',
-  1: 'File Upload',
-  2: 'In-Person',
-  3: 'No Submission Required',
-};
-
-const EVALUATION_METHOD_MAP: Record<number, string> = {
-  0: 'Marks',
-  1: 'Grade',
-  2: 'Rubric',
-  3: 'Checklist',
-  4: 'Feedback Only',
-  5: 'No Evaluation',
-};
 
 const enumOptionsFromMap = (options: Record<number, string>) =>
   Object.entries(options).map(([value, label]) => ({ label, value: Number(value) }));
@@ -60,13 +50,13 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
         align: 'left',
         minWidth: 170,
         filterType: 'enum',
-        enumOptions: enumOptionsFromMap(SUBMISSION_TYPE_MAP),
+        enumOptions: enumOptionsFromMap(ASSIGNMENT_SUBMISSION_TYPE_LABELS),
         render: (_value, row) => {
           const type = row.defaultSubmissionType;
-          if (type === undefined || type === null || type === '') return '-';
+          if (type === undefined || type === null) return '-';
           return (
             <Label variant="soft" color="info">
-              {SUBMISSION_TYPE_MAP[type] || 'Unknown'}
+              {ASSIGNMENT_SUBMISSION_TYPE_LABELS[type as AssignmentSubmissionType] || 'Unknown'}
             </Label>
           );
         },
@@ -86,6 +76,14 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
         minWidth: 150,
         filterType: 'number',
         render: (_value, row) => row.defaultDueDays ?? '-',
+      },
+      {
+        id: 'usageCount',
+        label: 'Usage',
+        align: 'right',
+        minWidth: 100,
+        filterType: 'number',
+        render: (_value, row) => row.usageCount ?? 0,
       },
       {
         id: 'evaluationRequired',
@@ -109,7 +107,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
         align: 'left',
         minWidth: 210,
         filterType: 'enum',
-        enumOptions: enumOptionsFromMap(EVALUATION_METHOD_MAP),
+        enumOptions: enumOptionsFromMap(ASSIGNMENT_EVALUATION_METHOD_LABELS),
         render: (_value, row) => {
           if (!row.evaluationRequired) {
             return (
@@ -119,15 +117,17 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
             );
           }
           const method = row.defaultEvaluationMethod;
-          if (method === undefined || method === null || method === '') return 'Required';
-          return EVALUATION_METHOD_MAP[method] || 'Unknown';
+          if (method === undefined || method === null) return 'Required';
+          return (
+            ASSIGNMENT_EVALUATION_METHOD_LABELS[method as AssignmentEvaluationMethod] || 'Unknown'
+          );
         },
       },
       {
         id: 'status',
         label: 'Status',
-        align: 'center',
         minWidth: 110,
+        sticky: true,
         filterType: 'enum',
         enumOptions: [
           { label: 'Active', value: 0 },
@@ -141,14 +141,6 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
             </Label>
           );
         },
-      },
-      {
-        id: 'usageCount',
-        label: 'Usage',
-        align: 'right',
-        minWidth: 100,
-        filterType: 'number',
-        render: (_value, row) => row.usageCount ?? 0,
       },
       {
         id: 'action',

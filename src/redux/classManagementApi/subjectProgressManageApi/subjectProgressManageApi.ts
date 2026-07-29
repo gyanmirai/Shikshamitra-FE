@@ -58,6 +58,37 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
       }),
       providesTags: [classManagementType.subjectProgress],
     }),
+    getEmployeeClasses: builder.query<any, { employeeId: string }>({
+      query: ({ employeeId }) => ({
+        url: `class-management/chapter-progress/employee/${employeeId}/classes`,
+        method: 'GET',
+      }),
+      providesTags: [classManagementType.subjectProgress],
+    }),
+    getEmployeeDivisions: builder.query<any, { employeeId: string; classId?: string }>({
+      query: ({ employeeId, classId }) => ({
+        url: `class-management/chapter-progress/employee/${employeeId}/divisions`,
+        method: 'GET',
+        params: {
+          ...(classId ? { classId } : {}),
+        },
+      }),
+      providesTags: [classManagementType.subjectProgress],
+    }),
+    getEmployeeSubjectsProgress: builder.query<
+      any,
+      { employeeId: string; classId?: string; divisionId?: string }
+    >({
+      query: ({ employeeId, classId, divisionId }) => ({
+        url: `class-management/chapter-progress/employee/${employeeId}/subjects-progress`,
+        method: 'GET',
+        params: {
+          ...(classId ? { classId } : {}),
+          ...(divisionId ? { divisionId } : {}),
+        },
+      }),
+      providesTags: [classManagementType.subjectProgress],
+    }),
   }),
 });
 
@@ -66,4 +97,7 @@ export const {
   useGetChaptersProgressQuery,
   useUpdateChapterProgressMutation,
   useGetChapterProgressLogsQuery,
+  useGetEmployeeClassesQuery,
+  useGetEmployeeDivisionsQuery,
+  useGetEmployeeSubjectsProgressQuery,
 } = subjectProgressManageApi;

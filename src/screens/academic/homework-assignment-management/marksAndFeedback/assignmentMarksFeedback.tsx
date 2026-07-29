@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { AssignmentV2Dto } from 'src/redux/academicAPI/HomeworkAssignmentApi/contracts';
 
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
@@ -12,6 +13,13 @@ import { Box, TextField, Autocomplete } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  AssignmentStatus,
+  isEvaluationEnabled,
+  AssignmentSubmissionType,
+  AssignmentEvaluationMethod,
+  ASSIGNMENT_SUBMISSION_TYPE_LABELS,
+} from 'src/enums/assignment';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
@@ -98,18 +106,22 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
 
   const assignmentOptions =
     (assignmentData?.items || [])
-      .filter((hw: any) => isPublishedTask(hw) && isEvaluationEnabledTask(hw))
-      .map((hw: any) => ({
-        id: hw.id,
-        label: `${hw.title} - ${submissionTypeLabels[Number(hw.submissionType)] || 'Submission'}`,
-        submissionType: hw.submissionType,
-        totalMarks: hw.totalMarks ?? hw.totalmarks ?? hw.maximumMarks ?? hw.maxMarks ?? null,
-        evaluationRequired: hw.evaluationRequired,
-        defaultEvaluationMethod: hw.defaultEvaluationMethod,
-        defaultMarks: hw.defaultMarks,
-        defaultDueDays: hw.defaultDueDays,
-        assignmentTypeId: hw.assignmentTypeId,
-        assignmentTypeName: hw.assignmentTypeName,
+      .filter(
+        (assignment: AssignmentV2Dto) =>
+          assignment.status === AssignmentStatus.Published &&
+          assignment.submissionType !== AssignmentSubmissionType.NoSubmissionRequired &&
+          isEvaluationEnabled(
+            assignment.evaluationRequired,
+            assignment.evaluationMethod ?? assignment.defaultEvaluationMethod
+          )
+      )
+      .map((assignment: AssignmentV2Dto) => ({
+        ...assignment,
+        label: `${assignment.title} - ${ASSIGNMENT_SUBMISSION_TYPE_LABELS[assignment.submissionType]}`,
+        evaluationMethod:
+          assignment.evaluationMethod ??
+          assignment.defaultEvaluationMethod ??
+          AssignmentEvaluationMethod.Marks,
       })) || [];
 
   // Dialog control for bulk grade assignment
@@ -234,18 +246,3 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
 };
 
 export default AssignmentMarksAndFeedback;
-
-const submissionTypeLabels: Record<number, string> = {
-  0: 'Online Text',
-  1: 'File Upload',
-  2: 'In-Person',
-  3: 'No Submission Required',
-};
-
-const isPublishedTask = (task: any) =>
-  Number(task?.status) === 1 || String(task?.status || '').toLowerCase() === 'published';
-
-const isEvaluationEnabledTask = (task: any) =>
-  Number(task?.submissionType) !== 3 &&
-  task?.evaluationRequired !== false &&
-  Number(task?.defaultEvaluationMethod) !== 5;

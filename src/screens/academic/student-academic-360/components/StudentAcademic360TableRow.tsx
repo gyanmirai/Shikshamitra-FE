@@ -150,7 +150,7 @@ export function StudentAcademic360TableRow({
       <TableCell align="right" onClick={(event) => event.stopPropagation()}>
         <Tooltip title="Open Academic 360">
           <IconButton size="small" onClick={() => onOpenStudent(item.student)} disabled={!item.studentId}>
-            <Iconify icon="mdi:arrow-right" />
+            <Iconify icon="mdi:eye-outline" />
           </IconButton>
         </Tooltip>
       </TableCell>

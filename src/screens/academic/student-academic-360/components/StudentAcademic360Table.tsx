@@ -18,10 +18,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { readText } from '../types';
-import {
-  getMetricPercentage,
-  normalizeAcademicStudent,
-} from '../listUtils';
+import { getMetricPercentage, normalizeAcademicStudent } from '../listUtils';
 
 import type { Academic360Metric, Academic360StudentRow } from '../types';
 import type { StudentAcademicListItem } from '../listUtils';
@@ -125,7 +122,12 @@ export function StudentAcademic360Table({
       filterType: 'number',
       render: (value: any, row: any) => {
         const item = row as StudentAcademicListItem;
-        return <MetricCell primary={formatMetric(item.attendance)} secondary={readText(item.attendance?.status, 'Attendance')} />;
+        return (
+          <MetricCell
+            primary={formatMetric(item.attendance)}
+            secondary={readText(item.attendance?.status, 'Attendance')}
+          />
+        );
       },
     },
     {
@@ -144,7 +146,12 @@ export function StudentAcademic360Table({
       filterType: 'number',
       render: (value: any, row: any) => {
         const item = row as StudentAcademicListItem;
-        return <MetricCell primary={formatMetric(item.examAverage)} secondary={readText(item.examAverage?.count, 'Exams')} />;
+        return (
+          <MetricCell
+            primary={formatMetric(item.examAverage)}
+            secondary={readText(item.examAverage?.count, 'Exams')}
+          />
+        );
       },
     },
     {
@@ -152,7 +159,14 @@ export function StudentAcademic360Table({
       label: 'Trend',
       render: (value: any, row: any) => {
         const item = row as StudentAcademicListItem;
-        return <Chip size="small" variant="soft" icon={<Iconify icon="mdi:trending-up" />} label={item.trend} />;
+        return (
+          <Chip
+            size="small"
+            variant="soft"
+            icon={<Iconify icon="mdi:trending-up" />}
+            label={item.trend}
+          />
+        );
       },
     },
     {
@@ -161,8 +175,15 @@ export function StudentAcademic360Table({
       render: (value: any, row: any) => {
         const item = row as StudentAcademicListItem;
         return (
-          <Tooltip title={item.academicHealthReasons.join(', ') || 'Open 360 for detailed evidence'}>
-            <Chip size="small" color={healthColor(item.academicHealth)} variant="soft" label={item.academicHealth} />
+          <Tooltip
+            title={item.academicHealthReasons.join(', ') || 'Open 360 for detailed evidence'}
+          >
+            <Chip
+              size="small"
+              color={healthColor(item.academicHealth)}
+              variant="soft"
+              label={item.academicHealth}
+            />
           </Tooltip>
         );
       },
@@ -196,17 +217,22 @@ export function StudentAcademic360Table({
     {
       id: 'action',
       label: 'Action',
-      align: 'right' as const,
+      align: 'left' as const,
       isSort: false,
       sticky: true,
-      stickyPosition: 'right' as const,
+      // stickyPosition: 'left' as const,
+      isFilter: false,
       excludeFromExport: true,
       render: (value: any, row: any) => {
         const item = row as StudentAcademicListItem;
         return (
           <Tooltip title="Open Academic 360">
-            <IconButton size="small" onClick={() => onOpenStudent(item.student)} disabled={!item.studentId}>
-              <Iconify icon="mdi:arrow-right" />
+            <IconButton
+              size="small"
+              onClick={() => onOpenStudent(item.student)}
+              disabled={!item.studentId}
+            >
+              <Iconify icon="mdi:eye" />
             </IconButton>
           </Tooltip>
         );
@@ -224,7 +250,9 @@ export function StudentAcademic360Table({
 
   if (isError) {
     return (
-      <Box sx={{ minHeight: 300, display: 'grid', placeItems: 'center', px: 2, textAlign: 'center' }}>
+      <Box
+        sx={{ minHeight: 300, display: 'grid', placeItems: 'center', px: 2, textAlign: 'center' }}
+      >
         <Box>
           <Iconify icon="mdi:cloud-alert-outline" width={42} sx={{ color: 'error.main', mb: 1 }} />
           <Typography variant="subtitle1">Student data could not be loaded.</Typography>
@@ -241,9 +269,15 @@ export function StudentAcademic360Table({
 
   if (!hasDivision || students.length === 0) {
     return (
-      <Box sx={{ minHeight: 300, display: 'grid', placeItems: 'center', px: 2, textAlign: 'center' }}>
+      <Box
+        sx={{ minHeight: 300, display: 'grid', placeItems: 'center', px: 2, textAlign: 'center' }}
+      >
         <Box>
-          <Iconify icon="mdi:account-search-outline" width={42} sx={{ color: 'text.disabled', mb: 1 }} />
+          <Iconify
+            icon="mdi:account-search-outline"
+            width={42}
+            sx={{ color: 'text.disabled', mb: 1 }}
+          />
           <Typography variant="subtitle1">
             {!hasDivision ? 'Select class and division' : 'No students found'}
           </Typography>
@@ -268,7 +302,6 @@ export function StudentAcademic360Table({
 
       isShowedDense
       defaultRowsPerPage={10}
-
     />
   );
 }

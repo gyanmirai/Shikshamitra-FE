@@ -69,10 +69,7 @@ const HomeworkAssignmentCards = ({
   }, [homeworkData]);
 
   const assignmentTableData = useMemo(() => {
-    const raw: any[] =
-      assignmentData?.data ??
-      assignmentData?.items ??
-      (Array.isArray(assignmentData) ? assignmentData : []);
+    const raw: any[] = assignmentData?.items ?? [];
     return raw.map((i: any) => ({
       assignmentTitle: i.title ?? i.name ?? '',
       publishedDate: i.startDate ?? i.createdAt ?? '',

@@ -149,8 +149,6 @@ const SubjectTable = ({
     [subjectTableData]
   );
 
-  console.log('subjectData', subjectData);
-
   const actions = useCallback(
     ({ popover, row }: any) => {
       const removeDisabled = row.canDelete === false;
@@ -405,7 +403,7 @@ const SubjectTable = ({
       isLoading={isLoading}
       totalCount={totalCount}
       noDataText={
-        <>
+        <Box width="100%" display="flex" flexDirection="column" alignItems="center">
           <Typography variant="body2" color="text.secondary" mb={1}>
             No subjects allocated for this class yet.
           </Typography>
@@ -422,7 +420,7 @@ const SubjectTable = ({
               + Allocate Subjects
             </Box>
           )}
-        </>
+        </Box>
       }
       serverSidePagination
       onServerPagination={(page, rowPerPage) => {

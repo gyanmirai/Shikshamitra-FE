@@ -428,61 +428,78 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
                 {/* Chapter Start Date */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.startDate && formik.errors.startDate) || false}
-                  >
-                    <DatePicker
-                      label="Chapter Start Date *"
-                      format="DD/MM/YYYY"
-                      value={formik.values.startDate}
-                      standardId={classId}
-                      disablePast
-                      onChange={(newValue) => {
-                        formik.setFieldValue('startDate', newValue);
-                      }}
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      sx={{ minWidth: 180, width: '100%' }}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          placeholder: 'DD/MM/YYYY',
-                          error: !!(formik.touched.startDate && formik.errors.startDate) || false,
-                          helperText: formik.touched.startDate && formik.errors.startDate,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
+                  {(() => {
+                    const startDateError = (formik.touched.startDate || !!formik.values.startDate) ? formik.errors.startDate : undefined;
+                    return (
+                      <ShakingTextField error={!!startDateError}>
+                        <DatePicker
+                          label="Chapter Start Date *"
+                          format="DD/MM/YYYY"
+                          value={formik.values.startDate}
+                          standardId={classId}
+                          disablePast
+                          onChange={(newValue) => {
+                            formik.setFieldValue('startDate', newValue);
+                          }}
+                          minDate={dayjs(currentYear?.startDate)}
+                          maxDate={dayjs(currentYear?.endDate)}
+                          sx={{ minWidth: 180, width: '100%' }}
+                          helperText={
+                            startDateError ||
+                            (currentYear?.startDate && currentYear?.endDate
+                              ? `Must be within ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} – ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`
+                              : undefined)
+                          }
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: 'small',
+                              placeholder: 'DD/MM/YYYY',
+                              error: !!startDateError,
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                    );
+                  })()}
                 </Grid>
 
                 {/* Chapter End Date */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.endDate && formik.errors.endDate) || false}
-                  >
-                    <DatePicker
-                      label="Chapter End Date *"
-                      format="DD/MM/YYYY"
-                      disablePast
-                      standardId={classId}
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      value={formik.values.endDate}
-                      onChange={(newValue) => {
-                        formik.setFieldValue('endDate', newValue);
-                      }}
-                      sx={{ minWidth: 180, width: '100%' }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          placeholder: 'DD/MM/YYYY',
-                          error: !!(formik.touched.endDate && formik.errors.endDate) || false,
-                          helperText: formik.touched.endDate && formik.errors.endDate,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
+                  {(() => {
+                    const endDateError = (formik.touched.endDate || !!formik.values.endDate) ? formik.errors.endDate : undefined;
+                    return (
+                      <ShakingTextField error={!!endDateError}>
+                        <DatePicker
+                          label="Chapter End Date *"
+                          format="DD/MM/YYYY"
+                          disablePast
+                          standardId={classId}
+                          minDate={dayjs(currentYear?.startDate)}
+                          maxDate={dayjs(currentYear?.endDate)}
+                          value={formik.values.endDate}
+                          onChange={(newValue) => {
+                            formik.setFieldValue('endDate', newValue);
+                          }}
+                          sx={{ minWidth: 180, width: '100%' }}
+                          helperText={
+                            endDateError ||
+                            (currentYear?.startDate && currentYear?.endDate
+                              ? `Must be within ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} – ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`
+                              : undefined)
+                          }
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: 'small',
+                              placeholder: 'DD/MM/YYYY',
+                              error: !!endDateError,
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                    );
+                  })()}
                 </Grid>
               </Grid>
             </Paper>

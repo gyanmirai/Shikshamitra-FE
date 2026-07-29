@@ -4,12 +4,16 @@ import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, Typography, IconButton } from '@mui/material';
+import {
+  AssignmentSubmissionType,
+  ASSIGNMENT_SUBMISSION_TYPE_LABELS,
+} from 'src/enums/assignment';
 
+import { getAssignmentActionVisibility } from './assignment-actions';
 import {
   getSubmissionProgress,
   getEvaluationProgress,
   LearningTaskStatusChip,
-  SUBMISSION_TYPE_LABELS,
   LearningTaskSummaryCards,
 } from '../../homeworkCreation/component/learningTaskUi';
 
@@ -22,6 +26,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   selectedDivision,
   selectedClass,
   onSwitchToggle,
+  onClose,
   onEdit,
   onDelete,
   onView,
@@ -67,7 +72,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   );
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <LearningTaskSummaryCards tasks={filteredData} />
       <CustomizableTable
         tableId="assignment-management"
@@ -104,7 +109,9 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               <Stack spacing={1}>
                 <Typography variant="body2">{value || '-'}</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {SUBMISSION_TYPE_LABELS[Number((row as any).submissionType)] || '-'}
+                  {ASSIGNMENT_SUBMISSION_TYPE_LABELS[
+                    Number((row as IAssignment).submissionType) as AssignmentSubmissionType
+                  ] || '-'}
                 </Typography>
               </Stack>
             ),
@@ -169,7 +176,12 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             stickyPosition: 'right',
             minWidth: 220,
             render: (_value, row) => {
-              const isDraft = Number((row as any).status ?? 0) === 0;
+              const assignment = row as IAssignment;
+              const actions = getAssignmentActionVisibility(assignment, {
+                canAdd,
+                canView,
+                canDelete,
+              });
               const schedules = (row as any).divisionSchedules || row.divisions || [];
               const divisionData = schedules.find(
                 (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
@@ -187,25 +199,34 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                       </IconButton>
                     </CustomTooltip>
                   )}
-                  {canAdd && isDraft && (
+                  {actions.canEdit && (
                     <CustomTooltip title="Edit" arrow>
                       <IconButton size="small" onClick={() => onEdit(row as IAssignment)}>
                         <Iconify icon="solar:pen-bold" width={18} />
                       </IconButton>
                     </CustomTooltip>
                   )}
-                  {canAdd && isDraft && (
+                  {actions.canPublish && (
                     <CustomTooltip title="Publish Now" arrow>
                       <IconButton size="small" onClick={() => onSwitchToggle(row as IAssignment)}>
                         <Iconify icon="solar:upload-bold" width={18} />
                       </IconButton>
                     </CustomTooltip>
                   )}
-                  <CustomTooltip title="View Submissions" arrow>
-                    <IconButton size="small" onClick={() => onViewSubmission(row as IAssignment)}>
-                      <Iconify icon="solar:inbox-in-bold" width={18} />
-                    </IconButton>
-                  </CustomTooltip>
+                  {actions.canClose && (
+                    <CustomTooltip title="Close Assignment" arrow>
+                      <IconButton size="small" onClick={() => onClose(row as IAssignment)}>
+                        <Iconify icon="solar:lock-bold" width={18} />
+                      </IconButton>
+                    </CustomTooltip>
+                  )}
+                  {actions.canViewSubmissions && (
+                    <CustomTooltip title="View Submissions" arrow>
+                      <IconButton size="small" onClick={() => onViewSubmission(row as IAssignment)}>
+                        <Iconify icon="solar:inbox-in-bold" width={18} />
+                      </IconButton>
+                    </CustomTooltip>
+                  )}
                   <CustomTooltip title="Send Reminder will be enabled after notification wiring" arrow>
                     <span>
                       <IconButton size="small" disabled>
@@ -214,12 +235,12 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                     </span>
                   </CustomTooltip>
                   {canDelete && (
-                    <CustomTooltip title={isDraft ? 'Delete' : 'Archive published tasks later'} arrow>
+                    <CustomTooltip title={actions.canDelete ? 'Delete' : 'Only draft assignments can be deleted'} arrow>
                       <span>
                         <IconButton
                           size="small"
                           color="error"
-                          disabled={!isDraft}
+                          disabled={!actions.canDelete}
                           onClick={() => onDelete(row as IAssignment)}
                         >
                           <Iconify icon="solar:trash-bin-trash-bold" width={18} />

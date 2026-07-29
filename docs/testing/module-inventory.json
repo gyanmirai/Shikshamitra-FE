@@ -1,0 +1,239 @@
+{
+  "generatedAt": "2026-07-29",
+  "scope": "Academic module",
+  "sources": [
+    "src/constants/academic-menu.ts",
+    "src/app/(auth-route)/academic/**/page.tsx",
+    "src/redux/academicAPI/**",
+    "Shikshamitra-BE/src/ShikshaMitra.HttpApi/Controllers/Academic/**",
+    "Shikshamitra-BE/src/ShikshaMitra.Domain.Shared/Constants/Permissions/SubmodulePermissions/Academics/**"
+  ],
+  "modules": [
+    {
+      "module": "Academic",
+      "submodules": [
+        {
+          "name": "Dashboard",
+          "routes": ["/academic/dashboard"],
+          "apis": ["/api/academic/dashboard"],
+          "roles": ["academic-admin"],
+          "permissions": ["ShikshaMitra.Academics.Dashboard", "Academics.Dashboard"],
+          "forms": [],
+          "businessActions": ["view dashboard KPIs", "drill into academic health"],
+          "risk": "high",
+          "status": "confirmed"
+        },
+        {
+          "name": "Student Academic 360",
+          "routes": ["/academic/studentAcademic360"],
+          "apis": ["/api/academics/student-academic-360"],
+          "roles": ["academic-admin", "teacher"],
+          "permissions": ["ShikshaMitra.Academics.Dashboard"],
+          "forms": ["student filters"],
+          "businessActions": ["search student", "view academic summary", "open student detail drawer"],
+          "risk": "high",
+          "status": "confirmed"
+        },
+        {
+          "name": "Curriculum",
+          "routes": [
+            "/academic/curriculumSubjects",
+            "/academic/courseSubjects",
+            "/academic/lesson-plan",
+            "/academic/curriculumReports",
+            "/academic/curriculumSetting/subjectCreation",
+            "/academic/curriculumSetting/electiveGroupCreation"
+          ],
+          "apis": [
+            "/api/academics/curriculum",
+            "/api/academic/curriculum/chapters",
+            "/api/academic/curriculum/lesson-plans",
+            "/api/academic/curriculum/teacher-diaries",
+            "/api/academic-mediums/{academicMediumId}/subjects",
+            "/api/academic-mediums/{academicMediumId}/elective-groups"
+          ],
+          "roles": ["academic-admin", "teacher"],
+          "permissions": [
+            "Academics.CurriculumManagement.SubjectAssignment",
+            "Academics.CurriculumManagement.ChapterManagement",
+            "Academics.CurriculumManagement.Reports",
+            "Academics.CurriculumManagement.Settings.SubjectCreation",
+            "Academics.CurriculumManagement.Settings.ElectiveGroupCreation"
+          ],
+          "forms": ["subject creation", "elective group creation", "subject allocation", "lesson plan"],
+          "businessActions": ["create subjects", "assign subjects", "manage syllabus", "plan lessons", "review curriculum reports"],
+          "risk": "critical",
+          "status": "confirmed"
+        },
+        {
+          "name": "Timetable",
+          "routes": [
+            "/academic/newTimetable",
+            "/academic/roomAvailability",
+            "/academic/substitutionManagement",
+            "/academic/timetableReports",
+            "/academic/timetableSettings/weeklyLectures",
+            "/academic/timetableSettings/lectureSlots"
+          ],
+          "apis": [
+            "/api/academics/timetable",
+            "/api/academics/timetable/management",
+            "/api/academics/timetable/room-availability",
+            "/api/academics/timetable/room-reservations",
+            "/api/academics/timetable/substitutions",
+            "/api/academics/timetable/settings/weekly-lecture-slots",
+            "/api/academics/timetable/settings/lecture-slots"
+          ],
+          "roles": ["academic-admin", "teacher"],
+          "permissions": [
+            "Academics.Timetable.TimetableManagement",
+            "Academics.Timetable.Reports",
+            "Academics.Timetable.Settings.WeeklyLectures",
+            "Academics.Timetable.Settings.LectureSlots"
+          ],
+          "forms": ["weekly lectures", "lecture slots", "timetable allocation", "room reservation", "substitution"],
+          "businessActions": ["configure lectures", "allocate teachers", "allocate rooms", "publish timetable", "manage substitutions"],
+          "risk": "critical",
+          "status": "confirmed"
+        },
+        {
+          "name": "Homework And Assignment",
+          "routes": [
+            "/academic/homeworkCreation",
+            "/academic/gradingAndFeedback",
+            "/academic/homeworkAssignmentReports",
+            "/academic/homeworkSettings/homeworkTypes",
+            "/academic/homeworkSettings/assignmentTypes",
+            "/academic/homeworkSettings/rubricConfig"
+          ],
+          "apis": [
+            "/api/academic/homeworks",
+            "/api/academic/assignments",
+            "/api/academic/homework-submissions",
+            "/api/academic/assignment-submissions",
+            "/api/homework-type",
+            "/api/assignment-type",
+            "/api/academic/rubrics"
+          ],
+          "roles": ["academic-admin", "teacher", "student"],
+          "permissions": [
+            "Academics.HomeworkAndAssignment.LearningTasks",
+            "Academics.HomeworkAndAssignment.AssessmentAndFeedback",
+            "Academics.HomeworkAndAssignment.Reports",
+            "Academics.HomeworkAndAssignment.Settings.HomeworkTypes",
+            "Academics.HomeworkAndAssignment.Settings.AssignmentTypes",
+            "Academics.HomeworkAndAssignment.Settings.RubricConfig"
+          ],
+          "forms": ["homework", "assignment", "assessment", "feedback", "homework type", "assignment type", "rubric"],
+          "businessActions": ["create tasks", "submit work", "grade submissions", "manage feedback", "configure task types"],
+          "risk": "critical",
+          "status": "confirmed"
+        },
+        {
+          "name": "Examination",
+          "routes": [
+            "/academic/scheduleExam",
+            "/academic/seatallocation",
+            "/academic/gradeEntry",
+            "/academic/resultCreation",
+            "/academic/questionBank",
+            "/academic/questionPapers",
+            "/academic/examinationReports",
+            "/academic/examinationSetting/gradeScaling",
+            "/academic/examinationSetting/examTypes"
+          ],
+          "apis": [
+            "/api/academics/exams",
+            "/api/academics/results",
+            "/api/academics/examination/settings",
+            "/api/academics/question-bank",
+            "/api/academics/question-papers"
+          ],
+          "roles": ["academic-admin", "teacher"],
+          "permissions": [
+            "Academics.Examination.ScheduleExam",
+            "Academics.Examination.SeatAllocation",
+            "Academics.Examination.RecordMarks",
+            "Academics.Examination.Result",
+            "Academics.Examination.Reports",
+            "Academics.Examination.Settings.GradeScaling",
+            "Academics.Examination.Settings.ExamTypes"
+          ],
+          "forms": ["exam schedule", "seat allocation", "marks entry", "result generation", "question bank", "question paper", "grade scaling", "exam type"],
+          "businessActions": ["schedule exam", "allocate seats", "record marks", "publish results", "manage question bank"],
+          "risk": "critical",
+          "status": "confirmed"
+        },
+        {
+          "name": "Academic Calendar",
+          "routes": [
+            "/academic/calendarManagement",
+            "/academic/calendarEmergencyClosure",
+            "/academic/calendarAuditLogs"
+          ],
+          "apis": ["/api/app/academic-calendar", "/api/academic/audit-events"],
+          "roles": ["academic-admin"],
+          "permissions": [
+            "Academics.AcademicCalendar.CalendarManagement",
+            "Academics.AcademicCalendar.EmergencyClosure",
+            "Academics.AcademicCalendar.AuditLogs"
+          ],
+          "forms": ["calendar day", "emergency closure", "calendar settings", "audit filters"],
+          "businessActions": ["manage working days", "declare closure", "audit changes"],
+          "risk": "critical",
+          "status": "confirmed"
+        },
+        {
+          "name": "Audits",
+          "routes": ["/academic/audits"],
+          "apis": ["/api/academic/audit-events"],
+          "roles": ["academic-admin"],
+          "permissions": ["Academics.Audits.View"],
+          "forms": ["audit filters"],
+          "businessActions": ["review audit trail", "inspect changed fields"],
+          "risk": "high",
+          "status": "confirmed"
+        },
+        {
+          "name": "Notification",
+          "routes": ["/academic/notification"],
+          "apis": [],
+          "roles": ["academic-admin"],
+          "permissions": ["ShikshaMitra.Academics.Notification"],
+          "forms": ["notification composer"],
+          "businessActions": ["send academic notifications"],
+          "risk": "medium",
+          "status": "confirmed-route-only"
+        },
+        {
+          "name": "Group Management",
+          "routes": ["/academic/activityDashboard", "/academic/dynamicGroup", "/academic/activityManagement"],
+          "apis": [],
+          "roles": [],
+          "permissions": ["Academics.GroupManagement"],
+          "forms": [],
+          "businessActions": [],
+          "risk": "medium",
+          "status": "not-confirmed-menu-commented"
+        },
+        {
+          "name": "Learning Management System",
+          "routes": [
+            "/academic/lmsDashboard",
+            "/academic/course",
+            "/academic/studentProgressTracking",
+            "/academic/contentLibrary",
+            "/academic/reportsAndAnalytics"
+          ],
+          "apis": [],
+          "roles": [],
+          "permissions": ["Academics.LMS"],
+          "forms": [],
+          "businessActions": [],
+          "risk": "medium",
+          "status": "not-confirmed-menu-commented"
+        }
+      ]
+    }
+  ]
+}

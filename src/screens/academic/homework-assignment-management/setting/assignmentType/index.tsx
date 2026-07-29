@@ -22,6 +22,7 @@ import {
   useGetAssignmentTypesQuery,
   useDeleteAssignmentTypeMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import AssignmentTypeForm from './assignmentTypeForm';
 import AssignmentTypeTable from './assignmentTypeTable';
@@ -103,7 +104,7 @@ const AssignmentTypeCreation = () => {
   const totalTypes = assignmentTypes.length;
   const activeTypes = assignmentTypes.filter((t: any) => t.status === 0).length;
   const inactiveTypes = assignmentTypes.filter((t: any) => t.status === 1).length;
-  
+
   let mostUsedType = '-';
   let maxUsage = 0;
   assignmentTypes.forEach((t: any) => {
@@ -142,34 +143,15 @@ const AssignmentTypeCreation = () => {
       />
 
       {/* Summary Cards */}
-      <Box display="grid" gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }} gap={1} mb={3}>
-        {[
-          { label: 'Total Types', value: totalTypes, color: 'primary.main' },
-          { label: 'Active Types', value: activeTypes, color: 'success.main' },
-          { label: 'Inactive Types', value: inactiveTypes, color: 'error.main' },
-          { label: 'Most Used Type', value: mostUsedType, color: 'warning.main' },
-          { label: 'Unused Types', value: unusedTypes, color: 'text.secondary' },
-        ].map((card, idx) => (
-          <Box
-            key={idx}
-            sx={{
-              p: 2,
-              borderRadius: 1,
-              bgcolor: 'background.neutral',
-              border: '1px solid',
-              borderColor: 'divider',
-              textAlign: 'center',
-            }}
-          >
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {card.label}
-            </Typography>
-            <Typography variant="h5" color={card.color} sx={{ fontWeight: 'bold', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              {card.value}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
+      <TimetableSettingsSummaryCards
+        cards={[
+          { label: 'Total Types', value: totalTypes, icon: 'solar:document-bold', color: 'primary' },
+          { label: 'Active Types', value: activeTypes, icon: 'mdi:check-circle-outline', color: 'success' },
+          { label: 'Inactive Types', value: inactiveTypes, icon: 'mdi:close-circle-outline', color: 'error' },
+          { label: 'Most Used Type', value: mostUsedType, icon: 'solar:star-bold', color: 'warning' },
+          { label: 'Unused Types', value: unusedTypes, icon: 'solar:ghost-bold', color: 'info' },
+        ]}
+      />
 
       <AssignmentTypeTable
         isLoading={isFetching}

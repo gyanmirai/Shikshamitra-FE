@@ -1476,11 +1476,11 @@ function TemplateBuilderDialog({
       current.map((section, idx) =>
         idx === sectionIndex
           ? {
-              ...section,
-              criteria: section.criteria.map((criterion: any, cIdx: number) =>
-                cIdx === criterionIndex ? { ...criterion, ...patch } : criterion
-              ),
-            }
+            ...section,
+            criteria: section.criteria.map((criterion: any, cIdx: number) =>
+              cIdx === criterionIndex ? { ...criterion, ...patch } : criterion
+            ),
+          }
           : section
       )
     );

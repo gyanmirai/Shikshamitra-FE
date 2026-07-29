@@ -22,6 +22,8 @@ import {
 } from './constants';
 
 import type { RubricConfigTableProps } from './types';
+import dayjs from 'dayjs';
+import { GlobalIcons } from 'src/utils/icons';
 
 const statusColor = {
   0: 'warning',
@@ -51,14 +53,13 @@ const RubricConfigTable: React.FC<RubricConfigTableProps> = ({
     isPagination
     isSearch
     isFilter
-    searchFieldProps={{ placeholder: 'Search by rubric name, description, or applicable type' }}
     noDataText="No Rubric Templates Found"
     columns={[
       {
         id: 'title',
         label: 'Rubric',
         align: 'left',
-        minWidth: 220,
+        minWidth: 150,
         sticky: true,
         stickyPosition: 'left',
         render: (_value, row) => (
@@ -98,29 +99,38 @@ const RubricConfigTable: React.FC<RubricConfigTableProps> = ({
       {
         id: 'criteria',
         label: 'Criteria',
-        align: 'right',
         minWidth: 110,
+        filterType: 'number',
         render: (_value, row) => toRubricRow(row).criteria?.length ?? 0,
       },
       {
         id: 'totalMarks',
         label: 'Max Score',
-        align: 'right',
         minWidth: 120,
         filterType: 'number',
       },
       {
         id: 'usageCount',
         label: 'Usage',
-        align: 'right',
         minWidth: 100,
         filterType: 'number',
         render: (value) => `${Number(value) || 0} times`,
       },
       {
+        id: 'lastModificationTime',
+        label: 'Updated',
+        align: 'left',
+        filterType: 'date',
+        minWidth: 130,
+        render: (_value, row) => {
+          const date = toRubricRow(row).lastModificationTime || toRubricRow(row).creationTime;
+          return date ? dayjs(date).format('DD-MM-YYYY') : '-';
+        },
+      },
+      {
         id: 'status',
         label: 'Status',
-        align: 'center',
+        sticky: true,
         minWidth: 120,
         filterType: 'enum',
         enumOptions: RUBRIC_STATUS_OPTIONS,
@@ -131,23 +141,11 @@ const RubricConfigTable: React.FC<RubricConfigTableProps> = ({
         ),
       },
       {
-        id: 'lastModificationTime',
-        label: 'Updated',
-        align: 'left',
-        minWidth: 130,
-        render: (_value, row) => {
-          const date = toRubricRow(row).lastModificationTime || toRubricRow(row).creationTime;
-          return date ? new Date(date).toLocaleDateString() : '-';
-        },
-      },
-      {
         id: 'action',
         label: 'Actions',
         minWidth: 82,
         width: 82,
-        align: 'center',
         sticky: true,
-        stickyPosition: 'right',
         isSort: false,
         isFilter: false,
         excludeFromExport: true,
@@ -161,52 +159,53 @@ const RubricConfigTable: React.FC<RubricConfigTableProps> = ({
                 action();
               };
 
+
               return (
                 <MenuList sx={{ p: 0.5 }}>
                   <MenuItem onClick={() => closeAndRun(() => onPreview(rubric))} sx={{ gap: 1.5 }}>
-                    <Iconify icon="solar:eye-bold-duotone" width={18} height={18} />
+                    <Iconify icon={GlobalIcons.eye} width={18} height={18} />
                     Preview
                   </MenuItem>
 
                   {canAdd && rubric.status === RubricStatus.Draft ? (
                     <MenuItem onClick={() => closeAndRun(() => onEdit(rubric))} sx={{ gap: 1.5 }}>
-                      <Iconify icon="solar:pen-bold-duotone" width={18} height={18} />
+                      <Iconify icon={GlobalIcons.edit} width={18} height={18} />
                       Edit
                     </MenuItem>
                   ) : null}
 
                   {canAdd ? (
                     <MenuItem onClick={() => closeAndRun(() => onDuplicate(rubric))} sx={{ gap: 1.5 }}>
-                      <Iconify icon="solar:copy-bold-duotone" width={18} height={18} />
+                      <Iconify icon={GlobalIcons.copy} width={18} height={18} />
                       Duplicate
                     </MenuItem>
                   ) : null}
 
                   {canAdd && rubric.status === RubricStatus.Draft ? (
                     <MenuItem onClick={() => closeAndRun(() => onPublish(rubric))} sx={{ gap: 1.5 }}>
-                      <Iconify icon="solar:upload-bold-duotone" width={18} height={18} />
+                      <Iconify icon={GlobalIcons.upload} width={18} height={18} />
                       Publish
                     </MenuItem>
                   ) : null}
 
                   {canAdd && rubric.status === RubricStatus.Published ? (
                     <MenuItem onClick={() => closeAndRun(() => onVersion(rubric))} sx={{ gap: 1.5 }}>
-                      <Iconify icon="solar:layers-bold-duotone" width={18} height={18} />
+                      <Iconify icon={GlobalIcons.newversion} width={18} height={18} />
                       Create New Version
                     </MenuItem>
                   ) : null}
 
                   <MenuItem onClick={() => closeAndRun(() => onUsage(rubric))} sx={{ gap: 1.5 }}>
-                    <Iconify icon="solar:chart-2-bold-duotone" width={18} height={18} />
+                    <Iconify icon={GlobalIcons.usage} width={18} height={18} />
                     View Usage
                   </MenuItem>
 
                   {canDelete && rubric.status !== RubricStatus.Archived ? (
-                    <MenuItem 
-                      onClick={() => closeAndRun(() => onArchive(rubric))} 
+                    <MenuItem
+                      onClick={() => closeAndRun(() => onArchive(rubric))}
                       sx={{ gap: 1.5, color: 'error.main' }}
                     >
-                      <Iconify icon="solar:box-archive-bold-duotone" width={18} height={18} />
+                      <Iconify icon={GlobalIcons.archive} width={18} height={18} />
                       Archive
                     </MenuItem>
                   ) : null}

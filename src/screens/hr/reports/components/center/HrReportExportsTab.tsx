@@ -70,7 +70,7 @@ export function HrReportExportsTab({
   currentUserId,
   permissions,
   dateFilter = { preset: 'all', fromDate: '', toDate: '' },
-  onDateFilterChange = () => {},
+  onDateFilterChange = () => { },
   onDownload,
   onExportAction,
 }: HrReportExportsTabProps) {
@@ -168,8 +168,8 @@ export function HrReportExportsTab({
                 </span>
               </Tooltip>
               {permissions.canExport &&
-              isOwnedByCurrentUser &&
-              (row.status === 'Queued' || row.status === 'Running') ? (
+                isOwnedByCurrentUser &&
+                (row.status === 'Queued' || row.status === 'Running') ? (
                 <Tooltip title="Cancel export">
                   <span>
                     <IconButton
@@ -208,8 +208,8 @@ export function HrReportExportsTab({
                 </Tooltip>
               ) : null}
               {permissions.canExport &&
-              isOwnedByCurrentUser &&
-              (row.status === 'Failed' || row.status === 'Cancelled') ? (
+                isOwnedByCurrentUser &&
+                (row.status === 'Failed' || row.status === 'Cancelled') ? (
                 <Tooltip title="Retry export">
                   <span>
                     <IconButton
@@ -363,8 +363,8 @@ export function HrReportExportsTab({
                 )}
                 helperText={
                   dateFilter.fromDate &&
-                  dateFilter.toDate &&
-                  dateFilter.toDate < dateFilter.fromDate
+                    dateFilter.toDate &&
+                    dateFilter.toDate < dateFilter.fromDate
                     ? 'To date must be on or after from date.'
                     : undefined
                 }
@@ -395,10 +395,10 @@ export function HrReportExportsTab({
             cursor: 'pointer',
             ...(row.id === highlightedExportId
               ? {
-                  '& td': {
-                    bgcolor: 'action.hover',
-                  },
-                }
+                '& td': {
+                  bgcolor: 'action.hover',
+                },
+              }
               : {}),
           },
         })}

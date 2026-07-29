@@ -5,6 +5,10 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Stack, Button, Typography, IconButton } from '@mui/material';
+import {
+  TimetableSettingsSummaryCards,
+  type ITimetableSummaryCard,
+} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 type Summary = {
   totalStudents?: number;
@@ -114,48 +118,25 @@ export function EvaluationSummaryCards({
   summary: Required<Summary>;
   showMarks?: boolean;
 }) {
-  const cards = [
-    { label: 'Students', value: summary.totalStudents, icon: 'solar:users-group-rounded-bold' },
-    { label: 'Submitted', value: summary.submitted, icon: 'solar:inbox-in-bold' },
-    { label: 'Needs Review', value: summary.needsReview, icon: 'solar:clipboard-check-bold' },
-    { label: 'Reviewed', value: summary.reviewed, icon: 'solar:check-circle-bold' },
-    { label: 'Not Submitted', value: summary.notSubmitted, icon: 'solar:clock-circle-bold' },
+  const cards: ITimetableSummaryCard[] = [
+    { label: 'Students', value: summary.totalStudents, icon: 'solar:users-group-rounded-bold', color: 'primary' },
+    { label: 'Submitted', value: summary.submitted, icon: 'solar:inbox-in-bold', color: 'info' },
+    { label: 'Needs Review', value: summary.needsReview, icon: 'solar:clipboard-check-bold', color: 'warning' },
+    { label: 'Reviewed', value: summary.reviewed, icon: 'solar:check-circle-bold', color: 'success' },
+    { label: 'Not Submitted', value: summary.notSubmitted, icon: 'solar:clock-circle-bold', color: 'error' },
     ...(showMarks
       ? [
           {
             label: 'Average Marks',
             value: summary.averageMarks ?? '-',
             icon: 'solar:chart-2-bold',
+            color: 'info' as const,
           },
         ]
       : []),
   ];
 
-  return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${cards.length}, minmax(120px, 1fr))`,
-        gap: 1,
-      }}
-    >
-      {cards.map((card) => (
-        <Card key={card.label} variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Iconify icon={card.icon} width={20} sx={{ color: 'text.secondary', flexShrink: 0 }} />
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {card.label}
-              </Typography>
-              <Typography variant="h6" lineHeight={1.2}>
-                {card.value}
-              </Typography>
-            </Box>
-          </Stack>
-        </Card>
-      ))}
-    </Box>
-  );
+  return <TimetableSettingsSummaryCards cards={cards} />;
 }
 
 export function EvaluationFilterBar({

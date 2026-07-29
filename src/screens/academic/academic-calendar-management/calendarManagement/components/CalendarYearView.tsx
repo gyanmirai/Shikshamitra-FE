@@ -130,9 +130,7 @@ const MonthInner = ({
           const key = day.format('YYYY-MM-DD');
           const dayMarker = dayMap[key];
           const calDay =
-            dayMarker && (!activeDayType || dayMarker.dayType === activeDayType)
-              ? dayMarker
-              : null;
+            dayMarker && (!activeDayType || dayMarker.dayType === activeDayType) ? dayMarker : null;
           const isWeekend = day.day() === 0;
           const isSaturday = day.day() === 6;
           const isToday = key === today;
@@ -166,6 +164,7 @@ const MonthInner = ({
                 }}
               >
                 <Box
+                  data-testid={`academic-calendar-year-day-${key}`}
                   onClick={() => !isOutside && onDayClick(key)}
                   sx={{
                     width: 30,
@@ -419,7 +418,7 @@ const CalendarYearView = ({
       <Paper
         elevation={0}
         sx={{
-          mb: 3,
+          mb: 1,
           borderRadius: 2.5,
           border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
           overflow: 'hidden',
@@ -429,8 +428,8 @@ const CalendarYearView = ({
         {/* Stats Row */}
         <Box
           sx={{
-            px: 3,
-            py: 2.25,
+            px: 1,
+            py: 1,
             borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
             backgroundColor: alpha(theme.palette.primary.main, 0.01),
           }}
@@ -465,7 +464,7 @@ const CalendarYearView = ({
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1,
-                    px: 1.75,
+                    px: 1,
                     py: 0.75,
                     borderRadius: 2,
                     backgroundColor: alpha(s.color, 0.06),
@@ -500,7 +499,7 @@ const CalendarYearView = ({
         </Box>
 
         {/* Legend Row */}
-        <Box sx={{ px: 3, py: 1.75, backgroundColor: alpha(theme.palette.grey[500], 0.02) }}>
+        <Box sx={{ px: 1, py: 1, backgroundColor: alpha(theme.palette.grey[500], 0.02) }}>
           <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
             <Typography
               variant="caption"

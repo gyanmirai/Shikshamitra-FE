@@ -30,10 +30,7 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  useUpdateHomeworkSubmissionStatusMutation,
-  useUpdateHomeworkSubmissionFeedbackMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 
 import { assignGradeValidationSchema } from './validationSchema';
 
@@ -68,11 +65,6 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
   });
 
-  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateHomeworkSubmissionStatusMutation,
-  });
-
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -98,19 +90,9 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           },
         }).unwrap();
 
-        await updateSubmissionStatus({
-          homeworkId: homeworkId || data?.homeworkId,
-          studentId: data?.studentId,
-          academicMediumId: (medium as any)?.id,
-          body: {
-            status: 4, // Reviewed
-          },
-        }).unwrap();
-
         shikshaMitraToast.success({
-          message: `Feedback has been ${isUpdate ? 'updated' : 'added'} successfully for ${
-            data?.studentName ?? 'the student'
-          }.`,
+          message: `Feedback has been ${isUpdate ? 'updated' : 'added'} successfully for ${data?.studentName ?? 'the student'
+            }.`,
         });
         if (submitAndNextRef.current && hasNext && onNext) {
           submitAndNextRef.current = false;
@@ -139,7 +121,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
           onSubmit={formik.handleSubmit}
         >
-          <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
+          <Scrollbar sx={{ flex: '1 1 auto', maxHeight: 'calc(80vh - 140px)', p: 2 }}>
             <Grid container spacing={1}>
               {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
@@ -275,7 +257,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                   <Box sx={{ display: 'none' }}>
                     <Editor
                       editable={false}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       isToolbarShow={false}
                       value={`
 1. The sun rises in the east.
@@ -529,7 +511,7 @@ I have completed all answers as per the instructions.`}
               variant="outlined"
               size="small"
               disabled={!hasNext}
-              loading={isUpdateLoading || isStatusLoading}
+              loading={isUpdateLoading}
               onClick={(e: any) => {
                 submitAndNextRef.current = true;
                 formik.handleSubmit(e);
@@ -541,7 +523,7 @@ I have completed all answers as per the instructions.`}
             <LoadingButton
               variant="contained"
               size="small"
-              loading={isUpdateLoading || isStatusLoading}
+              loading={isUpdateLoading}
               onClick={(e: any) => {
                 submitAndNextRef.current = false;
                 formik.handleSubmit(e);

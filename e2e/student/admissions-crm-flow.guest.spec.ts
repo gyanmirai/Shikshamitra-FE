@@ -326,7 +326,10 @@ async function updateCrmCycleRegistrationGate(
   currentConfiguration: Record<string, unknown>,
   registrationFormRequiredBeforeExam: boolean
 ) {
-  const proposedConfiguration = {
+  const proposedConfiguration: Record<string, unknown> & {
+    registrationFormRequiredBeforeExam: boolean;
+    impactPreviewFingerprint?: unknown;
+  } = {
     ...currentConfiguration,
     registrationFormRequiredBeforeExam,
   };

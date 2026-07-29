@@ -304,9 +304,9 @@ const SubjectActionButton = ({
         disabled={disabled}
         aria-label={title}
         onClick={onClick}
-        sx={{ width: 30, height: 30 }}
+        sx={{ width: 18, height: 18, p: 0 }}
       >
-        <Iconify icon={icon} width={18} height={18} />
+        <Iconify icon={icon} width={16} height={16} />
       </IconButton>
     </span>
   </CustomTooltip>

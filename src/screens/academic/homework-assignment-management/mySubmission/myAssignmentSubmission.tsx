@@ -7,16 +7,17 @@ import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
+import { AssignmentSubmissionType } from 'src/enums/assignment';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import mySubmissionData from 'src/json/academic/homeworkAssignment/myAssignmentData.json';
 import {
   ScheduleExamStatus,
@@ -86,7 +87,8 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
   useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        {tabs.value === 0 ? (
+        {tabs.value === 0 &&
+        row.submissionType !== AssignmentSubmissionType.NoSubmissionRequired ? (
           <MenuItem
             onClick={() => {
               assignmentSubmissionDialog.onTrue();
@@ -97,7 +99,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
             <Iconify icon={GlobalIcons.upload} />
             Upload
           </MenuItem>
-        ) : (
+        ) : tabs.value !== 0 ? (
           <MenuItem
             onClick={() => {
               viewSubmissionDialog.onTrue();
@@ -108,7 +110,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
             <Iconify icon={GlobalIcons.eye} />
             View Submission
           </MenuItem>
-        )}
+        ) : null}
       </MenuList>
     ),
     [assignmentSubmissionDialog, tabs.value, viewSubmissionDialog]

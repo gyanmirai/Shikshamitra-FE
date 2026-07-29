@@ -107,27 +107,27 @@ const CalendarAuditLogs = () => {
   );
   const canExport = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.Export`
+    `${academicPermissions.academicCalendar.auditLogs}.View`
   );
   const canRestore = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.Restore`
+    `${academicPermissions.academicCalendar.auditLogs}.Edit`
   );
   const canViewSensitive = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.ViewSensitiveMetadata`
+    `${academicPermissions.academicCalendar.auditLogs}.View`
   );
   const canAddNote = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.AddReviewNote`
+    `${academicPermissions.academicCalendar.auditLogs}.Add`
   );
   const canViewAI = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.ViewAIInsights`
+    `${academicPermissions.academicCalendar.auditLogs}.View`
   );
   const canViewAnalytics = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.ViewAnalytics`
+    `${academicPermissions.academicCalendar.auditLogs}.View`
   );
 
   // State
@@ -249,7 +249,6 @@ const CalendarAuditLogs = () => {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <CustomBreadcrumbs
-          sx={{ mb: 1 }}
           heading="Audit Logs"
           description="Track every academic calendar change with full history, impact, and accountability."
           links={[
@@ -269,7 +268,6 @@ const CalendarAuditLogs = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}>
       {/* Header */}
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Audit Logs"
         description="Track every academic calendar change with full history, impact, and accountability."
         links={[

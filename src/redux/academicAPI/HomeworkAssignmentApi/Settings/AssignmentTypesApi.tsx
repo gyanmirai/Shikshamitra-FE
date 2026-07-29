@@ -2,101 +2,105 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../../academicApi';
 
+import type {
+  MessageResponse,
+  AssignmentTypeDto,
+  AssignmentTypeResponse,
+  AssignmentTypeUpsertDto,
+  AssignmentTypeListResponse,
+  AssignmentTypeCreateResponse,
+} from '../contracts';
+
+const ASSIGNMENT_TYPE_LIST_ID = 'LIST';
+
 export const assignmentTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Get all assignment types under academic medium
-    getAssignmentTypes: builder.query({
-      query: ({ academicMediumId }: { academicMediumId: string }) => ({
-        url: `/assignment-type`,
+    getAssignmentTypes: builder.query<AssignmentTypeListResponse, { academicMediumId: string }>({
+      query: ({ academicMediumId }) => ({
+        url: '/assignment-type',
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: [academicType.assignmentType],
+      providesTags: (result) => [
+        academicType.assignmentType,
+        { type: academicType.assignmentTypeList, id: ASSIGNMENT_TYPE_LIST_ID },
+        ...(result?.data.map(({ id }) => ({ type: academicType.assignmentTypeDetail, id })) ?? []),
+      ],
     }),
 
-    // Get specific assignment type by ID
-    getAssignmentTypeById: builder.query({
-      query: ({ id }: { id: string }) => ({
+    getAssignmentTypeById: builder.query<
+      AssignmentTypeResponse,
+      { id: string; academicMediumId: string }
+    >({
+      query: ({ id, academicMediumId }) => ({
         url: `/assignment-type/${id}`,
         method: 'GET',
+        params: { academicMediumId },
       }),
-      providesTags: [academicType.assignmentType],
+      providesTags: (_result, _error, { id }) => [
+        academicType.assignmentType,
+        { type: academicType.assignmentTypeDetail, id },
+      ],
     }),
 
-    // Add new assignment type
-    addAssignmentType: builder.mutation({
-      query: ({
-        academicMediumId,
-        data,
-      }: {
-        academicMediumId: string;
-        data: {
-          assignmentTypeName: string;
-          description?: string;
-          defaultSubmissionType?: number;
-          defaultMarks?: number;
-          defaultDueDays?: number;
-          evaluationRequired?: boolean;
-          defaultEvaluationMethod?: number;
-          status?: number;
-        };
-      }) => ({
-        url: `/assignment-type`,
+    addAssignmentType: builder.mutation<
+      AssignmentTypeCreateResponse,
+      { academicMediumId: string; data: AssignmentTypeUpsertDto }
+    >({
+      query: ({ academicMediumId, data }) => ({
+        url: '/assignment-type',
         method: 'POST',
         body: data,
         params: { academicMediumId },
       }),
-      invalidatesTags: [academicType.assignmentType],
+      invalidatesTags: [
+        academicType.assignmentType,
+        { type: academicType.assignmentTypeList, id: ASSIGNMENT_TYPE_LIST_ID },
+        academicType.assignmentList,
+      ],
     }),
 
-    // Update assignment type
-    updateAssignmentType: builder.mutation({
-      query: ({
-        assignmentTypeId,
-        academicMediumId,
-        data,
-      }: {
-        assignmentTypeId: string;
-        academicMediumId: string;
-        data: {
-          assignmentTypeName: string;
-          description?: string;
-          defaultSubmissionType?: number;
-          defaultMarks?: number;
-          defaultDueDays?: number;
-          evaluationRequired?: boolean;
-          defaultEvaluationMethod?: number;
-          status?: number;
-        };
-      }) => ({
+    updateAssignmentType: builder.mutation<
+      MessageResponse,
+      { assignmentTypeId: string; academicMediumId: string; data: AssignmentTypeUpsertDto }
+    >({
+      query: ({ assignmentTypeId, academicMediumId, data }) => ({
         url: `/assignment-type/${assignmentTypeId}`,
         method: 'PUT',
         body: data,
         params: { academicMediumId },
       }),
-      invalidatesTags: [academicType.assignmentType],
+      invalidatesTags: (_result, _error, { assignmentTypeId }) => [
+        academicType.assignmentType,
+        { type: academicType.assignmentTypeList, id: ASSIGNMENT_TYPE_LIST_ID },
+        { type: academicType.assignmentTypeDetail, id: assignmentTypeId },
+        academicType.assignment,
+        academicType.assignmentList,
+        academicType.assignmentDetail,
+      ],
     }),
 
-    // Delete assignment type
-    deleteAssignmentType: builder.mutation({
-      query: ({
-        assignmentTypeId,
-        academicMediumId,
-      }: {
-        assignmentTypeId: string;
-        academicMediumId: string;
-      }) => ({
+    deleteAssignmentType: builder.mutation<
+      MessageResponse,
+      { assignmentTypeId: string; academicMediumId: string }
+    >({
+      query: ({ assignmentTypeId, academicMediumId }) => ({
         url: `/assignment-type/${assignmentTypeId}`,
         method: 'DELETE',
         params: { academicMediumId },
       }),
-      invalidatesTags: [academicType.assignmentType],
+      invalidatesTags: (_result, _error, { assignmentTypeId }) => [
+        academicType.assignmentType,
+        { type: academicType.assignmentTypeList, id: ASSIGNMENT_TYPE_LIST_ID },
+        { type: academicType.assignmentTypeDetail, id: assignmentTypeId },
+        academicType.assignment,
+        academicType.assignmentList,
+      ],
     }),
   }),
   overrideExisting: false,
 });
 
-// RTK query hooks
 export const {
   useGetAssignmentTypesQuery,
   useGetAssignmentTypeByIdQuery,
@@ -104,3 +108,5 @@ export const {
   useUpdateAssignmentTypeMutation,
   useDeleteAssignmentTypeMutation,
 } = assignmentTypesApi;
+
+export type { AssignmentTypeDto };

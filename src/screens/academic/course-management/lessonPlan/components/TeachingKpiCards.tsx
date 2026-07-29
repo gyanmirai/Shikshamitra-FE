@@ -104,15 +104,14 @@ const TeachingKpiCards = ({ lessonPlans, diaryEntries, onCardClick }: Props) => 
   ];
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} sx={{ mb: 1 }}>
       <Box
         sx={{
           display: 'grid',
           gap: 1,
           gridTemplateColumns: {
             xs: '1fr 1fr',
-            md: 'repeat(3, 1fr)',
-            xl: 'repeat(6, 1fr)',
+            md: 'repeat(6, 1fr)',
           },
         }}
       >

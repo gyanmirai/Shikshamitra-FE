@@ -1,43 +1,43 @@
 import type { Dayjs } from 'dayjs';
+import type { FileData } from 'src/components/custom-upload';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { AssignmentV2Dto } from 'src/redux/academicAPI/HomeworkAssignmentApi/contracts';
+import type {
+  AssignmentStatus,
+  AssignmentSubmissionType,
+  AssignmentEvaluationMethod,
+} from 'src/enums/assignment';
 
 import type { TStudentGrade, DivisionHomeworkMeta } from '../homeworkCreation/type';
 import type { TeacherProfile } from '../../curriculum-management/subjectAssignment/component/type';
 
-export interface IAssignment {
-  id: string;
-  title: string;
-  description: string;
-  className: string;
-  classId: string;
-  divisions: DivisionHomeworkMeta[]; // ✅ Each division with its own dates
+export interface IAssignment
+  extends Omit<AssignmentV2Dto, 'attachment' | 'createdBy' | 'divisionSchedules'> {
+  className?: string;
+  classId?: string;
+  divisions?: DivisionHomeworkMeta[];
+  divisionSchedules: AssignmentV2Dto['divisionSchedules'];
   divisionMeta?: DivisionHomeworkMeta;
-  students?: [];
-  subjectName: string;
-  subjectId: string;
-  submissionType: number;
-  totalMarks?: number;
-  // dueDate: Dayjs | null | string;
-  startDate: Dayjs | null | string;
-  endDate: Dayjs | null | string;
-  attachments: File[];
-  createdBy: TeacherProfile;
-  assignmentTypeId: string;
-  assignmentsType: string;
-  chapterIds?: string[];
-
-  // isScheduled: boolean;
-  // scheduleDate: Dayjs | null | string;
-  // todaysDate: Dayjs | string;
+  students?: string[];
+  assignmentsType?: string;
+  attachments?: File[];
+  startDate?: Dayjs | null | string;
+  endDate?: Dayjs | null | string;
+  createdBy: TeacherProfile | string;
+  attachment?: string | FileData | null;
+  submissionType: AssignmentSubmissionType;
+  evaluationRequired: boolean;
+  evaluationMethod?: AssignmentEvaluationMethod | null;
+  defaultEvaluationMethod?: AssignmentEvaluationMethod | null;
+  status: AssignmentStatus;
   content?: string;
   submission?: string;
-  status?: number;
 }
 
 export interface IAssignmentFormProps {
   classes: string;
   dialog: UseBooleanReturn;
-  onClose: (e: any, isSubmit: boolean) => void;
+  onClose: (event: unknown, isSubmit: boolean) => void;
   editData: IAssignment | null;
 }
 
@@ -48,6 +48,7 @@ export interface IAssignmentTableProps {
   selectedClass: string;
   dialog: UseBooleanReturn;
   onSwitchToggle: (row: IAssignment) => void;
+  onClose: (row: IAssignment) => void;
   onEdit: (row: IAssignment) => void;
   onDelete: (row: IAssignment) => void;
   onView: (row: IAssignment) => void;
