@@ -11,10 +11,7 @@ import { useGetStudentsByDivisionQuery } from 'src/redux/student';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Card, Stack, Typography } from '@mui/material';
 
-import {
-  matchesAcademicFilter,
-  normalizeAcademicStudent,
-} from './listUtils';
+import { matchesAcademicFilter, normalizeAcademicStudent } from './listUtils';
 
 import { StudentAcademic360Table } from './components/StudentAcademic360Table';
 import { StudentAcademic360Drawer } from './components/StudentAcademic360Drawer';
@@ -96,12 +93,9 @@ const StudentAcademic360Screen = () => {
     setSelectedStudent(student);
   };
 
-
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Student Academic 360"
         description="Review academic health, identify concerns and open the full student view."
         links={[
@@ -110,7 +104,7 @@ const StudentAcademic360Screen = () => {
         ]}
       />
 
-      <Card sx={{ p: 2 }}>
+      <Card sx={{ p: 1, mb: 1 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
           <CustomSelect
             options={allClass}
@@ -131,7 +125,6 @@ const StudentAcademic360Screen = () => {
             disabled={!selectedClass}
             formControlProps={{ sx: { minWidth: { md: 220 } } }}
           />
-
         </Stack>
       </Card>
 
@@ -141,18 +134,16 @@ const StudentAcademic360Screen = () => {
         onFilterChange={setActiveFilter}
       />
 
-
-        <StudentAcademic360Table
-          key={`${selectedClass}-${selectedDivision}-${activeFilter}`}
-          students={filteredStudents}
-          isLoading={isStudentsLoading}
-          isError={isStudentsError}
-          hasDivision={!!selectedDivision}
-          activeFilterLabel={activeFilterLabel}
-          onOpenStudent={openStudent}
-          onRetry={refetchStudents}
-        />
-
+      <StudentAcademic360Table
+        key={`${selectedClass}-${selectedDivision}-${activeFilter}`}
+        students={filteredStudents}
+        isLoading={isStudentsLoading}
+        isError={isStudentsError}
+        hasDivision={!!selectedDivision}
+        activeFilterLabel={activeFilterLabel}
+        onOpenStudent={openStudent}
+        onRetry={refetchStudents}
+      />
 
       <StudentAcademic360Drawer
         open={!!selectedStudent}

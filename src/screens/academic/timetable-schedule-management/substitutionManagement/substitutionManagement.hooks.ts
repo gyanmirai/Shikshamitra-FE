@@ -44,6 +44,14 @@ const mutationPopup = {
   success: false,
 };
 
+// My-Duties teacher actions (acknowledge / request-change / reject-duty) all
+// render their own success and error toasts inside the screen handler, so the
+// wrapper's automatic error toast would duplicate it. Silence the wrapper here.
+const silentMutationPopup = {
+  error: false,
+  success: false,
+};
+
 export const useSubstitutionsDataQuery = (
   params: QueryParams
 ): ReturnType<typeof useGetSubstitutionsQuery> =>
@@ -205,7 +213,7 @@ export const useAcknowledgeSubstitutionAction = (): ReturnType<
   useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAcknowledgeSubstitutionMutation,
-    popupConfig: mutationPopup,
+    popupConfig: silentMutationPopup,
   }) as ReturnType<typeof useAcknowledgeSubstitutionMutation>;
 
 export const useRequestSubstitutionChangeAction = (): ReturnType<
@@ -214,7 +222,7 @@ export const useRequestSubstitutionChangeAction = (): ReturnType<
   useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRequestSubstitutionChangeMutation,
-    popupConfig: mutationPopup,
+    popupConfig: silentMutationPopup,
   }) as ReturnType<typeof useRequestSubstitutionChangeMutation>;
 
 export const useRejectSubstitutionDutyAction = (): ReturnType<
@@ -223,7 +231,7 @@ export const useRejectSubstitutionDutyAction = (): ReturnType<
   useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRejectSubstitutionDutyMutation,
-    popupConfig: mutationPopup,
+    popupConfig: silentMutationPopup,
   }) as ReturnType<typeof useRejectSubstitutionDutyMutation>;
 
 export const useCreateTeacherAvailabilityAction = (): ReturnType<

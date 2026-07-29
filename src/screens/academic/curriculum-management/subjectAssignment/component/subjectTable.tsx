@@ -149,8 +149,6 @@ const SubjectTable = ({
     [subjectTableData]
   );
 
-  console.log('subjectData', subjectData);
-
   const actions = useCallback(
     ({ popover, row }: any) => {
       const removeDisabled = row.canDelete === false;

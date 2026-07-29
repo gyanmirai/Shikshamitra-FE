@@ -2,7 +2,7 @@ import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { SubmissionType } from 'src/enums/submission_type';
+import { ASSIGNMENT_SUBMISSION_TYPE_LABELS } from 'src/enums/assignment';
 import { Box, Card, Grid, Divider, Skeleton, Typography } from '@mui/material';
 
 import AssignmentOverview from './assignmentOverview';
@@ -267,10 +267,7 @@ const ViewAssignmentDetails = ({
               },
               {
                 label: 'Submit Via',
-                value:
-                  SubmissionType[assignment.submissionType as number] ||
-                  assignment.submissionType ||
-                  'N/A',
+                value: ASSIGNMENT_SUBMISSION_TYPE_LABELS[assignment.submissionType] || 'N/A',
               },
             ].map((item, idx, arr) => (
               <React.Fragment key={item.label}>

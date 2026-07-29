@@ -112,8 +112,8 @@ const AuditSmartFilters = ({
   return (
     <Paper
       sx={{
-        p: 2,
-        borderRadius: 3,
+        p: 1,
+        borderRadius: 1,
         border: `1px solid ${theme.palette.divider}`,
         boxShadow: theme.customShadows?.card || '0px 2px 12px rgba(0,0,0,0.03)',
         backgroundColor: 'background.paper',

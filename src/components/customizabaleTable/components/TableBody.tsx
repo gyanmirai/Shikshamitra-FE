@@ -89,28 +89,15 @@ export const TableBody = ({
       <MuiTableBody>
         <TableRow>
           <TableCell colSpan={columns.length} sx={{ p: 0 }}>
-            {isCustomEmptyState ? (
-              <Box
-                sx={{
-                  width: tableRef,
-                  position: 'sticky',
-                  left: 0,
-                  p: 0,
-                }}
-              >
-                {noDataText}
-              </Box>
-            ) : (
-              <EmptyContent
-                title={noDataText}
-                sx={{
-                  width: tableRef,
-                  position: 'sticky',
-                  left: '0',
-                  padding: '0',
-                }}
-              />
-            )}
+            <EmptyContent
+              title={noDataText}
+              sx={{
+                width: tableRef,
+                position: 'sticky',
+                left: '0',
+                padding: '0',
+              }}
+            />
           </TableCell>
         </TableRow>
       </MuiTableBody>

@@ -1,7 +1,8 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Chip, Grid, Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { Label } from 'src/components/label';
+import { Box, Card, Grid, Stack, Button, Typography, LinearProgress } from '@mui/material';
 
 import { HealthScoreGauge } from './HealthScoreGauge';
 import { Academic360EmptyState } from './Academic360EmptyState';
@@ -59,13 +60,13 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
               <HealthScoreGauge score={health?.score} />
               <Box sx={{ minWidth: 0 }}>
                 <Typography variant="subtitle1">Academic Health</Typography>
-                <Chip
-                  size="small"
+                <Label
                   sx={{ mt: 0.5 }}
                   color={health?.score ? 'success' : 'default'}
                   variant="soft"
-                  label={health?.status || 'Insufficient Data'}
-                />
+                >
+                  {health?.status || 'Insufficient Data'}
+                </Label>
               </Box>
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
@@ -74,56 +75,75 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             </Typography>
           </Card>
         </Grid>
-        {(data?.kpis || []).map((kpi) => (
-          <Grid key={kpi.key} size={{ xs: 12, sm: 6, md: 2 }}>
-            <Card variant="outlined" sx={{ p: 2, height: '100%', borderRadius: 2 }}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 1,
-                    display: 'grid',
-                    placeItems: 'center',
-                    bgcolor: (theme) => `${theme.palette.primary.main}14`,
-                    color: 'primary.main',
-                  }}
-                >
-                  <Iconify icon={kpiIcon(kpi.key)} width={18} />
-                </Box>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {kpi.label}
-                </Typography>
-              </Stack>
-              <Typography variant="h5" sx={{ mt: 1 }}>{kpi.displayValue}</Typography>
-              {kpi.trend && (
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
-                  <Iconify
-                    icon={
-                      trendColor(kpi.trend) === 'success.main'
-                        ? 'mdi:trending-up'
-                        : trendColor(kpi.trend) === 'error.main'
-                          ? 'mdi:trending-down'
-                          : 'mdi:trending-neutral'
-                    }
-                    width={14}
-                    sx={{ color: trendColor(kpi.trend) }}
-                  />
-                  <Typography variant="caption" sx={{ color: trendColor(kpi.trend) }}>
-                    {kpi.trend}
+        {(data?.kpis || []).map((kpi) => {
+          const isEmpty = !kpi.displayValue || /no data/i.test(kpi.displayValue);
+
+          return (
+            <Grid key={kpi.key} size={{ xs: 12, sm: 6, md: 2 }}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  height: '100%',
+                  borderRadius: 2,
+                  ...(isEmpty && { bgcolor: 'background.neutral' }),
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 1,
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: (theme) =>
+                        isEmpty ? `${theme.palette.grey[500]}1F` : `${theme.palette.primary.main}14`,
+                      color: isEmpty ? 'text.disabled' : 'primary.main',
+                    }}
+                  >
+                    <Iconify icon={kpiIcon(kpi.key)} width={18} />
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {kpi.label}
                   </Typography>
                 </Stack>
-              )}
-            </Card>
-          </Grid>
-        ))}
+                {isEmpty ? (
+                  <Typography variant="body2" sx={{ mt: 1, color: 'text.disabled' }}>
+                    No data yet
+                  </Typography>
+                ) : (
+                  <Typography variant="h5" sx={{ mt: 1 }}>{kpi.displayValue}</Typography>
+                )}
+                {kpi.trend && !isEmpty && (
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
+                    <Iconify
+                      icon={
+                        trendColor(kpi.trend) === 'success.main'
+                          ? 'mdi:trending-up'
+                          : trendColor(kpi.trend) === 'error.main'
+                            ? 'mdi:trending-down'
+                            : 'mdi:trending-neutral'
+                      }
+                      width={14}
+                      sx={{ color: trendColor(kpi.trend) }}
+                    />
+                    <Typography variant="caption" sx={{ color: trendColor(kpi.trend) }}>
+                      {kpi.trend}
+                    </Typography>
+                  </Stack>
+                )}
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
 
       <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
           <Iconify icon="mdi:alert-circle-outline" width={20} />
           <Typography variant="subtitle1">Attention Required</Typography>
-          {alerts.length > 0 && <Chip size="small" color="warning" variant="soft" label={alerts.length} />}
+          {alerts.length > 0 && <Label color="warning" variant="soft">{alerts.length}</Label>}
         </Stack>
         {alerts.length === 0 ? (
           <Academic360EmptyState
@@ -139,7 +159,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
               <Box key={`${alert.source}-${alert.title}`} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between">
                   <Box>
-                    <Chip size="small" color={severityColor(alert.severity)} variant="soft" label={alert.severity || 'Information'} />
+                    <Label color={severityColor(alert.severity)} variant="soft">{alert.severity || 'Information'}</Label>
                     <Typography variant="subtitle2" sx={{ mt: 1 }}>{alert.title}</Typography>
                     <Typography variant="body2" color="text.secondary">{alert.message}</Typography>
                     <Typography variant="caption" color="text.secondary">{alert.evidence}</Typography>
@@ -164,7 +184,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                 {upcoming.slice(0, 6).map((item) => (
                   <Stack key={`${item.type}-${item.title}-${item.date}`} direction="row" justifyContent="space-between" gap={1}>
                     <Typography variant="body2">{item.title}</Typography>
-                    <Chip size="small" color={item.isOverdue ? 'error' : 'default'} label={item.status || item.type} />
+                    <Label color={item.isOverdue ? 'error' : 'default'}>{item.status || item.type}</Label>
                   </Stack>
                 ))}
               </Stack>
@@ -201,7 +221,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
         {achievements.length > 0 ? (
           <Stack direction="row" flexWrap="wrap" gap={1}>
             {achievements.map((item) => (
-              <Chip key={`${item.source}-${item.title}`} color="success" variant="soft" label={`${item.title}: ${item.description}`} />
+              <Label key={`${item.source}-${item.title}`} color="success" variant="soft">{`${item.title}: ${item.description}`}</Label>
             ))}
           </Stack>
         ) : (

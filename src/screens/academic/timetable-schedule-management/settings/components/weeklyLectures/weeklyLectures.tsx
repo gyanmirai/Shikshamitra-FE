@@ -130,7 +130,6 @@ const WeeklyLectures = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Weekly Lectures Slots"
         description="Configure and manage weekly lecture slots for each class."
         links={[

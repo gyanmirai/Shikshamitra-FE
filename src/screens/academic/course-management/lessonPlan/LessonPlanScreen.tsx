@@ -33,6 +33,7 @@ import {
   Typography,
   IconButton,
   LinearProgress,
+  Paper,
 } from '@mui/material';
 import {
   useGetLessonPlansQuery,
@@ -1206,9 +1207,8 @@ const LessonPlanScreen = () => {
   });
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Lesson Plan / Teacher Diary"
         description="Plan lessons, record daily teaching evidence, review diary submissions, and track syllabus progress in one place."
         links={[
@@ -1232,7 +1232,7 @@ const LessonPlanScreen = () => {
       />
 
       {/* Tab Navigation & Filters */}
-      <Card>
+      <Paper sx={{ mb: 1 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -1256,7 +1256,7 @@ const LessonPlanScreen = () => {
             ))}
           </Tabs>
         </Stack>
-      </Card>
+      </Paper>
 
       {/* Tab Content */}
       {activeTab === 'dailyTimeline' && (

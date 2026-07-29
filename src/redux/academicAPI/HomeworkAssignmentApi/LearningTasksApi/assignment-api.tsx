@@ -1,81 +1,106 @@
 import { academicType } from 'src/redux/tagTypes';
+import { AssignmentStatus } from 'src/enums/assignment';
 
 import { academicApi } from '../../academicApi';
 
+import type {
+  AssignmentV2Dto,
+  GetAssignmentsParams,
+  AssignmentV2Response,
+  AssignmentMutationArgs,
+  AssignmentV2ListResponse,
+  AssignmentV2CreateResponse,
+  UpdateAssignmentMutationArgs,
+  AssignmentStatusUpdateResponse,
+} from '../contracts';
+
+const ASSIGNMENT_LIST_ID = 'LIST';
+
+const assignmentInvalidationTags = [
+  academicType.assignment,
+  { type: academicType.assignmentList, id: ASSIGNMENT_LIST_ID },
+  academicType.assignmentSubmissions,
+  academicType.chapter,
+  academicType.assessmentRubric,
+] as const;
+
 export const assignmentApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
-    // GET all assignments
-    getAssignments: builder.query({
-      query: ({ academicMediumId, StandardId, DivisionId, SubjectId, AssignmentDate }) => ({
-        url: `/academic/assignments`,
+    getAssignments: builder.query<AssignmentV2ListResponse, GetAssignmentsParams>({
+      query: ({ academicMediumId, ...params }) => ({
+        url: '/academic/assignments',
         method: 'GET',
-        params: {
-          academicMediumId,
-          StandardId,
-          DivisionId,
-          SubjectId,
-          AssignmentDate,
-        },
+        params: { academicMediumId, ...params },
       }),
-      providesTags: [academicType.assignment],
+      providesTags: (result) => [
+        academicType.assignment,
+        { type: academicType.assignmentList, id: ASSIGNMENT_LIST_ID },
+        ...(result?.items.map(({ id }) => ({ type: academicType.assignmentDetail, id })) ?? []),
+      ],
     }),
 
-    // GET assignment by id
-    getAssignmentById: builder.query({
-      query: ({
-        assignmentId,
-        academicMediumId,
-      }: {
-        assignmentId: string;
-        academicMediumId?: string;
-      }) => ({
+    getAssignmentById: builder.query<
+      AssignmentV2Response,
+      { assignmentId: string; academicMediumId?: string }
+    >({
+      query: ({ assignmentId, academicMediumId }) => ({
         url: `/academic/assignments/${assignmentId}`,
         method: 'GET',
-        params: {
-          academicMediumId,
-        },
+        params: academicMediumId ? { academicMediumId } : undefined,
       }),
-      providesTags: [academicType.assignment],
+      providesTags: (_result, _error, { assignmentId }) => [
+        academicType.assignment,
+        { type: academicType.assignmentDetail, id: assignmentId },
+      ],
     }),
 
-    // CREATE assignment (multipart/form-data)
-    addAssignment: builder.mutation({
+    addAssignment: builder.mutation<AssignmentV2CreateResponse, AssignmentMutationArgs>({
       query: ({ academicMediumId, body }) => ({
-        url: `/academic/assignments`,
+        url: '/academic/assignments',
         method: 'POST',
         params: { academicMediumId },
         body,
       }),
-      invalidatesTags: [academicType.assignment, academicType.chapter],
+      invalidatesTags: assignmentInvalidationTags,
     }),
 
-    // DELETE assignment
-    deleteAssignment: builder.mutation({
+    deleteAssignment: builder.mutation<void, string>({
       query: (assignmentId) => ({
         url: `/academic/assignments/${assignmentId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [academicType.assignment, academicType.chapter],
+      invalidatesTags: (_result, _error, assignmentId) => [
+        ...assignmentInvalidationTags,
+        { type: academicType.assignmentDetail, id: assignmentId },
+      ],
     }),
 
-    // UPDATE assignment (multipart/form-data)
-    updateAssignment: builder.mutation({
-      query: ({ assignmentId, body }: { assignmentId: string; body: FormData }) => ({
+    updateAssignment: builder.mutation<AssignmentV2Response, UpdateAssignmentMutationArgs>({
+      query: ({ assignmentId, academicMediumId, body }) => ({
         url: `/academic/assignments/${assignmentId}`,
         method: 'PUT',
+        params: { academicMediumId },
         body,
       }),
-      invalidatesTags: [academicType.assignment, academicType.chapter],
+      invalidatesTags: (_result, _error, { assignmentId }) => [
+        ...assignmentInvalidationTags,
+        { type: academicType.assignmentDetail, id: assignmentId },
+      ],
     }),
 
-    // UPDATE assignment status
-    updateAssignmentStatus: builder.mutation<any, { assignmentId: string; status: number }>({
+    updateAssignmentStatus: builder.mutation<
+      AssignmentStatusUpdateResponse,
+      { assignmentId: string; status: AssignmentStatus }
+    >({
       query: ({ assignmentId, status }) => ({
         url: `/academic/assignments/${assignmentId}/status`,
         method: 'PATCH',
         body: { status },
       }),
-      invalidatesTags: [academicType.assignment, academicType.chapter],
+      invalidatesTags: (_result, _error, { assignmentId }) => [
+        ...assignmentInvalidationTags,
+        { type: academicType.assignmentDetail, id: assignmentId },
+      ],
     }),
   }),
 
@@ -90,3 +115,5 @@ export const {
   useDeleteAssignmentMutation,
   useUpdateAssignmentStatusMutation,
 } = assignmentApi;
+
+export type { AssignmentV2Dto };

@@ -181,7 +181,7 @@ export default function SubjectKpiCards({
   if (!kpi) return null;
 
   return (
-    <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+    <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
       {cards.map((card) => (
         <KpiCard key={card.title} {...card} />
       ))}

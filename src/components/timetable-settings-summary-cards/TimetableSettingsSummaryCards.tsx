@@ -25,7 +25,7 @@ export function TimetableSettingsSummaryCards({ cards }: TimetableSettingsSummar
               display: 'flex',
               alignItems: 'center',
               gap: 1.5,
-              boxShadow: 'var(--shadows-4)',
+              boxShadow: 'var(--shadows-3)',
             }}
           >
             <Box

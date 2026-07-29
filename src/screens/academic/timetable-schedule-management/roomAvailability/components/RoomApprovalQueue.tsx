@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
@@ -15,27 +16,28 @@ import {
   Tooltip,
   TextField,
   Typography,
+  IconButton,
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
-  CircularProgress,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import { LoadingButton } from '@mui/lab';
 
 import { ApprovalStatusChip, ConflictSeverityChip } from './RoomStatusChip';
 
 import type { RoomReservation } from '../types';
 
+type PendingAction = { id: string; type: 'approve' | 'reject' } | null;
+
 interface RoomApprovalQueueProps {
   reservations: RoomReservation[];
-  onApprove?: (id: string, remarks?: string) => void | Promise<void>;
-  onReject?: (id: string, reason: string) => void | Promise<void>;
+  pendingAction?: PendingAction;
+  onApprove?: (id: string, remarks?: string) => Promise<boolean> | void;
+  onReject?: (id: string, reason: string) => Promise<boolean> | void;
 }
 
 export const RoomApprovalQueue = ({
   reservations,
+  pendingAction,
   onApprove,
   onReject,
 }: RoomApprovalQueueProps) => {
@@ -44,8 +46,14 @@ export const RoomApprovalQueue = ({
   const [rejectTargetId, setRejectTargetId] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [rejectError, setRejectError] = useState('');
-  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [isRejecting, setIsRejecting] = useState(false);
+
+  // True only for the specific row + action currently in flight; drives the
+  // active button's loading spinner. Sibling/other-row buttons are gated by
+  // `isAnyActionPending` to prevent concurrent requests.
+  const isBusy = (id: string, type: 'approve' | 'reject') =>
+    pendingAction?.id === id && pendingAction?.type === type;
+  const isAnyActionPending = pendingAction !== null;
 
   const handleOpenReject = (id: string) => {
     setRejectTargetId(id);
@@ -61,8 +69,8 @@ export const RoomApprovalQueue = ({
     }
     setIsRejecting(true);
     try {
-      await onReject?.(rejectTargetId, rejectReason);
-      shikshaMitraToast.info({ message: 'Reservation rejected.' });
+      const ok = await onReject?.(rejectTargetId, rejectReason);
+      if (ok === false) return; // parent already showed the error toast
       setRejectDialogOpen(false);
     } finally {
       setIsRejecting(false);
@@ -223,60 +231,56 @@ export const RoomApprovalQueue = ({
               sticky: true,
               stickyPosition: 'right',
               render: (_v, row) => (
-                <Stack direction="row" spacing={1} justifyContent="center">
+                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                   <Tooltip title="Approve">
-                    <IconButton
-                      size="small"
-                      color="success"
-                      disabled={approvingId !== null || isRejecting}
-                      onClick={async () => {
-                        setApprovingId(row.id);
-                        try {
-                          await onApprove?.(row.id);
-                          shikshaMitraToast.success({
-                            message: `${row.roomName} reservation approved.`,
-                          });
-                        } finally {
-                          setApprovingId(null);
-                        }
-                      }}
-                      sx={{
-                        bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-                        '&:hover': {
-                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
-                        },
-                      }}
-                    >
-                      {approvingId === row.id ? (
-                        <CircularProgress size={16} color="inherit" />
-                      ) : (
+                    <span>
+                      <LoadingButton
+                        size="small"
+                        color="success"
+                        variant="text"
+                        loading={isBusy(row.id, 'approve')}
+                        disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
+                        onClick={() => onApprove?.(row.id)}
+                        sx={{
+                          minWidth: 32,
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
+                          '&:hover': {
+                            bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
+                          },
+                        }}
+                      >
                         <Iconify icon="mdi:check-circle" width={16} />
-                      )}
-                    </IconButton>
-                  </Tooltip>
+                      </LoadingButton>
+                    </span>
+                  </Tooltip >
                   <Tooltip title="Reject">
-                    <IconButton
-                      size="small"
-                      color="error"
-                      disabled={approvingId !== null || isRejecting}
-                      onClick={() => handleOpenReject(row.id)}
-                      sx={{
-                        bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-                        '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
-                      }}
-                    >
-                      <Iconify icon="mdi:close-circle" width={16} />
-                    </IconButton>
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        disabled={isAnyActionPending}
+                        onClick={() => handleOpenReject(row.id)}
+                        sx={{
+                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                          '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
+                        }}
+                      >
+                        <Iconify icon="mdi:close-circle" width={16} />
+                      </IconButton>
+                    </span>
                   </Tooltip>
-                </Stack>
+                </Stack >
               ),
             },
           ]}
         />
-      </Stack>
+      </Stack >
 
       {/* Reject Dialog */}
-      <Dialog
+      < Dialog
         open={rejectDialogOpen}
         onClose={() => setRejectDialogOpen(false)}
         maxWidth="sm"
@@ -320,9 +324,9 @@ export const RoomApprovalQueue = ({
             size="small"
             variant="outlined"
             color="inherit"
+            disabled={isRejecting}
             startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
             onClick={() => setRejectDialogOpen(false)}
-            disabled={isRejecting}
           >
             Cancel
           </Button>
@@ -330,14 +334,14 @@ export const RoomApprovalQueue = ({
             size="small"
             variant="contained"
             color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} width={16} />}
             loading={isRejecting}
+            startIcon={<Iconify icon={GlobalIcons.delete} width={16} />}
             onClick={handleConfirmReject}
           >
             Confirm Rejection
           </LoadingButton>
         </DialogActions>
-      </Dialog>
+      </Dialog >
     </>
   );
 };

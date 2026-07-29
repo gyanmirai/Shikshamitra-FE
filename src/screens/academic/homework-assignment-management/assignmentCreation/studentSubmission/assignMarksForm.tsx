@@ -76,6 +76,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   hasNext,
   onPrevious,
   hasPrevious,
+  requiresMarks = true,
 }: IAssignGradeProps) => {
   const submitAndNextRef = useRef(false);
   const resolveTotalMarks = (value: unknown): number => {
@@ -109,9 +110,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
       feedback: data?.feedback || '',
     },
     validationSchema: Yup.object({
-      marks: Yup.number()
-        .required('Obtained Marks is required')
-        .max(Yup.ref('totalMarks'), 'Obtained Marks cannot exceed Total Marks'),
+      marks: requiresMarks
+        ? Yup.number()
+            .required('Obtained Marks is required')
+            .max(Yup.ref('totalMarks'), 'Obtained Marks cannot exceed Total Marks')
+        : Yup.number().nullable().optional(),
     }),
     async onSubmit(values) {
       const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
@@ -121,8 +124,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           studentId: data?.studentId,
           academicMediumId: (medium as any)?.id,
           body: {
-            marks: values.marks,
-            totalMarks: resolveTotalMarks(values.totalMarks),
+            marks: requiresMarks ? values.marks : null,
+            totalMarks: requiresMarks ? resolveTotalMarks(values.totalMarks) : null,
             feedback: values.feedback,
             status: 4,
           },
@@ -408,7 +411,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               </Grid>
 
               {/* Evaluation & Marks Section */}
-              <Grid size={{ xs: 12 }}>
+              {requiresMarks && <Grid size={{ xs: 12 }}>
                 <Card
                   sx={{
                     p: 0,
@@ -547,7 +550,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                     </Grid>
                   </Box>
                 </Card>
-              </Grid>
+              </Grid>}
 
               {/* Feedback Section */}
               <Grid size={{ xs: 12 }}>

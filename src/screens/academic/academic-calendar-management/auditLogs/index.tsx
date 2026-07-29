@@ -249,7 +249,6 @@ const CalendarAuditLogs = () => {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <CustomBreadcrumbs
-          sx={{ mb: 1 }}
           heading="Audit Logs"
           description="Track every academic calendar change with full history, impact, and accountability."
           links={[
@@ -269,7 +268,6 @@ const CalendarAuditLogs = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}>
       {/* Header */}
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Audit Logs"
         description="Track every academic calendar change with full history, impact, and accountability."
         links={[

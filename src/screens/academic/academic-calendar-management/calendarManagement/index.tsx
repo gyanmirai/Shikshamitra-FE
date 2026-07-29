@@ -393,7 +393,6 @@ const CalendarManagement = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
       {/* Breadcrumbs */}
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Calendar Management"
         description="Build and manage academic calendars — set holidays, vacations, events, and day markers."
         links={[
@@ -580,7 +579,7 @@ const CalendarManagement = () => {
         {searchParams.tab === 'yearView' && (
           <>
             {!selectedCalendarId ? (
-              <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
+              <Paper sx={{ p: 1, textAlign: 'center', borderRadius: 2 }}>
                 <Typography color="text.secondary">Select a calendar to view</Typography>
               </Paper>
             ) : (
@@ -591,7 +590,9 @@ const CalendarManagement = () => {
                 isLoading={daysLoading}
                 onDayClick={handleDayClick}
                 activeDayType={activeDayType}
-                onToggleDayType={(type) => setActiveDayType((prev) => (prev === type ? null : type))}
+                onToggleDayType={(type) =>
+                  setActiveDayType((prev) => (prev === type ? null : type))
+                }
               />
             )}
           </>

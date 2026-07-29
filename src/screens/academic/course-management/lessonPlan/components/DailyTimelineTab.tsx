@@ -71,7 +71,7 @@ const DailyTimelineTab = ({
   const handleToday = () => onChangeDate(dayjs());
 
   return (
-    <Card sx={{ p: 3 }}>
+    <Card sx={{ p: 3, height: '100%' }}>
       {/* Date navigation bar */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}

@@ -41,7 +41,7 @@ const SubjectBreadcrumbs = ({
 
   return (
     <CustomBreadcrumbs
-      sx={{ mb: 1 }}
+      // sx={{ mb: 1 }}
       heading="Subject Allocation"
       description={
         isViewOpen
