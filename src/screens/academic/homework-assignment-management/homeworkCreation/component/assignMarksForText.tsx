@@ -30,10 +30,7 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  useUpdateHomeworkSubmissionStatusMutation,
-  useUpdateHomeworkSubmissionFeedbackMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 
 import { assignGradeValidationSchema } from './validationSchema';
 
@@ -68,11 +65,6 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
   });
 
-  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateHomeworkSubmissionStatusMutation,
-  });
-
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -95,15 +87,6 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           body: {
             feedback: values.feedback,
             status: 4,
-          },
-        }).unwrap();
-
-        await updateSubmissionStatus({
-          homeworkId: homeworkId || data?.homeworkId,
-          studentId: data?.studentId,
-          academicMediumId: (medium as any)?.id,
-          body: {
-            status: 4, // Reviewed
           },
         }).unwrap();
 
@@ -528,7 +511,7 @@ I have completed all answers as per the instructions.`}
               variant="outlined"
               size="small"
               disabled={!hasNext}
-              loading={isUpdateLoading || isStatusLoading}
+              loading={isUpdateLoading}
               onClick={(e: any) => {
                 submitAndNextRef.current = true;
                 formik.handleSubmit(e);
@@ -540,7 +523,7 @@ I have completed all answers as per the instructions.`}
             <LoadingButton
               variant="contained"
               size="small"
-              loading={isUpdateLoading || isStatusLoading}
+              loading={isUpdateLoading}
               onClick={(e: any) => {
                 submitAndNextRef.current = false;
                 formik.handleSubmit(e);

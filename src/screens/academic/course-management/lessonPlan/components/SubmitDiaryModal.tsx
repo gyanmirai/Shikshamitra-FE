@@ -837,7 +837,7 @@ const SubmitDiaryModal = ({
             startIcon={<Iconify icon="mdi:check-circle-outline" />}
             onClick={() => handleSave(true)}
           >
-            Submit & Update Progress
+            Submit Diary
           </LoadingButton>
         </Stack>
       </Stack>

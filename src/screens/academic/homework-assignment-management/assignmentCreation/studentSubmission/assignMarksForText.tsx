@@ -26,10 +26,7 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  useUpdateSubmissionStatusMutation,
-  useUpdateSubmissionFeedbackMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
+import { useUpdateSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 
 import type { IAssignGradeProps } from '../../homeworkCreation/type';
 
@@ -47,11 +44,6 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubmissionFeedbackMutation,
-  });
-
-  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateSubmissionStatusMutation,
   });
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -81,15 +73,6 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
             totalMarks: values.totalMarks,
             feedback: values.feedback,
             status: 4,
-          },
-        }).unwrap();
-
-        await updateSubmissionStatus({
-          assignmentId: assignmentId || data?.id,
-          studentId: data?.studentId,
-          academicMediumId: (medium as any)?.id,
-          body: {
-            status: 4, // Reviewed
           },
         }).unwrap();
 
@@ -260,7 +243,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
               variant="contained"
               type="submit"
               size="small"
-              loading={isUpdateLoading || isStatusLoading}
+              loading={isUpdateLoading}
               onClick={() => {
                 formik.handleSubmit();
               }}

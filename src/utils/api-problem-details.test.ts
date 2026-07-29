@@ -65,6 +65,20 @@ describe('parseApiProblemDetail', () => {
     expect(parsed.errorCode).toBe('Academic:Timetable:020004');
   });
 
+  it('maps the homework feedback review business rule to an actionable message', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        status: 400,
+        title: 'Business rule violated',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'ShikshaMitra.Submission:UseFeedbackToReview',
+      },
+    });
+
+    expect(parsed.detail).toBe('Please save the feedback before marking the homework as Reviewed.');
+    expect(parsed.errorCode).toBe('ShikshaMitra.Submission:UseFeedbackToReview');
+  });
+
   it('extracts ABP exception data messages before generic business-rule text', () => {
     const parsed = parseApiProblemDetail({
       data: {

@@ -6,6 +6,8 @@ export interface ParsedApiProblemDetail {
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Academic:Timetable:020004':
     'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.',
+  'ShikshaMitra.Submission:UseFeedbackToReview':
+    'Please save the feedback before marking the homework as Reviewed.',
 };
 
 const GENERIC_MESSAGES = new Set([
