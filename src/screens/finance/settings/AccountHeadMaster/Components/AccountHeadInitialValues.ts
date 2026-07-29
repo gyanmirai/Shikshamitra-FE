@@ -2,7 +2,7 @@ export const AccountHeadInitialValues = {
   headName: '',
   headType: '',
   nature: '',
-  linkedSources: [],
+  linkedSources: [] as string[],
   openingBalance: 0,
   notes: '',
   isActive: true,

@@ -107,27 +107,27 @@ const CalendarAuditLogs = () => {
   );
   const canExport = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.Export`
+    `${academicPermissions.academicCalendar.auditLogs}.View`
   );
   const canRestore = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.Restore`
+    `${academicPermissions.academicCalendar.auditLogs}.Edit`
   );
   const canViewSensitive = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.ViewSensitiveMetadata`
+    `${academicPermissions.academicCalendar.auditLogs}.View`
   );
   const canAddNote = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.AddReviewNote`
+    `${academicPermissions.academicCalendar.auditLogs}.Add`
   );
   const canViewAI = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.ViewAIInsights`
+    `${academicPermissions.academicCalendar.auditLogs}.View`
   );
   const canViewAnalytics = hasGrantedPermission(
     permissions,
-    `${academicPermissions.academicCalendar.auditLogs}.ViewAnalytics`
+    `${academicPermissions.academicCalendar.auditLogs}.View`
   );
 
   // State
