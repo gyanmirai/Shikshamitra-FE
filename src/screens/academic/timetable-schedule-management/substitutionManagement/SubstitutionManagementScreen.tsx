@@ -731,15 +731,15 @@ const SubstitutionManagementScreen = () => {
   const createFormSnapshotRef = useRef<string>(JSON.stringify(defaultSubstitutionForm));
   const availabilityFormSnapshotRef = useRef<string>(JSON.stringify(defaultAvailabilityForm));
   const { currentMedium: medium, currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: substitutionResult } = useSubstitutionsDataQuery({
+  const { data: substitutionResult, refetch: refetchSubstitutions } = useSubstitutionsDataQuery({
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
-  const { data: dashboardResult } = useSubstitutionDashboardDataQuery({
+  const { data: dashboardResult, refetch: refetchDashboard } = useSubstitutionDashboardDataQuery({
     date: toDateTimeOffset(dayjs(todayIso).startOf('day')),
   });
-  const { data: myDutiesResult } = useMySubstitutionDutiesDataQuery({
+  const { data: myDutiesResult, refetch: refetchMyDuties } = useMySubstitutionDutiesDataQuery({
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
@@ -1717,6 +1717,7 @@ const SubstitutionManagementScreen = () => {
 
   const handleTeacherDutyAction = useCallback(
     async (id: string, action: 'accept' | 'reject' | 'change') => {
+      if (dutyAction) return;
       setDutyAction({ id, action });
       try {
         const updated =
@@ -1728,23 +1729,39 @@ const SubstitutionManagementScreen = () => {
                 id,
                 reason: 'Change requested from My Duties.',
               }).unwrap();
-        updateSubstitution(id, () => mapApiSubstitution(updated));
+        if (updated) {
+          updateSubstitution(id, () => mapApiSubstitution(updated));
+        }
+        await Promise.all([
+          refetchMyDuties?.(),
+          refetchSubstitutions?.(),
+          refetchDashboard?.(),
+        ]);
         shikshaMitraToast.success({
           message:
             action === 'accept'
-              ? 'Duty accepted.'
+              ? 'Substitution duty accepted successfully.'
               : action === 'reject'
-                ? 'Duty rejected and admin alert created.'
-                : 'Change request sent to admin.',
+                ? 'Substitution duty rejected and admin notified.'
+                : 'Substitution change request sent to admin successfully.',
         });
       } catch (error) {
-        const message = resolveDutyActionErrorMessage(error);
+        const message = resolveDutyActionErrorMessage(error, 'Failed to update substitution duty status.');
         shikshaMitraToast.error({ message });
       } finally {
         setDutyAction(null);
       }
     },
-    [acknowledgeSubstitution, rejectSubstitutionDuty, requestSubstitutionChange, updateSubstitution]
+    [
+      dutyAction,
+      acknowledgeSubstitution,
+      rejectSubstitutionDuty,
+      requestSubstitutionChange,
+      updateSubstitution,
+      refetchMyDuties,
+      refetchSubstitutions,
+      refetchDashboard,
+    ]
   );
 
   const handleDownloadDailySheet = async (format: 'pdf' | 'excel') => {
@@ -1779,20 +1796,20 @@ const SubstitutionManagementScreen = () => {
 
   const renderStatus = (status: SubstitutionStatus) => (
     <Chip
-      label={status === 'Pending' ? 'Pending Assignment' : status}
+      label={status}
       size="small"
       color={statusColor[status]}
-      variant="outlined"
+      variant="soft"
     />
   );
 
   const renderAck = (status: AcknowledgementStatus) => (
-    <Chip label={status} size="small" color={acknowledgementColor[status]} variant="outlined" />
+    <Chip label={status} size="small" color={acknowledgementColor[status]} variant="soft" />
   );
 
   const renderConflict = (status: ConflictStatus, reason?: string) => (
     <Tooltip title={reason || status}>
-      <Chip label={status} size="small" color={conflictColor[status]} variant="outlined" />
+      <Chip label={status} size="small" color={conflictColor[status]} variant="soft" />
     </Tooltip>
   );
 
@@ -1851,7 +1868,7 @@ const SubstitutionManagementScreen = () => {
       filterType: 'string' as const,
       minWidth: 110,
       render: (value: SubstitutionPriority) => (
-        <Chip label={value} size="small" color={priorityColor[value]} variant="outlined" />
+        <Chip label={value} size="small" color={priorityColor[value]} variant="soft" />
       ),
     },
     {
@@ -1931,13 +1948,24 @@ const SubstitutionManagementScreen = () => {
             borderRadius: 2,
             boxShadow: 'none',
             border: (theme) => `1px solid ${theme.palette.divider}`,
+            bgcolor: (theme) =>
+              alpha(
+                theme.palette[item.color as 'success']?.main || theme.palette.text.primary,
+                theme.palette.mode === 'dark' ? 0.12 : 0.04
+              ),
             cursor: item.filterStatus ? 'pointer' : 'default',
-            transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
+            transition: 'all 0.15s ease-in-out',
             '&:hover': item.filterStatus
               ? {
-                boxShadow: (theme) =>
-                  `0 2px 8px ${alpha(theme.palette[item.color as 'success']?.main ?? '#000', 0.18)}`,
-              }
+                  borderColor: `${item.color}.main`,
+                  bgcolor: (theme) =>
+                    alpha(
+                      theme.palette[item.color as 'success']?.main || theme.palette.text.primary,
+                      theme.palette.mode === 'dark' ? 0.18 : 0.08
+                    ),
+                  boxShadow: (theme) =>
+                    `0 2px 8px ${alpha(theme.palette[item.color as 'success']?.main ?? '#000', 0.12)}`,
+                }
               : undefined,
           }}
           onClick={() => {
@@ -2016,8 +2044,8 @@ const SubstitutionManagementScreen = () => {
             borderRadius: 1.5,
             display: 'grid',
             placeItems: 'center',
-            bgcolor: 'action.hover',
-            color: 'text.secondary',
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+            color: 'primary.main',
             flexShrink: 0,
           }}
         >
@@ -2038,12 +2066,9 @@ const SubstitutionManagementScreen = () => {
         borderRadius: 2,
         boxShadow: 'none',
         border: (theme) => `1px solid ${theme.palette.divider}`,
-        ...(isBoardView && {
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          minHeight: 0,
-        }),
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <Box sx={isBoardView ? { flexShrink: 0 } : undefined}>
@@ -2206,6 +2231,9 @@ const SubstitutionManagementScreen = () => {
         borderRadius: 2,
         boxShadow: 'none',
         border: (theme) => `1px solid ${theme.palette.divider}`,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {renderSectionHeader('mdi:account-group-outline', 'Teacher Load Snapshot')}
@@ -2230,7 +2258,7 @@ const SubstitutionManagementScreen = () => {
                         ? 'warning'
                         : 'error'
                   }
-                  variant="outlined"
+                  variant="soft"
                 />
               </Stack>
               <Typography variant="caption" color="text.secondary">
@@ -2419,7 +2447,7 @@ const SubstitutionManagementScreen = () => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 1,
+        gap: 1.5,
         height: 'calc(100vh - 100px)',
         overflowY: isViewportTab ? 'hidden' : 'auto',
         pr: isViewportTab ? 0 : 0.5,
@@ -2568,96 +2596,107 @@ const SubstitutionManagementScreen = () => {
       </Card>
 
       {activeTab === 'overview' && (
-        <Stack spacing={1} sx={{ flexShrink: 0 }}>
-          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1} alignItems="stretch">
-            <Box sx={{ flex: 1.4 }}>{renderTimeline()}</Box>
-            <Box sx={{ flex: 1 }}>{renderRiskPanel()}</Box>
-          </Stack>
-          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1} alignItems="stretch">
-            <Card
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                boxShadow: 'none',
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-                flex: 1,
-              }}
-            >
-              {(() => {
-                const pendingAckRows = todayRows.filter((item) =>
-                  ['Sent', 'Seen', 'Escalated'].includes(item.acknowledgementStatus)
-                );
-                return (
-                  <>
-                    {renderSectionHeader(
-                      'mdi:clipboard-clock-outline',
-                      'Pending Acknowledgement',
-                      <Chip size="small" label={pendingAckRows.length} variant="outlined" />
+        <Box
+          display="grid"
+          gridTemplateColumns={{ xs: '1fr', lg: 'repeat(2, 1fr)' }}
+          gap={1.5}
+          alignItems="stretch"
+          sx={{ flexShrink: 0 }}
+        >
+          <Box sx={{ minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {renderTimeline()}
+          </Box>
+          <Box sx={{ minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {renderRiskPanel()}
+          </Box>
+          <Card
+            sx={{
+              p: 2.5,
+              borderRadius: 2,
+              boxShadow: 'none',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minWidth: 0,
+            }}
+          >
+            {(() => {
+              const pendingAckRows = todayRows.filter((item) =>
+                ['Sent', 'Seen', 'Escalated'].includes(item.acknowledgementStatus)
+              );
+              return (
+                <>
+                  {renderSectionHeader(
+                    'mdi:clipboard-clock-outline',
+                    'Pending Acknowledgement',
+                    <Chip size="small" label={pendingAckRows.length} variant="soft" />
+                  )}
+                  <Stack spacing={1} sx={{ flex: 1, justifyContent: pendingAckRows.length === 0 ? 'center' : 'flex-start' }}>
+                    {pendingAckRows.length === 0 && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ textAlign: 'center', py: 3 }}
+                      >
+                        Everything has been acknowledged.
+                      </Typography>
                     )}
-                    <Stack spacing={1}>
-                      {pendingAckRows.length === 0 && (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ textAlign: 'center', py: 3 }}
-                        >
-                          Everything has been acknowledged.
-                        </Typography>
-                      )}
-                      {pendingAckRows.map((item) => (
+                    {pendingAckRows.map((item) => (
+                      <Stack
+                        key={item.id}
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        spacing={1}
+                        sx={{
+                          p: 1.25,
+                          borderRadius: 1.5,
+                          border: (theme) => `1px solid ${theme.palette.divider}`,
+                        }}
+                      >
                         <Stack
-                          key={item.id}
                           direction="row"
-                          alignItems="center"
-                          justifyContent="space-between"
                           spacing={1}
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            border: (theme) => `1px solid ${theme.palette.divider}`,
-                          }}
+                          alignItems="center"
+                          sx={{ minWidth: 0 }}
                         >
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                            sx={{ minWidth: 0 }}
-                          >
-                            <Iconify
-                              icon={
-                                item.acknowledgementStatus === 'Escalated'
-                                  ? 'mdi:alert-circle-outline'
-                                  : 'mdi:clock-alert-outline'
-                              }
-                              width={18}
-                              color={
-                                item.acknowledgementStatus === 'Escalated'
-                                  ? 'error.main'
-                                  : 'warning.main'
-                              }
-                            />
-                            <Typography variant="body2" noWrap>
-                              {item.substituteTeacherName || 'Teacher'} · {item.period} ·{' '}
-                              {item.className}-{item.divisionName}
-                            </Typography>
-                          </Stack>
-                          <Button
-                            size="small"
-                            sx={{ flexShrink: 0 }}
-                            onClick={() => updateSubstitutionStatus(item.id, 'Acknowledged')}
-                          >
-                            Mark Accepted
-                          </Button>
+                          <Iconify
+                            icon={
+                              item.acknowledgementStatus === 'Escalated'
+                                ? 'mdi:alert-circle-outline'
+                                : 'mdi:clock-alert-outline'
+                            }
+                            width={18}
+                            color={
+                              item.acknowledgementStatus === 'Escalated'
+                                ? 'error.main'
+                                : 'warning.main'
+                            }
+                          />
+                          <Typography variant="body2" noWrap>
+                            {item.substituteTeacherName || 'Teacher'} · {item.period} ·{' '}
+                            {item.className}-{item.divisionName}
+                          </Typography>
                         </Stack>
-                      ))}
-                    </Stack>
-                  </>
-                );
-              })()}
-            </Card>
-            <Box sx={{ flex: 1 }}>{renderWorkloadSnapshot()}</Box>
-          </Stack>
-        </Stack>
+                        <Button
+                          size="small"
+                          sx={{ flexShrink: 0 }}
+                          onClick={() => updateSubstitutionStatus(item.id, 'Acknowledged')}
+                        >
+                          Mark Accepted
+                        </Button>
+                      </Stack>
+                    ))}
+                  </Stack>
+                </>
+              );
+            })()}
+          </Card>
+          <Box sx={{ minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {renderWorkloadSnapshot()}
+          </Box>
+        </Box>
       )}
 
       {activeTab === 'board' && (
@@ -2986,7 +3025,7 @@ const SubstitutionManagementScreen = () => {
                     px: 1.5,
                     py: 1,
                     borderRadius: 1.5,
-                    bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.6),
+                    bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
                     border: (theme) => `1px solid ${theme.palette.divider}`,
                   }}
                 >
@@ -3079,7 +3118,7 @@ const SubstitutionManagementScreen = () => {
                   <Stack
                     direction="row"
                     alignItems="center"
-                    justifyContent="flex-start"
+                    justifyContent="flex-end"
                     spacing={1}
                     flexWrap="wrap"
                     useFlexGap
@@ -3104,12 +3143,12 @@ const SubstitutionManagementScreen = () => {
                       size="small"
                       variant="outlined"
                       color="warning"
-                      disabled={isCardBusy}
+                      disabled={isCardBusy || isChangeRequested}
                       loading={isChanging}
                       startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
                       onClick={() => handleTeacherDutyAction(item.id, 'change')}
                     >
-                      {isChanging ? 'Sending…' : 'Request Change'}
+                      {isChanging ? 'Sending…' : isChangeRequested ? 'Change Requested' : 'Request Change'}
                     </LoadingButton>
                     <LoadingButton
                       size="small"

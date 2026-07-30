@@ -3,7 +3,7 @@
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
-import React from 'react';
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
@@ -13,13 +13,14 @@ import {
   Grid,
   Stack,
   Alert,
+  Menu,
   Button,
+  MenuItem,
   Skeleton,
   Typography,
   IconButton,
   LinearProgress,
 } from '@mui/material';
-import index from 'swr';
 
 const planStatusColor: Record<
   string,
@@ -66,9 +67,21 @@ const DailyTimelineTab = ({
   onSubmitPlan,
   onCreateHomework,
 }: Props) => {
+  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const [menuPlan, setMenuPlan] = useState<any | null>(null);
+
   const handlePrevDay = () => onChangeDate(selectedDate.subtract(1, 'day'));
   const handleNextDay = () => onChangeDate(selectedDate.add(1, 'day'));
   const handleToday = () => onChangeDate(dayjs());
+
+  const openCardMenu = (target: HTMLElement, plan: any) => {
+    setMenuAnchorEl(target);
+    setMenuPlan(plan);
+  };
+  const closeCardMenu = () => {
+    setMenuAnchorEl(null);
+    setMenuPlan(null);
+  };
 
   return (
     <Card sx={{ p: 3, height: '100%' }}>
@@ -199,19 +212,32 @@ const DailyTimelineTab = ({
                   },
                 }}
               >
-                <Grid container spacing={1} alignItems="center">
+                <Grid container spacing={1} alignItems="flex-start">
                   {/* Period & Time slot info */}
                   <Grid size={{ xs: 12, md: 3 }}>
                     {isManualSlot ? (
-                      /* ── Manual / Unscheduled slot badge ── */
-                      <Stack spacing={0.75} alignItems="flex-start">
-                        <Label color="default" variant="soft">
-                          Manual Plan
-                        </Label>
-                        <Typography variant="caption" color="text.secondary">
-                          Grade {slot.standardName}
-                          {slot.divisionName ? `-${slot.divisionName}` : ''}
-                        </Typography>
+                      /* ── Manual / Unscheduled slot header (mirrors period block) ── */
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Box
+                          sx={{
+                            p: 1,
+                            borderRadius: 1,
+                            bgcolor: 'grey.100',
+                            color: 'text.secondary',
+                            display: 'flex',
+                          }}
+                        >
+                          <Iconify icon="mdi:calendar-edit-outline" width={20} />
+                        </Box>
+                        <Box>
+                          <Label color="default" variant="soft">
+                            Manual Plan
+                          </Label>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Grade {slot.standardName}
+                            {slot.divisionName ? `-${slot.divisionName}` : ''}
+                          </Typography>
+                        </Box>
                       </Stack>
                     ) : (
                       /* ── Regular timetable period ── */
@@ -271,29 +297,6 @@ const DailyTimelineTab = ({
                             Objective: {plan.learningObjective}
                           </Typography>
                         )}
-                        {planStatus === 'NeedsChanges' && plan.reviewRemarks && (
-                          <Alert
-                            severity="warning"
-                            sx={{
-                              py: 0.5,
-                              px: 1.5,
-                              mt: 1,
-                              borderLeft: '3px solid',
-                              borderColor: 'warning.main',
-                            }}
-                          >
-                            <strong>HOD Remarks:</strong> {plan.reviewRemarks}
-                          </Alert>
-                        )}
-                        {plan.insightMessage && (
-                          <Alert
-                            severity={plan.insightSeverity === 'error' ? 'error' : 'warning'}
-                            icon={<Iconify icon="mdi:information-outline" />}
-                            sx={{ py: 0.25, px: 1, mt: 0.5 }}
-                          >
-                            {plan.insightMessage}
-                          </Alert>
-                        )}
                         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
                           <Typography variant="caption" color="text.secondary">
                             Planned completion: <strong>{plan.plannedCompletionPercentage}%</strong>
@@ -338,74 +341,38 @@ const DailyTimelineTab = ({
                     )}
                   </Grid>
 
-                  {/* Actions Panel — horizontal flex row, wraps on small screens */}
+                  {/* Actions Panel — single primary action + overflow (⋮) menu */}
                   <Grid size={{ xs: 12, md: 3 }}>
                     {hasPlan ? (
                       <Stack
                         direction="row"
                         spacing={1}
-                        flexWrap="wrap"
                         justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
                         alignItems="center"
-                        useFlexGap
                       >
-                        {/* View — always shown */}
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<Iconify icon="mdi:eye-outline" />}
-                          onClick={() => normalizedPlan && onViewDetails(normalizedPlan)}
-                        >
-                          View
-                        </Button>
-
-                        {/* Draft / NeedsChanges / Rejected: Submit (primary) + Edit (secondary) */}
+                        {/* Primary action by status */}
                         {['Draft', 'NeedsChanges', 'Rejected'].includes(planStatus) && (
-                          <>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              color="primary"
-                              startIcon={<Iconify icon="mdi:send-outline" />}
-                              onClick={() => onSubmitPlan(plan.id || plan.Id)}
-                            >
-                              Submit
-                            </Button>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              startIcon={<Iconify icon="mdi:pencil-outline" />}
-                              onClick={() => onEditLesson(plan)}
-                            >
-                              Edit
-                            </Button>
-                          </>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            color="primary"
+                            startIcon={<Iconify icon="mdi:send-outline" />}
+                            onClick={() => onSubmitPlan(plan.id || plan.Id)}
+                          >
+                            Submit
+                          </Button>
                         )}
-
-                        {/* Approved: Record Diary (primary) + Homework (secondary) */}
                         {planStatus === 'Approved' && (
-                          <>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              color="success"
-                              startIcon={<Iconify icon="mdi:notebook-edit-outline" />}
-                              onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
-                            >
-                              Record Diary
-                            </Button>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              startIcon={<Iconify icon="mdi:book-plus-outline" />}
-                              onClick={() => normalizedPlan && onCreateHomework?.(normalizedPlan)}
-                            >
-                              Homework
-                            </Button>
-                          </>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            color="success"
+                            startIcon={<Iconify icon="mdi:notebook-edit-outline" />}
+                            onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
+                          >
+                            Record Diary
+                          </Button>
                         )}
-
-                        {/* Submitted: pending badge */}
                         {planStatus === 'Submitted' && (
                           <Button
                             variant="outlined"
@@ -416,37 +383,135 @@ const DailyTimelineTab = ({
                             Pending HOD
                           </Button>
                         )}
+
+                        {/* Secondary actions collapsed into ⋮ overflow */}
+                        {planStatus !== 'Submitted' && (
+                          <IconButton
+                            size="small"
+                            title="More actions"
+                            onClick={(e) =>
+                              normalizedPlan && openCardMenu(e.currentTarget, normalizedPlan)
+                            }
+                          >
+                            <Iconify icon="mdi:dots-vertical" />
+                          </IconButton>
+                        )}
                       </Stack>
                     ) : (
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        size="small"
-                        startIcon={<Iconify icon="mdi:plus-circle-outline" />}
-                        disabled={slot.isPlanCreationBlocked}
-                        onClick={() =>
-                          onAddLesson(selectedDate, {
-                            timetableSlotId: slot.timetableSlotId,
-                            period: slot.periodName,
-                            className: slot.standardName,
-                            divisionName: slot.divisionName,
-                            subjectName: slot.subjectName,
-                            standardId: slot.standardId,
-                            divisionId: slot.divisionId,
-                            subjectId: slot.subjectId,
-                          })
-                        }
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
+                        alignItems="center"
                       >
-                        {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
-                      </Button>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="small"
+                          startIcon={<Iconify icon="mdi:plus-circle-outline" />}
+                          disabled={slot.isPlanCreationBlocked}
+                          onClick={() =>
+                            onAddLesson(selectedDate, {
+                              timetableSlotId: slot.timetableSlotId,
+                              period: slot.periodName,
+                              className: slot.standardName,
+                              divisionName: slot.divisionName,
+                              subjectName: slot.subjectName,
+                              standardId: slot.standardId,
+                              divisionId: slot.divisionId,
+                              subjectId: slot.subjectId,
+                            })
+                          }
+                        >
+                          {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
+                        </Button>
+                      </Stack>
                     )}
                   </Grid>
                 </Grid>
+
+                {/* ── Full-width footer: HOD remarks + plan insight (only when present) ── */}
+                {hasPlan &&
+                  ((planStatus === 'NeedsChanges' && plan.reviewRemarks) ||
+                    plan.insightMessage) && (
+                    <Stack
+                      spacing={0.5}
+                      direction={{ xs: 'column', sm: 'row' }}
+                      sx={{ mt: 1.5, pt: 1.5, borderTop: '1px dashed', borderColor: 'divider' }}
+                    >
+                      {planStatus === 'NeedsChanges' && plan.reviewRemarks && (
+                        <Alert
+                          severity="warning"
+                          icon={<Iconify icon="mdi:alert-circle-outline" />}
+                          sx={{
+                            flex: 1,
+                            py: 0.75,
+                            px: 1.5,
+                            alignItems: 'center',
+                            borderLeft: '4px solid',
+                            borderColor: 'warning.main',
+                          }}
+                        >
+                          <strong>HOD Remarks:</strong> {plan.reviewRemarks}
+                        </Alert>
+                      )}
+                      {plan.insightMessage && (
+                        <Alert
+                          severity={plan.insightSeverity === 'error' ? 'error' : 'warning'}
+                          icon={<Iconify icon="mdi:information-outline" />}
+                          sx={{ flex: 1, py: 0.75, px: 1.5, alignItems: 'center' }}
+                        >
+                          {plan.insightMessage}
+                        </Alert>
+                      )}
+                    </Stack>
+                  )}
               </Box>
             );
           })}
         </Stack>
       )}
+
+      {/* Card action overflow menu — View / Edit / Homework driven by the selected plan's status */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={closeCardMenu}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuPlan) onViewDetails(menuPlan);
+            closeCardMenu();
+          }}
+        >
+          <Iconify icon="mdi:eye-outline" width={18} sx={{ mr: 1 }} />
+          View Details
+        </MenuItem>
+        {['Draft', 'NeedsChanges', 'Rejected'].includes(menuPlan?.status) && (
+          <MenuItem
+            onClick={() => {
+              if (menuPlan) onEditLesson(menuPlan);
+              closeCardMenu();
+            }}
+          >
+            <Iconify icon="mdi:pencil-outline" width={18} sx={{ mr: 1 }} />
+            Edit Plan
+          </MenuItem>
+        )}
+        {menuPlan?.status === 'Approved' && (
+          <MenuItem
+            onClick={() => {
+              if (menuPlan) onCreateHomework?.(menuPlan);
+              closeCardMenu();
+            }}
+          >
+            <Iconify icon="mdi:book-plus-outline" width={18} sx={{ mr: 1 }} />
+            Create Homework
+          </MenuItem>
+        )}
+      </Menu>
     </Card>
   );
 };

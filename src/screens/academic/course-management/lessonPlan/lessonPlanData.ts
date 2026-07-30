@@ -262,8 +262,13 @@ export type TeachingHealthScore = {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+export const getMondayOfWeek = (date: dayjs.Dayjs | string): dayjs.Dayjs => {
+  const d = typeof date === 'string' ? dayjs(date) : date;
+  return d.startOf('day').subtract((d.day() + 6) % 7, 'day');
+};
+
 export const todayIso = dayjs().format('YYYY-MM-DD');
-export const weekStartIso = dayjs().startOf('week').add(1, 'day').format('YYYY-MM-DD');
+export const weekStartIso = getMondayOfWeek(dayjs()).format('YYYY-MM-DD');
 export const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // ─── Option Arrays ────────────────────────────────────────────────────────────

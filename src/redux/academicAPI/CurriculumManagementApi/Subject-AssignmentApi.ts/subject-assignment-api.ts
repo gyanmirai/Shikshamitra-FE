@@ -155,6 +155,16 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.subjectAssignment],
     }),
+
+    // Copy subject assignments to target classes
+    copySubjectAssignments: builder.mutation({
+      query: (body) => ({
+        url: `/academics/curriculum/subject-assignments/copy`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.subjectAssignment],
+    }),
   }),
 
   overrideExisting: false,
@@ -177,4 +187,5 @@ export const {
   useGetTeacherWorkloadQuery,
   useArchiveSubjectAssignmentMutation,
   useRestoreSubjectAssignmentMutation,
+  useCopySubjectAssignmentsMutation,
 } = subjectAssignmentsApi;
