@@ -394,7 +394,9 @@ export function serializeSchedulePayload(values: IExamFormValues) {
       subjects.push({
         subjectId: sub.subjectId,
         // electiveGroupId: sub.electiveGroupId ?? null,
-        examDate: sub?.examDate?.toISOString() ?? null,
+        examDate: sub?.examDate?.format?.(dateFormat)
+          ? dateConvertor(sub.examDate.format(dateFormat))
+          : null,
         startTime: sub?.startTime?.format?.(dateFormat)
           ? dateConvertor(sub?.startTime?.format?.(dateFormat))
           : null,

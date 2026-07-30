@@ -6,10 +6,10 @@ export const subjectsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subjects under academic medium
     getCoreSubjectsByMedium: builder.query({
-      query: ({ academicMediumId, searchTerm }) => ({
+      query: ({ academicMediumId, searchTerm, includeArchived = false }) => ({
         url: `/academic-mediums/${academicMediumId}/subjects`,
         method: 'GET',
-        params: { searchTerm },
+        params: { searchTerm, includeArchived },
       }),
       providesTags: [academicType.subject],
     }),

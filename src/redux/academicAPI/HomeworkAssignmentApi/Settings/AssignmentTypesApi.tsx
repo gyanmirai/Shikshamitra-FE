@@ -15,11 +15,14 @@ const ASSIGNMENT_TYPE_LIST_ID = 'LIST';
 
 export const assignmentTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
-    getAssignmentTypes: builder.query<AssignmentTypeListResponse, { academicMediumId: string }>({
-      query: ({ academicMediumId }) => ({
+    getAssignmentTypes: builder.query<
+      AssignmentTypeListResponse,
+      { academicMediumId: string; includeArchived?: boolean }
+    >({
+      query: ({ academicMediumId, includeArchived = false }) => ({
         url: '/assignment-type',
         method: 'GET',
-        params: { academicMediumId },
+        params: { academicMediumId, includeArchived },
       }),
       providesTags: (result) => [
         academicType.assignmentType,
@@ -97,6 +100,42 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
         academicType.assignmentList,
       ],
     }),
+
+    archiveAssignmentType: builder.mutation<
+      MessageResponse,
+      { assignmentTypeId: string; academicMediumId: string }
+    >({
+      query: ({ assignmentTypeId, academicMediumId }) => ({
+        url: `/assignment-type/${assignmentTypeId}/archive`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: (_result, _error, { assignmentTypeId }) => [
+        academicType.assignmentType,
+        { type: academicType.assignmentTypeList, id: ASSIGNMENT_TYPE_LIST_ID },
+        { type: academicType.assignmentTypeDetail, id: assignmentTypeId },
+        academicType.assignment,
+        academicType.assignmentList,
+      ],
+    }),
+
+    restoreAssignmentType: builder.mutation<
+      MessageResponse,
+      { assignmentTypeId: string; academicMediumId: string }
+    >({
+      query: ({ assignmentTypeId, academicMediumId }) => ({
+        url: `/assignment-type/${assignmentTypeId}/restore`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: (_result, _error, { assignmentTypeId }) => [
+        academicType.assignmentType,
+        { type: academicType.assignmentTypeList, id: ASSIGNMENT_TYPE_LIST_ID },
+        { type: academicType.assignmentTypeDetail, id: assignmentTypeId },
+        academicType.assignment,
+        academicType.assignmentList,
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -107,6 +146,8 @@ export const {
   useAddAssignmentTypeMutation,
   useUpdateAssignmentTypeMutation,
   useDeleteAssignmentTypeMutation,
+  useArchiveAssignmentTypeMutation,
+  useRestoreAssignmentTypeMutation,
 } = assignmentTypesApi;
 
 export type { AssignmentTypeDto };

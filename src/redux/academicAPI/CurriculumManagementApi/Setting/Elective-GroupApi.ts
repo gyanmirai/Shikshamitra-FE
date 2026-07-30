@@ -6,9 +6,10 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all elective groups under academic medium
     getElectiveGroups: builder.query({
-      query: ({ academicMediumId }) => ({
+      query: ({ academicMediumId, includeArchived = false }) => ({
         url: `/academic-mediums/${academicMediumId}/elective-groups`,
         method: 'GET',
+        params: { includeArchived },
       }),
       providesTags: [academicType.electiveGroup],
     }),

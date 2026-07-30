@@ -1,7 +1,7 @@
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Select, Checkbox, MenuItem, TextField, Typography, FormControl } from '@mui/material';
@@ -16,6 +16,8 @@ import {
 } from 'src/enums/grade-entry-status';
 
 import type { IExamMarkItem, IGradeEntryTableProps, IExamMarksWorkflowFlags } from '../type';
+
+const GRADE_PLACEHOLDER = '-';
 
 interface ExtendedGradeEntryTableProps extends IGradeEntryTableProps {
   onRowsChange?: (rows: IExamMarkItem[]) => void;
@@ -86,12 +88,35 @@ const GradeEntryTable = ({
     }));
   }, [targetData]);
 
+  const savedRowsByStudentId = useMemo(() => {
+    const rowsById = new Map<string, IExamMarkItem>();
+    apiRows.forEach((row) => rowsById.set(row.studentId, row));
+    return rowsById;
+  }, [apiRows]);
+
   // Local state for inline edits
   const [localRows, setLocalRows] = useState<IExamMarkItem[]>([]);
 
   useEffect(() => {
     setLocalRows(apiRows);
   }, [apiRows]);
+
+  /**
+   * Memoization Justification:
+   * - Keeps the saved-row comparison stable for the all-assigned effect dependency list.
+   * - Prevents the effect from re-running solely because the helper function was recreated.
+   * - The helper is also reused by several table render callbacks in this frequently edited grid.
+   */
+  const isRowModified = useCallback((row: IExamMarkItem) => {
+    const savedRow = savedRowsByStudentId.get(row.studentId);
+    if (!savedRow) return false;
+
+    return (
+      (row.marks ?? null) !== (savedRow.marks ?? null) ||
+      (row.attendanceStatus ?? 0) !== (savedRow.attendanceStatus ?? 0) ||
+      (row.feedback ?? '') !== (savedRow.feedback ?? '')
+    );
+  }, [savedRowsByStudentId]);
 
   useEffect(() => {
     if (onRowsChange) {
@@ -112,17 +137,12 @@ const GradeEntryTable = ({
           next.attendanceStatus = attendanceStatus;
           next.marks = attendanceStatus === 0 ? 0 : null;
           next.feedback = '';
-          next.grade = attendanceStatus === 0 ? next.grade : 'â€”';
-          next.status = 1;
         }
 
         if (bulkEditRequest.action === 'marks') {
           const marks = Number(bulkEditRequest.value ?? 0);
           next.attendanceStatus = 0;
           next.marks = marks;
-          const pct = (marks / next.totalMarks) * 100;
-          next.grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
-          next.status = 1;
         }
 
         if (bulkEditRequest.action === 'remark') {
@@ -133,8 +153,6 @@ const GradeEntryTable = ({
           next.attendanceStatus = 0;
           next.marks = null;
           next.feedback = '';
-          next.grade = 'â€”';
-          next.status = 0;
         }
 
         return next;
@@ -151,21 +169,10 @@ const GradeEntryTable = ({
         if (row.studentId !== studentId) return row;
 
         const updatedRow = { ...row, [field]: value };
-        
-        // If marks are edited, automatically calculate grade and status preview
-        if (field === 'marks' || field === 'attendanceStatus') {
-          const isPresent = updatedRow.attendanceStatus === 0;
-          if (isPresent && updatedRow.marks !== null) {
-            const pct = (updatedRow.marks / updatedRow.totalMarks) * 100;
-            updatedRow.grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
-            updatedRow.status = 1; // Assigned
-          } else if (!isPresent) {
-            updatedRow.marks = null;
-            updatedRow.grade = '—';
-            updatedRow.status = 1; // Attendance status saved counts as assigned
-          } else {
-            updatedRow.status = 0; // Pending
-          }
+
+        if (field === 'attendanceStatus' && updatedRow.attendanceStatus !== 0) {
+          updatedRow.marks = null;
+          updatedRow.feedback = '';
         }
 
         return updatedRow;
@@ -212,9 +219,11 @@ const GradeEntryTable = ({
   // Notify parent whether all students have marks assigned
   useEffect(() => {
     if (!onAllAssignedChange) return;
-    const allAssigned = localRows.length > 0 && localRows.every((item) => item.status === 1);
+    const allAssigned =
+      localRows.length > 0 &&
+      localRows.every((item) => item.status === 1 && !isRowModified(item));
     onAllAssignedChange(allAssigned);
-  }, [localRows, onAllAssignedChange]);
+  }, [localRows, onAllAssignedChange, isRowModified]);
 
   // Emit workflow flags to parent
   useEffect(() => {
@@ -301,9 +310,13 @@ const GradeEntryTable = ({
           label: (
             <Checkbox
               size="small"
+              disabled={isLocked}
               checked={selectedStudents.length === localRows.length && localRows.length > 0}
               indeterminate={selectedStudents.length > 0 && selectedStudents.length < localRows.length}
               onChange={(e) => {
+                if (isLocked) {
+                  return;
+                }
                 localRows.forEach((row) => {
                   const isSelected = selectedStudents.includes(row.studentId);
                   if (e.target.checked && !isSelected) {
@@ -319,8 +332,13 @@ const GradeEntryTable = ({
           render: (value, row) => (
             <Checkbox
               size="small"
+              disabled={isLocked}
               checked={selectedStudents.includes(row.studentId)}
-              onChange={() => handleSelectStudent(row.studentId)}
+              onChange={() => {
+                if (!isLocked) {
+                  handleSelectStudent(row.studentId);
+                }
+              }}
             />
           ),
         },
@@ -407,11 +425,19 @@ const GradeEntryTable = ({
           id: 'grade',
           label: 'Grade',
           minWidth: 80,
-          render: (value) => (
-            <Label color={(value === 'F' || value === '—') ? 'error' : 'success'} variant="soft">
-              {value || '—'}
-            </Label>
-          ),
+          render: (value, row) => {
+            const gradeRow = row as IExamMarkItem;
+            const shouldShowSavedGrade = !isRowModified(gradeRow) && value && value !== '—';
+            return shouldShowSavedGrade ? (
+              <Label color={value === 'F' ? 'error' : 'success'} variant="soft">
+                {value}
+              </Label>
+            ) : (
+              <Typography variant="body2" color="text.disabled" fontWeight={600}>
+                {GRADE_PLACEHOLDER}
+              </Typography>
+            );
+          },
         },
         {
           id: 'feedback',
@@ -451,7 +477,14 @@ const GradeEntryTable = ({
           stickyPosition: 'right',
           filterType: 'enum',
           enumOptions: ExamGradeStatusOptions,
-          render(value: ExamGradeStatusType) {
+          render(value: ExamGradeStatusType, row) {
+            if (isRowModified(row as IExamMarkItem)) {
+              return (
+                <Label color="warning" variant="soft">
+                  Unsaved Changes
+                </Label>
+              );
+            }
             const color = ExamGradeStatusColor[value as ExamGradeStatusType] as LabelColor;
             return <Label color={color}>{ExamGradeStatusType[value]}</Label>;
           },

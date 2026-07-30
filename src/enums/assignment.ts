@@ -23,6 +23,7 @@ export enum AssignmentStatus {
 export enum AssignmentTypeStatus {
   Active = 0,
   Inactive = 1,
+  Archived = 2,
 }
 
 export const ASSIGNMENT_SUBMISSION_TYPE_LABELS: Record<AssignmentSubmissionType, string> = {
