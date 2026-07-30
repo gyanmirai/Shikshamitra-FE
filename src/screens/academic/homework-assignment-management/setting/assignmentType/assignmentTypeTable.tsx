@@ -2,6 +2,9 @@
 
 import React from 'react';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { Stack, IconButton } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
@@ -20,6 +23,8 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
   isLoading,
   data,
   onDelete,
+  onArchive,
+  onRestore,
   onEdit,
   canAdd = true,
   canDelete = true,
@@ -132,12 +137,14 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
         enumOptions: [
           { label: 'Active', value: 0 },
           { label: 'Inactive', value: 1 },
+          { label: 'Archived', value: 2 },
         ],
         render: (_value, row) => {
+          const isArchived = row.status === 2;
           const isActive = row.status === 0;
           return (
-            <Label variant="soft" color={isActive ? 'success' : 'error'}>
-              {isActive ? 'Active' : 'Inactive'}
+            <Label variant="soft" color={isArchived ? 'default' : isActive ? 'success' : 'error'}>
+              {isArchived ? 'Archived' : isActive ? 'Active' : 'Inactive'}
             </Label>
           );
         },
@@ -151,20 +158,45 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
         sticky: true,
         stickyPosition: 'right',
         isFilter: false,
-        render: (_value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            placement="right-top"
-            showDeleteIcon={canDelete}
-            showEditIcon={canAdd}
-            handleDeleteClick={() => {
-              onDelete(row as IAssignmentType);
-            }}
-            handleEditClick={() => {
-              onEdit(row as IAssignmentType);
-            }}
-          />
-        ),
+        render: (_value, row) => {
+          const assignmentType = row as IAssignmentType;
+          const isArchived = assignmentType.status === 2;
+          return (
+            <Stack direction="row" spacing={1} justifyContent="center">
+              {isArchived ? (
+                <TypeActionButton
+                  title="Restore assignment type"
+                  icon="solar:restart-bold"
+                  color="success"
+                  onClick={() => onRestore(assignmentType)}
+                />
+              ) : (
+                <>
+                  <ThreeDotsActions
+                    showThreeDots={false}
+                    placement="right-top"
+                    showDeleteIcon={canDelete}
+                    showEditIcon={canAdd}
+                    disableDeleteIcon={(assignmentType.usageCount || 0) > 0}
+                    handleDeleteClick={() => {
+                      onDelete(assignmentType);
+                    }}
+                    handleEditClick={() => {
+                      onEdit(assignmentType);
+                    }}
+                  />
+                  <TypeActionButton
+                    title="Archive assignment type"
+                    icon="solar:archive-bold"
+                    color="warning"
+                    disabled={!canDelete}
+                    onClick={() => onArchive(assignmentType)}
+                  />
+                </>
+              )}
+            </Stack>
+          );
+        },
       },
     ]}
     data={data || []}
@@ -172,3 +204,35 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
 );
 
 export default AssignmentTypeTable;
+
+const TypeActionButton = ({
+  title,
+  icon,
+  color,
+  disabled = false,
+  onClick,
+}: {
+  title: string;
+  icon: string;
+  color: 'success' | 'warning';
+  disabled?: boolean;
+  onClick: () => void;
+}) => (
+  <CustomTooltip title={title} arrow placement="top">
+    <span>
+      <IconButton
+        size="small"
+        color={color}
+        disabled={disabled}
+        aria-label={title}
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        sx={{ width: 18, height: 18, p: 0 }}
+      >
+        <Iconify icon={icon} width={16} height={16} />
+      </IconButton>
+    </span>
+  </CustomTooltip>
+);

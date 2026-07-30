@@ -9,8 +9,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { alpha } from '@mui/material/styles';
-import { Box, Paper, Stack, Button, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -19,11 +18,13 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   useGetHomeworkTypesQuery,
   useDeleteHomeworkTypeMutation,
+  useArchiveHomeworkTypeMutation,
+  useRestoreHomeworkTypeMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import HomeworkTypeForm from './homeworkTypeForm';
 import HomeworkTypeTable from './homeworkTypeTable';
@@ -36,6 +37,7 @@ const HomeworkTypeCreation = () => {
 
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
+  const archiveDialog = useBoolean();
 
   // Modal open/close state
   const [, setOpen] = useState(false);
@@ -68,6 +70,14 @@ const HomeworkTypeCreation = () => {
   const [deleteHomeworkType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteHomeworkTypeMutation,
+  });
+  const [archiveHomeworkType, { isLoading: isArchiveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useArchiveHomeworkTypeMutation,
+  });
+  const [restoreHomeworkType, { isLoading: isRestoreLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRestoreHomeworkTypeMutation,
   });
 
   /**
@@ -102,7 +112,7 @@ const HomeworkTypeCreation = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHomeworkTypesQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: true },
     options: {
       skip: !(medium as Medium)?.id,
     },
@@ -174,6 +184,23 @@ const HomeworkTypeCreation = () => {
           setSelectedData(data);
           deleteDialog.onTrue();
         }}
+        onArchive={(data) => {
+          setSelectedData(data);
+          archiveDialog.onTrue();
+        }}
+        onRestore={async (data) => {
+          try {
+            await restoreHomeworkType({
+              academicMediumId: (medium as Medium)?.id || '',
+              homeworkTypeId: data.id || '',
+            }).unwrap();
+            shikshaMitraToast.success({ message: 'Homework Type restored successfully' });
+          } catch (error: any) {
+            shikshaMitraToast.error({
+              message: error?.data?.message || 'Failed to restore Homework Type',
+            });
+          }
+        }}
       />
 
       <CustomDialog
@@ -234,8 +261,8 @@ const HomeworkTypeCreation = () => {
             onClick={async () => {
               try {
                 await deleteHomeworkType({
-                  academicMediumId: (medium as Medium)?.id,
-                  homeworkTypeId: selectedData?.id,
+                  academicMediumId: (medium as Medium)?.id || '',
+                  homeworkTypeId: selectedData?.id || '',
                 }).unwrap();
                 shikshaMitraToast.success({ message: 'Homework Type deleted successfully' });
               } catch (error: any) {
@@ -248,6 +275,46 @@ const HomeworkTypeCreation = () => {
             }}
           >
             Yes
+          </LoadingButton>
+        }
+      />
+
+      <ConfirmDialog
+        open={archiveDialog.value}
+        onClose={() => {
+          setSelectedData(null);
+          archiveDialog.onFalse();
+        }}
+        title="Archive"
+        content={
+          <>
+            Archive Homework Type <strong>{selectedData?.homeworkTypeName}</strong>? It will not
+            be available for future homework.
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isArchiveLoading || isRestoreLoading}
+            variant="contained"
+            size="small"
+            color="warning"
+            onClick={async () => {
+              try {
+                await archiveHomeworkType({
+                  academicMediumId: (medium as Medium)?.id || '',
+                  homeworkTypeId: selectedData?.id || '',
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Homework Type archived successfully' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to archive Homework Type',
+                });
+              }
+              archiveDialog.onFalse();
+              setSelectedData(null);
+            }}
+          >
+            Archive
           </LoadingButton>
         }
       />

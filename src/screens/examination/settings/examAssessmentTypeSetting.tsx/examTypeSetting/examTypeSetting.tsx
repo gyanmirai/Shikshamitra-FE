@@ -11,6 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -20,19 +21,21 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
-import { Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Paper, Stack, Button, IconButton, Typography } from '@mui/material';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
 import {
   examinationTypeApi,
   useGetExaminationTypesQuery,
   useDeleteExaminationTypeMutation,
+  useArchiveExaminationTypeMutation,
+  useRestoreExaminationTypeMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import ExamTypeForm from './examTypeForm';
 
 import type { IExamType } from '../type';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 
 const getStatusLabel = (status: any) => {
   if (status === 0 || status === 'Active') return { label: 'Active', color: 'success' };
@@ -58,6 +61,7 @@ const ExamTypeSettings = () => {
     }))
   );
   const addExamTypeDialog = useBoolean(false);
+  const archiveDialog = useBoolean(false);
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
 
@@ -78,7 +82,7 @@ const ExamTypeSettings = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExaminationTypesQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: true },
     options: {
       skip: !(currentMedium as Medium)?.id,
     },
@@ -86,6 +90,14 @@ const ExamTypeSettings = () => {
   const [deleteExamType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteExaminationTypeMutation,
+  });
+  const [archiveExamType, { isLoading: isArchiveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useArchiveExaminationTypeMutation,
+  });
+  const [restoreExamType, { isLoading: isRestoreLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRestoreExaminationTypeMutation,
   });
   // Dialog state for confirming the deletion of an exam type.
   const confirmDeleteDialog = useBoolean();
@@ -177,10 +189,30 @@ const ExamTypeSettings = () => {
 
       <TimetableSettingsSummaryCards
         cards={[
-          { label: 'Total Exam Types', value: totalTypes, icon: 'solar:documents-bold-duotone', color: 'primary' },
-          { label: 'Active Types', value: activeTypes, icon: 'solar:check-circle-bold-duotone', color: 'success' },
-          { label: 'Used Types', value: usedTypes, icon: 'solar:chart-square-bold-duotone', color: 'info' },
-          { label: 'Included in Result', value: includedInResult, icon: 'solar:star-bold-duotone', color: 'warning' },
+          {
+            label: 'Total Exam Types',
+            value: totalTypes,
+            icon: 'solar:documents-bold-duotone',
+            color: 'primary',
+          },
+          {
+            label: 'Active Types',
+            value: activeTypes,
+            icon: 'solar:check-circle-bold-duotone',
+            color: 'success',
+          },
+          {
+            label: 'Used Types',
+            value: usedTypes,
+            icon: 'solar:chart-square-bold-duotone',
+            color: 'info',
+          },
+          {
+            label: 'Included in Result',
+            value: includedInResult,
+            icon: 'solar:star-bold-duotone',
+            color: 'warning',
+          },
         ]}
       />
 
@@ -293,28 +325,68 @@ const ExamTypeSettings = () => {
             sticky: true,
             stickyPosition: 'right',
             render(value, row) {
+              const examType = row as any;
+              const isArchived = examType.status === 3 || examType.status === 'Archived';
               return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                  showThreeDots={false}
-                  showEditIcon={canAdd}
-                  showDeleteIcon={canDelete}
-                  handleDeleteClick={() => {
-                    confirmDeleteDialog.onTrue();
-                    setSelectedExamType(row as IExamType);
-                  }}
-                  handleEditClick={() => {
-                    addExamTypeDialog.onTrue();
-                    setSelectedExamType(row as IExamType);
-                    setIsEdit(true);
-                  }}
-                />
+                <Stack direction="row" spacing={1} justifyContent="center">
+                  {isArchived ? (
+                    <ArchiveActionButton
+                      title="Restore exam type"
+                      icon="solar:restart-bold"
+                      color="success"
+                      disabled={!canAdd || isRestoreLoading}
+                      onClick={async () => {
+                        try {
+                          await restoreExamType({
+                            academicMediumId: (currentMedium as any).id,
+                            id: examType.id,
+                          }).unwrap();
+                          shikshaMitraToast.success({
+                            message: 'Exam type restored successfully.',
+                          });
+                        } catch (error: any) {
+                          shikshaMitraToast.error({
+                            message: error?.data?.message || 'Failed to restore exam type.',
+                          });
+                        }
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <ThreeDotsActions
+                        placement="right-top"
+                        showThreeDots={false}
+                        showEditIcon={canAdd}
+                        showDeleteIcon={canDelete}
+                        disableDeleteIcon={(examType.usageCount || 0) > 0}
+                        handleDeleteClick={() => {
+                          confirmDeleteDialog.onTrue();
+                          setSelectedExamType(row as IExamType);
+                        }}
+                        handleEditClick={() => {
+                          addExamTypeDialog.onTrue();
+                          setSelectedExamType(row as IExamType);
+                          setIsEdit(true);
+                        }}
+                      />
+                      <ArchiveActionButton
+                        title="Archive exam type"
+                        icon="solar:archive-bold"
+                        color="warning"
+                        disabled={!canDelete || isArchiveLoading}
+                        onClick={() => {
+                          archiveDialog.onTrue();
+                          setSelectedExamType(row as IExamType);
+                        }}
+                      />
+                    </>
+                  )}
+                </Stack>
               );
             },
           },
         ]}
-        data={examTypeData?.items || []}
+        data={examTypeList}
       />
 
       <CustomDialog
@@ -383,7 +455,10 @@ const ExamTypeSettings = () => {
                   dispatchFn(
                     examinationTypeApi.util.updateQueryData(
                       'getExaminationTypes',
-                      { academicMediumId: (currentMedium as any).id },
+                      {
+                        academicMediumId: (currentMedium as any).id,
+                        includeArchived: true,
+                      },
                       (draft: any) => {
                         const index = draft.items.findIndex(
                           (item: any) => item.id === (selectedExamType as any).id
@@ -405,9 +480,49 @@ const ExamTypeSettings = () => {
                 setSelectedExamType(null);
               }, 200);
             }}
-          // startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
+          </LoadingButton>
+        }
+      />
+
+      <ConfirmDialog
+        open={archiveDialog.value}
+        onClose={() => {
+          archiveDialog.onFalse();
+          setSelectedExamType(null);
+        }}
+        title="Archive Exam Type"
+        content={
+          <>
+            Archive <strong>&quot;{selectedExamType?.examType}&quot;</strong>? It will not be
+            available for future exams, but old records will remain unchanged.
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isArchiveLoading}
+            variant="contained"
+            color="warning"
+            size="small"
+            onClick={async () => {
+              try {
+                await archiveExamType({
+                  academicMediumId: (currentMedium as any).id,
+                  id: (selectedExamType as any).id,
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Exam type archived successfully.' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to archive exam type.',
+                });
+              }
+              archiveDialog.onFalse();
+              setSelectedExamType(null);
+            }}
+          >
+            Archive
           </LoadingButton>
         }
       />
@@ -416,3 +531,35 @@ const ExamTypeSettings = () => {
 };
 
 export default ExamTypeSettings;
+
+const ArchiveActionButton = ({
+  title,
+  icon,
+  color,
+  disabled = false,
+  onClick,
+}: {
+  title: string;
+  icon: string;
+  color: 'success' | 'warning';
+  disabled?: boolean;
+  onClick: () => void;
+}) => (
+  <CustomTooltip title={title} arrow placement="top">
+    <span>
+      <IconButton
+        size="small"
+        color={color}
+        disabled={disabled}
+        aria-label={title}
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        sx={{ width: 18, height: 18, p: 0 }}
+      >
+        <Iconify icon={icon} width={16} height={16} />
+      </IconButton>
+    </span>
+  </CustomTooltip>
+);

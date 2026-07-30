@@ -6,10 +6,10 @@ export const gradeScalingApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all grade scalings under academic medium
     getGradeScalings: builder.query({
-      query: ({ academicMediumId }) => ({
+      query: ({ academicMediumId, includeArchived = false }) => ({
         url: `/academics/examination/settings/grading-scales`,
         method: 'GET',
-        params: { academicMediumId },
+        params: { academicMediumId, includeArchived },
       }),
       providesTags: [academicType.gradeScaling],
     }),
@@ -55,6 +55,24 @@ export const gradeScalingApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.gradeScaling],
     }),
+
+    archiveGradeScaling: builder.mutation({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academics/examination/settings/grading-scales/${id}/archive`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: [academicType.gradeScaling],
+    }),
+
+    restoreGradeScaling: builder.mutation({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academics/examination/settings/grading-scales/${id}/restore`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: [academicType.gradeScaling],
+    }),
   }),
   overrideExisting: false,
 });
@@ -66,4 +84,6 @@ export const {
   useAddGradeScalingMutation,
   useUpdateGradeScalingMutation,
   useDeleteGradeScalingMutation,
+  useArchiveGradeScalingMutation,
+  useRestoreGradeScalingMutation,
 } = gradeScalingApi;

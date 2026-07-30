@@ -37,7 +37,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetElectiveGroupsQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: true },
     options: {
       skip: !(currentMedium as Medium)?.id,
     },

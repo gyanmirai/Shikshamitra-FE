@@ -14,6 +14,8 @@ export interface IAssignmentTypeTableProps {
   data: IAssignmentType[];
   onEdit: (data: IAssignmentType) => void;
   onDelete: (data: IAssignmentType) => void;
+  onArchive: (data: IAssignmentType) => void;
+  onRestore: (data: IAssignmentType) => void;
   canAdd?: boolean;
   canDelete?: boolean;
 }

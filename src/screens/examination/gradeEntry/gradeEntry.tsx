@@ -589,7 +589,10 @@ const GradeEntry = (props: TabComponentType) => {
     ({ row, isLocked: locked }: any) => {
       if (locked) {
         return (
-          <CustomTooltip title="Marks Locked" placement="left">
+          <CustomTooltip
+            title="Marks can be edited only in Draft or Changes Requested status."
+            placement="left"
+          >
             <span>
               <IconButton size="small" disabled>
                 <Iconify icon="solar:lock-bold" width={18} sx={{ color: 'text.disabled' }} />
@@ -618,6 +621,11 @@ const GradeEntry = (props: TabComponentType) => {
     },
     [viewSubmissionDialog, subject, examId]
   );
+
+  const isGradeEntryEditable =
+    workflowStatus === GradeEntryWorkflowStatus.Draft ||
+    workflowStatus === GradeEntryWorkflowStatus.ChangesRequested;
+  const isGradeEntryLocked = !isGradeEntryEditable;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -823,7 +831,11 @@ const GradeEntry = (props: TabComponentType) => {
                   {saveState !== 'idle' && (
                     <Label
                       color={
-                        saveState === 'saving' ? 'warning' : saveState === 'saved' ? 'success' : 'error'
+                        saveState === 'saving'
+                          ? 'warning'
+                          : saveState === 'saved'
+                            ? 'success'
+                            : 'error'
                       }
                       variant="soft"
                       sx={{ py: 1.5, px: 2, mr: 0.5 }}
@@ -958,50 +970,50 @@ const GradeEntry = (props: TabComponentType) => {
                       <Grid container spacing={1}>
                         {(analyticsStats
                           ? [
-                            {
-                              label: 'Total Students',
-                              value: analyticsStats.totalCount,
-                              icon: 'solar:user-bold',
-                              color: 'primary.main',
-                            },
-                            {
-                              label: 'Graded',
-                              value: analyticsStats.totalCount - analyticsStats.pendingCount,
-                              icon: 'solar:check-square-bold',
-                              color: 'success.main',
-                            },
-                            {
-                              label: 'Pending',
-                              value: analyticsStats.pendingCount,
-                              icon: 'solar:clock-circle-bold',
-                              color:
-                                analyticsStats.pendingCount > 0
-                                  ? 'warning.main'
-                                  : 'text.disabled',
-                            },
-                            {
-                              label: 'Highest Marks',
-                              value: analyticsStats.highestMarks,
-                              icon: 'solar:arrow-up-bold',
-                              color: 'success.main',
-                            },
-                            {
-                              label: 'Lowest Marks',
-                              value: analyticsStats.lowestMarks,
-                              icon: 'solar:arrow-down-bold',
-                              color: 'error.main',
-                            },
-                            {
-                              label: 'Average Marks',
-                              value: analyticsStats.averageMarks,
-                              icon: 'solar:graph-new-bold',
-                              color: 'info.main',
-                            },
-                          ]
+                              {
+                                label: 'Total Students',
+                                value: analyticsStats.totalCount,
+                                icon: 'solar:user-bold',
+                                color: 'primary.main',
+                              },
+                              {
+                                label: 'Graded',
+                                value: analyticsStats.totalCount - analyticsStats.pendingCount,
+                                icon: 'solar:check-square-bold',
+                                color: 'success.main',
+                              },
+                              {
+                                label: 'Pending',
+                                value: analyticsStats.pendingCount,
+                                icon: 'solar:clock-circle-bold',
+                                color:
+                                  analyticsStats.pendingCount > 0
+                                    ? 'warning.main'
+                                    : 'text.disabled',
+                              },
+                              {
+                                label: 'Highest Marks',
+                                value: analyticsStats.highestMarks,
+                                icon: 'solar:arrow-up-bold',
+                                color: 'success.main',
+                              },
+                              {
+                                label: 'Lowest Marks',
+                                value: analyticsStats.lowestMarks,
+                                icon: 'solar:arrow-down-bold',
+                                color: 'error.main',
+                              },
+                              {
+                                label: 'Average Marks',
+                                value: analyticsStats.averageMarks,
+                                icon: 'solar:graph-new-bold',
+                                color: 'info.main',
+                              },
+                            ]
                           : Array.from({ length: 6 }, (_, i) => ({
-                            _skeleton: true,
-                            key: `sk-${i}`,
-                          }))
+                              _skeleton: true,
+                              key: `sk-${i}`,
+                            }))
                         ).map((stat: any) =>
                           stat._skeleton ? (
                             <Grid size={{ xs: 6, sm: 4 }} key={stat.key}>
@@ -1022,7 +1034,7 @@ const GradeEntry = (props: TabComponentType) => {
                                     bgcolor: (theme) =>
                                       alpha(
                                         (theme.palette as any)[stat.color.split('.')[0]]?.main ??
-                                        theme.palette.grey[500],
+                                          theme.palette.grey[500],
                                         0.08
                                       ),
                                     transform: 'translateY(-1px)',
@@ -1042,7 +1054,7 @@ const GradeEntry = (props: TabComponentType) => {
                                       bgcolor: (theme) =>
                                         alpha(
                                           (theme.palette as any)[stat.color.split('.')[0]]?.main ??
-                                          theme.palette.grey[500],
+                                            theme.palette.grey[500],
                                           0.16
                                         ),
                                     }}
@@ -1263,19 +1275,12 @@ const GradeEntry = (props: TabComponentType) => {
         )}
 
         {examId ? (
-          <Box sx={{ position: 'relative' }}>
-            <BulkGradeEntryToolbar
-              selectedCount={selectedStudents.length}
-              onClearSelection={() => setSelectedStudents([])}
-              onMarkPresent={() => handleBulkMarkAttendance(0)}
-              onMarkAbsent={() => handleBulkMarkAttendance(1)}
-              onApplyMarks={handleBulkApplyMarks}
-              onApplyRemark={handleBulkApplyRemark}
-              onClearMarks={handleBulkClearMarks}
-              onExport={handleExportTemplate}
-              onImport={importMarksDialog.onTrue}
-            />
-
+          <Box
+            sx={{
+              position: 'relative',
+              pb: !isGradeEntryLocked && selectedStudents.length > 0 ? 10 : 0,
+            }}
+          >
             <GradeEntryTable
               selectedStudents={selectedStudents}
               handleSelectStudent={handleSelectStudent}
@@ -1284,7 +1289,7 @@ const GradeEntry = (props: TabComponentType) => {
               divisionId={division}
               subjectId={subject}
               examId={examId}
-              isLocked={workflowStatus === GradeEntryWorkflowStatus.Published}
+              isLocked={isGradeEntryLocked}
               onAllAssignedChange={(val) => {
                 setAllMarksAssigned(val);
                 setIsDirty(true);
@@ -1294,6 +1299,21 @@ const GradeEntry = (props: TabComponentType) => {
               onRowsChange={setTableRows}
               bulkEditRequest={bulkEditRequest}
             />
+
+            {/* Bulk actions toolbar floating */}
+            {!isGradeEntryLocked && (
+              <BulkGradeEntryToolbar
+                selectedCount={selectedStudents.length}
+                onClearSelection={() => setSelectedStudents([])}
+                onMarkPresent={() => handleBulkMarkAttendance(0)}
+                onMarkAbsent={() => handleBulkMarkAttendance(1)}
+                onApplyMarks={handleBulkApplyMarks}
+                onApplyRemark={handleBulkApplyRemark}
+                onClearMarks={handleBulkClearMarks}
+                onExport={handleExportTemplate}
+                onImport={importMarksDialog.onTrue}
+              />
+            )}
           </Box>
         ) : (
           <Card
@@ -1343,7 +1363,14 @@ const GradeEntry = (props: TabComponentType) => {
             }, 200);
           }}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 {selectedStudent?.status === 1 ? 'Update Marks' : 'Assign Marks'}
               </Box>
@@ -1352,7 +1379,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Enter or update the marks and feedback remarks for the selected student."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1407,7 +1440,14 @@ const GradeEntry = (props: TabComponentType) => {
           open={keyboardHelpDialog.value}
           handleClose={keyboardHelpDialog.onFalse}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 Keyboard Cell Navigation Shortcuts
               </Box>
@@ -1416,7 +1456,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Use these keyboard shortcuts to navigate and edit grade input fields quickly."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1461,7 +1507,14 @@ const GradeEntry = (props: TabComponentType) => {
           open={auditLogsDialog.value}
           handleClose={auditLogsDialog.onFalse}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 Marks Revision Audit Logs
               </Box>
@@ -1470,7 +1523,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Review grade change logs, workflow updates, and auditor comments."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1530,7 +1589,14 @@ const GradeEntry = (props: TabComponentType) => {
           open={requestChangesDialog.value}
           handleClose={requestChangesDialog.onFalse}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 Request Grade Corrections
               </Box>
@@ -1539,7 +1605,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Send the grade entry back to the teacher with reviewer notes for corrections."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1577,7 +1649,14 @@ const GradeEntry = (props: TabComponentType) => {
           open={unlockDialog.value}
           handleClose={unlockDialog.onFalse}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 Unlock Published Marks
               </Box>
@@ -1586,7 +1665,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Unlock the published grades to allow editing and revision."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
