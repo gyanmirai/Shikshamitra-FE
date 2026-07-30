@@ -18,11 +18,13 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   useGetAssignmentTypesQuery,
   useDeleteAssignmentTypeMutation,
+  useArchiveAssignmentTypeMutation,
+  useRestoreAssignmentTypeMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import AssignmentTypeForm from './assignmentTypeForm';
 import AssignmentTypeTable from './assignmentTypeTable';
@@ -34,6 +36,7 @@ const AssignmentTypeCreation = () => {
   const addAssignmentTypeDialog = useBoolean();
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
+  const archiveDialog = useBoolean();
   // State to control modal visibility (unused)
   const [, setOpen] = useState(false);
   // Get changes status from redux store
@@ -64,6 +67,14 @@ const AssignmentTypeCreation = () => {
   const [deleteAssignmentType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteAssignmentTypeMutation,
+  });
+  const [archiveAssignmentType, { isLoading: isArchiveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useArchiveAssignmentTypeMutation,
+  });
+  const [restoreAssignmentType, { isLoading: isRestoreLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRestoreAssignmentTypeMutation,
   });
 
   /**
@@ -97,7 +108,7 @@ const AssignmentTypeCreation = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAssignmentTypesQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: true },
   });
 
   const assignmentTypes = assignmentTypeData?.data || [];
@@ -166,6 +177,23 @@ const AssignmentTypeCreation = () => {
           setSelectedData(data);
           deleteDialog.onTrue();
         }}
+        onArchive={(data) => {
+          setSelectedData(data);
+          archiveDialog.onTrue();
+        }}
+        onRestore={async (data) => {
+          try {
+            await restoreAssignmentType({
+              academicMediumId: (currentMedium as any).id,
+              assignmentTypeId: data.id,
+            }).unwrap();
+            shikshaMitraToast.success({ message: 'Assignment Type restored successfully' });
+          } catch (error: any) {
+            shikshaMitraToast.error({
+              message: error?.data?.message || 'Failed to restore Assignment Type',
+            });
+          }
+        }}
       />
       {/* Add/Edit Assignment Type Dialog */}
       <CustomDialog
@@ -227,7 +255,7 @@ const AssignmentTypeCreation = () => {
               try {
                 await deleteAssignmentType({
                   academicMediumId: (currentMedium as any).id,
-                  assignmentTypeId: selectedData?.id,
+                  assignmentTypeId: selectedData?.id || '',
                 }).unwrap();
                 shikshaMitraToast.success({ message: 'Assignment Type deleted successfully' });
               } catch (error: any) {
@@ -240,6 +268,45 @@ const AssignmentTypeCreation = () => {
             }}
           >
             Yes
+          </LoadingButton>
+        }
+      />
+      <ConfirmDialog
+        open={archiveDialog.value}
+        onClose={() => {
+          setSelectedData(null);
+          archiveDialog.onFalse();
+        }}
+        title="Archive"
+        content={
+          <>
+            Archive assignment type <strong>{selectedData?.assignmentTypeName}</strong>? It will
+            not be available for future assignments.
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isArchiveLoading || isRestoreLoading}
+            variant="contained"
+            color="warning"
+            size="small"
+            onClick={async () => {
+              try {
+                await archiveAssignmentType({
+                  academicMediumId: (currentMedium as any).id,
+                  assignmentTypeId: selectedData?.id || '',
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Assignment Type archived successfully' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to archive Assignment Type',
+                });
+              }
+              archiveDialog.onFalse();
+              setSelectedData(null);
+            }}
+          >
+            Archive
           </LoadingButton>
         }
       />

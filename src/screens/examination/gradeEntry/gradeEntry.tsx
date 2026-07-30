@@ -648,7 +648,10 @@ const GradeEntry = (props: TabComponentType) => {
     ({ row, isLocked: locked }: any) => {
       if (locked) {
         return (
-          <CustomTooltip title="Marks Locked" placement="left">
+          <CustomTooltip
+            title="Marks can be edited only in Draft or Changes Requested status."
+            placement="left"
+          >
             <span>
               <IconButton size="small" disabled>
                 <Iconify icon="solar:lock-bold" width={18} sx={{ color: 'text.disabled' }} />
@@ -677,6 +680,11 @@ const GradeEntry = (props: TabComponentType) => {
     },
     [viewSubmissionDialog, subject, examId]
   );
+
+  const isGradeEntryEditable =
+    workflowStatus === GradeEntryWorkflowStatus.Draft ||
+    workflowStatus === GradeEntryWorkflowStatus.ChangesRequested;
+  const isGradeEntryLocked = !isGradeEntryEditable;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -882,7 +890,11 @@ const GradeEntry = (props: TabComponentType) => {
                   {saveState !== 'idle' && (
                     <Label
                       color={
-                        saveState === 'saving' ? 'warning' : saveState === 'saved' ? 'success' : 'error'
+                        saveState === 'saving'
+                          ? 'warning'
+                          : saveState === 'saved'
+                            ? 'success'
+                            : 'error'
                       }
                       variant="soft"
                       sx={{ py: 1.5, px: 2, mr: 0.5 }}
@@ -1194,83 +1206,93 @@ const GradeEntry = (props: TabComponentType) => {
                         </Stack>
                       )}
                     </Grid>
-                  </Grid>
-                </Box>
-              </Collapse>
-            </Card>
-          </motion.div>
+                  </Grid >
+                </Box >
+              </Collapse >
+            </Card >
+          </motion.div >
         )}
 
-        {examId ? (
-          <Box sx={{ position: 'relative' }}>
-            <BulkGradeEntryToolbar
-              selectedCount={selectedStudents.length}
-              onClearSelection={() => setSelectedStudents([])}
-              onMarkPresent={() => handleBulkMarkAttendance(0)}
-              onMarkAbsent={() => handleBulkMarkAttendance(1)}
-              onApplyMarks={handleBulkApplyMarks}
-              onApplyRemark={handleBulkApplyRemark}
-              onClearMarks={handleBulkClearMarks}
-              onExport={handleExportTemplate}
-              onImport={importMarksDialog.onTrue}
-            />
-
-            <GradeEntryTable
-              selectedStudents={selectedStudents}
-              handleSelectStudent={handleSelectStudent}
-              actions={actions}
-              classId={classes}
-              divisionId={division}
-              subjectId={subject}
-              examId={examId}
-              isLocked={workflowStatus === GradeEntryWorkflowStatus.Published}
-              onAllAssignedChange={(val) => {
-                setAllMarksAssigned(val);
-                setIsDirty(true);
+        {
+          examId ? (
+            <Box
+              sx={{
+                position: 'relative',
+                pb: !isGradeEntryLocked && selectedStudents.length > 0 ? 10 : 0,
               }}
-              onStatsChange={setAnalyticsStats}
-              onWorkflowFlagsChange={handleWorkflowFlagsChange}
-              onRowsChange={setTableRows}
-              bulkEditRequest={bulkEditRequest}
-            />
-          </Box>
-        ) : (
-          <Card
-            sx={{
-              minHeight: "100%",
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              border: (theme) => `1px dashed ${theme.palette.divider}`,
-              bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.03)`,
-              boxShadow: 'var(--shadows-2)',
-            }}
-          >
-            <Stack spacing={1} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
-              <Box
-                sx={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: '50%',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: 'primary.main',
-                  bgcolor: (theme) => `rgba(${theme.palette.primary.mainChannel} / 0.12)`,
+            >
+              <GradeEntryTable
+                selectedStudents={selectedStudents}
+                handleSelectStudent={handleSelectStudent}
+                actions={actions}
+                classId={classes}
+                divisionId={division}
+                subjectId={subject}
+                examId={examId}
+                isLocked={isGradeEntryLocked}
+                onAllAssignedChange={(val) => {
+                  setAllMarksAssigned(val);
+                  setIsDirty(true);
                 }}
-              >
-                <Iconify icon="solar:clipboard-list-bold" width={36} />
-              </Box>
-              <Stack spacing={1}>
-                <Typography variant="h6">Please select an exam</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Choose an exam title from the filters above to view students and start entering
-                  marks.
-                </Typography>
+                onStatsChange={setAnalyticsStats}
+                onWorkflowFlagsChange={handleWorkflowFlagsChange}
+                onRowsChange={setTableRows}
+                bulkEditRequest={bulkEditRequest}
+              />
+
+              {/* Bulk actions toolbar floating */}
+              {!isGradeEntryLocked && (
+                <BulkGradeEntryToolbar
+                  selectedCount={selectedStudents.length}
+                  onClearSelection={() => setSelectedStudents([])}
+                  onMarkPresent={() => handleBulkMarkAttendance(0)}
+                  onMarkAbsent={() => handleBulkMarkAttendance(1)}
+                  onApplyMarks={handleBulkApplyMarks}
+                  onApplyRemark={handleBulkApplyRemark}
+                  onClearMarks={handleBulkClearMarks}
+                  onExport={handleExportTemplate}
+                  onImport={importMarksDialog.onTrue}
+                />
+              )}
+            </Box>
+          ) : (
+            <Card
+              sx={{
+                minHeight: "100%",
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                border: (theme) => `1px dashed ${theme.palette.divider}`,
+                bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.03)`,
+                boxShadow: 'var(--shadows-2)',
+              }}
+            >
+              <Stack spacing={1} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
+                <Box
+                  sx={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: 'primary.main',
+                    bgcolor: (theme) => `rgba(${theme.palette.primary.mainChannel} / 0.12)`,
+                  }}
+                >
+                  <Iconify icon="solar:clipboard-list-bold" width={36} />
+                </Box>
+                <Stack spacing={1}>
+                  <Typography variant="h6">Please select an exam</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Choose an exam title from the filters above to view students and start entering
+                    marks.
+                  </Typography>
+                </Stack>
               </Stack>
-            </Stack>
-          </Card>
-        )}
+            </Card>
+          )
+        }
 
         {/* Dialogs and drawers */}
         <CustomDialog
@@ -1282,7 +1304,14 @@ const GradeEntry = (props: TabComponentType) => {
             }, 200);
           }}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 {selectedStudent?.status === 1 ? 'Update Marks' : 'Assign Marks'}
               </Box>
@@ -1291,7 +1320,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Enter or update the marks and feedback remarks for the selected student."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1346,7 +1381,14 @@ const GradeEntry = (props: TabComponentType) => {
           open={keyboardHelpDialog.value}
           handleClose={keyboardHelpDialog.onFalse}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 Keyboard Cell Navigation Shortcuts
               </Box>
@@ -1355,7 +1397,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Use these keyboard shortcuts to navigate and edit grade input fields quickly."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1400,7 +1448,14 @@ const GradeEntry = (props: TabComponentType) => {
           open={auditLogsDialog.value}
           handleClose={auditLogsDialog.onFalse}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 Marks Revision Audit Logs
               </Box>
@@ -1409,7 +1464,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Review grade change logs, workflow updates, and auditor comments."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1469,7 +1530,14 @@ const GradeEntry = (props: TabComponentType) => {
           open={requestChangesDialog.value}
           handleClose={requestChangesDialog.onFalse}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 Request Grade Corrections
               </Box>
@@ -1478,7 +1546,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Send the grade entry back to the teacher with reviewer notes for corrections."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1516,7 +1590,14 @@ const GradeEntry = (props: TabComponentType) => {
           open={unlockDialog.value}
           handleClose={unlockDialog.onFalse}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              alignItems="center"
+              component="span"
+              sx={{ fontWeight: 'normal' }}
+            >
               <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 Unlock Published Marks
               </Box>
@@ -1525,7 +1606,13 @@ const GradeEntry = (props: TabComponentType) => {
                 placement="right"
                 title="Unlock the published grades to allow editing and revision."
               >
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                />
               </CustomTooltip>
             </Box>
           }
@@ -1606,8 +1693,8 @@ const GradeEntry = (props: TabComponentType) => {
             </LoadingButton>
           }
         />
-      </Box>
-    </Box>
+      </Box >
+    </Box >
   );
 };
 

@@ -6,10 +6,10 @@ export const examinationTypeApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all examination types under academic medium
     getExaminationTypes: builder.query({
-      query: ({ academicMediumId }) => ({
+      query: ({ academicMediumId, includeArchived = false }) => ({
         url: `/academics/examination/settings/exam-type`,
         method: 'GET',
-        params: { academicMediumId },
+        params: { academicMediumId, includeArchived },
       }),
       providesTags: [academicType.examinationType],
     }),
@@ -55,6 +55,24 @@ export const examinationTypeApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.examinationType],
     }),
+
+    archiveExaminationType: builder.mutation({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academics/examination/settings/exam-type/${id}/archive`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: [academicType.examinationType],
+    }),
+
+    restoreExaminationType: builder.mutation({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academics/examination/settings/exam-type/${id}/restore`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: [academicType.examinationType],
+    }),
   }),
   overrideExisting: false,
 });
@@ -66,4 +84,6 @@ export const {
   useAddExaminationTypeMutation,
   useUpdateExaminationTypeMutation,
   useDeleteExaminationTypeMutation,
+  useArchiveExaminationTypeMutation,
+  useRestoreExaminationTypeMutation,
 } = examinationTypeApi;

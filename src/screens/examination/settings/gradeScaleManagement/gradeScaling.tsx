@@ -5,13 +5,14 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState, useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { GlobalIcons } from 'src/utils/icons';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -22,10 +23,13 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Paper, Stack, Button, Typography, IconButton } from '@mui/material';
 import {
   gradeScalingApi,
   useGetGradeScalingsQuery,
   useDeleteGradeScalingMutation,
+  useArchiveGradeScalingMutation,
+  useRestoreGradeScalingMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
@@ -45,14 +49,15 @@ const getStatusLabel = (status: any) => {
   return { label: 'Unknown', color: 'default' };
 };
 
-// ---------------------------------------------------------------------------
-// Screen
-// ---------------------------------------------------------------------------
-
 const GradingScale = () => {
+  // State for storing currently selected grade
   const [selectedGrade, setSelectedGrade] = useState<IGrade | null>(null);
+  // Dialog control for viewing grade details
   const viewDialog = useBoolean();
+  // Dialog control for delete confirmation
   const deleteConfirmDialog = useBoolean();
+  const archiveDialog = useBoolean();
+
   const addGradeScalingDialog = useBoolean(false);
 
   const dispatch = useDispatch();
@@ -82,7 +87,14 @@ const GradingScale = () => {
     currentQueryAndMutation: useDeleteGradeScalingMutation,
     params: { academicMediumId: (currentMedium as Medium)?.id },
   });
-
+  const [archiveGradeScaling, { isLoading: isArchiveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useArchiveGradeScalingMutation,
+  });
+  const [restoreGradeScaling, { isLoading: isRestoreLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRestoreGradeScalingMutation,
+  });
   const {
     data: gradeScalings,
     isLoading,
@@ -91,7 +103,7 @@ const GradingScale = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGradeScalingsQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: true },
     options: {
       skip: !(currentMedium as Medium)?.id,
     },
@@ -111,38 +123,41 @@ const GradingScale = () => {
   const unusedScales = scalesList.filter((s: any) => !s.usageCount || s.usageCount === 0).length;
   const defaultScale = scalesList.find((s: any) => s.isDefault)?.name || 'None';
 
-  const summaryCards = useMemo(() => [
-    {
-      label: 'Total Scales',
-      value: totalScales,
-      icon: 'mdi:scale-balance',
-      color: 'primary' as const,
-    },
-    {
-      label: 'Active Scales',
-      value: activeScales,
-      icon: 'mdi:check-circle-outline',
-      color: 'success' as const,
-    },
-    {
-      label: 'Used Scales',
-      value: usedScales,
-      icon: 'mdi:database-check',
-      color: 'info' as const,
-    },
-    {
-      label: 'Unused Scales',
-      value: unusedScales,
-      icon: 'mdi:alert-circle-outline',
-      color: 'warning' as const,
-    },
-    {
-      label: 'Default Scale',
-      value: defaultScale,
-      icon: 'mdi:star-outline',
-      color: 'info' as const,
-    },
-  ], [totalScales, activeScales, usedScales, unusedScales, defaultScale]);
+  const summaryCards = useMemo(
+    () => [
+      {
+        label: 'Total Scales',
+        value: totalScales,
+        icon: 'mdi:scale-balance',
+        color: 'primary' as const,
+      },
+      {
+        label: 'Active Scales',
+        value: activeScales,
+        icon: 'mdi:check-circle-outline',
+        color: 'success' as const,
+      },
+      {
+        label: 'Used Scales',
+        value: usedScales,
+        icon: 'mdi:database-check',
+        color: 'info' as const,
+      },
+      {
+        label: 'Unused Scales',
+        value: unusedScales,
+        icon: 'mdi:alert-circle-outline',
+        color: 'warning' as const,
+      },
+      {
+        label: 'Default Scale',
+        value: defaultScale,
+        icon: 'mdi:star-outline',
+        color: 'info' as const,
+      },
+    ],
+    [totalScales, activeScales, usedScales, unusedScales, defaultScale]
+  );
 
   // -------------------------------------------------------------------------
   // Handlers
@@ -241,13 +256,14 @@ const GradingScale = () => {
             id: 'passMarks',
             label: 'Pass Marks',
             filterType: 'number',
-            render: (val) => (val !== undefined && val !== null ? (
-              <Typography variant="body2" color="primary.main" fontWeight={600}>
-                {val}
-              </Typography>
-            ) : (
-              '-'
-            )),
+            render: (val) =>
+              val !== undefined && val !== null ? (
+                <Typography variant="body2" color="primary.main" fontWeight={600}>
+                  {val}
+                </Typography>
+              ) : (
+                '-'
+              ),
           },
           {
             id: 'gradeRange',
@@ -296,32 +312,73 @@ const GradingScale = () => {
             width: 50,
             align: 'left',
             isFilter: false,
-            render(_value, row) {
+            render(value, row) {
+              const scale = row as any;
+              const isArchived = scale.status === 3 || scale.status === 'Archived';
               return (
-                <ThreeDotsActions
-                  showThreeDots={false}
-                  placement="right-top"
-                  showViewIcon={canView}
-                  handleViewClick={() => {
-                    setSelectedGrade(row as any);
-                    viewDialog.onTrue();
-                  }}
-                  showEditIcon={canAdd}
-                  showDeleteIcon={canDelete}
-                  handleEditClick={() => {
-                    setSelectedGrade(row as any);
-                    addGradeScalingDialog.onTrue();
-                  }}
-                  handleDeleteClick={() => {
-                    setSelectedGrade(row as any);
-                    deleteConfirmDialog.onTrue();
-                  }}
-                />
+                <Stack direction="row" spacing={1} justifyContent="center">
+                  {isArchived ? (
+                    <ArchiveActionButton
+                      title="Restore grade scale"
+                      icon="solar:restart-bold"
+                      color="success"
+                      disabled={!canAdd || isRestoreLoading}
+                      onClick={async () => {
+                        try {
+                          await restoreGradeScaling({
+                            academicMediumId: (currentMedium as any).id,
+                            id: scale.id,
+                          }).unwrap();
+                          shikshaMitraToast.success({
+                            message: 'Grade scale restored successfully.',
+                          });
+                        } catch (error: any) {
+                          shikshaMitraToast.error({
+                            message: error?.data?.message || 'Failed to restore grade scale.',
+                          });
+                        }
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <ThreeDotsActions
+                        showThreeDots={false}
+                        placement="right-top"
+                        showViewIcon={canView}
+                        handleViewClick={() => {
+                          viewDialog.onTrue();
+                          setSelectedGrade(row as any);
+                        }}
+                        showEditIcon={canAdd}
+                        showDeleteIcon={canDelete}
+                        disableDeleteIcon={(scale.usageCount || 0) > 0}
+                        handleDeleteClick={() => {
+                          setSelectedGrade(row as any);
+                          deleteConfirmDialog.onTrue();
+                        }}
+                        handleEditClick={() => {
+                          setSelectedGrade(row as any);
+                          addGradeScalingDialog.onTrue();
+                        }}
+                      />
+                      <ArchiveActionButton
+                        title="Archive grade scale"
+                        icon="solar:archive-bold"
+                        color="warning"
+                        disabled={!canDelete || isArchiveLoading}
+                        onClick={() => {
+                          setSelectedGrade(row as any);
+                          archiveDialog.onTrue();
+                        }}
+                      />
+                    </>
+                  )}
+                </Stack>
               );
             },
           },
         ]}
-        data={gradeScalings?.data || []}
+        data={scalesList}
       />
 
       {/* ------------------------------------------------------------------- */}
@@ -351,11 +408,7 @@ const GradingScale = () => {
           </Box>
         }
       >
-        <GradeForm
-          onSubmit={() => { }}
-          onClose={handleClose}
-          data={selectedGrade}
-        />
+        <GradeForm onSubmit={() => {}} onClose={handleClose} data={selectedGrade} />
       </CustomDialog>
 
       {/* ------------------------------------------------------------------- */}
@@ -378,12 +431,7 @@ const GradingScale = () => {
           </Box>
         }
       >
-        <GradeForm
-          onSubmit={() => { }}
-          onClose={handleClose}
-          data={selectedGrade}
-          viewOnly
-        />
+        <GradeForm onSubmit={() => {}} onClose={handleClose} data={selectedGrade} viewOnly />
       </CustomDialog>
 
       {/* ------------------------------------------------------------------- */}
@@ -416,7 +464,10 @@ const GradingScale = () => {
                   dispatchFn(
                     gradeScalingApi.util.updateQueryData(
                       'getGradeScalings',
-                      { academicMediumId: (currentMedium as any).id },
+                      {
+                        academicMediumId: (currentMedium as any).id,
+                        includeArchived: true,
+                      },
                       (draft: any) => {
                         const index = draft.data.findIndex(
                           (item: any) => item.id === (selectedGrade as any).id
@@ -441,8 +492,80 @@ const GradingScale = () => {
           </LoadingButton>
         }
       />
+
+      <ConfirmDialog
+        open={archiveDialog.value}
+        onClose={() => {
+          setSelectedGrade(null);
+          archiveDialog.onFalse();
+        }}
+        title="Archive Grade Scale"
+        content={
+          <>
+            Archive <strong>&quot;{selectedGrade?.name}&quot;</strong>? It will not be available for
+            future exams, but old results and schedules will remain unchanged.
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isArchiveLoading}
+            variant="contained"
+            color="warning"
+            size="small"
+            onClick={async () => {
+              try {
+                await archiveGradeScaling({
+                  academicMediumId: (currentMedium as any).id,
+                  id: (selectedGrade as any).id,
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Grade scale archived successfully.' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to archive grade scale.',
+                });
+              }
+              archiveDialog.onFalse();
+              setSelectedGrade(null);
+            }}
+          >
+            Archive
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 };
 
 export default GradingScale;
+
+const ArchiveActionButton = ({
+  title,
+  icon,
+  color,
+  disabled = false,
+  onClick,
+}: {
+  title: string;
+  icon: string;
+  color: 'success' | 'warning';
+  disabled?: boolean;
+  onClick: () => void;
+}) => (
+  <CustomTooltip title={title} arrow placement="top">
+    <span>
+      <IconButton
+        size="small"
+        color={color}
+        disabled={disabled}
+        aria-label={title}
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        sx={{ width: 18, height: 18, p: 0 }}
+      >
+        <Iconify icon={icon} width={16} height={16} />
+      </IconButton>
+    </span>
+  </CustomTooltip>
+);

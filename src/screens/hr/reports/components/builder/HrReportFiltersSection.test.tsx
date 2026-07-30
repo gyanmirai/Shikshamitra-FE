@@ -1,11 +1,18 @@
 import type { HrReportField, HrReportFilterCondition } from 'src/redux/hr/hrReportsApi';
 
 import { useState } from 'react';
-import { it, expect, describe } from 'vitest';
+import { it, expect, describe, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '@testing-library/react';
 
 import { HrReportFiltersSection } from './HrReportFiltersSection';
+
+// Stub Iconify so tests never fetch icons over HTTPS from the Iconify API.
+// Real network fetches get torn down on exit, causing unhandled
+// `write ECANCELED` / "SSL destruction" errors that fail CI.
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
 
 const fields: HrReportField[] = [
   {

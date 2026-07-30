@@ -6,21 +6,17 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-
-import { Box, Card, Chip, Stack, IconButton, Typography } from '@mui/material';
-
-import { formatDateOnly } from 'src/utils/date-only';
-
 import { Iconify } from 'src/components/iconify';
+import { formatDateOnly } from 'src/utils/date-only';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
-
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Card, Chip, Stack, IconButton, Typography } from '@mui/material';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
-import type { ISubject, ISubjectTableProps } from './type';
-
 import SubjectNameCell from './subjectNameCell';
+
+import type { ISubject, ISubjectTableProps } from './type';
 
 const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
   open,
@@ -44,7 +40,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: true },
     options: {
       skip: !(currentMedium as Medium)?.id,
     },

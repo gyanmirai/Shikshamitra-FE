@@ -6,10 +6,16 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all homework types under academic medium
     getHomeworkTypes: builder.query({
-      query: ({ academicMediumId }: { academicMediumId: string }) => ({
+      query: ({
+        academicMediumId,
+        includeArchived = false,
+      }: {
+        academicMediumId: string;
+        includeArchived?: boolean;
+      }) => ({
         url: `/homework-type`,
         method: 'GET',
-        params: { academicMediumId },
+        params: { academicMediumId, includeArchived },
       }),
       providesTags: [academicType.homeworkType],
     }),
@@ -107,6 +113,36 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.homeworkType],
     }),
+
+    archiveHomeworkType: builder.mutation({
+      query: ({
+        homeworkTypeId,
+        academicMediumId,
+      }: {
+        homeworkTypeId: string;
+        academicMediumId: string;
+      }) => ({
+        url: `/homework-type/${homeworkTypeId}/archive`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: [academicType.homeworkType],
+    }),
+
+    restoreHomeworkType: builder.mutation({
+      query: ({
+        homeworkTypeId,
+        academicMediumId,
+      }: {
+        homeworkTypeId: string;
+        academicMediumId: string;
+      }) => ({
+        url: `/homework-type/${homeworkTypeId}/restore`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: [academicType.homeworkType],
+    }),
   }),
   overrideExisting: true,
 });
@@ -118,4 +154,6 @@ export const {
   useAddHomeworkTypeMutation,
   useUpdateHomeworkTypeMutation,
   useDeleteHomeworkTypeMutation,
+  useArchiveHomeworkTypeMutation,
+  useRestoreHomeworkTypeMutation,
 } = homeworkTypesApi;
