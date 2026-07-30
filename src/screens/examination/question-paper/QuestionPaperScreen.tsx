@@ -24,11 +24,14 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { GlobalIcons } from 'src/utils/icons';
 import {
   Box,
   Card,
   Chip,
   Grid,
+  Paper,
   Stack,
   Table,
   Alert,
@@ -154,6 +157,71 @@ const paperValidationSchema = Yup.object({
     .max(480, 'Maximum 480 minutes'),
   creationMode: Yup.string().required(),
 });
+
+// ─── Section Card Wrapper Component (UI Skill Standard) ───────────────────────
+
+const SectionPaper = ({
+  title,
+  caption,
+  icon,
+  children,
+  action,
+}: {
+  title: string;
+  caption?: string;
+  icon: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) => (
+  <Paper
+    variant="outlined"
+    sx={{
+      p: { xs: 1.5, md: 2 },
+      borderRadius: 1.5,
+      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
+      borderColor: (theme) => alpha(theme.palette.divider, 0.9),
+      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.4)}`,
+    }}
+  >
+    <Stack spacing={1.5}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        gap={1}
+      >
+        <Stack direction="row" spacing={1.25} alignItems="center">
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'primary.main',
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+            }}
+          >
+            <Iconify icon={icon} width={18} height={18} />
+          </Box>
+          <Stack spacing={0.2}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              {title}
+            </Typography>
+            {caption && (
+              <Typography variant="caption" color="text.secondary">
+                {caption}
+              </Typography>
+            )}
+          </Stack>
+        </Stack>
+        {action}
+      </Stack>
+      {children}
+    </Stack>
+  </Paper>
+);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -410,9 +478,8 @@ export default function QuestionPaperScreen() {
   const examSchedules = examScheduleData?.schedules || examScheduleData?.items || [];
   const examScheduleOptions = examSchedules.map((sch: any) => ({
     value: sch.id,
-    label: `${sch.subjectName || sch.subjectId} – ${
-      sch.examDate ? new Date(sch.examDate).toLocaleDateString() : sch.id
-    }`,
+    label: `${sch.subjectName || sch.subjectId} – ${sch.examDate ? new Date(sch.examDate).toLocaleDateString() : sch.id
+      }`,
   }));
 
   // Chapters for blueprint (driven by selectedPaper)
@@ -553,9 +620,20 @@ export default function QuestionPaperScreen() {
   };
 
   const handleOpenCreate = () => {
-    formik.resetForm({ values: initialPaperValues(academicYearId) });
-    setDialogOpen(false);
-    setTimeout(() => setDialogOpen(true), 0);
+    formik.resetForm();
+    setDialogOpen(true);
+  };
+
+  const handleCloseCreateDialog = (event?: any, reason?: string) => {
+    if (reason === 'backdropClick') return;
+    if (formik.dirty) {
+      if (window.confirm('You have unsaved changes in the form. Are you sure you want to close?')) {
+        setDialogOpen(false);
+        formik.resetForm();
+      }
+    } else {
+      setDialogOpen(false);
+    }
   };
 
   const chapterOptions = (formChapters || []).map((c: any) => ({
@@ -749,7 +827,7 @@ export default function QuestionPaperScreen() {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box height="100%" display="flex" flexDirection="column" gap={1}>
       <CustomBreadcrumbs
         sx={{ mb: 1 }}
         heading="Question Papers"
@@ -773,11 +851,11 @@ export default function QuestionPaperScreen() {
             <Button
               variant="contained"
               size="small"
-              startIcon={<Iconify icon="mingcute:add-line" />}
+              startIcon={<Iconify icon="mdi:plus" />}
               disabled={!academicYearId}
               onClick={handleOpenCreate}
             >
-              Create Paper
+              Paper
             </Button>
           </Stack>
         }
@@ -816,12 +894,8 @@ export default function QuestionPaperScreen() {
         })}
         noDataText={
           <Stack alignItems="center" spacing={1} py={6}>
-            <Iconify icon="mingcute:document-2-line" width={40} sx={{ color: 'text.disabled' }} />
             <Typography variant="subtitle2" color="text.secondary">
               No question papers found
-            </Typography>
-            <Typography variant="caption" color="text.disabled">
-              Create a new paper to get started.
             </Typography>
           </Stack>
         }
@@ -1569,8 +1643,21 @@ export default function QuestionPaperScreen() {
       {/* ── Create Paper Dialog ────────────────────────────────────────────── */}
       <CustomDialog
         open={dialogOpen}
-        handleClose={() => setDialogOpen(false)}
-        title="Create Question Paper"
+        handleClose={handleCloseCreateDialog}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+              Create Question Paper
+            </Box>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Create and configure a new question paper with standard, subject, duration, and instructions."
+            >
+              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
         hasForm={false}
       >
@@ -1579,149 +1666,163 @@ export default function QuestionPaperScreen() {
           style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
         >
           <DialogScrollContent>
-            <Grid container spacing={1}>
-              {/* Paper Identity */}
-              <Grid size={12}>
-                <Typography variant="overline" color="text.disabled" letterSpacing={1}>
-                  Paper Details
-                </Typography>
-              </Grid>
+            <Stack spacing={2}>
+              {/* ── 1. Paper Details ────────────────────────────────────── */}
+              <SectionPaper
+                title="Paper Identity & Target"
+                caption="Provide paper title, class, and target subject"
+                icon="solar:document-text-bold-duotone"
+              >
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+                    <ShakingTextField error={(formik.touched.paperTitle || formik.submitCount > 0) && !!formik.errors.paperTitle}>
+                      <TextField
+                        fullWidth
+                        label="Paper Title *"
+                        name="paperTitle"
+                        value={formik.values.paperTitle}
+                        size="small"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={(formik.touched.paperTitle || formik.submitCount > 0) && !!formik.errors.paperTitle}
+                        helperText={((formik.touched.paperTitle || formik.submitCount > 0) && formik.errors.paperTitle) || ''}
+                        placeholder="e.g. Annual Examination – Mathematics 2025"
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              <Grid size={12}>
-                <ShakingTextField error={formik.touched.paperTitle && !!formik.errors.paperTitle}>
-                  <TextField
-                    fullWidth
-                    label="Paper Title *"
-                    name="paperTitle"
-                    value={formik.values.paperTitle}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.paperTitle && !!formik.errors.paperTitle}
-                    helperText={(formik.touched.paperTitle && formik.errors.paperTitle) || ''}
-                    placeholder="e.g. Annual Examination – Mathematics 2025"
-                  />
-                </ShakingTextField>
-              </Grid>
+                  <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+                    <ShakingTextField error={(formik.touched.standardId || formik.submitCount > 0) && !!formik.errors.standardId}>
+                      <CustomSelect
+                        label="Class *"
+                        options={classOptions}
+                        value={formik.values.standardId}
+                        onChange={(val) => {
+                          formik.setFieldValue('standardId', val);
+                          formik.setFieldValue('subjectId', '');
+                        }}
+                        error={(formik.touched.standardId || formik.submitCount > 0) && !!formik.errors.standardId}
+                        helperText={((formik.touched.standardId || formik.submitCount > 0) && formik.errors.standardId) || ''}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ShakingTextField error={formik.touched.standardId && !!formik.errors.standardId}>
-                  <CustomSelect
-                    label="Class *"
-                    options={classOptions}
-                    value={formik.values.standardId}
-                    onChange={(val) => {
-                      formik.setFieldValue('standardId', val);
-                      formik.setFieldValue('subjectId', '');
-                    }}
-                    error={formik.touched.standardId && !!formik.errors.standardId}
-                    helperText={(formik.touched.standardId && formik.errors.standardId) || ''}
-                  />
-                </ShakingTextField>
-              </Grid>
+                  <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+                    <ShakingTextField error={(formik.touched.subjectId || formik.submitCount > 0) && !!formik.errors.subjectId}>
+                      <CustomSelect
+                        label="Subject *"
+                        options={formSubjectOptions}
+                        value={formik.values.subjectId}
+                        disabled={!formik.values.standardId}
+                        onChange={(val) => formik.setFieldValue('subjectId', val)}
+                        error={(formik.touched.subjectId || formik.submitCount > 0) && !!formik.errors.subjectId}
+                        helperText={((formik.touched.subjectId || formik.submitCount > 0) && formik.errors.subjectId) || ''}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </Grid>
+              </SectionPaper>
 
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ShakingTextField error={formik.touched.subjectId && !!formik.errors.subjectId}>
-                  <CustomSelect
-                    label="Subject *"
-                    options={formSubjectOptions}
-                    value={formik.values.subjectId}
-                    disabled={!formik.values.standardId}
-                    onChange={(val) => formik.setFieldValue('subjectId', val)}
-                    error={formik.touched.subjectId && !!formik.errors.subjectId}
-                    helperText={(formik.touched.subjectId && formik.errors.subjectId) || ''}
-                  />
-                </ShakingTextField>
-              </Grid>
+              {/* ── 2. Exam Link ────────────────────────────────────────── */}
+              <SectionPaper
+                title="Link to Exam Schedule"
+                caption="Optionally link this paper to a scheduled examination timetable"
+                icon="solar:calendar-mark-bold-duotone"
+              >
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomSelect
+                      label="Exam"
+                      options={[
+                        { value: '', label: 'None / Custom Exam' },
+                        ...exams.map((ex: any) => ({ value: ex.id, label: ex.examName })),
+                      ]}
+                      value={formik.values.examId || ''}
+                      onChange={(val) => {
+                        formik.setFieldValue('examId', val);
+                        formik.setFieldValue('examScheduleId', '');
+                      }}
+                    />
+                  </Grid>
 
-              {/* Exam Link (optional) */}
-              <Grid size={12}>
-                <Typography variant="overline" color="text.disabled" letterSpacing={1}>
-                  Link to Exam (Optional)
-                </Typography>
-              </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomSelect
+                      label="Exam Schedule / Date"
+                      options={[{ value: '', label: 'None' }, ...examScheduleOptions]}
+                      value={formik.values.examScheduleId || ''}
+                      disabled={!formik.values.examId}
+                      onChange={(val) => formik.setFieldValue('examScheduleId', val)}
+                    />
+                  </Grid>
+                </Grid>
+              </SectionPaper>
 
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <CustomSelect
-                  label="Exam"
-                  options={[
-                    { value: '', label: 'None / Custom Exam' },
-                    ...exams.map((ex: any) => ({ value: ex.id, label: ex.examName })),
-                  ]}
-                  value={formik.values.examId || ''}
-                  onChange={(val) => {
-                    formik.setFieldValue('examId', val);
-                    formik.setFieldValue('examScheduleId', '');
-                  }}
-                />
-              </Grid>
+              {/* ── 3. Paper Configuration ─────────────────────────────── */}
+              <SectionPaper
+                title="Paper Configuration"
+                caption="Configure total marks, exam duration, and creation mode"
+                icon="solar:tuning-square-bold-duotone"
+              >
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <ShakingTextField error={(formik.touched.totalMarks || formik.submitCount > 0) && !!formik.errors.totalMarks}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label="Total Marks *"
+                        name="totalMarks"
+                        value={formik.values.totalMarks}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={(formik.touched.totalMarks || formik.submitCount > 0) && !!formik.errors.totalMarks}
+                        helperText={
+                          ((formik.touched.totalMarks || formik.submitCount > 0) && formik.errors.totalMarks) || ''
+                        }
+                        inputProps={{ min: 1 }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <CustomSelect
-                  label="Exam Schedule / Date"
-                  options={[{ value: '', label: 'None' }, ...examScheduleOptions]}
-                  value={formik.values.examScheduleId || ''}
-                  disabled={!formik.values.examId}
-                  onChange={(val) => formik.setFieldValue('examScheduleId', val)}
-                />
-              </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <ShakingTextField
+                      error={(formik.touched.durationMinutes || formik.submitCount > 0) && !!formik.errors.durationMinutes}
+                    >
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label="Duration (minutes) *"
+                        name="durationMinutes"
+                        value={formik.values.durationMinutes}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={(formik.touched.durationMinutes || formik.submitCount > 0) && !!formik.errors.durationMinutes}
+                        helperText={
+                          ((formik.touched.durationMinutes || formik.submitCount > 0) && formik.errors.durationMinutes) || ''
+                        }
+                        inputProps={{ min: 1 }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              {/* Paper Config */}
-              <Grid size={12}>
-                <Typography variant="overline" color="text.disabled" letterSpacing={1}>
-                  Paper Configuration
-                </Typography>
-              </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <CustomSelect
+                      label="Creation Mode"
+                      options={CREATION_MODE_OPTIONS}
+                      value={formik.values.creationMode}
+                      onChange={(val) => formik.setFieldValue('creationMode', val)}
+                    />
+                  </Grid>
+                </Grid>
+              </SectionPaper>
 
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <ShakingTextField error={formik.touched.totalMarks && !!formik.errors.totalMarks}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Total Marks *"
-                    name="totalMarks"
-                    value={formik.values.totalMarks}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.totalMarks && !!formik.errors.totalMarks}
-                    helperText={(formik.touched.totalMarks && formik.errors.totalMarks) || ''}
-                    inputProps={{ min: 1, step: 5 }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <ShakingTextField
-                  error={formik.touched.durationMinutes && !!formik.errors.durationMinutes}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Duration (minutes) *"
-                    name="durationMinutes"
-                    value={formik.values.durationMinutes}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.durationMinutes && !!formik.errors.durationMinutes}
-                    helperText={
-                      (formik.touched.durationMinutes && formik.errors.durationMinutes) || ''
-                    }
-                    inputProps={{ min: 10, step: 10 }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomSelect
-                  label="Creation Mode"
-                  options={CREATION_MODE_OPTIONS}
-                  value={formik.values.creationMode}
-                  onChange={(val) => formik.setFieldValue('creationMode', val)}
-                />
-              </Grid>
-
-              <Grid size={12}>
+              {/* ── 4. General Instructions ─────────────────────────────── */}
+              <SectionPaper
+                title="General Instructions"
+                caption="Default guidelines printed on the question paper header"
+                icon="solar:info-square-bold-duotone"
+              >
                 <TextField
                   fullWidth
                   multiline
@@ -1731,18 +1832,18 @@ export default function QuestionPaperScreen() {
                   value={formik.values.generalInstructions}
                   onChange={formik.handleChange}
                 />
-              </Grid>
-            </Grid>
+              </SectionPaper>
+            </Stack>
           </DialogScrollContent>
 
           <DialogActions
-            sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider', gap: 1 }}
+            sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}
           >
-            <CancelButton onClick={() => setDialogOpen(false)} />
+            <CancelButton onClick={() => handleCloseCreateDialog()} />
             <SubmitButton
               loading={createState.isLoading}
-              buttonText="Create Paper"
-              startIcon={<Iconify icon="mingcute:add-line" />}
+              buttonText="Create"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
             />
           </DialogActions>
         </form>

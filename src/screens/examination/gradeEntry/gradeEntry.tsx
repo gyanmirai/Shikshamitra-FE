@@ -72,6 +72,8 @@ import { BulkGradeEntryToolbar } from './components/BulkGradeEntryToolbar';
 import { GradeEntryReviewDialog } from './components/GradeEntryReviewDialog';
 import { ImportMarksPreviewDialog } from './components/ImportMarksPreviewDialog';
 
+import { TimetableSettingsSummaryCards, type ITimetableSummaryCard } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+
 import type { TabComponentType } from '../../hr/leave-request';
 import type {
   IExamMarkItem,
@@ -215,6 +217,48 @@ const GradeEntry = (props: TabComponentType) => {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [allMarksAssigned, setAllMarksAssigned] = useState(false);
   const [analyticsStats, setAnalyticsStats] = useState<IExamAnalyticsStats | null>(null);
+
+  const summaryCards = useMemo<ITimetableSummaryCard[]>(() => {
+    if (!analyticsStats) return [];
+    return [
+      {
+        label: 'Total Students',
+        value: analyticsStats.totalCount ?? 0,
+        icon: 'solar:user-bold',
+        color: 'primary',
+      },
+      {
+        label: 'Graded',
+        value: (analyticsStats.totalCount ?? 0) - (analyticsStats.pendingCount ?? 0),
+        icon: 'solar:check-square-bold',
+        color: 'success',
+      },
+      {
+        label: 'Pending',
+        value: analyticsStats.pendingCount ?? 0,
+        icon: 'solar:clock-circle-bold',
+        color: (analyticsStats.pendingCount ?? 0) > 0 ? 'warning' : 'info',
+      },
+      {
+        label: 'Highest Marks',
+        value: analyticsStats.highestMarks ?? 0,
+        icon: 'solar:arrow-up-bold',
+        color: 'success',
+      },
+      {
+        label: 'Lowest Marks',
+        value: analyticsStats.lowestMarks ?? 0,
+        icon: 'solar:arrow-down-bold',
+        color: 'error',
+      },
+      {
+        label: 'Average Marks',
+        value: analyticsStats.averageMarks ?? 0,
+        icon: 'solar:graph-new-bold',
+        color: 'info',
+      },
+    ];
+  }, [analyticsStats]);
   const [workflowStatus, setWorkflowStatus] = useState<GradeEntryWorkflowStatus>(
     GradeEntryWorkflowStatus.Draft
   );
@@ -364,6 +408,21 @@ const GradeEntry = (props: TabComponentType) => {
   };
 
   const handleBulkApplyMarks = async (marks: number | string) => {
+    const numMarks = Number(marks);
+    const selectedIds = new Set(selectedStudents);
+    const selectedRows = tableRows.filter((r) => selectedIds.has(r.studentId));
+    const maxTotalMarks =
+      selectedRows.length > 0
+        ? Math.max(...selectedRows.map((r) => r.totalMarks ?? 100))
+        : 100;
+
+    if (numMarks > maxTotalMarks) {
+      shikshaMitraToast.error({
+        message: `Obtained marks (${numMarks}) cannot be greater than Total Marks (${maxTotalMarks}).`,
+      });
+      return;
+    }
+
     queueBulkEdit('marks', marks);
     shikshaMitraToast.success({
       message: `Applied marks ${marks} locally. Click Save Draft to save.`,
@@ -955,127 +1014,7 @@ const GradeEntry = (props: TabComponentType) => {
                 <Box sx={{ p: 2 }}>
                   <Grid container spacing={1}>
                     <Grid size={{ xs: 12, md: 8 }}>
-                      <Grid container spacing={1}>
-                        {(analyticsStats
-                          ? [
-                            {
-                              label: 'Total Students',
-                              value: analyticsStats.totalCount,
-                              icon: 'solar:user-bold',
-                              color: 'primary.main',
-                            },
-                            {
-                              label: 'Graded',
-                              value: analyticsStats.totalCount - analyticsStats.pendingCount,
-                              icon: 'solar:check-square-bold',
-                              color: 'success.main',
-                            },
-                            {
-                              label: 'Pending',
-                              value: analyticsStats.pendingCount,
-                              icon: 'solar:clock-circle-bold',
-                              color:
-                                analyticsStats.pendingCount > 0
-                                  ? 'warning.main'
-                                  : 'text.disabled',
-                            },
-                            {
-                              label: 'Highest Marks',
-                              value: analyticsStats.highestMarks,
-                              icon: 'solar:arrow-up-bold',
-                              color: 'success.main',
-                            },
-                            {
-                              label: 'Lowest Marks',
-                              value: analyticsStats.lowestMarks,
-                              icon: 'solar:arrow-down-bold',
-                              color: 'error.main',
-                            },
-                            {
-                              label: 'Average Marks',
-                              value: analyticsStats.averageMarks,
-                              icon: 'solar:graph-new-bold',
-                              color: 'info.main',
-                            },
-                          ]
-                          : Array.from({ length: 6 }, (_, i) => ({
-                            _skeleton: true,
-                            key: `sk-${i}`,
-                          }))
-                        ).map((stat: any) =>
-                          stat._skeleton ? (
-                            <Grid size={{ xs: 6, sm: 4 }} key={stat.key}>
-                              <Skeleton variant="rounded" height={64} sx={{ borderRadius: 2 }} />
-                            </Grid>
-                          ) : (
-                            <Grid size={{ xs: 6, sm: 4 }} key={stat.label}>
-                              <Stack
-                                spacing={1}
-                                sx={{
-                                  p: 1.1,
-                                  borderRadius: 2,
-                                  bgcolor: (theme) => alpha(theme.palette.grey[500], 0.06),
-                                  border: (theme) =>
-                                    `1px solid ${alpha((theme.palette as any)[stat.color.split('.')[0]]?.main ?? theme.palette.grey[500], 0.2)}`,
-                                  transition: 'all 0.15s ease-in-out',
-                                  '&:hover': {
-                                    bgcolor: (theme) =>
-                                      alpha(
-                                        (theme.palette as any)[stat.color.split('.')[0]]?.main ??
-                                        theme.palette.grey[500],
-                                        0.08
-                                      ),
-                                    transform: 'translateY(-1px)',
-                                  },
-                                }}
-                              >
-                                <Stack direction="row" alignItems="center" spacing={1}>
-                                  <Box
-                                    sx={{
-                                      width: 22,
-                                      height: 22,
-                                      borderRadius: '50%',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      flexShrink: 0,
-                                      bgcolor: (theme) =>
-                                        alpha(
-                                          (theme.palette as any)[stat.color.split('.')[0]]?.main ??
-                                          theme.palette.grey[500],
-                                          0.16
-                                        ),
-                                    }}
-                                  >
-                                    <Iconify
-                                      icon={stat.icon}
-                                      width={13}
-                                      sx={{ color: stat.color }}
-                                    />
-                                  </Box>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    fontWeight={600}
-                                    noWrap
-                                    lineHeight={1.2}
-                                  >
-                                    {stat.label}
-                                  </Typography>
-                                </Stack>
-                                <Typography
-                                  variant="h6"
-                                  fontWeight={800}
-                                  lineHeight={1.1}
-                                  sx={{ color: stat.color, pl: 0.25 }}
-                                >
-                                  {String(stat.value)}
-                                </Typography>
-                              </Stack>
-                            </Grid>
-                          )
-                        )}
-                      </Grid>
+                      <TimetableSettingsSummaryCards cards={summaryCards} />
                     </Grid>
 
                     <Grid
@@ -1298,7 +1237,7 @@ const GradeEntry = (props: TabComponentType) => {
         ) : (
           <Card
             sx={{
-              minHeight: 420,
+              minHeight: "100%",
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

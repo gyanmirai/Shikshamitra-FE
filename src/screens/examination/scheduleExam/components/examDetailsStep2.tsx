@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { memo, useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -32,6 +33,7 @@ import {
   FormControlLabel,
   Switch,
   Typography,
+  Autocomplete,
   TableContainer,
   AccordionSummary,
   AccordionDetails,
@@ -122,13 +124,13 @@ const ScheduleTableHead = memo(() => (
             borderColor: 'divider',
             ...(col.sticky
               ? {
-                  position: 'sticky',
-                  left: 0,
-                  zIndex: 3,
-                  // Opaque background required so scrolling columns don't bleed through.
-                  // background.paper adapts correctly to both light and dark mode.
-                  bgcolor: 'background.paper',
-                }
+                position: 'sticky',
+                left: 0,
+                zIndex: 3,
+                // Opaque background required so scrolling columns don't bleed through.
+                // background.paper adapts correctly to both light and dark mode.
+                bgcolor: 'background.paper',
+              }
               : {}),
           }}
         >
@@ -230,9 +232,8 @@ const SubjectScheduleRow = memo(
                 label={
                   values.assignedStudentCount === 0
                     ? 'No students'
-                    : `${values.assignedStudentCount} student${
-                        values.assignedStudentCount === 1 ? '' : 's'
-                      }`
+                    : `${values.assignedStudentCount} student${values.assignedStudentCount === 1 ? '' : 's'
+                    }`
                 }
                 size="small"
                 color={values.assignedStudentCount === 0 ? 'default' : 'warning'}
@@ -333,31 +334,53 @@ const SubjectScheduleRow = memo(
       </TableCell>
 
       {/* Grade Scale */}
-      <TableCell sx={{ minWidth: 180, py: 1, px: 1.5, verticalAlign: 'top' }}>
+      <TableCell sx={{ minWidth: 200, py: 1, px: 1.5, verticalAlign: 'top' }}>
         <ShakingTextField error={!!(touched.gradeScalingId && errors.gradeScalingId)}>
-          <CustomSelect
-            label="Scale *"
-            options={gradeScalings}
-            value={values.gradeScalingId ?? ''}
-            labelKey="name"
-            valueKey="id"
-            isLoading={isGradeScalingsLoading}
-            formControlProps={{ sx: { width: 165 } }}
-            error={!!(touched.gradeScalingId && errors.gradeScalingId)}
-            helperText={
-              touched.gradeScalingId && errors.gradeScalingId ? errors.gradeScalingId : ' '
+          <CustomTooltip
+            title={
+              gradeScalings?.find((g: any) => String(g.id) === String(values.gradeScalingId))?.name ||
+              'Select grade scale for this subject'
             }
-            helperTextProps={HELPER_TEXT_PROPS}
-            onChange={async (selectedId) => {
-              await onFieldChange('gradeScalingId', selectedId || null);
-              onFieldBlur('gradeScalingId');
-              const selected = gradeScalings.find((s: any) => s.id === selectedId);
-              if (selected?.totalMarks !== undefined) {
-                await onFieldChange('totalMarks', selected.totalMarks ?? '');
-                onFieldBlur('totalMarks');
+            placement="top"
+          >
+            <Autocomplete
+              size="small"
+              options={gradeScalings || []}
+              loading={isGradeScalingsLoading}
+              value={
+                gradeScalings?.find(
+                  (g: any) => String(g.id) === String(values.gradeScalingId)
+                ) || null
               }
-            }}
-          />
+              getOptionLabel={(option: any) => option?.name || ''}
+              isOptionEqualToValue={(option: any, value: any) =>
+                String(option?.id) === String(value?.id)
+              }
+              onChange={async (_event, selectedOption: any) => {
+                const selectedId = selectedOption?.id || null;
+                await onFieldChange('gradeScalingId', selectedId);
+                onFieldBlur('gradeScalingId');
+                if (selectedOption?.totalMarks !== undefined) {
+                  await onFieldChange('totalMarks', selectedOption.totalMarks ?? '');
+                  onFieldBlur('totalMarks');
+                }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Scale *"
+                  size="small"
+                  sx={{ width: 175 }}
+                  error={!!(touched.gradeScalingId && errors.gradeScalingId)}
+                  helperText={
+                    touched.gradeScalingId && errors.gradeScalingId ? errors.gradeScalingId : ' '
+                  }
+                  FormHelperTextProps={HELPER_TEXT_PROPS}
+                  InputLabelProps={LABEL_PROPS}
+                />
+              )}
+            />
+          </CustomTooltip>
         </ShakingTextField>
       </TableCell>
 
