@@ -64,7 +64,10 @@ export const seatAllocationApi = academicApi.injectEndpoints({
       query: ({ examId, divisionId, standardId, seatingPlanId }) => ({
         url: `/academics/exams/${examId}/seat-allocation/divisions/${divisionId}/students`,
         method: 'GET',
-        params: { ...(standardId ? { StandardId: standardId } : {}), ...(seatingPlanId ? { SeatingPlanId: seatingPlanId } : {}) },
+        params: {
+          ...(standardId ? { StandardId: standardId } : {}),
+          ...(seatingPlanId ? { SeatingPlanId: seatingPlanId } : {}),
+        },
       }),
       providesTags: [academicType.seatAllocation],
     }),

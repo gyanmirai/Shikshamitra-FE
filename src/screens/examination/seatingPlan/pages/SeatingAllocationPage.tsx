@@ -5,6 +5,8 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -35,6 +37,13 @@ import {
   DialogContent,
   FormControlLabel,
 } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import { keyframes } from '@mui/system';
 import {
   useGetExamRoomsQuery,
   useGetSeatLayoutQuery,
@@ -84,6 +93,12 @@ interface Props {
   }) => void;
 }
 
+const shakeAnimation = keyframes`
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+`;
+
 export default function SeatingAllocationPage({ examId, onClose, onOpenReview }: Props) {
   const router = useRouter();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
@@ -116,6 +131,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     params: { examId, standardId },
     options: { skip: !examId || !standardId },
   });
+  console.log("divisionsData---", divisionsData);
 
   const { data: scopesData } = useQueryAndMutation({
     type: 'query',
@@ -123,7 +139,6 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     params: { examId },
     options: { skip: !examId },
   });
-
   const [saveSeatingPlanScope, { isLoading: isSavingScope }] = useSaveSeatingPlanScopeMutation();
 
   useEffect(() => {
@@ -158,10 +173,10 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
   const selectedDialogSubjectIds = scopeSubjectIds.length
     ? scopeSubjectIds
     : (scopesData?.availableSubjects || [])
-        .filter(
-          (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
-        )
-        .map((subject: SeatingPlanSubject) => subject.examSubjectId);
+      .filter(
+        (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
+      )
+      .map((subject: SeatingPlanSubject) => subject.examSubjectId);
   const selectedDialogHasOwnedSubject = selectedDialogSubjectIds.some((subjectId: string) =>
     subjectWiseSubjectOwners.has(subjectId)
   );
@@ -368,10 +383,10 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     draft.rooms.length === 0
       ? 0
       : Math.round(
-          (draft.assignments.length /
-            draft.rooms.reduce((s, r) => s + (r.seats.length || r.capacity), 0 || 1)) *
-            100
-        );
+        (draft.assignments.length /
+          draft.rooms.reduce((s, r) => s + (r.seats.length || r.capacity), 0 || 1)) *
+        100
+      );
 
   const handleSaveDraft = useCallback(async () => {
     if (selectedPlanIsLocked) return;
@@ -523,11 +538,11 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
         rooms: d.rooms.map((room) =>
           room.roomId === roomId
             ? {
-                ...room,
-                seats: room.seats.map((seat) =>
-                  seat.seatNumber === seatNumber ? { ...seat, isReserved: !seat.isReserved } : seat
-                ),
-              }
+              ...room,
+              seats: room.seats.map((seat) =>
+                seat.seatNumber === seatNumber ? { ...seat, isReserved: !seat.isReserved } : seat
+              ),
+            }
             : room
         ),
         isDirty: true,
@@ -541,10 +556,10 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     const chosenIds = scopeSubjectIds.length
       ? scopeSubjectIds
       : subjects
-          .filter(
-            (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
-          )
-          .map((subject: SeatingPlanSubject) => subject.examSubjectId);
+        .filter(
+          (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
+        )
+        .map((subject: SeatingPlanSubject) => subject.examSubjectId);
     if (!chosenIds.length) return;
     const ownedSubject = chosenIds.find((subjectId: string) =>
       subjectWiseSubjectOwners.has(subjectId)
@@ -706,30 +721,30 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
           {(selectedPlanIsLocked ||
             selectedPlanHasAllocations ||
             allSubjectPlanWithAllocations) && (
-            <Stack spacing={1} sx={{ mt: 1 }}>
-              {selectedPlanIsLocked && (
-                <Alert severity="warning">
-                  This seating plan is finalized. Unlock it before changing seats, rooms, rules, or
-                  subjects.
-                </Alert>
-              )}
-              {!selectedPlanIsLocked && selectedPlanHasAllocations && (
-                <Alert severity="info">
-                  This plan already has allocations. Remove allocations before changing its subject
-                  scope.
-                </Alert>
-              )}
-              {!selectedPlanIsLocked &&
-                selectedScope?.scopeType !== 0 &&
-                allSubjectPlanWithAllocations &&
-                allSubjectPlanWithAllocations.seatingPlanId !== selectedPlanId && (
+              <Stack spacing={1} sx={{ mt: 1 }}>
+                {selectedPlanIsLocked && (
                   <Alert severity="warning">
-                    The all-subject plan already has allocations. Review validation before
-                    finalizing this subject plan.
+                    This seating plan is finalized. Unlock it before changing seats, rooms, rules, or
+                    subjects.
                   </Alert>
                 )}
-            </Stack>
-          )}
+                {!selectedPlanIsLocked && selectedPlanHasAllocations && (
+                  <Alert severity="info">
+                    This plan already has allocations. Remove allocations before changing its subject
+                    scope.
+                  </Alert>
+                )}
+                {!selectedPlanIsLocked &&
+                  selectedScope?.scopeType !== 0 &&
+                  allSubjectPlanWithAllocations &&
+                  allSubjectPlanWithAllocations.seatingPlanId !== selectedPlanId && (
+                    <Alert severity="warning">
+                      The all-subject plan already has allocations. Review validation before
+                      finalizing this subject plan.
+                    </Alert>
+                  )}
+              </Stack>
+            )}
         </Paper>
 
         <Box sx={{ display: 'flex', gap: 1, px: 2, py: 1, flexWrap: 'wrap' }}>
@@ -855,76 +870,172 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             return handleAutoAllocatePreview(rules);
           }}
           onApply={applyAutoAllocate}
-          onCancelPreview={() => {}}
+          onCancelPreview={() => { }}
         />
-        <Dialog
-          open={scopeDialogOpen}
-          onClose={() => setScopeDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Create Seating Plan</DialogTitle>
-          <DialogContent>
-            <Stack spacing={1} sx={{ pt: 1 }}>
-              <TextField
-                label="Plan name"
-                value={scopeName}
-                onChange={(event) => setScopeName(event.target.value)}
-                fullWidth
-              />
-              {allSubjectPlanWithAllocations && (
-                <Alert severity="warning">
-                  The all-subject plan already has allocations. This new plan will be validated
-                  separately.
-                </Alert>
-              )}
-              {selectedDialogHasOwnedSubject && (
-                <Alert severity="error">
-                  Remove subjects already used in another subject-wise plan before creating this
-                  plan.
-                </Alert>
-              )}
-              <Box>
-                {(scopesData?.availableSubjects || []).map((subject: any) => {
-                  const owner = subjectWiseSubjectOwners.get(subject.examSubjectId);
-                  return (
-                    <FormControlLabel
-                      key={subject.examSubjectId}
-                      control={
-                        <Checkbox
-                          checked={scopeSubjectIds.includes(subject.examSubjectId)}
-                          disabled={!!owner}
-                          onChange={(event) =>
-                            setScopeSubjectIds((current) =>
-                              event.target.checked
-                                ? [...current, subject.examSubjectId]
-                                : current.filter((id) => id !== subject.examSubjectId)
-                            )
-                          }
-                        />
-                      }
-                      label={owner ? `${subject.subjectName} (${owner.name})` : subject.subjectName}
-                    />
-                  );
-                })}
-              </Box>
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setScopeDialogOpen(false)}>Cancel</Button>
-            <Button
-              variant="contained"
-              onClick={handleCreateSelectedScope}
-              disabled={
-                isSavingScope ||
-                selectedDialogHasOwnedSubject ||
-                selectedDialogSubjectIds.length === 0
+        {scopeDialogOpen && (
+          <Formik
+            initialValues={{ planName: scopeName, subjectIds: scopeSubjectIds }}
+            validationSchema={Yup.object().shape({
+              planName: Yup.string().trim().required('Plan name is required'),
+            })}
+            onSubmit={async (values, { setSubmitting }) => {
+              const subjects = scopesData?.availableSubjects || [];
+              const chosenIds = values.subjectIds.length
+                ? values.subjectIds
+                : subjects
+                  .filter(
+                    (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
+                  )
+                  .map((subject: SeatingPlanSubject) => subject.examSubjectId);
+              if (!chosenIds.length) {
+                setSubmitting(false);
+                return;
               }
-            >
-              Create
-            </Button>
-          </DialogActions>
-        </Dialog>
+              const ownedSubject = chosenIds.find((subjectId: string) =>
+                subjectWiseSubjectOwners.has(subjectId)
+              );
+              if (ownedSubject) {
+                window.alert(
+                  'One or more selected subjects already belong to another subject-wise seating plan.'
+                );
+                setSubmitting(false);
+                return;
+              }
+              if (
+                allSubjectPlanWithAllocations &&
+                !window.confirm(
+                  'The all-subject seating plan already has allocations. Create this subject plan separately?'
+                )
+              ) {
+                setSubmitting(false);
+                return;
+              }
+              try {
+                const response = await saveSeatingPlanScope({
+                  examId,
+                  body: {
+                    name: values.planName,
+                    scopeType: chosenIds.length === subjects.length ? 0 : chosenIds.length === 1 ? 2 : 1,
+                    examSubjectIds: chosenIds,
+                  },
+                }).unwrap();
+                setSelectedPlanId(response.seatingPlanId);
+                setScopeDialogOpen(false);
+                setScopeName('');
+                setScopeSubjectIds([]);
+              } catch (err) {
+                console.error(err);
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+          >
+            {({ values, errors, touched, handleChange, handleBlur, setFieldValue, handleSubmit, isSubmitting }) => (
+              <CustomDialog
+                open={scopeDialogOpen}
+                handleClose={() => setScopeDialogOpen(false)}
+                title={
+                  <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+                    <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                      Create Seating Plan
+                    </Box>
+                    <CustomTooltip
+                      arrow
+                      placement="right"
+                      title="Define a new seating arrangement plan for specific subjects and classrooms."
+                    >
+                      <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+                    </CustomTooltip>
+                  </Box>
+                }
+                maxWidth="sm"
+                hasForm={false}
+              >
+                <DialogScrollContent>
+                  <Stack spacing={2}>
+                    <Box sx={{ pt: 1 }}>
+                      <TextField
+                        name="planName"
+                        value={values.planName}
+                        label="Plan Name *"
+                        onChange={(e) => {
+                          handleChange(e);
+                          setScopeName(e.target.value);
+                        }}
+                        onBlur={handleBlur}
+                        placeholder="Enter plan name"
+                        fullWidth
+                        size="small"
+                        error={touched.planName && Boolean(errors.planName)}
+                        helperText={touched.planName && errors.planName}
+                        sx={{
+                          animation: touched.planName && errors.planName ? `${shakeAnimation} 0.5s ease-in-out` : 'none',
+                        }}
+                      />
+                    </Box>
+                    {allSubjectPlanWithAllocations && (
+                      <Alert severity="warning">
+                        The all-subject plan already has allocations. This new plan will be validated
+                        separately.
+                      </Alert>
+                    )}
+                    {selectedDialogHasOwnedSubject && (
+                      <Alert severity="error">
+                        Remove subjects already used in another subject-wise plan before creating this
+                        plan.
+                      </Alert>
+                    )}
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        Select Subjects
+                      </Typography>
+                      <Grid container spacing={1}>
+                        {(scopesData?.availableSubjects || []).map((subject: any) => {
+                          const owner = subjectWiseSubjectOwners.get(subject.examSubjectId);
+                          // Only append the owning plan's name when it differs from the subject
+                          // name; otherwise it reads "Science (Science)".
+                          const label =
+                            owner && owner.name !== subject.subjectName
+                              ? `${subject.subjectName} (${owner.name})`
+                              : subject.subjectName;
+                          return (
+                            <Grid key={subject.examSubjectId} size={{ xs: 12, sm: 6 }}>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    checked={values.subjectIds.includes(subject.examSubjectId)}
+                                    disabled={!!owner}
+                                    onChange={(event) => {
+                                      const nextIds = event.target.checked
+                                        ? [...values.subjectIds, subject.examSubjectId]
+                                        : values.subjectIds.filter((id) => id !== subject.examSubjectId);
+                                      setFieldValue('subjectIds', nextIds);
+                                      setScopeSubjectIds(nextIds);
+                                    }}
+                                  />
+                                }
+                                label={label}
+                              />
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    </Box>
+                  </Stack>
+                </DialogScrollContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                  <CancelButton onClick={() => setScopeDialogOpen(false)} />
+                  <SubmitButton
+                    buttonText="Create"
+                    type="button"
+                    loading={isSavingScope || isSubmitting}
+                    onClick={() => handleSubmit()}
+                  />
+                </DialogActions>
+              </CustomDialog>
+            )}
+          </Formik>
+        )}
       </Box>
     </DndContext>
   );

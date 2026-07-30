@@ -37,29 +37,24 @@ export const BulkGradeEntryToolbar: React.FC<BulkGradeEntryToolbarProps> = ({
     <AnimatePresence>
       <Box
         component={motion.div}
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        initial={{ height: 0, opacity: 0, y: -20 }}
+        animate={{ height: 'auto', opacity: 1, y: 0 }}
+        exit={{ height: 0, opacity: 0, y: -20 }}
+        transition={{ duration: 0.25 }}
         sx={{
-          position: 'fixed',
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1100,
-          width: '90%',
-          maxWidth: 900,
+          width: '100%',
+          mb: 1.5,
+          overflow: 'hidden',
         }}
       >
         <Paper
-          elevation={10}
+          elevation={4}
           sx={{
             p: 1.5,
             bgcolor: 'background.paper',
             borderRadius: '16px',
             border: (theme) => `1px solid ${theme.palette.divider}`,
-            backdropFilter: 'blur(10px)',
-            boxShadow: (theme) => `0px 20px 40px -10px rgba(0,0,0,0.15)`,
+            boxShadow: 'var(--shadows-3)',
           }}
         >
           <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
@@ -191,28 +186,12 @@ export const BulkGradeEntryToolbar: React.FC<BulkGradeEntryToolbarProps> = ({
                 <Button
                   size="small"
                   variant="outlined"
-                  color="warning"
+                  color="error"
                   startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
                   onClick={onClearMarks}
                 >
                   Clear
                 </Button>
-              </Tooltip>
-            </Stack>
-
-            <Divider orientation="vertical" flexItem />
-
-            {/* Right Section: Import/Export template */}
-            <Stack direction="row" spacing={1}>
-              <Tooltip title="Export Excel Template">
-                <IconButton size="small" color="inherit" onClick={onExport}>
-                  <Iconify icon="solar:file-download-bold" width={22} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Import Excel Template">
-                <IconButton size="small" color="inherit" onClick={onImport}>
-                  <Iconify icon="solar:file-send-bold" width={22} sx={{ color: 'primary.main' }} />
-                </IconButton>
               </Tooltip>
             </Stack>
           </Stack>

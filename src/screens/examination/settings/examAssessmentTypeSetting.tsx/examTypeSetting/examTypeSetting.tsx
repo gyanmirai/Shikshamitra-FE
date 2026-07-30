@@ -3,7 +3,7 @@
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
@@ -14,12 +14,12 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { academicPermissions } from 'src/constants/academic-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import { Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
@@ -32,6 +32,7 @@ import {
 import ExamTypeForm from './examTypeForm';
 
 import type { IExamType } from '../type';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 
 const getStatusLabel = (status: any) => {
   if (status === 0 || status === 'Active') return { label: 'Active', color: 'success' };
@@ -108,6 +109,11 @@ const ExamTypeSettings = () => {
   const usedTypes = examTypeList.filter((t: any) => t.usageCount > 0).length;
   const includedInResult = examTypeList.filter((t: any) => t.includedInResult).length;
 
+  const existingNames = useMemo(
+    () => new Set<string>(examTypeList.map((t: any) => t.examType.trim().toLowerCase())),
+    [examTypeList]
+  );
+
   // Function to handle form submission for creating or editing an exam type.
   const handleSubmit = (values: any) => {
     if (isEdit && selectedExamType) {
@@ -128,7 +134,7 @@ const ExamTypeSettings = () => {
   };
 
   // Function to handle closing of the dialog
-  const handleClose = (e: any, isSubmit?: boolean) => {
+  const handleClose = (e?: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
         dispatch(setIsChanges(false));
@@ -137,13 +143,8 @@ const ExamTypeSettings = () => {
       }, 200); // Adjust this delay based on your dialog's closing animation
     };
 
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addExamTypeDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addExamTypeDialog.onFalse();
-      resetState();
-    }
+    addExamTypeDialog.onFalse();
+    resetState();
   };
 
   return (
@@ -174,52 +175,14 @@ const ExamTypeSettings = () => {
         }
       />
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: 'repeat(1, minmax(0, 1fr))',
-            sm: 'repeat(2, minmax(0, 1fr))',
-            md: 'repeat(auto-fit, minmax(170px, 1fr))',
-          },
-          gap: 1,
-          mb: 2,
-        }}
-      >
-        {[
-          { label: 'Total Exam Types', value: totalTypes, color: 'text.primary' },
-          { label: 'Active Types', value: activeTypes, color: 'success.main' },
-          { label: 'Used Types', value: usedTypes, color: 'info.main' },
-          { label: 'Included in Result', value: includedInResult, color: 'secondary.main' },
-        ].map((card) => (
-          <Paper
-            key={card.label}
-            variant="outlined"
-            sx={{
-              p: 1.25,
-              borderRadius: 1,
-              bgcolor: (theme) =>
-                theme.palette.mode === 'dark'
-                  ? alpha(theme.palette.common.white, 0.04)
-                  : theme.palette.background.paper,
-              borderColor: (theme) =>
-                theme.palette.mode === 'dark'
-                  ? alpha(theme.palette.common.white, 0.12)
-                  : theme.palette.divider,
-              minWidth: 0,
-            }}
-          >
-            <Stack spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                {card.label}
-              </Typography>
-              <Typography variant="h6" sx={{ color: card.color, lineHeight: 1.1 }}>
-                {card.value}
-              </Typography>
-            </Stack>
-          </Paper>
-        ))}
-      </Box>
+      <TimetableSettingsSummaryCards
+        cards={[
+          { label: 'Total Exam Types', value: totalTypes, icon: 'solar:documents-bold-duotone', color: 'primary' },
+          { label: 'Active Types', value: activeTypes, icon: 'solar:check-circle-bold-duotone', color: 'success' },
+          { label: 'Used Types', value: usedTypes, icon: 'solar:chart-square-bold-duotone', color: 'info' },
+          { label: 'Included in Result', value: includedInResult, icon: 'solar:star-bold-duotone', color: 'warning' },
+        ]}
+      />
 
       <CustomizableTable
         tableId="examTypeTable"
@@ -246,9 +209,27 @@ const ExamTypeSettings = () => {
           </>
         }
         columns={[
-          { id: 'examType', label: 'Exam Types' },
-          { id: 'description', label: 'Description' },
-          { id: 'category', label: 'Category', render: (val) => val || '-' },
+          {
+            id: 'examType',
+            label: 'Exam Types',
+            filterType: 'string',
+            sticky: true,
+            stickyPosition: 'left',
+            minWidth: 150,
+          },
+          {
+            id: 'description',
+            label: 'Description',
+            filterType: 'string',
+            minWidth: 200,
+          },
+          {
+            id: 'category',
+            label: 'Category',
+            filterType: 'string',
+            minWidth: 130,
+            render: (val) => val || '-',
+          },
           {
             id: 'defaultTotalMarks',
             label: 'Default Marks',
@@ -259,11 +240,17 @@ const ExamTypeSettings = () => {
             id: 'defaultWeightage',
             label: 'Weightage',
             filterType: 'number',
-            render: (val) => (val !== null && val !== undefined ? `${val}%` : '-'),
+            render: (val) => (val && val !== '-' ? `${val}%` : '-'),
           },
           {
             id: 'includedInResult',
             label: 'Result Impact',
+            filterType: 'enum',
+            enumOptions: [
+              { value: true, label: 'Included' },
+              { value: false, label: 'Optional' },
+            ],
+            minWidth: 150,
             render: (val) =>
               val ? (
                 <Label color="success">Included</Label>
@@ -272,18 +259,28 @@ const ExamTypeSettings = () => {
               ),
           },
           {
+            id: 'usageCount',
+            label: 'Usage Count',
+            filterType: 'number',
+            minWidth: 120,
+            render: (val) => `${val || 0} exams`,
+          },
+          {
             id: 'status',
             label: 'Status',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Active', value: 'Active' },
+              { label: 'System Default', value: 'System Default' },
+              { label: 'Archived', value: 'Archived' },
+            ],
+            minWidth: 120,
+            sticky: true,
+            stickyPosition: 'right',
             render: (value, row: any) => {
               const { label, color } = getStatusLabel(row.status);
               return <Label color={color as any}>{label}</Label>;
             },
-          },
-          {
-            id: 'usageCount',
-            label: 'Usage Count',
-            filterType: 'number',
-            render: (val) => `${val || 0} exams`,
           },
           {
             id: 'actions',
@@ -294,6 +291,7 @@ const ExamTypeSettings = () => {
             minWidth: 50,
             width: 50,
             sticky: true,
+            stickyPosition: 'right',
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -349,10 +347,11 @@ const ExamTypeSettings = () => {
         }}
       >
         <ExamTypeForm
-          onClose={handleClose}
-          data={selectedExamType}
-          onSubmit={handleSubmit}
           isEdit={isEdit}
+          data={selectedExamType}
+          onClose={handleClose}
+          onSubmit={handleSubmit}
+          existingNames={existingNames}
         />
       </CustomDialog>
 
@@ -406,7 +405,7 @@ const ExamTypeSettings = () => {
                 setSelectedExamType(null);
               }, 200);
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+          // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </LoadingButton>

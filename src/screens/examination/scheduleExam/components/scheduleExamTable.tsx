@@ -136,55 +136,55 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   // Uses useCallback to memoize the component for performance
   const actions = ({ popover: pop, row }: any) =>
     canView || canAdd ? (
-        <>
-          {' '}
-          <MenuList>
-            <MenuItem
-              onClick={() => {
-                setPreviewExam(row);
-                pop.onClose();
-              }}
-            >
-              <Iconify icon="solar:eye-bold" />
-              Preview
-            </MenuItem>
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              setPreviewExam(row);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="solar:eye-bold" />
+            Preview
+          </MenuItem>
 
-            <MenuItem
-              onClick={() => {
-                onViewTimetable?.(row as IExamFormValues);
-                pop.onClose();
-              }}
-            >
-              <Iconify icon="solar:calendar-bold-duotone" />
-              View Timetable
-            </MenuItem>
+          <MenuItem
+            onClick={() => {
+              onViewTimetable?.(row as IExamFormValues);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="solar:calendar-bold-duotone" />
+            View Timetable
+          </MenuItem>
 
-            {/* Menu item for printing the timetable */}
-            <MenuItem
-              onClick={() => {
-                pop.onClose();
-              }}
-            >
-              <Iconify icon="solar:printer-outline" />
-              Print Timetable
-            </MenuItem>
+          {/* Menu item for printing the timetable */}
+          <MenuItem
+            onClick={() => {
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="solar:printer-outline" />
+            Print Timetable
+          </MenuItem>
 
-            {/* Menu item for publishing the timetable 
+          {/* Menu item for publishing the timetable 
               Sets the selected timetable name and shows confirmation dialog */}
-            {canAdd && row.status === examScheduledStatus.Pending && (
-              <MenuItem
-                onClick={() => {
-                  requestPublishExam(row);
-                  pop.onClose();
-                }}
-                disabled={(row.issueCount ?? 0) > 0}
-              >
-                <Iconify icon="solar:cloud-upload-outline" />
-                Publish Exam
-              </MenuItem>
-            )}
-          </MenuList>
-        </>
+          {canAdd && row.status === examScheduledStatus.Pending && (
+            <MenuItem
+              onClick={() => {
+                requestPublishExam(row);
+                pop.onClose();
+              }}
+              disabled={(row.issueCount ?? 0) > 0}
+            >
+              <Iconify icon="solar:cloud-upload-outline" />
+              Publish Exam
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
     ) : null;
 
   return (
@@ -242,9 +242,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           tableId="schedule-exam-table"
           isLoading={getExams?.isLoading || getExams?.isFetching}
           noDataText={
-            <>
-              Exam Data Not Found{' '}
+            <Stack alignItems="center" spacing={0.5}>
+              <Box component="span">Exam Data Not Found</Box>
               <Box
+                component="span"
                 onClick={() => {
                   setOpenDialog?.(true);
                   setEditData?.(null);
@@ -261,7 +262,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               >
                 Create Exam
               </Box>
-            </>
+            </Stack>
           }
           columns={[
             {
@@ -269,6 +270,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               label: 'Exam Name',
               align: 'left',
               sticky: true,
+              stickyPosition: 'left',
               minWidth: 260,
               render: (value, row) => (
                 <Box>
@@ -283,7 +285,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               ),
             },
             { id: 'examTypeName', label: 'Exam Type', align: 'left' },
-            { id: 'standardName', label: 'Class', align: 'left', filterType: 'number' },
+            { id: 'standardName', label: 'Class', align: 'left' },
             {
               id: 'divisions',
               label: 'Divisions',
@@ -308,22 +310,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               isFilter: false,
               render: (_value, row) =>
                 row.startDate && row.endDate
-                  ? `${dayjs(row.startDate).format('DD MMM')} - ${dayjs(row.endDate).format('DD MMM YYYY')}`
+                  ? `${dayjs(row.startDate).format('DD-MM-YYYY')} - ${dayjs(row.endDate).format('DD-MM-YYYY')}`
                   : 'Not scheduled',
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              align: 'left',
-              render: (value) => {
-                const meta =
-                  value === examScheduledStatus.Published
-                    ? { label: 'Published', color: 'info' }
-                    : value === examScheduledStatus.Completed
-                      ? { label: 'Completed', color: 'success' }
-                      : { label: 'Draft', color: 'warning' };
-                return <Label color={meta.color as LabelColor}>{meta.label}</Label>;
-              },
             },
             {
               id: 'issueCount',
@@ -349,14 +337,39 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                 </Stack>
               ),
             },
-            { id: 'creatorName', label: 'Created By', align: 'left' },
+            { id: 'creatorName', label: 'Created By', align: 'left', isFilter: false },
+            {
+              id: 'status',
+              label: 'Status',
+              align: 'left',
+              sticky: true,
+              stickyPosition: 'right',
+              minWidth: 120,
+              filterType: 'enum',
+              enumOptions: [
+                { label: 'Pending', value: 'Pending' },
+                { label: 'Published', value: 'Published' },
+                { label: 'Completed', value: 'Completed' },
+              ],
+              render: (value) => {
+                const meta =
+                  value === examScheduledStatus.Published
+                    ? { label: 'Published', color: 'info' }
+                    : value === examScheduledStatus.Completed
+                      ? { label: 'Completed', color: 'success' }
+                      : { label: 'Draft', color: 'warning' };
+                return <Label color={meta.color as LabelColor}>{meta.label}</Label>;
+              },
+            },
             {
               id: 'action',
               label: 'Actions',
-              minWidth: 80,
+              minWidth: 50,
+              width: 50,
               align: 'left',
               isSort: false,
               sticky: true,
+              stickyPosition: 'right',
               isFilter: false,
               render(value, row) {
                 return (
@@ -386,9 +399,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           tableId="schedule-exam-table"
           isLoading={getExams?.isLoading || getExams?.isFetching}
           noDataText={
-            <>
-              Exam Data Not Found{' '}
+            <Stack alignItems="center" spacing={0.5}>
+              <Box component="span">Exam Data Not Found</Box>
               <Box
+                component="span"
                 onClick={() => {
                   setOpenDialog?.(true);
                   setEditData?.(null);
@@ -405,7 +419,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               >
                 Create Exam
               </Box>
-            </>
+            </Stack>
           }
           columns={[
             { id: 'examName', label: 'Exam Name', align: 'left', sticky: true },
@@ -415,9 +429,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               id: 'divisions',
               label: 'Divisions',
               align: 'left',
+              isFilter: false,
+              isSort: false,
               render: (value) => <Box>{(value || []).join(', ')}</Box>,
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'createdBy', label: 'Created By', align: 'left', isFilter: false },
           ]}
           data={tableData || []}
         />

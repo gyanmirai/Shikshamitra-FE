@@ -1,5 +1,10 @@
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
+import { GlobalIcons } from 'src/utils/icons';
 import React, { useRef, useMemo, useState } from 'react';
 import {
   Box,
@@ -123,7 +128,7 @@ export const ImportMarksPreviewDialog: React.FC<ImportMarksPreviewDialogProps> =
         // Validate Obtained Marks
         let marksNum: number | null = null;
         const isPresent = col2.toLowerCase() === 'present' || col2 === '0';
-        
+
         if (isPresent) {
           if (col1 === '' || Number.isNaN(Number(col1))) {
             status = 'invalid';
@@ -178,10 +183,10 @@ export const ImportMarksPreviewDialog: React.FC<ImportMarksPreviewDialogProps> =
     }
 
     const payload = validRows.map((r) => {
-      const attStatus = r.attendance.toLowerCase() === 'absent' ? 1 
-                      : r.attendance.toLowerCase() === 'medicalleave' ? 2 
-                      : r.attendance.toLowerCase() === 'exempted' ? 3 
-                      : 0; // Default present
+      const attStatus = r.attendance.toLowerCase() === 'absent' ? 1
+        : r.attendance.toLowerCase() === 'medicalleave' ? 2
+          : r.attendance.toLowerCase() === 'exempted' ? 3
+            : 0; // Default present
       return {
         studentId: r.matchedStudentId!,
         attendanceStatus: attStatus,
@@ -197,15 +202,28 @@ export const ImportMarksPreviewDialog: React.FC<ImportMarksPreviewDialogProps> =
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Stack direction="row" alignItems="center" spacing={1}>
+    <CustomDialog
+      open={open}
+      handleClose={onClose}
+      title={
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
           <Iconify icon="solar:file-send-bold" width={24} sx={{ color: 'primary.main' }} />
-          <Typography variant="h6">Import Marks from Spreadsheet</Typography>
-        </Stack>
-      </DialogTitle>
-
-      <DialogContent dividers>
+          <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+            Import Marks from Spreadsheet
+          </Box>
+          <CustomTooltip
+            arrow
+            placement="right"
+            title="Import marks by copying and pasting spreadsheet rows or uploading a CSV file."
+          >
+            <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+          </CustomTooltip>
+        </Box>
+      }
+      maxWidth="md"
+      hasForm={false}
+    >
+      <DialogScrollContent>
         <Tabs value={tabValue} onChange={(_e, val) => setTabValue(val)} sx={{ mb: 2 }}>
           <Tab label="Copy & Paste Cells" />
           <Tab label="Upload CSV File" />
@@ -265,11 +283,11 @@ export const ImportMarksPreviewDialog: React.FC<ImportMarksPreviewDialogProps> =
         )}
 
         <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-          <Button variant="outlined" color="primary" onClick={handleParseText}>
+          <Button variant="outlined" color="primary" onClick={handleParseText} size="small">
             Parse & Validate Records
           </Button>
           {parsedData.length > 0 && (
-            <Button variant="text" color="inherit" onClick={() => setParsedData([])}>
+            <Button variant="text" color="inherit" onClick={() => setParsedData([])} size="small">
               Clear Preview
             </Button>
           )}
@@ -331,22 +349,17 @@ export const ImportMarksPreviewDialog: React.FC<ImportMarksPreviewDialogProps> =
             </TableContainer>
           </Box>
         )}
-      </DialogContent>
+      </DialogScrollContent>
 
-      <DialogActions>
-        <Button onClick={onClose} variant="outlined" color="inherit">
-          Cancel
-        </Button>
-        <Button
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <CancelButton onClick={onClose} />
+        <SubmitButton
+          buttonText={`Apply Valid Rows (${parsedData.filter((r) => r.status === 'matched').length})`}
           onClick={handleImportClick}
-          variant="contained"
-          color="primary"
-          disabled={parsedData.filter((r) => r.status === 'matched').length === 0}
           loading={isLoading}
-        >
-          Apply Valid Rows ({parsedData.filter((r) => r.status === 'matched').length})
-        </Button>
+          disabled={parsedData.filter((r) => r.status === 'matched').length === 0}
+        />
       </DialogActions>
-    </Dialog>
+    </CustomDialog>
   );
 };

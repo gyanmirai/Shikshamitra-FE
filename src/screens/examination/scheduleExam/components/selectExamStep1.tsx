@@ -30,6 +30,8 @@ import {
   TextField,
   Typography,
   Autocomplete,
+  Radio,
+  Tooltip,
 } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
@@ -238,24 +240,24 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             schedulingMode: sub.schedulingMode ?? (isElective ? 'separate' : undefined),
             subjects: isElective
               ? (sub.subjects ?? []).map((subjectItem: any) => {
-                  const assignedStudentCount =
-                    readiness?.assignedCounts?.[subjectItem.subjectId] ??
-                    readiness?.assignedCounts?.[subjectItem.id] ??
-                    0;
-                  return {
-                    ...subjectItem,
-                    assignedStudentCount,
-                    isExamSelectionDisabled: assignedStudentCount === 0,
-                    subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
-                    examDate: subjectItem.examDate || null,
-                    startTime: subjectItem.startTime || null,
-                    endTime: subjectItem.endTime || null,
-                    totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                    passingMarks: subjectItem.passingMarks ?? '',
-                    notes: subjectItem.notes || '',
-                    gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
-                  };
-                })
+                const assignedStudentCount =
+                  readiness?.assignedCounts?.[subjectItem.subjectId] ??
+                  readiness?.assignedCounts?.[subjectItem.id] ??
+                  0;
+                return {
+                  ...subjectItem,
+                  assignedStudentCount,
+                  isExamSelectionDisabled: assignedStudentCount === 0,
+                  subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
+                  examDate: subjectItem.examDate || null,
+                  startTime: subjectItem.startTime || null,
+                  endTime: subjectItem.endTime || null,
+                  totalMarks: subjectItem.totalMarks || defaultTotalMarks,
+                  passingMarks: subjectItem.passingMarks ?? '',
+                  notes: subjectItem.notes || '',
+                  gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
+                };
+              })
               : sub.subjects,
           };
         })
@@ -286,7 +288,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             animate="show"
             style={{ width: '100%' }}
           >
-            <Grid container spacing={1}>
+            <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 4 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
                   <ShakingTextField
@@ -315,6 +317,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       formControlProps={{ fullWidth: true }}
                       error={formik.touched.examType && Boolean(formik.errors.examType)}
                       helperText={formik.touched.examType ? formik.errors.examType : undefined}
+                      helperTextProps={{
+                        sx: {
+                          position: 'relative',
+                          whiteSpace: 'normal',
+                          mx: 0,
+                          mt: 0.5,
+                        },
+                      }}
                     />
                   </ShakingTextField>
 
@@ -326,7 +336,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     <ExamTypeForm
                       onClose={examTypeDialog.onFalse}
                       data={null}
-                      onSubmit={() => {}}
+                      onSubmit={() => { }}
                       isEdit={false}
                     />
                   </CustomDialog>
@@ -359,6 +369,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           ? formik.errors.className
                           : 'Select the class for this exam'
                       }
+                      helperTextProps={{
+                        sx: {
+                          position: 'relative',
+                          whiteSpace: 'normal',
+                          mx: 0,
+                          mt: 0.5,
+                        },
+                      }}
                     />
                   </ShakingTextField>
                 </motion.div>
@@ -446,6 +464,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             : formik.errors.divisions
                           : 'Select one or more divisions (choose “All” to include all)'
                       }
+                      helperTextProps={{
+                        sx: {
+                          position: 'relative',
+                          whiteSpace: 'normal',
+                          mx: 0,
+                          mt: 0.5,
+                        },
+                      }}
                     />
                   </ShakingTextField>
                 </motion.div>
@@ -518,6 +544,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                               ? formik.errors.subjects
                               : undefined
                           }
+                          FormHelperTextProps={{
+                            sx: {
+                              position: 'relative',
+                              whiteSpace: 'normal',
+                              mx: 0,
+                              mt: 0.5,
+                            },
+                          }}
                         />
                       )}
                     />
@@ -546,11 +580,53 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           ? formik.errors.examName
                           : 'A short, descriptive name for this exam'
                       }
+                      FormHelperTextProps={{
+                        sx: {
+                          position: 'relative',
+                          whiteSpace: 'normal',
+                          mx: 0,
+                          mt: 0.5,
+                        },
+                      }}
                     />
                   </ShakingTextField>
                 </motion.div>
               </Grid>
-
+              <Grid size={{ xs: 12, md: 6 }}>
+                <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                  <ShakingTextField
+                    error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
+                  >
+                    <CustomSelect
+                      options={gradeScalingsData?.data || []}
+                      isLoading={isGradeScalingsLoading || isGradeScalingsFetching}
+                      value={formik.values.gradingScaleId || ''}
+                      onChange={(val) => {
+                        formik.setFieldValue('gradingScaleId', val);
+                        formik.setFieldTouched('gradingScaleId', false);
+                      }}
+                      labelKey="name"
+                      valueKey="id"
+                      label="Grading Scale *"
+                      formControlProps={{ fullWidth: true }}
+                      error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
+                      helperText={
+                        formik.touched.gradingScaleId && formik.errors.gradingScaleId
+                          ? formik.errors.gradingScaleId
+                          : 'Select overall exam grading scale'
+                      }
+                      helperTextProps={{
+                        sx: {
+                          position: 'relative',
+                          whiteSpace: 'normal',
+                          mx: 0,
+                          mt: 0.5,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </motion.div>
+              </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
                   <Paper
@@ -582,65 +658,100 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 </motion.div>
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              {/* <Grid size={{ xs: 12 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 1,
-                      bgcolor: 'background.neutral',
-                    }}
-                  >
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                      <Chip
-                        icon={<Iconify icon="solar:pen-new-square-bold-duotone" />}
-                        label="Manual scheduling"
-                        color="primary"
-                        variant="soft"
-                      />
-                      <Chip
-                        icon={<Iconify icon="solar:copy-bold-duotone" />}
-                        label="Copy from existing exam - coming soon"
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+                    Scheduling Mode
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <Paper
                         variant="outlined"
-                      />
-                      <Chip
-                        icon={<Iconify icon="solar:magic-stick-3-bold-duotone" />}
-                        label="Auto-generate schedule - coming soon"
-                        variant="outlined"
-                      />
-                    </Stack>
-                  </Paper>
-                </motion.div>
-              </Grid>
+                        sx={{
+                          p: 2,
+                          borderRadius: 1,
+                          cursor: 'pointer',
+                          borderColor: 'primary.main',
+                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 1.5,
+                        }}
+                      >
+                        <Radio checked={true} size="small" sx={{ p: 0 }} color="primary" />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Manual scheduling
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Define date, time, and marks for each subject manually in the next step.
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
-                <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                  <ShakingTextField
-                    error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
-                  >
-                    <CustomSelect
-                      options={gradeScalingsData?.data || []}
-                      isLoading={isGradeScalingsLoading || isGradeScalingsFetching}
-                      value={formik.values.gradingScaleId || ''}
-                      onChange={(val) => {
-                        formik.setFieldValue('gradingScaleId', val);
-                        formik.setFieldTouched('gradingScaleId', false);
-                      }}
-                      labelKey="name"
-                      valueKey="id"
-                      label="Grading Scale *"
-                      formControlProps={{ fullWidth: true }}
-                      error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
-                      helperText={
-                        formik.touched.gradingScaleId && formik.errors.gradingScaleId
-                          ? formik.errors.gradingScaleId
-                          : 'Select overall exam grading scale'
-                      }
-                    />
-                  </ShakingTextField>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <Tooltip title="Coming soon!" arrow>
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: 2,
+                            borderRadius: 1,
+                            borderColor: 'divider',
+                            opacity: 0.6,
+                            bgcolor: 'action.disabledBackground',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 1.5,
+                            cursor: 'not-allowed',
+                          }}
+                        >
+                          <Radio checked={false} disabled size="small" sx={{ p: 0 }} />
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight={700} color="text.disabled">
+                              Copy from existing exam
+                            </Typography>
+                            <Typography variant="caption" color="text.disabled">
+                              Import schedule parameters from a previously scheduled exam.
+                            </Typography>
+                          </Box>
+                        </Paper>
+                      </Tooltip>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <Tooltip title="Coming soon!" arrow>
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: 2,
+                            borderRadius: 1,
+                            borderColor: 'divider',
+                            opacity: 0.6,
+                            bgcolor: 'action.disabledBackground',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 1.5,
+                            cursor: 'not-allowed',
+                          }}
+                        >
+                          <Radio checked={false} disabled size="small" sx={{ p: 0 }} />
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight={700} color="text.disabled">
+                              Auto-generate schedule
+                            </Typography>
+                            <Typography variant="caption" color="text.disabled">
+                              AI-powered automatic scheduling based on school timetable constraints.
+                            </Typography>
+                          </Box>
+                        </Paper>
+                      </Tooltip>
+                    </Grid>
+                  </Grid>
                 </motion.div>
-              </Grid>
+              </Grid> */}
+
+
 
               {/* NON-BREAKING: Subject chips preview — shown below the Subjects selector */}
               {formik.values.subjects.length > 0 && (
@@ -736,8 +847,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             .join(' · ')}
                         </strong>
                         {formik.values.subjects.length > 0 &&
-                          ` · ${formik.values.subjects.length} subject${
-                            formik.values.subjects.length !== 1 ? 's' : ''
+                          ` · ${formik.values.subjects.length} subject${formik.values.subjects.length !== 1 ? 's' : ''
                           }`}
                       </Typography>
                     </Box>

@@ -3,8 +3,9 @@ import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -18,15 +19,15 @@ import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/e
 import {
   Box,
   Grid,
+  Alert,
   Stack,
-  Button,
   Switch,
   TextField,
   Typography,
   DialogActions,
+  Autocomplete,
 } from '@mui/material';
 import {
-  useGetExaminationTypesQuery,
   useAddExaminationTypeMutation,
   useUpdateExaminationTypeMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
@@ -35,6 +36,7 @@ import { getExamTypeInitialValues } from '../initialValues';
 import { examTypeValidationSchema } from '../validationSchema';
 
 import type { IExamType, IExamTypeFormProps } from '../type';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const CATEGORY_OPTIONS = [
   { value: 'Main Exam', label: 'Main Exam' },
@@ -46,7 +48,6 @@ const CATEGORY_OPTIONS = [
 
 const STATUS_OPTIONS = [
   { value: 0, label: 'Active' },
-  { value: 1, label: 'Inactive' },
   { value: 2, label: 'System Default' },
   { value: 3, label: 'Archived' },
 ];
@@ -121,18 +122,10 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   onSubmit,
   data = null,
   isEdit = false,
+  existingNames,
 }) => {
   const theme = useTheme();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
-  const { data: examTypeData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExaminationTypesQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
-    options: {
-      skip: !(currentMedium as Medium)?.id,
-    },
-  });
 
   const { data: gradeScalings } = useQueryAndMutation({
     type: 'query',
@@ -152,12 +145,6 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
     [gradeScalings]
   );
 
-  const existingNames = useMemo(
-    () =>
-      new Set<string>((examTypeData?.items ?? []).map((t: any) => t.examType.trim().toLowerCase())),
-    [examTypeData]
-  );
-
   const [addExaminationType, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddExaminationTypeMutation,
@@ -170,7 +157,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
     initialValues: getExamTypeInitialValues(data),
-    validationSchema: examTypeValidationSchema(existingNames, data),
+    validationSchema: examTypeValidationSchema(existingNames || new Set(), data),
     onSubmit: async (values) => {
       try {
         const payloadBody = {
@@ -220,7 +207,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   };
 
   const sectionCardSx = {
-    p: 2.5,
+    p: 2,
     borderRadius: 2,
     border: `1px solid ${theme.palette.divider}`,
     bgcolor: alpha(theme.palette.grey[500], 0.04),
@@ -230,7 +217,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={1}>
         <Scrollbar sx={{ height: '480px' }}>
-          <Stack spacing={1} sx={{ p: 2.5 }}>
+          <Stack spacing={1} sx={{ p: 2 }}>
             {/* Section 1: Basic Information */}
             <Box sx={sectionCardSx}>
               <SectionHeader
@@ -239,7 +226,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 caption="Name, category and current status"
                 iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
-              <Grid container spacing={1}>
+              <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType)}>
                     <TextField
@@ -325,7 +312,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 caption="Defaults applied when this exam type is used"
                 iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
-              <Grid container spacing={1}>
+              <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <ShakingTextField
                     error={!!(formik.touched.defaultTotalMarks && formik.errors.defaultTotalMarks)}
@@ -371,25 +358,37 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <CustomSelect
-                    fullWidth
-                    label="Default Grade Scale"
-                    options={gradeScaleOptions}
-                    name="defaultGradeScaleId"
-                    size="small"
-                    sx={fieldSx}
-                    value={formik.values.defaultGradeScaleId}
-                    onChange={(val) => formik.setFieldValue('defaultGradeScaleId', val)}
-                    error={
-                      formik.touched.defaultGradeScaleId &&
-                      Boolean(formik.errors.defaultGradeScaleId)
-                    }
-                    helperText={
-                      formik.touched.defaultGradeScaleId
-                        ? (formik.errors.defaultGradeScaleId as string)
-                        : ''
-                    }
-                  />
+                  <CustomTooltip title={gradeScaleOptions.find((opt: any) => opt.value === formik.values.defaultGradeScaleId)?.label}>
+                    <Autocomplete
+                      size="small"
+                      fullWidth
+                      options={gradeScaleOptions}
+                      value={
+                        gradeScaleOptions.find((opt: any) => opt.value === formik.values.defaultGradeScaleId) ||
+                        null
+                      }
+                      getOptionLabel={(option) => option.label}
+                      isOptionEqualToValue={(option, value) => option.value === value.value}
+                      onChange={(_event, newValue) => {
+                        formik.setFieldValue('defaultGradeScaleId', newValue ? newValue.value : '');
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Default Grade Scale"
+                          error={
+                            formik.touched.defaultGradeScaleId &&
+                            Boolean(formik.errors.defaultGradeScaleId)
+                          }
+                          helperText={
+                            formik.touched.defaultGradeScaleId
+                              ? (formik.errors.defaultGradeScaleId as string)
+                              : ''
+                          }
+                        />
+                      )}
+                    />
+                  </CustomTooltip>
                 </Grid>
               </Grid>
             </Box>
@@ -402,7 +401,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 caption="Toggle how this exam type behaves"
                 iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
-              <Grid container spacing={1}>
+              <Grid container spacing={2}>
                 {TOGGLE_OPTIONS.map((toggle) => {
                   const checked = Boolean(formik.values[toggle.name as keyof typeof formik.values]);
                   return (
@@ -477,23 +476,22 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     </Grid>
                   );
                 })}
+                {data && (data as any).usageCount > 0 && (
+                  <Grid size={{ xs: 12 }}>
+                    <Alert severity="warning">
+                      This exam type is already used in academic modules. Major changes may affect existing records.
+                    </Alert>
+                  </Grid>
+                )}
               </Grid>
             </Box>
           </Stack>
         </Scrollbar>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            size="small"
-            onClick={(e) => onClose(e, false)}
-            variant="outlined"
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            size="small"
-            variant="contained"
+          <CancelButton onClick={() => onClose(undefined, false)} />
+          <SubmitButton
             loading={isUpdateLoading || isAddLoading}
+            buttonText={data ? 'Update' : 'Submit'}
             startIcon={
               <Iconify
                 icon={data ? GlobalIcons.edit : GlobalIcons.submit}
@@ -501,13 +499,10 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 height={data ? 16 : 20}
               />
             }
-            onClick={(e: any) => {
-              formik.handleSubmit(e);
+            onClick={() => {
+              formik.handleSubmit();
             }}
-            type="submit"
-          >
-            {data ? 'Update' : 'Submit'}
-          </LoadingButton>
+          />
         </DialogActions>
       </Box>
     </BackPopUpChecked>

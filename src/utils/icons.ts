@@ -59,6 +59,8 @@ export const GlobalIcons = {
   report: 'streamline-plump:file-report-solid',
   refresh: 'mdi:refresh',
   history: 'mdi:history',
+  notebook: 'solar:notebook-bold',
+  clock: 'solar:clock-circle-bold',
 };
 
 export const GlobalIconColors = {
