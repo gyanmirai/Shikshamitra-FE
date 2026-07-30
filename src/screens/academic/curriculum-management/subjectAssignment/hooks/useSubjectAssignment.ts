@@ -115,12 +115,17 @@ export function useSubjectAssignment() {
     async (payload: CopySubjectPayload) => {
       try {
         const response = await copySubjects(payload).unwrap();
-        shikshaMitraToast.success(response?.message || 'Subject allocations copied successfully.');
+        shikshaMitraToast.success(
+          response?.data?.message || response?.message || 'Subject allocations copied successfully.'
+        );
         copySubjectsDialog.onFalse();
         refetch();
       } catch (error: any) {
         shikshaMitraToast.error(
-          error?.data?.message || error?.message || 'Failed to copy subject allocations.'
+          error?.data?.detail ||
+            error?.data?.message ||
+            error?.message ||
+            'Failed to copy subject allocations.'
         );
       }
     },
