@@ -11,10 +11,12 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -645,116 +647,6 @@ const GradeEntry = (props: TabComponentType) => {
                   </IconButton>
                 </Tooltip>
               )}
-
-              {/* Autosave feedback badge */}
-              {saveState !== 'idle' && (
-                <Label
-                  color={
-                    saveState === 'saving' ? 'warning' : saveState === 'saved' ? 'success' : 'error'
-                  }
-                  variant="soft"
-                  sx={{ py: 1.5, px: 2, mr: 1 }}
-                >
-                  <Iconify
-                    icon={
-                      saveState === 'saving'
-                        ? 'solar:diskette-bold'
-                        : saveState === 'saved'
-                          ? 'solar:check-circle-bold'
-                          : 'solar:close-circle-bold'
-                    }
-                    width={16}
-                    sx={{ mr: 0.5 }}
-                  />
-                  {saveState === 'saving'
-                    ? 'Saving...'
-                    : saveState === 'saved'
-                      ? 'Saved just now'
-                      : 'Save failed'}
-                </Label>
-              )}
-
-              {examId && workflowStatus === GradeEntryWorkflowStatus.Draft && (
-                <LoadingButton
-                  variant="outlined"
-                  size="small"
-                  color="inherit"
-                  loading={isSaveDraftLoading || isBulkSaveLoading}
-                  startIcon={<Iconify icon="solar:diskette-bold" />}
-                  onClick={() => handleWorkflowAction('draft')}
-                >
-                  Save Draft
-                </LoadingButton>
-              )}
-
-              {examId &&
-                (workflowStatus === GradeEntryWorkflowStatus.Draft ||
-                  workflowStatus === GradeEntryWorkflowStatus.ChangesRequested) && (
-                  <LoadingButton
-                    variant="contained"
-                    size="small"
-                    color="primary"
-                    loading={isSubmitLoading}
-                    disabled={!allMarksAssigned}
-                    startIcon={<Iconify icon="solar:plain-bold" />}
-                    onClick={handleTriggerReview}
-                  >
-                    Review & Submit
-                  </LoadingButton>
-                )}
-
-              {examId && workflowStatus === GradeEntryWorkflowStatus.Submitted && (
-                <>
-                  <LoadingButton
-                    variant="outlined"
-                    size="small"
-                    color="error"
-                    loading={isRequestChangesLoading}
-                    startIcon={<Iconify icon="solar:close-circle-bold" />}
-                    onClick={requestChangesDialog.onTrue}
-                  >
-                    Request Corrections
-                  </LoadingButton>
-                  <LoadingButton
-                    variant="outlined"
-                    size="small"
-                    color="warning"
-                    loading={isVerifyLoading}
-                    startIcon={<Iconify icon="solar:check-circle-bold" />}
-                    onClick={() => handleWorkflowAction('verify')}
-                  >
-                    Verify Marks
-                  </LoadingButton>
-                </>
-              )}
-
-              {examId && workflowStatus === GradeEntryWorkflowStatus.Verified && (
-                <LoadingButton
-                  variant="contained"
-                  size="small"
-                  color="primary"
-                  loading={isPublishLoading}
-                  disabled={!allMarksAssigned}
-                  startIcon={<Iconify icon={GlobalIcons.publish} />}
-                  onClick={() => publishMarksDialog.onTrue()}
-                  sx={{ px: '24px' }}
-                >
-                  Publish Marks
-                </LoadingButton>
-              )}
-
-              {examId && workflowStatus === GradeEntryWorkflowStatus.Published && (
-                <LoadingButton
-                  variant="outlined"
-                  size="small"
-                  color="error"
-                  loading={isUnlockLoading}
-                  startIcon={<Iconify icon="solar:lock-open-bold" />}
-                  onClick={unlockDialog.onTrue}
-                >
-                  Unlock Marks
-                </LoadingButton>
-              )}
             </Stack>
           }
         />
@@ -920,7 +812,123 @@ const GradeEntry = (props: TabComponentType) => {
                     </Stack>
                   ))}
                 </Stack>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 'auto' }}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={1}
+                  sx={{ ml: 'auto' }}
+                  onClick={(e) => e.stopPropagation()} // Stop accordion collapse on button click
+                >
+                  {/* Autosave feedback badge */}
+                  {saveState !== 'idle' && (
+                    <Label
+                      color={
+                        saveState === 'saving' ? 'warning' : saveState === 'saved' ? 'success' : 'error'
+                      }
+                      variant="soft"
+                      sx={{ py: 1.5, px: 2, mr: 0.5 }}
+                    >
+                      <Iconify
+                        icon={
+                          saveState === 'saving'
+                            ? 'solar:diskette-bold'
+                            : saveState === 'saved'
+                              ? 'solar:check-circle-bold'
+                              : 'solar:close-circle-bold'
+                        }
+                        width={16}
+                        sx={{ mr: 0.5 }}
+                      />
+                      {saveState === 'saving'
+                        ? 'Saving...'
+                        : saveState === 'saved'
+                          ? 'Saved'
+                          : 'Save failed'}
+                    </Label>
+                  )}
+
+                  {examId && workflowStatus === GradeEntryWorkflowStatus.Draft && (
+                    <LoadingButton
+                      variant="outlined"
+                      size="small"
+                      color="inherit"
+                      loading={isSaveDraftLoading || isBulkSaveLoading}
+                      startIcon={<Iconify icon="solar:diskette-bold" />}
+                      onClick={() => handleWorkflowAction('draft')}
+                    >
+                      Save Draft
+                    </LoadingButton>
+                  )}
+
+                  {examId &&
+                    (workflowStatus === GradeEntryWorkflowStatus.Draft ||
+                      workflowStatus === GradeEntryWorkflowStatus.ChangesRequested) && (
+                      <LoadingButton
+                        variant="contained"
+                        size="small"
+                        color="primary"
+                        loading={isSubmitLoading}
+                        disabled={!allMarksAssigned}
+                        startIcon={<Iconify icon="solar:plain-bold" />}
+                        onClick={handleTriggerReview}
+                      >
+                        Review & Submit
+                      </LoadingButton>
+                    )}
+
+                  {examId && workflowStatus === GradeEntryWorkflowStatus.Submitted && (
+                    <>
+                      <LoadingButton
+                        variant="outlined"
+                        size="small"
+                        color="error"
+                        loading={isRequestChangesLoading}
+                        startIcon={<Iconify icon="solar:close-circle-bold" />}
+                        onClick={requestChangesDialog.onTrue}
+                      >
+                        Request Corrections
+                      </LoadingButton>
+                      <LoadingButton
+                        variant="outlined"
+                        size="small"
+                        color="warning"
+                        loading={isVerifyLoading}
+                        startIcon={<Iconify icon="solar:check-circle-bold" />}
+                        onClick={() => handleWorkflowAction('verify')}
+                      >
+                        Verify Marks
+                      </LoadingButton>
+                    </>
+                  )}
+
+                  {examId && workflowStatus === GradeEntryWorkflowStatus.Verified && (
+                    <LoadingButton
+                      variant="contained"
+                      size="small"
+                      color="primary"
+                      loading={isPublishLoading}
+                      disabled={!allMarksAssigned}
+                      startIcon={<Iconify icon={GlobalIcons.publish} />}
+                      onClick={() => publishMarksDialog.onTrue()}
+                      sx={{ px: '20px' }}
+                    >
+                      Publish Marks
+                    </LoadingButton>
+                  )}
+
+                  {examId && workflowStatus === GradeEntryWorkflowStatus.Published && (
+                    <LoadingButton
+                      variant="outlined"
+                      size="small"
+                      color="error"
+                      loading={isUnlockLoading}
+                      startIcon={<Iconify icon="solar:lock-open-bold" />}
+                      onClick={unlockDialog.onTrue}
+                    >
+                      Unlock Marks
+                    </LoadingButton>
+                  )}
+
                   <Label
                     color={GradeEntryWorkflowStatusColor[workflowStatus] as any}
                     variant="soft"
@@ -929,6 +937,10 @@ const GradeEntry = (props: TabComponentType) => {
                   </Label>
                   <IconButton
                     size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSummaryOpen((prev) => !prev);
+                    }}
                     sx={{
                       transition: 'transform 0.2s',
                       transform: summaryOpen ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -946,50 +958,50 @@ const GradeEntry = (props: TabComponentType) => {
                       <Grid container spacing={1}>
                         {(analyticsStats
                           ? [
-                              {
-                                label: 'Total Students',
-                                value: analyticsStats.totalCount,
-                                icon: 'solar:user-bold',
-                                color: 'primary.main',
-                              },
-                              {
-                                label: 'Graded',
-                                value: analyticsStats.totalCount - analyticsStats.pendingCount,
-                                icon: 'solar:check-square-bold',
-                                color: 'success.main',
-                              },
-                              {
-                                label: 'Pending',
-                                value: analyticsStats.pendingCount,
-                                icon: 'solar:clock-circle-bold',
-                                color:
-                                  analyticsStats.pendingCount > 0
-                                    ? 'warning.main'
-                                    : 'text.disabled',
-                              },
-                              {
-                                label: 'Highest Marks',
-                                value: analyticsStats.highestMarks,
-                                icon: 'solar:arrow-up-bold',
-                                color: 'success.main',
-                              },
-                              {
-                                label: 'Lowest Marks',
-                                value: analyticsStats.lowestMarks,
-                                icon: 'solar:arrow-down-bold',
-                                color: 'error.main',
-                              },
-                              {
-                                label: 'Average Marks',
-                                value: analyticsStats.averageMarks,
-                                icon: 'solar:graph-new-bold',
-                                color: 'info.main',
-                              },
-                            ]
+                            {
+                              label: 'Total Students',
+                              value: analyticsStats.totalCount,
+                              icon: 'solar:user-bold',
+                              color: 'primary.main',
+                            },
+                            {
+                              label: 'Graded',
+                              value: analyticsStats.totalCount - analyticsStats.pendingCount,
+                              icon: 'solar:check-square-bold',
+                              color: 'success.main',
+                            },
+                            {
+                              label: 'Pending',
+                              value: analyticsStats.pendingCount,
+                              icon: 'solar:clock-circle-bold',
+                              color:
+                                analyticsStats.pendingCount > 0
+                                  ? 'warning.main'
+                                  : 'text.disabled',
+                            },
+                            {
+                              label: 'Highest Marks',
+                              value: analyticsStats.highestMarks,
+                              icon: 'solar:arrow-up-bold',
+                              color: 'success.main',
+                            },
+                            {
+                              label: 'Lowest Marks',
+                              value: analyticsStats.lowestMarks,
+                              icon: 'solar:arrow-down-bold',
+                              color: 'error.main',
+                            },
+                            {
+                              label: 'Average Marks',
+                              value: analyticsStats.averageMarks,
+                              icon: 'solar:graph-new-bold',
+                              color: 'info.main',
+                            },
+                          ]
                           : Array.from({ length: 6 }, (_, i) => ({
-                              _skeleton: true,
-                              key: `sk-${i}`,
-                            }))
+                            _skeleton: true,
+                            key: `sk-${i}`,
+                          }))
                         ).map((stat: any) =>
                           stat._skeleton ? (
                             <Grid size={{ xs: 6, sm: 4 }} key={stat.key}>
@@ -1010,7 +1022,7 @@ const GradeEntry = (props: TabComponentType) => {
                                     bgcolor: (theme) =>
                                       alpha(
                                         (theme.palette as any)[stat.color.split('.')[0]]?.main ??
-                                          theme.palette.grey[500],
+                                        theme.palette.grey[500],
                                         0.08
                                       ),
                                     transform: 'translateY(-1px)',
@@ -1030,7 +1042,7 @@ const GradeEntry = (props: TabComponentType) => {
                                       bgcolor: (theme) =>
                                         alpha(
                                           (theme.palette as any)[stat.color.split('.')[0]]?.main ??
-                                            theme.palette.grey[500],
+                                          theme.palette.grey[500],
                                           0.16
                                         ),
                                     }}
@@ -1251,7 +1263,19 @@ const GradeEntry = (props: TabComponentType) => {
         )}
 
         {examId ? (
-          <Box sx={{ position: 'relative', pb: selectedStudents.length > 0 ? 10 : 0 }}>
+          <Box sx={{ position: 'relative' }}>
+            <BulkGradeEntryToolbar
+              selectedCount={selectedStudents.length}
+              onClearSelection={() => setSelectedStudents([])}
+              onMarkPresent={() => handleBulkMarkAttendance(0)}
+              onMarkAbsent={() => handleBulkMarkAttendance(1)}
+              onApplyMarks={handleBulkApplyMarks}
+              onApplyRemark={handleBulkApplyRemark}
+              onClearMarks={handleBulkClearMarks}
+              onExport={handleExportTemplate}
+              onImport={importMarksDialog.onTrue}
+            />
+
             <GradeEntryTable
               selectedStudents={selectedStudents}
               handleSelectStudent={handleSelectStudent}
@@ -1269,19 +1293,6 @@ const GradeEntry = (props: TabComponentType) => {
               onWorkflowFlagsChange={handleWorkflowFlagsChange}
               onRowsChange={setTableRows}
               bulkEditRequest={bulkEditRequest}
-            />
-
-            {/* Bulk actions toolbar floating */}
-            <BulkGradeEntryToolbar
-              selectedCount={selectedStudents.length}
-              onClearSelection={() => setSelectedStudents([])}
-              onMarkPresent={() => handleBulkMarkAttendance(0)}
-              onMarkAbsent={() => handleBulkMarkAttendance(1)}
-              onApplyMarks={handleBulkApplyMarks}
-              onApplyRemark={handleBulkApplyRemark}
-              onClearMarks={handleBulkClearMarks}
-              onExport={handleExportTemplate}
-              onImport={importMarksDialog.onTrue}
             />
           </Box>
         ) : (
@@ -1332,10 +1343,17 @@ const GradeEntry = (props: TabComponentType) => {
             }, 200);
           }}
           title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+              <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
                 {selectedStudent?.status === 1 ? 'Update Marks' : 'Assign Marks'}
-              </Typography>
+              </Box>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="Enter or update the marks and feedback remarks for the selected student."
+              >
+                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              </CustomTooltip>
             </Box>
           }
         >
@@ -1385,14 +1403,27 @@ const GradeEntry = (props: TabComponentType) => {
         />
 
         {/* Keyboard Shortcuts Dialog */}
-        <Dialog
+        <CustomDialog
           open={keyboardHelpDialog.value}
-          onClose={keyboardHelpDialog.onFalse}
+          handleClose={keyboardHelpDialog.onFalse}
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+              <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                Keyboard Cell Navigation Shortcuts
+              </Box>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="Use these keyboard shortcuts to navigate and edit grade input fields quickly."
+              >
+                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              </CustomTooltip>
+            </Box>
+          }
           maxWidth="xs"
-          fullWidth
+          hasForm={false}
         >
-          <DialogTitle>Keyboard Cell Navigation Shortcuts</DialogTitle>
-          <DialogContent dividers>
+          <DialogScrollContent>
             <List>
               {[
                 { key: 'Enter / ArrowDown', desc: 'Save and move to next student cell' },
@@ -1419,23 +1450,34 @@ const GradeEntry = (props: TabComponentType) => {
                 </ListItem>
               ))}
             </List>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={keyboardHelpDialog.onFalse} variant="contained">
-              Got it
-            </Button>
+          </DialogScrollContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <SubmitButton buttonText="Got it" onClick={keyboardHelpDialog.onFalse} />
           </DialogActions>
-        </Dialog>
+        </CustomDialog>
 
         {/* Audit Logs Dialog */}
-        <Dialog
+        <CustomDialog
           open={auditLogsDialog.value}
-          onClose={auditLogsDialog.onFalse}
+          handleClose={auditLogsDialog.onFalse}
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+              <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                Marks Revision Audit Logs
+              </Box>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="Review grade change logs, workflow updates, and auditor comments."
+              >
+                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              </CustomTooltip>
+            </Box>
+          }
           maxWidth="sm"
-          fullWidth
+          hasForm={false}
         >
-          <DialogTitle>Marks Revision Audit Logs</DialogTitle>
-          <DialogContent dividers>
+          <DialogScrollContent>
             <List>
               {resolvedAuditLogs.length === 0 ? (
                 <Typography
@@ -1477,24 +1519,35 @@ const GradeEntry = (props: TabComponentType) => {
                 ))
               )}
             </List>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={auditLogsDialog.onFalse} variant="outlined">
-              Close
-            </Button>
+          </DialogScrollContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <CancelButton buttonText="Close" onClick={auditLogsDialog.onFalse} />
           </DialogActions>
-        </Dialog>
+        </CustomDialog>
 
         {/* Request Changes Note Dialog */}
-        <Dialog
+        <CustomDialog
           open={requestChangesDialog.value}
-          onClose={requestChangesDialog.onFalse}
+          handleClose={requestChangesDialog.onFalse}
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+              <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                Request Grade Corrections
+              </Box>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="Send the grade entry back to the teacher with reviewer notes for corrections."
+              >
+                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              </CustomTooltip>
+            </Box>
+          }
           maxWidth="xs"
-          fullWidth
+          hasForm={false}
         >
-          <DialogTitle>Request Grade Corrections</DialogTitle>
-          <DialogContent dividers>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <DialogScrollContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, pt: 1 }}>
               Provide reviewer notes indicating why corrections are required:
             </Typography>
             <TextField
@@ -1504,30 +1557,44 @@ const GradeEntry = (props: TabComponentType) => {
               fullWidth
               placeholder="e.g. Please verify Roll #4 obtained marks, looks lower than average..."
             />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={requestChangesDialog.onFalse} variant="outlined" color="inherit">
-              Cancel
-            </Button>
-            <Button
+          </DialogScrollContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <CancelButton onClick={requestChangesDialog.onFalse} />
+            <SubmitButton
+              buttonText="Request Changes"
+              loading={isRequestChangesLoading}
+              startIcon={<Iconify icon="solar:close-circle-bold" />}
               onClick={() => {
                 const el = document.getElementById('reviewer-note-input') as HTMLTextAreaElement;
                 handleRequestChanges(el?.value || '');
               }}
-              variant="contained"
-              color="error"
-              loading={isRequestChangesLoading}
-            >
-              Request Changes
-            </Button>
+            />
           </DialogActions>
-        </Dialog>
+        </CustomDialog>
 
         {/* Unlock Marks Reason Dialog */}
-        <Dialog open={unlockDialog.value} onClose={unlockDialog.onFalse} maxWidth="xs" fullWidth>
-          <DialogTitle>Unlock Published Marks</DialogTitle>
-          <DialogContent dividers>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <CustomDialog
+          open={unlockDialog.value}
+          handleClose={unlockDialog.onFalse}
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+              <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                Unlock Published Marks
+              </Box>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="Unlock the published grades to allow editing and revision."
+              >
+                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              </CustomTooltip>
+            </Box>
+          }
+          maxWidth="xs"
+          hasForm={false}
+        >
+          <DialogScrollContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, pt: 1 }}>
               Are you sure you want to unlock published marks? Provide an unlock reason for audit
               trail:
             </Typography>
@@ -1538,24 +1605,20 @@ const GradeEntry = (props: TabComponentType) => {
               fullWidth
               placeholder="e.g. Correcting clerical mistake in roll #8..."
             />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={unlockDialog.onFalse} variant="outlined" color="inherit">
-              Cancel
-            </Button>
-            <Button
+          </DialogScrollContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <CancelButton onClick={unlockDialog.onFalse} />
+            <SubmitButton
+              buttonText="Confirm Unlock"
+              loading={isUnlockLoading}
+              startIcon={<Iconify icon="solar:lock-open-bold" />}
               onClick={() => {
                 const el = document.getElementById('unlock-reason-input') as HTMLTextAreaElement;
                 handleUnlockMarks(el?.value || '');
               }}
-              variant="contained"
-              color="error"
-              loading={isUnlockLoading}
-            >
-              Confirm Unlock
-            </Button>
+            />
           </DialogActions>
-        </Dialog>
+        </CustomDialog>
 
         {/* Unsaved Changes switch confirmation */}
         <ConfirmDialog

@@ -19,6 +19,7 @@ export interface IExamTypeFormProps {
   onSubmit: (values: any) => void;
   data?: any | null;
   isEdit?: boolean;
+  existingNames?: Set<string>;
 }
 
 export interface IAssessmentType {

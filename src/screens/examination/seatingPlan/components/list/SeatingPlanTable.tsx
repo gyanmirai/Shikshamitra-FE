@@ -82,7 +82,7 @@ export default function SeatingPlanTable({ rows, isLoading, canAdd, onRowClick, 
           isSort: false,
           isFilter: false,
           sticky: true,
-          minWidth: 170,
+          minWidth: 190,
           render: (_value, row: any) => {
             if (!canAdd) return null;
             const action = PRIMARY_ACTION[row.status as SeatingPlanListRow['status']];
@@ -90,7 +90,7 @@ export default function SeatingPlanTable({ rows, isLoading, canAdd, onRowClick, 
               <Button
                 size="small"
                 variant="outlined"
-                startIcon={<Iconify icon={action.icon} sx={{ height: 16, width: 16 }} />}
+                startIcon={<Iconify icon={action.icon} sx={{ height: 16, width: 18 }} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onPrimaryAction(row);

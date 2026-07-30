@@ -199,12 +199,12 @@ export default function SeatingPlanListPage() {
                     setWorkspaceDrawer((current) =>
                       current
                         ? {
-                            ...current,
-                            mode: 'review',
-                            divisionId: context.divisionId,
-                            roomIds: context.roomIds,
-                            seatingPlanId: context.seatingPlanId,
-                          }
+                          ...current,
+                          mode: 'review',
+                          divisionId: context.divisionId,
+                          roomIds: context.roomIds,
+                          seatingPlanId: context.seatingPlanId,
+                        }
                         : current
                     )
                   }

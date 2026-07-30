@@ -471,9 +471,9 @@ const AttendanceTrackingScreen = () => {
         ? { attendanceId: row.attendanceId }
         : { employeeId: row.employeeId, attendanceDate: row.attendanceDate }
       : {
-          attendanceIds: editableSelectedIds,
-          employeeDates: editableSelectedEmployeeDates,
-        }),
+        attendanceIds: editableSelectedIds,
+        employeeDates: editableSelectedEmployeeDates,
+      }),
     statusWire: editableStatusMeta(draft.status).wire,
     inTime: toWireTime(draft.inTime),
     outTime: toWireTime(draft.outTime),
@@ -775,10 +775,10 @@ const AttendanceTrackingScreen = () => {
         rowProps={(row) => ({
           sx: row.isHoliday
             ? {
-                bgcolor: 'action.hover',
-                color: 'text.secondary',
-                '& td': { bgcolor: 'action.hover' },
-              }
+              bgcolor: 'action.hover',
+              color: 'text.secondary',
+              '& td': { bgcolor: 'action.hover' },
+            }
             : undefined,
         })}
         isLoading={false}
