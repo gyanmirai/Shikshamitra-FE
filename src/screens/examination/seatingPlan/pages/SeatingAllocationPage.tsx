@@ -686,6 +686,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             direction={{ xs: 'column', md: 'row' }}
             spacing={1}
             alignItems={{ xs: 'stretch', md: 'center' }}
+            flexWrap="wrap"
           >
             <CustomSelect
               options={scopesData?.items || []}
@@ -694,9 +695,31 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
               onChange={(val) => setSelectedPlanId(val as string)}
               labelKey="name"
               valueKey="seatingPlanId"
-              formControlProps={{ sx: { minWidth: 240 } }}
+              formControlProps={{ sx: { minWidth: 200 } }}
             />
-            <Box sx={{ flex: 1 }}>
+            <CustomSelect
+              options={divisionsData?.items || []}
+              label="Division"
+              value={division}
+              onChange={(val) => {
+                setDivision(val as string);
+                setActiveRoomId('');
+              }}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: 160 } }}
+            />
+            <CustomSelect
+              options={roomsData?.items || []}
+              label="Room"
+              value={activeRoomId}
+              onChange={(val) => val && setActiveRoomId(val as string)}
+              labelKey="roomName"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: 160 } }}
+              disabled={!division}
+            />
+            <Box sx={{ flex: 1, minWidth: 150 }}>
               <Typography variant="body2" color="text.secondary">
                 {selectedScope?.subjects
                   ?.map((subject: SeatingPlanSubject) => subject.subjectName)
@@ -705,6 +728,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             </Box>
             <Button
               variant="outlined"
+              size="small"
               onClick={() => setScopeDialogOpen(true)}
               disabled={selectedPlanIsLocked}
             >
@@ -712,6 +736,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             </Button>
             <Button
               variant="outlined"
+              size="small"
               onClick={handleCreateIndividualScopes}
               disabled={isSavingScope || selectedPlanIsLocked}
             >
@@ -746,31 +771,6 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
               </Stack>
             )}
         </Paper>
-
-        <Box sx={{ display: 'flex', gap: 1, px: 2, py: 1, flexWrap: 'wrap' }}>
-          <CustomSelect
-            options={divisionsData?.items || []}
-            label="Division"
-            value={division}
-            onChange={(val) => {
-              setDivision(val as string);
-              setActiveRoomId('');
-            }}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: 180 } }}
-          />
-          <CustomSelect
-            options={roomsData?.items || []}
-            label="Room"
-            value={activeRoomId}
-            onChange={(val) => val && setActiveRoomId(val as string)}
-            labelKey="roomName"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: 180 } }}
-            disabled={!division}
-          />
-        </Box>
 
         {draft.rooms.length > 0 && (
           <RoomSwitcher

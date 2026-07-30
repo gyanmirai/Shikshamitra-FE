@@ -16,6 +16,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useCreateQuestionMutation } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
@@ -775,7 +776,10 @@ export default function CreateQuestionDialog({
     [allClass]
   );
 
-  const [createQuestion, createState] = useCreateQuestionMutation();
+  const [createQuestion, createState] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateQuestionMutation,
+  });
   const [creationMode, setCreationMode] = useState<'manual' | 'upload'>('manual');
 
   const validationSchema = useMemo(() => {
@@ -836,16 +840,20 @@ export default function CreateQuestionDialog({
     },
   });
 
-  const { data: subjectData } = useGetSubjectAssignmentsQuery(
-    { standardId: formik.values.standardId },
-    { skip: !formik.values.standardId }
-  );
+  const { data: subjectData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: formik.values.standardId },
+    options: { skip: !formik.values.standardId },
+  });
   const subjectOptions = useMemo(() => buildSubjectOptions(subjectData), [subjectData]);
 
-  const { data: chapters } = useGetChaptersByStandardQuery(
-    { standardId: formik.values.standardId, subjectId: formik.values.subjectId },
-    { skip: !formik.values.standardId || !formik.values.subjectId }
-  );
+  const { data: chapters } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    params: { standardId: formik.values.standardId, subjectId: formik.values.subjectId },
+    options: { skip: !formik.values.standardId || !formik.values.subjectId },
+  });
   const chapterOptions = useMemo(
     () =>
       (chapters || []).map((c: any) => ({
@@ -906,7 +914,7 @@ export default function CreateQuestionDialog({
         </DialogScrollContent>
 
         <DialogActions
-          sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider', gap: 1 }}
+          sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}
         >
           <CancelButton onClick={handleClose} />
           <SubmitButton

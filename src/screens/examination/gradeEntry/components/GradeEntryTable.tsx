@@ -135,12 +135,18 @@ const GradeEntryTable = ({
         if (bulkEditRequest.action === 'attendance') {
           const attendanceStatus = Number(bulkEditRequest.value ?? 0);
           next.attendanceStatus = attendanceStatus;
-          next.marks = attendanceStatus === 0 ? 0 : null;
+          next.marks = attendanceStatus === 0 ? (row.marks !== null ? row.marks : null) : null;
           next.feedback = '';
+          next.grade = attendanceStatus === 0 ? next.grade : '—';
+          next.status = (attendanceStatus !== 0 || next.marks !== null) ? 1 : 0;
         }
 
         if (bulkEditRequest.action === 'marks') {
-          const marks = Number(bulkEditRequest.value ?? 0);
+          const rawMarks = Number(bulkEditRequest.value ?? 0);
+          const marks =
+            row.totalMarks != null
+              ? Math.min(Math.max(0, rawMarks), row.totalMarks)
+              : Math.max(0, rawMarks);
           next.attendanceStatus = 0;
           next.marks = marks;
         }
@@ -153,6 +159,8 @@ const GradeEntryTable = ({
           next.attendanceStatus = 0;
           next.marks = null;
           next.feedback = '';
+          next.grade = '—';
+          next.status = 0;
         }
 
         return next;
@@ -170,9 +178,27 @@ const GradeEntryTable = ({
 
         const updatedRow = { ...row, [field]: value };
 
-        if (field === 'attendanceStatus' && updatedRow.attendanceStatus !== 0) {
-          updatedRow.marks = null;
-          updatedRow.feedback = '';
+        // If marks are edited, automatically calculate grade and status preview
+        if (field === 'marks' || field === 'attendanceStatus') {
+          if (field === 'marks' && value !== null) {
+            const rawVal = Number(value);
+            updatedRow.marks =
+              updatedRow.totalMarks != null
+                ? Math.min(Math.max(0, rawVal), updatedRow.totalMarks)
+                : Math.max(0, rawVal);
+          }
+          const isPresent = updatedRow.attendanceStatus === 0;
+          if (isPresent && updatedRow.marks !== null) {
+            const pct = (updatedRow.marks / updatedRow.totalMarks) * 100;
+            updatedRow.grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
+            updatedRow.status = 1; // Assigned
+          } else if (!isPresent) {
+            updatedRow.marks = null;
+            updatedRow.grade = '—';
+            updatedRow.status = 1; // Attendance status saved counts as assigned
+          } else {
+            updatedRow.status = 0; // Pending
+          }
         }
 
         return updatedRow;
@@ -276,7 +302,7 @@ const GradeEntryTable = ({
     const highest = Math.max(...markValues);
     const lowest = Math.min(...markValues);
     const average = markValues.reduce((a, b) => a + b, 0) / markValues.length;
-    
+
     const passItems = assigned.filter((item) => {
       const total = item.totalMarks || 100;
       const threshold = item.passingMarks != null ? item.passingMarks : total * 0.33;
@@ -307,6 +333,8 @@ const GradeEntryTable = ({
       columns={[
         {
           id: 'select',
+          sticky: true,
+          stickyPosition: 'left',
           label: (
             <Checkbox
               size="small"
@@ -406,8 +434,12 @@ const GradeEntryTable = ({
                   'data-col-type': 'marks',
                 }}
                 onChange={(e) => {
-                  const val = e.target.value === '' ? null : Number(e.target.value);
-                  handleCellEdit(row.studentId, 'marks', val);
+                  const rawVal = e.target.value === '' ? null : Number(e.target.value);
+                  const clampedVal =
+                    rawVal !== null && row.totalMarks != null
+                      ? Math.min(Math.max(0, rawVal), row.totalMarks)
+                      : rawVal;
+                  handleCellEdit(row.studentId, 'marks', clampedVal);
                 }}
                 onKeyDown={(e) => handleKeyDown(e, row.studentId, 'marks')}
                 error={value !== null && (value < 0 || value > row.totalMarks)}
