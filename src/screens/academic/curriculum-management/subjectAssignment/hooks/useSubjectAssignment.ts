@@ -4,8 +4,9 @@ import type { RootState } from 'src/redux/store';
 
 import { useState, useCallback } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useDebounceEffect } from 'src/hooks/use-debounce';
 import { useSelector, useDispatch } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import { useDebounceEffect } from 'src/hooks/use-debounce';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -13,6 +14,7 @@ import {
   useGetSubjectAssignmentsQuery,
   useArchiveSubjectAssignmentMutation,
   useRestoreSubjectAssignmentMutation,
+  useCopySubjectAssignmentsMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { useClassSelection } from './useClassSelection';
@@ -20,6 +22,7 @@ import { useSubjectMutations } from './useSubjectMutations';
 import { SubjectAssignmentStatus } from '../enum/subjectType';
 
 import type { ISubjectFormValues } from '../component/type';
+import type { CopySubjectPayload } from '../component/SubjectCopyDialog';
 
 const TEACHER_SEARCH_DEBOUNCE_MS = 400;
 
@@ -79,6 +82,7 @@ export function useSubjectAssignment() {
 
   const [archiveSubject, { isLoading: isArchiveLoading }] = useArchiveSubjectAssignmentMutation();
   const [restoreSubject, { isLoading: isRestoreLoading }] = useRestoreSubjectAssignmentMutation();
+  const [copySubjects, { isLoading: isCopyLoading }] = useCopySubjectAssignmentsMutation();
 
   const addSubjectDialog = useBoolean();
   const deleteConfirmDialog = useBoolean();
@@ -86,6 +90,7 @@ export function useSubjectAssignment() {
   const showSubjectDialog = useBoolean();
   const archiveConfirmDialog = useBoolean();
   const restoreConfirmDialog = useBoolean();
+  const copySubjectsDialog = useBoolean();
 
   const [selectedSubject, setSelectedSubject] = useState<ISubjectFormValues | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -95,9 +100,32 @@ export function useSubjectAssignment() {
     confirmPublishDialog.onFalse();
     archiveConfirmDialog.onFalse();
     restoreConfirmDialog.onFalse();
+    copySubjectsDialog.onFalse();
     setIsEdit(false);
     setTimeout(() => setSelectedSubject(null), 100);
-  }, [deleteConfirmDialog, confirmPublishDialog, archiveConfirmDialog, restoreConfirmDialog]);
+  }, [
+    deleteConfirmDialog,
+    confirmPublishDialog,
+    archiveConfirmDialog,
+    restoreConfirmDialog,
+    copySubjectsDialog,
+  ]);
+
+  const handleConfirmCopySubjects = useCallback(
+    async (payload: CopySubjectPayload) => {
+      try {
+        const response = await copySubjects(payload).unwrap();
+        shikshaMitraToast.success(response?.message || 'Subject allocations copied successfully.');
+        copySubjectsDialog.onFalse();
+        refetch();
+      } catch (error: any) {
+        shikshaMitraToast.error(
+          error?.data?.message || error?.message || 'Failed to copy subject allocations.'
+        );
+      }
+    },
+    [copySubjects, copySubjectsDialog, refetch]
+  );
 
   const { isDeleteLoading, isPublishLoading, handleConfirmDelete, handleConfirmPublish } =
     useSubjectMutations({
@@ -260,6 +288,7 @@ export function useSubjectAssignment() {
     isPublishLoading,
     isArchiveLoading,
     isRestoreLoading,
+    isCopyLoading,
     isTableLoading,
     isFetching,
     subjectTableData,
@@ -271,6 +300,7 @@ export function useSubjectAssignment() {
     archiveConfirmDialog,
     restoreConfirmDialog,
     showSubjectDialog,
+    copySubjectsDialog,
     handleClose,
     handleViewSubject,
     handleEditSubject,
@@ -280,6 +310,7 @@ export function useSubjectAssignment() {
     handleRequestRestore,
     handleConfirmArchive,
     handleConfirmRestore,
+    handleConfirmCopySubjects,
     handleCloseDialog,
     handleConfirmDelete,
     handleConfirmPublish,

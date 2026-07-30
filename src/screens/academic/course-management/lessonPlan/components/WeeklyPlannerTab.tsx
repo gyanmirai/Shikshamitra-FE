@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
@@ -20,7 +21,7 @@ import {
   CardContent,
 } from '@mui/material';
 
-import { weekDays, weekStartIso } from '../lessonPlanData';
+import { getMondayOfWeek } from '../lessonPlanData';
 
 import type { LessonPlanRow } from '../lessonPlanData';
 
@@ -51,6 +52,11 @@ type Props = {
   onCopyPreviousWeek: () => void;
 };
 
+const weekSelectionTypeOptions = [
+  { value: 'calendar', label: 'Calendar Week (Mon–Sat)' },
+  { value: 'selectedDay', label: 'Start from Selected Day' },
+];
+
 const WeeklyPlannerTab = ({
   lessonPlans,
   onAddLesson,
@@ -61,11 +67,30 @@ const WeeklyPlannerTab = ({
   onMarkMissed,
   onCopyPreviousWeek,
 }: Props) => {
-  const [weekStart, setWeekStart] = useState<Dayjs | null>(dayjs(weekStartIso));
+  const [weekStart, setWeekStart] = useState<Dayjs | null>(dayjs());
+  const [selectionType, setSelectionType] = useState<'calendar' | 'selectedDay'>('calendar');
   const [cardMenuAnchor, setCardMenuAnchor] = useState<{
     el: HTMLElement;
     plan: LessonPlanRow;
   } | null>(null);
+
+  const effectiveStartDate = React.useMemo(() => {
+    const rawDate = weekStart || dayjs();
+    return selectionType === 'calendar' ? getMondayOfWeek(rawDate) : rawDate;
+  }, [weekStart, selectionType]);
+
+  const daysToRender = React.useMemo(
+    () =>
+      Array.from({ length: 6 }).map((_, index) => {
+        const d = effectiveStartDate.add(index, 'day');
+        return {
+          dayName: d.format('dddd'),
+          date: d,
+          dateStr: d.format('YYYY-MM-DD'),
+        };
+      }),
+    [effectiveStartDate]
+  );
 
   const openCardMenu = (el: HTMLElement, plan: LessonPlanRow) => setCardMenuAnchor({ el, plan });
   const closeCardMenu = () => setCardMenuAnchor(null);
@@ -87,14 +112,25 @@ const WeeklyPlannerTab = ({
         spacing={1}
         sx={{ mb: 2.5 }}
       >
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
           <DatePicker
-            label="Week Starting"
-            value={weekStart}
-            onChange={setWeekStart}
+            label={selectionType === 'calendar' ? 'Week Starting' : 'Start Date'}
+            value={
+              selectionType === 'calendar'
+                ? getMondayOfWeek(weekStart || dayjs())
+                : weekStart || dayjs()
+            }
+            onChange={(newDate) => setWeekStart(newDate)}
             slotProps={{ textField: { size: 'small', sx: { maxWidth: 180 } } }}
           />
-          <Button size="small" variant="outlined" onClick={() => setWeekStart(dayjs(weekStartIso))}>
+          <CustomSelect
+            label="Selection Mode"
+            value={selectionType}
+            onChange={(val) => setSelectionType(val as 'calendar' | 'selectedDay')}
+            options={weekSelectionTypeOptions}
+            formControlProps={{ sx: { minWidth: 210 } }}
+          />
+          <Button size="small" variant="outlined" onClick={() => setWeekStart(dayjs())}>
             This Week
           </Button>
         </Stack>
@@ -122,9 +158,7 @@ const WeeklyPlannerTab = ({
           },
         }}
       >
-        {weekDays.map((day, index) => {
-          const date = (weekStart || dayjs(weekStartIso)).add(index, 'day');
-          const dateStr = date.format('YYYY-MM-DD');
+        {daysToRender.map(({ dayName, date, dateStr }) => {
           const isToday = dateStr === dayjs().format('YYYY-MM-DD');
           const plansForDay = lessonPlans
             .filter((p) => p.plannedDate === dateStr)
@@ -132,7 +166,7 @@ const WeeklyPlannerTab = ({
 
           return (
             <Card
-              key={day}
+              key={dateStr}
               variant="outlined"
               sx={{
                 borderRadius: 1.5,
@@ -151,7 +185,7 @@ const WeeklyPlannerTab = ({
                   <Box>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography variant="subtitle1" fontWeight={600}>
-                        {day}
+                        {dayName}
                       </Typography>
                       {isToday && (
                         <Label color="primary" variant="filled" sx={{ height: 18, fontSize: 10 }}>

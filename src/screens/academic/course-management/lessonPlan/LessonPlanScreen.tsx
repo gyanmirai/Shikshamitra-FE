@@ -886,8 +886,15 @@ const LessonPlanScreen = () => {
           message: submit ? 'Teacher diary submitted successfully.' : 'Teacher diary notes saved.',
         });
       } catch (err: any) {
+        const errorMsg =
+          err?.data?.detail ||
+          err?.data?.title ||
+          err?.data?.error?.message ||
+          err?.detail ||
+          err?.message ||
+          'Teacher diary can be submitted only against an approved lesson plan.';
         shikshaMitraToast.error({
-          message: err?.data?.error?.message || 'Failed to save teacher diary.',
+          message: errorMsg,
         });
       }
     },

@@ -10,6 +10,7 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import SubjectTable from './component/subjectTable';
 import SubjectKpiCards from './component/SubjectKpiCards';
 import SubjectActionBar from './component/SubjectActionBar';
+import SubjectCopyDialog from './component/SubjectCopyDialog';
 import SubjectBreadcrumbs from './component/SubjectBreadcrumbs';
 import SubjectDeleteDialog from './component/SubjectDeleteDialog';
 import SubjectPublishDialog from './component/SubjectPublishDialog';
@@ -30,6 +31,7 @@ const Subject = () => {
     isPublishLoading,
     isArchiveLoading,
     isRestoreLoading,
+    isCopyLoading,
     isTableLoading,
     isFetching,
     subjectTableData,
@@ -41,6 +43,7 @@ const Subject = () => {
     archiveConfirmDialog,
     restoreConfirmDialog,
     showSubjectDialog,
+    copySubjectsDialog,
     handleClose,
     handleViewSubject,
     handleEditSubject,
@@ -50,6 +53,7 @@ const Subject = () => {
     handleRequestRestore,
     handleConfirmArchive,
     handleConfirmRestore,
+    handleConfirmCopySubjects,
     handleCloseDialog,
     handleConfirmDelete,
     handleConfirmPublish,
@@ -107,6 +111,7 @@ const Subject = () => {
               onClassChange={handleClassChange}
               onTeacherSearchChange={handleTeacherSearchChange}
               onAddNew={handleAddNew}
+              onCopySubjects={copySubjectsDialog.onTrue}
             />
           )}
 
@@ -175,6 +180,18 @@ const Subject = () => {
           selectedSubject={selectedSubject}
           onClose={handleCloseDialog}
           onConfirm={handleConfirmRestore}
+        />
+      )}
+
+      {copySubjectsDialog.value && canAdd && (
+        <SubjectCopyDialog
+          open={copySubjectsDialog.value}
+          isLoading={isCopyLoading}
+          allClass={allClass}
+          sourceClassId={classId}
+          sourceClassName={classes}
+          onClose={handleCloseDialog}
+          onConfirm={handleConfirmCopySubjects}
         />
       )}
 

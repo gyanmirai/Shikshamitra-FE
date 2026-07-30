@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Chip, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Tab, Tabs, Chip, Stack } from '@mui/material';
 
 export type ReviewStatusFilter = 'pending' | 'approved' | 'changes' | 'rejected' | 'all';
 
@@ -19,27 +19,48 @@ const labels: Record<ReviewStatusFilter, string> = {
   all: 'All Reviews',
 };
 
+const statusChipColors: Record<ReviewStatusFilter, 'warning' | 'success' | 'info' | 'error' | 'default'> = {
+  pending: 'warning',
+  approved: 'success',
+  changes: 'warning',
+  rejected: 'error',
+  all: 'default',
+};
+
 const ReviewStatusTabs = ({ value, counts, onChange }: Props) => (
-  <ToggleButtonGroup
+  <Tabs
     value={value}
-    exclusive
-    onChange={(_, nextValue: ReviewStatusFilter | null) => nextValue && onChange(nextValue)}
-    size="small"
-    sx={{ overflowX: 'auto', maxWidth: 1 }}
+    onChange={(_, nextValue: ReviewStatusFilter) => onChange(nextValue)}
+    variant="scrollable"
+    scrollButtons="auto"
+    sx={{
+      px: 2,
+      minHeight: 48,
+      '& .MuiTab-root': {
+        minHeight: 48,
+        fontWeight: 600,
+      },
+    }}
   >
     {(Object.keys(labels) as ReviewStatusFilter[]).map((status) => (
-      <ToggleButton key={status} value={status} sx={{ whiteSpace: 'nowrap', px: 1.25 }}>
-        <Stack direction="row" spacing={0.75} alignItems="center">
-          {labels[status]}
-          <Chip
-            label={counts[status]}
-            size="small"
-            color={status === 'pending' ? 'warning' : 'default'}
-          />
-        </Stack>
-      </ToggleButton>
+      <Tab
+        key={status}
+        value={status}
+        label={
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <span>{labels[status]}</span>
+            <Chip
+              label={counts[status]}
+              size="small"
+              color={statusChipColors[status]}
+              variant="soft"
+              sx={{ height: 20, fontSize: 11, fontWeight: 700 }}
+            />
+          </Stack>
+        }
+      />
     ))}
-  </ToggleButtonGroup>
+  </Tabs>
 );
 
 export default ReviewStatusTabs;

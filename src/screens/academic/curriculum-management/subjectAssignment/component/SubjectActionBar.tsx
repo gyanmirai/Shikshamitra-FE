@@ -2,12 +2,12 @@ import type { RootState } from 'src/redux/store';
 import type { Standards } from 'src/types/school';
 
 import React from 'react';
-import { Add, Close, Search } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { Box, Card, Button, TextField, IconButton, InputAdornment } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
+import { Add, Close, Search, ContentCopy } from '@mui/icons-material';
+import { Box, Card, Button, Tooltip, TextField, IconButton, InputAdornment } from '@mui/material';
 
 interface SubjectActionBarProps {
   allClass: Standards[];
@@ -16,6 +16,7 @@ interface SubjectActionBarProps {
   onClassChange: (value: string | number) => void;
   onTeacherSearchChange: (value: string) => void;
   onAddNew: () => void;
+  onCopySubjects?: () => void;
 }
 
 const SubjectActionBar = ({
@@ -25,6 +26,7 @@ const SubjectActionBar = ({
   onClassChange,
   onTeacherSearchChange,
   onAddNew,
+  onCopySubjects,
 }: SubjectActionBarProps) => {
   const { permissions } = useSelector((state: RootState) => state.auth);
 
@@ -81,15 +83,36 @@ const SubjectActionBar = ({
           }}
         />
         {addEditPermission && (
-          <Button
-            size="small"
-            startIcon={<Add />}
-            variant="contained"
-            onClick={onAddNew}
-            sx={{ px: '32px', ml: 'auto' }}
-          >
-            Subject Allocation
-          </Button>
+          <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
+            {onCopySubjects && (
+              <Tooltip
+                title={!classId ? 'Select a class first' : ''}
+                disableHoverListener={!!classId}
+              >
+                <span>
+                  <Button
+                    size="small"
+                    startIcon={<ContentCopy />}
+                    variant="outlined"
+                    disabled={!classId}
+                    onClick={onCopySubjects}
+                    sx={{ px: '20px' }}
+                  >
+                    Copy Subjects
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={onAddNew}
+              sx={{ px: '32px' }}
+            >
+              Subject Allocation
+            </Button>
+          </Box>
         )}
       </Box>
     </Card>

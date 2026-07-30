@@ -4,10 +4,12 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   Card,
@@ -26,11 +28,10 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
-
-import type { LessonPlanRow } from '../lessonPlanData';
 
 import ReviewStatusTabs, { type ReviewStatusFilter } from './ReviewStatusTabs';
+
+import type { LessonPlanRow } from '../lessonPlanData';
 
 type ReviewTarget = { type: 'plan'; id: string };
 type ReviewDateFilterMode = 'all' | 'day' | 'week' | 'range';
@@ -249,13 +250,34 @@ const ReviewQueueTab = ({
     (!currentTeacherId || !row.teacherId || row.teacherId !== currentTeacherId);
 
   return (
-    <Box>
-      {/* Toolbar */}
-      <Stack spacing={1} sx={{ mb: 2 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="subtitle1">
-            Review Queue ({statusCounts.pending} pending / {reviewRows.length} total)
-          </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {/* Top Filter & Navigation Card */}
+      <Card
+        sx={{
+          borderRadius: 2,
+          boxShadow: 'none',
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        {/* Header Title & View Mode Toggle */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ px: 2, py: 1.5 }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="subtitle1" fontWeight={700}>
+              Review Queue
+            </Typography>
+            <Chip
+              label={`${statusCounts.pending} pending · ${reviewRows.length} total`}
+              size="small"
+              color={statusCounts.pending > 0 ? 'warning' : 'default'}
+              variant="soft"
+              sx={{ fontWeight: 600 }}
+            />
+          </Stack>
           <ToggleButtonGroup
             value={viewMode}
             exclusive
@@ -271,16 +293,23 @@ const ReviewQueueTab = ({
           </ToggleButtonGroup>
         </Stack>
 
+        <Divider />
+
+        {/* Status Tabs Row */}
         <ReviewStatusTabs value={statusFilter} counts={statusCounts} onChange={setStatusFilter} />
 
+        <Divider />
+
+        {/* Search & Filters Controls Row */}
         <Stack
           direction={{ xs: 'column', md: 'row' }}
-          spacing={1}
+          spacing={1.5}
           alignItems={{ xs: 'stretch', md: 'center' }}
+          sx={{ p: 2 }}
         >
           <TextField
             size="small"
-            label="Search Teacher..."
+            placeholder="Search Teacher..."
             value={teacherSearch}
             onChange={(event) => setTeacherSearch(event.target.value)}
             sx={{ minWidth: { xs: 1, md: 240 } }}
@@ -359,7 +388,7 @@ const ReviewQueueTab = ({
             Clear
           </Button>
         </Stack>
-      </Stack>
+      </Card>
 
       {!canReviewSubmissions && reviewRows.length > 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
@@ -402,7 +431,7 @@ const ReviewQueueTab = ({
         <Box
           sx={{
             display: 'grid',
-            gap: 1,
+            gap: 2,
             gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' },
           }}
         >
@@ -410,7 +439,22 @@ const ReviewQueueTab = ({
             const sourcePlan = lessonPlans.find((plan) => plan.id === row.id);
 
             return (
-              <Card key={row.id} variant="outlined" sx={{ borderRadius: 2 }}>
+              <Card
+                key={row.id}
+                variant="outlined"
+                sx={{
+                  borderRadius: 2,
+                  borderColor: (theme) => theme.palette.divider,
+                  boxShadow: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'all 0.15s ease-in-out',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
+                  },
+                }}
+              >
                 <CardContent sx={{ pb: 1 }}>
                   {/* Header */}
                   <Stack
@@ -487,7 +531,14 @@ const ReviewQueueTab = ({
                   )}
 
                   {/* AI Summary */}
-                  <Box sx={{ p: 1, bgcolor: 'grey.50', borderRadius: 1, mb: 1 }}>
+                  <Box
+                    sx={{
+                      p: 1,
+                      bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
+                      borderRadius: 1,
+                      mb: 1,
+                    }}
+                  >
                     <Stack direction="row" spacing={1} alignItems="flex-start">
                       <Iconify
                         icon="mdi:robot-outline"
@@ -513,11 +564,14 @@ const ReviewQueueTab = ({
                 {row.status === 'pending' && canReviewRow(row) && (
                   <>
                     <Divider />
-                    <CardActions sx={{ px: 2, py: 1, gap: 1 }}>
+                    <CardActions
+                      sx={{ px: 2, py: 1.25, justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}
+                    >
                       <Button
                         size="small"
                         variant="contained"
                         color="success"
+                        startIcon={<Iconify icon="mdi:check" width={16} />}
                         onClick={() => openReview({ type: 'plan', id: row.id }, 'approve')}
                       >
                         Approve
@@ -526,6 +580,7 @@ const ReviewQueueTab = ({
                         size="small"
                         variant="outlined"
                         color="warning"
+                        startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
                         onClick={() => openReview({ type: 'plan', id: row.id }, 'changes')}
                       >
                         Request Changes
@@ -534,6 +589,7 @@ const ReviewQueueTab = ({
                         size="small"
                         variant="outlined"
                         color="error"
+                        startIcon={<Iconify icon="mdi:close" width={16} />}
                         onClick={() => openReview({ type: 'plan', id: row.id }, 'reject')}
                       >
                         Reject
