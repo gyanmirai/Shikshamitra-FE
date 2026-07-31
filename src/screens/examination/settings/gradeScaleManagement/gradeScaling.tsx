@@ -408,7 +408,7 @@ const GradingScale = () => {
           </Box>
         }
       >
-        <GradeForm onSubmit={() => {}} onClose={handleClose} data={selectedGrade} />
+        <GradeForm onSubmit={() => { }} onClose={handleClose} data={selectedGrade} />
       </CustomDialog>
 
       {/* ------------------------------------------------------------------- */}
@@ -431,7 +431,7 @@ const GradingScale = () => {
           </Box>
         }
       >
-        <GradeForm onSubmit={() => {}} onClose={handleClose} data={selectedGrade} viewOnly />
+        <GradeForm onSubmit={() => { }} onClose={handleClose} data={selectedGrade} viewOnly />
       </CustomDialog>
 
       {/* ------------------------------------------------------------------- */}

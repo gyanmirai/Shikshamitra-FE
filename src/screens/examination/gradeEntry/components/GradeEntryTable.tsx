@@ -113,7 +113,7 @@ const GradeEntryTable = ({
 
     return (
       (row.marks ?? null) !== (savedRow.marks ?? null) ||
-      (row.attendanceStatus ?? 0) !== (savedRow.attendanceStatus ?? 0) ||
+      (row.attendanceStatus ?? null) !== (savedRow.attendanceStatus ?? null) ||
       (row.feedback ?? '') !== (savedRow.feedback ?? '')
     );
   }, [savedRowsByStudentId]);
@@ -149,6 +149,10 @@ const GradeEntryTable = ({
               : Math.max(0, rawMarks);
           next.attendanceStatus = 0;
           next.marks = marks;
+          next.status = 1;
+          const total = row.totalMarks || 100;
+          const pct = (marks / total) * 100;
+          next.grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
         }
 
         if (bulkEditRequest.action === 'remark') {
@@ -165,7 +169,6 @@ const GradeEntryTable = ({
 
         return next;
       });
-      onRowsChange?.(nextRows);
       return nextRows;
     });
   }, [bulkEditRequest, onRowsChange]);
@@ -186,6 +189,9 @@ const GradeEntryTable = ({
               updatedRow.totalMarks != null
                 ? Math.min(Math.max(0, rawVal), updatedRow.totalMarks)
                 : Math.max(0, rawVal);
+            if (updatedRow.attendanceStatus == null) {
+              updatedRow.attendanceStatus = 0; // Default to Present when marks are entered
+            }
           }
           const isPresent = updatedRow.attendanceStatus === 0;
           if (isPresent && updatedRow.marks !== null) {
@@ -203,7 +209,6 @@ const GradeEntryTable = ({
 
         return updatedRow;
       });
-      onRowsChange?.(nextRows);
       return nextRows;
     });
   };
@@ -247,9 +252,9 @@ const GradeEntryTable = ({
     if (!onAllAssignedChange) return;
     const allAssigned =
       localRows.length > 0 &&
-      localRows.every((item) => item.status === 1 && !isRowModified(item));
+      localRows.every((item) => item.status === 1);
     onAllAssignedChange(allAssigned);
-  }, [localRows, onAllAssignedChange, isRowModified]);
+  }, [localRows, onAllAssignedChange]);
 
   // Emit workflow flags to parent
   useEffect(() => {

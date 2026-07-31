@@ -81,6 +81,7 @@ import type {
   IStudentExamGradeEntry,
   IExamMarksWorkflowFlags,
 } from './type';
+import { Scrollbar } from 'src/components/scrollbar';
 
 const GradeEntry = (props: TabComponentType) => {
   const dialog = useBoolean();
@@ -508,10 +509,23 @@ const GradeEntry = (props: TabComponentType) => {
   // Review before submit validation trigger
   const handleTriggerReview = async () => {
     try {
+      if (isDirty) {
+        setSaveState('saving');
+        await bulkSaveMarks({
+          examId,
+          body: { subjectId: subject, divisionId: division, rows: buildMarksPayload(tableRows) },
+        }).unwrap();
+        await saveDraftMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
+        setIsDirty(false);
+        setSaveState('saved');
+      }
       await validateMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
       reviewDialog.onTrue();
     } catch (e) {
       console.error(e);
+      if (isDirty) {
+        setSaveState('failed');
+      }
     }
   };
 
@@ -546,12 +560,15 @@ const GradeEntry = (props: TabComponentType) => {
 
   const buildMarksPayload = useCallback(
     (rows: IExamMarkItem[]) =>
-      rows.map((row) => ({
-        studentId: row.studentId,
-        attendanceStatus: row.attendanceStatus ?? 0,
-        obtainedMarks: (row.attendanceStatus ?? 0) === 0 ? row.marks : null,
-        feedback: (row.attendanceStatus ?? 0) === 0 ? (row.feedback ?? '') : '',
-      })),
+      rows.map((row) => {
+        const hasAttendance = row.attendanceStatus !== null && row.attendanceStatus !== undefined;
+        return {
+          studentId: row.studentId,
+          attendanceStatus: hasAttendance ? row.attendanceStatus : null,
+          obtainedMarks: row.attendanceStatus === 0 ? row.marks : null,
+          feedback: row.attendanceStatus === 0 ? (row.feedback ?? '') : '',
+        };
+      }),
     []
   );
 
@@ -672,7 +689,6 @@ const GradeEntry = (props: TabComponentType) => {
             <Iconify
               icon={row.status === 1 ? GlobalIcons.edit : 'mdi:arrow-right-circle'}
               width={18}
-              sx={{ color: row.status === 1 ? 'primary.main' : 'success.main' }}
             />
           </IconButton>
         </CustomTooltip>
@@ -1026,7 +1042,7 @@ const GradeEntry = (props: TabComponentType) => {
                 <Box sx={{ p: 2 }}>
                   <Grid container spacing={1}>
                     <Grid size={{ xs: 12, md: 8 }}>
-                      <TimetableSettingsSummaryCards cards={summaryCards} />
+                      <TimetableSettingsSummaryCards cards={summaryCards} cardsPerRow={3} />
                     </Grid>
 
                     <Grid
@@ -1218,9 +1234,27 @@ const GradeEntry = (props: TabComponentType) => {
             <Box
               sx={{
                 position: 'relative',
-                pb: !isGradeEntryLocked && selectedStudents.length > 0 ? 10 : 0,
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                minHeight: 0,
               }}
             >
+              {/* Bulk actions toolbar */}
+              {!isGradeEntryLocked && (
+                <BulkGradeEntryToolbar
+                  selectedCount={selectedStudents.length}
+                  onClearSelection={() => setSelectedStudents([])}
+                  onMarkPresent={() => handleBulkMarkAttendance(0)}
+                  onMarkAbsent={() => handleBulkMarkAttendance(1)}
+                  onApplyMarks={handleBulkApplyMarks}
+                  onApplyRemark={handleBulkApplyRemark}
+                  onClearMarks={handleBulkClearMarks}
+                  onExport={handleExportTemplate}
+                  onImport={importMarksDialog.onTrue}
+                />
+              )}
+
               <GradeEntryTable
                 selectedStudents={selectedStudents}
                 handleSelectStudent={handleSelectStudent}
@@ -1239,26 +1273,12 @@ const GradeEntry = (props: TabComponentType) => {
                 onRowsChange={setTableRows}
                 bulkEditRequest={bulkEditRequest}
               />
-
-              {/* Bulk actions toolbar floating */}
-              {!isGradeEntryLocked && (
-                <BulkGradeEntryToolbar
-                  selectedCount={selectedStudents.length}
-                  onClearSelection={() => setSelectedStudents([])}
-                  onMarkPresent={() => handleBulkMarkAttendance(0)}
-                  onMarkAbsent={() => handleBulkMarkAttendance(1)}
-                  onApplyMarks={handleBulkApplyMarks}
-                  onApplyRemark={handleBulkApplyRemark}
-                  onClearMarks={handleBulkClearMarks}
-                  onExport={handleExportTemplate}
-                  onImport={importMarksDialog.onTrue}
-                />
-              )}
             </Box>
           ) : (
             <Card
               sx={{
-                minHeight: "100%",
+                flex: 1,
+                minHeight: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1410,7 +1430,7 @@ const GradeEntry = (props: TabComponentType) => {
           maxWidth="xs"
           hasForm={false}
         >
-          <DialogScrollContent>
+          <Scrollbar sx={{ height: '350px' }}>
             <List>
               {[
                 { key: 'Enter / ArrowDown', desc: 'Save and move to next student cell' },
@@ -1437,8 +1457,8 @@ const GradeEntry = (props: TabComponentType) => {
                 </ListItem>
               ))}
             </List>
-          </DialogScrollContent>
-          <DialogActions sx={{ px: 3, pb: 2 }}>
+          </Scrollbar>
+          <DialogActions>
             <SubmitButton buttonText="Got it" onClick={keyboardHelpDialog.onFalse} />
           </DialogActions>
         </CustomDialog>
