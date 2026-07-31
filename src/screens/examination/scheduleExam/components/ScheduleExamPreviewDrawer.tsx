@@ -17,10 +17,11 @@ import {
   Divider,
   Typography,
   Grid,
-  DialogActions,
+  Drawer,
+  IconButton,
 } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 import {
   useGetExamScheduleQuery,
@@ -175,69 +176,133 @@ const ScheduleExamPreviewDrawer = ({
   );
 
   return (
-    <CustomDialog
+    <Drawer
+      anchor="right"
       open={open}
-      handleClose={onClose}
-      title={dialogTitle}
-      maxWidth="md"
-      hasForm={false}
-      paperProps={{ sx: { p: 0 } }}
+      onClose={onClose}
+      slotProps={{
+        backdrop: {
+          sx: {
+            bgcolor: 'rgba(15, 23, 42, 0.44)',
+            backdropFilter: 'blur(3px)',
+          },
+        },
+      }}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', md: 560 },
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
+        },
+      }}
     >
-      <DialogScrollContent>
+      {/* Drawer Header */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 1.5,
+          p: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {previewExam?.examName || 'Exam Preview'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="View scheduled exam subjects, dates, times, and planning issues."
+            >
+              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+            </CustomTooltip>
+          </Stack>
+
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary', typography: 'caption' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Iconify icon={GlobalIcons.calendar} width={14} height={14} />
+              <span>{dateRange}</span>
+            </Box>
+            <Label color={meta.color} variant="soft">
+              {meta.label}
+            </Label>
+          </Stack>
+        </Stack>
+
+        <IconButton onClick={onClose} sx={{ p: 0.5, color: 'text.secondary' }}>
+          <Iconify icon="mdi:close" />
+        </IconButton>
+      </Box>
+
+      {/* Content wrapper with scrollbar */}
+      <Scrollbar sx={{ flex: 1, '& .simplebar-content': { p: 2 }, p: 1.5 }}>
         {isDetailsLoading && <LoadingScreen sx={{ minHeight: 180 }} />}
         {!isDetailsLoading && (
-          <Stack spacing={3} sx={{ mt: 1 }}>
-            {/* Metadata Horizontal Grid */}
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 6, sm: 3 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                    Exam Type
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    {previewExam?.examTypeName || '-'}
-                  </Typography>
-                </Box>
+          <Stack spacing={1}>
+            {/* Metadata Horizontal Section - Beautifully Boxed */}
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 1.5,
+                bgcolor: (theme) => alpha(theme.palette.grey[500], 0.03),
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                      Exam Type
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                      {previewExam?.examTypeName || '-'}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                      Class
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                      {previewExam?.standardName || '-'}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                      Created By
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                      {previewExam?.creatorName || '-'}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                      Divisions
+                    </Typography>
+                    <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                      {(previewExam?.divisions || []).length ? (
+                        previewExam.divisions.map((division: string) => (
+                          <Chip key={division} label={division} size="small" variant="soft" />
+                        ))
+                      ) : (
+                        <Typography variant="subtitle2">-</Typography>
+                      )}
+                    </Stack>
+                  </Box>
+                </Grid>
               </Grid>
-              <Grid size={{ xs: 6, sm: 3 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                    Class
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    {previewExam?.standardName || '-'}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6, sm: 3 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                    Created By
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    {previewExam?.creatorName || '-'}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6, sm: 3 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                    Divisions
-                  </Typography>
-                  <Stack direction="row" flexWrap="wrap" gap={0.5}>
-                    {(previewExam?.divisions || []).length ? (
-                      previewExam.divisions.map((division: string) => (
-                        <Chip key={division} label={division} size="small" variant="soft" />
-                      ))
-                    ) : (
-                      <Typography variant="subtitle2">-</Typography>
-                    )}
-                  </Stack>
-                </Box>
-              </Grid>
-            </Grid>
-
-            <Divider sx={{ borderStyle: 'dashed' }} />
+            </Box>
 
             {/* Stat Summary Metrics Grid */}
             <Grid container spacing={2}>
@@ -271,7 +336,7 @@ const ScheduleExamPreviewDrawer = ({
               <Box
                 sx={{
                   p: 1.5,
-                  borderRadius: 1,
+                  borderRadius: 1.5,
                   bgcolor: alpha(theme.palette.error.main, 0.08),
                   color: theme.palette.error.dark,
                   border: '1px solid',
@@ -300,13 +365,13 @@ const ScheduleExamPreviewDrawer = ({
                 <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
                   Subjects & Schedule
                 </Typography>
-                <Stack spacing={1}>
+                <Stack spacing={1.25}>
                   {subjectRows.map((subject: any) => (
                     <Box
                       key={subject.subjectId}
                       sx={{
-                        p: 1.5,
-                        borderRadius: 1,
+                        p: 2,
+                        borderRadius: 1.5,
                         border: '1px solid',
                         borderColor: 'divider',
                         bgcolor: 'background.paper',
@@ -315,19 +380,24 @@ const ScheduleExamPreviewDrawer = ({
                         justifyContent: 'space-between',
                         alignItems: { xs: 'flex-start', sm: 'center' },
                         gap: 1.5,
-                        transition: 'all 0.2s',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.01)',
+                        transition: theme.transitions.create(['background-color', 'border-color', 'box-shadow', 'transform'], {
+                          duration: theme.transitions.duration.shorter,
+                        }),
                         '&:hover': {
+                          transform: 'translateX(4px)',
                           bgcolor: 'background.neutral',
                           borderColor: 'primary.light',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
                         },
                       }}
                     >
                       <Box>
-                        <Typography variant="subtitle2" fontWeight={600}>
+                        <Typography variant="subtitle2" fontWeight={700} color="text.primary">
                           {subject.subjectName || '-'}
                         </Typography>
                         {subject.groupName && (
-                          <Typography variant="caption" color="text.secondary" display="block">
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
                             Group: {subject.groupName}
                           </Typography>
                         )}
@@ -339,12 +409,14 @@ const ScheduleExamPreviewDrawer = ({
                             alignItems: 'center',
                             gap: 0.5,
                             py: 0.5,
-                            px: 1,
-                            borderRadius: 0.75,
-                            bgcolor: alpha(theme.palette.primary.main, 0.08),
-                            color: theme.palette.primary.dark,
+                            px: 1.25,
+                            borderRadius: 1,
+                            bgcolor: subject.examDate ? alpha(theme.palette.success.main, 0.08) : alpha(theme.palette.error.main, 0.08),
+                            color: subject.examDate ? theme.palette.success.dark : theme.palette.error.dark,
                             typography: 'caption',
-                            fontWeight: 600,
+                            fontWeight: 700,
+                            border: '1px solid',
+                            borderColor: subject.examDate ? alpha(theme.palette.success.main, 0.15) : alpha(theme.palette.error.main, 0.15),
                           }}
                         >
                           <Iconify icon={GlobalIcons.calendar} width={14} height={14} />
@@ -357,12 +429,14 @@ const ScheduleExamPreviewDrawer = ({
                               alignItems: 'center',
                               gap: 0.5,
                               py: 0.5,
-                              px: 1,
-                              borderRadius: 0.75,
+                              px: 1.25,
+                              borderRadius: 1,
                               bgcolor: alpha(theme.palette.info.main, 0.08),
                               color: theme.palette.info.dark,
                               typography: 'caption',
-                              fontWeight: 600,
+                              fontWeight: 700,
+                              border: '1px solid',
+                              borderColor: alpha(theme.palette.info.main, 0.15),
                             }}
                           >
                             <Iconify icon={GlobalIcons.clock} width={14} height={14} />
@@ -377,9 +451,21 @@ const ScheduleExamPreviewDrawer = ({
             )}
           </Stack>
         )}
-      </DialogScrollContent>
+      </Scrollbar>
 
-      <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', justifyContent: 'flex-end' }}>
+      {/* Drawer Footer Actions */}
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: 1,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.neutral',
+        }}
+      >
         <Button
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.eye} />}
@@ -410,8 +496,8 @@ const ScheduleExamPreviewDrawer = ({
             Publish Exam
           </Button>
         )}
-      </DialogActions>
-    </CustomDialog>
+      </Box>
+    </Drawer>
   );
 };
 
@@ -427,31 +513,35 @@ const PreviewMetric = ({
   icon: string;
 }) => {
   const theme = useTheme();
+
   const getColorStyles = () => {
     switch (tone) {
       case 'error':
         return {
-          bgcolor: alpha(theme.palette.error.main, 0.08),
+          bg: `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0.08)} 0%, ${alpha(theme.palette.error.main, 0.02)} 100%)`,
           color: theme.palette.error.dark,
-          borderColor: alpha(theme.palette.error.main, 0.2),
-          iconColor: theme.palette.error.main,
+          borderColor: alpha(theme.palette.error.main, 0.16),
           iconBg: alpha(theme.palette.error.main, 0.12),
+          iconColor: theme.palette.error.main,
+          shadowColor: alpha(theme.palette.error.main, 0.12),
         };
       case 'warning':
         return {
-          bgcolor: alpha(theme.palette.warning.main, 0.08),
+          bg: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.08)} 0%, ${alpha(theme.palette.warning.main, 0.02)} 100%)`,
           color: theme.palette.warning.dark,
-          borderColor: alpha(theme.palette.warning.main, 0.2),
-          iconColor: theme.palette.warning.main,
+          borderColor: alpha(theme.palette.warning.main, 0.16),
           iconBg: alpha(theme.palette.warning.main, 0.12),
+          iconColor: theme.palette.warning.main,
+          shadowColor: alpha(theme.palette.warning.main, 0.12),
         };
       default:
         return {
-          bgcolor: theme.palette.background.neutral,
-          color: theme.palette.text.primary,
-          borderColor: alpha(theme.palette.divider, 0.8),
+          bg: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+          color: theme.palette.primary.dark,
+          borderColor: alpha(theme.palette.primary.main, 0.16),
+          iconBg: alpha(theme.palette.primary.main, 0.12),
           iconColor: theme.palette.primary.main,
-          iconBg: alpha(theme.palette.primary.main, 0.08),
+          shadowColor: alpha(theme.palette.primary.main, 0.12),
         };
     }
   };
@@ -463,39 +553,41 @@ const PreviewMetric = ({
       sx={{
         flex: 1,
         p: 2,
-        borderRadius: 1.5,
+        borderRadius: 2,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        bgcolor: styles.bgcolor,
+        background: styles.bg,
         color: styles.color,
         border: '1px solid',
         borderColor: styles.borderColor,
+        boxShadow: `0 4px 12px 0 ${styles.shadowColor}`,
         transition: theme.transitions.create(['transform', 'box-shadow'], {
           duration: theme.transitions.duration.shorter,
         }),
         '&:hover': {
           transform: 'translateY(-2px)',
-          boxShadow: theme.customShadows?.card || theme.shadows[2],
+          boxShadow: `0 8px 20px 0 ${styles.shadowColor}`,
         },
       }}
     >
       <Box
         sx={{
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
+          width: 48,
+          height: 48,
+          borderRadius: '12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           bgcolor: styles.iconBg,
           color: styles.iconColor,
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
         }}
       >
-        <Iconify icon={icon} width={22} height={22} />
+        <Iconify icon={icon} width={24} height={24} />
       </Box>
       <Box>
-        <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+        <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.2 }}>
           {value}
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>

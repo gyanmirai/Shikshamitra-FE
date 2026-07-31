@@ -471,65 +471,65 @@ const CalendarImpactLogs = () => {
       },
       ...(canResolve
         ? [
-            {
-              id: 'action',
-              label: 'Actions',
-              align: 'right' as const,
-              isSort: false,
-              isFilter: false,
-              sticky: true,
-              minWidth: 100,
-              render: (value: any, row: any) => {
-                if (
-                  row.status === CalendarImpactStatus.Resolved ||
-                  row.status === CalendarImpactStatus.IgnoredWithReason ||
-                  row.status === CalendarImpactStatus.Rescheduled
-                ) {
-                  return null;
-                }
-                return (
-                  <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                    <Tooltip title="Mark Resolved">
-                      <IconButton
-                        size="small"
-                        sx={{
-                          color: 'success.main',
-                          '&:hover': { backgroundColor: alpha(theme.palette.success.main, 0.1) },
-                        }}
-                        onClick={() => openAction(row, resolveDialog)}
-                      >
-                        <Iconify icon="mdi:check-circle-outline" width={18} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Reschedule">
-                      <IconButton
-                        size="small"
-                        sx={{
-                          color: 'info.main',
-                          '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.1) },
-                        }}
-                        onClick={() => openAction(row, rescheduleDialog)}
-                      >
-                        <Iconify icon="mdi:calendar-sync-outline" width={18} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Ignore with Reason">
-                      <IconButton
-                        size="small"
-                        sx={{
-                          color: 'warning.main',
-                          '&:hover': { backgroundColor: alpha(theme.palette.warning.main, 0.1) },
-                        }}
-                        onClick={() => openAction(row, ignoreDialog)}
-                      >
-                        <Iconify icon="mdi:eye-off-outline" width={18} />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                );
-              },
+          {
+            id: 'action',
+            label: 'Actions',
+            align: 'right' as const,
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            minWidth: 100,
+            render: (value: any, row: any) => {
+              if (
+                row.status === CalendarImpactStatus.Resolved ||
+                row.status === CalendarImpactStatus.IgnoredWithReason ||
+                row.status === CalendarImpactStatus.Rescheduled
+              ) {
+                return null;
+              }
+              return (
+                <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                  <Tooltip title="Mark Resolved">
+                    <IconButton
+                      size="small"
+                      sx={{
+                        color: 'success.main',
+                        '&:hover': { backgroundColor: alpha(theme.palette.success.main, 0.1) },
+                      }}
+                      onClick={() => openAction(row, resolveDialog)}
+                    >
+                      <Iconify icon="mdi:check-circle-outline" width={18} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Reschedule">
+                    <IconButton
+                      size="small"
+                      sx={{
+                        color: 'info.main',
+                        '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.1) },
+                      }}
+                      onClick={() => openAction(row, rescheduleDialog)}
+                    >
+                      <Iconify icon="mdi:calendar-sync-outline" width={18} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Ignore with Reason">
+                    <IconButton
+                      size="small"
+                      sx={{
+                        color: 'warning.main',
+                        '&:hover': { backgroundColor: alpha(theme.palette.warning.main, 0.1) },
+                      }}
+                      onClick={() => openAction(row, ignoreDialog)}
+                    >
+                      <Iconify icon="mdi:eye-off-outline" width={18} />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+              );
             },
-          ]
+          },
+        ]
         : []),
     ],
     [canResolve, theme, resolveDialog, rescheduleDialog, ignoreDialog]

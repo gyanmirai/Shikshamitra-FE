@@ -128,7 +128,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
 
   const formik = useFormik({
     initialValues: {
-      marks: typeof data?.obtainedMarks === 'number' ? data.obtainedMarks : '',
+      marks: typeof data?.marks === 'number' ? data.marks : (typeof data?.obtainedMarks === 'number' ? data.obtainedMarks : ''),
       totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : '',
       feedback: data?.feedback || '',
       attendanceStatus:
@@ -192,8 +192,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
   const marksValue = Number(formik.values.marks);
   const autoGrade =
     formik.values.attendanceStatus === AttendanceStatus.Present &&
-    formik.values.marks !== '' &&
-    !Number.isNaN(marksValue)
+      formik.values.marks !== '' &&
+      !Number.isNaN(marksValue)
       ? calculateAutoGrade(marksValue, totalMarks, targetScale)
       : null;
   const isAbsent = formik.values.attendanceStatus !== AttendanceStatus.Present;
@@ -341,7 +341,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                         <strong>
                           {
                             AttendanceStatusLabel[
-                              formik.values.attendanceStatus as AttendanceStatus
+                            formik.values.attendanceStatus as AttendanceStatus
                             ]
                           }
                         </strong>{' '}

@@ -221,14 +221,13 @@ const toQuestionBody = (values: any) => {
     String(values.answerKey || '').trim() ||
     getObjectiveAnswerKey(Number(values.questionType), options);
 
-  // topicName is a display-only field; topicId is always null (no topics API)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { topicName, tagsText, ...rest } = values;
   return {
     ...rest,
     answerKey,
     chapterId: values.chapterId || null,
-    topicId: null,
+    topicName: values.topicName?.trim() || null,
     bloomLevel: values.bloomLevel || null,
     visibility: 2, // default Internal / School
     marks: Number(values.marks),
@@ -903,7 +902,7 @@ export default function QuestionBankScreen() {
         standardId: question.standardId || '',
         subjectId: question.subjectId || '',
         chapterId: question.chapterId || '',
-        topicName: '', // topicId is not surfaced via API; no topics lookup
+        topicName: question.topicName || '', // topicName holds the typed topic string
         questionText: question.questionText || '',
         questionType: question.questionType || 1,
         difficultyLevel: question.difficultyLevel || 1,

@@ -185,7 +185,7 @@ const toQuestionBody = (values: any) => {
     ...values,
     answerKey,
     chapterId: values.chapterId || null,
-    topicId: values.topicId || null,
+    topicName: values.topicName?.trim() || null,
     bloomLevel: values.bloomLevel || null,
     marks: Number(values.marks),
     negativeMarks:
@@ -210,7 +210,7 @@ const makeInitialValues = (
   standardId,
   subjectId,
   chapterId,
-  topicId: '',
+  topicName: '',
   questionText: '',
   questionType: 1,
   difficultyLevel: 1,
@@ -362,8 +362,8 @@ function QuestionFormFields({
           fullWidth
           size="small"
           label="Topic (optional)"
-          name="topicId"
-          value={formik.values.topicId || ''}
+          name="topicName"
+          value={formik.values.topicName || ''}
           onChange={formik.handleChange}
           placeholder="Enter topic name"
         />

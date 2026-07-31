@@ -14,13 +14,14 @@ export interface ITimetableSummaryCard {
 
 interface TimetableSettingsSummaryCardsProps {
   cards: ITimetableSummaryCard[];
+  cardsPerRow?: number;
 }
 
-export function TimetableSettingsSummaryCards({ cards }: TimetableSettingsSummaryCardsProps) {
+export function TimetableSettingsSummaryCards({ cards, cardsPerRow }: TimetableSettingsSummaryCardsProps) {
   return (
     <Grid container spacing={1} sx={{ mb: 1 }}>
       {cards.map((card) => (
-        <Grid key={card.label} size={{ xs: 6, sm: 4, md: 12 / cards.length }}>
+        <Grid key={card.label} size={{ xs: 6, sm: 4, md: cardsPerRow ? (12 / cardsPerRow) : (12 / cards.length) }}>
           <Card
             onClick={card.onClick}
             sx={{
