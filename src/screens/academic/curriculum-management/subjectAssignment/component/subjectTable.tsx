@@ -314,8 +314,8 @@ const SubjectTable = ({
         id: 'lastUpdatedDisplay',
         label: 'Updated',
         align: 'left',
-        minWidth: 90,
-        width: 90,
+        minWidth: 100,
+        width: 100,
         isSort: false,
         isFilter: false,
         render: (value) => (

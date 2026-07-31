@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
@@ -20,12 +21,12 @@ import {
   Divider,
   Tooltip,
   TextField,
-  InputAdornment,
   IconButton,
   Typography,
   CardContent,
   CardActions,
   ToggleButton,
+  InputAdornment,
   ToggleButtonGroup,
 } from '@mui/material';
 
@@ -55,6 +56,67 @@ const reviewStatusColors: Record<ReviewStatusFilter, 'default' | 'success' | 'wa
     rejected: 'error',
     all: 'default',
   };
+
+const REVIEW_STATUS_DESCRIPTIONS: Record<string, string> = {
+  pending: 'Pending: Awaiting reviewer action & approval',
+  approved: 'Approved: Submission reviewed and approved',
+  changes: 'Changes Requested: Returned with comments for teacher revisions',
+  rejected: 'Rejected: Submission rejected',
+};
+
+const ReviewStatusHeaderTooltip = (
+  <Box sx={{ p: 1, minWidth: 260 }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: '135px 1fr',
+        rowGap: 0.75,
+        columnGap: 1,
+        alignItems: 'center',
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
+      >
+        Pending :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Awaiting reviewer action
+      </Typography>
+
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}
+      >
+        Approved :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Reviewed & approved
+      </Typography>
+
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
+      >
+        Changes Requested :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Requires teacher revisions
+      </Typography>
+
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}
+      >
+        Rejected :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Submission rejected
+      </Typography>
+    </Box>
+  </Box>
+);
 
 type ReviewState = {
   target: ReviewTarget | null;
@@ -250,7 +312,9 @@ const ReviewQueueTab = ({
     (!currentTeacherId || !row.teacherId || row.teacherId !== currentTeacherId);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box
+      sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: '1 0 auto', minHeight: '100%' }}
+    >
       {/* Top Filter & Navigation Card */}
       <Card
         sx={{
@@ -653,16 +717,38 @@ const ReviewQueueTab = ({
             { id: 'teacherName', label: 'Teacher', minWidth: 160, sticky: true },
             {
               id: 'status',
-              label: 'Status',
+              label: (
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
+                    Status
+                  </Typography>
+                  <CustomTooltip title={ReviewStatusHeaderTooltip} placement="top" arrow>
+                    <Iconify
+                      icon="lucide:info"
+                      width={14}
+                      height={14}
+                      sx={{ color: 'text.secondary', cursor: 'pointer' }}
+                    />
+                  </CustomTooltip>
+                </Stack>
+              ),
               minWidth: 150,
               sticky: true,
               render: (value: ReviewStatusFilter) => (
-                <Chip
-                  label={reviewStatusLabels[value]}
-                  size="small"
-                  color={reviewStatusColors[value]}
-                  variant="soft"
-                />
+                <CustomTooltip
+                  title={REVIEW_STATUS_DESCRIPTIONS[value] || `${reviewStatusLabels[value]} status`}
+                  placement="top"
+                  arrow
+                >
+                  <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
+                    <Chip
+                      label={reviewStatusLabels[value]}
+                      size="small"
+                      color={reviewStatusColors[value]}
+                      variant="soft"
+                    />
+                  </Box>
+                </CustomTooltip>
               ),
             },
             {

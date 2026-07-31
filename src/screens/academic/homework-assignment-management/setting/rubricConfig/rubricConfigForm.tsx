@@ -11,6 +11,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useRef, useState } from 'react';
 import { alpha } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import {
   Box,
@@ -224,9 +225,9 @@ const SectionPaper = ({
     sx={{
       p: { xs: 1.5, md: 2 },
       borderRadius: 1.5,
-      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
-      borderColor: (theme) => alpha(theme.palette.divider, 0.9),
-      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.4)}`,
+      bgcolor: 'background.paper',
+      borderColor: 'divider',
+      boxShadow: 'var(--shadows-2)',
     }}
   >
     <Stack spacing={1.5}>
@@ -246,7 +247,7 @@ const SectionPaper = ({
               alignItems: 'center',
               justifyContent: 'center',
               color: 'primary.main',
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+              bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
             }}
           >
             <Iconify icon={icon} width={18} height={18} />
@@ -571,7 +572,8 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                   sx={{
                     p: 1.25,
                     borderRadius: 1,
-                    bgcolor: (theme) => alpha(theme.palette.background.default, 0.35),
+                    bgcolor: 'background.neutral',
+                    borderColor: 'divider',
                   }}
                 >
                   <Grid container spacing={1} alignItems="center">
@@ -731,7 +733,8 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                 sx={{
                   p: 1.25,
                   borderRadius: 1,
-                  bgcolor: (theme) => alpha(theme.palette.background.default, 0.35),
+                  bgcolor: 'background.neutral',
+                  borderColor: 'divider',
                 }}
               >
                 <Grid container spacing={1} alignItems="flex-start">
@@ -914,7 +917,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                   p: 1.25,
                   borderRadius: 1,
                   border: (theme) => `1px solid ${theme.palette.divider}`,
-                  bgcolor: (theme) => alpha(theme.palette.background.default, 0.35),
+                  bgcolor: 'background.neutral',
                 }}
               >
                 <Stack direction="row" justifyContent="space-between" gap={1}>

@@ -3,28 +3,30 @@ import type { RootState } from 'src/redux/store';
 import { useDrag } from 'react-dnd';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Add, Search } from '@mui/icons-material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { alpha, useTheme } from '@mui/material/styles';
+import { Add, Search, Clear } from '@mui/icons-material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weeklyLectures/createWeeklyLectures';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
-import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   Box,
+  Tab,
   List,
   Card,
   Chip,
+  Tabs,
+  Stack,
   Button,
   Divider,
   Skeleton,
   ListItem,
   TextField,
   Typography,
+  IconButton,
   LinearProgress,
   InputAdornment,
-  Tabs,
-  Tab,
 } from '@mui/material';
 
 import { ItemTypes } from './types';
@@ -43,8 +45,7 @@ interface SubjectCardProps {
 
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSubjects }) => {
   const totalLectures = subject.totalLectures ?? 0;
-  // A subject with 0 configured weekly lectures must never be draggable.
-  const isFull = totalLectures === 0 || placedCount >= totalLectures;
+  const isFull = totalLectures > 0 && placedCount >= totalLectures;
   const progressPct = totalLectures > 0 ? Math.min(100, (placedCount / totalLectures) * 100) : 0;
   const isElective = !!(subject as any).electiveGroupId;
   const theme = useTheme();
@@ -61,7 +62,9 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
     [isFull, subject]
   );
 
-  const subjectColor = isFull ? '#9e9e9e' : subject.color;
+  const cardAccentColor = isFull
+    ? theme.palette.success.main
+    : subject.color || theme.palette.primary.main;
 
   return (
     <ListItem
@@ -71,39 +74,44 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
       disableGutters
       sx={{
         p: 0,
-        mb: 1,
+        mb: 1.25,
         display: 'flex',
         flexDirection: 'column',
         borderRadius: 1.5,
         border: '1px solid',
-        borderColor: isFull ? 'action.disabled' : 'divider',
-        borderLeft: `4px solid ${subjectColor}`,
-        bgcolor: 'background.paper',
-        cursor: isFull ? 'not-allowed' : 'grab',
-        transition: 'all 0.18s ease',
-        opacity: isDragging ? 0.45 : isFull ? 0.55 : 1,
-        filter: isFull ? 'grayscale(60%)' : 'none',
-        pointerEvents: isFull ? 'none' : 'auto',
+        borderColor: isFull
+          ? (t) => alpha(t.palette.success.main, 0.3)
+          : (t) => alpha(cardAccentColor, 0.24),
+        borderLeft: `4px solid ${cardAccentColor}`,
+        bgcolor: 'transparent',
+        cursor: isFull ? 'default' : 'grab',
+        transition: 'all 0.18s ease-in-out',
+        opacity: isDragging ? 0.45 : 1,
         overflow: 'hidden',
-        boxShadow: isFull ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
+        boxShadow: (t) =>
+          t.palette.mode === 'dark'
+            ? '0 2px 6px rgba(0,0,0,0.3)'
+            : '0 2px 6px rgba(145, 158, 171, 0.08)',
         '&:hover': {
           transform: isFull ? 'none' : 'translateY(-2px)',
-          boxShadow: isFull ? 'none' : `0 4px 12px ${alpha(subjectColor, 0.25)}`,
-          borderColor: isFull ? 'action.disabled' : subjectColor,
-          bgcolor: isFull ? 'background.paper' : alpha(subjectColor, 0.04),
+          boxShadow: isFull ? 'none' : (t) => `0 4px 12px ${alpha(cardAccentColor, 0.2)}`,
+          borderColor: cardAccentColor,
         },
       }}
     >
-      {/* Card content row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', px: 1.5, pt: 1, pb: 0.5 }}>
+      {/* Card Header & Information */}
+      <Box
+        sx={{ display: 'flex', alignItems: 'center', width: '100%', px: 1.5, pt: 1.25, pb: 0.75 }}
+      >
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             variant="body2"
-            fontWeight={600}
-            color={isFull ? 'text.disabled' : 'text.primary'}
+            fontWeight={700}
+            color="text.primary"
             sx={{
+              fontSize: '0.85rem',
               lineHeight: 1.3,
-              mb: 0.25,
+              mb: 0.5,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -111,59 +119,62 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
           >
             {subject.name}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+
+          <Stack direction="row" alignItems="center" spacing={1}>
             <Chip
               label={isElective ? 'Elective' : 'Core'}
               size="small"
-              variant="outlined"
+              variant="soft"
+              color={isElective ? 'secondary' : 'primary'}
               sx={{
-                height: 16,
-                fontSize: '0.6rem',
+                height: 18,
+                fontSize: '0.65rem',
                 fontWeight: 700,
-                backgroundColor: isElective
-                  ? alpha(theme.palette.secondary.main, 0.16)
-                  : alpha(theme.palette.primary.main, 0.14),
-                color: isElective
-                  ? theme.vars.palette.text.secondary
-                  : theme.vars.palette.primary.dark,
-                border: '1px solid',
-                borderColor: isElective
-                  ? alpha(theme.palette.secondary.main, 0.35)
-                  : alpha(theme.palette.primary.main, 0.3),
                 '& .MuiChip-label': { px: 0.75 },
               }}
             />
+
             <Typography
               variant="caption"
               sx={{
-                fontSize: '0.65rem',
-                color: isFull ? 'error.main' : placedCount > 0 ? 'success.main' : 'text.secondary',
-                fontWeight: 600,
+                fontSize: '0.7rem',
+                color: 'text.primary',
+                fontWeight: 700,
               }}
             >
               {placedCount}/{totalLectures} slots
             </Typography>
-          </Box>
+          </Stack>
         </Box>
-        {isFull && (
-          <Iconify
-            icon="mdi:check-circle"
-            sx={{ color: 'success.main', flexShrink: 0, width: 18, height: 18 }}
-          />
+
+        {isFull ? (
+          <CustomTooltip title="All weekly slots scheduled" placement="top">
+            <Iconify
+              icon="mdi:check-circle"
+              sx={{ color: 'success.main', flexShrink: 0, width: 20, height: 20, ml: 1 }}
+            />
+          </CustomTooltip>
+        ) : (
+          <CustomTooltip title="Drag to schedule in timetable" placement="top">
+            <Iconify
+              icon="solar:drag-vertical-bold"
+              sx={{ color: 'text.disabled', flexShrink: 0, width: 18, height: 18, ml: 1 }}
+            />
+          </CustomTooltip>
         )}
       </Box>
 
-      {/* Progress bar */}
+      {/* Progress Bar */}
       <LinearProgress
         variant="determinate"
         value={progressPct}
         sx={{
           width: '100%',
           height: 3,
-          bgcolor: alpha(subjectColor, 0.15),
+          bgcolor: (t) => alpha(cardAccentColor, 0.12),
           borderRadius: 0,
           '& .MuiLinearProgress-bar': {
-            bgcolor: isFull ? 'success.main' : subjectColor,
+            bgcolor: isFull ? 'success.main' : cardAccentColor,
             borderRadius: 0,
             transition: 'width 0.4s ease',
           },
@@ -217,40 +228,21 @@ const SubjectPalette: React.FC<PaletteProps> = ({
     },
   });
 
-  // const subjects: Subject[] = React.useMemo(() => {
-  //   if (!subjectTableData?.data?.items) return [];
-  //   return subjectTableData.data.items.flatMap((item: any) => {
-  //     const totalLectures = item.totalLectures ?? 0;
-  //     if (item.subjectType === 1) {
-  //       return item.subjects.map((sub: any) => ({
-  //         id: sub.assignedId || sub.subjectId,
-  //         name: sub.subject?.name || sub.subjectName,
-  //         color: sub.subject?.color || sub.color || '#90caf9',
-  //         totalLectures,
-  //       }));
-  //     }
-  //     return [
-  //       {
-  //         id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
-  //         name: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
-  //         color: item.subjects[0]?.subject?.color || item.subjects[0]?.color || '#90caf9',
-  //         totalLectures,
-  //       },
-  //     ];
-  //   });
-  // }, [subjectTableData]);
-
   return (
     <Card
       sx={{
-        width: '280px',
+        width: '290px',
         height: '100%',
         ml: 1,
         mt: 1,
         display: 'flex',
         flexDirection: 'column',
         zIndex: 10,
-        boxShadow: 'var(--shadows-4)',
+        boxShadow: (t) =>
+          t.palette.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.4)' : 'var(--shadows-4)',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1.5,
         overflow: 'hidden',
       }}
     >
@@ -280,11 +272,11 @@ const SubjectPalette: React.FC<PaletteProps> = ({
               variant="fullWidth"
               sx={{
                 mb: 1.5,
-                minHeight: 32,
-                height: 32,
+                minHeight: 36,
+                height: 36,
                 '& .MuiTab-root': {
-                  minHeight: 32,
-                  height: 32,
+                  minHeight: 36,
+                  height: 36,
                   py: 0.5,
                   fontSize: '0.75rem',
                   fontWeight: 700,
@@ -294,7 +286,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
               <Tab label="Subjects" />
               <Tab
                 label={
-                  <Box display="flex" alignItems="center" gap={1}>
+                  <Box display="flex" alignItems="center" gap={0.75}>
                     Issues
                     {conflicts.length > 0 && (
                       <Chip
@@ -302,9 +294,9 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                         size="small"
                         color="error"
                         sx={{
-                          height: 16,
-                          minWidth: 16,
-                          fontSize: '0.6rem',
+                          height: 18,
+                          minWidth: 18,
+                          fontSize: '0.65rem',
                           fontWeight: 700,
                           '& .MuiChip-label': { px: 0.5 },
                         }}
@@ -333,13 +325,13 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                     Subjects
                   </Typography>
                   <CustomTooltip
-                    title="Drag subjects onto time slots to schedule them"
+                    title="Drag subjects onto time slots in the grid to schedule them"
                     placement="left"
                     arrow
                   >
                     <Iconify
                       icon="lucide:info"
-                      sx={{ cursor: 'pointer', color: 'text.disabled', width: 16, height: 16 }}
+                      sx={{ cursor: 'pointer', color: 'primary.main', width: 16, height: 16 }}
                     />
                   </CustomTooltip>
                 </Box>
@@ -360,30 +352,37 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                   /{subjects.length} complete
                 </Typography>
 
-                {/* Search */}
+                {/* Search Input */}
                 <TextField
                   size="small"
-                  placeholder="Search subjects..."
+                  placeholder="Search subject by name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   fullWidth
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Search sx={{ fontSize: 16, color: 'text.disabled' }} />
+                        <Search sx={{ fontSize: 18, color: 'text.disabled' }} />
                       </InputAdornment>
                     ),
+                    endAdornment: searchQuery ? (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setSearchQuery('')}>
+                          <Clear sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null,
                   }}
                   sx={{
-                    mb: 1,
+                    mb: 1.25,
                     '& .MuiOutlinedInput-root': {
-                      fontSize: '0.8rem',
+                      fontSize: '0.8125rem',
                       borderRadius: 1.5,
                     },
                   }}
                 />
 
-                {/* Stats Row */}
+                {/* Overall Completion Progress */}
                 {(() => {
                   const schedulableSubjects = subjects.filter((s) => (s.totalLectures ?? 0) > 0);
                   const totalPlaced = schedulableSubjects.reduce(
@@ -406,7 +405,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                           sx={{
                             height: 6,
                             borderRadius: 3,
-                            bgcolor: 'action.hover',
+                            bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
                             '& .MuiLinearProgress-bar': {
                               borderRadius: 3,
                               bgcolor: pct === 100 ? 'success.main' : 'primary.main',
@@ -418,7 +417,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                         variant="caption"
                         fontWeight={700}
                         color={pct === 100 ? 'success.main' : 'text.secondary'}
-                        sx={{ whiteSpace: 'nowrap', minWidth: 36 }}
+                        sx={{ whiteSpace: 'nowrap', minWidth: 36, fontSize: '0.75rem' }}
                       >
                         {pct}%
                       </Typography>
@@ -454,9 +453,9 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                     ))}
                   {subjects.filter((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase()))
                     .length === 0 && (
-                    <Box sx={{ textAlign: 'center', py: 3 }}>
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
                       <Typography variant="body2" color="text.disabled">
-                        No subjects match
+                        No subjects match search
                       </Typography>
                     </Box>
                   )}
@@ -488,7 +487,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                         alignItems: 'flex-start',
                         borderRadius: 1,
                         border: '1px solid',
-                        borderColor: 'error.light',
+                        borderColor: (t) => alpha(t.palette.error.main, 0.3),
                         bgcolor: (theme) => alpha(theme.palette.error.main, 0.04),
                       }}
                     >
