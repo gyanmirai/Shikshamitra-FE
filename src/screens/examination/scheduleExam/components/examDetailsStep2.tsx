@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { memo, useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -18,10 +17,12 @@ import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/e
 import {
   Box,
   Chip,
+  Alert,
   Stack,
   Paper,
   Table,
   Button,
+  Switch,
   Divider,
   Tooltip,
   TableRow,
@@ -30,11 +31,10 @@ import {
   TableCell,
   TableHead,
   TextField,
-  FormControlLabel,
-  Switch,
   Typography,
   Autocomplete,
   TableContainer,
+  FormControlLabel,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -128,13 +128,13 @@ const ScheduleTableHead = memo(() => (
             borderColor: 'divider',
             ...(col.sticky
               ? {
-                position: 'sticky',
-                left: 0,
-                zIndex: 3,
-                // Opaque background required so scrolling columns don't bleed through.
-                // background.paper adapts correctly to both light and dark mode.
-                bgcolor: 'background.paper',
-              }
+                  position: 'sticky',
+                  left: 0,
+                  zIndex: 3,
+                  // Opaque background required so scrolling columns don't bleed through.
+                  // background.paper adapts correctly to both light and dark mode.
+                  bgcolor: 'background.paper',
+                }
               : {}),
           }}
         >
@@ -236,8 +236,9 @@ const SubjectScheduleRow = memo(
                 label={
                   values.assignedStudentCount === 0
                     ? 'No students'
-                    : `${values.assignedStudentCount} student${values.assignedStudentCount === 1 ? '' : 's'
-                    }`
+                    : `${values.assignedStudentCount} student${
+                        values.assignedStudentCount === 1 ? '' : 's'
+                      }`
                 }
                 size="small"
                 color={values.assignedStudentCount === 0 ? 'default' : 'warning'}
@@ -342,8 +343,8 @@ const SubjectScheduleRow = memo(
         <ShakingTextField error={!!(touched.gradeScalingId && errors.gradeScalingId)}>
           <CustomTooltip
             title={
-              gradeScalings?.find((g: any) => String(g.id) === String(values.gradeScalingId))?.name ||
-              'Select grade scale for this subject'
+              gradeScalings?.find((g: any) => String(g.id) === String(values.gradeScalingId))
+                ?.name || 'Select grade scale for this subject'
             }
             placement="top"
           >
@@ -352,9 +353,8 @@ const SubjectScheduleRow = memo(
               options={gradeScalings || []}
               loading={isGradeScalingsLoading}
               value={
-                gradeScalings?.find(
-                  (g: any) => String(g.id) === String(values.gradeScalingId)
-                ) || null
+                gradeScalings?.find((g: any) => String(g.id) === String(values.gradeScalingId)) ||
+                null
               }
               getOptionLabel={(option: any) => option?.name || ''}
               isOptionEqualToValue={(option: any, value: any) =>
@@ -695,6 +695,10 @@ const ElectiveGroupCard = memo(
     const group = formik.values.subjects[groupIndex];
     const groupName: string = group?.subjectName || group?.electiveGroupName || 'Elective Group';
     const individualSubjects: any[] = group?.subjects || [];
+    const groupSubjectsError = formik.errors.subjects?.[groupIndex]?.subjects;
+    const showGroupScheduleError =
+      typeof groupSubjectsError === 'string' &&
+      (formik.submitCount > 0 || Boolean(formik.touched.subjects?.[groupIndex]?.subjects));
 
     const handleSubjectFieldChange = useCallback(
       (subjectIdx: number, field: string, value: any) =>
@@ -812,6 +816,11 @@ const ElectiveGroupCard = memo(
             }}
           >
             <ApplyToAllBar onApply={handleApplyToGroup} />
+            {showGroupScheduleError && (
+              <Alert severity="error" variant="outlined" sx={{ mt: 1, py: 0.5 }}>
+                {groupSubjectsError}
+              </Alert>
+            )}
           </Box>
 
           {/* Schedule table */}
