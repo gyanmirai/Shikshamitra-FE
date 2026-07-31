@@ -26,6 +26,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetAssignmentTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
 import { serializeAssignmentFormData } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-serialization';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
@@ -180,7 +181,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAssignmentTypesQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: { skip: !(medium as Medium)?.id },
   });
 
@@ -303,7 +304,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { standardId: formik.values.classId },
+    params: { standardId: formik.values.classId, status: SubjectAssignmentStatus.Published },
     options: { skip: !formik.values.classId },
   });
 
@@ -934,7 +935,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                                       onChange={(val) => {
                                         formik.setFieldValue(`divisions[${idx}].publishDate`, val);
                                         const selectedType = activeAssignmentTypes.find(
-                                          (assignmentType) => assignmentType.id === formik.values.assignmentTypeId
+                                          (assignmentType) =>
+                                            assignmentType.id === formik.values.assignmentTypeId
                                         );
                                         if (
                                           val &&

@@ -280,7 +280,7 @@ const StandardResultListReports = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !shouldLoadSubjects || !!classId,
     },
@@ -297,6 +297,7 @@ const StandardResultListReports = ({
     params: {
       academicMediumId: medium?.id,
       standardId: classId,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !shouldLoadSubjects || !classId,

@@ -9,6 +9,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weeklyLectures/createWeeklyLectures';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   Box,
   List,
@@ -209,6 +210,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
     params: {
       academicMediumId: medium?.id,
       standardId,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !medium?.id || !standardId,
@@ -323,7 +325,11 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                     mb: 0.5,
                   }}
                 >
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={700}
+                    sx={{ letterSpacing: '-0.01em' }}
+                  >
                     Subjects
                   </Typography>
                   <CustomTooltip
@@ -381,14 +387,16 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                 {(() => {
                   const schedulableSubjects = subjects.filter((s) => (s.totalLectures ?? 0) > 0);
                   const totalPlaced = schedulableSubjects.reduce(
-                    (sum, s) => sum + Math.min(placedCounts[s.subjectId] ?? 0, s.totalLectures ?? 0),
+                    (sum, s) =>
+                      sum + Math.min(placedCounts[s.subjectId] ?? 0, s.totalLectures ?? 0),
                     0
                   );
                   const totalRequired = schedulableSubjects.reduce(
                     (sum, s) => sum + (s.totalLectures ?? 0),
                     0
                   );
-                  const pct = totalRequired > 0 ? Math.round((totalPlaced / totalRequired) * 100) : 0;
+                  const pct =
+                    totalRequired > 0 ? Math.round((totalPlaced / totalRequired) * 100) : 0;
                   return (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                       <Box sx={{ flex: 1 }}>
@@ -485,8 +493,17 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                       }}
                     >
                       <Box display="flex" gap={1} alignItems="flex-start" width="100%">
-                        <Iconify icon="mdi:alert-circle" color="error.main" sx={{ mt: 0.25, flexShrink: 0 }} />
-                        <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                        <Iconify
+                          icon="mdi:alert-circle"
+                          color="error.main"
+                          sx={{ mt: 0.25, flexShrink: 0 }}
+                        />
+                        <Typography
+                          variant="body2"
+                          color="text.primary"
+                          fontWeight={600}
+                          sx={{ fontSize: '0.75rem', lineHeight: 1.4 }}
+                        >
                           {err}
                         </Typography>
                       </Box>
@@ -494,7 +511,13 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                   ))}
                   {conflicts.length === 0 && (
                     <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
-                      <Iconify icon="mdi:check-circle" color="success.main" width={36} height={36} sx={{ mb: 1 }} />
+                      <Iconify
+                        icon="mdi:check-circle"
+                        color="success.main"
+                        width={36}
+                        height={36}
+                        sx={{ mb: 1 }}
+                      />
                       <Typography variant="body2" color="text.secondary" fontWeight={600}>
                         No Issues Found
                       </Typography>

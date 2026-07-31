@@ -47,7 +47,7 @@ export const useElectiveSubjectForm = ({
   const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(currentMedium as Medium)?.id,
     },
@@ -56,7 +56,7 @@ export const useElectiveSubjectForm = ({
   const { data: electiveGroupsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetElectiveGroupsQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(currentMedium as Medium)?.id,
       // The elective group list is already loaded (and kept fresh via tag

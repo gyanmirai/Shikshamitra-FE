@@ -88,6 +88,10 @@ const HELPER_TEXT_PROPS = {
   sx: { margin: 0, position: 'static' as const, whiteSpace: 'normal' as const },
 };
 const LABEL_PROPS = { sx: { lineHeight: '1.2em' } };
+const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
+
+const isSelectableSetting = (item: any) =>
+  item?.status == null || SELECTABLE_SETTING_STATUSES.has(item.status);
 
 // ---------------------------------------------------------------------------
 // ScheduleTableHead
@@ -868,11 +872,14 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   const { data: gradeScalings, isLoading: isGradeScalingsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGradeScalingsQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: false },
     options: { skip: !(currentMedium as Medium)?.id },
   });
 
-  const gradeScalingsList: any[] = gradeScalings?.data ?? [];
+  const gradeScalingsList: any[] = useMemo(
+    () => (gradeScalings?.data ?? []).filter(isSelectableSetting),
+    [gradeScalings?.data]
+  );
 
   const { coreSubjects, electiveGroups } = useMemo(() => {
     const core: Array<{ subject: any; index: number }> = [];
