@@ -7,7 +7,7 @@ import type {
   AdmissionCrmConfigurationImpactPreviewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  LinearProgress,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -158,6 +159,7 @@ const getErrorMessage = (error: unknown) => {
 
 export function CommunicationReminderSettings({ academicYearId }: { academicYearId: string }) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [pendingRemovalIndex, setPendingRemovalIndex] = useState<number | null>(null);
   const [form, setForm] = useState<ReminderForm>(emptyForm);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingUpdate, setPendingUpdate] = useState<{
@@ -179,8 +181,21 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
     configuration?.journeyRules.filter((rule) => rule.ruleName.startsWith(reminderPrefix)) || [];
   const approvedTemplates = templatesQuery.data?.items || [];
   const templateById = new Map(approvedTemplates.map((template) => [template.id, template]));
+  const hasDependencyError = configurationQuery.isError || templatesQuery.isError;
+  const isDependencyRefreshing = configurationQuery.isFetching || templatesQuery.isFetching;
+  const isMutationBusy = updateState.isLoading || previewState.isLoading;
+  const isInteractionBlocked = hasDependencyError || isDependencyRefreshing || isMutationBusy;
+  const pendingRemoval = pendingRemovalIndex == null ? undefined : reminders[pendingRemovalIndex];
+
+  useEffect(() => {
+    if (!isDependencyRefreshing) return;
+    setDialogOpen(false);
+    setPendingRemovalIndex(null);
+    setPendingUpdate(null);
+  }, [isDependencyRefreshing]);
 
   const openEditor = (rule?: AdmissionCrmJourneyRuleDto, index?: number) => {
+    if (isInteractionBlocked) return;
     setEditingIndex(index ?? null);
     setForm(rule ? toForm(rule) : emptyForm());
     setDialogOpen(true);
@@ -193,6 +208,7 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
     }).unwrap();
     setDialogOpen(false);
     setPendingUpdate(null);
+    setPendingRemovalIndex(null);
     shikshaMitraToast.success({ message: 'Reminder settings saved.' });
   };
 
@@ -223,6 +239,7 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
   };
 
   const save = async () => {
+    if (isInteractionBlocked) return;
     if (!form.name.trim() || !form.messageTemplateId) {
       shikshaMitraToast.error({
         message: 'Reminder name and an approved message template are required.',
@@ -270,11 +287,18 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
     }
   };
 
-  const remove = async (index: number) => {
-    const body = prepareUpdate(reminders.filter((_rule, ruleIndex) => ruleIndex !== index));
-    if (!body) return;
+  const confirmRemoval = async () => {
+    if (pendingRemovalIndex == null || isInteractionBlocked) return;
+    const body = prepareUpdate(
+      reminders.filter((_rule, ruleIndex) => ruleIndex !== pendingRemovalIndex)
+    );
+    if (!body) {
+      setPendingRemovalIndex(null);
+      return;
+    }
     try {
       await previewAndSave(body);
+      setPendingRemovalIndex(null);
     } catch (error) {
       shikshaMitraToast.error({ message: getErrorMessage(error) });
     }
@@ -346,13 +370,15 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
       render: (_value, row) => {
         const reminder = row as AdmissionCrmJourneyRuleDto;
         const index = reminders.indexOf(reminder);
+        const reminderName = reminder.ruleName.slice(reminderPrefix.length);
         return (
           <Stack direction="row" justifyContent="flex-end">
             <Tooltip title="Edit">
               <IconButton
                 size="small"
+                disabled={isInteractionBlocked}
                 onClick={() => openEditor(reminder, index)}
-                aria-label="Edit"
+                aria-label={`Edit ${reminderName}`}
               >
                 <Iconify icon="mdi:pencil-outline" />
               </IconButton>
@@ -362,9 +388,9 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
                 <IconButton
                   size="small"
                   color="error"
-                  disabled={updateState.isLoading || previewState.isLoading}
-                  onClick={() => remove(index)}
-                  aria-label="Remove"
+                  disabled={isInteractionBlocked}
+                  onClick={() => setPendingRemovalIndex(index)}
+                  aria-label={`Remove ${reminderName}`}
                 >
                   <Iconify icon="mdi:delete-outline" />
                 </IconButton>
@@ -376,8 +402,30 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
     },
   ];
 
+  if (hasDependencyError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button
+            color="inherit"
+            size="small"
+            onClick={() => {
+              if (configurationQuery.isError) configurationQuery.refetch();
+              if (templatesQuery.isError) templatesQuery.refetch();
+            }}
+          >
+            Retry
+          </Button>
+        }
+      >
+        Reminder settings could not be loaded.
+      </Alert>
+    );
+  }
+
   return (
-    <Stack spacing={1.25}>
+    <Stack spacing={1.25} sx={{ flex: 1, minHeight: 0 }}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent="space-between"
@@ -393,7 +441,7 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
           variant="contained"
           size="small"
           startIcon={<Iconify icon="mdi:plus" />}
-          disabled={!approvedTemplates.length}
+          disabled={!approvedTemplates.length || isInteractionBlocked}
           onClick={() => openEditor()}
         >
           Add reminder
@@ -406,44 +454,62 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
         </Alert>
       ) : null}
 
-      {configurationQuery.isError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button color="inherit" size="small" onClick={() => configurationQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          Reminder settings could not be loaded.
-        </Alert>
-      ) : (
-        <CustomizableTable
-          tableId="student-enrollment-communication-reminders"
-          tableTitle="Admission reminders"
-          columns={columns}
-          data={reminders}
-          isLoading={
-            configurationQuery.isLoading ||
-            configurationQuery.isFetching ||
-            templatesQuery.isLoading ||
-            templatesQuery.isFetching
-          }
-          isPagination={false}
-          noDataText={
-            <EnrollmentTableEmptyState
-              title="No admission reminders"
-              description="Add only the reminders the school will actively use."
-            />
-          }
-          wrapperProps={{ sx: enrollmentTableWrapperSx }}
-          tableContainerProps={{ sx: enrollmentTableContainerSx }}
-        />
-      )}
+      {(configurationQuery.isFetching && !configurationQuery.isLoading) ||
+      (templatesQuery.isFetching && !templatesQuery.isLoading) ? (
+        <LinearProgress aria-label="Refreshing admission reminder settings" />
+      ) : null}
+
+      <CustomizableTable
+        tableId="student-enrollment-communication-reminders"
+        tableTitle="Admission reminders"
+        columns={columns}
+        data={reminders}
+        isLoading={configurationQuery.isLoading || templatesQuery.isLoading}
+        isPagination={false}
+        noDataText={
+          <EnrollmentTableEmptyState
+            title="No admission reminders"
+            description="Add only the reminders the school will actively use."
+          />
+        }
+        wrapperProps={{ sx: enrollmentTableWrapperSx }}
+        tableContainerProps={{ sx: enrollmentTableContainerSx }}
+      />
+
+      <Dialog
+        open={pendingRemovalIndex != null}
+        onClose={() => !isMutationBusy && setPendingRemovalIndex(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Remove reminder?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            Remove{' '}
+            <strong>
+              {pendingRemoval?.ruleName.slice(reminderPrefix.length) || 'this reminder'}
+            </strong>
+            ? This change cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={isMutationBusy} onClick={() => setPendingRemovalIndex(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={isInteractionBlocked}
+            onClick={confirmRemoval}
+          >
+            Remove reminder
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={dialogOpen}
-        onClose={() => !updateState.isLoading && setDialogOpen(false)}
+        onClose={() => !isMutationBusy && setDialogOpen(false)}
         fullWidth
         maxWidth="sm"
       >
@@ -564,14 +630,10 @@ export function CommunicationReminderSettings({ academicYearId }: { academicYear
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button disabled={updateState.isLoading} onClick={() => setDialogOpen(false)}>
+          <Button disabled={isMutationBusy} onClick={() => setDialogOpen(false)}>
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            disabled={updateState.isLoading || previewState.isLoading}
-            onClick={save}
-          >
+          <Button variant="contained" disabled={isInteractionBlocked} onClick={save}>
             Save
           </Button>
         </DialogActions>

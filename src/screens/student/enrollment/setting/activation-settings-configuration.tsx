@@ -140,21 +140,31 @@ export function ActivationSettingsConfiguration({ academicYearId }: { academicYe
     return <LinearProgress aria-label="Loading Activation settings" />;
   }
 
+  if (configurationQuery.isError || admissionYear.versionsQuery.isError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button
+            color="inherit"
+            size="small"
+            onClick={() => {
+              if (configurationQuery.isError) configurationQuery.refetch();
+              if (admissionYear.versionsQuery.isError) admissionYear.versionsQuery.refetch();
+            }}
+          >
+            Retry
+          </Button>
+        }
+      >
+        Activation settings could not be loaded. Editing is unavailable until all required rules are
+        restored.
+      </Alert>
+    );
+  }
+
   return (
     <Stack spacing={2}>
-      {configurationQuery.isError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button color="inherit" size="small" onClick={() => configurationQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          Activation settings could not be loaded.
-        </Alert>
-      ) : null}
-
       <Box>
         <Typography variant="subtitle1">Required activation gates</Typography>
         <Typography variant="body2" color="text.secondary">

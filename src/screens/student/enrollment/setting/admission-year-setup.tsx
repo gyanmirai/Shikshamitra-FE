@@ -51,11 +51,12 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { EnrollmentWorkspaceHeader } from '../admissions-crm/workspace-header';
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import {
   enrollmentTableWrapperSx,
   EnrollmentTableEmptyState,
-  enrollmentTableContainerSx,
+  enrollmentEmbeddedTableContainerSx,
 } from '../admissions-crm/workspace-table-patterns';
 import {
   toAdmissionYearSetupForm,
@@ -329,6 +330,20 @@ export function AdmissionYearSetup() {
   const isDirty = draft
     ? formSignature(form) !== formSignature(toAdmissionYearSetupForm(draft))
     : false;
+  const hasRequiredQueryError =
+    versionsQuery.isError || standardsQuery.isError || staffQuery.isError;
+  const hasRequiredQueryPending =
+    versionsQuery.isLoading || standardsQuery.isLoading || staffQuery.isLoading;
+
+  useEnrollmentSettingsDirtyState({
+    source: 'admission-year-setup',
+    dirty: isDirty,
+    onDiscard: () => {
+      if (!draft) return;
+      setForm(toAdmissionYearSetupForm(draft));
+      setValidationErrors([]);
+    },
+  });
 
   useEffect(() => {
     if (draft && draft.id !== loadedDraftId) {
@@ -352,7 +367,7 @@ export function AdmissionYearSetup() {
 
   const saveDraft = useCallback(
     async (showSuccess = true) => {
-      if (!draft) return undefined;
+      if (!draft || hasRequiredQueryError || hasRequiredQueryPending) return undefined;
       try {
         const saved = await updateDraft({ id: draft.id, body: form }).unwrap();
         setForm(toAdmissionYearSetupForm(saved));
@@ -363,11 +378,11 @@ export function AdmissionYearSetup() {
         return undefined;
       }
     },
-    [draft, form, updateDraft]
+    [draft, form, hasRequiredQueryError, hasRequiredQueryPending, updateDraft]
   );
 
   const handleCreateDraft = async () => {
-    if (!academicYearId) return;
+    if (!academicYearId || hasRequiredQueryError || hasRequiredQueryPending) return;
     try {
       const created = await createDraft({ academicYearId }).unwrap();
       setForm(toAdmissionYearSetupForm(created));
@@ -394,6 +409,7 @@ export function AdmissionYearSetup() {
   };
 
   const handlePublish = async () => {
+    if (hasRequiredQueryError || hasRequiredQueryPending) return;
     const errors = validateAdmissionYearSetupForPublish(form);
     if (errors.length) {
       setValidationErrors(errors);
@@ -731,7 +747,7 @@ export function AdmissionYearSetup() {
             <Button
               variant="contained"
               startIcon={<Iconify icon="mdi:content-save-outline" />}
-              disabled={isBusy || !isDirty}
+              disabled={isBusy || !isDirty || hasRequiredQueryError || hasRequiredQueryPending}
               onClick={() => saveDraft()}
             >
               Save draft
@@ -740,7 +756,9 @@ export function AdmissionYearSetup() {
             <Button
               variant="contained"
               startIcon={<Iconify icon="mdi:file-document-plus-outline" />}
-              disabled={isBusy || !academicYearId}
+              disabled={
+                isBusy || !academicYearId || hasRequiredQueryError || hasRequiredQueryPending
+              }
               onClick={handleCreateDraft}
             >
               {versions.length ? 'Create new version' : 'Start setup'}
@@ -752,10 +770,10 @@ export function AdmissionYearSetup() {
       {!academicYearId ? (
         <Alert severity="warning">Select an academic year before configuring admissions.</Alert>
       ) : null}
-      {versionsQuery.isFetching || standardsQuery.isFetching ? (
+      {versionsQuery.isFetching || standardsQuery.isFetching || staffQuery.isFetching ? (
         <LinearProgress aria-label="Loading Admission Year Setup" />
       ) : null}
-      {versionsQuery.isError || standardsQuery.isError || staffQuery.isError ? (
+      {hasRequiredQueryError ? (
         <Alert
           severity="error"
           action={
@@ -775,7 +793,7 @@ export function AdmissionYearSetup() {
         </Alert>
       ) : null}
 
-      {academicYearId ? (
+      {academicYearId && !hasRequiredQueryError && !hasRequiredQueryPending ? (
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           gap={1}
@@ -814,7 +832,7 @@ export function AdmissionYearSetup() {
         </Stack>
       ) : null}
 
-      {draft ? (
+      {draft && !hasRequiredQueryError && !hasRequiredQueryPending ? (
         <Box sx={{ px: { xs: 1, md: 2 } }}>
           <Stepper
             activeStep={activeStep}
@@ -855,7 +873,7 @@ export function AdmissionYearSetup() {
               <Button
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:content-save-outline" />}
-                disabled={isBusy || !isDirty}
+                disabled={isBusy || !isDirty || hasRequiredQueryError || hasRequiredQueryPending}
                 onClick={() => saveDraft()}
               >
                 Save draft
@@ -864,7 +882,7 @@ export function AdmissionYearSetup() {
                 <Button
                   variant="contained"
                   endIcon={<Iconify icon="eva:arrow-forward-fill" />}
-                  disabled={isBusy}
+                  disabled={isBusy || hasRequiredQueryError || hasRequiredQueryPending}
                   onClick={handleNext}
                 >
                   Continue
@@ -874,7 +892,7 @@ export function AdmissionYearSetup() {
                   variant="contained"
                   color="success"
                   startIcon={<Iconify icon="mdi:publish" />}
-                  disabled={isBusy}
+                  disabled={isBusy || hasRequiredQueryError || hasRequiredQueryPending}
                   onClick={() => {
                     const errors = validateAdmissionYearSetupForPublish(form);
                     setValidationErrors(errors);
@@ -887,7 +905,7 @@ export function AdmissionYearSetup() {
             </Stack>
           </Stack>
         </Box>
-      ) : academicYearId && !versionsQuery.isLoading ? (
+      ) : academicYearId && !hasRequiredQueryError && !hasRequiredQueryPending ? (
         <Alert severity={published ? 'info' : 'warning'}>
           {published
             ? 'The published setup is immutable. Create a new version to make changes.'
@@ -895,40 +913,42 @@ export function AdmissionYearSetup() {
         </Alert>
       ) : null}
 
-      <Box sx={{ pt: 1 }}>
-        <Typography component="h2" variant="h6" sx={{ px: 2, mb: 1 }}>
-          Version history
-        </Typography>
-        <CustomizableTable
-          tableId="student-enrollment-admission-year-versions"
-          tableTitle="Admission Year Versions"
-          columns={columns}
-          data={versions as unknown as IData[]}
-          isLoading={versionsQuery.isLoading || versionsQuery.isFetching}
-          isFilter
-          isPagination
-          defaultRowsPerPage={10}
-          rowsPerPageOptions={[10, 25]}
-          noDataText={
-            <EnrollmentTableEmptyState
-              title="No Admission Year versions"
-              description="Start setup to create the first version for this academic year."
-            />
-          }
-          rowProps={(row) => {
-            const version = row as unknown as AdmissionCrmAdmissionYearSetupDto;
-            return {
-              'data-testid': 'student-enrollment-admission-year-version-row',
-              'data-version': version.version,
-            };
-          }}
-          wrapperProps={{ sx: enrollmentTableWrapperSx }}
-          tableContainerProps={{ sx: enrollmentTableContainerSx }}
-        />
-      </Box>
+      {!hasRequiredQueryError ? (
+        <Box sx={{ pt: 1 }}>
+          <Typography component="h2" variant="h6" sx={{ px: 2, mb: 1 }}>
+            Version history
+          </Typography>
+          <CustomizableTable
+            tableId="student-enrollment-admission-year-versions"
+            tableTitle="Admission Year Versions"
+            columns={columns}
+            data={versions as unknown as IData[]}
+            isLoading={versionsQuery.isLoading}
+            isFilter
+            isPagination
+            defaultRowsPerPage={10}
+            rowsPerPageOptions={[10, 25]}
+            noDataText={
+              <EnrollmentTableEmptyState
+                title="No Admission Year versions"
+                description="Start setup to create the first version for this academic year."
+              />
+            }
+            rowProps={(row) => {
+              const version = row as unknown as AdmissionCrmAdmissionYearSetupDto;
+              return {
+                'data-testid': 'student-enrollment-admission-year-version-row',
+                'data-version': version.version,
+              };
+            }}
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{ sx: enrollmentEmbeddedTableContainerSx }}
+          />
+        </Box>
+      ) : null}
 
       <Dialog
-        open={publishDialogOpen}
+        open={publishDialogOpen && !hasRequiredQueryError && !hasRequiredQueryPending}
         onClose={() => !isBusy && setPublishDialogOpen(false)}
         maxWidth="sm"
         fullWidth
@@ -944,14 +964,19 @@ export function AdmissionYearSetup() {
           <Button disabled={isBusy} onClick={() => setPublishDialogOpen(false)}>
             Cancel
           </Button>
-          <Button variant="contained" color="success" disabled={isBusy} onClick={handlePublish}>
+          <Button
+            variant="contained"
+            color="success"
+            disabled={isBusy || hasRequiredQueryError || hasRequiredQueryPending}
+            onClick={handlePublish}
+          >
             Publish
           </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog
-        open={closeDialogOpen}
+        open={closeDialogOpen && !hasRequiredQueryError && !hasRequiredQueryPending}
         onClose={() => !isBusy && setCloseDialogOpen(false)}
         maxWidth="sm"
         fullWidth

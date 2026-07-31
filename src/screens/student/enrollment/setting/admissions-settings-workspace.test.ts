@@ -142,6 +142,34 @@ describe('Enrollment settings route contracts', () => {
     expect(settingsPage).toContain('href={getPanelHref(option.value)}');
   });
 
+  it('resets schema-dependent catalog table state when the visible record type changes', () => {
+    const catalog = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'pipeline-catalog-settings.tsx'
+    );
+
+    expect(catalog).toContain('key={view}');
+    expect(catalog).toContain('tableId={`student-enrollment-pipeline-catalog-');
+  });
+
+  it('leaves tenant-wide message-template retirement safety to the backend guard', () => {
+    const templates = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'communication-template-settings.tsx'
+    );
+
+    expect(templates).not.toContain('useGetAdmissionCrmCycleConfigurationQuery');
+    expect(templates).toContain('server will block retirement');
+  });
+
   it('uses the project breadcrumb header and lets the exam setup table fill the workspace', () => {
     const settingsPage = read(
       'src',
@@ -182,7 +210,7 @@ describe('Enrollment settings route contracts', () => {
     );
     expect(settingsPage).not.toContain('<CustomBreadcrumbs');
     expect(settingsShell).toContain("flexDirection: 'column'");
-    expect(examRoute).toContain('fillAvailableHeight');
+    expect(examRoute).toContain('layout="table"');
     expect(playbooks).toContain('wrapperProps={{ sx: { minHeight: 320 } }}');
   });
 
@@ -380,6 +408,7 @@ describe('Enrollment settings route contracts', () => {
 
   it('protects every exposed draft editor and uses staff selectors for delegation', () => {
     const protectedEditors = [
+      'admission-year-setup.tsx',
       'admissions-crm-configuration.tsx',
       'admissions-playbook-configuration.tsx',
       'admissions-registration-configuration.tsx',

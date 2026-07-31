@@ -115,6 +115,34 @@ describe('Enrollment workspace URL state', () => {
     expect(serialized.get('return')).toBe('applicant-return-token');
   });
 
+  it('round trips the selected report view independently of the Pipeline view', () => {
+    const state = parseEnrollmentWorkspaceState(
+      new URLSearchParams({ report: 'standards', view: 'list' })
+    );
+
+    expect(state.reportView).toBe('standards');
+    expect(state.view).toBe('list');
+
+    const serialized = serializeEnrollmentWorkspaceState(state);
+    expect(serialized.get('report')).toBe('standards');
+    expect(serialized.get('view')).toBe('list');
+  });
+
+  it('rejects an unsupported report view', () => {
+    expect(
+      parseEnrollmentWorkspaceState(new URLSearchParams({ report: 'private-breakdown' })).reportView
+    ).toBeUndefined();
+  });
+
+  it('rejects impossible report dates from deep links', () => {
+    const state = parseEnrollmentWorkspaceState(
+      new URLSearchParams({ from: '2026-02-31', to: '2026-03-01' })
+    );
+
+    expect(state.from).toBeUndefined();
+    expect(state.to).toBe('2026-03-01');
+  });
+
   it('recognizes the dynamic applicant route as the applicant workspace', () => {
     expect(getWorkspaceFromPathname('/student/enrollment/applicants/lead-1')).toBe('applicant');
   });

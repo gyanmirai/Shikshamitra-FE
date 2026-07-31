@@ -1,5 +1,7 @@
 'use client';
 
+import type { AdmissionCrmSetupStatusDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { studentPaths } from 'src/constants/student-menu';
@@ -17,6 +19,11 @@ type SetupItem = {
   path: string;
   icon: string;
   group: string;
+};
+
+type SetupCard = SetupItem & {
+  ready: boolean;
+  readOnly: boolean;
 };
 
 const setupItems: SetupItem[] = [
@@ -95,6 +102,26 @@ const setupItems: SetupItem[] = [
   },
 ];
 
+export const buildEnrollmentSetupCards = (setup?: AdmissionCrmSetupStatusDto): SetupCard[] =>
+  setupItems.flatMap((item) => {
+    if (!setup) return [{ ...item, ready: false, readOnly: false }];
+
+    const visibleStatuses = setup.items.filter(
+      (candidate) => item.statusKeys.includes(candidate.key) && candidate.accessMode !== 0
+    );
+    if (!visibleStatuses.length) return [];
+
+    return [
+      {
+        ...item,
+        ready: visibleStatuses.every(
+          (candidate) => candidate.status === 2 || candidate.status === 3
+        ),
+        readOnly: visibleStatuses.every((candidate) => candidate.accessMode === 1),
+      },
+    ];
+  });
+
 export function EnrollmentSetupCenter() {
   const { academicYearId, state } = useEnrollmentWorkspace();
   const query = useGetAdmissionCrmSetupStatusQuery(
@@ -104,16 +131,12 @@ export function EnrollmentSetupCenter() {
   const withCycle = (path: string) =>
     state.cycle ? `${path}?cycle=${encodeURIComponent(state.cycle)}` : path;
   const setup = query.data;
-  const configured = setup?.status === 2 || setup?.status === 3;
-  const visibleItems = setup?.items.filter((item) => item.accessMode !== 0);
-  const completedCount = setupItems.filter((item) => {
-    const statuses = visibleItems?.filter((candidate) => item.statusKeys.includes(candidate.key));
-    return Boolean(
-      statuses?.length &&
-      statuses.every((candidate) => candidate.status === 2 || candidate.status === 3)
-    );
-  }).length;
-  const essentialCount = setupItems.length;
+  const isActiveYearPending = Boolean(academicYearId) && !setup;
+  const showSetupContent = !query.isError && !isActiveYearPending;
+  const cards = showSetupContent ? buildEnrollmentSetupCards(setup) : [];
+  const completedCount = cards.filter((item) => item.ready).length;
+  const essentialCount = cards.length;
+  const configured = essentialCount > 0 && completedCount === essentialCount;
 
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
@@ -121,11 +144,15 @@ export function EnrollmentSetupCenter() {
         title="Enrollment Setup Center"
         description="Complete the essentials first. Advanced controls can stay on the recommended defaults."
         actions={
-          <Chip
-            icon={<Iconify icon={configured ? 'mdi:check-circle-outline' : 'mdi:progress-alert'} />}
-            color={configured ? 'success' : 'warning'}
-            label={configured ? 'Core setup ready' : 'Setup needs attention'}
-          />
+          setup && !query.isError ? (
+            <Chip
+              icon={
+                <Iconify icon={configured ? 'mdi:check-circle-outline' : 'mdi:progress-alert'} />
+              }
+              color={configured ? 'success' : 'warning'}
+              label={configured ? 'Core setup ready' : 'Setup needs attention'}
+            />
+          ) : undefined
         }
       />
 
@@ -143,79 +170,64 @@ export function EnrollmentSetupCenter() {
         </Alert>
       ) : null}
 
-      <Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 2 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} gap={2} justifyContent="space-between">
-          <Stack spacing={0.75}>
-            <Typography variant="overline" color="text.secondary">
-              Current admission year
-            </Typography>
-            <Typography variant="h6">
-              {setup?.cycleName || 'Select an academic year to begin'}
+      {showSetupContent ? (
+        <>
+          <Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 2 }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} gap={2} justifyContent="space-between">
+              <Stack spacing={0.75}>
+                <Typography variant="overline" color="text.secondary">
+                  Current admission year
+                </Typography>
+                <Typography variant="h6">
+                  {setup?.cycleName || 'Select an academic year to begin'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {setup
+                    ? 'Configuration and readiness for the selected academic year.'
+                    : 'Configuration will be saved for the selected academic year.'}
+                </Typography>
+              </Stack>
+              <Stack spacing={0.75} sx={{ minWidth: { md: 260 } }}>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2">Essential progress</Typography>
+                  <Typography variant="body2" fontWeight={700}>
+                    {completedCount}/{essentialCount}
+                  </Typography>
+                </Stack>
+                <LinearProgress
+                  variant="determinate"
+                  value={
+                    essentialCount ? Math.min(100, (completedCount / essentialCount) * 100) : 0
+                  }
+                  sx={{ height: 8, borderRadius: 999 }}
+                />
+                <Typography variant="caption" color="text.secondary">
+                  {setup?.appliedPresetName
+                    ? `Platform managed | ${setup.appliedPresetName} v${setup.appliedPresetVersion}`
+                    : 'School managed | no platform preset applied'}
+                </Typography>
+              </Stack>
+            </Stack>
+          </Paper>
+
+          <Box>
+            <Typography component="h2" variant="h6">
+              Setup checklist
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {setup
-                ? 'Configuration and readiness for the selected academic year.'
-                : 'Configuration will be saved for the selected academic year.'}
+              Open a section to review its configuration. Your progress is saved automatically by
+              section.
             </Typography>
-          </Stack>
-          <Stack spacing={0.75} sx={{ minWidth: { md: 260 } }}>
-            <Stack direction="row" justifyContent="space-between">
-              <Typography variant="body2">Essential progress</Typography>
-              <Typography variant="body2" fontWeight={700}>
-                {completedCount}/{essentialCount}
-              </Typography>
-            </Stack>
-            <LinearProgress
-              variant="determinate"
-              value={Math.min(100, (completedCount / essentialCount) * 100)}
-              sx={{ height: 8, borderRadius: 999 }}
-            />
-            <Typography variant="caption" color="text.secondary">
-              {setup?.appliedPresetName
-                ? `Platform managed | ${setup.appliedPresetName} v${setup.appliedPresetVersion}`
-                : 'School managed | no platform preset applied'}
-            </Typography>
-          </Stack>
-        </Stack>
-      </Paper>
+          </Box>
 
-      <Box>
-        <Typography component="h2" variant="h6">
-          Setup checklist
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Open a section to review its configuration. Your progress is saved automatically by
-          section.
-        </Typography>
-      </Box>
-
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-          gap: 1.25,
-        }}
-      >
-        {setupItems
-          .filter((item) => {
-            if (!setup) return true;
-            return setup.items.some(
-              (statusItem) =>
-                item.statusKeys.includes(statusItem.key) && statusItem.accessMode !== 0
-            );
-          })
-          .map((item) => {
-            const statusItems = setup?.items.filter((candidate) =>
-              item.statusKeys.includes(candidate.key)
-            );
-            const ready = Boolean(
-              statusItems?.length &&
-              statusItems.every((candidate) => candidate.status === 2 || candidate.status === 3)
-            );
-            const readOnly = Boolean(
-              statusItems?.length && statusItems.every((candidate) => candidate.accessMode === 1)
-            );
-            return (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+              gap: 1.25,
+            }}
+          >
+            {cards.map((item) => (
               <Paper key={item.key} variant="outlined" sx={{ p: 1.75, borderRadius: 2 }}>
                 <Stack direction="row" spacing={1.5} alignItems="flex-start">
                   <Box
@@ -247,8 +259,8 @@ export function EnrollmentSetupCenter() {
                       </Box>
                       <Chip
                         size="small"
-                        color={ready ? 'success' : 'default'}
-                        label={readOnly ? 'Managed' : ready ? 'Ready' : 'Review'}
+                        color={item.ready ? 'success' : 'default'}
+                        label={item.readOnly ? 'Managed' : item.ready ? 'Ready' : 'Review'}
                       />
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
@@ -261,14 +273,15 @@ export function EnrollmentSetupCenter() {
                       endIcon={<Iconify icon="mdi:arrow-right" />}
                       sx={{ alignSelf: 'flex-start' }}
                     >
-                      {readOnly || ready ? 'Review' : 'Configure'}
+                      {item.readOnly || item.ready ? 'Review' : 'Configure'}
                     </Button>
                   </Stack>
                 </Stack>
               </Paper>
-            );
-          })}
-      </Box>
+            ))}
+          </Box>
+        </>
+      ) : null}
     </Stack>
   );
 }

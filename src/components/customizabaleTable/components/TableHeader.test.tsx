@@ -2,7 +2,7 @@ import { Table, Checkbox } from '@mui/material';
 import { vi, it, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { TableHeader } from './TableHeader';
@@ -48,5 +48,42 @@ describe('TableHeader', () => {
         .querySelector('.customizable-table-header-content')
     ).toHaveStyle({ overflow: 'visible' });
     expect(screen.getByText('Applicant')).toHaveStyle({ overflow: 'hidden' });
+  });
+
+  it('exposes keyboard sorting, named filtering, and the active sort direction', () => {
+    const onSort = vi.fn();
+    const onFilter = vi.fn();
+
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <Table>
+          <TableHeader
+            columns={[{ id: 'applicant', label: 'Applicant', isSort: true, isFilter: true }]}
+            columnVisibility={{ applicant: true }}
+            sorts={[{ column: 'applicant', direction: 'asc' }]}
+            onSort={onSort}
+            filters={[]}
+            onColumnFilterClick={onFilter}
+            headerRefs={[]}
+            setHeaderRef={vi.fn()}
+            getStickyStyle={() => ({})}
+            tableUniqId="accessible-actions"
+          />
+        </Table>
+      </ThemeProvider>
+    );
+
+    const sortButton = screen.getByRole('button', { name: 'Sort by Applicant' });
+    expect(sortButton.tagName).toBe('BUTTON');
+    fireEvent.click(sortButton);
+
+    expect(onSort).toHaveBeenCalledWith('applicant', undefined);
+    expect(screen.getByRole('columnheader', { name: /Applicant/i })).toHaveAttribute(
+      'aria-sort',
+      'ascending'
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filter Applicant' }));
+    expect(onFilter).toHaveBeenCalledOnce();
   });
 });

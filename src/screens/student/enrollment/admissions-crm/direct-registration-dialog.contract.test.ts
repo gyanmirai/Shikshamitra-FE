@@ -27,6 +27,8 @@ describe('Admissions CRM paper registration contract', () => {
   });
 
   it('submits one published hierarchy option and keeps the academic target in one step', () => {
+    expect(source).toContain('useGetAdmissionCrmOperationalStandardOptionsQuery');
+    expect(source).not.toContain('useGetAdmissionCrmAdmissionYearStandardOptionsQuery');
     expect(source).toContain('academicBoardId: selectedStandard.boardId');
     expect(source).toContain('academicMediumId: selectedStandard.mediumId');
     expect(source).toContain('academicMediumStageId: selectedStandard.mediumStageId');

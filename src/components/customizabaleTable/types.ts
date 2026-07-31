@@ -59,6 +59,7 @@ export interface ICustomizableTableProps {
   serverSidePagination?: boolean;
   serverSideSearch?: boolean;
   serverSideSort?: boolean;
+  serverSideSortMode?: 'single' | 'multiple';
   serverSideFilter?: boolean;
   onServerSort?: (
     column: string,
@@ -85,6 +86,7 @@ export interface ICustomizableTableProps {
   rowsPerPage?: number;
   searchTerm?: string;
   filters?: IParams['filters'];
+  sorts?: IParams['sorts'];
   rowsPerPageOptions?: TablePaginationProps['rowsPerPageOptions'];
   showCheckbox?: boolean;
   onSendNotification?: (data: any) => void;

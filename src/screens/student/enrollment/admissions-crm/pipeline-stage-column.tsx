@@ -6,8 +6,8 @@ import type {
   AdmissionCrmPipelineColumnKey,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useRef, useState, useEffect } from 'react';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import { useRef, useMemo, useState, useEffect } from 'react';
 import { useGetAdmissionCrmLeadsQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
   Chip,
@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 
 const PAGE_SIZE = 25;
+const emptyLeads: AdmissionCrmLeadDto[] = [];
 
 export type PipelineColumnDefinition = {
   key: AdmissionCrmPipelineColumnKey;
@@ -48,10 +49,22 @@ export function PipelineStageColumn({
   renderLead,
 }: Props) {
   const columnRef = useRef<HTMLDivElement>(null);
-  const [page, setPage] = useState(0);
-  const [loadedLeads, setLoadedLeads] = useState<AdmissionCrmLeadDto[]>([]);
+  const [pagination, setPagination] = useState({ resetKey, page: 0 });
+  const [loadedState, setLoadedState] = useState<{
+    resetKey: string;
+    leads: AdmissionCrmLeadDto[];
+    totalCount: number;
+  }>({ resetKey, leads: [], totalCount: 0 });
   const [shouldLoad, setShouldLoad] = useState(false);
-  const { data, isFetching, isError, refetch } = useGetAdmissionCrmLeadsQuery(
+  const page = pagination.resetKey === resetKey ? pagination.page : 0;
+  const loadedLeads = loadedState.resetKey === resetKey ? loadedState.leads : emptyLeads;
+  const totalCount = loadedState.resetKey === resetKey ? loadedState.totalCount : 0;
+  const {
+    currentData: data,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetAdmissionCrmLeadsQuery(
     {
       academicYearId,
       ...query,
@@ -84,20 +97,24 @@ export function PipelineStageColumn({
   }, [shouldLoad]);
 
   useEffect(() => {
-    setPage(0);
-    setLoadedLeads([]);
+    setPagination({ resetKey, page: 0 });
+    setLoadedState({ resetKey, leads: [], totalCount: 0 });
   }, [resetKey]);
 
   useEffect(() => {
     if (!data) return;
-    setLoadedLeads((current) => {
-      const next = page === 0 ? data.items : [...current, ...data.items];
-      return Array.from(new Map(next.map((lead) => [lead.id, lead])).values());
+    setLoadedState((current) => {
+      const currentLeads = current.resetKey === resetKey ? current.leads : [];
+      const next = page === 0 ? data.items : [...currentLeads, ...data.items];
+      return {
+        resetKey,
+        leads: Array.from(new Map(next.map((lead) => [lead.id, lead])).values()),
+        totalCount: data.totalCount,
+      };
     });
-  }, [data, page]);
+  }, [data, page, resetKey]);
 
-  const visibleLeads = useMemo(() => loadedLeads, [loadedLeads]);
-  const canLoadMore = loadedLeads.length < (data?.totalCount ?? 0);
+  const canLoadMore = loadedLeads.length < totalCount;
   const tooltipTitle = (
     <Typography variant="caption" color="inherit">
       {column.description}
@@ -173,8 +190,8 @@ export function PipelineStageColumn({
             pr: { lg: 0.5 },
           }}
         >
-          {visibleLeads.length
-            ? visibleLeads.map(renderLead)
+          {loadedLeads.length
+            ? loadedLeads.map(renderLead)
             : !isFetching && (
                 <Typography variant="body2" color="text.secondary">
                   No applicants
@@ -183,7 +200,12 @@ export function PipelineStageColumn({
           {canLoadMore && (
             <Button
               size="small"
-              onClick={() => setPage((current) => current + 1)}
+              onClick={() =>
+                setPagination((current) => ({
+                  resetKey,
+                  page: current.resetKey === resetKey ? current.page + 1 : 1,
+                }))
+              }
               disabled={isFetching}
             >
               {isFetching ? (

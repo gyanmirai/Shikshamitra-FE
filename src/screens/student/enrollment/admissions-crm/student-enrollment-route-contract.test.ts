@@ -72,6 +72,8 @@ describe('Student Enrollment workspace route contracts', () => {
       'AnalyticsWorkspace',
     ].forEach((workspace) => expect(source).toContain(workspace));
     expect(source).not.toContain('StudentAdmissionsCrmScreen');
+    expect(source).toContain('EnrollmentWorkspaceLoadingState');
+    expect(source).not.toContain('SplashScreen');
     expect(
       fs.existsSync(
         path.join(
@@ -448,6 +450,7 @@ describe('Student Enrollment workspace route contracts', () => {
       'overview-workspace.tsx',
       'pipeline-workspace.tsx',
       'exams-workspace.tsx',
+      'applicant-worklist-workspace.tsx',
       'operations-queue-workspace.tsx',
       'analytics-workspace.tsx',
       'rte-allotment-import.tsx',
@@ -484,7 +487,7 @@ describe('Student Enrollment workspace route contracts', () => {
     ).toBe(false);
   });
 
-  it('keeps shared table sort indicators decorative instead of unnamed buttons', () => {
+  it('keeps shared table sort and filter actions keyboard accessible and explicitly named', () => {
     const tableHeader = read(
       'src',
       'components',
@@ -493,11 +496,14 @@ describe('Student Enrollment workspace route contracts', () => {
       'TableHeader.tsx'
     );
 
-    expect(tableHeader).not.toContain('<IconButton');
+    expect(tableHeader).toContain('<ButtonBase');
+    expect(tableHeader).toContain('<IconButton');
+    expect(tableHeader).toContain('aria-label={`Sort by');
+    expect(tableHeader).toContain('aria-label={`Filter');
     expect(tableHeader).toContain('aria-hidden="true"');
   });
 
-  it('keeps every paginated Enrollment workspace server-filtered and server-sorted', () => {
+  it('keeps filter-capable paginated Enrollment workspaces server-filtered and server-sorted', () => {
     const paginatedTableFiles = [
       'overview-workspace.tsx',
       'pipeline-workspace.tsx',
@@ -510,8 +516,23 @@ describe('Student Enrollment workspace route contracts', () => {
       expect(source, file).toContain('serverSideFilter');
       expect(source, file).toContain('onServerFilter');
       expect(source, file).toContain('serverSideSort');
+      expect(source, file).toContain('serverSideSortMode="single"');
       expect(source, file).toContain('onServerSort');
+      expect(source, file).toContain('parseEnrollmentTableSorts');
     });
+
+    const applicantWorklist = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'applicant-worklist-workspace.tsx'
+    );
+    expect(applicantWorklist).toContain('serverSideSearch');
+    expect(applicantWorklist).toContain('serverSideSort');
+    expect(applicantWorklist).toContain('serverSideSortMode="single"');
+    expect(applicantWorklist).toContain('parseEnrollmentTableSorts');
 
     const analytics = read(
       'src',
@@ -530,6 +551,8 @@ describe('Student Enrollment workspace route contracts', () => {
       'rte-allotment-import.tsx'
     );
     expect(analytics).not.toContain('isFilter={false}');
+    expect(analytics).toContain('key={reportView}');
+    expect(analytics).toContain('tableId={`student-enrollment-admission-report-');
     expect(rteImport).not.toContain('isFilter={false}');
   });
 

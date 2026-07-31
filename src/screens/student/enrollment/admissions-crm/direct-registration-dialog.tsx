@@ -33,7 +33,7 @@ import {
   useGetAdmissionCrmRegistrationTemplatesQuery,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
   useCreatePaperAdmissionCrmRegistrationMutation,
-  useGetAdmissionCrmAdmissionYearStandardOptionsQuery,
+  useGetAdmissionCrmOperationalStandardOptionsQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
@@ -121,7 +121,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     { academicYearId: academicYearId || '' },
     { skip: !open || !academicYearId }
   );
-  const admissionYearStandardOptionsQuery = useGetAdmissionCrmAdmissionYearStandardOptionsQuery(
+  const admissionYearStandardOptionsQuery = useGetAdmissionCrmOperationalStandardOptionsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !open || !academicYearId }
   );

@@ -29,7 +29,8 @@ describe('Admissions Pipeline Quick Inquiry contract', () => {
 
   it('uses Admission Year Setup options and sends one consistent academic target', () => {
     expect(pipelineSource).toContain('useGetAdmissionCrmQuickInquiryOptionsQuery');
-    expect(pipelineSource).toContain('useGetAdmissionCrmAdmissionYearStandardOptionsQuery');
+    expect(pipelineSource).toContain('useGetAdmissionCrmOperationalStandardOptionsQuery');
+    expect(pipelineSource).not.toContain('useGetAdmissionCrmAdmissionYearStandardOptionsQuery');
     expect(pipelineSource).toContain('mapQuickInquiryOptions(quickInquiryOptionsQuery.data)');
     expect(pipelineSource).toContain('quickInquiryOptions.routes.map');
     expect(pipelineSource).toContain('quickInquiryOptions.channels.map');

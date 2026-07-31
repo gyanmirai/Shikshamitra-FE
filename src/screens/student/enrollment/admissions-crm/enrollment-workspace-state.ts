@@ -17,6 +17,8 @@ import {
   AdmissionCrmApplicantDocumentStatus,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { isValidAdmissionReportDate } from './admission-report-date-range';
+
 export type EnrollmentWorkspace =
   | 'overview'
   | 'pipeline'
@@ -33,6 +35,7 @@ export type EnrollmentPersona =
   'administrator' | 'receptionist' | 'counselor' | 'approver' | 'restricted';
 
 export type PipelineView = 'board' | 'list';
+export type EnrollmentReportView = 'lifecycle' | 'sources' | 'standards' | 'outcomes';
 export type ScoreBandFilter = 'all' | 'hot' | 'warm' | 'needsAttention';
 export type EnrollmentApplicantTab =
   | 'overview'
@@ -99,6 +102,7 @@ export type EnrollmentWorkspaceState = {
   eligibility?: AdmissionCrmEligibilityDecision;
   from?: string;
   to?: string;
+  reportView?: EnrollmentReportView;
   settingsPanel?: EnrollmentSettingsPanel;
 };
 
@@ -179,7 +183,12 @@ const settingsPanels = new Set<EnrollmentSettingsPanel>([
   'providers',
   'reminders',
 ]);
-const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const reportViews = new Set<EnrollmentReportView>([
+  'lifecycle',
+  'sources',
+  'standards',
+  'outcomes',
+]);
 
 const parseEnum = <T extends number>(value: string | null, values: Set<T>) => {
   if (value == null || value.trim() === '') return undefined;
@@ -251,6 +260,7 @@ export const parseEnrollmentWorkspaceState = (
   const scoreValue = searchParams.get('score') as ScoreBandFilter | null;
   const fromValue = searchParams.get('from');
   const toValue = searchParams.get('to');
+  const reportViewValue = searchParams.get('report') as EnrollmentReportView | null;
   const settingsPanelValue = searchParams.get('panel') as EnrollmentSettingsPanel | null;
   const applicantTabValue = searchParams.get('tab') as EnrollmentApplicantTab | null;
   const legacyStage = parseEnum(searchParams.get('stage'), stages);
@@ -310,8 +320,10 @@ export const parseEnrollmentWorkspaceState = (
     examStatus: parseEnum(searchParams.get('result'), examStatuses) ?? defaults.examStatus,
     eligibility:
       parseEnum(searchParams.get('eligibility'), eligibilityDecisions) ?? defaults.eligibility,
-    from: fromValue && datePattern.test(fromValue) ? fromValue : defaults.from,
-    to: toValue && datePattern.test(toValue) ? toValue : defaults.to,
+    from: fromValue && isValidAdmissionReportDate(fromValue) ? fromValue : defaults.from,
+    to: toValue && isValidAdmissionReportDate(toValue) ? toValue : defaults.to,
+    reportView:
+      reportViewValue && reportViews.has(reportViewValue) ? reportViewValue : defaults.reportView,
     settingsPanel:
       settingsPanelValue && settingsPanels.has(settingsPanelValue)
         ? settingsPanelValue
@@ -362,6 +374,7 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('eligibility', state.eligibility);
   set('from', state.from);
   set('to', state.to);
+  set('report', state.reportView);
   set('panel', state.settingsPanel);
   return params;
 };

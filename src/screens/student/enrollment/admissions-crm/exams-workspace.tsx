@@ -57,6 +57,11 @@ import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { resolveAdmissionCrmExamActionPermissions } from './admission-action-permissions';
 import { readExamResultImportFile, downloadExamResultTemplate } from './exam-result-import';
+import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
+import {
+  createEnrollmentQueryScopeKey,
+  getEnrollmentFilterQueryScope,
+} from './enrollment-query-scope';
 import {
   createApplicantRowNavigationProps,
   createApplicantLinkNavigationProps,
@@ -448,9 +453,22 @@ export function ExamsWorkspace() {
     setOverrideReason('');
   }, [selectedExam]);
 
+  const selectionScopeKey = createEnrollmentQueryScopeKey({
+    academicYearId,
+    search: search.trim(),
+    filters: getEnrollmentFilterQueryScope(columnFilters),
+    attendanceStatus: state.attendance,
+    examStatus: state.examStatus,
+    eligibilityDecision: state.eligibility,
+    page: state.page,
+    sorting: state.sorting || 'ExamStartTime ASC',
+  });
+
   useEffect(() => {
     setSelectedExamIds([]);
-  }, [state.page, state.attendance, state.examStatus, state.eligibility]);
+    setBulkMarksOpen(false);
+    setBulkMarksByExamId({});
+  }, [selectionScopeKey]);
 
   const run = async (action: () => Promise<unknown>, message: string) => {
     try {
@@ -993,6 +1011,7 @@ export function ExamsWorkspace() {
           serverSidePagination
           serverSideSearch
           serverSideSort
+          serverSideSortMode="single"
           serverSideFilter
           defaultSearchTerm={search}
           searchFieldProps={{
@@ -1000,6 +1019,7 @@ export function ExamsWorkspace() {
             inputProps: { 'aria-label': 'Search entrance exams' },
           }}
           filters={[...tableFilters, ...columnFilters]}
+          sorts={parseEnrollmentTableSorts(state.sorting || 'ExamStartTime ASC', columns)}
           totalCount={examsQuery.data?.totalCount || 0}
           page={page}
           rowsPerPage={pageSize}
@@ -1011,10 +1031,10 @@ export function ExamsWorkspace() {
           }}
           onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
           onServerSort={(_column, sorts) => {
-            const sort = sorts[0];
+            const nextSorting = serializeEnrollmentTableSort(sorts);
             updateState(
               {
-                sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : undefined,
+                sorting: nextSorting || undefined,
                 page: 1,
               },
               'push'

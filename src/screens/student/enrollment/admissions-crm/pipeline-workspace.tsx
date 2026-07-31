@@ -72,7 +72,7 @@ import {
   useScheduleAdmissionCrmEntranceExamMutation,
   useBulkAssignAdmissionCrmLeadOwnersMutation,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
-  useGetAdmissionCrmAdmissionYearStandardOptionsQuery,
+  useGetAdmissionCrmOperationalStandardOptionsQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { formatEnrollmentDate } from './enrollment-display';
@@ -81,6 +81,11 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
+import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
+import {
+  createEnrollmentQueryScopeKey,
+  getEnrollmentFilterQueryScope,
+} from './enrollment-query-scope';
 import {
   createApplicantRowNavigationProps,
   createApplicantLinkNavigationProps,
@@ -488,6 +493,8 @@ export function PipelineWorkspace() {
   const [bulkStage, setBulkStage] = useState(AdmissionInquiryStage.FollowUp);
   const [bulkReason, setBulkReason] = useState('');
   const [overrideProtectedStages, setOverrideProtectedStages] = useState(false);
+  const [boardDataRevision, setBoardDataRevision] = useState(0);
+  const refreshBoardData = useCallback(() => setBoardDataRevision((current) => current + 1), []);
 
   useEffect(() => {
     if ((state.view || 'list') === 'list') {
@@ -560,7 +567,7 @@ export function PipelineWorkspace() {
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
-  const admissionYearStandardOptionsQuery = useGetAdmissionCrmAdmissionYearStandardOptionsQuery(
+  const admissionYearStandardOptionsQuery = useGetAdmissionCrmOperationalStandardOptionsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !quickDialogOpen }
   );
@@ -722,18 +729,37 @@ export function PipelineWorkspace() {
   const [bulkChangeStages, bulkChangeStagesState] = useBulkChangeAdmissionCrmStagesMutation();
   const [bulkArchiveLeads, bulkArchiveLeadsState] = useBulkArchiveAdmissionCrmLeadsMutation();
 
-  useEffect(
-    () => setSelectedLeadIds([]),
-    [
-      debouncedSearch,
-      columnFilters,
-      state.channel,
-      state.owner,
-      state.page,
-      state.pipelineColumn,
-      state.priority,
-    ]
-  );
+  const selectionScopeKey = createEnrollmentQueryScopeKey({
+    academicYearId,
+    academicMediumId,
+    view: state.view || 'list',
+    filterText: debouncedSearch,
+    filters: getEnrollmentFilterQueryScope(columnFilters),
+    pipelineColumn: state.pipelineColumn,
+    channel: state.channel,
+    campaignName: state.campaign,
+    ownerUserId: resolvedOwner,
+    priority: state.priority,
+    intendedRouteType: state.routeType,
+    desiredClassName: state.className,
+    page: state.page,
+    sorting: state.sorting || 'LastActivityTime DESC',
+    boardDataRevision,
+  });
+  const boardScopeKey = createEnrollmentQueryScopeKey({
+    academicYearId,
+    academicMediumId,
+    filterText: debouncedSearch,
+    channel: state.channel,
+    campaignName: state.campaign,
+    priority: state.priority,
+    boardDataRevision,
+  });
+
+  useEffect(() => {
+    setSelectedLeadIds([]);
+    setBulkAction(null);
+  }, [selectionScopeKey]);
 
   const stages = useMemo(
     () => (stagesQuery.data || []).filter((stage) => stage.isEnabled),
@@ -1298,6 +1324,7 @@ export function PipelineWorkspace() {
           capacityOverrideReason: overrideCapacity ? capacityOverrideReason.trim() : undefined,
         },
       }).unwrap();
+      refreshBoardData();
       setScheduleLead(null);
       setSelectedSlotId('');
       setOverrideCapacity(false);
@@ -1341,6 +1368,7 @@ export function PipelineWorkspace() {
           reason: bulkReason.trim(),
           overrideProtectedStages,
         }).unwrap();
+        if (result.succeededCount > 0) refreshBoardData();
         if (result.failedCount > 0) {
           shikshaMitraToast.warning({
             message: `${result.succeededCount} stage changes completed; ${result.failedCount} failed.`,
@@ -1351,11 +1379,12 @@ export function PipelineWorkspace() {
       }
       if (bulkAction === 'archive') {
         if (!bulkReason.trim()) throw new Error('Reason is required.');
-        await bulkArchiveLeads({
+        const result = await bulkArchiveLeads({
           academicYearId,
           leadIds: selectedLeadIds,
           reason: bulkReason.trim(),
         }).unwrap();
+        if (result.succeededCount > 0) refreshBoardData();
       }
       setBulkAction(null);
       setBulkReason('');
@@ -1597,11 +1626,12 @@ export function PipelineWorkspace() {
               column={column}
               query={{
                 filterText: debouncedSearch || undefined,
+                academicMediumId,
                 channel: state.channel,
                 campaignName: state.campaign,
                 priority: state.priority,
               }}
-              resetKey={`${state.channel}-${state.campaign}-${state.priority}-${debouncedSearch}`}
+              resetKey={boardScopeKey}
               renderLead={renderLeadCard}
             />
           ))}
@@ -1626,6 +1656,7 @@ export function PipelineWorkspace() {
               serverSidePagination
               serverSideSearch
               serverSideSort
+              serverSideSortMode="single"
               serverSideFilter
               searchTerm={search}
               defaultSearchTerm={search}
@@ -1634,6 +1665,7 @@ export function PipelineWorkspace() {
                 inputProps: { 'aria-label': 'Search applicants' },
               }}
               filters={[...tableFilters, ...columnFilters]}
+              sorts={parseEnrollmentTableSorts(state.sorting || 'LastActivityTime DESC', columns)}
               totalCount={leadsQuery.data?.totalCount || 0}
               page={page}
               rowsPerPage={pageSize}
@@ -1652,12 +1684,10 @@ export function PipelineWorkspace() {
               }}
               onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
               onServerSort={(_column, sorts) => {
-                const sort = sorts[0];
+                const nextSorting = serializeEnrollmentTableSort(sorts);
                 updateState(
                   {
-                    sorting: sort
-                      ? `${sort.originalId || sort.column} ${sort.direction}`
-                      : undefined,
+                    sorting: nextSorting || undefined,
                     page: 1,
                   },
                   'push'
@@ -1706,8 +1736,8 @@ export function PipelineWorkspace() {
             />
             {showEmptyPipeline ? (
               <Alert severity="info">
-                No applicants in this admission year. Create a real inquiry for this admission year or
-                clear filters to show existing applicants.
+                No applicants in this admission year. Create a real inquiry for this admission year
+                or clear filters to show existing applicants.
               </Alert>
             ) : null}
           </>

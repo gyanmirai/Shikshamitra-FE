@@ -104,7 +104,15 @@ export function CoreSettingsRoute({
     : definition.defaultPanel;
 
   return (
-    <EnrollmentSettingsPage title={definition.title} description={definition.description}>
+    <EnrollmentSettingsPage
+      title={definition.title}
+      description={definition.description}
+      layout={
+        section === 'communications' && (focusPanel === 'templates' || focusPanel === 'reminders')
+          ? 'table'
+          : 'document'
+      }
+    >
       {section === 'journey' && academicYearId ? (
         <ApplicationStagePolicyPanel academicYearId={academicYearId} />
       ) : null}

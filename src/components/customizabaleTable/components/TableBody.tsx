@@ -89,15 +89,19 @@ export const TableBody = ({
       <MuiTableBody>
         <TableRow>
           <TableCell colSpan={columns.length} sx={{ p: 0 }}>
-            <EmptyContent
-              title={noDataText}
-              sx={{
-                width: tableRef,
-                position: 'sticky',
-                left: '0',
-                padding: '0',
-              }}
-            />
+            {isCustomEmptyState ? (
+              noDataText
+            ) : (
+              <EmptyContent
+                title={noDataText}
+                sx={{
+                  width: tableRef,
+                  position: 'sticky',
+                  left: '0',
+                  padding: '0',
+                }}
+              />
+            )}
           </TableCell>
         </TableRow>
       </MuiTableBody>
@@ -122,6 +126,8 @@ export const TableBody = ({
               <TableCell>
                 <IconButton
                   size="small"
+                  aria-label={`${expandedRows[index] ? 'Collapse' : 'Expand'} row ${index + 1}`}
+                  aria-expanded={Boolean(expandedRows[index])}
                   onClick={(e) => {
                     e.stopPropagation();
                     onExpandRow(index);

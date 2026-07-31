@@ -14,6 +14,7 @@ export default function ActivationSettingsPage() {
     <EnrollmentSettingsPage
       title="Activation Settings"
       description="Configure required gates, approval ownership, cancellation timing, and activation messages."
+      layout="document"
     >
       {academicYearId ? (
         <>

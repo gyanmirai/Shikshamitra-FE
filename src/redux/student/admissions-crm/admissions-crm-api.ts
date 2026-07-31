@@ -2983,6 +2983,15 @@ export const buildAdmissionCrmQuickInquiryOptionsRequest = ({
   method: 'GET',
 });
 
+export const buildAdmissionCrmOperationalStandardOptionsRequest = ({
+  academicYearId,
+}: {
+  academicYearId: string;
+}): FetchArgs => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/operational-standard-options`,
+  method: 'GET',
+});
+
 export const buildPreviewAdmissionCrmLeadDuplicatesRequest = ({
   academicYearId,
   body,
@@ -4744,6 +4753,13 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       { academicYearId: string }
     >({
       query: buildAdmissionCrmQuickInquiryOptionsRequest,
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
+    getAdmissionCrmOperationalStandardOptions: builder.query<
+      AdmissionCrmAdmissionYearStandardOptionDto[],
+      { academicYearId: string }
+    >({
+      query: buildAdmissionCrmOperationalStandardOptionsRequest,
       providesTags: [studentAdmissionsCrmType.configuration],
     }),
     previewAdmissionCrmLeadDuplicates: builder.mutation<
@@ -7757,6 +7773,7 @@ export const {
   useGetAdmissionCrmGeneratedDocumentAvailabilityQuery,
   useCreateAdmissionCrmLeadMutation,
   useGetAdmissionCrmQuickInquiryOptionsQuery,
+  useGetAdmissionCrmOperationalStandardOptionsQuery,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
   useAssignAdmissionCrmLeadOwnerMutation,
   useChangeAdmissionCrmLeadPriorityMutation,

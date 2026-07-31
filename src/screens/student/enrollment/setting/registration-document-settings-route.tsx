@@ -16,6 +16,7 @@ export function RegistrationDocumentSettingsRoute() {
     <EnrollmentSettingsPage
       title="Registration Settings"
       description="Configure form sections, required information, documents, corrections, and verification."
+      layout="document"
     >
       <RegistrationOfferHandoffGuidance />
       <EnrollmentSettingsSetupSteps
