@@ -14,12 +14,15 @@ import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useCreateQuestionMutation } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  useCreateQuestionMutation,
+  useLazyDownloadQuestionBulkTemplateQuery,
+} from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import {
   Box,
   Grid,
@@ -72,6 +75,27 @@ const VISIBILITY_OPTIONS = [
   { value: 2, label: 'Internal / School' },
   { value: 3, label: 'Private' },
 ];
+
+const buildQuestionTemplateFileName = (chapterName?: string) => {
+  const safeChapter = String(chapterName || 'questions')
+    .trim()
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+
+  return `question-bank-${safeChapter || 'questions'}-template.xlsx`;
+};
+
+const triggerTemplateDownload = (blob: Blob, fileName: string) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -185,7 +209,7 @@ const toQuestionBody = (values: any) => {
     ...values,
     answerKey,
     chapterId: values.chapterId || null,
-    topicName: values.topicName?.trim() || null,
+    topicName: String(values.topicName || '').trim() || null,
     bloomLevel: values.bloomLevel || null,
     marks: Number(values.marks),
     negativeMarks:
@@ -239,6 +263,8 @@ function QuestionFormFields({
   chapterOptions,
   creationMode,
   setCreationMode,
+  onDownloadTemplate,
+  isTemplateDownloading,
 }: any) {
   const theme = useTheme();
   const showOptions = [1, 2, 3].includes(formik.values.questionType);
@@ -677,11 +703,10 @@ function QuestionFormFields({
                 variant="text"
                 color="primary"
                 startIcon={<Iconify icon="solar:download-bold" />}
-                onClick={() =>
-                  shikshaMitraToast.info({ message: 'Excel Template download triggered.' })
-                }
+                disabled={isTemplateDownloading}
+                onClick={onDownloadTemplate}
               >
-                Download Excel Template
+                {isTemplateDownloading ? 'Downloading...' : 'Download Excel Template'}
               </Button>
             </Box>
           </Grid>
@@ -780,6 +805,7 @@ export default function CreateQuestionDialog({
     type: 'mutation',
     currentQueryAndMutation: useCreateQuestionMutation,
   });
+  const [downloadTemplate, downloadTemplateState] = useLazyDownloadQuestionBulkTemplateQuery();
   const [creationMode, setCreationMode] = useState<'manual' | 'upload'>('manual');
 
   const validationSchema = useMemo(() => {
@@ -876,6 +902,21 @@ export default function CreateQuestionDialog({
     onClose();
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const template = await downloadTemplate(undefined, false).unwrap();
+      triggerTemplateDownload(template, buildQuestionTemplateFileName(chapterName));
+      shikshaMitraToast.success({
+        message: 'Excel template downloaded successfully.',
+      });
+    } catch (error) {
+      console.error('Failed to download question template:', error);
+      shikshaMitraToast.error({
+        message: 'Failed to download Excel template. Please try again.',
+      });
+    }
+  };
+
   const title = chapterName ? `Create Question — ${chapterName}` : 'Create New Question';
 
   return (
@@ -910,12 +951,12 @@ export default function CreateQuestionDialog({
             chapterOptions={chapterOptions}
             creationMode={creationMode}
             setCreationMode={setCreationMode}
+            onDownloadTemplate={handleDownloadTemplate}
+            isTemplateDownloading={downloadTemplateState.isFetching}
           />
         </DialogScrollContent>
 
-        <DialogActions
-          sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}
-        >
+        <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
           <CancelButton onClick={handleClose} />
           <SubmitButton
             loading={createState.isLoading}

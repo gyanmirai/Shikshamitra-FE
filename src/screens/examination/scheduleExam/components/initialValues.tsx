@@ -46,6 +46,7 @@ export const defaultExamFormValues: IExamFormValues = {
   examName: '',
   className: '',
   gradingScaleId: '',
+  gradeScaleRequired: true,
   divisions: [],
   subjects: [],
   description: '',
@@ -365,6 +366,8 @@ export function mapBackendToFormik(
     examName: basicData?.examName ?? '',
     className: basicData?.standardId ?? '',
     gradingScaleId: basicData?.gradingScaleId ?? '',
+    gradeScaleRequired:
+      examTypes.find((t: any) => t.id === basicData?.examTypeId)?.gradeScaleRequired ?? true,
     divisions: basicData?.divisionIds ?? [],
     subjects,
     description: basicData?.description ?? '',

@@ -12,6 +12,13 @@ export const questionBankApi = academicApi.injectEndpoints({
       query: (params) => ({ url: '/academics/question-bank/settings', method: 'GET', params }),
       providesTags: [academicType.questionBank],
     }),
+    downloadQuestionBulkTemplate: builder.query<Blob, void>({
+      query: () => ({
+        url: '/academics/question-bank/questions/bulk-template',
+        method: 'GET',
+        responseHandler: (response: Response) => response.blob(),
+      }),
+    }),
     saveQuestionBankSettings: builder.mutation({
       query: (body) => ({ url: '/academics/question-bank/settings', method: 'POST', body }),
       invalidatesTags: [academicType.questionBank],
@@ -107,6 +114,7 @@ export const questionBankApi = academicApi.injectEndpoints({
 export const {
   useGetQuestionBankDashboardQuery,
   useGetQuestionBankSettingsQuery,
+  useLazyDownloadQuestionBulkTemplateQuery,
   useSaveQuestionBankSettingsMutation,
   useGetQuestionsQuery,
   useGetQuestionByIdQuery,

@@ -29,6 +29,7 @@ import {
   useGetEmergencyClosuresQuery,
   useCreateEmergencyClosureMutation,
   useCancelEmergencyClosureMutation,
+  useUpdateEmergencyClosureMutation,
 } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
@@ -138,6 +139,7 @@ const EmergencyClosureScreen = () => {
   );
   const [createEmergencyClosure, { isLoading: creating }] = useCreateEmergencyClosureMutation();
   const [cancelEmergencyClosure, { isLoading: cancelling }] = useCancelEmergencyClosureMutation();
+  const [updateEmergencyClosure, { isLoading: updating }] = useUpdateEmergencyClosureMutation();
 
   const formik = useFormik({
     initialValues: {
@@ -179,10 +181,24 @@ const EmergencyClosureScreen = () => {
 
       try {
         if (editingClosureId) {
-          // No dedicated update endpoint exists — an edit is applied as
-          // cancel-the-original then declare-a-new-one with the updated values.
-          await cancelEmergencyClosure(editingClosureId).unwrap();
-          await createEmergencyClosure(payload).unwrap();
+          await updateEmergencyClosure({
+            id: editingClosureId,
+            body: {
+              startDate: formattedStartDate,
+              endDate: formattedEndDate,
+              startTime: payload.startTime,
+              endTime: payload.endTime,
+              title: values.title,
+              description: values.description,
+              appliesToAll: values.appliesToAll,
+              standardIds: values.appliesToAll ? [] : values.standardIds,
+              notifyParents: values.notifyParents,
+              notifyTeachers: values.notifyTeachers,
+              notifyStudents: values.notifyStudents,
+              notifyStaff: values.notifyStaff,
+              autoScanImpacts: payload.autoScanImpacts,
+            },
+          }).unwrap();
           shikshaMitraToast.success({ message: 'Emergency closure updated successfully' });
         } else {
           await createEmergencyClosure(payload).unwrap();
@@ -751,7 +767,7 @@ const EmergencyClosureScreen = () => {
             variant="contained"
             color="error"
             size="small"
-            loading={creating || cancelling}
+            loading={creating || updating}
             onClick={(e: any) => formik.handleSubmit(e)}
             startIcon={<Iconify icon="mdi:alert-octagon-outline" />}
           >

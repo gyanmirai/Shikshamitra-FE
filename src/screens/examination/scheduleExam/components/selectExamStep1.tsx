@@ -322,8 +322,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         formik.setFieldValue('examTypeName', selectedType?.examType ?? '');
                         formik.setFieldTouched(`examType`, false);
 
-                        if (selectedType?.defaultGradeScaleId) {
+                        // Sync gradeScaleRequired from the selected exam type configuration
+                        const isGradeScaleRequired = selectedType?.gradeScaleRequired ?? true;
+                        formik.setFieldValue('gradeScaleRequired', isGradeScaleRequired);
+
+                        if (isGradeScaleRequired && selectedType?.defaultGradeScaleId) {
                           formik.setFieldValue('gradingScaleId', selectedType.defaultGradeScaleId);
+                        } else if (!isGradeScaleRequired) {
+                          formik.setFieldValue('gradingScaleId', '');
                         }
                       }}
                       labelKey="examType"
@@ -622,13 +628,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       }}
                       labelKey="name"
                       valueKey="id"
-                      label="Grading Scale *"
+                      label={`Grading Scale${formik.values.gradeScaleRequired ? ' *' : ''}`}
                       formControlProps={{ fullWidth: true }}
                       error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
                       helperText={
                         formik.touched.gradingScaleId && formik.errors.gradingScaleId
                           ? formik.errors.gradingScaleId
-                          : 'Select overall exam grading scale'
+                          : formik.values.gradeScaleRequired
+                            ? 'Select overall exam grading scale'
+                            : 'Optional for this exam type'
                       }
                       helperTextProps={{
                         sx: {

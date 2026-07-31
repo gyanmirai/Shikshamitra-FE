@@ -6,43 +6,39 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Label } from 'src/components/label';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { GlobalIcons } from 'src/utils/icons';
 import {
   Box,
   Card,
-  Chip,
   Grid,
   Paper,
   Stack,
   Alert,
   Button,
-  Dialog,
   Switch,
   Popover,
   Tooltip,
-  TextField,
   MenuList,
   MenuItem,
+  TextField,
   Typography,
   IconButton,
-  DialogTitle,
   DialogActions,
-  DialogContent,
 } from '@mui/material';
 import {
   useGetQuestionsQuery,
@@ -221,13 +217,12 @@ const toQuestionBody = (values: any) => {
     String(values.answerKey || '').trim() ||
     getObjectiveAnswerKey(Number(values.questionType), options);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { topicName, tagsText, ...rest } = values;
+  const { tagsText, ...rest } = values;
   return {
     ...rest,
     answerKey,
     chapterId: values.chapterId || null,
-    topicName: values.topicName?.trim() || null,
+    topicName: String(values.topicName || '').trim() || null,
     bloomLevel: values.bloomLevel || null,
     visibility: 2, // default Internal / School
     marks: Number(values.marks),
@@ -902,7 +897,7 @@ export default function QuestionBankScreen() {
         standardId: question.standardId || '',
         subjectId: question.subjectId || '',
         chapterId: question.chapterId || '',
-        topicName: question.topicName || '', // topicName holds the typed topic string
+        topicName: question.topicName || '',
         questionText: question.questionText || '',
         questionType: question.questionType || 1,
         difficultyLevel: question.difficultyLevel || 1,
@@ -916,14 +911,14 @@ export default function QuestionBankScreen() {
         tagsText: (question.tags || []).join(', '),
         options: question.options?.length
           ? question.options.map((o: any) => ({
-            optionText: o.optionText,
-            isCorrect: o.isCorrect,
-            sortOrder: o.sortOrder,
-          }))
+              optionText: o.optionText,
+              isCorrect: o.isCorrect,
+              sortOrder: o.sortOrder,
+            }))
           : [
-            { optionText: '', isCorrect: true, sortOrder: 1 },
-            { optionText: '', isCorrect: false, sortOrder: 2 },
-          ],
+              { optionText: '', isCorrect: true, sortOrder: 1 },
+              { optionText: '', isCorrect: false, sortOrder: 2 },
+            ],
       },
     });
     setEditDialogOpen(true);
@@ -1090,7 +1085,12 @@ export default function QuestionBankScreen() {
             {!!row.tags?.length && (
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {row.tags.map((tag: string) => (
-                  <Label key={tag} variant="soft" color="default" sx={{ fontSize: '0.75rem', px: 1 }}>
+                  <Label
+                    key={tag}
+                    variant="soft"
+                    color="default"
+                    sx={{ fontSize: '0.75rem', px: 1 }}
+                  >
                     {tag}
                   </Label>
                 ))}
@@ -1117,7 +1117,11 @@ export default function QuestionBankScreen() {
         filterType: 'number' as const,
         width: 80,
         align: 'center' as const,
-        render: (v: any) => <Typography variant="body2" fontWeight={700}>{v}</Typography>,
+        render: (v: any) => (
+          <Typography variant="body2" fontWeight={700}>
+            {v}
+          </Typography>
+        ),
       },
       {
         id: 'difficultyLevel',
@@ -1311,12 +1315,7 @@ export default function QuestionBankScreen() {
       )}
 
       {/* Stat Cards */}
-      <Stack
-        direction="row"
-        spacing={1}
-        flexWrap="wrap"
-        useFlexGap
-      >
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         {statCards.map((card) => (
           <Box key={card.label} sx={{ flex: '1 1 180px', minWidth: 180 }}>
             <StatCard {...card} />
@@ -1643,7 +1642,14 @@ export default function QuestionBankScreen() {
         open={dialogOpen}
         handleClose={() => setDialogOpen(false)}
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+          <Box
+            display="flex"
+            flexDirection="row"
+            gap={1}
+            alignItems="center"
+            component="span"
+            sx={{ fontWeight: 'normal' }}
+          >
             <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
               Create New Question
             </Box>
@@ -1652,7 +1658,13 @@ export default function QuestionBankScreen() {
               placement="right"
               title="Add a new assessment question with classification, scoring rules, choices, and marking schemes."
             >
-              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+                width={16}
+                height={16}
+              />
             </CustomTooltip>
           </Box>
         }
@@ -1697,7 +1709,14 @@ export default function QuestionBankScreen() {
           setSelectedQuestion(null);
         }}
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+          <Box
+            display="flex"
+            flexDirection="row"
+            gap={1}
+            alignItems="center"
+            component="span"
+            sx={{ fontWeight: 'normal' }}
+          >
             <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
               {`Edit Question${selectedQuestion?.isLocked ? ' (Locked – Versioning)' : ''}`}
             </Box>
@@ -1706,7 +1725,13 @@ export default function QuestionBankScreen() {
               placement="right"
               title="Modify question content, scoring properties, options, or marking schemes."
             >
-              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+                width={16}
+                height={16}
+              />
             </CustomTooltip>
           </Box>
         }
