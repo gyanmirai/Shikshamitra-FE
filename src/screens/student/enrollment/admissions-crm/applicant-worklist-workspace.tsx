@@ -11,6 +11,10 @@ import { useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
+  AdmissionCrmApplicantStepKey,
+  useGetAdmissionCrmLeadsQuery,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import {
   Box,
   Chip,
   Stack,
@@ -18,16 +22,15 @@ import {
   Button,
   Typography,
   ToggleButton,
+  LinearProgress,
   ToggleButtonGroup,
 } from '@mui/material';
-import {
-  AdmissionCrmApplicantStepKey,
-  useGetAdmissionCrmLeadsQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
+import { parseEnrollmentTablePagination } from './workspace-table-pagination';
 import { createApplicantRowNavigationProps } from './applicant-row-navigation';
+import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
   getRouteTypeLabel,
   formatEnrollmentDate,
@@ -82,8 +85,7 @@ export function ApplicantWorklistWorkspace({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { academicYearId, academicMediumId, openApplicant } = useEnrollmentWorkspace();
-  const page = Math.max(0, Number(searchParams.get('page') || '1') - 1);
-  const pageSize = Math.min(100, Math.max(10, Number(searchParams.get('pageSize') || '25')));
+  const { page, pageSize } = parseEnrollmentTablePagination(searchParams);
   const search = searchParams.get('search') || '';
   const sorting = searchParams.get('sorting') || 'lastActivityTime desc';
   const requestedColumn = Number(searchParams.get('worklist'));
@@ -269,49 +271,56 @@ export function ApplicantWorklistWorkspace({
           onRetry={() => query.refetch()}
         />
       ) : (
-        <CustomizableTable
-          tableId={tableId}
-          tableTitle={title}
-          columns={columns}
-          data={query.data?.items || []}
-          isLoading={query.isLoading || query.isFetching}
-          serverSide
-          serverSidePagination
-          serverSideSearch
-          serverSideSort
-          totalCount={query.data?.totalCount || 0}
-          page={page}
-          rowsPerPage={pageSize}
-          searchTerm={search}
-          defaultRowsPerPage={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          onServerPagination={(nextPage, nextPageSize) =>
-            updateUrl({ page: nextPage + 1, pageSize: nextPageSize })
-          }
-          onServerSearch={(value) => updateUrl({ search: value || null, page: 1 })}
-          onServerSort={(_column, sorts) => {
-            const sort = sorts[0];
-            updateUrl({
-              sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : null,
-              page: 1,
-            });
-          }}
-          rowProps={(row) => {
-            const lead = row as AdmissionCrmLeadDto;
-            return createApplicantRowNavigationProps({
-              applicantName: applicantName(lead),
-              onOpen: () => openLead(lead),
-            });
-          }}
-          noDataText={
-            <EnrollmentTableEmptyState
-              title={`No ${title.toLocaleLowerCase()} work`}
-              description="No applicants currently need action in this worklist."
-            />
-          }
-          wrapperProps={{ sx: enrollmentTableWrapperSx }}
-          tableContainerProps={{ sx: enrollmentTableContainerSx }}
-        />
+        <>
+          {query.isFetching && !query.isLoading ? (
+            <LinearProgress aria-label={`Refreshing ${title}`} />
+          ) : null}
+          <CustomizableTable
+            tableId={tableId}
+            tableTitle={title}
+            columns={columns}
+            data={query.data?.items || []}
+            isLoading={query.isLoading}
+            serverSide
+            serverSidePagination
+            serverSideSearch
+            serverSideSort
+            serverSideSortMode="single"
+            totalCount={query.data?.totalCount || 0}
+            page={page}
+            rowsPerPage={pageSize}
+            searchTerm={search}
+            sorts={parseEnrollmentTableSorts(sorting, columns)}
+            defaultRowsPerPage={25}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            onServerPagination={(nextPage, nextPageSize) =>
+              updateUrl({ page: nextPage, pageSize: nextPageSize })
+            }
+            onServerSearch={(value) => updateUrl({ search: value || null, page: 1 })}
+            onServerSort={(_column, sorts) => {
+              const nextSorting = serializeEnrollmentTableSort(sorts);
+              updateUrl({
+                sorting: nextSorting || null,
+                page: 1,
+              });
+            }}
+            rowProps={(row) => {
+              const lead = row as AdmissionCrmLeadDto;
+              return createApplicantRowNavigationProps({
+                applicantName: applicantName(lead),
+                onOpen: () => openLead(lead),
+              });
+            }}
+            noDataText={
+              <EnrollmentTableEmptyState
+                title={`No ${title.toLocaleLowerCase()} work`}
+                description="No applicants currently need action in this worklist."
+              />
+            }
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{ sx: enrollmentTableContainerSx }}
+          />
+        </>
       )}
     </Stack>
   );

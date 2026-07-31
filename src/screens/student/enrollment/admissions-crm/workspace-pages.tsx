@@ -1,11 +1,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { SplashScreen } from 'src/components/loading-screen';
 import { studentPermissions } from 'src/constants/student-menu';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
-const loading = () => <SplashScreen />;
+import { EnrollmentWorkspaceLoadingState } from './workspace-table-patterns';
+
+const loading = () => <EnrollmentWorkspaceLoadingState />;
 const PipelineWorkspace = dynamic(
   () => import('./pipeline-workspace').then((module) => module.PipelineWorkspace),
   { loading }

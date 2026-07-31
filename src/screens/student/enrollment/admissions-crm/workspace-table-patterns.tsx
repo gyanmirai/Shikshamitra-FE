@@ -2,14 +2,14 @@ import type { ReactNode } from 'react';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import FilterAltOffRounded from '@mui/icons-material/FilterAltOffRounded';
-import { Box, Alert, Paper, Stack, Button, Typography } from '@mui/material';
+import { Box, Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 export const enrollmentWorkspaceRootSx = {
   flex: 1,
   minWidth: 0,
   minHeight: 0,
   height: '100%',
-  overflow: 'hidden',
+  overflow: { xs: 'auto', md: 'hidden' },
 } as const;
 
 export const enrollmentTableWrapperSx = {
@@ -21,8 +21,16 @@ export const enrollmentTableWrapperSx = {
 } as const;
 
 export const enrollmentTableContainerSx = {
-  minHeight: 320,
+  minHeight: { xs: 320, md: 0 },
   height: '100%',
+  '& .MuiTableBody-root .MuiTypography-caption': {
+    color: 'text.primary',
+  },
+} as const;
+
+export const enrollmentEmbeddedTableContainerSx = {
+  minHeight: 320,
+  height: 'auto',
   '& .MuiTableBody-root .MuiTypography-caption': {
     color: 'text.primary',
   },
@@ -150,5 +158,30 @@ export function EnrollmentWorkspaceErrorState({ message, onRetry }: ErrorStatePr
     >
       {message}
     </Alert>
+  );
+}
+
+export function EnrollmentWorkspaceLoadingState() {
+  return (
+    <Stack
+      role="status"
+      aria-label="Loading Enrollment workspace"
+      spacing={1.5}
+      sx={enrollmentWorkspaceRootSx}
+    >
+      <Stack spacing={0.75} sx={{ flexShrink: 0 }}>
+        <Skeleton variant="text" width={220} height={34} />
+        <Skeleton variant="text" width="min(520px, 80%)" />
+      </Stack>
+      <Skeleton variant="rounded" height={72} sx={{ flexShrink: 0 }} />
+      <Paper
+        variant="outlined"
+        sx={{ p: 1.5, flex: 1, minHeight: 240, display: 'flex', flexDirection: 'column', gap: 1 }}
+      >
+        <Skeleton variant="rounded" height={38} width="min(300px, 60%)" />
+        <Skeleton variant="rounded" sx={{ flex: 1, minHeight: 160 }} />
+        <Skeleton variant="text" width={180} sx={{ alignSelf: 'flex-end' }} />
+      </Paper>
+    </Stack>
   );
 }

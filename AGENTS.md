@@ -4,10 +4,11 @@ ShikshaMitra frontend is a multi-tenant school operating UI built with Next.js, 
 
 ## Start here
 
-1. [docs/README.md](docs/README.md) is the frontend documentation map.
-2. [docs/module-docs-standard.md](docs/module-docs-standard.md) is the frontend module docs standard.
-3. Run commands from the `Shikshamitra-FE` repo root.
-4. If you opened `C:\Repo\ShikshaMitra`, move into `C:\Repo\ShikshaMitra\Shikshamitra-FE` before using git.
+1. [DESIGN.md](DESIGN.md) is the canonical frontend interface contract.
+2. [docs/README.md](docs/README.md) is the frontend documentation map.
+3. [docs/module-docs-standard.md](docs/module-docs-standard.md) is the frontend module docs standard.
+4. Run commands from the `Shikshamitra-FE` repo root.
+5. If you opened `C:\Repo\ShikshaMitra`, move into `C:\Repo\ShikshaMitra\Shikshamitra-FE` before using git.
 
 ## Repository layout
 
@@ -16,6 +17,7 @@ ShikshaMitra frontend is a multi-tenant school operating UI built with Next.js, 
 | App routes and screens  | `src/screens/`                  |
 | Redux and API clients   | `src/redux/`                    |
 | Shared UI and utilities | `src/components/`, `src/utils/` |
+| Interface design        | `DESIGN.md`                     |
 | E2E tests               | `e2e/`                          |
 | Module docs             | `docs/<module>/`                |
 | Docs validators         | `scripts/docs/`                 |

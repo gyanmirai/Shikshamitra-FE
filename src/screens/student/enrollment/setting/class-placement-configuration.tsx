@@ -77,6 +77,7 @@ export function ClassPlacementConfiguration({ academicYearId }: { academicYearId
   });
 
   const save = async () => {
+    if (admissionYear.versionsQuery.isError) return;
     try {
       await admissionYear.savePatch({ placementTiming: timing }, admissionYear.draft);
       shikshaMitraToast.success({
@@ -163,8 +164,28 @@ export function ClassPlacementConfiguration({ academicYearId }: { academicYearId
     return <LinearProgress aria-label="Loading Class Placement settings" />;
   }
 
+  if (admissionYear.versionsQuery.isError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button
+            color="inherit"
+            size="small"
+            onClick={() => admissionYear.versionsQuery.refetch()}
+          >
+            Retry
+          </Button>
+        }
+      >
+        Admission Year placement rules could not be loaded. Editing is unavailable until they are
+        restored.
+      </Alert>
+    );
+  }
+
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
       <Box>
         <Typography variant="subtitle1">Division assignment timing</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

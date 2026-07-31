@@ -12,6 +12,7 @@ export default function ClassPlacementSettingsPage() {
     <EnrollmentSettingsPage
       title="Class Placement Settings"
       description="Configure division timing, capacity warnings, and authorized placement overrides."
+      layout="table"
     >
       {academicYearId ? (
         <ClassPlacementConfiguration academicYearId={academicYearId} />

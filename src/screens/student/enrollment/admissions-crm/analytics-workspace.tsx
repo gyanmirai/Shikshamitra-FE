@@ -2,7 +2,6 @@
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { useState } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useGetAdmissionCrmAdmissionReportQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
@@ -11,6 +10,7 @@ import {
   Stack,
   Paper,
   Button,
+  Skeleton,
   TextField,
   Typography,
   ToggleButton,
@@ -20,8 +20,15 @@ import {
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
+import { getAdmissionReportDateRangeError } from './admission-report-date-range';
+import {
+  enrollmentTableWrapperSx,
+  EnrollmentTableEmptyState,
+  enrollmentWorkspaceRootSx,
+  enrollmentTableContainerSx,
+} from './workspace-table-patterns';
 
-type ReportView = 'lifecycle' | 'sources' | 'standards' | 'outcomes';
+import type { EnrollmentReportView } from './enrollment-workspace-state';
 
 const integerFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const decimalFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
@@ -133,29 +140,32 @@ const viewConfiguration = {
   sources: { title: 'Inquiry sources', columns: sourceColumns },
   standards: { title: 'Admissions by standard', columns: standardColumns },
   outcomes: { title: 'Closed outcomes', columns: outcomeColumns },
-} satisfies Record<ReportView, { title: string; columns: IColumn[] }>;
+} satisfies Record<EnrollmentReportView, { title: string; columns: IColumn[] }>;
 
 export function AnalyticsWorkspace() {
   const { academicYearId, state, updateState } = useEnrollmentWorkspace();
-  const [reportView, setReportView] = useState<ReportView>('lifecycle');
+  const reportView = state.reportView || 'lifecycle';
   const from = state.from || '';
   const to = state.to || '';
-  const invalidDateRange = Boolean(from && to && from > to);
+  const dateRangeError = getAdmissionReportDateRangeError(from, to);
   const reportQuery = useGetAdmissionCrmAdmissionReportQuery(
     {
       academicYearId: academicYearId || '',
       fromDate: from || undefined,
       toDate: to || undefined,
     },
-    { skip: !academicYearId || invalidDateRange }
+    { skip: !academicYearId || Boolean(dateRangeError) }
   );
   const report = reportQuery.data;
+  const isInitialReportLoading = reportQuery.isLoading && !report;
+  const showReportWorkspace =
+    !dateRangeError && !reportQuery.isError && (Boolean(report) || isInitialReportLoading);
   const view = viewConfiguration[reportView];
   const reportData = report?.[reportView] || [];
 
   if (!academicYearId) {
     return (
-      <Stack spacing={1.5}>
+      <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
         <EnrollmentWorkspaceHeader
           title="Admission Reports"
           description="Auditable admission status, source, standard, and outcome reporting."
@@ -177,7 +187,7 @@ export function AnalyticsWorkspace() {
     : [];
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="Admission Reports"
         description="Auditable admission status, source, standard, and outcome reporting."
@@ -192,7 +202,7 @@ export function AnalyticsWorkspace() {
             value={from}
             onChange={(event) => updateState({ from: event.target.value || undefined }, 'replace')}
             InputLabelProps={{ shrink: true }}
-            error={invalidDateRange}
+            error={Boolean(dateRangeError)}
           />
           <TextField
             size="small"
@@ -201,7 +211,7 @@ export function AnalyticsWorkspace() {
             value={to}
             onChange={(event) => updateState({ to: event.target.value || undefined }, 'replace')}
             InputLabelProps={{ shrink: true }}
-            error={invalidDateRange}
+            error={Boolean(dateRangeError)}
           />
           <Button
             size="small"
@@ -218,15 +228,23 @@ export function AnalyticsWorkspace() {
         </Stack>
       </Paper>
 
-      {invalidDateRange ? (
+      {dateRangeError === 'invalid-order' ? (
         <Alert severity="warning">The From date must be on or before the To date.</Alert>
+      ) : null}
+      {dateRangeError === 'invalid-date' ? (
+        <Alert severity="warning">Choose valid calendar dates for this report.</Alert>
+      ) : null}
+      {dateRangeError === 'too-large' ? (
+        <Alert severity="warning">Choose a report date range of 366 days or fewer.</Alert>
       ) : null}
       {report?.isScopeRestricted ? (
         <Alert severity="info">
           Counts include only the standards and applicants within your assigned access.
         </Alert>
       ) : null}
-      {reportQuery.isFetching ? <LinearProgress aria-label="Loading Admission Reports" /> : null}
+      {reportQuery.isFetching && !reportQuery.isLoading ? (
+        <LinearProgress aria-label="Refreshing Admission Reports" />
+      ) : null}
       {reportQuery.isError ? (
         <Alert
           severity="error"
@@ -240,7 +258,7 @@ export function AnalyticsWorkspace() {
         </Alert>
       ) : null}
 
-      {report ? (
+      {showReportWorkspace ? (
         <>
           <Box
             sx={{
@@ -251,28 +269,44 @@ export function AnalyticsWorkspace() {
                 xl: 'repeat(6, minmax(0, 1fr))',
               },
               gap: 1,
+              flexShrink: 0,
             }}
           >
-            {metrics.map(([label, value]) => (
-              <Paper key={label} variant="outlined" sx={{ p: 1.5, borderRadius: 1, minWidth: 0 }}>
-                <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                  {integerFormatter.format(value)}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {label}
-                </Typography>
-              </Paper>
-            ))}
+            {report
+              ? metrics.map(([label, value]) => (
+                  <Paper
+                    key={label}
+                    variant="outlined"
+                    sx={{ p: 1.5, borderRadius: 1, minWidth: 0 }}
+                  >
+                    <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                      {integerFormatter.format(value)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {label}
+                    </Typography>
+                  </Paper>
+                ))
+              : Array.from({ length: 6 }, (_, index) => (
+                  <Paper
+                    key={`report-metric-skeleton-${index}`}
+                    variant="outlined"
+                    sx={{ p: 1.5, borderRadius: 1, minWidth: 0 }}
+                  >
+                    <Skeleton variant="text" width="45%" height={32} />
+                    <Skeleton variant="text" width="75%" />
+                  </Paper>
+                ))}
           </Box>
 
-          <Stack spacing={1}>
+          <Stack spacing={1} sx={{ flex: 1, minHeight: 0 }}>
             <Box sx={{ overflowX: 'auto' }}>
               <ToggleButtonGroup
                 exclusive
                 size="small"
                 value={reportView}
-                onChange={(_, value: ReportView | null) => {
-                  if (value) setReportView(value);
+                onChange={(_, value: EnrollmentReportView | null) => {
+                  if (value) updateState({ reportView: value }, 'replace');
                 }}
                 aria-label="Admission report view"
               >
@@ -283,14 +317,23 @@ export function AnalyticsWorkspace() {
               </ToggleButtonGroup>
             </Box>
             <CustomizableTable
-              tableId="student-enrollment-admission-report"
+              key={reportView}
+              tableId={`student-enrollment-admission-report-${reportView}`}
               tableTitle={view.title}
               columns={view.columns}
               data={reportData}
+              isLoading={isInitialReportLoading}
               isSearch={false}
               isPagination={false}
               isShowedDense={false}
-              tableContainerProps={{ sx: { minHeight: 320 } }}
+              noDataText={
+                <EnrollmentTableEmptyState
+                  title={`No ${view.title.toLocaleLowerCase()} data`}
+                  description="No applicants match the selected admission year and date range."
+                />
+              }
+              wrapperProps={{ sx: enrollmentTableWrapperSx }}
+              tableContainerProps={{ sx: enrollmentTableContainerSx }}
             />
           </Stack>
         </>

@@ -53,6 +53,7 @@ export function FinanceHandoffConfiguration({ academicYearId }: { academicYearId
   });
 
   const save = async () => {
+    if (admissionYear.versionsQuery.isError || integrationsQuery.isError) return;
     try {
       await admissionYear.savePatch({ financeVerificationRequired: required }, admissionYear.draft);
       shikshaMitraToast.success({
@@ -68,29 +69,35 @@ export function FinanceHandoffConfiguration({ academicYearId }: { academicYearId
     financeCapability?.state === AdmissionCrmIntegrationCapabilityState.Configured;
   const cycleQuery = state.cycle ? `?cycle=${encodeURIComponent(state.cycle)}` : '';
 
-  if (admissionYear.versionsQuery.isLoading) {
+  if (admissionYear.versionsQuery.isLoading || integrationsQuery.isLoading) {
     return <LinearProgress aria-label="Loading Finance handoff settings" />;
+  }
+
+  if (admissionYear.versionsQuery.isError || integrationsQuery.isError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button
+            color="inherit"
+            size="small"
+            onClick={() => {
+              if (admissionYear.versionsQuery.isError) admissionYear.versionsQuery.refetch();
+              if (integrationsQuery.isError) integrationsQuery.refetch();
+            }}
+          >
+            Retry
+          </Button>
+        }
+      >
+        Finance handoff settings or integration status could not be loaded. Editing is unavailable
+        until both are restored.
+      </Alert>
+    );
   }
 
   return (
     <Stack spacing={2}>
-      {admissionYear.versionsQuery.isError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              onClick={() => admissionYear.versionsQuery.refetch()}
-            >
-              Retry
-            </Button>
-          }
-        >
-          Admission Year rules could not be loaded.
-        </Alert>
-      ) : null}
-
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         alignItems={{ sm: 'center' }}

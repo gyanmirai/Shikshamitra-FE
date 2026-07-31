@@ -75,6 +75,7 @@ import {
   buildAdmissionCrmCommunicationOptOutListRequest,
   buildAssignAdmissionCrmDocumentChecklistRequest,
   buildAdmissionCrmRegistrationTemplateListRequest,
+  buildAdmissionCrmOperationalStandardOptionsRequest,
   buildCreateAdmissionCrmRegistrationTemplateRequest,
   buildUpdateAdmissionCrmCommunicationProviderRequest,
   buildUpdateAdmissionCrmLeadApplicantChecklistRequest,
@@ -525,6 +526,13 @@ describe('admissions CRM API contracts', () => {
 
     expect(buildAdmissionCrmQuickInquiryOptionsRequest({ academicYearId: 'year-1' })).toEqual({
       url: '/student-enrollment/admissions-crm/year-1/quick-inquiry-options',
+      method: 'GET',
+    });
+
+    expect(
+      buildAdmissionCrmOperationalStandardOptionsRequest({ academicYearId: 'year-1' })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/operational-standard-options',
       method: 'GET',
     });
 

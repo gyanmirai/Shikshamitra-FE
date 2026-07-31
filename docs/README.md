@@ -3,7 +3,7 @@ module: frontend-docs
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-07-31
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,18 +17,22 @@ Start from this page when you need the canonical frontend doc for a documented m
 
 Use this table before searching older docs.
 
-| Module | Canonical index |
-|---|---|
+| Module    | Canonical index                                   |
+| --------- | ------------------------------------------------- |
 | Dashboard | [docs/dashboard/README.md](./dashboard/README.md) |
-| Finance | [docs/finance/README.md](./finance/README.md) |
-| HR | [docs/hr/README.md](./hr/README.md) |
-| Library | [docs/library/README.md](./library/README.md) |
-| Student | [docs/student/README.md](./student/README.md) |
+| Finance   | [docs/finance/README.md](./finance/README.md)     |
+| HR        | [docs/hr/README.md](./hr/README.md)               |
+| Library   | [docs/library/README.md](./library/README.md)     |
+| Student   | [docs/student/README.md](./student/README.md)     |
 
 ## Standard
 
 New frontend module docs should follow [module-docs-standard.md](./module-docs-standard.md).
 Do not keep old plans, generated notes, or phase docs under `docs/`.
+
+## Interface design
+
+Use [DESIGN.md](../DESIGN.md) for the canonical page, table, tab, loader, responsive, state, accessibility, and validation contracts.
 
 ## Validation
 

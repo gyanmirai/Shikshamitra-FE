@@ -19,6 +19,7 @@ export function GovernanceSettingsRoute() {
     <EnrollmentSettingsPage
       title="Policies & Compliance"
       description="Manage admission routes, policy defaults, privacy, retention, and controlled exceptions."
+      layout="document"
     >
       <EnrollmentSettingsPanelTabs
         label="Enrollment governance settings"

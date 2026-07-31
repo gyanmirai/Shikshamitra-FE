@@ -1,7 +1,7 @@
 import React from 'react';
 import { keyframes } from '@emotion/react';
 import { useTheme } from '@mui/material/styles';
-import { Box, TableRow, TableHead, TableCell } from '@mui/material';
+import { Box, TableRow, TableHead, TableCell, IconButton, ButtonBase } from '@mui/material';
 import {
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
@@ -55,13 +55,18 @@ export const TableHeader = React.memo(
     return (
       <TableHead>
         <TableRow>
-          {columns.some((column) => column.children) && <TableCell />}
+          {columns.some((column) => column.children) && (
+            <TableCell scope="col" aria-label="Row details" />
+          )}
           {columns.map(
             (column, index) =>
               columnVisibility[column.id] && (
                 <TableCell
                   key={column.id}
                   align={column.align}
+                  sortDirection={
+                    sorts.find((sort) => sort.column === column.id)?.direction || false
+                  }
                   id={`${tableUniqId}-column-${column.id}`}
                   ref={(el: HTMLTableCellElement | null) => {
                     if (!el) {
@@ -89,6 +94,9 @@ export const TableHeader = React.memo(
                     py: 1.5,
                     px: 2,
                     animation: `${fadeSlideIn} 0.4s ease both`,
+                    '@media (prefers-reduced-motion: reduce)': {
+                      animation: 'none',
+                    },
 
                     backgroundColor: theme.vars.palette.background.neutral,
                     // boxShadow: column.sticky
@@ -122,39 +130,44 @@ export const TableHeader = React.memo(
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       width: '100%',
-                      cursor: column.isSort !== false ? 'pointer' : 'default',
                       userSelect: 'none',
                       fontWeight: 'bold',
                       minWidth: 0,
                       gap: 0.5,
                     }}
-                    onClick={() => column.isSort !== false && onSort(column.id, column?.originalId)}
                   >
-                    <Box
-                      // fontSize="14px"
-                      className="customizable-table-header-content"
-                      display="block"
-                      textAlign={column.align}
-                      gap={1}
-                      minWidth={0}
-                      overflow={column.renderColumn ? 'visible' : 'hidden'}
-                      textOverflow="ellipsis"
-                      width={!column?.renderColumn ? 'auto' : 'inherit'}
-                      component="span"
-                      sx={{ flex: 1, minWidth: 0 }}
-                    >
-                      {column.label} {column?.renderColumn?.(column)}
-                    </Box>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        ml: 'auto',
-                        flexShrink: 0,
-                        gap: 1,
-                      }}
-                    >
-                      {column.isSort !== false && (
+                    {column.isSort !== false ? (
+                      <ButtonBase
+                        onClick={() => onSort(column.id, column?.originalId)}
+                        aria-label={`Sort by ${typeof column.label === 'string' ? column.label : column.id}`}
+                        sx={{
+                          flex: 1,
+                          minWidth: 0,
+                          justifyContent: 'space-between',
+                          gap: 0.5,
+                          font: 'inherit',
+                          color: 'inherit',
+                          textAlign: 'inherit',
+                          borderRadius: 0.5,
+                          '&:focus-visible': {
+                            outline: '2px solid',
+                            outlineColor: 'primary.main',
+                            outlineOffset: 2,
+                          },
+                        }}
+                      >
+                        <Box
+                          className="customizable-table-header-content"
+                          display="block"
+                          textAlign={column.align}
+                          minWidth={0}
+                          overflow={column.renderColumn ? 'visible' : 'hidden'}
+                          textOverflow="ellipsis"
+                          component="span"
+                          sx={{ flex: 1, minWidth: 0 }}
+                        >
+                          {column.label} {column?.renderColumn?.(column)}
+                        </Box>
                         <Box
                           width="18px"
                           display="flex"
@@ -184,9 +197,30 @@ export const TableHeader = React.memo(
                             )}
                           </Box>
                         </Box>
-                      )}
-                      {column.isFilter && (
-                        <Box position="relative" display="flex" alignItems="center" flexShrink={0}>
+                      </ButtonBase>
+                    ) : (
+                      <Box
+                        className="customizable-table-header-content"
+                        display="block"
+                        textAlign={column.align}
+                        minWidth={0}
+                        overflow={column.renderColumn ? 'visible' : 'hidden'}
+                        textOverflow="ellipsis"
+                        width={!column?.renderColumn ? 'auto' : 'inherit'}
+                        component="span"
+                        sx={{ flex: 1, minWidth: 0 }}
+                      >
+                        {column.label} {column?.renderColumn?.(column)}
+                      </Box>
+                    )}
+                    {column.isFilter && (
+                      <Box position="relative" display="flex" alignItems="center" flexShrink={0}>
+                        <IconButton
+                          size="small"
+                          aria-label={`Filter ${typeof column.label === 'string' ? column.label : column.id}`}
+                          onClick={(event) => onColumnFilterClick(event, column)}
+                          sx={{ p: 0.5 }}
+                        >
                           <Iconify
                             icon="fluent:filter-12-filled"
                             className="column-filter-icon"
@@ -197,24 +231,24 @@ export const TableHeader = React.memo(
                               m: 0,
                               color: 'text.disabled',
                             }}
-                            onClick={(e) => onColumnFilterClick(e, column)}
                           />
-                          {filters.some((f) => f.column === column.id) && (
-                            <Box
-                              sx={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                bgcolor: 'primary.main',
-                                position: 'absolute',
-                                top: '-4px',
-                                right: '-4px',
-                              }}
-                            />
-                          )}
-                        </Box>
-                      )}
-                    </Box>
+                        </IconButton>
+                        {filters.some((f) => f.column === column.id) && (
+                          <Box
+                            aria-hidden="true"
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              bgcolor: 'primary.main',
+                              position: 'absolute',
+                              top: 0,
+                              right: 0,
+                            }}
+                          />
+                        )}
+                      </Box>
+                    )}
                   </Box>
                   <Box
                     className="column-separator"

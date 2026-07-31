@@ -31,6 +31,7 @@ import {
   ToggleButton,
   DialogContent,
   DialogActions,
+  LinearProgress,
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -332,7 +333,7 @@ export function PipelineCatalogSettings({ academicYearId }: { academicYearId: st
   })();
 
   return (
-    <Stack spacing={1.25}>
+    <Stack spacing={1.25} sx={{ flex: 1, minHeight: 0 }}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         gap={1}
@@ -387,22 +388,28 @@ export function PipelineCatalogSettings({ academicYearId }: { academicYearId: st
           Pipeline catalog could not be loaded.
         </Alert>
       ) : (
-        <CustomizableTable
-          tableId="student-enrollment-pipeline-catalog"
-          tableTitle={view === 'sources' ? 'Inquiry sources' : 'Inquiry types'}
-          columns={columns}
-          data={records}
-          isLoading={query.isLoading || query.isFetching}
-          isPagination={false}
-          noDataText={
-            <EnrollmentTableEmptyState
-              title={`No inquiry ${view}`}
-              description={`Add the first inquiry ${view === 'sources' ? 'source' : 'type'} for this admission year.`}
-            />
-          }
-          wrapperProps={{ sx: enrollmentTableWrapperSx }}
-          tableContainerProps={{ sx: enrollmentTableContainerSx }}
-        />
+        <>
+          {query.isFetching && !query.isLoading ? (
+            <LinearProgress aria-label="Refreshing Pipeline catalog" />
+          ) : null}
+          <CustomizableTable
+            key={view}
+            tableId={`student-enrollment-pipeline-catalog-${view}`}
+            tableTitle={view === 'sources' ? 'Inquiry sources' : 'Inquiry types'}
+            columns={columns}
+            data={records}
+            isLoading={query.isLoading}
+            isPagination={false}
+            noDataText={
+              <EnrollmentTableEmptyState
+                title={`No inquiry ${view}`}
+                description={`Add the first inquiry ${view === 'sources' ? 'source' : 'type'} for this admission year.`}
+              />
+            }
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{ sx: enrollmentTableContainerSx }}
+          />
+        </>
       )}
 
       <Dialog

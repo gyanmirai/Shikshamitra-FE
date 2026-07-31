@@ -65,6 +65,7 @@ import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { createApplicantRowNavigationProps } from './applicant-row-navigation';
 import { IntegrationCapabilitiesPanel } from './integration-capabilities-panel';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
   buildOperationsQueueColumns,
   type EnrollmentQueueVariant,
@@ -301,14 +302,8 @@ export function OperationsQueueWorkspace({
   showOperationsUtilities = false,
   headerActions,
 }: Props) {
-  const {
-    academicYearId,
-    sessionIdentity,
-    state,
-    updateState,
-    getApplicantHref,
-    openApplicant,
-  } = useEnrollmentWorkspace();
+  const { academicYearId, sessionIdentity, state, updateState, getApplicantHref, openApplicant } =
+    useEnrollmentWorkspace();
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const selectedQueue =
     state.queue != null && allowedQueues.includes(state.queue) ? state.queue : defaultQueue;
@@ -1378,6 +1373,7 @@ export function OperationsQueueWorkspace({
           serverSidePagination
           serverSideSearch
           serverSideSort
+          serverSideSortMode="single"
           serverSideFilter
           searchTerm={search}
           defaultSearchTerm={search}
@@ -1387,6 +1383,7 @@ export function OperationsQueueWorkspace({
           }}
           totalCount={queueQuery.data?.totalCount || 0}
           filters={[...tableFilters, ...columnFilters]}
+          sorts={parseEnrollmentTableSorts(state.sorting, columns)}
           page={page}
           rowsPerPage={pageSize}
           defaultRowsPerPage={pageSize}
@@ -1394,10 +1391,10 @@ export function OperationsQueueWorkspace({
           onServerSearch={setSearch}
           onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
           onServerSort={(_column, sorts) => {
-            const sort = sorts[0];
+            const nextSorting = serializeEnrollmentTableSort(sorts);
             updateState(
               {
-                sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : undefined,
+                sorting: nextSorting || undefined,
                 page: 1,
               },
               'push'
@@ -1495,7 +1492,6 @@ export function OperationsQueueWorkspace({
           </Paper>
         </Stack>
       )}
-
     </Stack>
   );
 }

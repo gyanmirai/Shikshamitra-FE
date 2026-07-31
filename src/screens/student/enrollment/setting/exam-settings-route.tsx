@@ -13,7 +13,7 @@ export function ExamSettingsRoute() {
     <EnrollmentSettingsPage
       title="Entrance Exam Settings"
       description="Configure exam applicability, schedules, result rules, retests, and parent messages."
-      fillAvailableHeight
+      layout="table"
     >
       <ExamRegistrationHandoffGuidance />
       {academicYearId ? (

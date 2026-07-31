@@ -20,7 +20,7 @@ type SettingsPageProps = {
   title: string;
   description: string;
   children: ReactNode;
-  fillAvailableHeight?: boolean;
+  layout: 'table' | 'document';
 };
 
 type SettingsPanelOption = {
@@ -39,18 +39,22 @@ export function EnrollmentSettingsPage({
   title,
   description,
   children,
-  fillAvailableHeight = false,
+  layout,
 }: SettingsPageProps) {
+  const isTableLayout = layout === 'table';
+
   return (
     <Stack
       spacing={1.5}
       sx={{
         minWidth: 0,
-        minHeight: fillAvailableHeight ? 0 : undefined,
-        flex: fillAvailableHeight ? 1 : undefined,
+        minHeight: isTableLayout ? 0 : undefined,
+        flex: isTableLayout ? 1 : undefined,
+        height: isTableLayout ? '100%' : undefined,
+        overflow: isTableLayout ? { xs: 'auto', md: 'hidden' } : undefined,
       }}
     >
-      <Box component="header">
+      <Box component="header" sx={{ flexShrink: 0 }}>
         <EnrollmentWorkspaceHeader
           title={title}
           description={description}
@@ -60,12 +64,12 @@ export function EnrollmentSettingsPage({
       <Box
         sx={{
           px: 2,
-          display: fillAvailableHeight ? 'flex' : undefined,
-          flexDirection: fillAvailableHeight ? 'column' : undefined,
-          gap: fillAvailableHeight ? 1.5 : undefined,
+          display: isTableLayout ? 'flex' : undefined,
+          flexDirection: isTableLayout ? 'column' : undefined,
+          gap: isTableLayout ? 1.5 : undefined,
           minWidth: 0,
-          minHeight: fillAvailableHeight ? 0 : undefined,
-          flex: fillAvailableHeight ? 1 : undefined,
+          minHeight: isTableLayout ? 0 : undefined,
+          flex: isTableLayout ? 1 : undefined,
         }}
       >
         {children}

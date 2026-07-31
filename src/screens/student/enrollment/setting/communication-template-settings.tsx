@@ -3,7 +3,7 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmMessageTemplateDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -21,6 +21,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  LinearProgress,
 } from '@mui/material';
 import {
   AdmissionCrmMessageChannel,
@@ -104,6 +105,9 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
   const [editing, setEditing] = useState<AdmissionCrmMessageTemplateDto | null>(null);
   const [form, setForm] = useState<TemplateForm>(emptyForm);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [pendingRetirement, setPendingRetirement] = useState<AdmissionCrmMessageTemplateDto | null>(
+    null
+  );
   const query = useGetAdmissionCrmMessageTemplatesQuery({
     academicYearId,
     skipCount: 0,
@@ -113,14 +117,24 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
   const [updateTemplate, updateState] = useUpdateAdmissionCrmMessageTemplateMutation();
   const [updateStatus, statusState] = useUpdateAdmissionCrmMessageTemplateStatusMutation();
   const isSaving = createState.isLoading || updateState.isLoading;
+  const isInteractionBlocked =
+    query.isLoading || query.isFetching || query.isError || isSaving || statusState.isLoading;
+
+  useEffect(() => {
+    if (!query.isFetching) return;
+    setDialogOpen(false);
+    setPendingRetirement(null);
+  }, [query.isFetching]);
 
   const openEditor = (template?: AdmissionCrmMessageTemplateDto) => {
+    if (isInteractionBlocked) return;
     setEditing(template || null);
     setForm(template ? toForm(template) : emptyForm());
     setDialogOpen(true);
   };
 
   const save = async () => {
+    if (isInteractionBlocked) return;
     const templateName = form.templateName.trim();
     const bodyText = form.body.trim();
     if (!templateName || !form.purpose.trim() || !bodyText) {
@@ -154,6 +168,7 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
   };
 
   const changeStatus = async (template: AdmissionCrmMessageTemplateDto) => {
+    if (isInteractionBlocked) return;
     const approve = template.status !== AdmissionCrmMessageTemplateStatus.Approved;
     try {
       await updateStatus({
@@ -168,6 +183,7 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
       shikshaMitraToast.success({
         message: `${template.templateName} ${approve ? 'approved' : 'retired'}.`,
       });
+      if (!approve) setPendingRetirement(null);
     } catch (error) {
       shikshaMitraToast.error({ message: getErrorMessage(error) });
     }
@@ -256,9 +272,12 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
               <span>
                 <IconButton
                   size="small"
-                  disabled={template.status === AdmissionCrmMessageTemplateStatus.Retired}
+                  disabled={
+                    isInteractionBlocked ||
+                    template.status === AdmissionCrmMessageTemplateStatus.Retired
+                  }
                   onClick={() => openEditor(template)}
-                  aria-label="Edit"
+                  aria-label={`Edit ${template.templateName}`}
                 >
                   <Iconify icon="mdi:pencil-outline" />
                 </IconButton>
@@ -274,12 +293,18 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
               <span>
                 <IconButton
                   size="small"
-                  disabled={statusState.isLoading}
-                  onClick={() => changeStatus(template)}
+                  disabled={isInteractionBlocked}
+                  onClick={() => {
+                    if (template.status === AdmissionCrmMessageTemplateStatus.Approved) {
+                      setPendingRetirement(template);
+                    } else {
+                      changeStatus(template);
+                    }
+                  }}
                   aria-label={
                     template.status === AdmissionCrmMessageTemplateStatus.Approved
-                      ? 'Retire'
-                      : 'Approve'
+                      ? `Retire ${template.templateName}`
+                      : `Approve ${template.templateName}`
                   }
                 >
                   <Iconify
@@ -299,12 +324,13 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
   ];
 
   return (
-    <Stack spacing={1.25}>
+    <Stack spacing={1.25} sx={{ flex: 1, minHeight: 0 }}>
       <Stack direction="row" justifyContent="flex-end">
         <Button
           variant="contained"
           size="small"
           startIcon={<Iconify icon="mdi:plus" />}
+          disabled={isInteractionBlocked}
           onClick={() => openEditor()}
         >
           Add template
@@ -322,28 +348,62 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
           Message templates could not be loaded.
         </Alert>
       ) : (
-        <CustomizableTable
-          tableId="student-enrollment-message-templates"
-          tableTitle="Admission message templates"
-          columns={columns}
-          data={query.data?.items || []}
-          isLoading={query.isLoading || query.isFetching}
-          defaultRowsPerPage={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          noDataText={
-            <EnrollmentTableEmptyState
-              title="No admission message templates"
-              description="Add an approved template before sending automated or manual messages."
-            />
-          }
-          wrapperProps={{ sx: enrollmentTableWrapperSx }}
-          tableContainerProps={{ sx: enrollmentTableContainerSx }}
-        />
+        <>
+          {query.isFetching && !query.isLoading ? (
+            <LinearProgress aria-label="Refreshing admission message templates" />
+          ) : null}
+          <CustomizableTable
+            tableId="student-enrollment-message-templates"
+            tableTitle="Admission message templates"
+            columns={columns}
+            data={query.data?.items || []}
+            isLoading={query.isLoading}
+            defaultRowsPerPage={25}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            noDataText={
+              <EnrollmentTableEmptyState
+                title="No admission message templates"
+                description="Add an approved template before sending automated or manual messages."
+              />
+            }
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{ sx: enrollmentTableContainerSx }}
+          />
+        </>
       )}
 
       <Dialog
+        open={Boolean(pendingRetirement)}
+        onClose={() => !isInteractionBlocked && setPendingRetirement(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Retire message template?</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning">
+            Retiring {pendingRetirement?.templateName || 'this template'} prevents it from being
+            selected for future messages. The server will block retirement while any enabled
+            automation in the school still uses it.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingRetirement(null)} disabled={isInteractionBlocked}>
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={!pendingRetirement || isInteractionBlocked}
+            onClick={() => pendingRetirement && changeStatus(pendingRetirement)}
+          >
+            Retire template
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
         open={dialogOpen}
-        onClose={() => !isSaving && setDialogOpen(false)}
+        onClose={() => !isInteractionBlocked && setDialogOpen(false)}
         fullWidth
         maxWidth="md"
       >
@@ -431,10 +491,10 @@ export function CommunicationTemplateSettings({ academicYearId }: { academicYear
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button disabled={isSaving} onClick={() => setDialogOpen(false)}>
+          <Button disabled={isInteractionBlocked} onClick={() => setDialogOpen(false)}>
             Cancel
           </Button>
-          <Button variant="contained" disabled={isSaving} onClick={save}>
+          <Button variant="contained" disabled={isInteractionBlocked} onClick={save}>
             Save draft
           </Button>
         </DialogActions>

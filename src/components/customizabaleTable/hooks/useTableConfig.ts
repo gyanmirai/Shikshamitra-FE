@@ -8,6 +8,38 @@ interface UseTableConfigProps {
   defaultSearchTerm?: string;
 }
 
+export const getNextTableSorts = (
+  sorts: IParams['sorts'],
+  column: string,
+  originalId?: string
+): IParams['sorts'] => {
+  const nextSorts = sorts.map((sort) => ({ ...sort }));
+  const sortIndex = nextSorts.findIndex((sort) => sort.column === column);
+
+  if (sortIndex < 0) {
+    return [...nextSorts, { column, direction: 'asc', originalId }];
+  }
+
+  if (nextSorts[sortIndex].direction === 'asc') {
+    nextSorts[sortIndex] = { column, direction: 'desc', originalId };
+    return nextSorts;
+  }
+
+  nextSorts.splice(sortIndex, 1);
+  return nextSorts;
+};
+
+export const getNextSingleTableSort = (
+  sorts: IParams['sorts'],
+  column: string,
+  originalId?: string
+): IParams['sorts'] => {
+  const currentSort = sorts.find((sort) => sort.column === column);
+  if (!currentSort) return [{ column, direction: 'asc', originalId }];
+  if (currentSort.direction === 'asc') return [{ column, direction: 'desc', originalId }];
+  return [{ column, direction: 'asc', originalId }];
+};
+
 export const reconcileColumnVisibility = (columns: IColumn[], current: Record<string, boolean>) =>
   columns.reduce<Record<string, boolean>>(
     (acc, column) => ({
@@ -51,22 +83,10 @@ export const useTableConfig = ({
    * necessary for dependent effects or callbacks in child components.
    */
   const handleSort = useCallback((column: string, originalId?: string) => {
-    setTableConfig((prev) => {
-      const newSortConfig = [...prev.sorts];
-      const configIndex = newSortConfig.findIndex((item) => item.column === column);
-
-      if (configIndex > -1) {
-        if (newSortConfig[configIndex].direction === 'asc') {
-          newSortConfig[configIndex].direction = 'desc';
-          newSortConfig[configIndex].originalId = originalId;
-        } else {
-          newSortConfig.splice(configIndex, 1);
-        }
-      } else {
-        newSortConfig.push({ column, direction: 'asc', originalId });
-      }
-      return { ...prev, sorts: newSortConfig };
-    });
+    setTableConfig((prev) => ({
+      ...prev,
+      sorts: getNextTableSorts(prev.sorts, column, originalId),
+    }));
   }, []);
 
   return {

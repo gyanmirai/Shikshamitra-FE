@@ -61,6 +61,12 @@ export const TableToolbar = React.memo(
     onToggleFullScreen,
   }: TableToolbarProps) => {
     const theme = useTheme();
+    const {
+      sx: searchSx,
+      inputProps: searchInputProps,
+      InputProps: searchAdornmentProps,
+      ...otherSearchFieldProps
+    } = searchFieldProps;
     // Fullscreen state is now managed by parent
     const [anchorColumnEl, setColumnAnchorEl] = useState<null | HTMLElement>(null);
     const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
@@ -85,13 +91,21 @@ export const TableToolbar = React.memo(
             value={searchValue}
             onChange={onSearch}
             placeholder="Search..."
+            {...otherSearchFieldProps}
+            inputProps={{ 'aria-label': 'Search table', ...searchInputProps }}
             InputProps={{
               startAdornment: <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />,
               endAdornment: searchValue && (
-                <IconButton size="small" onClick={onClearSearch} edge="end">
+                <IconButton
+                  size="small"
+                  onClick={onClearSearch}
+                  edge="end"
+                  aria-label="Clear search"
+                >
                   <ClearIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               ),
+              ...searchAdornmentProps,
               sx: {
                 borderRadius: 1.5,
                 bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
@@ -102,6 +116,7 @@ export const TableToolbar = React.memo(
                 '&:hover fieldset': {
                   borderColor: `${varAlpha(theme.vars.palette.grey['500Channel'], 0.4)} !important`,
                 },
+                ...searchAdornmentProps?.sx,
               },
             }}
             sx={{
@@ -110,8 +125,8 @@ export const TableToolbar = React.memo(
               '& .MuiInputBase-root': {
                 pr: 1,
               },
+              ...searchSx,
             }}
-            {...searchFieldProps}
           />
         )}
 
@@ -160,6 +175,7 @@ export const TableToolbar = React.memo(
                     fullWidth
                     size="small"
                     placeholder="Search columns..."
+                    inputProps={{ 'aria-label': 'Search columns' }}
                     value={columnSearchTerm}
                     onChange={(e) => setColumnSearchTerm(e.target.value)}
                     sx={{

@@ -28,9 +28,14 @@ import { TableToolbar } from './components/TableToolbar';
 import { useStickyColumns } from './hooks/useStickyColumns';
 import { ColumnFilterMenu } from './components/ColumnFilterMenu';
 import { getExportableColumns, extractTextFromReactNode } from './utils';
-import { useTableConfig, reconcileColumnVisibility } from './hooks/useTableConfig';
+import {
+  useTableConfig,
+  getNextTableSorts,
+  getNextSingleTableSort,
+  reconcileColumnVisibility,
+} from './hooks/useTableConfig';
 
-import type { IColumnFilterAnchor, ICustomizableTableProps } from './types';
+import type { IParams, IColumnFilterAnchor, ICustomizableTableProps } from './types';
 
 const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   columns,
@@ -40,6 +45,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   serverSidePagination = false,
   serverSideSearch = false,
   serverSideSort = false,
+  serverSideSortMode = 'multiple',
   serverSideFilter = false,
   onServerSort,
   onServerPagination,
@@ -63,6 +69,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   rowsPerPage: controlledRowsPerPage,
   searchTerm: controlledSearchTerm,
   filters: controlledFilters,
+  sorts: controlledSorts,
   rowsPerPageOptions: configuredRowsPerPageOptions,
   showCheckbox = false,
   onSendNotification = () => {},
@@ -86,7 +93,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [canUseColumnFilters, columns]
   );
 
-  const { tableConfig, setTableConfig, handleChangeParams, handleSort } = useTableConfig({
+  const { tableConfig, setTableConfig, handleChangeParams } = useTableConfig({
     columns: memoizedColumns,
     defaultSearchTerm,
     defaultRowsPerPage,
@@ -136,28 +143,48 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   ]);
 
   useEffect(() => {
-    if (controlledPage !== undefined && controlledPage !== page) {
-      handleChangeParams({ page: controlledPage });
-    }
-  }, [controlledPage, handleChangeParams, page]);
+    setTableConfig((current) => {
+      const changes: Partial<IParams> = {};
 
-  useEffect(() => {
-    if (controlledRowsPerPage !== undefined && controlledRowsPerPage !== rowsPerPage) {
-      handleChangeParams({ rowsPerPage: controlledRowsPerPage });
-    }
-  }, [controlledRowsPerPage, handleChangeParams, rowsPerPage]);
+      if (controlledSearchTerm !== undefined && controlledSearchTerm !== current.searchTerm) {
+        changes.searchTerm = controlledSearchTerm;
+        if (controlledPage === undefined) changes.page = 0;
+      }
 
-  useEffect(() => {
-    if (controlledSearchTerm !== undefined && controlledSearchTerm !== searchTerm) {
-      handleChangeParams({ searchTerm: controlledSearchTerm, page: 0 });
-    }
-  }, [controlledSearchTerm, handleChangeParams, searchTerm]);
+      if (
+        controlledFilters &&
+        JSON.stringify(controlledFilters) !== JSON.stringify(current.filters)
+      ) {
+        changes.filters = controlledFilters;
+        if (controlledPage === undefined) changes.page = 0;
+      }
 
-  useEffect(() => {
-    if (controlledFilters && JSON.stringify(controlledFilters) !== JSON.stringify(filters)) {
-      handleChangeParams({ filters: controlledFilters, page: 0 });
-    }
-  }, [controlledFilters, filters, handleChangeParams]);
+      if (controlledSorts && !_.isEqual(controlledSorts, current.sorts)) {
+        changes.sorts = controlledSorts;
+        if (controlledPage === undefined) changes.page = 0;
+      }
+
+      if (controlledRowsPerPage !== undefined && controlledRowsPerPage !== current.rowsPerPage) {
+        changes.rowsPerPage = controlledRowsPerPage;
+      }
+
+      // Apply an explicitly controlled page last so a deep-linked search or
+      // filter never resets the visible paginator while the parent still owns
+      // the server request offset.
+      if (controlledPage !== undefined && controlledPage !== current.page) {
+        changes.page = controlledPage;
+      }
+
+      return Object.keys(changes).length ? { ...current, ...changes } : current;
+    });
+  }, [
+    controlledFilters,
+    controlledPage,
+    controlledRowsPerPage,
+    controlledSearchTerm,
+    controlledSorts,
+    setTableConfig,
+  ]);
 
   const [headerRefs, setHeaderRefs] = useState<number[]>([]);
   const [tableRef, setTableRef] = useState<number>(0);
@@ -215,6 +242,18 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       }
     },
     [handleChangeParams, serverSidePagination, onServerPagination]
+  );
+
+  const handleTableSort = useCallback(
+    (column: string, originalId?: string) => {
+      const nextSorts =
+        serverSideSort && serverSideSortMode === 'single'
+          ? getNextSingleTableSort(sorts, column, originalId)
+          : getNextTableSorts(sorts, column, originalId);
+      handleChangeParams({ sorts: nextSorts, page: 0 });
+      if (serverSideSort) onServerSort?.(column, nextSorts);
+    },
+    [handleChangeParams, onServerSort, serverSideSort, serverSideSortMode, sorts]
   );
 
   const handleSearch = useCallback(
@@ -507,10 +546,14 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 minHeight: 0,
                 height: '100%',
                 '&:focus-visible': {
-                  outline: 'none',
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: -2,
                 },
                 '& .simplebar-content-wrapper:focus-visible,td:focus-visible': {
-                  outline: 'none',
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: -2,
                 },
                 ...sx,
               }}
@@ -518,12 +561,13 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             >
               <Table
                 stickyHeader
-                aria-label="customizable table"
+                aria-label={`${tableTitle} table`}
                 size={dense ? 'small' : 'medium'}
                 sx={{
-                  // height: '100%',
                   '&:focus-visible': {
-                    outline: 'none',
+                    outline: '2px solid',
+                    outlineColor: 'primary.main',
+                    outlineOffset: -2,
                   },
                 }}
               >
@@ -531,7 +575,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   columns={memoizedColumns}
                   columnVisibility={columnVisibility}
                   sorts={sorts}
-                  onSort={handleSort}
+                  onSort={handleTableSort}
                   filters={filters}
                   onColumnFilterClick={(e, col) => {
                     e.stopPropagation();
@@ -636,7 +680,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       other,
       dense,
       sorts,
-      handleSort,
+      handleTableSort,
       headerRefs,
       getStickyStyle,
       isLoading,

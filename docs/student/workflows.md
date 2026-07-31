@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-07-28
+updated_on: 2026-07-31
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -15,31 +15,31 @@ Every worklist opens the same applicant workspace and uses the backend progress 
 
 ## Enrollment submodules
 
-| Area | Route | Primary interaction |
-|---|---|---|
-| My Work | `/student/enrollment/my-work` | Assigned tasks, due work, blockers, and one recommended action |
-| Pipeline | `/student/enrollment/pipeline` | Board and list views over every pre-admission applicant |
-| Entrance Exams | `/student/enrollment/entrance-exams` | Scheduling, attendance, result, eligibility, absence, and retest work |
-| Registration | `/student/enrollment/registration` | Form progress, missing items, corrections, documents, and verification |
-| Class Placement | `/student/enrollment/class-placement` | Capacity review and division assignment |
-| Activation | `/student/enrollment/activation` | Gate review, approval, repair state, and Student Records handoff |
+| Area                  | Route                                     | Primary interaction                                                      |
+| --------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
+| My Work               | `/student/enrollment/my-work`             | Assigned tasks, due work, blockers, and one recommended action           |
+| Pipeline              | `/student/enrollment/pipeline`            | Board and list views over every pre-admission applicant                  |
+| Entrance Exams        | `/student/enrollment/entrance-exams`      | Scheduling, attendance, result, eligibility, absence, and retest work    |
+| Registration          | `/student/enrollment/registration`        | Form progress, missing items, corrections, documents, and verification   |
+| Class Placement       | `/student/enrollment/class-placement`     | Capacity review and division assignment                                  |
+| Activation            | `/student/enrollment/activation`          | Gate review, approval, repair state, and Student Records handoff         |
 | Follow-ups & Messages | `/student/enrollment/follow-ups-messages` | Due reminders, manual follow-ups, message history, and delivery failures |
-| Admission Reports | `/student/enrollment/reports` | Auditable funnel, source, standard, stage, and outcome analysis |
-| Applicant workspace | `/student/enrollment/applicants/{leadId}` | Full stepper, blockers, checklist, next action, messages, and activity |
+| Admission Reports     | `/student/enrollment/reports`             | Auditable funnel, source, standard, stage, and outcome analysis          |
+| Applicant workspace   | `/student/enrollment/applicants/{leadId}` | Full stepper, blockers, checklist, next action, messages, and activity   |
 
 ## Applicant Stepper
 
 The Applicant Stepper contains exactly these six school-facing steps.
 The backend applicant progress projection decides each step status, blocker, and next action.
 
-| Order | Step | Completion meaning |
-|---|---|---|
-| 1 | Inquiry | Minimum applicant, guardian, academic preference, source, type, and owner data are captured |
-| 2 | Entrance Exam | The exam is completed and an eligibility decision exists, or the published Admission Year Setup permits a skip |
-| 3 | Registration | Required responses, documents, corrections, and verification are complete |
-| 4 | Finance | Finance confirms the configured admission requirement, or the published setup marks Finance as optional |
-| 5 | Class Placement | Board, medium, standard, and required division placement are confirmed |
-| 6 | Activation | Configured gates pass and the applicant is handed to Student Records as an active student |
+| Order | Step            | Completion meaning                                                                                             |
+| ----- | --------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1     | Inquiry         | Minimum applicant, guardian, academic preference, source, type, and owner data are captured                    |
+| 2     | Entrance Exam   | The exam is completed and an eligibility decision exists, or the published Admission Year Setup permits a skip |
+| 3     | Registration    | Required responses, documents, corrections, and verification are complete                                      |
+| 4     | Finance         | Finance confirms the configured admission requirement, or the published setup marks Finance as optional        |
+| 5     | Class Placement | Board, medium, standard, and required division placement are confirmed                                         |
+| 6     | Activation      | Configured gates pass and the applicant is handed to Student Records as an active student                      |
 
 Step statuses are `Not Started`, `In Progress`, `Complete`, `Skipped`, `Blocked`, and `Needs Review`.
 Optional steps show `Skipped` only when the immutable Admission Year Setup snapshot permits the skip or an authorized bypass is recorded.
@@ -85,14 +85,33 @@ Each focused submodule uses one `CustomizableTable`.
 Filtering, sorting, and pagination are server-owned for bounded performance.
 Actions open or update the same applicant record used by Pipeline and My Work.
 
-| Worklist | Required row context |
-|---|---|
-| My Work | Applicant, current step, issue, due time, owner, priority, and recommended action |
-| Entrance Exams | Schedule, attendance, result, eligibility, absence, retest, and review state |
-| Registration | Completion, missing fields, missing documents, correction state, and verification |
-| Class Placement | Board, medium, standard, division, capacity state, and override authority |
-| Activation | Registration, Exam, Finance, Placement, approval, account setup, and repair gates |
-| Follow-ups & Messages | Due state, assignee, channel, template, provider state, and last attempt |
+| Worklist              | Required row context                                                              |
+| --------------------- | --------------------------------------------------------------------------------- |
+| My Work               | Applicant, current step, issue, due time, owner, priority, and recommended action |
+| Entrance Exams        | Schedule, attendance, result, eligibility, absence, retest, and review state      |
+| Registration          | Completion, missing fields, missing documents, correction state, and verification |
+| Class Placement       | Board, medium, standard, division, capacity state, and override authority         |
+| Activation            | Registration, Exam, Finance, Placement, approval, account setup, and repair gates |
+| Follow-ups & Messages | Due state, assignee, channel, template, provider state, and last attempt          |
+
+## Enrollment interface contract
+
+Enrollment follows the global [frontend interface design contract](../../DESIGN.md).
+Table-first pages use an unbroken full-height flex chain so the primary `CustomizableTable` consumes all remaining desktop content height.
+The table region owns data scrolling, while the document must not gain horizontal overflow.
+The page header, admission-year context, filters, and tabs remain mounted during loading, empty, and error states.
+Durable tabs, views, paging, sorting, and meaningful filters use shareable URL state.
+`SplashScreen` is reserved for authentication, permission, or application bootstrap rather than normal Enrollment route or tab changes.
+
+| Page type          | Enrollment surfaces                                                                                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Table workspace    | My Work, Pipeline list, Entrance Exams, Registration, Class Placement, Activation, Follow-ups and Messages, Admission Reports, and table-first Settings panels |
+| Document workspace | Setup Centre, Finance Handoff forms, provider forms, and other pages whose primary task is guidance or data entry                                              |
+| Sequential setup   | Admission Year Setup and the genuinely ordered Registration and Documents setup flow                                                                           |
+| Mixed workspace    | Applicant, Admission Year history, Activation Settings, and other routes that must explicitly separate a primary table panel from document-style panels        |
+
+A bounded table is permitted only for an embedded preview, import result, comparison, or history.
+The component and its tests must name that exception explicitly.
 
 ## Admission Year Setup
 
@@ -116,16 +135,16 @@ Closing requires an auditable reason.
 Settings are grouped by the school task they control.
 A generic configuration page must not replace these submodule boundaries.
 
-| Settings page | Responsibility |
-|---|---|
-| Admission Year Setup | Academic year, dates, target standards, routes, required gates, placement timing, ownership, and publication |
-| Pipeline Settings | Inquiry sources, inquiry types, owner pool, default owner, quick-capture fields, follow-up reasons, and allowed shortcuts |
-| Entrance Exam Settings | Applicability, schedules, pass rules, retest policy, parent scheduling, and exam messages |
-| Registration Settings | Sections, required fields, documents, languages, verification, and correction reasons |
-| Finance Handoff Settings | Finance requirement, handoff trigger, and visible Finance reference fields |
-| Class Placement Settings | Placement timing, live capacity status, and override permissions |
-| Activation Settings | Required gates, approver, cancellation window, account handoff, and confirmation message |
-| Communication Settings | Channels, templates, variables, consent, provider mode, delivery logs, and simple reminders |
+| Settings page            | Responsibility                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Admission Year Setup     | Academic year, dates, target standards, routes, required gates, placement timing, ownership, and publication              |
+| Pipeline Settings        | Inquiry sources, inquiry types, owner pool, default owner, quick-capture fields, follow-up reasons, and allowed shortcuts |
+| Entrance Exam Settings   | Applicability, schedules, pass rules, retest policy, parent scheduling, and exam messages                                 |
+| Registration Settings    | Sections, required fields, documents, languages, verification, and correction reasons                                     |
+| Finance Handoff Settings | Finance requirement, handoff trigger, and visible Finance reference fields                                                |
+| Class Placement Settings | Placement timing, live capacity status, and override permissions                                                          |
+| Activation Settings      | Required gates, approver, cancellation window, account handoff, and confirmation message                                  |
+| Communication Settings   | Channels, templates, variables, consent, provider mode, delivery logs, and simple reminders                               |
 
 Simple reminders belong to Communication Settings.
 There is no separate Automation, Policy and Compliance, Journey Rules, or generic Governance page in canonical navigation.
@@ -147,14 +166,14 @@ All groupings come from the server and reuse the same fixed lifecycle projection
 
 ## Integration ownership
 
-| Integration | Ownership rule |
-|---|---|
-| Academic structure | Institute Setup owns academic year, board, medium, stage, and standard |
-| Division and capacity | Class Management owns divisions and capacity truth |
-| Payment | Finance owns charge, payment, receipt, waiver, reversal, and verification truth |
-| Active student | Student Records owns the student after activation |
-| Communication delivery | The provider response owns sent, delivered, failed, and undelivered truth |
-| Enrollment | Enrollment owns the applicant, progress projection, admission decisions, tasks, and handoff references |
+| Integration            | Ownership rule                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| Academic structure     | Institute Setup owns academic year, board, medium, stage, and standard                                 |
+| Division and capacity  | Class Management owns divisions and capacity truth                                                     |
+| Payment                | Finance owns charge, payment, receipt, waiver, reversal, and verification truth                        |
+| Active student         | Student Records owns the student after activation                                                      |
+| Communication delivery | The provider response owns sent, delivered, failed, and undelivered truth                              |
+| Enrollment             | Enrollment owns the applicant, progress projection, admission decisions, tasks, and handoff references |
 
 Enrollment must not mark fees paid without a Finance reference.
 Enrollment must not duplicate board, medium, standard, division, or capacity configuration.

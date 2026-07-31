@@ -53,6 +53,7 @@ export function PipelineSettingsRoute() {
     <EnrollmentSettingsPage
       title="Pipeline Settings"
       description="Configure inquiry capture and ownership while keeping the admission stages fixed."
+      layout={selectedPanel.value === 'capture' ? 'table' : 'document'}
     >
       <EnrollmentSettingsPanelTabs
         label="Pipeline settings"

@@ -5,9 +5,9 @@ import type { ReactNode } from 'react';
 import { Box } from '@mui/material';
 import { Suspense, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { SplashScreen } from 'src/components/loading-screen';
 
 import { EnrollmentWorkspaceProvider } from './admissions-crm/enrollment-workspace-context';
+import { EnrollmentWorkspaceLoadingState } from './admissions-crm/workspace-table-patterns';
 
 type Props = {
   children: ReactNode;
@@ -53,7 +53,7 @@ const EnrollmentShell = ({ children }: Props) => {
         tabIndex={-1}
         sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}
       >
-        <Suspense fallback={<SplashScreen />}>
+        <Suspense fallback={<EnrollmentWorkspaceLoadingState />}>
           <EnrollmentWorkspaceProvider>{children}</EnrollmentWorkspaceProvider>
         </Suspense>
       </Box>

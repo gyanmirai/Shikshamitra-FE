@@ -5,11 +5,39 @@ import { screen, fireEvent } from '@testing-library/react';
 
 import {
   enrollmentActionsColumn,
+  enrollmentTableWrapperSx,
   EnrollmentTableEmptyState,
+  enrollmentWorkspaceRootSx,
+  enrollmentTableContainerSx,
   EnrollmentWorkspaceFilterPanel,
+  EnrollmentWorkspaceLoadingState,
+  enrollmentEmbeddedTableContainerSx,
 } from './workspace-table-patterns';
 
 describe('Enrollment workspace table patterns', () => {
+  it('keeps the complete desktop flex-height chain and mobile page scrolling contract', () => {
+    expect(enrollmentWorkspaceRootSx).toMatchObject({
+      flex: 1,
+      height: '100%',
+      minHeight: 0,
+      overflow: { xs: 'auto', md: 'hidden' },
+    });
+    expect(enrollmentTableWrapperSx).toMatchObject({
+      flex: 1,
+      minHeight: 0,
+      display: 'flex',
+      flexDirection: 'column',
+    });
+    expect(enrollmentTableContainerSx).toMatchObject({
+      height: '100%',
+      minHeight: { xs: 320, md: 0 },
+    });
+    expect(enrollmentEmbeddedTableContainerSx).toMatchObject({
+      minHeight: 320,
+      height: 'auto',
+    });
+  });
+
   it('keeps the project-standard sticky actions column geometry', () => {
     expect(enrollmentActionsColumn).toMatchObject({
       width: 112,
@@ -50,5 +78,11 @@ describe('Enrollment workspace table patterns', () => {
 
     expect(screen.getByText('Queue cleared')).toBeVisible();
     expect(screen.getByText('No applicants need action.')).toBeVisible();
+  });
+
+  it('keeps route-level loading inside the Enrollment workspace geometry', () => {
+    renderWithProviders(<EnrollmentWorkspaceLoadingState />);
+
+    expect(screen.getByRole('status', { name: 'Loading Enrollment workspace' })).toBeVisible();
   });
 });
