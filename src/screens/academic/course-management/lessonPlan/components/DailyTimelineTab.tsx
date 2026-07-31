@@ -84,7 +84,7 @@ const DailyTimelineTab = ({
   };
 
   return (
-    <Card sx={{ p: 3, height: '100%' }}>
+    <Card sx={{ p: 3, flex: '1 0 auto', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Date navigation bar */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -122,7 +122,7 @@ const DailyTimelineTab = ({
 
       {/* Skeletons loader */}
       {isLoading ? (
-        <Stack spacing={1}>
+        <Stack spacing={1} sx={{ flex: 1 }}>
           {[1, 2, 3].map((key) => (
             <Box
               key={key}
@@ -144,7 +144,7 @@ const DailyTimelineTab = ({
           ))}
         </Stack>
       ) : slots.length === 0 ? (
-        <Stack alignItems="center" spacing={1} sx={{ py: 6, textAlign: 'center' }}>
+        <Stack alignItems="center" justifyContent="center" spacing={1} sx={{ flex: 1, py: 6, textAlign: 'center' }}>
           <Iconify icon="mdi:calendar-blank" width={48} sx={{ color: 'text.disabled' }} />
           <Typography variant="h6" color="text.secondary">
             No timetable slots scheduled
@@ -155,7 +155,7 @@ const DailyTimelineTab = ({
         </Stack>
       ) : (
         /* Timeline slots list */
-        <Stack spacing={1}>
+        <Stack spacing={1} sx={{ flex: 1, overflow: 'auto' }}>
           {slots.map((slot, index) => {
             const hasPlan = !!slot.lessonPlan;
             const plan = slot.lessonPlan;

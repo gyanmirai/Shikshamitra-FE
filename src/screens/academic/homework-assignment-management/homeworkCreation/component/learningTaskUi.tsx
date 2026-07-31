@@ -112,7 +112,7 @@ export const LearningTaskSummaryCards = ({ tasks }: { tasks: any[] }) => {
           sx={{
             p: 1.25,
             borderRadius: 1,
-            bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
+            bgcolor: 'background.paper',
           }}
         >
           <Stack spacing={1}>
