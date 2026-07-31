@@ -322,7 +322,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                     fontWeight={700}
                     sx={{ letterSpacing: '-0.01em' }}
                   >
-                    Subjects Palette
+                    Subjects
                   </Typography>
                   <CustomTooltip
                     title="Drag subjects onto time slots in the grid to schedule them"

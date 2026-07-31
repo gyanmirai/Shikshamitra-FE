@@ -11,6 +11,31 @@ function combineDateAndTime(dateObj: any, timeObj: any): string | null {
   return d.hour(t.hour()).minute(t.minute()).second(0).millisecond(0).toISOString();
 }
 
+function toApiDateTime(value: any): string | null {
+  return value?.format?.(dateFormat) ? dateConvertor(value.format(dateFormat)) : null;
+}
+
+function toNullableNumber(value: any): number | null {
+  if (value === '' || value === undefined || value === null) return null;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function hasCompleteSchedule(value: any): boolean {
+  return Boolean(
+    value?.examDate &&
+    value?.startTime &&
+    value?.endTime &&
+    value?.gradeScalingId &&
+    value?.totalMarks !== '' &&
+    value?.totalMarks !== undefined &&
+    value?.totalMarks !== null &&
+    value?.passingMarks !== '' &&
+    value?.passingMarks !== undefined &&
+    value?.passingMarks !== null
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Default empty form values — used for CREATE mode
 // ---------------------------------------------------------------------------
@@ -159,43 +184,42 @@ export function mapBackendToFormik(
         )
       : (basicData?.subjectIds ?? []);
 
-  const rawEntries: RawEntry[] = rawEntrySubjectIds
-    .map((subjectId: string) => {
-      const sched = scheduleMap[subjectId] ?? {};
-      const sub = examSubjectMap[subjectId] ?? {};
-      // Look up by subjectId first; if basicData already uses group IDs this hits directly
-      const electiveData = electiveGroupMap[subjectId];
+  const rawEntries: RawEntry[] = rawEntrySubjectIds.map((subjectId: string) => {
+    const sched = scheduleMap[subjectId] ?? {};
+    const sub = examSubjectMap[subjectId] ?? {};
+    // Look up by subjectId first; if basicData already uses group IDs this hits directly
+    const electiveData = electiveGroupMap[subjectId];
 
-      const resolvedElectiveGroupId: string | undefined =
-        sched.electiveGroupId ?? sub.electiveGroupId ?? (electiveData ? subjectId : undefined);
+    const resolvedElectiveGroupId: string | undefined =
+      sched.electiveGroupId ?? sub.electiveGroupId ?? (electiveData ? subjectId : undefined);
 
-      const resolvedSubjectName: string =
-        sched.electiveGroupName ??
-        sched.subjectName ??
-        sub.subjectName ??
-        electiveData?.name ??
-        sub.name ??
-        '';
+    const resolvedSubjectName: string =
+      sched.electiveGroupName ??
+      sched.subjectName ??
+      sub.subjectName ??
+      electiveData?.name ??
+      sub.name ??
+      '';
 
-      const resolvedSubjectColor: string =
-        sched.subjectColor ??
-        sched.electiveGroupColor ??
-        sched.color ??
-        sub.subjectColor ??
-        sub.color ??
-        electiveData?.color ??
-        '#9E9E9E';
+    const resolvedSubjectColor: string =
+      sched.subjectColor ??
+      sched.electiveGroupColor ??
+      sched.color ??
+      sub.subjectColor ??
+      sub.color ??
+      electiveData?.color ??
+      '#9E9E9E';
 
-      return {
-        subjectId,
-        sched,
-        sub,
-        electiveData,
-        resolvedElectiveGroupId,
-        resolvedSubjectName,
-        resolvedSubjectColor,
-      };
-    });
+    return {
+      subjectId,
+      sched,
+      sub,
+      electiveData,
+      resolvedElectiveGroupId,
+      resolvedSubjectName,
+      resolvedSubjectColor,
+    };
+  });
 
   // Helper — enrich a subject object with its per-subject schedule fields
   const withSchedule = (s: any, fallbackColor: string) => {
@@ -382,8 +406,8 @@ export function serializeSchedulePayload(values: IExamFormValues) {
     startTime: string | null;
     endTime: string | null;
     gradeScalingId: string | null;
-    totalMarks: number;
-    passingMarks: number;
+    totalMarks: number | null;
+    passingMarks: number | null;
     notes: string;
   }> = [];
 
@@ -396,12 +420,12 @@ export function serializeSchedulePayload(values: IExamFormValues) {
           subjects.push({
             subjectId: s.subjectId || s.id,
             electiveGroupId: sub.electiveGroupId,
-            examDate: dateConvertor(s.examDate.format(dateFormat)) ?? null,
-            startTime: dateConvertor(s.startTime.format(dateFormat)) ?? null,
-            endTime: dateConvertor(s.endTime.format(dateFormat)) ?? null,
+            examDate: toApiDateTime(s.examDate),
+            startTime: toApiDateTime(s.startTime),
+            endTime: toApiDateTime(s.endTime),
             gradeScalingId: s.gradeScalingId ?? null,
-            totalMarks: Number(s.totalMarks),
-            passingMarks: Number(s.passingMarks),
+            totalMarks: toNullableNumber(s.totalMarks),
+            passingMarks: toNullableNumber(s.passingMarks),
             notes: s.notes ?? '',
           });
         });
@@ -410,18 +434,12 @@ export function serializeSchedulePayload(values: IExamFormValues) {
       subjects.push({
         subjectId: sub.subjectId,
         electiveGroupId: sub.electiveGroupId ?? null,
-        examDate: sub?.examDate?.format?.(dateFormat)
-          ? dateConvertor(sub.examDate.format(dateFormat))
-          : null,
-        startTime: sub?.startTime?.format?.(dateFormat)
-          ? dateConvertor(sub?.startTime?.format?.(dateFormat))
-          : null,
-        endTime: sub?.endTime?.format?.(dateFormat)
-          ? dateConvertor(sub?.endTime?.format?.(dateFormat))
-          : null,
+        examDate: toApiDateTime(sub.examDate),
+        startTime: toApiDateTime(sub.startTime),
+        endTime: toApiDateTime(sub.endTime),
         gradeScalingId: sub.gradeScalingId ?? null,
-        totalMarks: Number(sub.totalMarks),
-        passingMarks: Number(sub.passingMarks),
+        totalMarks: toNullableNumber(sub.totalMarks),
+        passingMarks: toNullableNumber(sub.passingMarks),
         notes: sub.notes,
       });
     }
@@ -448,6 +466,7 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
         .filter((s: any) => !s.isExamSelectionDisabled)
         .forEach((s: any) => {
           const sId = s.subjectId || s.id;
+          const shouldAssignRooms = hasCompleteSchedule(s);
           const mappedDivisions = validDivisionIds.map((divId) => ({
             divisionId: divId,
             roomIds: values.roomDetails[sId]?.[divId]?.roomIds ?? [],
@@ -456,9 +475,11 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
           subjectEntries.push({
             subjectId: sId,
             electiveGroupId: sub.electiveGroupId ?? null,
-            examDate: s.examDate?.toISOString?.() ?? null,
+            examDate: toApiDateTime(s.examDate),
             divisions: values.isRoomAssign
-              ? mappedDivisions.filter((div) => div.roomIds.length > 0)
+              ? shouldAssignRooms
+                ? mappedDivisions.filter((div) => div.roomIds.length > 0)
+                : []
               : mappedDivisions,
           });
         });
@@ -472,7 +493,7 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
       subjectEntries.push({
         subjectId: sub.subjectId,
         electiveGroupId: null,
-        examDate: sub.examDate?.toISOString() ?? null,
+        examDate: toApiDateTime(sub.examDate),
         divisions: values.isRoomAssign
           ? mappedDivisions.filter((div) => div.roomIds.length > 0)
           : mappedDivisions,
