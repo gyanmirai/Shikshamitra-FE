@@ -72,7 +72,7 @@ const QuizInformation = ({ formik }: any) => {
   );
 
   const { data: subjectsData } = useGetCoreSubjectsByMediumQuery(
-    { academicMediumId: medium?.id },
+    { academicMediumId: medium?.id, includeArchived: false },
     { skip: !medium?.id }
   );
 

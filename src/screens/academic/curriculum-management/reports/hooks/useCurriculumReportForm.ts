@@ -136,7 +136,7 @@ export const useCurriculumReportForm = (report: CurriculumReportTitle) => {
   const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(medium as Medium)?.id,
     },

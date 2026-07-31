@@ -8,11 +8,11 @@ import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
@@ -21,20 +21,16 @@ import { cardStyle } from 'src/screens/academic/homework-assignment-management/h
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   Box,
-  Chip,
   Grid,
   Paper,
-  Stack,
   Switch,
   Checkbox,
   TextField,
   Typography,
   Autocomplete,
-  Radio,
-  Tooltip,
 } from '@mui/material';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
@@ -45,6 +41,11 @@ type ElectiveReadiness = {
   message?: string;
   assignedCounts: Record<string, number>;
 };
+
+const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
+
+const isSelectableSetting = (item: any) =>
+  item?.status == null || SELECTABLE_SETTING_STATUSES.has(item.status);
 
 // Framer Motion stagger variants for form fields
 const formContainerVariants: Variants = {
@@ -92,7 +93,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExaminationTypesQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(medium as Medium)?.id,
     },
@@ -105,11 +106,21 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGradeScalingsQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(medium as Medium)?.id,
     },
   });
+
+  const examTypeOptions = useMemo(
+    () => (examTypeData?.items || []).filter(isSelectableSetting),
+    [examTypeData?.items]
+  );
+
+  const gradeScalingOptions = useMemo(
+    () => (gradeScalingsData?.data || []).filter(isSelectableSetting),
+    [gradeScalingsData?.data]
+  );
 
   const [query, setQuery] = useState<{ page: number; pageSize: number }>({
     page: 0,
@@ -124,7 +135,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { standardId: formik.values.className, ...query },
+    params: {
+      standardId: formik.values.className,
+      ...query,
+      status: SubjectAssignmentStatus.Published,
+    },
     options: { skip: !formik.values.className },
   });
 
@@ -200,9 +215,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
   const handleSubjectsChange = useCallback(
     async (value: any[]) => {
-      const selectedType = examTypeData?.items?.find(
-        (item: any) => item.id === formik.values.examType
-      );
+      const selectedType = examTypeOptions.find((item: any) => item.id === formik.values.examType);
       const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
       const defaultGradeScaleId = selectedType?.defaultGradeScaleId || null;
       const nextReadiness = { ...electiveReadiness };
@@ -223,6 +236,30 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             }
           }
 
+          const assignedElectiveSubjects = isElective
+            ? (sub.subjects ?? [])
+                .map((subjectItem: any) => {
+                  const assignedStudentCount =
+                    readiness?.assignedCounts?.[subjectItem.subjectId] ??
+                    readiness?.assignedCounts?.[subjectItem.id] ??
+                    0;
+                  return {
+                    ...subjectItem,
+                    assignedStudentCount,
+                    isExamSelectionDisabled: assignedStudentCount === 0,
+                    subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
+                    examDate: subjectItem.examDate || null,
+                    startTime: subjectItem.startTime || null,
+                    endTime: subjectItem.endTime || null,
+                    totalMarks: subjectItem.totalMarks || defaultTotalMarks,
+                    passingMarks: subjectItem.passingMarks ?? '',
+                    notes: subjectItem.notes || '',
+                    gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
+                  };
+                })
+                .filter((subjectItem: any) => subjectItem.assignedStudentCount > 0)
+            : sub.subjects;
+
           return {
             ...sub,
             subjectId: sub.electiveGroupId || sub?.subjects?.[0]?.subjectId || sub.subjectId,
@@ -238,27 +275,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             subjectCode: isElective ? '' : sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
             subjectColor: sub?.color || sub?.subjectColor || '#9E9E9E',
             schedulingMode: sub.schedulingMode ?? (isElective ? 'separate' : undefined),
-            subjects: isElective
-              ? (sub.subjects ?? []).map((subjectItem: any) => {
-                const assignedStudentCount =
-                  readiness?.assignedCounts?.[subjectItem.subjectId] ??
-                  readiness?.assignedCounts?.[subjectItem.id] ??
-                  0;
-                return {
-                  ...subjectItem,
-                  assignedStudentCount,
-                  isExamSelectionDisabled: assignedStudentCount === 0,
-                  subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
-                  examDate: subjectItem.examDate || null,
-                  startTime: subjectItem.startTime || null,
-                  endTime: subjectItem.endTime || null,
-                  totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                  passingMarks: subjectItem.passingMarks ?? '',
-                  notes: subjectItem.notes || '',
-                  gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
-                };
-              })
-              : sub.subjects,
+            subjects: assignedElectiveSubjects,
           };
         })
       );
@@ -267,7 +284,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
       formik.setFieldValue('subjects', normalizedResults.filter(Boolean));
       formik.setFieldTouched('subjects', false);
     },
-    [electiveReadiness, examTypeData?.items, formik, getElectiveReadiness]
+    [electiveReadiness, examTypeOptions, formik, getElectiveReadiness]
   );
 
   return (
@@ -295,15 +312,13 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     error={formik.touched.examType && Boolean(formik.errors.examType)}
                   >
                     <CustomSelect
-                      options={examTypeData?.items || []}
+                      options={examTypeOptions}
                       isLoading={isLoading || isFetching}
                       value={formik.values.examType}
                       onChange={(val) => {
                         formik.setFieldValue('examType', val);
                         // Also store the display name so the Review step shows it correctly
-                        const selectedType = examTypeData?.items?.find(
-                          (item: any) => item.id === val
-                        );
+                        const selectedType = examTypeOptions.find((item: any) => item.id === val);
                         formik.setFieldValue('examTypeName', selectedType?.examType ?? '');
                         formik.setFieldTouched(`examType`, false);
 
@@ -336,7 +351,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     <ExamTypeForm
                       onClose={examTypeDialog.onFalse}
                       data={null}
-                      onSubmit={() => { }}
+                      onSubmit={() => {}}
                       isEdit={false}
                     />
                   </CustomDialog>
@@ -598,7 +613,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
                   >
                     <CustomSelect
-                      options={gradeScalingsData?.data || []}
+                      options={gradeScalingOptions}
                       isLoading={isGradeScalingsLoading || isGradeScalingsFetching}
                       value={formik.values.gradingScaleId || ''}
                       onChange={(val) => {
@@ -751,8 +766,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 </motion.div>
               </Grid> */}
 
-
-
               {/* NON-BREAKING: Subject chips preview — shown below the Subjects selector */}
               {formik.values.subjects.length > 0 && (
                 <Grid size={{ xs: 12 }}>
@@ -847,7 +860,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             .join(' · ')}
                         </strong>
                         {formik.values.subjects.length > 0 &&
-                          ` · ${formik.values.subjects.length} subject${formik.values.subjects.length !== 1 ? 's' : ''
+                          ` · ${formik.values.subjects.length} subject${
+                            formik.values.subjects.length !== 1 ? 's' : ''
                           }`}
                       </Typography>
                     </Box>

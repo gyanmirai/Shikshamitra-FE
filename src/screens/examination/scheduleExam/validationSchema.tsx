@@ -9,6 +9,8 @@ interface ScheduledSlot {
   endTime: any;
 }
 
+const isSameElectiveGroup = (a?: string, b?: string) => !!a && !!b && a === b;
+
 const getRootSubjects = (context: any) => {
   const fromArray = context.options?.from || [];
   const rootContext = fromArray.find((f: any) => f.value && 'examName' in f.value);
@@ -20,7 +22,7 @@ const flattenSlots = (rootSubjects: any[]): ScheduledSlot[] => {
   rootSubjects.forEach((sub: any) => {
     if (sub?.electiveGroupId && sub?.schedulingMode === 'separate') {
       (sub.subjects || []).forEach((nested: any) => {
-        if (nested?.subjectId) {
+        if (nested?.subjectId && !nested?.isExamSelectionDisabled) {
           allSlots.push({
             subjectId: nested.subjectId,
             electiveGroupId: sub.electiveGroupId,
@@ -138,8 +140,7 @@ const scheduleFieldsSchema = {
       const conflicting = allSlots.find((other) => {
         if (other.subjectId === subjectId) return false;
         if (!slotsOverlap(currentSlot, other)) return false;
-        if (!currentGroupId || !other.electiveGroupId) return true;
-        return currentGroupId !== other.electiveGroupId;
+        return !isSameElectiveGroup(currentGroupId, other.electiveGroupId);
       });
 
       if (conflicting) {

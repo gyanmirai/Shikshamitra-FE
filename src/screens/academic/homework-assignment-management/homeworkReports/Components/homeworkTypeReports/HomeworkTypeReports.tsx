@@ -280,7 +280,7 @@ const HomeworkManagementReports = ({
   const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !currentFields.includes('subjects') || !(medium as Medium)?.id || !!classId,
     },
@@ -296,6 +296,7 @@ const HomeworkManagementReports = ({
     params: {
       academicMediumId: medium?.id,
       standardId: classId,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !currentFields.includes('subjects') || !medium?.id || !classId,

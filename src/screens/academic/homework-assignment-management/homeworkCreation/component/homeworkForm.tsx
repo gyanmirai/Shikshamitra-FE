@@ -27,6 +27,7 @@ import DocumentPreviewDialog from 'src/components/preview-document/DocumentPrevi
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   RubricStatus,
   RubricWorkType,
@@ -122,7 +123,10 @@ const SubmissionTypeCard = ({
           p: 1,
           borderRadius: 1.5,
           color: selected ? 'primary.main' : 'text.secondary',
-          bgcolor: (theme) => (selected ? alpha(theme.palette.primary.main, 0.12) : alpha(theme.palette.grey[500], 0.08)),
+          bgcolor: (theme) =>
+            selected
+              ? alpha(theme.palette.primary.main, 0.12)
+              : alpha(theme.palette.grey[500], 0.08),
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -139,7 +143,7 @@ const SubmissionTypeCard = ({
           color: 'text.disabled',
           '&.Mui-checked': {
             color: 'primary.main',
-          }
+          },
         }}
       />
     </Stack>
@@ -265,7 +269,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
         const selectedType = activeHomeworkTypes.find((t: any) => t.id === values.homeworkTypeId);
         if (selectedType) {
           let hasOverride = false;
-          if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null && selectedType.defaultSubmissionType !== values.submissionType) {
+          if (
+            selectedType.defaultSubmissionType !== undefined &&
+            selectedType.defaultSubmissionType !== null &&
+            selectedType.defaultSubmissionType !== values.submissionType
+          ) {
             hasOverride = true;
           }
 
@@ -385,13 +393,17 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             formData.append(`DivisionSchedules[${index}].DueAt`, division.dueDate.toISOString());
           });
 
-          const response = await addHomework({ academicMediumId: medium?.id, body: formData }).unwrap();
+          const response = await addHomework({
+            academicMediumId: medium?.id,
+            body: formData,
+          }).unwrap();
           const createdHomeworkId = response?.data?.id || response?.id;
           if (selectedRubricTemplateId && createdHomeworkId) {
             await createRubricFromTemplate({
               templateId: selectedRubricTemplateId,
               body: {
-                standardId: values.classId || values.standardId || values.class || activeClassId || '',
+                standardId:
+                  values.classId || values.standardId || values.class || activeClassId || '',
                 subjectId: values.subjectId || values.subject,
                 homeworkId: createdHomeworkId,
                 title: `${values.title} Rubric`,
@@ -433,6 +445,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: {
       standardId: formik.values.classId || formik.values.class,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !(formik.values.classId || formik.values.class),
@@ -480,7 +493,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHomeworkTypesQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(medium as Medium)?.id,
     },
@@ -489,7 +502,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   const activeHomeworkTypes = useMemo(() => {
     const list = (homeworkTypeData?.data || []).filter((t: any) => t.status === 0);
     if (editData?.homeworkTypeId) {
-      const editType = (homeworkTypeData?.data || []).find((t: any) => t.id === editData.homeworkTypeId);
+      const editType = (homeworkTypeData?.data || []).find(
+        (t: any) => t.id === editData.homeworkTypeId
+      );
       if (editType && editType.status === 1) {
         list.push(editType);
       }
@@ -655,7 +670,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                               divisionId: divId,
                               createdAt: dayjs(),
                               publishDate,
-                              dueDate: defaultDueDays !== undefined && defaultDueDays !== null ? publishDate.add(defaultDueDays, 'day') : null,
+                              dueDate:
+                                defaultDueDays !== undefined && defaultDueDays !== null
+                                  ? publishDate.add(defaultDueDays, 'day')
+                                  : null,
                             }
                           );
                         });
@@ -669,10 +687,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         (typeof formik.errors.divisions === 'string'
                           ? formik.errors.divisions
                           : formik.errors.divisions?.some(
-                            (divErr: any) =>
-                              typeof divErr === 'object' &&
-                              (divErr?.publishDate || divErr?.dueDate)
-                          )
+                                (divErr: any) =>
+                                  typeof divErr === 'object' &&
+                                  (divErr?.publishDate || divErr?.dueDate)
+                              )
                             ? 'Select schedule dates also'
                             : undefined)
                       }
@@ -844,10 +862,19 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         setSelectedRubricTemplateId('');
                         const selectedType = activeHomeworkTypes.find((t: any) => t.id === val);
                         if (selectedType) {
-                          if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null) {
-                            formik.setFieldValue('submissionType', selectedType.defaultSubmissionType);
+                          if (
+                            selectedType.defaultSubmissionType !== undefined &&
+                            selectedType.defaultSubmissionType !== null
+                          ) {
+                            formik.setFieldValue(
+                              'submissionType',
+                              selectedType.defaultSubmissionType
+                            );
                           }
-                          if (selectedType.defaultDueDays !== undefined && selectedType.defaultDueDays !== null) {
+                          if (
+                            selectedType.defaultDueDays !== undefined &&
+                            selectedType.defaultDueDays !== null
+                          ) {
                             const newDivisions = formik.values.divisions.map((d: any) => {
                               const pubDate = d.publishDate ? dayjs(d.publishDate) : dayjs();
                               return {
@@ -1052,7 +1079,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                           !!formik.touched.divisions?.[idx]?.publishDate,
                                         helperText:
                                           formik.touched.divisions?.[idx]?.publishDate &&
-                                            typeof formik.errors.divisions?.[idx] === 'object'
+                                          typeof formik.errors.divisions?.[idx] === 'object'
                                             ? (formik.errors.divisions?.[idx] as any)?.publishDate
                                             : '',
                                       },
@@ -1091,7 +1118,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                           !!formik.touched.divisions?.[idx]?.dueDate,
                                         helperText:
                                           formik.touched.divisions?.[idx]?.dueDate &&
-                                            typeof formik.errors.divisions?.[idx] === 'object'
+                                          typeof formik.errors.divisions?.[idx] === 'object'
                                             ? (formik.errors.divisions?.[idx] as any)?.dueDate
                                             : '',
                                       },
@@ -1132,28 +1159,32 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           value: 0,
                           label: 'Online Text',
                           description: 'Type response directly in the text editor.',
-                          icon: 'solar:keyboard-bold-duotone'
+                          icon: 'solar:keyboard-bold-duotone',
                         },
                         {
                           value: 1,
                           label: 'File Upload',
                           description: 'Submit PDFs, documents, or images.',
-                          icon: 'solar:file-send-bold-duotone'
+                          icon: 'solar:file-send-bold-duotone',
                         },
                         {
                           value: 2,
                           label: 'In-Person',
                           description: 'Turn in physically in class.',
-                          icon: 'solar:users-group-two-rounded-bold-duotone'
+                          icon: 'solar:users-group-two-rounded-bold-duotone',
                         },
                         {
                           value: 3,
                           label: 'No Submission',
                           description: 'For reading or verbal homework tasks.',
-                          icon: 'solar:verified-check-bold-duotone'
+                          icon: 'solar:verified-check-bold-duotone',
                         },
                       ].map((item) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.value} sx={{ display: 'flex' }}>
+                        <Grid
+                          size={{ xs: 12, sm: 6, md: 3 }}
+                          key={item.value}
+                          sx={{ display: 'flex' }}
+                        >
                           <SubmissionTypeCard
                             value={item.value}
                             label={item.label}
@@ -1221,7 +1252,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               variant="contained"
               size="small"
               loading={isUpdateLoading || isAddLoading || isPublishLoading || isRubricCopyLoading}
-              startIcon={<Iconify icon={shouldSchedule ? 'solar:calendar-mark-bold' : 'solar:upload-bold'} />}
+              startIcon={
+                <Iconify icon={shouldSchedule ? 'solar:calendar-mark-bold' : 'solar:upload-bold'} />
+              }
               onClick={(e: any) => {
                 setHomeworkSubmitMode(shouldSchedule ? 'schedule' : 'publish');
                 formik.handleSubmit(e);

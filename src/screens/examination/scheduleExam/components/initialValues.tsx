@@ -43,14 +43,17 @@ export function mapBackendToFormik(
 ): IExamFormValues {
   const scheduleMap: Record<string, any> = {};
   const rawScheduleSubjects: any[] = scheduleData?.subjects ?? scheduleData?.data?.subjects ?? [];
+  const scheduleSubjectIds = new Set<string>();
   rawScheduleSubjects.forEach((s: any) => {
     if (s?.subjectId) {
       scheduleMap[s.subjectId] = s;
+      scheduleSubjectIds.add(s.subjectId);
       // Schedule API stores individual elective subjects in electiveGroupSubjects (not subjects).
       // Populate scheduleMap for each so per-subject schedule lookup works in separate mode.
       if (s.electiveGroupId && Array.isArray(s.electiveGroupSubjects)) {
         s.electiveGroupSubjects.forEach((sub: any) => {
           if (sub?.subjectId) {
+            scheduleSubjectIds.add(sub.subjectId);
             scheduleMap[sub.subjectId] = {
               ...sub,
               electiveGroupId: s.electiveGroupId,
@@ -144,42 +147,55 @@ export function mapBackendToFormik(
     resolvedSubjectColor: string;
   }
 
-  const rawEntries: RawEntry[] = (basicData?.subjectIds ?? []).map((subjectId: string) => {
-    const sched = scheduleMap[subjectId] ?? {};
-    const sub = examSubjectMap[subjectId] ?? {};
-    // Look up by subjectId first; if basicData already uses group IDs this hits directly
-    const electiveData = electiveGroupMap[subjectId];
+  const rawEntrySubjectIds: string[] =
+    scheduleSubjectIds.size > 0
+      ? Array.from(
+          new Set([
+            ...(basicData?.subjectIds ?? []).filter((subjectId: string) =>
+              scheduleSubjectIds.has(subjectId)
+            ),
+            ...Array.from(scheduleSubjectIds),
+          ])
+        )
+      : (basicData?.subjectIds ?? []);
 
-    const resolvedElectiveGroupId: string | undefined =
-      sched.electiveGroupId ?? sub.electiveGroupId ?? (electiveData ? subjectId : undefined);
+  const rawEntries: RawEntry[] = rawEntrySubjectIds
+    .map((subjectId: string) => {
+      const sched = scheduleMap[subjectId] ?? {};
+      const sub = examSubjectMap[subjectId] ?? {};
+      // Look up by subjectId first; if basicData already uses group IDs this hits directly
+      const electiveData = electiveGroupMap[subjectId];
 
-    const resolvedSubjectName: string =
-      sched.electiveGroupName ??
-      sched.subjectName ??
-      sub.subjectName ??
-      electiveData?.name ??
-      sub.name ??
-      '';
+      const resolvedElectiveGroupId: string | undefined =
+        sched.electiveGroupId ?? sub.electiveGroupId ?? (electiveData ? subjectId : undefined);
 
-    const resolvedSubjectColor: string =
-      sched.subjectColor ??
-      sched.electiveGroupColor ??
-      sched.color ??
-      sub.subjectColor ??
-      sub.color ??
-      electiveData?.color ??
-      '#9E9E9E';
+      const resolvedSubjectName: string =
+        sched.electiveGroupName ??
+        sched.subjectName ??
+        sub.subjectName ??
+        electiveData?.name ??
+        sub.name ??
+        '';
 
-    return {
-      subjectId,
-      sched,
-      sub,
-      electiveData,
-      resolvedElectiveGroupId,
-      resolvedSubjectName,
-      resolvedSubjectColor,
-    };
-  });
+      const resolvedSubjectColor: string =
+        sched.subjectColor ??
+        sched.electiveGroupColor ??
+        sched.color ??
+        sub.subjectColor ??
+        sub.color ??
+        electiveData?.color ??
+        '#9E9E9E';
+
+      return {
+        subjectId,
+        sched,
+        sub,
+        electiveData,
+        resolvedElectiveGroupId,
+        resolvedSubjectName,
+        resolvedSubjectColor,
+      };
+    });
 
   // Helper — enrich a subject object with its per-subject schedule fields
   const withSchedule = (s: any, fallbackColor: string) => {
@@ -379,7 +395,7 @@ export function serializeSchedulePayload(values: IExamFormValues) {
         .forEach((s: any) => {
           subjects.push({
             subjectId: s.subjectId || s.id,
-            // electiveGroupId: sub.electiveGroupId,
+            electiveGroupId: sub.electiveGroupId,
             examDate: dateConvertor(s.examDate.format(dateFormat)) ?? null,
             startTime: dateConvertor(s.startTime.format(dateFormat)) ?? null,
             endTime: dateConvertor(s.endTime.format(dateFormat)) ?? null,
@@ -393,7 +409,7 @@ export function serializeSchedulePayload(values: IExamFormValues) {
       // Core subject or elective group in Combined mode
       subjects.push({
         subjectId: sub.subjectId,
-        // electiveGroupId: sub.electiveGroupId ?? null,
+        electiveGroupId: sub.electiveGroupId ?? null,
         examDate: sub?.examDate?.format?.(dateFormat)
           ? dateConvertor(sub.examDate.format(dateFormat))
           : null,

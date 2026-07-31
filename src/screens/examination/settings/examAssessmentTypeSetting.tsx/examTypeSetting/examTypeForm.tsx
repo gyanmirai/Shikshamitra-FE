@@ -52,6 +52,11 @@ const STATUS_OPTIONS = [
   { value: 3, label: 'Archived' },
 ];
 
+const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
+
+const isSelectableSetting = (item: any) =>
+  item?.status == null || SELECTABLE_SETTING_STATUSES.has(item.status);
+
 const TOGGLE_OPTIONS = [
   {
     name: 'includedInResult',
@@ -130,7 +135,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   const { data: gradeScalings } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGradeScalingsQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
+    params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(currentMedium as Medium)?.id,
     },
@@ -138,7 +143,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
 
   const gradeScaleOptions = useMemo(
     () =>
-      (gradeScalings?.data || []).map((gs: any) => ({
+      (gradeScalings?.data || []).filter(isSelectableSetting).map((gs: any) => ({
         value: gs.id,
         label: `${gs.name} (${gs.totalMarks} Marks)`,
       })),
@@ -358,14 +363,21 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <CustomTooltip title={gradeScaleOptions.find((opt: any) => opt.value === formik.values.defaultGradeScaleId)?.label}>
+                  <CustomTooltip
+                    title={
+                      gradeScaleOptions.find(
+                        (opt: any) => opt.value === formik.values.defaultGradeScaleId
+                      )?.label
+                    }
+                  >
                     <Autocomplete
                       size="small"
                       fullWidth
                       options={gradeScaleOptions}
                       value={
-                        gradeScaleOptions.find((opt: any) => opt.value === formik.values.defaultGradeScaleId) ||
-                        null
+                        gradeScaleOptions.find(
+                          (opt: any) => opt.value === formik.values.defaultGradeScaleId
+                        ) || null
                       }
                       getOptionLabel={(option) => option.label}
                       isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -429,12 +441,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                           },
                         }}
                       >
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          spacing={1}
-                          sx={{ minWidth: 0 }}
-                        >
+                        <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
                           <Box
                             sx={{
                               width: 30,
@@ -479,7 +486,8 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 {data && (data as any).usageCount > 0 && (
                   <Grid size={{ xs: 12 }}>
                     <Alert severity="warning">
-                      This exam type is already used in academic modules. Major changes may affect existing records.
+                      This exam type is already used in academic modules. Major changes may affect
+                      existing records.
                     </Alert>
                   </Grid>
                 )}
