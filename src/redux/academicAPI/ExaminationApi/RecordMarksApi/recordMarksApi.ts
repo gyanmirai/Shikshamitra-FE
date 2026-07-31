@@ -114,8 +114,8 @@ export const recordMarksApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.recordMarks],
     }),
 
-    // Get Audit Logs – history of updates
-    getAuditLogs: builder.query({
+    // Get Exam Marks Audit Logs – history of marks updates
+    getExamMarksAuditLogs: builder.query({
       query: ({ examId, subjectId, divisionId }) => ({
         url: `/academics/exams/${examId}/marks/audit`,
         method: 'GET',
@@ -162,5 +162,5 @@ export const {
   useValidateMarksMutation,
   useRequestChangesMutation,
   useUnlockMarksMutation,
-  useGetAuditLogsQuery,
+  useGetExamMarksAuditLogsQuery,
 } = recordMarksApi;

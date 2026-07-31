@@ -114,9 +114,9 @@ export const buildExamPlanningIssues = (values: any): ExamPlanningIssue[] => {
           issues.push({
             id: `room-missing-${subjectId || subjectIndex}-${divisionId}`,
             step: 2,
-            severity: 'blocking',
+            severity: 'warning',
             title: `${subject.subjectName || 'Subject'} is missing room assignment`,
-            description: `Assign at least one room for division ${divisionId}.`,
+            description: 'Room assignment is optional. You can publish and assign rooms later.',
           });
         }
       });

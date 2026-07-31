@@ -54,7 +54,7 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
-  useGetAuditLogsQuery,
+  useGetExamMarksAuditLogsQuery,
   useVerifyMarksMutation,
   useUnlockMarksMutation,
   useBulkSaveMarksMutation,
@@ -308,7 +308,7 @@ const GradeEntry = (props: TabComponentType) => {
   // Audit Logs data query
   const { data: auditLogsData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAuditLogsQuery,
+    currentQueryAndMutation: useGetExamMarksAuditLogsQuery,
     params: {
       examId,
       subjectId: subject,

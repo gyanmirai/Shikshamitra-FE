@@ -108,12 +108,12 @@ const ScheduleExamPreviewDrawer = ({
   const isDetailsLoading = basicLoading || scheduleLoading || roomLoading || subjectsLoading;
   const hydratedExam = basicDetails
     ? mapBackendToFormik(
-      basicDetails,
-      scheduleDetails ?? null,
-      roomAssignmentData ?? null,
-      examSubjectsData ?? null,
-      examTypeData?.items ?? []
-    )
+        basicDetails,
+        scheduleDetails ?? null,
+        roomAssignmentData ?? null,
+        examSubjectsData ?? null,
+        examTypeData?.items ?? []
+      )
     : null;
   const subjectRows = getSubjectRows(hydratedExam?.subjects ?? []);
   const scheduledDates = subjectRows
@@ -127,22 +127,22 @@ const ScheduleExamPreviewDrawer = ({
   const warningCount = readiness ? readiness.warnings.length : (exam?.warningCount ?? 0);
   const previewExam = hydratedExam
     ? {
-      ...exam,
-      ...hydratedExam,
-      examId,
-      examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
-      standardName: exam?.standardName,
-      divisions: exam?.divisions,
-      subjectCount: subjectRows.length,
-      issueCount,
-      warningCount,
-    }
+        ...exam,
+        ...hydratedExam,
+        examId,
+        examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
+        standardName: exam?.standardName,
+        divisions: exam?.divisions,
+        subjectCount: subjectRows.length,
+        issueCount,
+        warningCount,
+      }
     : exam;
   const dateRange =
     scheduledDates.length > 0
       ? `${scheduledDates
-        .reduce((min, date) => (date.isBefore(min) ? date : min), scheduledDates[0])
-        .format('DD MMM YYYY')} - ${scheduledDates
+          .reduce((min, date) => (date.isBefore(min) ? date : min), scheduledDates[0])
+          .format('DD MMM YYYY')} - ${scheduledDates
           .reduce((max, date) => (date.isAfter(max) ? date : max), scheduledDates[0])
           .format('DD MMM YYYY')}`
       : previewExam?.startDate && previewExam?.endDate
@@ -150,7 +150,10 @@ const ScheduleExamPreviewDrawer = ({
         : 'Not scheduled';
 
   const dialogTitle = (
-    <Box component="span" sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, fontWeight: 'normal' }}>
+    <Box
+      component="span"
+      sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, fontWeight: 'normal' }}
+    >
       <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
           {previewExam?.examName || 'Exam Preview'}
@@ -160,10 +163,25 @@ const ScheduleExamPreviewDrawer = ({
           placement="right"
           title="View scheduled exam subjects, dates, times, and planning issues."
         >
-          <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+          <Iconify
+            icon={GlobalIcons.info}
+            sx={{ cursor: 'pointer' }}
+            color="info.main"
+            width={16}
+            height={16}
+          />
         </CustomTooltip>
       </Box>
-      <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: 'text.secondary', fontSize: '0.85rem' }}>
+      <Box
+        component="span"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          color: 'text.secondary',
+          fontSize: '0.85rem',
+        }}
+      >
         <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Iconify icon={GlobalIcons.calendar} width={16} height={16} />
           <span>{dateRange}</span>
@@ -220,11 +238,22 @@ const ScheduleExamPreviewDrawer = ({
               placement="right"
               title="View scheduled exam subjects, dates, times, and planning issues."
             >
-              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+                width={16}
+                height={16}
+              />
             </CustomTooltip>
           </Stack>
 
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary', typography: 'caption' }}>
+          <Stack
+            direction="row"
+            spacing={1.5}
+            alignItems="center"
+            sx={{ color: 'text.secondary', typography: 'caption' }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Iconify icon={GlobalIcons.calendar} width={14} height={14} />
               <span>{dateRange}</span>
@@ -257,7 +286,11 @@ const ScheduleExamPreviewDrawer = ({
               <Grid container spacing={2}>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}
+                    >
                       Exam Type
                     </Typography>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
@@ -267,7 +300,11 @@ const ScheduleExamPreviewDrawer = ({
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}
+                    >
                       Class
                     </Typography>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
@@ -277,7 +314,11 @@ const ScheduleExamPreviewDrawer = ({
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}
+                    >
                       Created By
                     </Typography>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
@@ -287,7 +328,11 @@ const ScheduleExamPreviewDrawer = ({
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}
+                    >
                       Divisions
                     </Typography>
                     <Stack direction="row" flexWrap="wrap" gap={0.5}>
@@ -336,24 +381,24 @@ const ScheduleExamPreviewDrawer = ({
               <Box
                 sx={{
                   p: 1.5,
-                  borderRadius: 1.5,
-                  bgcolor: alpha(theme.palette.error.main, 0.08),
-                  color: theme.palette.error.dark,
+                  borderRadius: 1,
+                  bgcolor: alpha(theme.palette.warning.main, 0.08),
+                  color: theme.palette.text.secondary,
                   border: '1px solid',
-                  borderColor: alpha(theme.palette.error.main, 0.15),
+                  borderColor: alpha(theme.palette.warning.main, 0.2),
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
                 }}
               >
-                <Iconify icon={GlobalIcons.info} color="error.main" width={20} height={20} />
+                <Iconify icon={GlobalIcons.info} color="warning.main" width={20} height={20} />
                 <Box>
                   <Typography variant="subtitle2" fontWeight={700}>
                     {previewExam.missingRoomAssignmentCount} room assignment gap
                     {previewExam.missingRoomAssignmentCount > 1 ? 's' : ''}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Review room planning before publishing this exam.
+                    Room assignment is optional. You can publish now and assign rooms later.
                   </Typography>
                 </Box>
               </Box>
@@ -381,9 +426,12 @@ const ScheduleExamPreviewDrawer = ({
                         alignItems: { xs: 'flex-start', sm: 'center' },
                         gap: 1.5,
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.01)',
-                        transition: theme.transitions.create(['background-color', 'border-color', 'box-shadow', 'transform'], {
-                          duration: theme.transitions.duration.shorter,
-                        }),
+                        transition: theme.transitions.create(
+                          ['background-color', 'border-color', 'box-shadow', 'transform'],
+                          {
+                            duration: theme.transitions.duration.shorter,
+                          }
+                        ),
                         '&:hover': {
                           transform: 'translateX(4px)',
                           bgcolor: 'background.neutral',
@@ -397,7 +445,12 @@ const ScheduleExamPreviewDrawer = ({
                           {subject.subjectName || '-'}
                         </Typography>
                         {subject.groupName && (
-                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                            sx={{ mt: 0.25 }}
+                          >
                             Group: {subject.groupName}
                           </Typography>
                         )}
@@ -411,16 +464,24 @@ const ScheduleExamPreviewDrawer = ({
                             py: 0.5,
                             px: 1.25,
                             borderRadius: 1,
-                            bgcolor: subject.examDate ? alpha(theme.palette.success.main, 0.08) : alpha(theme.palette.error.main, 0.08),
-                            color: subject.examDate ? theme.palette.success.dark : theme.palette.error.dark,
+                            bgcolor: subject.examDate
+                              ? alpha(theme.palette.success.main, 0.08)
+                              : alpha(theme.palette.error.main, 0.08),
+                            color: subject.examDate
+                              ? theme.palette.success.dark
+                              : theme.palette.error.dark,
                             typography: 'caption',
                             fontWeight: 700,
                             border: '1px solid',
-                            borderColor: subject.examDate ? alpha(theme.palette.success.main, 0.15) : alpha(theme.palette.error.main, 0.15),
+                            borderColor: subject.examDate
+                              ? alpha(theme.palette.success.main, 0.15)
+                              : alpha(theme.palette.error.main, 0.15),
                           }}
                         >
                           <Iconify icon={GlobalIcons.calendar} width={14} height={14} />
-                          {subject.examDate ? dayjs(subject.examDate).format('DD-MM-YYYY') : 'Date not set'}
+                          {subject.examDate
+                            ? dayjs(subject.examDate).format('DD-MM-YYYY')
+                            : 'Date not set'}
                         </Box>
                         {subject.startTime && subject.endTime && (
                           <Box
@@ -489,7 +550,6 @@ const ScheduleExamPreviewDrawer = ({
             color="primary"
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            disabled={issueCount > 0}
             onClick={() => onPublish(previewExam)}
             size="small"
           >

@@ -42,7 +42,7 @@ const MonthInner = ({
   activeDayType,
 }: {
   monthStart: dayjs.Dayjs;
-  dayMap: Record<string, any>;
+  dayMap: Record<string, any[]>;
   startDate: string;
   endDate: string;
   today: string;
@@ -59,11 +59,11 @@ const MonthInner = ({
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  // Count marked days in this month
+  // Count marked days in this month (dates that have at least one matching event)
   const markedCount = Object.entries(dayMap).filter(
-    ([key, value]) =>
+    ([key, events]) =>
       key.startsWith(monthStart.format('YYYY-MM')) &&
-      (!activeDayType || value.dayType === activeDayType)
+      (!activeDayType || events.some((e: any) => e.dayType === activeDayType))
   ).length;
 
   return (
@@ -128,15 +128,21 @@ const MonthInner = ({
           }
 
           const key = day.format('YYYY-MM-DD');
-          const dayMarker = dayMap[key];
-          const calDay =
-            dayMarker && (!activeDayType || dayMarker.dayType === activeDayType) ? dayMarker : null;
+          const dayEvents = dayMap[key];
+          const calEvents = dayEvents
+            ? activeDayType
+              ? dayEvents.filter((e: any) => e.dayType === activeDayType)
+              : dayEvents
+            : [];
           const isWeekend = day.day() === 0;
           const isSaturday = day.day() === 6;
           const isToday = key === today;
           const isOutside =
             day.isBefore(dayjs(startDate), 'day') || day.isAfter(dayjs(endDate), 'day');
-          const markerColor = calDay ? DAY_TYPE_COLORS[calDay.dayType as DayType] : null;
+          // Use the first event's color for cell background, or null if no events
+          const markerColor = calEvents.length > 0
+            ? DAY_TYPE_COLORS[calEvents[0].dayType as DayType]
+            : null;
 
           return (
             <Tooltip
@@ -144,8 +150,16 @@ const MonthInner = ({
               title={
                 isOutside
                   ? ''
-                  : calDay
-                    ? calDay.title || DAY_TYPE_LABELS[calDay.dayType as DayType]
+                  : calEvents.length > 0
+                    ? (
+                        <Box sx={{ py: 0.5 }}>
+                          {calEvents.map((e: any, i: number) => (
+                            <Typography key={i} variant="caption" sx={{ display: 'block', lineHeight: 1.6 }}>
+                              {`${i + 1}. ${e.title || DAY_TYPE_LABELS[e.dayType as DayType]}`}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )
                     : isWeekend || isSaturday
                       ? 'Weekend'
                       : dayjs(key).format('dddd, DD MMM YYYY')
@@ -202,7 +216,7 @@ const MonthInner = ({
                   <Typography
                     sx={{
                       fontSize: '11px',
-                      fontWeight: isToday ? 800 : calDay ? 700 : 500,
+                      fontWeight: isToday ? 800 : calEvents.length > 0 ? 700 : 500,
                       lineHeight: 1,
                       color: isToday
                         ? '#fff'
@@ -215,17 +229,21 @@ const MonthInner = ({
                   >
                     {day.date()}
                   </Typography>
-                  {/* Visual Dot indicator */}
-                  {calDay && !isToday && (
-                    <Box
-                      sx={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: '50%',
-                        backgroundColor: markerColor,
-                        mt: '2px',
-                      }}
-                    />
+                  {/* Multi-event dot indicators */}
+                  {calEvents.length > 0 && !isToday && (
+                    <Box sx={{ display: 'flex', gap: '2px', mt: '2px' }}>
+                      {calEvents.slice(0, 3).map((e: any, i: number) => (
+                        <Box
+                          key={i}
+                          sx={{
+                            width: 4,
+                            height: 4,
+                            borderRadius: '50%',
+                            backgroundColor: DAY_TYPE_COLORS[e.dayType as DayType] || markerColor,
+                          }}
+                        />
+                      ))}
+                    </Box>
                   )}
                 </Box>
               </Box>
@@ -239,7 +257,7 @@ const MonthInner = ({
 
 const MonthCard = (props: {
   monthStart: dayjs.Dayjs;
-  dayMap: Record<string, any>;
+  dayMap: Record<string, any[]>;
   startDate: string;
   endDate: string;
   today: string;
@@ -280,7 +298,7 @@ const DualMonthCard = ({
   activeDayType,
 }: {
   months: dayjs.Dayjs[];
-  dayMap: Record<string, any>;
+  dayMap: Record<string, any[]>;
   startDate: string;
   endDate: string;
   today: string;
@@ -355,11 +373,12 @@ const CalendarYearView = ({
   const endDate = calendarEndDate;
   const today = dayjs().format('YYYY-MM-DD');
 
-  // Build date map
-  const dayMap: Record<string, any> = {};
+  // Build date map — accumulate all events per date (supports multiple events on same day)
+  const dayMap: Record<string, any[]> = {};
   days.forEach((d) => {
     const key = dayjs(d.date).format('YYYY-MM-DD');
-    if (!dayMap[key]) dayMap[key] = d;
+    if (!dayMap[key]) dayMap[key] = [];
+    dayMap[key].push(d);
   });
 
   // Build months list

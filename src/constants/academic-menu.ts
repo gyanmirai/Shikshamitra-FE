@@ -152,8 +152,8 @@ export const academicPermissions = {
     seatAllocation: `${defaultAcademicPermissionName}Examination.SeatAllocation`,
     recordMarks: `${defaultAcademicPermissionName}Examination.RecordMarks`,
     resultCreation: `${defaultAcademicPermissionName}Examination.Result`,
-    questionBank: `${defaultModulePermissionName}${defaultAcademicPermissionName}Examination`,
-    questionPapers: `${defaultModulePermissionName}${defaultAcademicPermissionName}Examination`,
+    questionBank: `${defaultModulePermissionName}${defaultAcademicPermissionName}Examination.QuestionBank`,
+    questionPapers: `${defaultModulePermissionName}${defaultAcademicPermissionName}Examination.QuestionPapers`,
     quizManagement: `${defaultAcademicPermissionName}Examination.QuizManagement`,
     reports: `${defaultAcademicPermissionName}Examination.Reports`,
     settings: {

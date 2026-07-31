@@ -231,6 +231,21 @@ export const academicCalendarApi = academicApi.injectEndpoints({
       ],
     }),
 
+    updateEmergencyClosure: builder.mutation({
+      query: ({ id, body }: { id: string; body: any }) => ({
+        url: `/academic/calendar-days/${id}/emergency-closure`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [
+        academicCalendarType.calendarDay,
+        academicCalendarType.calendar,
+        academicCalendarType.impactLog,
+        academicCalendarType.auditLog,
+        academicCalendarType.emergencyClosure,
+      ],
+    }),
+
     // ─── Impact Logs ────────────────────────────────────────────────────────
 
     getImpactLogs: builder.query({
@@ -391,6 +406,7 @@ export const {
   useGetEmergencyClosuresQuery,
   useCreateEmergencyClosureMutation,
   useCancelEmergencyClosureMutation,
+  useUpdateEmergencyClosureMutation,
 
   useGetImpactLogsQuery,
   useGetImpactLogsByDayQuery,
