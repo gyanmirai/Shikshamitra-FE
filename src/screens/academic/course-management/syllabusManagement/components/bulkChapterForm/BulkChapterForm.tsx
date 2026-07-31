@@ -268,16 +268,36 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
 
   const handleFileUpload = useCallback(
     async (uid: string, files: (File | string)[]) => {
-      if (!files.length) return;
-      const formData = new FormData();
-      formData.append('File', files[0] as File);
-      const response = await uploadCurriculumFile(formData).unwrap();
-      formik.setFieldValue(
-        'chapters',
-        formik.values.chapters.map((ch) =>
-          ch.uid === uid ? { ...ch, documents: [response.data] } : ch
-        )
-      );
+      if (!files.length) {
+        formik.setFieldValue(
+          'chapters',
+          formik.values.chapters.map((ch) => (ch.uid === uid ? { ...ch, documents: [] } : ch))
+        );
+        return;
+      }
+      try {
+        const uploadPromises = files.map(async (file) => {
+          if (typeof file === 'string') {
+            return file;
+          }
+          const formData = new FormData();
+          formData.append('File', file as File);
+          const response = await uploadCurriculumFile(formData).unwrap();
+          return response.data;
+        });
+
+        const results = await Promise.all(uploadPromises);
+        const validUrls = results.filter((res): res is string => typeof res === 'string' && Boolean(res));
+
+        formik.setFieldValue(
+          'chapters',
+          formik.values.chapters.map((ch) =>
+            ch.uid === uid ? { ...ch, documents: validUrls } : ch
+          )
+        );
+      } catch (error) {
+        shikshaMitraToast.error({ message: 'Failed to upload one or more files.' });
+      }
     },
     [formik, uploadCurriculumFile]
   );

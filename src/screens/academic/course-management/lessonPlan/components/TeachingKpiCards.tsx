@@ -2,18 +2,21 @@
 
 import React from 'react';
 import dayjs from 'dayjs';
+import { alpha } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import { Box, Card, Stack, Typography } from '@mui/material';
 
 import { todayIso, weekStartIso } from '../lessonPlanData';
 
 import type { LessonPlanRow, TeacherDiaryRow } from '../lessonPlanData';
 
-type KpiCard = {
+type KpiCardConfig = {
   key: string;
   label: string;
   value: number | string;
   microCopy: string;
-  onClick?: () => void;
+  icon: string;
+  color: 'primary' | 'info' | 'warning' | 'secondary' | 'error' | 'success';
 };
 
 type Props = {
@@ -61,56 +64,69 @@ const TeachingKpiCards = ({ lessonPlans, diaryEntries, onCardClick }: Props) => 
       { subject: '', gap: 0 }
     ).subject || '-';
 
-  const cards: KpiCard[] = [
+  const cards: KpiCardConfig[] = [
     {
       key: 'lessons_planned',
       label: 'Lessons Planned',
       value: thisWeekPlans.length,
       microCopy: `${approvedThisWeek} approved, ${pendingThisWeek} pending`,
+      icon: 'solar:book-bookmark-bold-duotone',
+      color: 'primary',
     },
     {
       key: 'diaries_submitted',
       label: 'Diaries Submitted',
       value: submittedToday,
       microCopy: lastSubmitted
-        ? `Last submitted ${dayjs(lastSubmitted).format('hh:mm A')}`
-        : 'None submitted today',
+        ? `Last: ${dayjs(lastSubmitted).format('hh:mm A')}`
+        : 'None today',
+      icon: 'solar:notebook-bookmark-bold-duotone',
+      color: 'info',
     },
     {
       key: 'pending_diaries',
       label: 'Pending Diaries',
       value: pendingDiaries,
-      microCopy: 'Requires submission before 6 PM',
+      microCopy: 'Due before 6 PM',
+      icon: 'solar:clock-circle-bold-duotone',
+      color: 'warning',
     },
     {
       key: 'pending_approvals',
       label: 'Pending Approvals',
       value: pendingApprovals,
       microCopy:
-        oldestPending > 0 ? `Oldest pending: ${oldestPending} day(s)` : 'No pending approvals',
+        oldestPending > 0 ? `Oldest: ${oldestPending} day(s)` : 'All reviewed',
+      icon: 'solar:shield-warning-bold-duotone',
+      color: 'secondary',
     },
     {
       key: 'missed_lessons',
       label: 'Missed Lessons',
       value: missedLessons,
       microCopy: missedLessons > 0 ? 'Needs reschedule' : 'No missed lessons',
+      icon: 'solar:calendar-minimalistic-bold-duotone',
+      color: 'error',
     },
     {
       key: 'syllabus_delay',
       label: 'Syllabus Delay',
       value: syllabusDelayed,
-      microCopy: syllabusDelayed > 0 ? `Highest delay: ${highestDelaySubject}` : 'All on track',
+      microCopy: syllabusDelayed > 0 ? `Delay: ${highestDelaySubject}` : 'All on track',
+      icon: 'solar:graph-down-bold-duotone',
+      color: 'error',
     },
   ];
 
   return (
-    <Stack spacing={1} sx={{ mb: 1 }}>
+    <Stack spacing={1} sx={{ mb: 2 }}>
       <Box
         sx={{
           display: 'grid',
-          gap: 1,
+          gap: 1.5,
           gridTemplateColumns: {
             xs: '1fr 1fr',
+            sm: 'repeat(3, 1fr)',
             md: 'repeat(6, 1fr)',
           },
         }}
@@ -120,21 +136,108 @@ const TeachingKpiCards = ({ lessonPlans, diaryEntries, onCardClick }: Props) => 
             key={card.key}
             onClick={() => onCardClick(card.key)}
             sx={{
-              p: 1.5,
-              borderRadius: 1,
+              p: 1.75,
+              borderRadius: 1.5,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.background.paper, 0.8)
+                  : 'background.paper',
+              boxShadow: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? '0 2px 8px rgba(0,0,0,0.3)'
+                  : '0 2px 8px rgba(145, 158, 171, 0.08)',
               cursor: 'pointer',
-              minHeight: 92,
-              transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
-              '&:hover': { boxShadow: 4 },
+              transition: 'all 0.2s ease-in-out',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: 104,
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? '0 6px 16px rgba(0,0,0,0.5)'
+                    : '0 6px 16px rgba(145, 158, 171, 0.16)',
+                borderColor: `${card.color}.main`,
+              },
             }}
           >
-            <Typography variant="caption" color="text.secondary">
-              {card.label}
-            </Typography>
-            <Typography variant="h5">{card.value}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {card.microCopy}
-            </Typography>
+            {/* Header: Label & Icon */}
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '0.72rem',
+                    lineHeight: 1.2,
+                    display: 'block',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {card.label}
+                </Typography>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    mt: 0.5,
+                    color: 'text.primary',
+                    fontSize: '1.4rem',
+                  }}
+                >
+                  {card.value}
+                </Typography>
+              </Box>
+
+              {/* Icon Container */}
+              <Box
+                sx={{
+                  p: 1,
+                  borderRadius: 1.25,
+                  bgcolor: (theme) => alpha(theme.palette[card.color].main, 0.12),
+                  color: `${card.color}.main`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Iconify icon={card.icon} width={22} height={22} />
+              </Box>
+            </Box>
+
+            {/* Subtitle Microcopy */}
+            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 1 }}>
+              <Box
+                sx={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  bgcolor: `${card.color}.main`,
+                  flexShrink: 0,
+                }}
+              />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                  fontSize: '0.7rem',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {card.microCopy}
+              </Typography>
+            </Stack>
           </Card>
         ))}
       </Box>

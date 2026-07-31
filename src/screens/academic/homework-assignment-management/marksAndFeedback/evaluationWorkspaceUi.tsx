@@ -105,6 +105,7 @@ export function getEvaluationSummary(rows: any[] = [], apiSummary?: Summary): Re
 }
 
 export function filterEvaluationRows(rows: any[], filter: string) {
+  if (filter === 'submitted') return rows.filter((row) => [1, 2, 4, 6].includes(Number(row.status)));
   if (filter === 'needsReview') return rows.filter((row) => [1, 2, 6].includes(Number(row.status)));
   if (filter === 'notSubmitted') return rows.filter((row) => Number(row.status) === 0);
   if (filter === 'reviewed') return rows.filter((row) => Number(row.status) === 4);
@@ -114,16 +115,55 @@ export function filterEvaluationRows(rows: any[], filter: string) {
 export function EvaluationSummaryCards({
   summary,
   showMarks = true,
+  activeFilter = 'all',
+  onFilterChange,
 }: {
   summary: Required<Summary>;
   showMarks?: boolean;
+  activeFilter?: string;
+  onFilterChange?: (filter: string) => void;
 }) {
   const cards: ITimetableSummaryCard[] = [
-    { label: 'Students', value: summary.totalStudents, icon: 'solar:users-group-rounded-bold', color: 'primary' },
-    { label: 'Submitted', value: summary.submitted, icon: 'solar:inbox-in-bold', color: 'info' },
-    { label: 'Needs Review', value: summary.needsReview, icon: 'solar:clipboard-check-bold', color: 'warning' },
-    { label: 'Reviewed', value: summary.reviewed, icon: 'solar:check-circle-bold', color: 'success' },
-    { label: 'Not Submitted', value: summary.notSubmitted, icon: 'solar:clock-circle-bold', color: 'error' },
+    {
+      label: 'Students',
+      value: summary.totalStudents,
+      icon: 'solar:users-group-rounded-bold',
+      color: 'primary',
+      onClick: () => onFilterChange?.('all'),
+      isActive: activeFilter === 'all',
+    },
+    {
+      label: 'Submitted',
+      value: summary.submitted,
+      icon: 'solar:inbox-in-bold',
+      color: 'info',
+      onClick: () => onFilterChange?.('submitted'),
+      isActive: activeFilter === 'submitted',
+    },
+    {
+      label: 'Needs Review',
+      value: summary.needsReview,
+      icon: 'solar:clipboard-check-bold',
+      color: 'warning',
+      onClick: () => onFilterChange?.('needsReview'),
+      isActive: activeFilter === 'needsReview',
+    },
+    {
+      label: 'Reviewed',
+      value: summary.reviewed,
+      icon: 'solar:check-circle-bold',
+      color: 'success',
+      onClick: () => onFilterChange?.('reviewed'),
+      isActive: activeFilter === 'reviewed',
+    },
+    {
+      label: 'Not Submitted',
+      value: summary.notSubmitted,
+      icon: 'solar:clock-circle-bold',
+      color: 'error',
+      onClick: () => onFilterChange?.('notSubmitted'),
+      isActive: activeFilter === 'notSubmitted',
+    },
     ...(showMarks
       ? [
           {

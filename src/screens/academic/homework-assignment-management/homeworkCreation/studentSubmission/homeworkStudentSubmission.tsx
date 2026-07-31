@@ -206,8 +206,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   return (
     <>
       <Stack spacing={1}>
-        <EvaluationSummaryCards summary={summary} showMarks={hasRubricAssessment} />
-        <EvaluationFilterBar value={activeFilter} onChange={setActiveFilter} />
+        <EvaluationSummaryCards
+          summary={summary}
+          showMarks={hasRubricAssessment}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
       </Stack>
       <Box sx={{ mt: 1.5 }}>
         <CustomizableTable

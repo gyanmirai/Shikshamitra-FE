@@ -177,7 +177,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               <Box
                 sx={{
                   p: 2,
-                  bgcolor: (theme) => theme.palette.grey[100],
+                  bgcolor: 'background.neutral',
                   borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                 }}
               >

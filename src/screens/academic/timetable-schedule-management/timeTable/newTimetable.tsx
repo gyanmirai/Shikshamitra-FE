@@ -9,6 +9,7 @@ import type { TimetableValidationIssue } from 'src/components/timetable/timetabl
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { cloneDeep } from 'lodash';
@@ -1586,11 +1587,20 @@ const TimeTableForm = ({
         {/* Enhanced header bar */}
         <Box
           sx={{
+            px: 2,
+            py: 1.25,
+            mb: 1.5,
+            borderRadius: 1.5,
+            border: '1px solid',
+            borderColor: 'divider',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? alpha(theme.palette.background.paper, 0.6)
+                : alpha(theme.palette.common.white, 0.9),
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            gap: 1,
-            pb: 1,
+            gap: 2,
             flexWrap: 'wrap',
           }}
         >
@@ -1599,7 +1609,7 @@ const TimeTableForm = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               <Iconify
                 icon="mdi:school-outline"
-                sx={{ width: 18, height: 18, color: 'text.secondary' }}
+                sx={{ width: 18, height: 18, color: 'primary.main' }}
               />
               <Typography
                 variant="subtitle2"
@@ -1614,7 +1624,7 @@ const TimeTableForm = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               <Iconify
                 icon="mdi:door-open"
-                sx={{ width: 16, height: 16, color: 'text.secondary' }}
+                sx={{ width: 16, height: 16, color: 'primary.main' }}
               />
               <Typography
                 variant="subtitle2"
@@ -1636,10 +1646,10 @@ const TimeTableForm = ({
               label={`${slotSummary.filled}/${slotSummary.total} filled`}
               size="small"
               color={slotSummary.filled > 0 ? 'success' : 'default'}
-              variant="outlined"
+              variant="soft"
               sx={{
-                height: 22,
-                fontSize: '0.7rem',
+                height: 24,
+                fontSize: '0.75rem',
                 fontWeight: 600,
                 '& .MuiChip-label': { px: 0.75 },
               }}
@@ -1650,10 +1660,10 @@ const TimeTableForm = ({
                 label={`${slotSummary.remaining} remaining`}
                 size="small"
                 color="warning"
-                variant="outlined"
+                variant="soft"
                 sx={{
-                  height: 22,
-                  fontSize: '0.7rem',
+                  height: 24,
+                  fontSize: '0.75rem',
                   fontWeight: 600,
                   '& .MuiChip-label': { px: 0.75 },
                 }}
@@ -1664,10 +1674,10 @@ const TimeTableForm = ({
               label={`${subjectProgress.completed}/${subjectProgress.total} subjects`}
               size="small"
               color={subjectProgress.completed === subjectProgress.total ? 'success' : 'default'}
-              variant="outlined"
+              variant="soft"
               sx={{
-                height: 22,
-                fontSize: '0.7rem',
+                height: 24,
+                fontSize: '0.75rem',
                 fontWeight: 600,
                 '& .MuiChip-label': { px: 0.75 },
               }}
@@ -1676,11 +1686,16 @@ const TimeTableForm = ({
               icon={<Iconify icon="mdi:account-tie" sx={{ width: 14, height: 14 }} />}
               label={`Teachers: ${assignmentProgress.teacherAssigned}/${assignmentProgress.totalFilledSubjects}`}
               size="small"
-              color={assignmentProgress.teacherAssigned === assignmentProgress.totalFilledSubjects && assignmentProgress.totalFilledSubjects > 0 ? 'success' : 'default'}
-              variant="outlined"
+              color={
+                assignmentProgress.teacherAssigned === assignmentProgress.totalFilledSubjects &&
+                assignmentProgress.totalFilledSubjects > 0
+                  ? 'success'
+                  : 'default'
+              }
+              variant="soft"
               sx={{
-                height: 22,
-                fontSize: '0.7rem',
+                height: 24,
+                fontSize: '0.75rem',
                 fontWeight: 600,
                 '& .MuiChip-label': { px: 0.75 },
               }}
@@ -1689,11 +1704,16 @@ const TimeTableForm = ({
               icon={<Iconify icon="mdi:door-closed" sx={{ width: 14, height: 14 }} />}
               label={`Rooms: ${assignmentProgress.roomAssigned}/${assignmentProgress.totalFilledSubjects}`}
               size="small"
-              color={assignmentProgress.roomAssigned === assignmentProgress.totalFilledSubjects && assignmentProgress.totalFilledSubjects > 0 ? 'success' : 'default'}
-              variant="outlined"
+              color={
+                assignmentProgress.roomAssigned === assignmentProgress.totalFilledSubjects &&
+                assignmentProgress.totalFilledSubjects > 0
+                  ? 'success'
+                  : 'default'
+              }
+              variant="soft"
               sx={{
-                height: 22,
-                fontSize: '0.7rem',
+                height: 24,
+                fontSize: '0.75rem',
                 fontWeight: 600,
                 '& .MuiChip-label': { px: 0.75 },
               }}
@@ -1704,10 +1724,10 @@ const TimeTableForm = ({
                 label={`${conflicts.length} conflicts`}
                 size="small"
                 color="error"
-                variant="outlined"
+                variant="soft"
                 sx={{
-                  height: 22,
-                  fontSize: '0.7rem',
+                  height: 24,
+                  fontSize: '0.75rem',
                   fontWeight: 600,
                   '& .MuiChip-label': { px: 0.75 },
                 }}
@@ -1717,9 +1737,10 @@ const TimeTableForm = ({
               label={editorDisplayStatus}
               size="small"
               color={DISPLAY_STATUS_COLORS[editorDisplayStatus] as any}
+              variant="soft"
               sx={{
-                height: 22,
-                fontSize: '0.7rem',
+                height: 24,
+                fontSize: '0.75rem',
                 fontWeight: 700,
                 px: 0.5,
               }}
@@ -1730,7 +1751,7 @@ const TimeTableForm = ({
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             {/* Progress indicator */}
             {slotSummary.total > 0 && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 110, mr: 0.5 }}>
                 <LinearProgress
                   variant="determinate"
                   value={(slotSummary.filled / slotSummary.total) * 100}
@@ -1738,7 +1759,7 @@ const TimeTableForm = ({
                     flex: 1,
                     height: 6,
                     borderRadius: 3,
-                    bgcolor: 'action.hover',
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
                     '& .MuiLinearProgress-bar': {
                       borderRadius: 3,
                       bgcolor: slotSummary.remaining === 0 ? 'success.main' : 'primary.main',
@@ -1765,43 +1786,59 @@ const TimeTableForm = ({
               disabled={isSubmitting}
               sx={{
                 borderColor: 'divider',
-                color: 'text.secondary',
-                '&:hover': { borderColor: 'text.primary', color: 'text.primary' },
+                color: 'text.primary',
+                fontWeight: 600,
+                '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
               }}
             >
               Save Draft
             </Button>
+
             <Button
               variant="outlined"
               size="small"
-              color="info"
+              color="inherit"
               startIcon={<Iconify icon="lucide:check-square" />}
               onClick={handleValidate}
               disabled={isSubmitting || isValidating}
+              sx={{
+                borderColor: 'divider',
+                color: 'text.primary',
+                fontWeight: 600,
+                '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
+              }}
             >
               Validate
             </Button>
+
             <Button
               variant="outlined"
               size="small"
-              color="secondary"
+              color="inherit"
               startIcon={<Iconify icon="lucide:eye" />}
               onClick={() => setPreviewOpen(true)}
               disabled={isSubmitting}
+              sx={{
+                borderColor: 'divider',
+                color: 'text.primary',
+                fontWeight: 600,
+                '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
+              }}
             >
               Preview
             </Button>
-            <Button
+
+            <LoadingButton
               variant="contained"
               size="small"
+              color="primary"
               startIcon={<Iconify icon={GlobalIcons.publish} />}
               onClick={handlePublishClick}
-              disabled={isSubmitting}
               loading={isSubmitting}
-              color="primary"
+              sx={{ fontWeight: 600 }}
             >
               Publish
-            </Button>
+            </LoadingButton>
           </Box>
         </Box>
         <Box sx={{ flex: 1, minHeight: 0 }}>
@@ -1878,8 +1915,8 @@ const TimeTableForm = ({
                     sx={{
                       p: 2,
                       borderRadius: 2,
-                      borderColor: (theme) => alpha(theme.palette.success.main, 0.24),
-                      bgcolor: (theme) => alpha(theme.palette.success.main, 0.06),
+                      borderColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.24),
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.06),
                       boxShadow: (theme) => `inset 4px 0 0 ${theme.palette.success.main}`,
                     }}
                   >
@@ -1897,7 +1934,7 @@ const TimeTableForm = ({
                           flexShrink: 0,
                           placeItems: 'center',
                           color: 'success.main',
-                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.12),
+                          bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.12),
                         }}
                       >
                         <Iconify icon="mdi:check-decagram-outline" width={26} />
@@ -1945,7 +1982,7 @@ const TimeTableForm = ({
                             p: 1.5,
                             height: '100%',
                             borderRadius: 1,
-                            bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.5),
+                            bgcolor: (theme) => varAlpha(theme.vars.palette.background.neutralChannel, 0.8),
                           }}
                         >
                           <Stack spacing={1}>

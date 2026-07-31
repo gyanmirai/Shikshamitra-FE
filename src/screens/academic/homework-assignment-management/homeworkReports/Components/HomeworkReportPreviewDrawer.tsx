@@ -356,7 +356,7 @@ const HomeworkReportPreviewDrawer = ({
                   hover
                   sx={(theme) => ({
                     '&:nth-of-type(even)': {
-                      bgcolor: alpha(theme.palette.grey[100], 0.6),
+                      bgcolor: 'background.neutral',
                     },
                   })}
                 >
@@ -413,7 +413,7 @@ const HomeworkReportPreviewDrawer = ({
           display: 'flex',
           gap: 1,
           justifyContent: 'flex-end',
-          bgcolor: alpha(theme.palette.grey[100], 0.6),
+          bgcolor: 'background.neutral',
           flexShrink: 0,
         })}
       >

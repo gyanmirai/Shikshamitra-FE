@@ -208,7 +208,7 @@ const ViewAssignmentDetails = ({
           sx={{
             p: 2,
             borderRadius: 2,
-            bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.08),
+            bgcolor: 'background.neutral',
             border: (theme) => `1px dashed ${theme.palette.divider}`,
             display: 'flex',
             flexDirection: 'column',
