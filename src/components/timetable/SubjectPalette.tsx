@@ -3,29 +3,30 @@ import type { RootState } from 'src/redux/store';
 import { useDrag } from 'react-dnd';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Add, Search, Clear } from '@mui/icons-material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { alpha, useTheme } from '@mui/material/styles';
+import { Add, Search, Clear } from '@mui/icons-material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weeklyLectures/createWeeklyLectures';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
+  Tab,
   List,
   Card,
   Chip,
+  Tabs,
+  Stack,
   Button,
   Divider,
   Skeleton,
   ListItem,
   TextField,
   Typography,
+  IconButton,
   LinearProgress,
   InputAdornment,
-  IconButton,
-  Tabs,
-  Tab,
-  Stack,
 } from '@mui/material';
 
 import { ItemTypes } from './types';
@@ -220,6 +221,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
     params: {
       academicMediumId: medium?.id,
       standardId,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !medium?.id || !standardId,

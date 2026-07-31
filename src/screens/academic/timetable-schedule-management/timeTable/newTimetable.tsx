@@ -9,6 +9,7 @@ import type { TimetableValidationIssue } from 'src/components/timetable/timetabl
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { cloneDeep } from 'lodash';
@@ -1914,8 +1915,8 @@ const TimeTableForm = ({
                     sx={{
                       p: 2,
                       borderRadius: 2,
-                      borderColor: (theme) => alpha(theme.palette.success.main, 0.24),
-                      bgcolor: (theme) => alpha(theme.palette.success.main, 0.06),
+                      borderColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.24),
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.06),
                       boxShadow: (theme) => `inset 4px 0 0 ${theme.palette.success.main}`,
                     }}
                   >
@@ -1933,7 +1934,7 @@ const TimeTableForm = ({
                           flexShrink: 0,
                           placeItems: 'center',
                           color: 'success.main',
-                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.12),
+                          bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.12),
                         }}
                       >
                         <Iconify icon="mdi:check-decagram-outline" width={26} />
@@ -1981,7 +1982,7 @@ const TimeTableForm = ({
                             p: 1.5,
                             height: '100%',
                             borderRadius: 1,
-                            bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.5),
+                            bgcolor: (theme) => varAlpha(theme.vars.palette.background.neutralChannel, 0.8),
                           }}
                         >
                           <Stack spacing={1}>

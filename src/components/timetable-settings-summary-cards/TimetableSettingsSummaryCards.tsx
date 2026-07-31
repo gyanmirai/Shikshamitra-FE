@@ -8,6 +8,8 @@ export interface ITimetableSummaryCard {
   value: string | number;
   icon: string;
   color?: 'primary' | 'success' | 'warning' | 'error' | 'info';
+  onClick?: () => void;
+  isActive?: boolean;
 }
 
 interface TimetableSettingsSummaryCardsProps {
@@ -20,12 +22,26 @@ export function TimetableSettingsSummaryCards({ cards }: TimetableSettingsSummar
       {cards.map((card) => (
         <Grid key={card.label} size={{ xs: 6, sm: 4, md: 12 / cards.length }}>
           <Card
+            onClick={card.onClick}
             sx={{
               p: 1.75,
               display: 'flex',
               alignItems: 'center',
               gap: 1.5,
               boxShadow: 'var(--shadows-3)',
+              cursor: card.onClick ? 'pointer' : 'default',
+              transition: 'all 0.2s ease-in-out',
+              ...(card.isActive && {
+                border: (theme) => `2px solid ${theme.palette[card.color ?? 'primary'].main}`,
+                bgcolor: (theme) =>
+                  `color-mix(in srgb, ${theme.palette[card.color ?? 'primary'].main} 8%, transparent)`,
+              }),
+              ...(card.onClick && {
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 'var(--shadows-8)',
+                },
+              }),
             }}
           >
             <Box

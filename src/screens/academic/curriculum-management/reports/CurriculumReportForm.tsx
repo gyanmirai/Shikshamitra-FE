@@ -237,6 +237,7 @@ const CurriculumReportForm = ({
     params: {
       academicMediumId: medium?.id,
       standardId: classId,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !medium?.id || !classId,

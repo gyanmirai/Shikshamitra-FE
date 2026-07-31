@@ -291,7 +291,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                     sx={{
                       px: 2,
                       py: 1.25,
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      bgcolor: 'background.neutral',
                       borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
@@ -407,7 +407,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                     sx={{
                       px: 2,
                       py: 1.25,
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      bgcolor: 'background.neutral',
                       borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
@@ -518,11 +518,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                                   ]),
                                 ...(activeQuickScore !== qs.key && {
                                   borderColor: (theme) =>
-                                    varAlpha(theme.palette.grey['500Channel'], 0.32),
+                                    varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
                                   '&:hover': {
                                     borderColor: 'text.primary',
                                     bgcolor: (theme) =>
-                                      varAlpha(theme.palette.grey['500Channel'], 0.08),
+                                      varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
                                   },
                                 }),
                               }}
@@ -552,7 +552,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      bgcolor: 'background.neutral',
                       borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >

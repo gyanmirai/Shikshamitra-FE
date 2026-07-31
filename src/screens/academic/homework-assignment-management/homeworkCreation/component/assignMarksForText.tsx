@@ -200,7 +200,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                     sx={{
                       px: 2,
                       py: 1.25,
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      bgcolor: 'background.neutral',
                       borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
@@ -305,7 +305,7 @@ I have completed all answers as per the instructions.`}
                     sx={{
                       px: 2,
                       py: 1.25,
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      bgcolor: 'background.neutral',
                       borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
@@ -337,7 +337,7 @@ I have completed all answers as per the instructions.`}
                         fontFamily: 'inherit',
                         color: 'text.primary',
                         p: 2,
-                        bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.04),
+                        bgcolor: 'background.neutral',
                         borderRadius: 1,
                         border: (theme) => `1px solid ${theme.palette.divider}`,
                       }}
@@ -365,7 +365,7 @@ I have completed all answers as per the instructions.`}
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      bgcolor: 'background.neutral',
                       borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >

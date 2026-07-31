@@ -293,7 +293,7 @@ const AssignmentManagementReports = ({
   const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !showField('subjects') || !(medium as Medium)?.id || !!classId,
     },
@@ -309,6 +309,7 @@ const AssignmentManagementReports = ({
     params: {
       academicMediumId: medium?.id,
       standardId: classId,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !showField('subjects') || !medium?.id || !classId,

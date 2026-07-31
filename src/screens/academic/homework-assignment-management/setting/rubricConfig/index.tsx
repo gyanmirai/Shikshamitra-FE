@@ -24,6 +24,7 @@ import {
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { alpha } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -352,8 +353,8 @@ const RubricConfigScreen = () => {
               sx={{
                 p: 2,
                 borderRadius: 1.5,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
-                border: (theme) => `1px dashed ${alpha(theme.palette.primary.main, 0.2)}`,
+                bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.02),
+                border: (theme) => `1px dashed ${varAlpha(theme.vars.palette.primary.mainChannel, 0.2)}`,
                 display: 'flex',
                 gap: 1.5,
                 alignItems: 'flex-start',
@@ -403,11 +404,11 @@ const RubricConfigScreen = () => {
                   sx={{
                     p: 2,
                     borderRadius: 1.5,
-                    boxShadow: (theme) => `0 2px 8px -2px ${alpha(theme.palette.grey[500], 0.08)}`,
+                    boxShadow: (theme) => `0 2px 8px -2px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
                     transition: 'all 0.2s',
                     '&:hover': {
                       borderColor: 'primary.main',
-                      boxShadow: (theme) => `0 4px 12px -2px ${alpha(theme.palette.primary.main, 0.08)}`,
+                      boxShadow: (theme) => `0 4px 12px -2px ${varAlpha(theme.vars.palette.primary.mainChannel, 0.08)}`,
                       transform: 'translateY(-1px)',
                     },
                   }}
@@ -424,7 +425,7 @@ const RubricConfigScreen = () => {
                           width: 28,
                           height: 28,
                           borderRadius: '50%',
-                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                          bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
                           color: 'primary.main',
                           display: 'flex',
                           alignItems: 'center',

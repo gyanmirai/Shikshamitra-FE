@@ -79,6 +79,11 @@ const getApiItems = (response: any): any[] => {
   return [];
 };
 
+const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
+
+const isSelectableSetting = (item: any) =>
+  item?.status == null || SELECTABLE_SETTING_STATUSES.has(item.status);
+
 const SubjectPerformanceReportFieldsMap: Record<ExamReportTitle, string[]> = {
   [ExamReportTitle.AverageSubjectMarkAnalysis]: [
     'organizations',
@@ -352,7 +357,7 @@ const SubjectPerformanceReports = ({
   const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !shouldLoadSubjects || !!classId,
     },
@@ -368,6 +373,7 @@ const SubjectPerformanceReports = ({
     params: {
       academicMediumId: medium?.id,
       standardId: classId,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !shouldLoadSubjects || !classId,
@@ -384,7 +390,7 @@ const SubjectPerformanceReports = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGradeScalingsQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !shouldLoadGrades,
     },
@@ -448,13 +454,15 @@ const SubjectPerformanceReports = ({
 
   const gradeOptions = useMemo(() => {
     const gradeSet = new Set<string>();
-    getApiItems(gradeScalingData).forEach((scale: any) => {
-      (scale?.gradingScale ?? []).forEach((gradeItem: any) => {
-        if (gradeItem?.grade) {
-          gradeSet.add(String(gradeItem.grade));
-        }
+    getApiItems(gradeScalingData)
+      .filter(isSelectableSetting)
+      .forEach((scale: any) => {
+        (scale?.gradingScale ?? []).forEach((gradeItem: any) => {
+          if (gradeItem?.grade) {
+            gradeSet.add(String(gradeItem.grade));
+          }
+        });
       });
-    });
 
     return Array.from(gradeSet).map((grade) => ({ id: grade, name: grade }));
   }, [gradeScalingData]);
