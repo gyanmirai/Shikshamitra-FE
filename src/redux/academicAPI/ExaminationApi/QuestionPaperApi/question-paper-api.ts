@@ -94,7 +94,7 @@ export const questionPaperApi = academicApi.injectEndpoints({
         url: `/academics/question-papers/${paperId}/generate`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.questionPaper, academicType.chapter],
+      invalidatesTags: [academicType.questionPaper, academicType.questionBank, academicType.chapter],
     }),
     addQuestionToPaper: builder.mutation({
       query: ({ paperId, body }) => ({
@@ -102,7 +102,7 @@ export const questionPaperApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.questionPaper, academicType.chapter],
+      invalidatesTags: [academicType.questionPaper, academicType.questionBank, academicType.chapter],
     }),
     removeQuestionFromPaper: builder.mutation({
       query: ({ paperId, paperQuestionId }) => ({
@@ -110,7 +110,7 @@ export const questionPaperApi = academicApi.injectEndpoints({
         method: 'POST',
         body: paperQuestionId,
       }),
-      invalidatesTags: [academicType.questionPaper, academicType.chapter],
+      invalidatesTags: [academicType.questionPaper, academicType.questionBank, academicType.chapter],
     }),
     reorderPaperQuestions: builder.mutation({
       query: ({ paperId, body }) => ({
@@ -118,7 +118,7 @@ export const questionPaperApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.questionPaper, academicType.chapter],
+      invalidatesTags: [academicType.questionPaper, academicType.questionBank, academicType.chapter],
     }),
     getPaperPreview: builder.query({
       query: ({ paperId }) => ({

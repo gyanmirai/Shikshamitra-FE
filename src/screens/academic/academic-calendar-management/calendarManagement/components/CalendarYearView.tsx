@@ -57,7 +57,7 @@ const MonthInner = ({
     ...Array(firstDayOfWeek).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => monthStart.add(i, 'day')),
   ];
-  while (cells.length % 7 !== 0) cells.push(null);
+  while (cells.length < 42) cells.push(null);
 
   // Count marked days in this month (dates that have at least one matching event)
   const markedCount = Object.entries(dayMap).filter(
@@ -67,10 +67,13 @@ const MonthInner = ({
   ).length;
 
   return (
-    <Box sx={{ minWidth: 0 }}>
+    <Box sx={{ minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Month Header */}
       <Box
         sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 2,
           px: 2.5,
           py: 1.75,
           borderBottom: `1px solid ${varAlpha(theme.palette.dividerChannel, 0.5)}`,
@@ -91,7 +94,6 @@ const MonthInner = ({
         >
           {monthStart.format('MMMM YYYY')}
         </Typography>
-        {markedCount > 0 && <Label>{`${markedCount} marked`}</Label>}
       </Box>
 
       {/* Weekday headers */}
@@ -152,14 +154,14 @@ const MonthInner = ({
                   ? ''
                   : calEvents.length > 0
                     ? (
-                        <Box sx={{ py: 0.5 }}>
-                          {calEvents.map((e: any, i: number) => (
-                            <Typography key={i} variant="caption" sx={{ display: 'block', lineHeight: 1.6 }}>
-                              {`${i + 1}. ${e.title || DAY_TYPE_LABELS[e.dayType as DayType]}`}
-                            </Typography>
-                          ))}
-                        </Box>
-                      )
+                      <Box sx={{ py: 0.5 }}>
+                        {calEvents.map((e: any, i: number) => (
+                          <Typography key={i} variant="caption" sx={{ display: 'block', lineHeight: 1.6 }}>
+                            {`${i + 1}. ${e.title || DAY_TYPE_LABELS[e.dayType as DayType]}`}
+                          </Typography>
+                        ))}
+                      </Box>
+                    )
                     : isWeekend || isSaturday
                       ? 'Weekend'
                       : dayjs(key).format('dddd, DD MMM YYYY')
@@ -202,15 +204,15 @@ const MonthInner = ({
                     '&:hover': isOutside
                       ? {}
                       : {
-                          backgroundColor: markerColor
-                            ? alpha(markerColor, 0.18)
-                            : isToday
-                              ? theme.vars.palette.primary.dark
-                              : varAlpha(theme.palette.primary.mainChannel, 0.08),
-                          transform: 'scale(1.15)',
-                          zIndex: 2,
-                          boxShadow: `0 4px 8px ${alpha(theme.palette.common.black, 0.08)}`,
-                        },
+                        backgroundColor: markerColor
+                          ? alpha(markerColor, 0.18)
+                          : isToday
+                            ? theme.vars.palette.primary.dark
+                            : varAlpha(theme.palette.primary.mainChannel, 0.08),
+                        transform: 'scale(1.15)',
+                        zIndex: 2,
+                        boxShadow: `0 4px 8px ${alpha(theme.palette.common.black, 0.08)}`,
+                      },
                   }}
                 >
                   <Typography
@@ -269,6 +271,9 @@ const MonthCard = (props: {
     <Paper
       elevation={0}
       sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         borderRadius: 2.5,
         overflow: 'hidden',
         border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
@@ -286,66 +291,7 @@ const MonthCard = (props: {
   );
 };
 
-// ─── Dual Month Card (two months combined into one wide card) ───────────────
-
-const DualMonthCard = ({
-  months,
-  dayMap,
-  startDate,
-  endDate,
-  today,
-  onDayClick,
-  activeDayType,
-}: {
-  months: dayjs.Dayjs[];
-  dayMap: Record<string, any[]>;
-  startDate: string;
-  endDate: string;
-  today: string;
-  onDayClick: (date: string) => void;
-  activeDayType: DayType | null;
-}) => {
-  const theme = useTheme();
-
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        borderRadius: 2.5,
-        overflow: 'hidden',
-        border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
-        backgroundColor: theme.vars.palette.background.paper,
-        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-        display: 'grid',
-        gridTemplateColumns: `repeat(${months.length}, minmax(0, 1fr))`,
-        '&:hover': {
-          boxShadow: `0 12px 28px ${alpha(theme.palette.primary.main, 0.08)}`,
-          borderColor: alpha(theme.palette.primary.main, 0.25),
-        },
-      }}
-    >
-      {months.map((month, idx) => (
-        <Box
-          key={month.format('YYYY-MM')}
-          sx={{
-            minWidth: 0,
-            borderLeft: idx > 0 ? `1px solid ${alpha(theme.palette.divider, 0.6)}` : 'none',
-          }}
-        >
-          <MonthInner
-            monthStart={month}
-            dayMap={dayMap}
-            startDate={startDate}
-            endDate={endDate}
-            today={today}
-            onDayClick={onDayClick}
-            activeDayType={activeDayType}
-          />
-        </Box>
-      ))}
-    </Paper>
-  );
-};
+// DualMonthCard removed — year view uses individual MonthCard per responsive grid (Bug #5408 fix)
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -391,145 +337,54 @@ const CalendarYearView = ({
     }
   }
 
-  // Summary stats
-  const stats = [
-    {
-      label: 'Holidays',
-      count: days.filter((d) => d.dayType === DayType.Holiday).length,
-      color: DAY_TYPE_COLORS[DayType.Holiday],
-      icon: 'mdi:flag-outline',
-    },
-    {
-      label: 'Vacations',
-      count: days.filter((d) => d.dayType === DayType.Vacation).length,
-      color: DAY_TYPE_COLORS[DayType.Vacation],
-      icon: 'mdi:beach',
-    },
-    {
-      label: 'Events',
-      count: days.filter((d) => d.dayType === DayType.Event).length,
-      color: DAY_TYPE_COLORS[DayType.Event],
-      icon: 'mdi:party-popper',
-    },
-    {
-      label: 'Exam Days',
-      count: days.filter((d) => d.dayType === DayType.Exam).length,
-      color: DAY_TYPE_COLORS[DayType.Exam],
-      icon: 'mdi:file-document-edit-outline',
-    },
-    {
-      label: 'PTM Days',
-      count: days.filter((d) => d.dayType === DayType.PTM).length,
-      color: DAY_TYPE_COLORS[DayType.PTM],
-      icon: 'mdi:account-group-outline',
-    },
-    {
-      label: 'Half Days',
-      count: days.filter((d) => d.dayType === DayType.HalfDay).length,
-      color: DAY_TYPE_COLORS[DayType.HalfDay],
-      icon: 'mdi:clock-time-four-outline',
-    },
-  ];
+  // Summary stats are shown inline in the legend filter chips (no separate redundant row needed)
 
   return (
     <Box>
-      {/* Summary + Legend Section */}
+      {/* Integrated Streamlined Legend & Filter Section */}
       <Paper
         elevation={0}
         sx={{
-          mb: 1,
-          borderRadius: 2.5,
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          mb: 1.5,
+          p: 1.5,
+          borderRadius: 2,
           border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
-          overflow: 'hidden',
           backgroundColor: theme.vars.palette.background.paper,
+          boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.04)}`,
         }}
       >
-        {/* Stats Row */}
-        <Box
-          sx={{
-            px: 1,
-            py: 1,
-            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-            backgroundColor: alpha(theme.palette.primary.main, 0.01),
-          }}
-        >
-          <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
-            <Stack direction="row" alignItems="center" gap={1} mr={1.5}>
-              <Avatar
-                sx={{
-                  width: 28,
-                  height: 28,
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  color: 'primary.main',
-                }}
-              >
-                <Iconify icon="mdi:calendar-range" width={15} />
-              </Avatar>
-              <Typography
-                variant="subtitle2"
-                fontWeight={800}
-                color="text.primary"
-                sx={{ letterSpacing: 0.3 }}
-              >
-                {dayjs(startDate).format('MMM YYYY')} — {dayjs(endDate).format('MMM YYYY')}
-              </Typography>
-            </Stack>
-
-            <Stack direction="row" flexWrap="wrap" gap={1} flex={1}>
-              {stats.map((s) => (
-                <Box
-                  key={s.label}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    px: 1,
-                    py: 0.75,
-                    borderRadius: 2,
-                    backgroundColor: alpha(s.color, 0.06),
-                    border: `1px solid ${alpha(s.color, 0.15)}`,
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      backgroundColor: alpha(s.color, 0.1),
-                      transform: 'translateY(-1px)',
-                    },
-                  }}
-                >
-                  <Iconify icon={s.icon} width={14} sx={{ color: s.color }} />
-                  <Typography
-                    variant="body2"
-                    fontWeight={800}
-                    sx={{ color: s.color, lineHeight: 1 }}
-                  >
-                    {s.count}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    fontWeight={600}
-                    sx={{ fontSize: '11px' }}
-                  >
-                    {s.label}
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
-          </Stack>
-        </Box>
-
-        {/* Legend Row */}
-        <Box sx={{ px: 1, py: 1, backgroundColor: alpha(theme.palette.grey[500], 0.02) }}>
-          <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
+        <Stack direction="row" flexWrap="wrap" gap={1.25} alignItems="center">
+          <Stack direction="row" alignItems="center" gap={1} mr={1}>
+            <Avatar
+              sx={{
+                width: 26,
+                height: 26,
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                color: 'primary.main',
+              }}
+            >
+              <Iconify icon="mdi:calendar-range" width={14} />
+            </Avatar>
             <Typography
               variant="caption"
-              color="text.disabled"
               fontWeight={800}
-              sx={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: 1, mr: 1 }}
+              color="text.primary"
+              sx={{ letterSpacing: 0.3, whiteSpace: 'nowrap' }}
             >
-              Legend
+              {dayjs(startDate).format('MMM YYYY')} — {dayjs(endDate).format('MMM YYYY')}
             </Typography>
+          </Stack>
+
+          <Box sx={{ height: 16, width: '1px', bgcolor: 'divider', display: { xs: 'none', sm: 'block' } }} />
+
+          {/* Interactive Legend & Count Filter Chips */}
+          <Stack direction="row" flexWrap="wrap" gap={0.75} alignItems="center" flex={1}>
             {LEGEND_ITEMS.map(({ type, label }) => {
               const isActive = activeDayType === type;
+              const count = days.filter((d) => d.dayType === type).length;
 
               return (
                 <Stack
@@ -538,54 +393,68 @@ const CalendarYearView = ({
                   type="button"
                   direction="row"
                   alignItems="center"
-                  gap={1}
+                  gap={0.75}
                   onClick={() => onToggleDayType(type)}
                   sx={{
-                    border: 0,
+                    border: '1px solid',
+                    borderColor: isActive
+                      ? DAY_TYPE_COLORS[type]
+                      : alpha(DAY_TYPE_COLORS[type], 0.25),
                     cursor: 'pointer',
-                    borderRadius: 1,
-                    px: 0.75,
-                    py: 0.5,
-                    backgroundColor: isActive ? alpha(DAY_TYPE_COLORS[type], 0.12) : 'transparent',
+                    borderRadius: 1.5,
+                    px: 1,
+                    py: 0.4,
+                    backgroundColor: isActive
+                      ? alpha(DAY_TYPE_COLORS[type], 0.12)
+                      : alpha(DAY_TYPE_COLORS[type], 0.03),
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      backgroundColor: alpha(DAY_TYPE_COLORS[type], 0.12),
+                      transform: 'translateY(-1px)',
+                    },
                   }}
                 >
                   <Box
                     sx={{
-                      width: 14,
-                      height: 14,
+                      width: 7,
+                      height: 7,
                       borderRadius: '50%',
-                      backgroundColor: alpha(DAY_TYPE_COLORS[type], 0.15),
-                      border: `1.5px solid ${alpha(DAY_TYPE_COLORS[type], 0.5)}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      backgroundColor: DAY_TYPE_COLORS[type],
                     }}
-                  >
-                    <Box
-                      sx={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: '50%',
-                        backgroundColor: DAY_TYPE_COLORS[type],
-                      }}
-                    />
-                  </Box>
+                  />
                   <Typography
                     variant="caption"
-                    fontWeight={600}
-                    color="text.secondary"
+                    fontWeight={700}
+                    color="text.primary"
                     sx={{ fontSize: '11px' }}
                   >
                     {label}
                   </Typography>
+                  {count > 0 && (
+                    <Box
+                      sx={{
+                        px: 0.6,
+                        py: 0.1,
+                        borderRadius: 1,
+                        backgroundColor: alpha(DAY_TYPE_COLORS[type], 0.16),
+                        color: DAY_TYPE_COLORS[type],
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {count}
+                    </Box>
+                  )}
                 </Stack>
               );
             })}
-            <Stack direction="row" alignItems="center" gap={1}>
+
+            <Stack direction="row" alignItems="center" gap={0.75} ml={{ md: 'auto' }}>
               <Box
                 sx={{
-                  width: 14,
-                  height: 14,
+                  width: 12,
+                  height: 12,
                   borderRadius: '50%',
                   backgroundColor: alpha(theme.palette.text.secondary, 0.15),
                   border: `1px solid ${alpha(theme.palette.text.secondary, 0.4)}`,
@@ -599,8 +468,6 @@ const CalendarYearView = ({
               >
                 Weekend
               </Typography>
-            </Stack>
-            <Stack direction="row" alignItems="center" gap={1} ml={{ md: 'auto' }}>
               <Box
                 sx={{
                   width: 14,
@@ -610,6 +477,7 @@ const CalendarYearView = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  ml: 1,
                 }}
               >
                 <Typography sx={{ fontSize: '8px', color: '#fff', fontWeight: 900, lineHeight: 1 }}>
@@ -626,19 +494,24 @@ const CalendarYearView = ({
               </Typography>
             </Stack>
           </Stack>
-        </Box>
+        </Stack>
       </Paper>
 
-      {/* Monthly Grids */}
+      {/* Monthly Grids — max 4 columns so cards are never cramped (Bug #5408) */}
       <Box
         sx={{
           display: 'grid',
-          gap: 1,
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: 1.5,
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)',
+            lg: 'repeat(4, minmax(280px, 1fr))',
+          },
         }}
       >
         {months.map((month) => (
-          <Box key={month.format('YYYY-MM')} sx={{ minWidth: 0 }}>
+          <Box key={month.format('YYYY-MM')} sx={{ minWidth: 0, height: '100%' }}>
             <MonthCard
               monthStart={month}
               dayMap={dayMap}
