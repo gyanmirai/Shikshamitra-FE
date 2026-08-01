@@ -17,6 +17,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Label } from 'src/components/label';
 import { useGetQuestionsQuery } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import {
   useGetExamsQuery,
@@ -53,6 +54,8 @@ import {
   DialogActions,
   DialogContent,
 } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import {
   useGetBlueprintQuery,
   useGetPaperPreviewQuery,
@@ -67,12 +70,14 @@ import {
   useDeleteQuestionPaperMutation,
   useApproveQuestionPaperMutation,
   usePublishQuestionPaperMutation,
+  useLockQuestionPaperMutation,
   useArchiveQuestionPaperMutation,
   useGetQuestionPaperSettingsQuery,
   useGetQuestionPaperDashboardQuery,
   useRemoveQuestionFromPaperMutation,
   useSaveQuestionPaperSettingsMutation,
 } from 'src/redux/academicAPI/ExaminationApi/QuestionPaperApi/question-paper-api';
+import dayjs from 'dayjs';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -525,11 +530,16 @@ export default function QuestionPaperScreen() {
   const [approvePaper] = useApproveQuestionPaperMutation();
   const [rejectPaper, rejectPaperState] = useRejectQuestionPaperMutation();
   const [publishPaper] = usePublishQuestionPaperMutation();
+  const [lockQuestionPaper] = useLockQuestionPaperMutation();
   const [deletePaper] = useDeleteQuestionPaperMutation();
   const [archivePaper] = useArchiveQuestionPaperMutation();
   const [addQuestionToPaper] = useAddQuestionToPaperMutation();
   const [removeQuestionFromPaper] = useRemoveQuestionFromPaperMutation();
   const [savePaperSettings, savingPaperSettings] = useSaveQuestionPaperSettingsMutation();
+
+  const [deletePaperId, setDeletePaperId] = useState<string | null>(null);
+  const [archivePaperId, setArchivePaperId] = useState<string | null>(null);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
 
   // ─── Derived validations ─────────────────────────────────────────────────
 
@@ -554,43 +564,113 @@ export default function QuestionPaperScreen() {
       }))
       .filter((rule) => rule.marks > 0);
 
-    await saveBlueprint({
-      paperId: selectedPaperId,
-      body: {
-        questionPaperId: selectedPaperId,
-        totalMarks: selectedPaper.totalMarks,
-        chapterRules,
-        difficultyRules: DIFFICULTY_OPTIONS.map((d) => ({
-          difficultyLevel: d.value,
-          percentage: difficultyDist[d.value] || 0,
-        })),
-        bloomRules: BLOOM_OPTIONS.map((b) => ({
-          bloomLevel: b.value,
-          percentage: bloomDist[b.value] || 0,
-        })),
-      },
-    }).unwrap();
+    try {
+      await saveBlueprint({
+        paperId: selectedPaperId,
+        body: {
+          questionPaperId: selectedPaperId,
+          totalMarks: selectedPaper.totalMarks,
+          chapterRules,
+          difficultyRules: DIFFICULTY_OPTIONS.map((d) => ({
+            difficultyLevel: d.value,
+            percentage: difficultyDist[d.value] || 0,
+          })),
+          bloomRules: BLOOM_OPTIONS.map((b) => ({
+            bloomLevel: b.value,
+            percentage: bloomDist[b.value] || 0,
+          })),
+        },
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Blueprint saved successfully.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || err?.data?.message || 'Failed to save blueprint.' });
+    }
   };
 
   const handleAddQuestion = async (bankQuestion: any) => {
     if (!selectedPaperId || !selectedPaper) return;
     const sectionId = selectedPaper.sections?.[0]?.id;
     if (!sectionId) return;
-    await addQuestionToPaper({
-      paperId: selectedPaperId,
-      body: {
-        questionPaperSectionId: sectionId,
-        questionBankItemId: bankQuestion.id,
-        questionNumber: (selectedPaper.questions?.length || 0) + 1,
-        marks: bankQuestion.marks,
-        sortOrder: (selectedPaper.questions?.length || 0) + 1,
-      },
-    }).unwrap();
+    try {
+      await addQuestionToPaper({
+        paperId: selectedPaperId,
+        body: {
+          questionPaperSectionId: sectionId,
+          questionBankItemId: bankQuestion.id,
+          questionNumber: (selectedPaper.questions?.length || 0) + 1,
+          marks: bankQuestion.marks,
+          sortOrder: (selectedPaper.questions?.length || 0) + 1,
+        },
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Question added to paper.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || err?.data?.message || 'Failed to add question.' });
+    }
   };
 
   const handleRemoveQuestion = async (paperQuestionId: string) => {
     if (!selectedPaperId) return;
-    await removeQuestionFromPaper({ paperId: selectedPaperId, paperQuestionId }).unwrap();
+    try {
+      await removeQuestionFromPaper({ paperId: selectedPaperId, paperQuestionId }).unwrap();
+      shikshaMitraToast.success({ message: 'Question removed from paper.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || err?.data?.message || 'Failed to remove question.' });
+    }
+  };
+
+  const handleSubmitPaper = async () => {
+    if (!selectedPaperId) return;
+    try {
+      await submitPaper({ id: selectedPaperId }).unwrap();
+      shikshaMitraToast.success({ message: 'Paper submitted for approval.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || err?.data?.message || 'Failed to submit paper.' });
+    }
+  };
+
+  const handleApprovePaper = async () => {
+    if (!selectedPaperId) return;
+    try {
+      await approvePaper({ id: selectedPaperId, body: {} }).unwrap();
+      shikshaMitraToast.success({ message: 'Paper approved.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || err?.data?.message || 'Failed to approve paper.' });
+    }
+  };
+
+  const handlePublishPaper = async () => {
+    if (!selectedPaperId) return;
+    try {
+      await publishPaper({ id: selectedPaperId }).unwrap();
+      await lockQuestionPaper({ id: selectedPaperId }).unwrap();
+      shikshaMitraToast.success({ message: 'Paper published and locked.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || err?.data?.message || 'Failed to publish paper.' });
+    }
+  };
+
+  const handleConfirmDeletePaper = async () => {
+    if (!deletePaperId) return;
+    try {
+      await deletePaper({ id: deletePaperId }).unwrap();
+      shikshaMitraToast.success({ message: 'Paper deleted.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || err?.data?.message || 'Failed to delete paper.' });
+    } finally {
+      setDeletePaperId(null);
+    }
+  };
+
+  const handleConfirmArchivePaper = async () => {
+    if (!archivePaperId) return;
+    try {
+      await archivePaper({ id: archivePaperId }).unwrap();
+      shikshaMitraToast.success({ message: 'Paper archived.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || err?.data?.message || 'Failed to archive paper.' });
+    } finally {
+      setArchivePaperId(null);
+    }
   };
 
   const handleRejectPaperConfirm = async () => {
@@ -693,13 +773,49 @@ export default function QuestionPaperScreen() {
         label: 'Paper',
         filterType: 'string' as const,
         minWidth: 200,
+        sticky: true,
+        stickyPosition: 'left' as const,
         render: (_: any, row: any) => (
           <Box>
-            <Typography variant="subtitle2">{row.paperTitle}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {row.creationMode}
+            <Typography variant="subtitle2" noWrap>{row.paperTitle}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {row.paperCode ? `#${row.paperCode}` : row.creationMode}
             </Typography>
           </Box>
+        ),
+      },
+      {
+        id: 'standardName',
+        label: 'Class',
+        filterType: 'string' as const,
+        width: 120,
+      },
+      {
+        id: 'subjectName',
+        label: 'Subject',
+        filterType: 'string' as const,
+        width: 140,
+      },
+      {
+        id: 'examTitle',
+        label: 'Exam',
+        filterType: 'string' as const,
+        width: 150,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.primary" noWrap>
+            {row.examTitle || row.exam?.title || row.examName || '—'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'examDate',
+        label: 'Exam Date',
+        filterType: 'date' as const,
+        width: 120,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.secondary" noWrap>
+            {row.examDate || row.exam?.startDate ? dayjs(row.examDate || row.exam?.startDate).format('DD-MM-YYYY') : '—'}
+          </Typography>
         ),
       },
       {
@@ -714,7 +830,7 @@ export default function QuestionPaperScreen() {
         id: 'durationMinutes',
         label: 'Duration',
         filterType: 'number' as const,
-        width: 110,
+        width: 100,
         align: 'center' as const,
         render: (v: any) => <Typography variant="body2">{v ? `${v} min` : '—'}</Typography>,
       },
@@ -724,23 +840,10 @@ export default function QuestionPaperScreen() {
         filterType: 'enum' as const,
         width: 110,
         enumOptions: CREATION_MODE_OPTIONS,
-        defaultHidden: true,
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        filterType: 'enum' as const,
-        width: 130,
-        enumOptions: Object.entries(STATUS_LABEL).map(([v, l]) => ({
-          value: Number(v),
-          label: l,
-        })),
         render: (v: any) => (
-          <Chip
-            size="small"
-            color={(STATUS_COLOR[v] as any) || 'default'}
-            label={STATUS_LABEL[v] || '—'}
-          />
+          <Label variant="soft" color="default" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
+            {v || 'Manual'}
+          </Label>
         ),
       },
       {
@@ -750,7 +853,41 @@ export default function QuestionPaperScreen() {
         width: 100,
         align: 'center' as const,
         render: (_: any, row: any) => (
-          <Typography variant="body2">{row.questions?.length || 0}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {row.questions?.length || row.totalQuestions || 0}
+          </Typography>
+        ),
+      },
+      {
+        id: 'createdAt',
+        label: 'Created On',
+        filterType: 'date' as const,
+        width: 120,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.secondary" noWrap>
+            {row.createdAt ? dayjs(row.createdAt).format('DD-MM-YYYY') : '—'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        filterType: 'enum' as const,
+        sticky: true,
+        stickyPosition: 'right' as const,
+        width: 130,
+        enumOptions: Object.entries(STATUS_LABEL).map(([v, l]) => ({
+          value: l,
+          label: l,
+        })),
+        render: (v: any) => (
+          <Label
+            variant="soft"
+            color={(STATUS_COLOR[v] as any) || 'default'}
+            sx={{ fontWeight: 700 }}
+          >
+            {STATUS_LABEL[v] || v || '—'}
+          </Label>
         ),
       },
       {
@@ -758,10 +895,12 @@ export default function QuestionPaperScreen() {
         label: 'Actions',
         isFilter: false,
         isSort: false,
-        width: 160,
-        align: 'right' as const,
+        width: 140,
+        align: 'left' as const,
+        sticky: true,
+        stickyPosition: 'right' as const,
         render: (_: any, row: any) => (
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Stack direction="row" spacing={0.5} justifyContent="flex-start">
             <Tooltip title="Blueprint & Builder">
               <IconButton
                 size="small"
@@ -796,7 +935,7 @@ export default function QuestionPaperScreen() {
                   disabled={row.status === 8 || row.status === 6}
                   onClick={(e) => {
                     e.stopPropagation();
-                    archivePaper({ id: row.id });
+                    setArchivePaperId(row.id);
                   }}
                 >
                   <Iconify icon="mingcute:archive-line" width={17} />
@@ -811,7 +950,7 @@ export default function QuestionPaperScreen() {
                   disabled={row.status > 2}
                   onClick={(e) => {
                     e.stopPropagation();
-                    deletePaper({ id: row.id });
+                    setDeletePaperId(row.id);
                   }}
                 >
                   <Iconify icon="mingcute:delete-2-line" width={17} />
@@ -822,8 +961,7 @@ export default function QuestionPaperScreen() {
         ),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [classOptions, formSubjectOptions]
   );
 
   return (
@@ -855,7 +993,7 @@ export default function QuestionPaperScreen() {
               disabled={!academicYearId}
               onClick={handleOpenCreate}
             >
-              Paper
+              + Create Paper
             </Button>
           </Stack>
         }
@@ -2112,6 +2250,44 @@ export default function QuestionPaperScreen() {
           </LoadingButton>
         </DialogActions>
       </Dialog>
+
+      {/* ── Confirm Delete Paper Dialog ── */}
+      <ConfirmDialog
+        open={!!deletePaperId}
+        title="Delete Question Paper"
+        content="This action cannot be undone. The question paper and its blueprint data will be permanently removed."
+        icon="warning"
+        onClose={() => setDeletePaperId(null)}
+        action={
+          <Button
+            size="small"
+            color="error"
+            variant="contained"
+            onClick={handleConfirmDeletePaper}
+          >
+            Delete
+          </Button>
+        }
+      />
+
+      {/* ── Confirm Archive Paper Dialog ── */}
+      <ConfirmDialog
+        open={!!archivePaperId}
+        title="Archive Question Paper"
+        content="Archiving will hide this paper from active exam schedule options. You can restore it later if needed."
+        icon="warning"
+        onClose={() => setArchivePaperId(null)}
+        action={
+          <Button
+            size="small"
+            color="warning"
+            variant="contained"
+            onClick={handleConfirmArchivePaper}
+          >
+            Archive
+          </Button>
+        }
+      />
     </Box>
   );
 }

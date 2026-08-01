@@ -350,7 +350,13 @@ const CalendarDayFormDialog = ({
                 rows={2}
                 label="Description"
                 name="description"
-                value={formik.values.description}
+                value={
+                  // Bug #5411: strip raw backend GUID strings (ExamId / auto-created) from view
+                  formik.values.description
+                    .replace(/\.?\s*Auto-created from examination schedule\.?/gi, '')
+                    .replace(/\.?\s*ExamId:\s*[\w-]+/gi, '')
+                    .trim()
+                }
                 onChange={formik.handleChange}
                 placeholder="Optional details or notes..."
               />
@@ -451,16 +457,22 @@ const CalendarDayFormDialog = ({
                       </Grid>
                       {formik.values.standardIds.length === 1 && (
                         <Grid size={{ xs: 12, sm: 6 }}>
+                          {/* Bug #5411: notched + shrink prevents label/placeholder collision */}
                           <FormControl fullWidth size="small">
-                            <InputLabel>Division (optional)</InputLabel>
+                            <InputLabel id="division-select-label" shrink htmlFor="division-select">
+                              Division
+                            </InputLabel>
                             <Select
-                              label="Division (optional)"
+                              labelId="division-select-label"
+                              inputProps={{ id: 'division-select' }}
+                              label="Division"
                               name="divisionId"
                               value={formik.values.divisionId}
                               onChange={formik.handleChange}
                               displayEmpty
+                              notched
                               renderValue={(selected) => {
-                                if (!selected) return 'All Divisions';
+                                if (!selected) return <em style={{ opacity: 0.6, fontStyle: 'normal' }}>All Divisions (optional)</em>;
                                 const selectedDivision = standards
                                   .find((s) => s.id === formik.values.standardIds[0])
                                   ?.divisions?.find((d: any) => d.id === selected);

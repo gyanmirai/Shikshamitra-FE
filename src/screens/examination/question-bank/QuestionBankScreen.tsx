@@ -1,5 +1,6 @@
 'use client';
 
+import dayjs from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -13,8 +14,8 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { LoadingButton } from '@mui/lab';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -22,9 +23,15 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import CustomTooltip from 'src/components/custom-tooltip';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { academicPaths } from 'src/constants/academic-menu';
 import {
   Box,
+  Tab,
   Card,
+  Tabs,
+  Chip,
   Grid,
   Paper,
   Stack,
@@ -32,6 +39,7 @@ import {
   Button,
   Switch,
   Popover,
+  Skeleton,
   Tooltip,
   MenuList,
   MenuItem,
@@ -40,6 +48,11 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import {
+  QB_STATUS_LABEL,
+  QB_STATUS_COLOR,
+} from 'src/utils/examination-constants';
 import {
   useGetQuestionsQuery,
   useCreateQuestionMutation,
@@ -53,6 +66,8 @@ import {
   useGetQuestionBankSettingsQuery,
   useGetQuestionBankDashboardQuery,
   useSaveQuestionBankSettingsMutation,
+  useBulkApproveQuestionsMutation,
+  useBulkRejectQuestionsMutation,
 } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -126,12 +141,22 @@ function buildQuestionValidationSchema(settings?: any) {
       .required('Marks are required')
       .min(0.5, 'Minimum 0.5')
       .max(100, 'Maximum 100'),
-    difficultyLevel: Yup.number().required(),
+    difficultyLevel: Yup.number().required('Difficulty level is required'),
     chapterId: settings?.requireChapter
       ? Yup.string().required('Chapter is required')
       : Yup.string().nullable(),
     topicName: settings?.requireTopic
       ? Yup.string().required('Topic is required')
+      : Yup.string().nullable(),
+    bloomLevel: settings?.requireBloomLevel
+      ? Yup.number().required("Bloom's level is required")
+      : Yup.number().nullable(),
+    answerKey: settings?.requireAnswerKey
+      ? Yup.string().when('questionType', {
+        is: (type: number) => [4, 5, 6].includes(Number(type)),
+        then: (schema) => schema.trim().required('Answer key is required'),
+        otherwise: (schema) => schema.notRequired(),
+      })
       : Yup.string().nullable(),
     options: Yup.array().when('questionType', {
       is: (type: number) => [1, 2, 3].includes(Number(type)),
@@ -270,22 +295,40 @@ function StatCard({
   value,
   icon,
   color,
+  isSelected,
+  isLoading,
+  onClick,
 }: {
   label: string;
   value: number;
   icon: string;
   color: StatColor;
+  isSelected?: boolean;
+  isLoading?: boolean;
+  onClick?: () => void;
 }) {
   const theme = useTheme();
   const palette = theme.palette[color];
+
+  if (isLoading) {
+    return <Skeleton variant="rounded" height={64} width="100%" sx={{ borderRadius: 1 }} />;
+  }
+
   return (
     <Card
+      onClick={onClick}
       sx={{
         p: 1.5,
         borderRadius: 1,
         border: '1px solid',
-        borderColor: 'divider',
-        boxShadow: 'none',
+        borderColor: isSelected ? palette.main : 'divider',
+        boxShadow: isSelected ? `0 0 0 1px ${palette.main}` : 'none',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'all 0.2s ease',
+        '&:hover': {
+          borderColor: palette.main,
+          transform: 'translateY(-1px)',
+        },
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -307,7 +350,7 @@ function StatCard({
           <Typography variant="h5" sx={{ lineHeight: 1 }}>
             {value}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" color="text.secondary" noWrap display="block">
             {label}
           </Typography>
         </Box>
@@ -388,6 +431,8 @@ function QuestionFormFields({
   classOptions,
   subjectOptions,
   chapterOptions,
+  isSubjectLoading,
+  isChapterLoading,
   onTypeChange,
   onOptionChange,
   theme,
@@ -430,6 +475,7 @@ function QuestionFormFields({
                 options={subjectOptions}
                 value={formik.values.subjectId}
                 disabled={!formik.values.standardId}
+                isLoading={isSubjectLoading}
                 onChange={(val: any) => {
                   formik.setFieldValue('subjectId', val);
                   formik.setFieldValue('chapterId', '');
@@ -447,6 +493,7 @@ function QuestionFormFields({
                 options={[{ value: '', label: 'None' }, ...chapterOptions]}
                 value={formik.values.chapterId || ''}
                 disabled={!formik.values.subjectId}
+                isLoading={isChapterLoading}
                 onChange={(val: any) => formik.setFieldValue('chapterId', val)}
                 error={formik.touched.chapterId && !!formik.errors.chapterId}
                 helperText={(formik.touched.chapterId && formik.errors.chapterId) || ''}
@@ -748,20 +795,32 @@ export default function QuestionBankScreen() {
     [allClass]
   );
 
-  // Filter cascade queries
-  const { data: filterSubjectData } = useGetSubjectAssignmentsQuery(
-    { standardId: filters.standardId },
-    { skip: !filters.standardId }
-  );
+  // Filter cascade queries via useQueryAndMutation (SKILL.md Section 4)
+  const {
+    data: filterSubjectData,
+    isFetching: isFilterSubjectFetching,
+    isLoading: isFilterSubjectLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: filters.standardId },
+    options: { skip: !filters.standardId },
+  });
   const filterSubjectOptions = useMemo(
     () => buildSubjectOptions(filterSubjectData),
     [filterSubjectData]
   );
 
-  const { data: filterChapters } = useGetChaptersByStandardQuery(
-    { standardId: filters.standardId, subjectId: filters.subjectId },
-    { skip: !filters.standardId || !filters.subjectId }
-  );
+  const {
+    data: filterChapters,
+    isFetching: isFilterChapterFetching,
+    isLoading: isFilterChapterLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    params: { standardId: filters.standardId, subjectId: filters.subjectId },
+    options: { skip: !filters.standardId || !filters.subjectId },
+  });
   const filterChapterOptions = useMemo(
     () =>
       (filterChapters || []).map((c: any) => ({
@@ -771,31 +830,87 @@ export default function QuestionBankScreen() {
     [filterChapters]
   );
 
-  // Data queries
+  // Data queries via useQueryAndMutation
   const query = useMemo(
-    () => ({ ...filters, academicYearId: academicYearId || undefined, pageSize: 300 }),
+    () => ({
+      ...filters,
+      academicYearId: academicYearId || undefined,
+      pageSize: 300,
+    }),
     [academicYearId, filters]
   );
-  const { data: dashboard } = useGetQuestionBankDashboardQuery(
-    { academicYearId },
-    { skip: !academicYearId }
-  );
-  const { data, isFetching } = useGetQuestionsQuery(query, { skip: !academicYearId });
-  const { data: settings } = useGetQuestionBankSettingsQuery(
-    { academicYearId },
-    { skip: !academicYearId }
-  );
-  const [saveSettings, savingSettings] = useSaveQuestionBankSettingsMutation();
-  const [createQuestion, createState] = useCreateQuestionMutation();
-  const [updateQuestion, updateState] = useUpdateQuestionMutation();
-  const [submitQuestion] = useSubmitQuestionMutation();
-  const [approveQuestion] = useApproveQuestionMutation();
-  const [rejectQuestion] = useRejectQuestionMutation();
-  const [deleteQuestion] = useDeleteQuestionMutation();
-  const [archiveQuestion] = useArchiveQuestionMutation();
-  const [duplicateQuestion] = useDuplicateQuestionMutation();
 
-  // Dynamic validation schema respects Settings toggles (bug #5397)
+  const {
+    data: dashboard,
+    isFetching: isDashboardFetching,
+    isLoading: isDashboardLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetQuestionBankDashboardQuery,
+    params: { academicYearId },
+    options: { skip: !academicYearId },
+  });
+
+  const {
+    data,
+    isFetching: isQuestionFetching,
+    isLoading: isQuestionLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetQuestionsQuery,
+    params: query,
+    options: { skip: !academicYearId },
+  });
+
+  const {
+    data: settings,
+    isFetching: isSettingsFetching,
+    isLoading: isSettingsLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetQuestionBankSettingsQuery,
+    params: { academicYearId },
+    options: { skip: !academicYearId },
+  });
+
+  const [saveSettings, { isLoading: isSaveSettingsLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSaveQuestionBankSettingsMutation,
+  });
+  const [createQuestion, { isLoading: isCreateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateQuestionMutation,
+  });
+  const [updateQuestion, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateQuestionMutation,
+  });
+  const [submitQuestion, { isLoading: isSubmitLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSubmitQuestionMutation,
+  });
+  const [approveQuestion, { isLoading: isApproveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useApproveQuestionMutation,
+  });
+  const [rejectQuestion, { isLoading: isRejectLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectQuestionMutation,
+  });
+  const [deleteQuestion, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteQuestionMutation,
+  });
+  const [archiveQuestion, { isLoading: isArchiveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useArchiveQuestionMutation,
+  });
+  const [duplicateQuestion, { isLoading: isDuplicateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDuplicateQuestionMutation,
+  });
+
+  // Dynamic validation schema respects Settings toggles
   const questionValidationSchema = useMemo(
     () => buildQuestionValidationSchema(settings),
     [settings]
@@ -842,16 +957,28 @@ export default function QuestionBankScreen() {
   });
 
   // Form cascade queries (driven by formik values)
-  const { data: formSubjectData } = useGetSubjectAssignmentsQuery(
-    { standardId: formik.values.standardId },
-    { skip: !formik.values.standardId }
-  );
+  const {
+    data: formSubjectData,
+    isFetching: isFormSubjectFetching,
+    isLoading: isFormSubjectLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: formik.values.standardId },
+    options: { skip: !formik.values.standardId },
+  });
   const formSubjectOptions = useMemo(() => buildSubjectOptions(formSubjectData), [formSubjectData]);
 
-  const { data: formChapters } = useGetChaptersByStandardQuery(
-    { standardId: formik.values.standardId, subjectId: formik.values.subjectId },
-    { skip: !formik.values.standardId || !formik.values.subjectId }
-  );
+  const {
+    data: formChapters,
+    isFetching: isFormChapterFetching,
+    isLoading: isFormChapterLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    params: { standardId: formik.values.standardId, subjectId: formik.values.subjectId },
+    options: { skip: !formik.values.standardId || !formik.values.subjectId },
+  });
   const formChapterOptions = useMemo(
     () =>
       (formChapters || []).map((c: any) => ({
@@ -862,16 +989,28 @@ export default function QuestionBankScreen() {
   );
 
   // Edit form cascade queries (driven by editFormik values)
-  const { data: editSubjectData } = useGetSubjectAssignmentsQuery(
-    { standardId: editFormik.values.standardId },
-    { skip: !editFormik.values.standardId }
-  );
+  const {
+    data: editSubjectData,
+    isFetching: isEditSubjectFetching,
+    isLoading: isEditSubjectLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: editFormik.values.standardId },
+    options: { skip: !editFormik.values.standardId },
+  });
   const editSubjectOptions = useMemo(() => buildSubjectOptions(editSubjectData), [editSubjectData]);
 
-  const { data: editChapters } = useGetChaptersByStandardQuery(
-    { standardId: editFormik.values.standardId, subjectId: editFormik.values.subjectId },
-    { skip: !editFormik.values.standardId || !editFormik.values.subjectId }
-  );
+  const {
+    data: editChapters,
+    isFetching: isEditChapterFetching,
+    isLoading: isEditChapterLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    params: { standardId: editFormik.values.standardId, subjectId: editFormik.values.subjectId },
+    options: { skip: !editFormik.values.standardId || !editFormik.values.subjectId },
+  });
   const editChapterOptions = useMemo(
     () =>
       (editChapters || []).map((c: any) => ({
@@ -880,6 +1019,8 @@ export default function QuestionBankScreen() {
       })),
     [editChapters]
   );
+
+
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
@@ -911,17 +1052,81 @@ export default function QuestionBankScreen() {
         tagsText: (question.tags || []).join(', '),
         options: question.options?.length
           ? question.options.map((o: any) => ({
-              optionText: o.optionText,
-              isCorrect: o.isCorrect,
-              sortOrder: o.sortOrder,
-            }))
+            optionText: o.optionText,
+            isCorrect: o.isCorrect,
+            sortOrder: o.sortOrder,
+          }))
           : [
-              { optionText: '', isCorrect: true, sortOrder: 1 },
-              { optionText: '', isCorrect: false, sortOrder: 2 },
-            ],
+            { optionText: '', isCorrect: true, sortOrder: 1 },
+            { optionText: '', isCorrect: false, sortOrder: 2 },
+          ],
       },
     });
     setEditDialogOpen(true);
+  };
+
+  const [deleteQuestionId, setDeleteQuestionId] = useState<string | null>(null);
+  const [archiveQuestionId, setArchiveQuestionId] = useState<string | null>(null);
+
+  const handleSubmitQuestion = async (id: string) => {
+    try {
+      await submitQuestion({ id }).unwrap();
+      shikshaMitraToast.success({ message: 'Question submitted for review.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({
+        message: err?.data?.detail || err?.data?.message || 'Failed to submit question.',
+      });
+    }
+  };
+
+  const handleApproveQuestion = async (id: string) => {
+    try {
+      await approveQuestion({ id, body: { comment: reviewComment } }).unwrap();
+      shikshaMitraToast.success({ message: 'Question approved.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({
+        message: err?.data?.detail || err?.data?.message || 'Failed to approve question.',
+      });
+    }
+  };
+
+  const handleDuplicateQuestion = async (id: string) => {
+    try {
+      await duplicateQuestion({ id }).unwrap();
+      shikshaMitraToast.success({ message: 'Question duplicated.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({
+        message: err?.data?.detail || err?.data?.message || 'Failed to duplicate question.',
+      });
+    }
+  };
+
+  const handleConfirmDeleteQuestion = async () => {
+    if (!deleteQuestionId) return;
+    try {
+      await deleteQuestion({ id: deleteQuestionId }).unwrap();
+      shikshaMitraToast.success({ message: 'Question deleted permanently.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({
+        message: err?.data?.detail || err?.data?.message || 'Failed to delete question.',
+      });
+    } finally {
+      setDeleteQuestionId(null);
+    }
+  };
+
+  const handleConfirmArchiveQuestion = async () => {
+    if (!archiveQuestionId) return;
+    try {
+      await archiveQuestion({ id: archiveQuestionId }).unwrap();
+      shikshaMitraToast.success({ message: 'Question archived.' });
+    } catch (err: any) {
+      shikshaMitraToast.error({
+        message: err?.data?.detail || err?.data?.message || 'Failed to archive question.',
+      });
+    } finally {
+      setArchiveQuestionId(null);
+    }
   };
 
   const handleRejectClick = (id: string) => {
@@ -934,11 +1139,15 @@ export default function QuestionBankScreen() {
     if (!rejectTargetId) return;
     try {
       await rejectQuestion({ id: rejectTargetId, body: { comment: rejectCommentText } }).unwrap();
+      shikshaMitraToast.success({ message: 'Question rejected.' });
       setRejectDialogOpen(false);
       setRejectTargetId(null);
       setRejectCommentText('');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to reject question:', err);
+      shikshaMitraToast.error({
+        message: err?.data?.detail || err?.data?.message || 'Failed to reject question.',
+      });
     }
   };
 
@@ -1083,14 +1292,9 @@ export default function QuestionBankScreen() {
               {row.questionText}
             </Typography>
             {!!row.tags?.length && (
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
                 {row.tags.map((tag: string) => (
-                  <Label
-                    key={tag}
-                    variant="soft"
-                    color="default"
-                    sx={{ fontSize: '0.75rem', px: 1 }}
-                  >
+                  <Label key={tag} variant="soft" color="default" sx={{ fontSize: '0.75rem', px: 0.75 }}>
                     {tag}
                   </Label>
                 ))}
@@ -1107,7 +1311,51 @@ export default function QuestionBankScreen() {
         enumOptions: QUESTION_TYPE_OPTIONS.map((q) => ({ value: q.label, label: q.label })),
         render: (v: any) => (
           <Typography variant="body2">
-            {QUESTION_TYPE_OPTIONS.find((q) => q.value === v)?.label || '—'}
+            {QUESTION_TYPE_OPTIONS.find((q) => q.value === Number(v))?.label || v || '—'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'standardName',
+        label: 'Class',
+        filterType: 'string' as const,
+        width: 120,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.primary" noWrap>
+            {row.standardName || row.standard?.name || classOptions.find((c: any) => c.value === row.standardId)?.label || row.standardId || '—'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'subjectName',
+        label: 'Subject',
+        filterType: 'string' as const,
+        width: 140,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.primary" noWrap>
+            {row.subjectName || row.subject?.name || filterSubjectOptions.find((s: any) => s.value === row.subjectId)?.label || row.subjectId || '—'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'chapterName',
+        label: 'Chapter',
+        filterType: 'string' as const,
+        width: 150,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.primary" noWrap>
+            {row.chapterName || row.chapter?.chapterName || row.chapter?.name || (row.chapterNumber ? `${row.chapterNumber}. ${row.chapterName || ''}` : filterChapterOptions.find((c: any) => c.value === row.chapterId)?.label) || row.chapterId || '—'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'topicName',
+        label: 'Topic',
+        filterType: 'string' as const,
+        width: 130,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.secondary" noWrap>
+            {row.topicName || row.topic?.name || '—'}
           </Typography>
         ),
       },
@@ -1117,11 +1365,7 @@ export default function QuestionBankScreen() {
         filterType: 'number' as const,
         width: 80,
         align: 'center' as const,
-        render: (v: any) => (
-          <Typography variant="body2" fontWeight={700}>
-            {v}
-          </Typography>
-        ),
+        render: (v: any) => <Typography variant="body2" fontWeight={700}>{v ?? '—'}</Typography>,
       },
       {
         id: 'difficultyLevel',
@@ -1132,22 +1376,22 @@ export default function QuestionBankScreen() {
         render: (v: any) => (
           <Label
             variant="soft"
-            color={(DIFFICULTY_COLOR[v] as any) || 'default'}
+            color={(DIFFICULTY_COLOR[Number(v)] as any) || 'default'}
             sx={{ fontWeight: 600 }}
           >
-            {DIFFICULTY_OPTIONS.find((d) => d.value === v)?.label || '—'}
+            {DIFFICULTY_OPTIONS.find((d) => d.value === Number(v))?.label || '—'}
           </Label>
         ),
       },
       {
         id: 'bloomLevel',
-        label: "Bloom's",
+        label: "Bloom's Level",
         filterType: 'enum' as const,
         width: 130,
         enumOptions: BLOOM_OPTIONS.map((b) => ({ value: b.label, label: b.label })),
         render: (v: any) => (
-          <Typography variant="body2">
-            {BLOOM_OPTIONS.find((b) => b.value === v)?.label || '—'}
+          <Typography variant="body2" color="text.secondary" noWrap>
+            {BLOOM_OPTIONS.find((b) => b.value === Number(v))?.label || '—'}
           </Typography>
         ),
       },
@@ -1164,21 +1408,42 @@ export default function QuestionBankScreen() {
         ),
       },
       {
+        id: 'createdByTeacherId',
+        label: 'Created By',
+        filterType: 'string' as const,
+        width: 140,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.secondary" noWrap>
+            {row.createdByName || row.createdByTeacher?.name || row.createdByUserId || row.createdByTeacherId || '—'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'createdAt',
+        label: 'Created On',
+        filterType: 'date' as const,
+        width: 120,
+        render: (_: any, row: any) => (
+          <Typography variant="body2" color="text.secondary" noWrap>
+            {row.createdAt ? dayjs(row.createdAt).format('DD-MM-YYYY') : '—'}
+          </Typography>
+        ),
+      },
+      {
         id: 'status',
         label: 'Status',
         filterType: 'enum' as const,
         sticky: true,
         stickyPosition: 'right' as const,
-        minWidth: 120,
         width: 120,
         enumOptions: STATUS_OPTIONS.map((s) => ({ value: s.label, label: s.label })),
         render: (v: any) => (
           <Label
             variant="soft"
-            color={(STATUS_COLOR[v] as any) || 'default'}
+            color={(STATUS_COLOR[Number(v)] as any) || 'default'}
             sx={{ fontWeight: 700 }}
           >
-            {STATUS_OPTIONS.find((s) => s.value === v)?.label || '—'}
+            {STATUS_OPTIONS.find((s) => s.value === Number(v))?.label || '—'}
           </Label>
         ),
       },
@@ -1205,7 +1470,7 @@ export default function QuestionBankScreen() {
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
-                      submitQuestion({ id: row.id });
+                      handleSubmitQuestion(row.id);
                     }}
                   >
                     <Iconify icon="mingcute:send-line" sx={{ mr: 1, height: 16, width: 16 }} />
@@ -1216,7 +1481,7 @@ export default function QuestionBankScreen() {
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
-                      approveQuestion({ id: row.id, body: { comment: reviewComment } });
+                      handleApproveQuestion(row.id);
                     }}
                   >
                     <Iconify
@@ -1243,7 +1508,7 @@ export default function QuestionBankScreen() {
                 <MenuItem
                   onClick={() => {
                     popover.onClose();
-                    duplicateQuestion({ id: row.id });
+                    handleDuplicateQuestion(row.id);
                   }}
                 >
                   <Iconify icon="mingcute:copy-2-line" sx={{ mr: 1, height: 16, width: 16 }} />
@@ -1253,7 +1518,7 @@ export default function QuestionBankScreen() {
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
-                      archiveQuestion({ id: row.id });
+                      setArchiveQuestionId(row.id);
                     }}
                   >
                     <Iconify
@@ -1263,6 +1528,20 @@ export default function QuestionBankScreen() {
                     Archive
                   </MenuItem>
                 )}
+                {row.status === 1 && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      setDeleteQuestionId(row.id);
+                    }}
+                  >
+                    <Iconify
+                      icon="mingcute:delete-2-line"
+                      sx={{ mr: 1, height: 16, width: 16, color: 'error.main' }}
+                    />
+                    Delete
+                  </MenuItem>
+                )}
               </MenuList>
             )}
           />
@@ -1270,7 +1549,7 @@ export default function QuestionBankScreen() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [reviewComment]
+    [classOptions, reviewComment]
   );
 
   return (
@@ -1318,7 +1597,10 @@ export default function QuestionBankScreen() {
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         {statCards.map((card) => (
           <Box key={card.label} sx={{ flex: '1 1 180px', minWidth: 180 }}>
-            <StatCard {...card} />
+            <StatCard
+              {...card}
+              isLoading={isDashboardLoading || isDashboardFetching}
+            />
           </Box>
         ))}
       </Stack>
@@ -1359,6 +1641,7 @@ export default function QuestionBankScreen() {
               options={[{ value: '', label: 'All Subjects' }, ...filterSubjectOptions]}
               value={filters.subjectId || ''}
               disabled={!filters.standardId}
+              isLoading={isFilterSubjectLoading || isFilterSubjectFetching}
               onChange={(val) =>
                 setFilters((prev: any) => ({
                   ...prev,
@@ -1374,6 +1657,7 @@ export default function QuestionBankScreen() {
               options={[{ value: '', label: 'All Chapters' }, ...filterChapterOptions]}
               value={filters.chapterId || ''}
               disabled={!filters.subjectId}
+              isLoading={isFilterChapterLoading || isFilterChapterFetching}
               onChange={(val) =>
                 setFilters((prev: any) => ({ ...prev, chapterId: val || undefined }))
               }
@@ -1399,7 +1683,7 @@ export default function QuestionBankScreen() {
         tableTitle="Questions"
         columns={questionColumns}
         data={data?.items || []}
-        isLoading={isFetching}
+        isLoading={isQuestionLoading || isQuestionFetching}
         noDataText={
           <Stack alignItems="center" spacing={1} py={6}>
             <Iconify icon="mingcute:question-line" width={40} sx={{ color: 'text.disabled' }} />
@@ -1631,7 +1915,7 @@ export default function QuestionBankScreen() {
           <CancelButton onClick={handleCloseSettings} />
           <SubmitButton
             buttonText="Save"
-            loading={savingSettings.isLoading}
+            loading={isSaveSettingsLoading}
             onClick={handleSaveSettings}
           />
         </Box>
@@ -1681,6 +1965,8 @@ export default function QuestionBankScreen() {
               classOptions={classOptions}
               subjectOptions={formSubjectOptions}
               chapterOptions={formChapterOptions}
+              isSubjectLoading={isFormSubjectLoading || isFormSubjectFetching}
+              isChapterLoading={isFormChapterLoading || isFormChapterFetching}
               onTypeChange={handleQuestionTypeChange}
               onOptionChange={handleOptionChange}
               theme={theme}
@@ -1693,7 +1979,7 @@ export default function QuestionBankScreen() {
           >
             <CancelButton onClick={() => setDialogOpen(false)} />
             <SubmitButton
-              loading={createState.isLoading}
+              loading={isCreateLoading}
               buttonText="Save Draft"
               startIcon={<Iconify icon="mingcute:save-line" />}
             />
@@ -1754,6 +2040,8 @@ export default function QuestionBankScreen() {
               classOptions={classOptions}
               subjectOptions={editSubjectOptions}
               chapterOptions={editChapterOptions}
+              isSubjectLoading={isEditSubjectLoading || isEditSubjectFetching}
+              isChapterLoading={isEditChapterLoading || isEditChapterFetching}
               onTypeChange={handleEditQuestionTypeChange}
               onOptionChange={handleEditOptionChange}
               theme={theme}
@@ -1771,7 +2059,7 @@ export default function QuestionBankScreen() {
               }}
             />
             <SubmitButton
-              loading={updateState.isLoading}
+              loading={isUpdateLoading}
               buttonText="Save Changes"
               startIcon={<Iconify icon="mingcute:save-line" />}
             />
@@ -1808,19 +2096,60 @@ export default function QuestionBankScreen() {
           />
           <DialogActions sx={{ px: 0, pb: 0, pt: 2, gap: 1 }}>
             <CancelButton onClick={() => setRejectDialogOpen(false)} />
-            <Button
+            <LoadingButton
               variant="contained"
               color="error"
               size="small"
-              disabled={!rejectCommentText.trim()}
+              loading={isRejectLoading}
+              disabled={!rejectCommentText.trim() || isRejectLoading}
               onClick={handleRejectConfirm}
               startIcon={<Iconify icon="mingcute:close-circle-line" />}
             >
               Reject
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </DialogScrollContent>
       </CustomDialog>
+
+      {/* ── Confirm Delete Question Dialog ── */}
+      <ConfirmDialog
+        open={!!deleteQuestionId}
+        title="Delete Question"
+        content="This action cannot be undone. The question will be permanently deleted from the Question Bank."
+        icon="warning"
+        onClose={() => setDeleteQuestionId(null)}
+        action={
+          <LoadingButton
+            variant="contained"
+            color="error"
+            size="small"
+            loading={isDeleteLoading}
+            onClick={handleConfirmDeleteQuestion}
+          >
+            Delete
+          </LoadingButton>
+        }
+      />
+
+      {/* ── Confirm Archive Question Dialog ── */}
+      <ConfirmDialog
+        open={!!archiveQuestionId}
+        title="Archive Question"
+        content="Archiving will hide this question from paper builder selection. Historical papers that already use this question will be unaffected."
+        icon="warning"
+        onClose={() => setArchiveQuestionId(null)}
+        action={
+          <LoadingButton
+            variant="contained"
+            color="warning"
+            size="small"
+            loading={isArchiveLoading}
+            onClick={handleConfirmArchiveQuestion}
+          >
+            Archive
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 }
