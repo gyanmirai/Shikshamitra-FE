@@ -1075,6 +1075,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           }}
         >
           <Button
+            type="button"
             variant="outlined"
             onClick={() => onClose(null, false)}
             color="inherit"
@@ -1094,7 +1095,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 height={editData ? 16 : 20}
               />
             }
-            type="submit"
+            type="button"
+            onClick={formik.submitForm}
           >
             {editData ? 'Update' : 'Create'}
           </LoadingButton>
@@ -1117,6 +1119,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           action={
             <Stack direction="row" spacing={1}>
               <Button
+                type="button"
                 variant="outlined"
                 onClick={() => {
                   typeDefaultsDialog.onFalse();
@@ -1126,6 +1129,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 Preserve Values
               </Button>
               <Button
+                type="button"
                 variant="contained"
                 onClick={() => {
                   const assignmentType = activeAssignmentTypes.find(
@@ -1154,6 +1158,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           content="Marks, submission settings, evaluation, or exact due offsets differ from the selected assignment type defaults. Continue with your values?"
           action={
             <LoadingButton
+              type="button"
               loading={isAddLoading || isUpdateLoading || isRubricCopyLoading}
               variant="contained"
               color="warning"

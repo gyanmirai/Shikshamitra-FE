@@ -344,11 +344,27 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
 
       <AccordionDetails sx={{ pt: 1.5, px: { xs: 1.5, sm: 2 }, pb: 2 }}>
         <Box width="100%">
-          {/* Class Selection - Only show in first group */}
-          {isFirstGroup && (
-            <Box sx={{ mb: 2.5 }}>
-              <Grid container>
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          {/* Class Selection & Active Days Slider Side by Side */}
+          {(() => {
+            const totalSlotsNode = (
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                  Total Slots
+                </Typography>
+                <SlotCounterControl
+                  value={Number(config.totalSlots) || 0}
+                  disabled={slotControlsDisabled}
+                  error={totalSlotsError}
+                  min={1}
+                  max={20}
+                  onChange={onTotalSlotsChange}
+                />
+              </Stack>
+            );
+
+            return isFirstGroup ? (
+              <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                <Grid size={{ xs: 12, md: 3.5, lg: 3 }}>
                   <ShakingTextField error={Boolean(classNameError)}>
                     <CustomSelect
                       options={classes}
@@ -363,53 +379,57 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
                       disabled={lockedByEdit}
                     />
                   </ShakingTextField>
+                  {isClassSelected && !canConfigureSlots && (
+                    <Typography
+                      variant="caption"
+                      color="warning.main"
+                      sx={{ mt: 1, display: 'block' }}
+                    >
+                      {classShiftMessage}
+                    </Typography>
+                  )}
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 8.5, lg: 9 }}>
+                  <ActiveDaysSlider
+                    value={config.weekRange}
+                    disabled={slotControlsDisabled}
+                    error={weekRangeError}
+                    rightElement={totalSlotsNode}
+                    onChange={(next) =>
+                      formik.setFieldValue(`slotConfigurations[${configIndex}].weekRange`, next)
+                    }
+                    onBlur={() =>
+                      formik.setFieldTouched(
+                        `slotConfigurations[${configIndex}].weekRange`,
+                        true,
+                        false
+                      )
+                    }
+                  />
                 </Grid>
               </Grid>
-              {isClassSelected && !canConfigureSlots && (
-                <Typography
-                  variant="caption"
-                  color="warning.main"
-                  sx={{ mt: 1, display: 'block' }}
-                >
-                  {classShiftMessage}
-                </Typography>
-              )}
-            </Box>
-          )}
-
-          {/* Active Days Slider */}
-          <ActiveDaysSlider
-            value={config.weekRange}
-            disabled={slotControlsDisabled}
-            error={weekRangeError}
-            onChange={(next) =>
-              formik.setFieldValue(`slotConfigurations[${configIndex}].weekRange`, next)
-            }
-            onBlur={() =>
-              formik.setFieldTouched(`slotConfigurations[${configIndex}].weekRange`, true, false)
-            }
-          />
-
-          {/* Slot Counter - Below Active Days */}
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="flex-end"
-            spacing={1}
-            sx={{ mt: 2 }}
-          >
-            <Typography variant="caption" color="text.secondary" fontWeight={500}>
-              Total Slots
-            </Typography>
-            <SlotCounterControl
-              value={Number(config.totalSlots) || 0}
-              disabled={slotControlsDisabled}
-              error={totalSlotsError}
-              min={1}
-              max={20}
-              onChange={onTotalSlotsChange}
-            />
-          </Stack>
+            ) : (
+              <Box sx={{ mb: 2 }}>
+                <ActiveDaysSlider
+                  value={config.weekRange}
+                  disabled={slotControlsDisabled}
+                  error={weekRangeError}
+                  rightElement={totalSlotsNode}
+                  onChange={(next) =>
+                    formik.setFieldValue(`slotConfigurations[${configIndex}].weekRange`, next)
+                  }
+                  onBlur={() =>
+                    formik.setFieldTouched(
+                      `slotConfigurations[${configIndex}].weekRange`,
+                      true,
+                      false
+                    )
+                  }
+                />
+              </Box>
+            );
+          })()}
           {timeSlotsArrayError && (
             <Typography
               variant="caption"

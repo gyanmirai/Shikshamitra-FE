@@ -11,7 +11,6 @@ export const subjectValidationSchema = Yup.object({
   subjectColor: Yup.string().required('Subject color is required'),
   icon: Yup.string().trim().max(50, 'Icon cannot exceed 50 characters'),
   description: Yup.string().trim().max(500, 'Description cannot exceed 500 characters'),
-  status: Yup.string().oneOf(['Active', 'Inactive', 'Archived']).required('Status is required'),
   sortOrder: Yup.number()
     .transform((value, originalValue) => (originalValue === '' ? undefined : value))
     .min(1, 'Sort order must be at least 1')

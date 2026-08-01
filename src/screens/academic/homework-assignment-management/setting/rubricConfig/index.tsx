@@ -5,10 +5,20 @@ import type { AssessmentRubricDto } from 'src/redux/academicAPI/HomeworkAssignme
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
+import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { academicPermissions } from 'src/constants/academic-menu';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
   Card,
@@ -21,22 +31,13 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { alpha } from '@mui/material/styles';
-import { varAlpha } from 'src/theme/styles';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { academicPermissions } from 'src/constants/academic-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Label } from 'src/components/label';
 import {
   RubricStatus,
-  useAddRubricMutation,
   useGetRubricsQuery,
+  useAddRubricMutation,
   useArchiveRubricMutation,
   usePublishRubricMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import RubricConfigForm from './rubricConfigForm';
 import RubricConfigTable from './rubricConfigTable';
@@ -45,7 +46,6 @@ import {
   RUBRIC_WORK_TYPE_LABELS,
   RUBRIC_SCORING_MODEL_LABELS,
 } from './constants';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const RubricConfigScreen = () => {
   const addDialog = useBoolean();
@@ -154,9 +154,11 @@ const RubricConfigScreen = () => {
       {isFormOpen ? (
         <CustomBreadcrumbs
           heading={selectedData ? 'Update Rubric Template' : 'Create Rubric Template'}
-          description={selectedData
-            ? 'Revise the rubric template details, scoring model, and criteria to keep your assessment framework up to date.'
-            : 'Build a reusable scoring rubric by defining a name, scoring model, performance levels, and evaluation criteria.'}
+          description={
+            selectedData
+              ? 'Revise the rubric template details, scoring model, and criteria to keep your assessment framework up to date.'
+              : 'Build a reusable scoring rubric by defining a name, scoring model, performance levels, and evaluation criteria.'
+          }
           isBack
           onBack={() => handleClose(null, false)}
           links={[
@@ -165,7 +167,8 @@ const RubricConfigScreen = () => {
             { name: 'Settings' },
             { name: 'Rubric Templates', href: undefined },
           ]}
-          sx={{ px: 1 }} />
+          sx={{ px: 1 }}
+        />
       ) : (
         <CustomBreadcrumbs
           heading="Rubric Templates"
@@ -176,17 +179,20 @@ const RubricConfigScreen = () => {
             { name: 'Rubric Templates' },
           ]}
           description="Create reusable scoring frameworks for homework, assignments, projects, practicals, presentations, and academic activities."
-          action={canAdd ? (
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={addDialog.onTrue}
-              sx={{ px: '32px' }}
-            >
-              Create Rubric
-            </Button>
-          ) : null} />
+          action={
+            canAdd ? (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="mdi:plus" />}
+                onClick={addDialog.onTrue}
+                sx={{ px: '32px' }}
+              >
+                Create Rubric
+              </Button>
+            ) : null
+          }
+        />
       )}
 
       {/* Form view — inline Card replacing the old dialog */}
@@ -262,9 +268,10 @@ const RubricConfigScreen = () => {
                 await publishRubric(row.id).unwrap();
                 shikshaMitraToast.success({ message: 'Rubric template published successfully.' });
               } catch (error: unknown) {
-                const apiError = error as { data?: { message?: string; detail?: string; }; };
+                const apiError = error as { data?: { message?: string; detail?: string } };
                 shikshaMitraToast.error({
-                  message: apiError.data?.detail ||
+                  message:
+                    apiError.data?.detail ||
                     apiError.data?.message ||
                     'Failed to publish rubric template.',
                 });
@@ -273,7 +280,8 @@ const RubricConfigScreen = () => {
             onArchive={(row) => {
               setSelectedData(row);
               archiveDialog.onTrue();
-            }} />
+            }}
+          />
         </>
       )}
 
@@ -283,19 +291,21 @@ const RubricConfigScreen = () => {
           setSelectedData(null);
           previewDialog.onFalse();
         }}
-        title={<Box display="flex" alignItems="center" gap={1}>
-          <Typography variant="h6" fontWeight={700}>
-            {selectedData?.title || 'Rubric'}
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title="You can view rubric template details and preview them here."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>}
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="h6" fontWeight={700}>
+              {selectedData?.title || 'Rubric'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="You can view rubric template details and preview them here."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
       >
         <DialogScrollContent>
@@ -305,13 +315,18 @@ const RubricConfigScreen = () => {
                 variant="soft"
                 color={selectedData?.appliesToWorkType === 0 ? 'info' : 'secondary'}
                 sx={{ py: 1.5, px: 1.5, borderRadius: 1, textTransform: 'capitalize' }}
-                startIcon={<Iconify
-                  icon={selectedData?.appliesToWorkType === 0
-                    ? 'solar:document-bold'
-                    : 'solar:bill-list-bold'} />}
+                startIcon={
+                  <Iconify
+                    icon={
+                      selectedData?.appliesToWorkType === 0
+                        ? 'solar:document-bold'
+                        : 'solar:bill-list-bold'
+                    }
+                  />
+                }
               >
                 {selectedData?.appliesToWorkType !== undefined &&
-                  selectedData?.appliesToWorkType !== null
+                selectedData?.appliesToWorkType !== null
                   ? RUBRIC_WORK_TYPE_LABELS[selectedData.appliesToWorkType]
                   : 'Homework & Assignment'}
               </Label>
@@ -323,16 +338,18 @@ const RubricConfigScreen = () => {
               >
                 {selectedData
                   ? RUBRIC_SCORING_MODEL_LABELS[selectedData.scoringModel] ||
-                  selectedData.scoringModel
+                    selectedData.scoringModel
                   : 'Points-Based'}
               </Label>
               <Label
                 variant="soft"
-                color={selectedData?.status === 1
-                  ? 'success'
-                  : selectedData?.status === 0
-                    ? 'warning'
-                    : 'default'}
+                color={
+                  selectedData?.status === 1
+                    ? 'success'
+                    : selectedData?.status === 0
+                      ? 'warning'
+                      : 'default'
+                }
                 sx={{ py: 1.5, px: 1.5, borderRadius: 1 }}
                 startIcon={<Iconify icon="solar:shield-check-bold" />}
               >
@@ -354,7 +371,8 @@ const RubricConfigScreen = () => {
                 p: 2,
                 borderRadius: 1.5,
                 bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.02),
-                border: (theme) => `1px dashed ${varAlpha(theme.vars.palette.primary.mainChannel, 0.2)}`,
+                border: (theme) =>
+                  `1px dashed ${varAlpha(theme.vars.palette.primary.mainChannel, 0.2)}`,
                 display: 'flex',
                 gap: 1.5,
                 alignItems: 'flex-start',
@@ -364,7 +382,8 @@ const RubricConfigScreen = () => {
                 icon="solar:info-circle-bold-duotone"
                 sx={{ color: 'primary.main', mt: 0.25 }}
                 width={20}
-                height={20} />
+                height={20}
+              />
               <Stack spacing={0.5} width="100%">
                 <Typography variant="subtitle2" fontWeight={700} color="primary.darker">
                   Instructions for Students & Evaluators
@@ -404,11 +423,13 @@ const RubricConfigScreen = () => {
                   sx={{
                     p: 2,
                     borderRadius: 1.5,
-                    boxShadow: (theme) => `0 2px 8px -2px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
+                    boxShadow: (theme) =>
+                      `0 2px 8px -2px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
                     transition: 'all 0.2s',
                     '&:hover': {
                       borderColor: 'primary.main',
-                      boxShadow: (theme) => `0 4px 12px -2px ${varAlpha(theme.vars.palette.primary.mainChannel, 0.08)}`,
+                      boxShadow: (theme) =>
+                        `0 4px 12px -2px ${varAlpha(theme.vars.palette.primary.mainChannel, 0.08)}`,
                       transform: 'translateY(-1px)',
                     },
                   }}
@@ -425,7 +446,8 @@ const RubricConfigScreen = () => {
                           width: 28,
                           height: 28,
                           borderRadius: '50%',
-                          bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
+                          bgcolor: (theme) =>
+                            varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
                           color: 'primary.main',
                           display: 'flex',
                           alignItems: 'center',
@@ -452,42 +474,44 @@ const RubricConfigScreen = () => {
 
                         {(previewCriterion.studentDescription ||
                           previewCriterion.teacherGuidance) && (
-                            <Stack
-                              spacing={1}
-                              sx={{
-                                mt: 1.5,
-                                pt: 1.5,
-                                borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
-                              }}
-                            >
-                              {previewCriterion.studentDescription && (
-                                <Stack direction="row" gap={1} alignItems="flex-start">
-                                  <Iconify
-                                    icon="solar:user-speak-bold-duotone"
-                                    sx={{ color: 'text.disabled', mt: 0.25 }}
-                                    width={16}
-                                    height={16} />
-                                  <Typography variant="caption" color="text.secondary">
-                                    <strong>Student Guidance:</strong>{' '}
-                                    {previewCriterion.studentDescription}
-                                  </Typography>
-                                </Stack>
-                              )}
-                              {previewCriterion.teacherGuidance && (
-                                <Stack direction="row" gap={1} alignItems="flex-start">
-                                  <Iconify
-                                    icon="solar:key-bold-duotone"
-                                    sx={{ color: 'text.disabled', mt: 0.25 }}
-                                    width={16}
-                                    height={16} />
-                                  <Typography variant="caption" color="text.secondary">
-                                    <strong>Teacher Guidance:</strong>{' '}
-                                    {previewCriterion.teacherGuidance}
-                                  </Typography>
-                                </Stack>
-                              )}
-                            </Stack>
-                          )}
+                          <Stack
+                            spacing={1}
+                            sx={{
+                              mt: 1.5,
+                              pt: 1.5,
+                              borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
+                            }}
+                          >
+                            {previewCriterion.studentDescription && (
+                              <Stack direction="row" gap={1} alignItems="flex-start">
+                                <Iconify
+                                  icon="solar:user-speak-bold-duotone"
+                                  sx={{ color: 'text.disabled', mt: 0.25 }}
+                                  width={16}
+                                  height={16}
+                                />
+                                <Typography variant="caption" color="text.secondary">
+                                  <strong>Student Guidance:</strong>{' '}
+                                  {previewCriterion.studentDescription}
+                                </Typography>
+                              </Stack>
+                            )}
+                            {previewCriterion.teacherGuidance && (
+                              <Stack direction="row" gap={1} alignItems="flex-start">
+                                <Iconify
+                                  icon="solar:key-bold-duotone"
+                                  sx={{ color: 'text.disabled', mt: 0.25 }}
+                                  width={16}
+                                  height={16}
+                                />
+                                <Typography variant="caption" color="text.secondary">
+                                  <strong>Teacher Guidance:</strong>{' '}
+                                  {previewCriterion.teacherGuidance}
+                                </Typography>
+                              </Stack>
+                            )}
+                          </Stack>
+                        )}
                       </Stack>
                     </Stack>
 
@@ -518,25 +542,28 @@ const RubricConfigScreen = () => {
             Close
           </Button>
         </DialogActions>
-      </CustomDialog><CustomDialog
+      </CustomDialog>
+      <CustomDialog
         open={usageDialog.value}
         handleClose={() => {
           setSelectedData(null);
           usageDialog.onFalse();
         }}
-        title={<Box display="flex" alignItems="center" gap={1}>
-          <Typography variant="h6" fontWeight={700}>
-            Rubric Usage
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title="You can view rubric usage details here."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>}
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="h6" fontWeight={700}>
+              Rubric Usage
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="You can view rubric usage details here."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
       >
         <DialogScrollContent>
@@ -588,40 +615,47 @@ const RubricConfigScreen = () => {
             Close
           </Button>
         </DialogActions>
-      </CustomDialog><ConfirmDialog
+      </CustomDialog>
+      <ConfirmDialog
         open={archiveDialog.value}
         onClose={() => {
           setSelectedData(null);
           archiveDialog.onFalse();
         }}
         title="Archive"
-        content={<>
-          Are you sure you want to archive rubric template <strong>{selectedData?.title}</strong>?
-        </>}
-        action={<LoadingButton
-          loading={isArchiving || isPublishing || isDuplicating}
-          variant="contained"
-          color="error"
-          size="small"
-          onClick={async () => {
-            if (!selectedData) return;
-            try {
-              await archiveRubric(selectedData.id).unwrap();
-              shikshaMitraToast.success({ message: 'Rubric template archived successfully.' });
-            } catch (error: unknown) {
-              const apiError = error as { data?: { message?: string; detail?: string; }; };
-              shikshaMitraToast.error({
-                message: apiError.data?.detail ||
-                  apiError.data?.message ||
-                  'Failed to archive rubric template.',
-              });
-            }
-            archiveDialog.onFalse();
-            setSelectedData(null);
-          }}
-        >
-          Archive
-        </LoadingButton>} />
+        content={
+          <>
+            Are you sure you want to archive rubric template <strong>{selectedData?.title}</strong>?
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isArchiving || isPublishing || isDuplicating}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={async () => {
+              if (!selectedData) return;
+              try {
+                await archiveRubric(selectedData.id).unwrap();
+                shikshaMitraToast.success({ message: 'Rubric template archived successfully.' });
+              } catch (error: unknown) {
+                const apiError = error as { data?: { message?: string; detail?: string } };
+                shikshaMitraToast.error({
+                  message:
+                    apiError.data?.detail ||
+                    apiError.data?.message ||
+                    'Failed to archive rubric template.',
+                });
+              }
+              archiveDialog.onFalse();
+              setSelectedData(null);
+            }}
+          >
+            Archive
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 };

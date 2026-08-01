@@ -314,12 +314,14 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         </Box> */}
 
       <CustomDialog
+        hasForm={false}
         open={addAssignmentDialog.value}
         handleClose={() => {
           addAssignmentDialog.onFalse();
           setTimeout(() => {
             setSelectedAssignment(null);
-          }, 200); // Adjust delay to match your Dialog transition (typically 200–300ms)
+            dispatch(setIsChanges(false));
+          }, 200);
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">

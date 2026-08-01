@@ -156,10 +156,30 @@ const AssignmentTypeCreation = () => {
       {/* Summary Cards */}
       <TimetableSettingsSummaryCards
         cards={[
-          { label: 'Total Types', value: totalTypes, icon: 'solar:document-bold', color: 'primary' },
-          { label: 'Active Types', value: activeTypes, icon: 'mdi:check-circle-outline', color: 'success' },
-          { label: 'Inactive Types', value: inactiveTypes, icon: 'mdi:close-circle-outline', color: 'error' },
-          { label: 'Most Used Type', value: mostUsedType, icon: 'solar:star-bold', color: 'warning' },
+          {
+            label: 'Total Types',
+            value: totalTypes,
+            icon: 'solar:document-bold',
+            color: 'primary',
+          },
+          {
+            label: 'Active Types',
+            value: activeTypes,
+            icon: 'mdi:check-circle-outline',
+            color: 'success',
+          },
+          {
+            label: 'Inactive Types',
+            value: inactiveTypes,
+            icon: 'mdi:close-circle-outline',
+            color: 'error',
+          },
+          {
+            label: 'Most Used Type',
+            value: mostUsedType,
+            icon: 'solar:star-bold',
+            color: 'warning',
+          },
           { label: 'Unused Types', value: unusedTypes, icon: 'solar:ghost-bold', color: 'info' },
         ]}
       />
@@ -280,8 +300,8 @@ const AssignmentTypeCreation = () => {
         title="Archive"
         content={
           <>
-            Archive assignment type <strong>{selectedData?.assignmentTypeName}</strong>? It will
-            not be available for future assignments.
+            Archive assignment type <strong>{selectedData?.assignmentTypeName}</strong>? It will not
+            be available for future assignments.
           </>
         }
         action={

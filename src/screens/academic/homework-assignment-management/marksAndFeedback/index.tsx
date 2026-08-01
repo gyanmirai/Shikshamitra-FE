@@ -96,10 +96,13 @@ const MarksFeedbackHomeworkAssignment = () => {
           sx: {
             p: 0,
             minHeight: 0,
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
           },
         }}
       >
-        <Box sx={{ height: '100%' }}>
+        <Box sx={{ height: '100%', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               searchParams={searchParams}

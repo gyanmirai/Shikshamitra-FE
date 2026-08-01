@@ -65,7 +65,14 @@ function KpiCard({ title, value, subValue, icon, color, tooltip, onClick }: KpiC
         }}
       >
         {/* Top Row: Title + Value on Left, Icon Avatar on Right */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 1,
+          }}
+        >
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               variant="caption"
@@ -197,9 +204,7 @@ export default function SubjectKpiCards({
           kpi.subjectsMissingTeacher > 0 ? `${kpi.subjectsMissingTeacher} missing` : 'All assigned',
         icon: 'solar:user-bold-duotone',
         color:
-          kpi.subjectsMissingTeacher > 0
-            ? theme.palette.warning.main
-            : theme.palette.success.main,
+          kpi.subjectsMissingTeacher > 0 ? theme.palette.warning.main : theme.palette.success.main,
         tooltip: 'Click to filter subjects missing a primary teacher',
         onClick: onFilterMissingTeacher,
       },
@@ -285,7 +290,14 @@ export default function SubjectKpiCards({
             },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 1,
+            }}
+          >
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
                 variant="caption"

@@ -176,24 +176,6 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
 
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
-              select
-              fullWidth
-              size="small"
-              label="Status"
-              name="status"
-              value={formik.values.status}
-              onChange={formik.handleChange}
-            >
-              {['Active', 'Inactive', 'Archived'].map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
               fullWidth
               size="small"
               type="number"

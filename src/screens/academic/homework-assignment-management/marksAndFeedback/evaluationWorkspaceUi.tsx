@@ -29,7 +29,12 @@ export const EVALUATION_FILTERS = [
 ];
 
 const getEvaluationRowKey = (row: any, index: number) =>
-  row?.studentId || row?.studentID || row?.student?.id || row?.grNumber || row?.id || `row-${index}`;
+  row?.studentId ||
+  row?.studentID ||
+  row?.student?.id ||
+  row?.grNumber ||
+  row?.id ||
+  `row-${index}`;
 
 const STATUS_META: Record<number, { label: string; color: any }> = {
   0: { label: 'Not Submitted', color: 'warning' },
@@ -105,7 +110,8 @@ export function getEvaluationSummary(rows: any[] = [], apiSummary?: Summary): Re
 }
 
 export function filterEvaluationRows(rows: any[], filter: string) {
-  if (filter === 'submitted') return rows.filter((row) => [1, 2, 4, 6].includes(Number(row.status)));
+  if (filter === 'submitted')
+    return rows.filter((row) => [1, 2, 4, 6].includes(Number(row.status)));
   if (filter === 'needsReview') return rows.filter((row) => [1, 2, 6].includes(Number(row.status)));
   if (filter === 'notSubmitted') return rows.filter((row) => Number(row.status) === 0);
   if (filter === 'reviewed') return rows.filter((row) => Number(row.status) === 4);
@@ -204,7 +210,10 @@ export function EvaluationFilterBar({
 }
 
 export function EvaluationStatusChip({ row }: { row: any }) {
-  const status = STATUS_META[Number(row?.status)] ?? { label: row?.submissionStatusLabel ?? '-', color: 'default' };
+  const status = STATUS_META[Number(row?.status)] ?? {
+    label: row?.submissionStatusLabel ?? '-',
+    color: 'default',
+  };
   return <Label color={status.color}>{row?.submissionStatusLabel || status.label}</Label>;
 }
 
@@ -222,7 +231,13 @@ export function FeedbackStatusChip({ row }: { row: any }) {
 
   return (
     <Label
-      color={statusLabel === 'Reviewed' ? 'success' : statusLabel === 'Needs Review' ? 'warning' : 'default'}
+      color={
+        statusLabel === 'Reviewed'
+          ? 'success'
+          : statusLabel === 'Needs Review'
+            ? 'warning'
+            : 'default'
+      }
     >
       {statusLabel}
     </Label>
@@ -248,7 +263,9 @@ export function EvaluationActionButton({
     Number(rowSubmissionType) === 2 ||
     normalizedSubmissionType.includes('inperson') ||
     normalizedSubmissionType.includes('in person') ||
-    String(row?.homeworkType || '').toLowerCase().includes('in person');
+    String(row?.homeworkType || '')
+      .toLowerCase()
+      .includes('in person');
 
   const status = Number(row?.status);
   const isReviewed = status === 4;
