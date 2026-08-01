@@ -1593,10 +1593,7 @@ const TimeTableForm = ({
             borderRadius: 1.5,
             border: '1px solid',
             borderColor: 'divider',
-            bgcolor: (theme) =>
-              theme.palette.mode === 'dark'
-                ? alpha(theme.palette.background.paper, 0.6)
-                : alpha(theme.palette.common.white, 0.9),
+            bgcolor: (theme) => varAlpha(theme.vars.palette.background.paperChannel, 0.8),
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',

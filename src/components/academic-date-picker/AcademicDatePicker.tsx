@@ -3,8 +3,8 @@ import type { DatePickerProps } from '@mui/x-date-pickers/DatePicker';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-import AcademicCalendarPickersDay from './AcademicCalendarPickersDay';
 import { getCalendarDayTitle } from './academic-date-picker-utils';
+import AcademicCalendarPickersDay from './AcademicCalendarPickersDay';
 import { useAcademicDatePickerRules } from './useAcademicDatePickerRules';
 
 import type { AcademicDatePickerProps } from './types';
@@ -57,14 +57,16 @@ export default function AcademicDatePicker({
         }
         onChange?.(value, context);
       }}
-      shouldDisableDate={(date) => Boolean(getBlockingDay(date)) || Boolean(shouldDisableDate?.(date))}
+      shouldDisableDate={(date) =>
+        Boolean(getBlockingDay(date)) || Boolean(shouldDisableDate?.(date))
+      }
       slots={{
         ...slots,
         day: showCalendarMarkers
           ? (AcademicCalendarPickersDay as NonNullable<DatePickerProps['slots']>['day'])
           : slots?.day,
       }}
-      format='DD/MM/YYYY'
+      format="DD/MM/YYYY"
       slotProps={{
         ...slotProps,
         day: {
@@ -76,6 +78,28 @@ export default function AcademicDatePicker({
           helperText:
             helperText ||
             (datePickerProps.value ? getBlockedDateMessage(datePickerProps.value) : undefined),
+          FormHelperTextProps: {
+            sx: {
+              mx: 0,
+              mt: 0.5,
+              fontSize: '11px',
+              fontWeight: 600,
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              zIndex: 10,
+              whiteSpace: 'nowrap',
+              bgcolor: 'background.paper',
+              color: 'error.main',
+              px: 1,
+              py: 0.25,
+              borderRadius: 0.75,
+              border: (t) => `1px solid ${t.palette.error.main}`,
+              boxShadow: 'var(--shadows-4)',
+              ...(slotProps?.textField as any)?.FormHelperTextProps?.sx,
+            },
+            ...(slotProps?.textField as any)?.FormHelperTextProps,
+          },
         },
       }}
       loading={datePickerProps.loading || isFetching}

@@ -73,6 +73,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
 
   const displaySubjects = hasSubjects ? slot.subjects! : attachedSubject ? [attachedSubject] : [];
   const allTeachersAssigned = displaySubjects.every((s) => s.teacherId);
+  const roomText = displaySubjects.map((s) => s.roomName).filter(Boolean).join(' | ');
   const theme = useTheme();
 
   const [{ isDragging }, drag] = useDrag({
@@ -500,7 +501,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                     }}
                   >
                     {/* Room Name */}
-                    {displaySubjects[0]?.roomName && (
+                    {roomText && (
                       <Box
                         sx={{
                           display: 'inline-flex',
@@ -511,13 +512,13 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                       >
                         <Iconify icon="solar:home-bold-duotone" width={11} />
                         <Typography variant="caption" sx={{ fontSize: '0.65rem', fontWeight: 500 }}>
-                          {displaySubjects[0].roomName}
+                          {roomText}
                         </Typography>
                       </Box>
                     )}
 
                     {/* Divider dot */}
-                    {displaySubjects[0]?.roomName && allTeachersAssigned && (
+                    {roomText && allTeachersAssigned && (
                       <Box component="span" sx={{ fontSize: '0.65rem', color: 'text.disabled' }}>
                         •
                       </Box>

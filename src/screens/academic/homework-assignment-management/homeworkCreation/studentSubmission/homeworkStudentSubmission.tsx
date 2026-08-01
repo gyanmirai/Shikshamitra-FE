@@ -204,7 +204,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   );
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', gap: 1.5 }}>
       <Stack spacing={1}>
         <EvaluationSummaryCards
           summary={summary}
@@ -213,7 +213,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           onFilterChange={setActiveFilter}
         />
       </Stack>
-      <Box sx={{ mt: 1.5 }}>
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents?.length > 0}
@@ -479,6 +479,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           />
         ) : null}
       </CustomDialog>
-    </>
+    </Box>
   );
 };

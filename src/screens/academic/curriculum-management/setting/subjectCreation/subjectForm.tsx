@@ -201,26 +201,6 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
 
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              select
-              fullWidth
-              label="Status *"
-              name="status"
-              size="small"
-              value={formik.values.status}
-              onChange={formik.handleChange}
-              error={formik.touched.status && Boolean(formik.errors.status)}
-              helperText={formik.touched.status && formik.errors.status}
-            >
-              {['Active', 'Inactive', 'Archived'].map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
               fullWidth
               type="number"
               label="Sort Order"

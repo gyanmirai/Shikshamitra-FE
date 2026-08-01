@@ -4,6 +4,7 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useCallback } from 'react';
@@ -512,25 +513,14 @@ export const SubstitutionActiveFilters = ({
           key={af.key}
           label={af.label}
           size="small"
+          variant="soft"
+          color="info"
           onDelete={() => handleRemoveFilter(af.key)}
           sx={{
-            bgcolor: (theme) => alpha(theme.palette.info.main, 0.12),
-            color: 'info.main',
-            borderColor: (theme) => alpha(theme.palette.info.main, 0.28),
-            borderStyle: 'solid',
-            borderWidth: 1,
-            fontSize: 12,
-            fontWeight: 'fontWeightMedium',
             maxWidth: 260,
             '& .MuiChip-label': {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-            },
-            '& .MuiChip-deleteIcon': {
-              color: 'info.main',
-              '&:hover': {
-                color: 'info.dark',
-              },
             },
           }}
         />

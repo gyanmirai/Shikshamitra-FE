@@ -1,9 +1,8 @@
 import type { Dayjs } from 'dayjs';
 import type { FileData } from 'src/components/custom-upload';
-import type {
-  AssignmentSubmissionType,
-  AssignmentEvaluationMethod,
-} from 'src/enums/assignment';
+import type { AssignmentSubmissionType, AssignmentEvaluationMethod } from 'src/enums/assignment';
+
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 export interface AssignmentScheduleFormValue {
   divisionId: string;
@@ -64,10 +63,16 @@ export const serializeAssignmentFormData = (values: AssignmentFormDataValue) => 
   values.divisions.forEach((division, index) => {
     formData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
     if (division.publishDate) {
-      formData.append(`DivisionSchedules[${index}].PublishAt`, division.publishDate.toISOString());
+      formData.append(
+        `DivisionSchedules[${index}].PublishAt`,
+        dateConvertor(division.publishDate.format(dateFormat))
+      );
     }
     if (division.dueDate) {
-      formData.append(`DivisionSchedules[${index}].DueAt`, division.dueDate.toISOString());
+      formData.append(
+        `DivisionSchedules[${index}].DueAt`,
+        dateConvertor(division.dueDate.format(dateFormat))
+      );
     }
   });
 

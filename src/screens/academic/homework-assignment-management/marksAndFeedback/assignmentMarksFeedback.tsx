@@ -127,7 +127,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   // Dialog control for bulk grade assignment
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, minHeight: 0 }}>
       <Box
         display="flex"
         sx={{

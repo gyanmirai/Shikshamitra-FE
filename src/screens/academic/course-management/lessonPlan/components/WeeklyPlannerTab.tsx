@@ -6,8 +6,7 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
+import { AcademicWeekDatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   Card,
@@ -52,11 +51,6 @@ type Props = {
   onCopyPreviousWeek: () => void;
 };
 
-const weekSelectionTypeOptions = [
-  { value: 'calendar', label: 'Calendar Week (Mon–Sat)' },
-  { value: 'selectedDay', label: 'Start from Selected Day' },
-];
-
 const WeeklyPlannerTab = ({
   lessonPlans,
   onAddLesson,
@@ -68,7 +62,6 @@ const WeeklyPlannerTab = ({
   onCopyPreviousWeek,
 }: Props) => {
   const [weekStart, setWeekStart] = useState<Dayjs | null>(dayjs());
-  const [selectionType, setSelectionType] = useState<'calendar' | 'selectedDay'>('calendar');
   const [cardMenuAnchor, setCardMenuAnchor] = useState<{
     el: HTMLElement;
     plan: LessonPlanRow;
@@ -76,8 +69,8 @@ const WeeklyPlannerTab = ({
 
   const effectiveStartDate = React.useMemo(() => {
     const rawDate = weekStart || dayjs();
-    return selectionType === 'calendar' ? getMondayOfWeek(rawDate) : rawDate;
-  }, [weekStart, selectionType]);
+    return getMondayOfWeek(rawDate);
+  }, [weekStart]);
 
   const daysToRender = React.useMemo(
     () =>
@@ -103,7 +96,9 @@ const WeeklyPlannerTab = ({
   };
 
   return (
-    <Card sx={{ p: 2, flex: '1 0 auto', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Card
+      sx={{ p: 2, flex: '1 0 auto', minHeight: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       {/* Week selector header */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -112,27 +107,13 @@ const WeeklyPlannerTab = ({
         spacing={1}
         sx={{ mb: 2.5 }}
       >
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-          <DatePicker
-            label={selectionType === 'calendar' ? 'Week Starting' : 'Start Date'}
-            value={
-              selectionType === 'calendar'
-                ? getMondayOfWeek(weekStart || dayjs())
-                : weekStart || dayjs()
-            }
+        <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+          <AcademicWeekDatePicker
+            value={weekStart}
             onChange={(newDate) => setWeekStart(newDate)}
-            slotProps={{ textField: { size: 'small', sx: { maxWidth: 180 } } }}
+
+            subLabel="Current week"
           />
-          <CustomSelect
-            label="Selection Mode"
-            value={selectionType}
-            onChange={(val) => setSelectionType(val as 'calendar' | 'selectedDay')}
-            options={weekSelectionTypeOptions}
-            formControlProps={{ sx: { minWidth: 210 } }}
-          />
-          <Button size="small" variant="outlined" onClick={() => setWeekStart(dayjs())}>
-            This Week
-          </Button>
         </Stack>
         <Stack direction="row" spacing={1}>
           <Button

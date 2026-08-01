@@ -11,6 +11,7 @@ interface IActiveDaysSliderProps {
   error?: string;
   onChange: (next: number[]) => void;
   onBlur?: () => void;
+  rightElement?: React.ReactNode;
 }
 
 const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
@@ -19,6 +20,7 @@ const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
   error,
   onChange,
   onBlur,
+  rightElement,
 }) => {
   const [start, end] = value?.length === 2 ? value : [0, 5];
 
@@ -50,8 +52,8 @@ const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
     <Box
       sx={{
         px: 2,
-        pt: 1.5,
-        pb: 2,
+        pt: 1.25,
+        pb: 1.25,
         borderRadius: 2,
         backgroundColor: (theme) =>
           theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
@@ -67,14 +69,26 @@ const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
       }}
     >
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
-        <Iconify icon="mdi:calendar-week" width={18} color="primary.main" />
-        <Typography variant="subtitle2" color="primary.main" sx={{ fontWeight: 600 }}>
-          Active Days
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ ml: 0.25, fontWeight: 500 }}>
-          ({rangeLabel})
-        </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1,
+          mb: 1,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Iconify icon="mdi:calendar-week" width={18} color="primary.main" />
+          <Typography variant="subtitle2" color="primary.main" sx={{ fontWeight: 600 }}>
+            Active Days
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ ml: 0.25, fontWeight: 500 }}>
+            ({rangeLabel})
+          </Typography>
+        </Box>
+        {rightElement && <Box sx={{ display: 'flex', alignItems: 'center' }}>{rightElement}</Box>}
       </Box>
 
       {/* Day chips */}
