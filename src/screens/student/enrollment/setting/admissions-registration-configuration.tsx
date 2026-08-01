@@ -28,21 +28,16 @@ import {
 } from '@mui/icons-material';
 import {
   Box,
-  Tab,
   Chip,
-  Tabs,
-  Step,
   Alert,
   Stack,
   Switch,
   Dialog,
   Button,
   Divider,
-  Stepper,
   MenuItem,
   MenuList,
   TextField,
-  StepLabel,
   Typography,
   IconButton,
   DialogTitle,
@@ -69,6 +64,8 @@ import {
 import { RegistrationTemplatePreview } from './registration-template-preview';
 import { getAdmissionCrmStageLabel } from '../admissions-crm/admissions-crm-utils';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { EnrollmentSettingsEditorDrawer } from './enrollment-settings-editor-drawer';
+import { EnrollmentSettingsDecisionCards } from './enrollment-settings-decision-cards';
 import { RegistrationTemplateLocalizationEditor } from './registration-template-localization-editor';
 import { resolveAdmissionCrmRegistrationSettingsPermissions } from '../admissions-crm/admission-action-permissions';
 import {
@@ -86,7 +83,16 @@ import {
 
 import type { RegistrationTemplateEditorStep } from './admissions-registration-configuration-utils';
 
-type Props = { academicYearId?: string };
+type Props = {
+  academicYearId?: string;
+  view: 'templates' | 'numbering';
+};
+
+const registrationEditorSteps = [
+  { value: 0, label: 'Template Rules' },
+  { value: 1, label: 'Sections & Fields' },
+  { value: 2, label: 'Languages & Preview' },
+] as const;
 
 const statusLabel: Record<AdmissionCrmRegistrationTemplateStatus, string> = {
   [AdmissionCrmRegistrationTemplateStatus.Draft]: 'Draft',
@@ -146,14 +152,13 @@ const messageFromError = (error: unknown) => {
   return 'The configuration action failed.';
 };
 
-export default function AdmissionsRegistrationConfiguration({ academicYearId }: Props) {
+export default function AdmissionsRegistrationConfiguration({ academicYearId, view }: Props) {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const {
     canManageRegistrationTemplates,
     canPublishRegistrationTemplates,
     canManageFormNumberSeries,
   } = resolveAdmissionCrmRegistrationSettingsPermissions(permissions);
-  const [tab, setTab] = useState(0);
   const [templateStep, setTemplateStep] = useState<RegistrationTemplateEditorStep>(0);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] =
@@ -171,11 +176,11 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
 
   const templatesQuery = useGetAdmissionCrmRegistrationTemplatesQuery(
     { academicYearId: academicYearId || '', maxResultCount: 100 },
-    { skip: !academicYearId || tab !== 0 }
+    { skip: !academicYearId || view !== 'templates' }
   );
   const seriesQuery = useGetAdmissionCrmFormNumberSeriesQuery(
     { academicYearId: academicYearId || '' },
-    { skip: !academicYearId || tab !== 1 }
+    { skip: !academicYearId || view !== 'numbering' }
   );
   const [createTemplate, createTemplateState] = useCreateAdmissionCrmRegistrationTemplateMutation();
   const [updateTemplate, updateTemplateState] = useUpdateAdmissionCrmRegistrationTemplateMutation();
@@ -360,6 +365,18 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
     );
   };
 
+  const handleTemplateStepChange = (value: number) => {
+    const nextStep = value as RegistrationTemplateEditorStep;
+    if (nextStep > templateStep) {
+      const [message] = validateRegistrationTemplateStep(templateForm, templateStep);
+      if (message) {
+        shikshaMitraToast.error({ message });
+        return;
+      }
+    }
+    setTemplateStep(nextStep);
+  };
+
   const templateColumns: IColumn[] = useMemo(
     () => [
       {
@@ -530,20 +547,28 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   );
 
   return (
-    <Box>
-      <Stack spacing={1.25}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: view === 'templates' ? 1 : undefined,
+        minHeight: view === 'templates' ? 0 : undefined,
+      }}
+    >
+      <Stack spacing={1.25} sx={{ flex: view === 'templates' ? 1 : undefined, minHeight: 0 }}>
         <Box>
-          <Typography variant="subtitle1">Registration Forms</Typography>
+          <Typography component="h2" variant="subtitle1">
+            {view === 'templates' ? 'Registration Form Templates' : 'Form Numbering'}
+          </Typography>
           <Typography variant="caption" color="text.secondary">
-            Published templates control the form, secure link, issue method, and numbering.
+            {view === 'templates'
+              ? 'Published templates control the secure form, issue method, sections, and family-facing content.'
+              : 'Number series give every issued form a clear, traceable reference.'}
           </Typography>
         </Box>
-        <Tabs value={tab} onChange={(_event, value: number) => setTab(value)}>
-          <Tab label="Templates" />
-          <Tab label="Form Numbering" />
-        </Tabs>
 
-        {(tab === 0 && templatesQuery.isError) || (tab === 1 && seriesQuery.isError) ? (
+        {(view === 'templates' && templatesQuery.isError) ||
+        (view === 'numbering' && seriesQuery.isError) ? (
           <Alert
             severity="error"
             action={
@@ -551,7 +576,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 color="inherit"
                 size="small"
                 onClick={() => {
-                  if (tab === 0) templatesQuery.refetch();
+                  if (view === 'templates') templatesQuery.refetch();
                   else seriesQuery.refetch();
                 }}
               >
@@ -563,8 +588,8 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           </Alert>
         ) : null}
 
-        {tab === 0 && !templatesQuery.isError ? (
-          <Stack spacing={1.25}>
+        {view === 'templates' && !templatesQuery.isError ? (
+          <Stack spacing={1.25} sx={{ flex: 1, minHeight: 0 }}>
             {canManageRegistrationTemplates ? (
               <Stack direction="row" justifyContent="flex-end" gap={1}>
                 <Button
@@ -595,12 +620,13 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
               isLoading={templatesQuery.isFetching}
               defaultRowsPerPage={10}
               noDataText="No registration templates configured. Create one to issue secure registration links."
-              tableContainerProps={{ sx: { minHeight: 320 } }}
+              wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+              tableContainerProps={{ sx: { height: '100%', minHeight: 0 } }}
             />
           </Stack>
         ) : null}
 
-        {tab === 1 && !seriesQuery.isError ? (
+        {view === 'numbering' && !seriesQuery.isError ? (
           <Stack spacing={1.25}>
             {canManageFormNumberSeries ? (
               <Stack direction="row" justifyContent="flex-end">
@@ -658,453 +684,484 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
         ) : null}
       </Stack>
 
-      <Dialog open={templateOpen} onClose={() => setTemplateOpen(false)} fullWidth maxWidth="lg">
-        <DialogTitle>
-          {editingTemplate
+      <EnrollmentSettingsEditorDrawer
+        open={templateOpen}
+        onClose={() => setTemplateOpen(false)}
+        title={
+          editingTemplate
             ? `${editingTemplate.name} - Version ${editingTemplate.version}`
-            : 'New Registration Template'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Stepper activeStep={templateStep} sx={{ mb: 2 }}>
-            <Step>
-              <StepLabel>Template Rules</StepLabel>
-            </Step>
-            <Step>
-              <StepLabel>Sections & Fields</StepLabel>
-            </Step>
-            <Step>
-              <StepLabel>Languages & Preview</StepLabel>
-            </Step>
-          </Stepper>
-          <Stack spacing={2}>
-            {templateStep === 0 ? (
-              <>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1.5fr' },
-                    gap: 1.5,
-                  }}
+            : 'New Registration Template'
+        }
+        description="Build the issue rules, family-facing sections, translations, and preview in one guided workspace."
+        steps={[...registrationEditorSteps]}
+        activeStep={templateStep}
+        onStepChange={handleTemplateStepChange}
+        busy={createTemplateState.isLoading || updateTemplateState.isLoading}
+        width={1040}
+        actions={
+          <>
+            <Button
+              disabled={createTemplateState.isLoading || updateTemplateState.isLoading}
+              onClick={() => setTemplateOpen(false)}
+            >
+              Close
+            </Button>
+            <Button startIcon={<Visibility />} onClick={() => setPreviewTemplate(templateForm)}>
+              Preview
+            </Button>
+            {templateStep > 0 ? (
+              <Button
+                onClick={() =>
+                  setTemplateStep((current) =>
+                    current > 0 ? ((current - 1) as RegistrationTemplateEditorStep) : current
+                  )
+                }
+              >
+                Back
+              </Button>
+            ) : null}
+            {templateStep < 2 ? (
+              <Button variant="contained" onClick={handleNextTemplateStep}>
+                Continue
+              </Button>
+            ) : null}
+            {!templateReadOnly && templateStep === 2 ? (
+              <LoadingButton
+                variant="contained"
+                loading={createTemplateState.isLoading || updateTemplateState.isLoading}
+                onClick={saveTemplate}
+              >
+                Save Template
+              </LoadingButton>
+            ) : null}
+          </>
+        }
+      >
+        <Stack spacing={2}>
+          {templateStep === 0 ? (
+            <>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
+                  gap: 1.5,
+                }}
+              >
+                <TextField
+                  size="small"
+                  label="Template name"
+                  value={templateForm.name}
+                  disabled={templateReadOnly}
+                  onChange={(event) =>
+                    setTemplateForm((current) => ({ ...current, name: event.target.value }))
+                  }
+                />
+                <TextField
+                  size="small"
+                  type="number"
+                  label="Link expiry days"
+                  value={templateForm.linkExpiryDays}
+                  disabled={templateReadOnly}
+                  onChange={(event) =>
+                    setTemplateForm((current) => ({
+                      ...current,
+                      linkExpiryDays: Number(event.target.value),
+                    }))
+                  }
+                />
+              </Box>
+              <Box>
+                <Typography component="h3" variant="subtitle2" sx={{ mb: 0.75 }}>
+                  How Should Families Receive This Form?
+                </Typography>
+                <EnrollmentSettingsDecisionCards
+                  label="Registration form issue method"
+                  value={templateForm.autoIssueAtStage == null ? 'manual' : 'automatic'}
+                  disabled={templateReadOnly}
+                  onChange={(value) =>
+                    setTemplateForm((current) => ({
+                      ...current,
+                      autoIssueAtStage:
+                        value === 'manual'
+                          ? null
+                          : (current.autoIssueAtStage ?? AdmissionInquiryStage.Eligible),
+                    }))
+                  }
+                  options={[
+                    {
+                      value: 'manual',
+                      title: 'Staff Sends When Ready',
+                      description:
+                        'Eligible applicants appear in Ready to Invite and staff choose when to issue the secure link.',
+                      icon: 'mdi:account-arrow-right-outline',
+                      recommended: true,
+                    },
+                    {
+                      value: 'automatic',
+                      title: 'Issue at a Journey Stage',
+                      description:
+                        'The system issues this template automatically when an applicant reaches the selected stage.',
+                      icon: 'mdi:robot-outline',
+                    },
+                  ]}
+                />
+              </Box>
+              {templateForm.autoIssueAtStage != null ? (
+                <TextField
+                  select
+                  size="small"
+                  label="Automatic issue stage"
+                  value={templateForm.autoIssueAtStage}
+                  disabled={templateReadOnly}
+                  onChange={(event) =>
+                    setTemplateForm((current) => ({
+                      ...current,
+                      autoIssueAtStage: Number(event.target.value) as AdmissionInquiryStage,
+                    }))
+                  }
+                  sx={{ maxWidth: 420 }}
                 >
-                  <TextField
-                    size="small"
-                    label="Template name"
-                    value={templateForm.name}
-                    disabled={templateReadOnly}
-                    onChange={(event) =>
-                      setTemplateForm((current) => ({ ...current, name: event.target.value }))
-                    }
-                  />
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Link expiry days"
-                    value={templateForm.linkExpiryDays}
-                    disabled={templateReadOnly}
-                    onChange={(event) =>
-                      setTemplateForm((current) => ({
-                        ...current,
-                        linkExpiryDays: Number(event.target.value),
-                      }))
-                    }
-                  />
-                  <TextField
-                    select
-                    size="small"
-                    label="Issue registration form"
-                    value={templateForm.autoIssueAtStage ?? ''}
-                    disabled={templateReadOnly}
-                    helperText="Manual sends eligible applicants to Ready to Invite. Automatic issues this template when the selected stage is reached."
-                    onChange={(event) =>
-                      setTemplateForm((current) => ({
-                        ...current,
-                        autoIssueAtStage:
-                          event.target.value === ''
-                            ? null
-                            : (Number(event.target.value) as AdmissionInquiryStage),
-                      }))
-                    }
-                  >
-                    <MenuItem value="">Staff issues manually</MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.ExamReady}>
-                      Automatically when exam ready
-                    </MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.ExamCompleted}>
-                      Automatically when exam completed
-                    </MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.Eligible}>
-                      Automatically when eligible
-                    </MenuItem>
-                  </TextField>
-                </Box>
-                <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={templateForm.isFallback}
-                        disabled={templateReadOnly}
-                        onChange={(event) =>
-                          setTemplateForm((current) => ({
-                            ...current,
-                            isFallback: event.target.checked,
-                          }))
-                        }
-                      />
-                    }
-                    label="Fallback template"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={templateForm.allowPartialSave}
-                        disabled={templateReadOnly}
-                        onChange={(event) =>
-                          setTemplateForm((current) => ({
-                            ...current,
-                            allowPartialSave: event.target.checked,
-                          }))
-                        }
-                      />
-                    }
-                    label="Allow partial save"
-                  />
-                </Stack>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-                    gap: 1,
-                  }}
-                >
-                  {(
-                    [
-                      ['campus', 'Campus'],
-                      ['desiredClass', 'Class'],
-                      ['board', 'Board'],
-                      ['medium', 'Medium'],
-                      ['applicantCategory', 'Category'],
-                      ['admissionRound', 'Admission round'],
-                      ['admissionRoute', 'Admission route'],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <TextField
-                      key={key}
-                      size="small"
-                      label={label}
-                      value={templateForm.applicability[key] || ''}
-                      disabled={templateReadOnly || templateForm.isFallback}
+                  <MenuItem value={AdmissionInquiryStage.ExamReady}>When exam ready</MenuItem>
+                  <MenuItem value={AdmissionInquiryStage.ExamCompleted}>
+                    When exam completed
+                  </MenuItem>
+                  <MenuItem value={AdmissionInquiryStage.Eligible}>When eligible</MenuItem>
+                </TextField>
+              ) : null}
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={templateForm.isFallback}
+                      disabled={templateReadOnly}
                       onChange={(event) =>
                         setTemplateForm((current) => ({
                           ...current,
-                          applicability: {
-                            ...current.applicability,
-                            [key]: event.target.value || null,
-                          },
+                          isFallback: event.target.checked,
                         }))
                       }
                     />
-                  ))}
-                </Box>
-              </>
-            ) : null}
-            {templateStep === 1 ? (
-              <>
-                <Divider />
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="subtitle2">Sections and fields</Typography>
-                  <Button
+                  }
+                  label="Fallback template"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={templateForm.allowPartialSave}
+                      disabled={templateReadOnly}
+                      onChange={(event) =>
+                        setTemplateForm((current) => ({
+                          ...current,
+                          allowPartialSave: event.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label="Allow partial save"
+                />
+              </Stack>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+                  gap: 1,
+                }}
+              >
+                {(
+                  [
+                    ['campus', 'Campus'],
+                    ['desiredClass', 'Class'],
+                    ['board', 'Board'],
+                    ['medium', 'Medium'],
+                    ['applicantCategory', 'Category'],
+                    ['admissionRound', 'Admission round'],
+                    ['admissionRoute', 'Admission route'],
+                  ] as const
+                ).map(([key, label]) => (
+                  <TextField
+                    key={key}
                     size="small"
-                    startIcon={<Add />}
-                    disabled={templateReadOnly}
-                    onClick={() =>
+                    label={label}
+                    value={templateForm.applicability[key] || ''}
+                    disabled={templateReadOnly || templateForm.isFallback}
+                    onChange={(event) =>
                       setTemplateForm((current) => ({
                         ...current,
-                        sections: [...current.sections, createRegistrationSection()],
+                        applicability: {
+                          ...current.applicability,
+                          [key]: event.target.value || null,
+                        },
                       }))
                     }
-                  >
-                    Add Section
-                  </Button>
-                </Stack>
-                {templateForm.sections.map((section, sectionIndex) => (
-                  <Box
-                    key={`${section.key}-${sectionIndex}`}
-                    sx={{ borderTop: 1, borderColor: 'divider', pt: 1.5 }}
-                  >
-                    <Stack spacing={1.25}>
+                  />
+                ))}
+              </Box>
+            </>
+          ) : null}
+          {templateStep === 1 ? (
+            <>
+              <Divider />
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="subtitle2">Sections and fields</Typography>
+                <Button
+                  size="small"
+                  startIcon={<Add />}
+                  disabled={templateReadOnly}
+                  onClick={() =>
+                    setTemplateForm((current) => ({
+                      ...current,
+                      sections: [...current.sections, createRegistrationSection()],
+                    }))
+                  }
+                >
+                  Add Section
+                </Button>
+              </Stack>
+              {templateForm.sections.map((section, sectionIndex) => (
+                <Box
+                  key={`${section.key}-${sectionIndex}`}
+                  sx={{ borderTop: 1, borderColor: 'divider', pt: 1.5 }}
+                >
+                  <Stack spacing={1.25}>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', md: '1fr 2fr auto' },
+                        gap: 1,
+                      }}
+                    >
+                      <TextField
+                        size="small"
+                        label="Section key"
+                        value={section.key}
+                        disabled={templateReadOnly}
+                        onChange={(event) =>
+                          setTemplateForm((current) => ({
+                            ...current,
+                            sections: current.sections.map((item, index) =>
+                              index === sectionIndex ? { ...item, key: event.target.value } : item
+                            ),
+                          }))
+                        }
+                      />
+                      <TextField
+                        size="small"
+                        label="Section title"
+                        value={section.title}
+                        disabled={templateReadOnly}
+                        onChange={(event) =>
+                          setTemplateForm((current) => ({
+                            ...current,
+                            sections: current.sections.map((item, index) =>
+                              index === sectionIndex ? { ...item, title: event.target.value } : item
+                            ),
+                          }))
+                        }
+                      />
+                      <IconButton
+                        aria-label="Remove registration section"
+                        disabled={templateReadOnly || templateForm.sections.length === 1}
+                        onClick={() =>
+                          setTemplateForm((current) => ({
+                            ...current,
+                            sections: current.sections.filter(
+                              (_item, index) => index !== sectionIndex
+                            ),
+                          }))
+                        }
+                      >
+                        <DeleteOutline />
+                      </IconButton>
+                    </Box>
+                    {section.fields.map((field, fieldIndex) => (
                       <Box
+                        key={`${field.key}-${fieldIndex}`}
                         sx={{
+                          pl: { xs: 0, md: 2 },
                           display: 'grid',
-                          gridTemplateColumns: { xs: '1fr', md: '1fr 2fr auto' },
+                          gridTemplateColumns: { xs: '1fr', md: '1fr 1.5fr 1fr 1fr auto' },
                           gap: 1,
+                          alignItems: 'center',
                         }}
                       >
                         <TextField
                           size="small"
-                          label="Section key"
-                          value={section.key}
+                          label="Field key"
+                          value={field.key}
                           disabled={templateReadOnly}
                           onChange={(event) =>
-                            setTemplateForm((current) => ({
-                              ...current,
-                              sections: current.sections.map((item, index) =>
-                                index === sectionIndex ? { ...item, key: event.target.value } : item
-                              ),
-                            }))
+                            updateField(sectionIndex, fieldIndex, { key: event.target.value })
                           }
                         />
                         <TextField
                           size="small"
-                          label="Section title"
-                          value={section.title}
+                          label="Label"
+                          value={field.label}
                           disabled={templateReadOnly}
                           onChange={(event) =>
+                            updateField(sectionIndex, fieldIndex, { label: event.target.value })
+                          }
+                        />
+                        <TextField
+                          select
+                          size="small"
+                          label="Type"
+                          value={field.fieldType}
+                          disabled={templateReadOnly}
+                          onChange={(event) =>
+                            updateField(
+                              sectionIndex,
+                              fieldIndex,
+                              normalizeRegistrationFieldForType(
+                                field,
+                                Number(event.target.value) as AdmissionCrmFormFieldType
+                              )
+                            )
+                          }
+                        >
+                          {Object.entries(fieldTypeLabel).map(([value, label]) => (
+                            <MenuItem key={value} value={Number(value)}>
+                              {label}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                        <TextField
+                          select
+                          size="small"
+                          label="System mapping"
+                          value={field.systemField || ''}
+                          disabled={templateReadOnly}
+                          onChange={(event) =>
+                            updateField(
+                              sectionIndex,
+                              fieldIndex,
+                              normalizeRegistrationFieldForType(
+                                { ...field, systemField: event.target.value || null },
+                                field.fieldType
+                              )
+                            )
+                          }
+                        >
+                          <MenuItem value="">Custom field</MenuItem>
+                          {registrationSystemFields.map((item) => (
+                            <MenuItem key={item} value={item}>
+                              {item}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                        <IconButton
+                          aria-label="Remove registration field"
+                          disabled={templateReadOnly || section.fields.length === 1}
+                          onClick={() =>
                             setTemplateForm((current) => ({
                               ...current,
                               sections: current.sections.map((item, index) =>
                                 index === sectionIndex
-                                  ? { ...item, title: event.target.value }
+                                  ? {
+                                      ...item,
+                                      fields: item.fields.filter(
+                                        (_field, itemIndex) => itemIndex !== fieldIndex
+                                      ),
+                                    }
                                   : item
-                              ),
-                            }))
-                          }
-                        />
-                        <IconButton
-                          aria-label="Remove registration section"
-                          disabled={templateReadOnly || templateForm.sections.length === 1}
-                          onClick={() =>
-                            setTemplateForm((current) => ({
-                              ...current,
-                              sections: current.sections.filter(
-                                (_item, index) => index !== sectionIndex
                               ),
                             }))
                           }
                         >
                           <DeleteOutline />
                         </IconButton>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              size="small"
+                              checked={field.required}
+                              disabled={templateReadOnly}
+                              onChange={(event) =>
+                                updateField(sectionIndex, fieldIndex, {
+                                  required: event.target.checked,
+                                })
+                              }
+                            />
+                          }
+                          label="Required"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              size="small"
+                              checked={field.parentEditable}
+                              disabled={templateReadOnly}
+                              onChange={(event) =>
+                                updateField(sectionIndex, fieldIndex, {
+                                  parentEditable: event.target.checked,
+                                })
+                              }
+                            />
+                          }
+                          label="Parent editable"
+                        />
+                        <TextField
+                          size="small"
+                          label="Visible when field"
+                          value={field.visibleWhenFieldKey || ''}
+                          disabled={templateReadOnly}
+                          onChange={(event) =>
+                            updateField(sectionIndex, fieldIndex, {
+                              visibleWhenFieldKey: event.target.value || null,
+                            })
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          label="Equals"
+                          value={field.visibleWhenValue || ''}
+                          disabled={templateReadOnly}
+                          onChange={(event) =>
+                            updateField(sectionIndex, fieldIndex, {
+                              visibleWhenValue: event.target.value || null,
+                            })
+                          }
+                        />
                       </Box>
-                      {section.fields.map((field, fieldIndex) => (
-                        <Box
-                          key={`${field.key}-${fieldIndex}`}
-                          sx={{
-                            pl: { xs: 0, md: 2 },
-                            display: 'grid',
-                            gridTemplateColumns: { xs: '1fr', md: '1fr 1.5fr 1fr 1fr auto' },
-                            gap: 1,
-                            alignItems: 'center',
-                          }}
-                        >
-                          <TextField
-                            size="small"
-                            label="Field key"
-                            value={field.key}
-                            disabled={templateReadOnly}
-                            onChange={(event) =>
-                              updateField(sectionIndex, fieldIndex, { key: event.target.value })
-                            }
-                          />
-                          <TextField
-                            size="small"
-                            label="Label"
-                            value={field.label}
-                            disabled={templateReadOnly}
-                            onChange={(event) =>
-                              updateField(sectionIndex, fieldIndex, { label: event.target.value })
-                            }
-                          />
-                          <TextField
-                            select
-                            size="small"
-                            label="Type"
-                            value={field.fieldType}
-                            disabled={templateReadOnly}
-                            onChange={(event) =>
-                              updateField(
-                                sectionIndex,
-                                fieldIndex,
-                                normalizeRegistrationFieldForType(
-                                  field,
-                                  Number(event.target.value) as AdmissionCrmFormFieldType
-                                )
-                              )
-                            }
-                          >
-                            {Object.entries(fieldTypeLabel).map(([value, label]) => (
-                              <MenuItem key={value} value={Number(value)}>
-                                {label}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                          <TextField
-                            select
-                            size="small"
-                            label="System mapping"
-                            value={field.systemField || ''}
-                            disabled={templateReadOnly}
-                            onChange={(event) =>
-                              updateField(
-                                sectionIndex,
-                                fieldIndex,
-                                normalizeRegistrationFieldForType(
-                                  { ...field, systemField: event.target.value || null },
-                                  field.fieldType
-                                )
-                              )
-                            }
-                          >
-                            <MenuItem value="">Custom field</MenuItem>
-                            {registrationSystemFields.map((item) => (
-                              <MenuItem key={item} value={item}>
-                                {item}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                          <IconButton
-                            aria-label="Remove registration field"
-                            disabled={templateReadOnly || section.fields.length === 1}
-                            onClick={() =>
-                              setTemplateForm((current) => ({
-                                ...current,
-                                sections: current.sections.map((item, index) =>
-                                  index === sectionIndex
-                                    ? {
-                                        ...item,
-                                        fields: item.fields.filter(
-                                          (_field, itemIndex) => itemIndex !== fieldIndex
-                                        ),
-                                      }
-                                    : item
-                                ),
-                              }))
-                            }
-                          >
-                            <DeleteOutline />
-                          </IconButton>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                size="small"
-                                checked={field.required}
-                                disabled={templateReadOnly}
-                                onChange={(event) =>
-                                  updateField(sectionIndex, fieldIndex, {
-                                    required: event.target.checked,
-                                  })
-                                }
-                              />
-                            }
-                            label="Required"
-                          />
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                size="small"
-                                checked={field.parentEditable}
-                                disabled={templateReadOnly}
-                                onChange={(event) =>
-                                  updateField(sectionIndex, fieldIndex, {
-                                    parentEditable: event.target.checked,
-                                  })
-                                }
-                              />
-                            }
-                            label="Parent editable"
-                          />
-                          <TextField
-                            size="small"
-                            label="Visible when field"
-                            value={field.visibleWhenFieldKey || ''}
-                            disabled={templateReadOnly}
-                            onChange={(event) =>
-                              updateField(sectionIndex, fieldIndex, {
-                                visibleWhenFieldKey: event.target.value || null,
-                              })
-                            }
-                          />
-                          <TextField
-                            size="small"
-                            label="Equals"
-                            value={field.visibleWhenValue || ''}
-                            disabled={templateReadOnly}
-                            onChange={(event) =>
-                              updateField(sectionIndex, fieldIndex, {
-                                visibleWhenValue: event.target.value || null,
-                              })
-                            }
-                          />
-                        </Box>
-                      ))}
-                      <Button
-                        size="small"
-                        startIcon={<Add />}
-                        disabled={templateReadOnly}
-                        onClick={() =>
-                          setTemplateForm((current) => ({
-                            ...current,
-                            sections: current.sections.map((item, index) =>
-                              index === sectionIndex
-                                ? { ...item, fields: [...item.fields, createRegistrationField()] }
-                                : item
-                            ),
-                          }))
-                        }
-                        sx={{ alignSelf: 'flex-start' }}
-                      >
-                        Add Field
-                      </Button>
-                    </Stack>
-                  </Box>
-                ))}
-              </>
-            ) : null}
-            {templateStep === 2 ? (
-              <>
-                <Alert severity="info">
-                  Add parent-facing Gujarati and Hindi content, then use Preview to check the
-                  desktop, mobile, online, and print experiences before saving.
-                </Alert>
-                <RegistrationTemplateLocalizationEditor
-                  value={templateForm}
-                  readOnly={templateReadOnly}
-                  onChange={setTemplateForm}
-                />
-              </>
-            ) : null}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setTemplateOpen(false)}>Close</Button>
-          <Button startIcon={<Visibility />} onClick={() => setPreviewTemplate(templateForm)}>
-            Preview
-          </Button>
-          {templateStep > 0 ? (
-            <Button
-              onClick={() =>
-                setTemplateStep((current) =>
-                  current > 0 ? ((current - 1) as RegistrationTemplateEditorStep) : current
-                )
-              }
-            >
-              Back
-            </Button>
+                    ))}
+                    <Button
+                      size="small"
+                      startIcon={<Add />}
+                      disabled={templateReadOnly}
+                      onClick={() =>
+                        setTemplateForm((current) => ({
+                          ...current,
+                          sections: current.sections.map((item, index) =>
+                            index === sectionIndex
+                              ? { ...item, fields: [...item.fields, createRegistrationField()] }
+                              : item
+                          ),
+                        }))
+                      }
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      Add Field
+                    </Button>
+                  </Stack>
+                </Box>
+              ))}
+            </>
           ) : null}
-          {templateStep < 2 ? (
-            <Button variant="contained" onClick={handleNextTemplateStep}>
-              Next
-            </Button>
+          {templateStep === 2 ? (
+            <>
+              <Alert severity="info">
+                Add parent-facing Gujarati and Hindi content, then use Preview to check the desktop,
+                mobile, online, and print experiences before saving.
+              </Alert>
+              <RegistrationTemplateLocalizationEditor
+                value={templateForm}
+                readOnly={templateReadOnly}
+                onChange={setTemplateForm}
+              />
+            </>
           ) : null}
-          {!templateReadOnly && templateStep === 2 ? (
-            <LoadingButton
-              variant="contained"
-              loading={createTemplateState.isLoading || updateTemplateState.isLoading}
-              onClick={saveTemplate}
-            >
-              Save Template
-            </LoadingButton>
-          ) : null}
-        </DialogActions>
-      </Dialog>
+        </Stack>
+      </EnrollmentSettingsEditorDrawer>
 
       {previewTemplate ? (
         <RegistrationTemplatePreview

@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { RouterLink } from 'src/routes/components';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
+import { Iconify } from 'src/components/iconify';
 import {
   useGetAdmissionCrmCycleConfigurationQuery,
   useUpdateAdmissionCrmCycleConfigurationMutation,
@@ -14,17 +15,15 @@ import {
 import {
   Box,
   Chip,
-  List,
   Stack,
   Alert,
+  Paper,
   Button,
   Dialog,
   Divider,
-  ListItem,
   TextField,
   Typography,
   DialogTitle,
-  ListItemText,
   DialogContent,
   DialogActions,
   LinearProgress,
@@ -32,6 +31,7 @@ import {
 
 import { useAdmissionYearDraft } from './use-admission-year-draft';
 import { buildAdmissionCrmCycleUpdate } from './admission-crm-cycle-update';
+import { EnrollmentSettingsFlowPreview } from './enrollment-settings-decision-cards';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import { attachAdmissionCrmImpactFingerprint } from './admissions-crm-configuration-utils';
@@ -129,11 +129,36 @@ export function ActivationSettingsConfiguration({ academicYearId }: { academicYe
   const cycleQuery = state.cycle ? `?cycle=${encodeURIComponent(state.cycle)}` : '';
   const setup = admissionYear.effective;
   const gates = [
-    ['Registration verified', true],
-    ['Entrance exam eligible', setup?.entranceExamRequired ?? true],
-    ['Finance verified', setup?.financeVerificationRequired ?? false],
-    ['Class placement reviewed', true],
-    ['Activation approved', true],
+    {
+      label: 'Registration verified',
+      required: true,
+      href: studentPaths.enrollment.settingsSections.registration,
+      action: 'Review registration',
+    },
+    {
+      label: 'Entrance exam eligible',
+      required: setup?.entranceExamRequired ?? true,
+      href: studentPaths.enrollment.settingsSections.entranceExam,
+      action: 'Review exam policy',
+    },
+    {
+      label: 'Finance verified',
+      required: setup?.financeVerificationRequired ?? false,
+      href: studentPaths.enrollment.settingsSections.financeHandoff,
+      action: 'Review handoff',
+    },
+    {
+      label: 'Class placement reviewed',
+      required: true,
+      href: studentPaths.enrollment.settingsSections.classPlacement,
+      action: 'Review placement',
+    },
+    {
+      label: 'Activation approved',
+      required: true,
+      href: studentPaths.enrollment.activation,
+      action: 'Open activation work',
+    },
   ] as const;
 
   if (configurationQuery.isLoading || admissionYear.versionsQuery.isLoading) {
@@ -165,68 +190,154 @@ export function ActivationSettingsConfiguration({ academicYearId }: { academicYe
 
   return (
     <Stack spacing={2}>
-      <Box>
-        <Typography variant="subtitle1">Required activation gates</Typography>
-        <Typography variant="body2" color="text.secondary">
-          These checks are enforced by the backend before an active Student record is created.
-        </Typography>
-      </Box>
-      <List disablePadding>
-        {gates.map(([label, required]) => (
-          <ListItem
-            key={label}
-            divider
-            secondaryAction={
-              <Chip
-                size="small"
-                variant="outlined"
-                color={required ? 'success' : 'default'}
-                label={required ? 'Required' : 'Not required'}
-              />
-            }
+      <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 1.5 }}>
+        <Stack spacing={1.5}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            gap={1}
+            alignItems={{ sm: 'center' }}
           >
-            <ListItemText primary={label} />
-          </ListItem>
-        ))}
-      </List>
-      <Alert severity="info">
-        Activation approval is enforced through the dedicated Approve Activation permission.
-      </Alert>
+            <Box>
+              <Typography component="h2" variant="subtitle1">
+                Activation Readiness
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                These backend-enforced checks must resolve before an active Student record is
+                created.
+              </Typography>
+            </Box>
+            <Chip
+              variant="outlined"
+              color="primary"
+              label={`${gates.filter(({ required }) => required).length} required gates`}
+            />
+          </Stack>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                lg: 'repeat(5, minmax(0, 1fr))',
+              },
+              gap: 1,
+            }}
+          >
+            {gates.map(({ label, required, href, action }) => (
+              <Stack
+                key={label}
+                spacing={0.75}
+                sx={{ p: 1.25, border: 1, borderColor: 'divider', borderRadius: 1.25 }}
+              >
+                <Iconify
+                  icon={required ? 'mdi:shield-check-outline' : 'mdi:shield-off-outline'}
+                  width={22}
+                  sx={{ color: required ? 'success.main' : 'text.disabled' }}
+                />
+                <Typography variant="subtitle2">{label}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {required ? 'Must be complete' : 'Not required this year'}
+                </Typography>
+                <Button
+                  component={RouterLink}
+                  href={`${href}${cycleQuery}`}
+                  size="small"
+                  variant="text"
+                  sx={{ alignSelf: 'flex-start', mt: 'auto', px: 0 }}
+                >
+                  {action}
+                </Button>
+              </Stack>
+            ))}
+          </Box>
+          <EnrollmentSettingsFlowPreview
+            label="Activation workflow"
+            steps={[
+              {
+                label: 'Readiness Checks',
+                description:
+                  'Registration, assessment, Finance, and placement gates are evaluated.',
+                icon: 'mdi:clipboard-check-outline',
+              },
+              {
+                label: 'Approval',
+                description: 'An authorized staff member approves the final activation action.',
+                icon: 'mdi:account-key-outline',
+                status: 'Approve Activation permission required',
+              },
+              {
+                label: 'Student Created',
+                description:
+                  'Student identity, placement, and access records are created together.',
+                icon: 'mdi:account-school-outline',
+              },
+            ]}
+          />
+        </Stack>
+      </Paper>
 
       <Divider />
 
-      <Box>
-        <Typography variant="subtitle1">Cancellation window</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          After this window, cancellation requires the repair and approval workflow.
-        </Typography>
-        <TextField
-          size="small"
-          type="number"
-          label="Days after activation"
-          value={cancellationWindowDays}
-          onChange={(event) => setCancellationWindowDays(Number(event.target.value))}
-          inputProps={{ min: 0, max: 90, step: 1 }}
-          sx={{ width: { xs: '100%', sm: 240 } }}
-        />
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
+          gap: 1.5,
+        }}
+      >
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+          <Stack spacing={1.25}>
+            <Box>
+              <Typography component="h2" variant="subtitle1">
+                Cancellation Window
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                After this period, cancellation requires the repair and approval workflow.
+              </Typography>
+            </Box>
+            <TextField
+              size="small"
+              type="number"
+              label="Days after activation"
+              value={cancellationWindowDays}
+              onChange={(event) => setCancellationWindowDays(Number(event.target.value))}
+              inputProps={{ min: 0, max: 90, step: 1 }}
+              helperText="Recommended starting point: 7 days"
+              sx={{ width: { xs: '100%', sm: 260 } }}
+            />
+            <Button
+              variant="contained"
+              disabled={!isDirty || updateState.isLoading || previewState.isLoading}
+              onClick={save}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Save Cancellation Rule
+            </Button>
+          </Stack>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+          <Stack spacing={1.25}>
+            <Box>
+              <Typography component="h2" variant="subtitle1">
+                Family Communication
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Review the approved message sent after activation succeeds.
+              </Typography>
+            </Box>
+            <Button
+              component={RouterLink}
+              href={`${studentPaths.enrollment.settingsSections.communication}${cycleQuery}`}
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:message-text-outline" />}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Configure Activation Message
+            </Button>
+          </Stack>
+        </Paper>
       </Box>
-
-      <Stack direction="row" gap={1} flexWrap="wrap">
-        <Button
-          variant="contained"
-          disabled={!isDirty || updateState.isLoading || previewState.isLoading}
-          onClick={save}
-        >
-          Save
-        </Button>
-        <Button
-          component={RouterLink}
-          href={`${studentPaths.enrollment.settingsSections.communication}${cycleQuery}`}
-          variant="outlined"
-        >
-          Configure activation message
-        </Button>
-      </Stack>
 
       <Dialog
         open={Boolean(pendingUpdate)}

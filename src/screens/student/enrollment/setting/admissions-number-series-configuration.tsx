@@ -27,6 +27,8 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { EnrollmentSettingsEditorDrawer } from './enrollment-settings-editor-drawer';
+import { validateIdentifierSeriesStep } from './admissions-number-series-model';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -53,6 +55,8 @@ const numberSeriesDefaults = {
 
 export default function AdmissionsNumberSeriesConfiguration() {
   const { academicYearId } = useEnrollmentWorkspace();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorStep, setEditorStep] = useState(0);
   const [code, setCode] = useState(numberSeriesDefaults.code);
   const [name, setName] = useState(numberSeriesDefaults.name);
   const [prefix, setPrefix] = useState(numberSeriesDefaults.prefix);
@@ -96,22 +100,29 @@ export default function AdmissionsNumberSeriesConfiguration() {
     setPlacementKey(numberSeriesDefaults.placementKey);
   };
 
+  const closeEditor = () => {
+    resetEditor();
+    setEditorStep(0);
+    setEditorOpen(false);
+  };
+
   const isEditorDirty =
-    code !== numberSeriesDefaults.code ||
-    name !== numberSeriesDefaults.name ||
-    prefix !== numberSeriesDefaults.prefix ||
-    suffix !== numberSeriesDefaults.suffix ||
-    padding !== numberSeriesDefaults.padding ||
-    startingSequence !== numberSeriesDefaults.startingSequence ||
-    maximumSequence !== numberSeriesDefaults.maximumSequence ||
-    effectiveFrom !== numberSeriesDefaults.effectiveFrom ||
-    effectiveUntil !== numberSeriesDefaults.effectiveUntil ||
-    placementKey !== numberSeriesDefaults.placementKey;
+    editorOpen &&
+    (code !== numberSeriesDefaults.code ||
+      name !== numberSeriesDefaults.name ||
+      prefix !== numberSeriesDefaults.prefix ||
+      suffix !== numberSeriesDefaults.suffix ||
+      padding !== numberSeriesDefaults.padding ||
+      startingSequence !== numberSeriesDefaults.startingSequence ||
+      maximumSequence !== numberSeriesDefaults.maximumSequence ||
+      effectiveFrom !== numberSeriesDefaults.effectiveFrom ||
+      effectiveUntil !== numberSeriesDefaults.effectiveUntil ||
+      placementKey !== numberSeriesDefaults.placementKey);
 
   useEnrollmentSettingsDirtyState({
     source: 'number-series-editor',
     dirty: isEditorDirty,
-    onDiscard: resetEditor,
+    onDiscard: closeEditor,
   });
 
   const run = async (action: () => Promise<unknown>, message: string) => {
@@ -129,7 +140,24 @@ export default function AdmissionsNumberSeriesConfiguration() {
     }
   };
   const save = async () => {
-    if (!academicYearId || !code.trim() || !name.trim()) return;
+    if (!academicYearId) return;
+    const values = {
+      code,
+      name,
+      padding,
+      startingSequence,
+      maximumSequence,
+      effectiveFrom,
+      effectiveUntil,
+    };
+    const issue = [0, 1, 2]
+      .map((step) => ({ step, message: validateIdentifierSeriesStep(values, step) }))
+      .find(({ message }) => message);
+    if (issue?.message) {
+      setEditorStep(issue.step);
+      shikshaMitraToast.error({ message: issue.message });
+      return;
+    }
     const created = await run(
       () =>
         create({
@@ -152,7 +180,34 @@ export default function AdmissionsNumberSeriesConfiguration() {
         }).unwrap(),
       'Number series draft created.'
     );
-    if (created) resetEditor();
+    if (created) closeEditor();
+  };
+
+  const previewNumber = `${prefix}${String(Number(startingSequence) || 0).padStart(
+    Math.max(1, Number(padding) || 1),
+    '0'
+  )}${suffix}`;
+
+  const goToEditorStep = (nextStep: number) => {
+    if (nextStep > editorStep) {
+      const message = validateIdentifierSeriesStep(
+        {
+          code,
+          name,
+          padding,
+          startingSequence,
+          maximumSequence,
+          effectiveFrom,
+          effectiveUntil,
+        },
+        editorStep
+      );
+      if (message) {
+        shikshaMitraToast.error({ message });
+        return;
+      }
+    }
+    setEditorStep(nextStep);
   };
 
   const scopeOptions = Array.from(
@@ -188,101 +243,33 @@ export default function AdmissionsNumberSeriesConfiguration() {
 
   return (
     <Stack spacing={1.25}>
-      <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
+      <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 1.5 }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1.5}
+          alignItems={{ sm: 'center' }}
+          justifyContent="space-between"
+        >
           <Box>
-            <Typography variant="subtitle2">Permanent identifier series</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Publish non-overlapping GR sequences before student activation.
+            <Typography component="h2" variant="subtitle1">
+              Permanent Student Identifiers
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ textWrap: 'pretty' }}>
+              Create controlled, non-overlapping GR number series and publish them before student
+              activation.
             </Typography>
           </Box>
-          <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-            <TextField
-              size="small"
-              label="Series code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-            />
-            <TextField
-              size="small"
-              fullWidth
-              label="Series name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <TextField
-              size="small"
-              select
-              label="Academic scope"
-              value={placementKey}
-              onChange={(e) => setPlacementKey(e.target.value)}
-              sx={{ minWidth: 240 }}
-            >
-              <MenuItem value="">Whole cycle</MenuItem>
-              {scopeOptions.map(([key, value]) => (
-                <MenuItem key={key} value={key}>
-                  {value.boardName} / {value.mediumName} / {value.standardName}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              size="small"
-              label="Prefix"
-              value={prefix}
-              onChange={(e) => setPrefix(e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Suffix"
-              value={suffix}
-              onChange={(e) => setSuffix(e.target.value)}
-            />
-            <TextField
-              size="small"
-              type="number"
-              label="Padding"
-              value={padding}
-              onChange={(e) => setPadding(e.target.value)}
-            />
-            <TextField
-              size="small"
-              type="number"
-              label="Starts at"
-              value={startingSequence}
-              onChange={(e) => setStartingSequence(e.target.value)}
-            />
-            <TextField
-              size="small"
-              type="number"
-              label="Maximum"
-              value={maximumSequence}
-              onChange={(e) => setMaximumSequence(e.target.value)}
-            />
-            <TextField
-              size="small"
-              type="date"
-              label="Effective from"
-              value={effectiveFrom}
-              onChange={(e) => setEffectiveFrom(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              size="small"
-              type="date"
-              label="Effective until"
-              value={effectiveUntil}
-              onChange={(e) => setEffectiveUntil(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Stack>
           <LoadingButton
             variant="contained"
             startIcon={<Add />}
-            loading={createState.isLoading}
-            onClick={save}
-            sx={{ alignSelf: 'flex-start' }}
+            disabled={!academicYearId}
+            onClick={() => {
+              resetEditor();
+              setEditorStep(0);
+              setEditorOpen(true);
+            }}
           >
-            Create draft
+            New Identifier Series
           </LoadingButton>
         </Stack>
       </Paper>
@@ -386,6 +373,211 @@ export default function AdmissionsNumberSeriesConfiguration() {
           )}
         </Stack>
       </Paper>
+
+      <EnrollmentSettingsEditorDrawer
+        open={editorOpen}
+        onClose={closeEditor}
+        title="New Permanent Identifier Series"
+        description="Define the academic scope, number format, and effective period before submitting the series for approval."
+        steps={[
+          { value: 0, label: 'Identity & Scope' },
+          { value: 1, label: 'Format & Preview' },
+          { value: 2, label: 'Effective Period' },
+        ]}
+        activeStep={editorStep}
+        onStepChange={goToEditorStep}
+        busy={createState.isLoading}
+        width={720}
+        actions={
+          <>
+            <LoadingButton disabled={createState.isLoading} onClick={closeEditor}>
+              Cancel
+            </LoadingButton>
+            {editorStep > 0 ? (
+              <LoadingButton
+                disabled={createState.isLoading}
+                onClick={() => setEditorStep((current) => Math.max(0, current - 1))}
+              >
+                Back
+              </LoadingButton>
+            ) : null}
+            {editorStep < 2 ? (
+              <LoadingButton
+                variant="contained"
+                disabled={createState.isLoading}
+                onClick={() => goToEditorStep(editorStep + 1)}
+              >
+                Continue
+              </LoadingButton>
+            ) : (
+              <LoadingButton
+                variant="contained"
+                startIcon={<Add />}
+                loading={createState.isLoading}
+                onClick={save}
+              >
+                Create Draft Series
+              </LoadingButton>
+            )}
+          </>
+        }
+      >
+        {editorStep === 0 ? (
+          <Stack spacing={1.5}>
+            <Alert severity="info">
+              Use one series for the whole admission year or narrow it to a board, medium, and
+              standard combination.
+            </Alert>
+            <TextField
+              name="identifierSeriesCode"
+              size="small"
+              label="Series code"
+              value={code}
+              onChange={(event) => setCode(event.target.value.toUpperCase())}
+              helperText="Internal code used in audit and approval records"
+            />
+            <TextField
+              name="identifierSeriesName"
+              size="small"
+              label="Series name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              helperText="School-facing name shown to authorized staff"
+            />
+            <TextField
+              name="identifierSeriesScope"
+              size="small"
+              select
+              label="Academic scope"
+              value={placementKey}
+              onChange={(event) => setPlacementKey(event.target.value)}
+            >
+              <MenuItem value="">Whole admission year</MenuItem>
+              {scopeOptions.map(([key, value]) => (
+                <MenuItem key={key} value={key}>
+                  {value.boardName} / {value.mediumName} / {value.standardName}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
+        ) : null}
+
+        {editorStep === 1 ? (
+          <Stack spacing={2}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                gap: 1.5,
+              }}
+            >
+              <TextField
+                name="identifierPrefix"
+                size="small"
+                label="Prefix"
+                value={prefix}
+                onChange={(event) => setPrefix(event.target.value.toUpperCase())}
+              />
+              <TextField
+                name="identifierSuffix"
+                size="small"
+                label="Suffix"
+                value={suffix}
+                onChange={(event) => setSuffix(event.target.value.toUpperCase())}
+              />
+              <TextField
+                name="identifierPadding"
+                size="small"
+                type="number"
+                label="Number width"
+                value={padding}
+                onChange={(event) => setPadding(event.target.value)}
+                inputProps={{ min: 1, max: 12, inputMode: 'numeric' }}
+              />
+              <TextField
+                name="identifierStartingSequence"
+                size="small"
+                type="number"
+                label="Starts at"
+                value={startingSequence}
+                onChange={(event) => setStartingSequence(event.target.value)}
+                inputProps={{ min: 1, inputMode: 'numeric' }}
+              />
+              <TextField
+                name="identifierMaximumSequence"
+                size="small"
+                type="number"
+                label="Maximum (optional)"
+                value={maximumSequence}
+                onChange={(event) => setMaximumSequence(event.target.value)}
+                inputProps={{ min: 1, inputMode: 'numeric' }}
+              />
+            </Box>
+            <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5, bgcolor: 'action.hover' }}>
+              <Typography variant="overline" color="text.secondary">
+                First identifier preview
+              </Typography>
+              <Typography
+                variant="h4"
+                sx={{ mt: 0.25, fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}
+              >
+                {previewNumber}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Future identifiers increment only after a successful, auditable allocation.
+              </Typography>
+            </Paper>
+          </Stack>
+        ) : null}
+
+        {editorStep === 2 ? (
+          <Stack spacing={2}>
+            <Alert severity="warning">
+              Effective periods and academic scopes must not overlap another published series.
+            </Alert>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                gap: 1.5,
+              }}
+            >
+              <TextField
+                name="identifierEffectiveFrom"
+                size="small"
+                type="date"
+                label="Effective from"
+                value={effectiveFrom}
+                onChange={(event) => setEffectiveFrom(event.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                name="identifierEffectiveUntil"
+                size="small"
+                type="date"
+                label="Effective until"
+                value={effectiveUntil}
+                onChange={(event) => setEffectiveUntil(event.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Box>
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+              <Stack spacing={0.5}>
+                <Typography variant="subtitle2">Review</Typography>
+                <Typography variant="body2">
+                  {name} ({code.toUpperCase()})
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  First number: {previewNumber} · Scope:{' '}
+                  {selected
+                    ? `${selected.boardName} / ${selected.mediumName} / ${selected.standardName}`
+                    : 'Whole admission year'}
+                </Typography>
+              </Stack>
+            </Paper>
+          </Stack>
+        ) : null}
+      </EnrollmentSettingsEditorDrawer>
     </Stack>
   );
 }

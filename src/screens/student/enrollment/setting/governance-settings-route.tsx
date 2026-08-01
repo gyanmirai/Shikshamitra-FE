@@ -5,7 +5,7 @@ import AdmissionsConfigurationSafety from './admissions-configuration-safety';
 import AdmissionsGovernanceConfiguration from './admissions-governance-configuration';
 import AdmissionsPolicyPackConfiguration from './admissions-policy-pack-configuration';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
-import { EnrollmentSettingsPage, EnrollmentSettingsPanelTabs } from './enrollment-settings-page';
+import { EnrollmentSettingsPage, EnrollmentSettingsTaskNav } from './enrollment-settings-page';
 
 export function GovernanceSettingsRoute() {
   const { state } = useEnrollmentWorkspace();
@@ -21,14 +21,22 @@ export function GovernanceSettingsRoute() {
       description="Manage admission routes, policy defaults, privacy, retention, and controlled exceptions."
       layout="document"
     >
-      <EnrollmentSettingsPanelTabs
+      <EnrollmentSettingsTaskNav
         label="Enrollment governance settings"
         value={panel as 'routes' | 'policy-packs' | 'compliance' | 'configuration-safety'}
         options={[
-          { value: 'routes', label: 'Admission Routes' },
-          { value: 'policy-packs', label: 'Policy Packs' },
-          { value: 'compliance', label: 'Compliance & Privacy' },
-          { value: 'configuration-safety', label: 'Configuration Safety' },
+          { value: 'routes', label: 'Admission Routes', icon: 'mdi:routes' },
+          { value: 'policy-packs', label: 'Policy Packs', icon: 'mdi:book-cog-outline' },
+          {
+            value: 'compliance',
+            label: 'Compliance & Privacy',
+            icon: 'mdi:shield-account-outline',
+          },
+          {
+            value: 'configuration-safety',
+            label: 'Configuration Safety',
+            icon: 'mdi:shield-check-outline',
+          },
         ]}
       />
       {panel === 'routes' ? <AdmissionsRouteConfiguration /> : null}

@@ -3,12 +3,12 @@
 import type { ReactNode } from 'react';
 
 import { usePathname } from 'next/navigation';
-import { useTheme } from '@mui/material/styles';
 import { RouterLink } from 'src/routes/components';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import { alpha, useTheme } from '@mui/material/styles';
 import { studentPaths } from 'src/constants/student-menu';
+import { Iconify } from 'src/components/iconify';
 import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
-import { Box, Tab, Tabs, Step, Stack, Stepper, StepButton, Typography } from '@mui/material';
+import { Box, Stack, ButtonBase, Typography } from '@mui/material';
 
 import { EnrollmentWorkspaceHeader } from '../admissions-crm/workspace-header';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
@@ -27,6 +27,8 @@ type SettingsPanelOption = {
   value: EnrollmentSettingsPanel;
   label: string;
   description?: string;
+  icon?: string;
+  meta?: string;
 };
 
 type SettingsPanelTabsProps = {
@@ -78,57 +80,10 @@ export function EnrollmentSettingsPage({
   );
 }
 
-export function EnrollmentSettingsPanelTabs({ label, value, options }: SettingsPanelTabsProps) {
-  const pathname = usePathname();
-  const { state, updateState } = useEnrollmentWorkspace();
-
-  const getPanelHref = (panel: EnrollmentSettingsPanel) => {
-    const query = serializeEnrollmentWorkspaceState({
-      ...state,
-      page: 1,
-      settingsPanel: panel,
-    }).toString();
-
-    return query ? `${pathname}?${query}` : pathname;
-  };
-
-  return (
-    <Box sx={{ borderBottom: 1, borderColor: 'divider', minWidth: 0 }}>
-      <Tabs
-        value={value}
-        variant="scrollable"
-        scrollButtons="auto"
-        allowScrollButtonsMobile
-        aria-label={label}
-      >
-        {options.map((option) => (
-          <Tab
-            key={option.value}
-            component={RouterLink}
-            href={getPanelHref(option.value)}
-            value={option.value}
-            label={option.label}
-            onClick={(event) => {
-              if (!isPlainPrimaryNavigationClick(event)) return;
-              event.preventDefault();
-              updateState({ settingsPanel: option.value, page: 1 }, 'push');
-            }}
-          />
-        ))}
-      </Tabs>
-    </Box>
-  );
-}
-
-export function EnrollmentSettingsSetupSteps({ label, value, options }: SettingsPanelTabsProps) {
+export function EnrollmentSettingsTaskNav({ label, value, options }: SettingsPanelTabsProps) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const pathname = usePathname();
   const { state, updateState } = useEnrollmentWorkspace();
-  const activeStep = Math.max(
-    0,
-    options.findIndex((option) => option.value === value)
-  );
 
   const getPanelHref = (panel: EnrollmentSettingsPanel) => {
     const query = serializeEnrollmentWorkspaceState({
@@ -141,40 +96,116 @@ export function EnrollmentSettingsSetupSteps({ label, value, options }: Settings
   };
 
   return (
-    <Box component="section" aria-label={label} sx={{ py: 0.5, minWidth: 0 }}>
-      <Typography variant="overline" color="text.secondary">
-        Setup sequence
-      </Typography>
-      <Stepper
-        nonLinear
-        activeStep={activeStep}
-        orientation={isMobile ? 'vertical' : 'horizontal'}
-        sx={{ mt: 0.25 }}
+    <Box component="nav" aria-label={label} sx={{ minWidth: 0, flexShrink: 0 }}>
+      <Box
+        sx={{
+          overflowX: 'auto',
+          overscrollBehaviorX: 'contain',
+          pb: 0.5,
+          scrollbarWidth: 'thin',
+        }}
       >
-        {options.map((option, index) => (
-          <Step key={option.value} completed={false}>
-            <StepButton
-              component={RouterLink}
-              href={getPanelHref(option.value)}
-              onClick={(event) => {
-                if (!isPlainPrimaryNavigationClick(event)) return;
-                event.preventDefault();
-                updateState({ settingsPanel: option.value, page: 1 }, 'push');
-              }}
-              aria-current={index === activeStep ? 'step' : undefined}
-            >
-              <Stack spacing={0.125} sx={{ textAlign: 'left', minWidth: 0 }}>
-                <Typography variant="subtitle2">{option.label}</Typography>
-                {option.description ? (
-                  <Typography variant="caption" color="text.secondary" sx={{ textWrap: 'pretty' }}>
-                    {option.description}
-                  </Typography>
-                ) : null}
-              </Stack>
-            </StepButton>
-          </Step>
-        ))}
-      </Stepper>
+        <Box
+          sx={{
+            display: 'grid',
+            gridAutoFlow: { xs: 'column', lg: 'row' },
+            gridAutoColumns: { xs: 'minmax(220px, 78vw)', sm: 'minmax(220px, 1fr)' },
+            gridTemplateColumns: { lg: `repeat(${options.length}, minmax(0, 1fr))` },
+            gap: 1,
+            minWidth: { xs: 'max-content', lg: 0 },
+          }}
+        >
+          {options.map((option) => {
+            const isActive = option.value === value;
+            return (
+              <ButtonBase
+                key={option.value}
+                component={RouterLink}
+                href={getPanelHref(option.value)}
+                aria-current={isActive ? 'page' : undefined}
+                onClick={(event) => {
+                  if (!isPlainPrimaryNavigationClick(event)) return;
+                  event.preventDefault();
+                  updateState({ settingsPanel: option.value, page: 1 }, 'push');
+                }}
+                sx={{
+                  position: 'relative',
+                  minHeight: 76,
+                  p: 1.25,
+                  border: 1,
+                  borderColor: isActive ? 'primary.main' : 'divider',
+                  borderRadius: 1.5,
+                  alignItems: 'flex-start',
+                  justifyContent: 'flex-start',
+                  textAlign: 'left',
+                  bgcolor: isActive ? alpha(theme.palette.primary.main, 0.08) : 'background.paper',
+                  transition: theme.transitions.create(['border-color', 'background-color']),
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: '0 auto 0 0',
+                    width: 3,
+                    borderRadius: '6px 0 0 6px',
+                    bgcolor: isActive ? 'primary.main' : 'transparent',
+                  },
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    bgcolor: alpha(theme.palette.primary.main, isActive ? 0.1 : 0.04),
+                  },
+                  '&:focus-visible': {
+                    outline: `3px solid ${alpha(theme.palette.primary.main, 0.35)}`,
+                    outlineOffset: 2,
+                  },
+                }}
+              >
+                <Stack direction="row" spacing={1} sx={{ minWidth: 0, width: '100%' }}>
+                  <Box
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 1,
+                      display: 'grid',
+                      placeItems: 'center',
+                      flexShrink: 0,
+                      color: isActive ? 'primary.main' : 'text.secondary',
+                      bgcolor: isActive ? alpha(theme.palette.primary.main, 0.12) : 'action.hover',
+                    }}
+                  >
+                    <Iconify icon={option.icon || 'mdi:tune-variant'} width={20} />
+                  </Box>
+                  <Stack spacing={0.125} sx={{ minWidth: 0, flex: 1 }}>
+                    <Stack direction="row" spacing={0.75} alignItems="baseline">
+                      <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
+                        {option.label}
+                      </Typography>
+                      {option.meta ? (
+                        <Typography variant="caption" color="text.secondary">
+                          {option.meta}
+                        </Typography>
+                      ) : null}
+                    </Stack>
+                    {option.description ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textWrap: 'pretty',
+                        }}
+                      >
+                        {option.description}
+                      </Typography>
+                    ) : null}
+                  </Stack>
+                </Stack>
+              </ButtonBase>
+            );
+          })}
+        </Box>
+      </Box>
     </Box>
   );
 }

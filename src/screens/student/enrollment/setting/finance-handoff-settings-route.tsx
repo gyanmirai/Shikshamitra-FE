@@ -15,10 +15,6 @@ export function FinanceHandoffSettingsRoute() {
       description="Choose when Enrollment asks Finance for verification and which Finance reference staff can see."
       layout="document"
     >
-      <Alert severity="info">
-        Finance remains the source of truth for payment, receipt, waiver, reconciliation, and refund
-        status. Enrollment only requests and displays verification.
-      </Alert>
       {academicYearId ? (
         <FinanceHandoffConfiguration academicYearId={academicYearId} />
       ) : (

@@ -105,6 +105,13 @@ import { buildInquirySourceSelectOptions } from './inquiry-source-utils';
 import { buildDuplicateInquiryFormTemplate } from './inquiry-form-template-utils';
 import { InquiryFormTemplatePreviewDialog } from './inquiry-form-template-preview';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { EnrollmentSettingsDecisionCards } from './enrollment-settings-decision-cards';
+import {
+  leadScoringGroups,
+  leadScoringPresets,
+  getLeadScoringPreviews,
+  matchesLeadScoringPreset,
+} from './pipeline-scoring-model';
 import {
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
@@ -571,27 +578,6 @@ const readinessOptions = [
   { value: AdmissionCrmExamReadinessField.StudentName, label: 'Student name' },
   { value: AdmissionCrmExamReadinessField.ParentGuardianName, label: 'Parent name' },
   { value: AdmissionCrmExamReadinessField.InquirySource, label: 'Inquiry source' },
-];
-
-const scoringRuleFields: Array<{ field: keyof AdmissionCrmLeadScoringRulesDto; label: string }> = [
-  { field: 'baseScore', label: 'Base' },
-  { field: 'bothContactChannelsScore', label: 'Phone + email' },
-  { field: 'parentGuardianScore', label: 'Parent name' },
-  { field: 'desiredClassScore', label: 'Desired class' },
-  { field: 'campaignScore', label: 'Campaign' },
-  { field: 'manualBackOfficeChannelScore', label: 'Manual' },
-  { field: 'quickCallEntryChannelScore', label: 'Quick call' },
-  { field: 'walkInReceptionChannelScore', label: 'Walk-in' },
-  { field: 'schoolWebsiteFormChannelScore', label: 'Website' },
-  { field: 'whatsAppInquiryChannelScore', label: 'WhatsApp' },
-  { field: 'staffSharedLinkChannelScore', label: 'Staff link' },
-  { field: 'qrCodeScanChannelScore', label: 'QR scan' },
-  { field: 'campaignLinkChannelScore', label: 'Campaign link' },
-  { field: 'examPassScore', label: 'Exam pass' },
-  { field: 'examFailPenalty', label: 'Exam fail' },
-  { field: 'highPerformanceScore', label: 'High score' },
-  { field: 'highPerformancePercentage', label: 'High score %' },
-  { field: 'maxScore', label: 'Max' },
 ];
 
 const messageChannelLabel: Record<AdmissionCrmMessageChannel, string> = {
@@ -3030,8 +3016,8 @@ const AdmissionsCrmConfiguration = ({
                   </Stack>
                   {!cycleForm.entranceExamRequired && (
                     <Alert severity="warning" sx={{ mt: 1 }}>
-                      Exam scheduling is disabled for this admission year. Applicants use the exam-waived
-                      registration and admission readiness path.
+                      Exam scheduling is disabled for this admission year. Applicants use the
+                      exam-waived registration and admission readiness path.
                     </Alert>
                   )}
                 </AccordionDetails>
@@ -3807,48 +3793,185 @@ const AdmissionsCrmConfiguration = ({
       </Box>
 
       {focusSection === 'routing' && (!focusPanel || focusPanel === 'scoring') && (
-        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-          <Stack spacing={1.25}>
-            <Typography component="h2" variant="subtitle1">
-              <SettingsHelpLabel
-                label="Lead Scoring"
-                help="Adds points to inquiries so the admissions team can identify higher-intent applicants first."
-              />
-            </Typography>
-            <Divider />
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(6, minmax(0, 1fr))' },
-                gap: 1,
-              }}
-            >
-              {scoringRuleFields.map((option) => (
-                <TextField
-                  key={option.field}
-                  size="small"
-                  type="number"
-                  label={option.label}
-                  value={cycleForm.leadScoringRules[option.field]}
-                  disabled={!academicYearId || isUpdatingCycle}
-                  onChange={(event) =>
-                    handleScoringRuleChange(option.field, Number(event.target.value))
-                  }
-                />
-              ))}
-            </Box>
+        <Stack spacing={1.5}>
+          <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 1.5 }}>
+            <Stack spacing={1.5}>
+              <Box>
+                <Typography component="h2" variant="subtitle1">
+                  Recommended Scoring Models
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ textWrap: 'pretty' }}>
+                  Start with a transparent school-ready model, then tune individual signals only
+                  when your admissions team has evidence for the change.
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+                  gap: 1,
+                }}
+              >
+                {leadScoringPresets.map((preset) => {
+                  const selected = matchesLeadScoringPreset(cycleForm.leadScoringRules, preset);
+                  return (
+                    <Button
+                      key={preset.id}
+                      variant={selected ? 'contained' : 'outlined'}
+                      color={selected ? 'primary' : 'inherit'}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      aria-pressed={selected}
+                      onClick={() =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          leadScoringRules: { ...preset.rules },
+                        }))
+                      }
+                      sx={{
+                        p: 1.5,
+                        minHeight: 112,
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
+                        textAlign: 'left',
+                        textTransform: 'none',
+                      }}
+                    >
+                      <Stack spacing={0.5}>
+                        <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
+                          <Typography variant="subtitle2" color="inherit">
+                            {preset.title}
+                          </Typography>
+                          {preset.recommended ? (
+                            <Chip
+                              size="small"
+                              label="Recommended"
+                              variant="outlined"
+                              color={selected ? 'default' : 'primary'}
+                            />
+                          ) : null}
+                        </Stack>
+                        <Typography variant="body2" color={selected ? 'inherit' : 'text.secondary'}>
+                          {preset.description}
+                        </Typography>
+                      </Stack>
+                    </Button>
+                  );
+                })}
+              </Box>
+              <Alert severity="info">
+                Lead scores only order work for the admissions team. They never approve, reject, or
+                change applicant eligibility.
+              </Alert>
+            </Stack>
+          </Paper>
+
+          <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 1.5 }}>
+            <Stack spacing={1.25}>
+              <Box>
+                <Typography component="h2" variant="subtitle1">
+                  Score Preview
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  See how common inquiry profiles respond before saving the model.
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+                  gap: 1,
+                }}
+              >
+                {getLeadScoringPreviews(cycleForm.leadScoringRules).map((preview) => (
+                  <Stack
+                    key={preview.label}
+                    spacing={0.75}
+                    sx={{ p: 1.25, border: 1, borderColor: 'divider', borderRadius: 1.25 }}
+                  >
+                    <Stack direction="row" justifyContent="space-between" gap={1}>
+                      <Typography variant="subtitle2">{preview.label}</Typography>
+                      <Typography
+                        variant="subtitle2"
+                        color="primary.main"
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {preview.score}
+                      </Typography>
+                    </Stack>
+                    <LinearProgress
+                      variant="determinate"
+                      value={
+                        (preview.score / Math.max(1, cycleForm.leadScoringRules.maxScore)) * 100
+                      }
+                      aria-label={`${preview.label} score ${preview.score}`}
+                    />
+                  </Stack>
+                ))}
+              </Box>
+            </Stack>
+          </Paper>
+
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', xl: 'repeat(3, minmax(0, 1fr))' },
+              gap: 1.5,
+            }}
+          >
+            {leadScoringGroups.map((group) => (
+              <Paper key={group.title} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+                <Stack spacing={1.25}>
+                  <Box>
+                    <Typography component="h3" variant="subtitle1">
+                      {group.title}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {group.description}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        xs: '1fr 1fr',
+                        sm: 'repeat(3, minmax(0, 1fr))',
+                        xl: '1fr 1fr',
+                      },
+                      gap: 1,
+                    }}
+                  >
+                    {group.fields.map((option) => (
+                      <TextField
+                        key={option.field}
+                        size="small"
+                        type="number"
+                        label={option.label}
+                        value={cycleForm.leadScoringRules[option.field]}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleScoringRuleChange(option.field, Number(event.target.value))
+                        }
+                        inputProps={{ inputMode: 'numeric' }}
+                      />
+                    ))}
+                  </Box>
+                </Stack>
+              </Paper>
+            ))}
+          </Box>
+
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
             <LoadingButton
-              size="small"
               variant="contained"
               loading={isUpdatingCycle || isPreviewingCycleImpact}
               disabled={!academicYearId}
               onClick={handleSaveCycle}
               sx={{ alignSelf: 'flex-start' }}
             >
-              Save Scoring
+              Save Lead Scoring
             </LoadingButton>
-          </Stack>
-        </Paper>
+          </Paper>
+        </Stack>
       )}
 
       {focusSection === 'routing' && (!focusPanel || focusPanel === 'routing') && (
@@ -3857,15 +3980,46 @@ const AdmissionsCrmConfiguration = ({
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
               <Typography component="h2" variant="subtitle1">
                 <SettingsHelpLabel
-                  label="Lead Routing"
+                  label="Ownership & Routing"
                   help="Assigns inquiries to the right admissions owner using the first matching configured rule."
                 />
               </Typography>
-              <Button size="small" variant="outlined" onClick={handleAddRoutingRule}>
-                Add Rule
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleAddRoutingRule}
+              >
+                Add Routing Rule
               </Button>
             </Stack>
             <Divider />
+            <Stack direction="row" gap={0.75} flexWrap="wrap">
+              <Chip
+                size="small"
+                variant="outlined"
+                color={cycleForm.leadRoutingSettings.isEnabled ? 'success' : 'default'}
+                label={
+                  cycleForm.leadRoutingSettings.isEnabled
+                    ? 'Automatic routing on'
+                    : 'Manual assignment'
+                }
+              />
+              <Chip
+                size="small"
+                variant="outlined"
+                label={`${cycleForm.leadRoutingSettings.ownerPoolUserIds.length} pool owners`}
+              />
+              <Chip
+                size="small"
+                variant="outlined"
+                label={`${cycleForm.leadRoutingSettings.rules.filter((rule) => rule.isEnabled).length} active rules`}
+              />
+            </Stack>
+            <Alert severity="info">
+              Test the broadest ownership behavior first. Add match rules only for exceptions such
+              as a dedicated campus, source, language, or campaign owner.
+            </Alert>
             <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
               <FormControlLabel
                 control={
@@ -3877,7 +4031,7 @@ const AdmissionsCrmConfiguration = ({
                     }
                   />
                 }
-                label="Enabled"
+                label="Route new inquiries automatically"
               />
               <FormControl fullWidth size="small">
                 <InputLabel>Default owner</InputLabel>
@@ -3899,30 +4053,42 @@ const AdmissionsCrmConfiguration = ({
                 </Select>
               </FormControl>
             </Stack>
+            <Box>
+              <Typography component="h3" variant="subtitle2" sx={{ mb: 0.75 }}>
+                Assignment Strategy
+              </Typography>
+              <EnrollmentSettingsDecisionCards
+                label="Lead routing strategy"
+                value={cycleForm.leadRoutingSettings.routingStrategy}
+                onChange={(value) => handleRoutingSettingsChange('routingStrategy', value)}
+                disabled={!academicYearId || isUpdatingCycle}
+                columns={3}
+                options={[
+                  {
+                    value: AdmissionCrmLeadRoutingStrategy.FirstMatchingRule,
+                    title: routingStrategyLabel[AdmissionCrmLeadRoutingStrategy.FirstMatchingRule],
+                    description:
+                      'Apply the first enabled rule that matches, then fall back to the default owner.',
+                    icon: 'mdi:filter-check-outline',
+                    recommended: true,
+                  },
+                  {
+                    value: AdmissionCrmLeadRoutingStrategy.RoundRobin,
+                    title: routingStrategyLabel[AdmissionCrmLeadRoutingStrategy.RoundRobin],
+                    description: 'Rotate new inquiries evenly across the active owner pool.',
+                    icon: 'mdi:account-sync-outline',
+                  },
+                  {
+                    value: AdmissionCrmLeadRoutingStrategy.LeastOpenLeads,
+                    title: routingStrategyLabel[AdmissionCrmLeadRoutingStrategy.LeastOpenLeads],
+                    description:
+                      'Send each inquiry to the eligible owner with the lightest open workload.',
+                    icon: 'mdi:scale-balance',
+                  },
+                ]}
+              />
+            </Box>
             <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Routing strategy</InputLabel>
-                <Select
-                  label="Routing strategy"
-                  value={cycleForm.leadRoutingSettings.routingStrategy}
-                  disabled={!academicYearId || isUpdatingCycle}
-                  onChange={(event) =>
-                    handleRoutingSettingsChange(
-                      'routingStrategy',
-                      Number(event.target.value) as AdmissionCrmLeadRoutingStrategy
-                    )
-                  }
-                >
-                  {Object.entries(routingStrategyLabel).map(([value, label]) => (
-                    <MenuItem key={value} value={Number(value)}>
-                      {label}
-                    </MenuItem>
-                  ))}
-                </Select>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Controls how matching rules and owner pools decide who receives a new inquiry.
-                </Typography>
-              </FormControl>
               <Autocomplete
                 multiple
                 fullWidth
@@ -3967,6 +4133,13 @@ const AdmissionsCrmConfiguration = ({
                   }}
                 >
                   <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <Chip
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      label={`Rule ${index + 1}`}
+                      sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
+                    />
                     <TextField
                       fullWidth
                       size="small"
@@ -3986,6 +4159,7 @@ const AdmissionsCrmConfiguration = ({
                       onChange={(event) =>
                         handleRoutingRuleChange(index, 'priority', Number(event.target.value))
                       }
+                      sx={{ width: { xs: '100%', md: 120 } }}
                     />
                     <FormControlLabel
                       control={
@@ -4008,6 +4182,19 @@ const AdmissionsCrmConfiguration = ({
                           aria-label={`Duplicate routing rule ${rule.ruleName || index + 1}`}
                         >
                           <ContentCopy fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Remove this routing rule" arrow>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onClick={() => handleRemoveRoutingRule(index)}
+                          aria-label={`Remove routing rule ${rule.ruleName || index + 1}`}
+                        >
+                          <Delete fontSize="small" />
                         </IconButton>
                       </span>
                     </Tooltip>
@@ -4079,77 +4266,96 @@ const AdmissionsCrmConfiguration = ({
                         ))}
                       </Select>
                     </FormControl>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Target standard ID"
-                      value={rule.targetStandardId ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleRoutingRuleChange(index, 'targetStandardId', event.target.value)
-                      }
-                    />
                   </Stack>
-                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Campaign contains"
-                      value={rule.campaignContains ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleRoutingRuleChange(index, 'campaignContains', event.target.value)
-                      }
-                    />
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Class contains"
-                      value={rule.desiredClassContains ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleRoutingRuleChange(index, 'desiredClassContains', event.target.value)
-                      }
-                    />
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Branch contains"
-                      value={rule.campusBranchContains ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleRoutingRuleChange(index, 'campusBranchContains', event.target.value)
-                      }
-                    />
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Language contains"
-                      value={rule.preferredLanguageContains ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleRoutingRuleChange(
-                          index,
-                          'preferredLanguageContains',
-                          event.target.value
-                        )
-                      }
-                    />
-                    <Button
-                      size="small"
-                      color="error"
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onClick={() => handleRemoveRoutingRule(index)}
-                    >
-                      Remove
-                    </Button>
-                  </Stack>
+                  <Accordion variant="outlined" disableGutters>
+                    <AccordionSummary expandIcon={<ExpandMore />}>
+                      <Box>
+                        <Typography variant="subtitle2">Advanced Match Conditions</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Narrow this exception by standard, campaign, class, branch, or language.
+                        </Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                          gap: 1,
+                        }}
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Target standard ID"
+                          value={rule.targetStandardId ?? ''}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleRoutingRuleChange(index, 'targetStandardId', event.target.value)
+                          }
+                        />
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Campaign contains"
+                          value={rule.campaignContains ?? ''}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleRoutingRuleChange(index, 'campaignContains', event.target.value)
+                          }
+                        />
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Class contains"
+                          value={rule.desiredClassContains ?? ''}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleRoutingRuleChange(
+                              index,
+                              'desiredClassContains',
+                              event.target.value
+                            )
+                          }
+                        />
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Branch contains"
+                          value={rule.campusBranchContains ?? ''}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleRoutingRuleChange(
+                              index,
+                              'campusBranchContains',
+                              event.target.value
+                            )
+                          }
+                        />
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Language contains"
+                          value={rule.preferredLanguageContains ?? ''}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleRoutingRuleChange(
+                              index,
+                              'preferredLanguageContains',
+                              event.target.value
+                            )
+                          }
+                        />
+                      </Box>
+                    </AccordionDetails>
+                  </Accordion>
                 </Box>
               ))}
               {!cycleForm.leadRoutingSettings.rules.length && (
-                <Typography variant="body2" color="text.secondary">
-                  No routing rules configured
-                </Typography>
+                <Alert severity="info">
+                  No exception rules are configured. New inquiries use the selected strategy, owner
+                  pool, and default owner.
+                </Alert>
               )}
             </Box>
             <LoadingButton
@@ -4160,7 +4366,7 @@ const AdmissionsCrmConfiguration = ({
               onClick={handleSaveCycle}
               sx={{ alignSelf: 'flex-start' }}
             >
-              Save Routing
+              Save Ownership Rules
             </LoadingButton>
           </Stack>
         </Paper>
@@ -5493,10 +5699,7 @@ const AdmissionsCrmConfiguration = ({
           ) : null}
         </DialogContent>
         <DialogActions>
-          <Button
-            disabled={isUpdatingPipelineStage}
-            onClick={() => setPendingStageUpdate(null)}
-          >
+          <Button disabled={isUpdatingPipelineStage} onClick={() => setPendingStageUpdate(null)}>
             Cancel
           </Button>
           <LoadingButton

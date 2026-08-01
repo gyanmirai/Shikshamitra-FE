@@ -134,6 +134,16 @@ describe('Enrollment workspace URL state', () => {
     ).toBeUndefined();
   });
 
+  it.each(['sources', 'types', 'form-numbering', 'activation', 'numbering'])(
+    'round trips the %s settings task',
+    (panel) => {
+      const state = parseEnrollmentWorkspaceState(new URLSearchParams({ panel }));
+
+      expect(state.settingsPanel).toBe(panel);
+      expect(serializeEnrollmentWorkspaceState(state).get('panel')).toBe(panel);
+    }
+  );
+
   it('rejects impossible report dates from deep links', () => {
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams({ from: '2026-02-31', to: '2026-03-01' })

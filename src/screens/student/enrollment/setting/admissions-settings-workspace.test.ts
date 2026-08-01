@@ -134,10 +134,10 @@ describe('Enrollment settings route contracts', () => {
 
     expect(state).toContain("searchParams.get('panel')");
     expect(state).toContain("set('panel', state.settingsPanel)");
-    expect(settingsPage).toContain('EnrollmentSettingsPanelTabs');
-    expect(settingsPage).toContain('EnrollmentSettingsSetupSteps');
-    expect(settingsPage).toContain('<Stepper');
-    expect(settingsPage).toContain('<StepButton');
+    expect(settingsPage).toContain('EnrollmentSettingsTaskNav');
+    expect(settingsPage).not.toContain('EnrollmentSettingsPanelTabs');
+    expect(settingsPage).not.toContain('EnrollmentSettingsSetupSteps');
+    expect(settingsPage).not.toContain('<Stepper');
     expect(settingsPage).toContain('component={RouterLink}');
     expect(settingsPage).toContain('href={getPanelHref(option.value)}');
   });
@@ -211,7 +211,8 @@ describe('Enrollment settings route contracts', () => {
     expect(settingsPage).not.toContain('<CustomBreadcrumbs');
     expect(settingsShell).toContain("flexDirection: 'column'");
     expect(examRoute).toContain('layout="table"');
-    expect(playbooks).toContain('wrapperProps={{ sx: { minHeight: 320 } }}');
+    expect(playbooks).toContain('wrapperProps={{ sx: enrollmentTableWrapperSx }}');
+    expect(playbooks).toContain('tableContainerProps={{ sx: enrollmentTableContainerSx }}');
   });
 
   it('aligns CRM workspace headers with the shared module breadcrumb spacing', () => {
@@ -346,10 +347,10 @@ describe('Enrollment settings route contracts', () => {
       'exam-settings-route.tsx'
     );
 
-    expect(playbooks).toContain('Quick admission setup');
-    expect(playbooks).toContain('Written entrance exam');
-    expect(playbooks).toContain('Student interaction only');
-    expect(playbooks).toContain('No entrance assessment');
+    expect(playbooks).toContain('Quick Admission Setup');
+    expect(playbooks).toContain('Written Entrance Exam');
+    expect(playbooks).toContain('Student Interaction');
+    expect(playbooks).toContain('No Entrance Assessment');
     expect(playbooks).toContain('Generate hall tickets for this exam');
     expect(playbooks).toContain('Advanced setup');
     expect(playbooks).toContain('hallTicketEnabled: false');

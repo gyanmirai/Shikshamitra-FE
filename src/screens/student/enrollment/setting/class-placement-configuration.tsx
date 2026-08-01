@@ -20,12 +20,11 @@ import {
   Button,
   Divider,
   Typography,
-  ToggleButton,
   LinearProgress,
-  ToggleButtonGroup,
 } from '@mui/material';
 
 import { useAdmissionYearDraft } from './use-admission-year-draft';
+import { EnrollmentSettingsDecisionCards } from './enrollment-settings-decision-cards';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
   enrollmentTableWrapperSx,
@@ -187,26 +186,37 @@ export function ClassPlacementConfiguration({ academicYearId }: { academicYearId
   return (
     <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
       <Box>
-        <Typography variant="subtitle1">Division assignment timing</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Board, medium, and standard are always confirmed before activation.
+        <Typography component="h2" variant="subtitle1">
+          Placement Decision
         </Typography>
-        <ToggleButtonGroup
-          exclusive
-          size="small"
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.25 }}>
+          Choose how much placement detail must be confirmed before a student can be activated.
+        </Typography>
+        <EnrollmentSettingsDecisionCards
+          label="Division assignment timing"
           value={timing}
-          onChange={(_event, value: AdmissionCrmPlacementTiming | null) => {
-            if (value != null) setTiming(value);
-          }}
-          aria-label="Division assignment timing"
-        >
-          <ToggleButton value={AdmissionCrmPlacementTiming.StandardBeforeActivation}>
-            Assign division later
-          </ToggleButton>
-          <ToggleButton value={AdmissionCrmPlacementTiming.DivisionBeforeActivation}>
-            Assign before activation
-          </ToggleButton>
-        </ToggleButtonGroup>
+          onChange={setTiming}
+          disabled={admissionYear.isCreating || admissionYear.isSaving}
+          options={[
+            {
+              value: AdmissionCrmPlacementTiming.StandardBeforeActivation,
+              title: 'Confirm Standard First',
+              description:
+                'Activate after board, medium, and standard are confirmed. Assign the division later when the timetable is ready.',
+              icon: 'mdi:school-outline',
+              recommended: true,
+              meta: 'Best for schools that finalize divisions close to opening day.',
+            },
+            {
+              value: AdmissionCrmPlacementTiming.DivisionBeforeActivation,
+              title: 'Confirm Full Class Placement',
+              description:
+                'Require board, medium, standard, and division before activation can finish.',
+              icon: 'mdi:account-group-outline',
+              meta: 'Best when class capacity is finalized during admissions.',
+            },
+          ]}
+        />
       </Box>
 
       <Stack direction="row" gap={1} flexWrap="wrap">

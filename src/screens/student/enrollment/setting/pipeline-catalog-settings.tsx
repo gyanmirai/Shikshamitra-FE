@@ -28,12 +28,11 @@ import {
   InputLabel,
   FormControl,
   DialogTitle,
-  ToggleButton,
+  Typography,
   DialogContent,
   DialogActions,
   LinearProgress,
   FormControlLabel,
-  ToggleButtonGroup,
 } from '@mui/material';
 import {
   AdmissionInquiryChannel,
@@ -54,7 +53,7 @@ import {
   enrollmentTableContainerSx,
 } from '../admissions-crm/workspace-table-patterns';
 
-type CatalogView = 'sources' | 'types';
+export type CatalogView = 'sources' | 'types';
 type CatalogRecord = AdmissionCrmInquirySourceDto | AdmissionCrmInquiryTypeDto;
 
 type CatalogForm = {
@@ -91,8 +90,13 @@ const getErrorMessage = (error: unknown) => {
 const isSource = (record: CatalogRecord): record is AdmissionCrmInquirySourceDto =>
   'allowedChannels' in record;
 
-export function PipelineCatalogSettings({ academicYearId }: { academicYearId: string }) {
-  const [view, setView] = useState<CatalogView>('sources');
+export function PipelineCatalogSettings({
+  academicYearId,
+  view,
+}: {
+  academicYearId: string;
+  view: CatalogView;
+}) {
   const [includeInactive, setIncludeInactive] = useState(false);
   const [editing, setEditing] = useState<CatalogRecord | null>(null);
   const [form, setForm] = useState<CatalogForm>(emptyForm);
@@ -303,18 +307,22 @@ export function PipelineCatalogSettings({ academicYearId }: { academicYearId: st
           const record = row as CatalogRecord;
           return (
             <Stack direction="row" justifyContent="flex-end">
-              <Tooltip title="Edit">
-                <IconButton size="small" onClick={() => openEditor(record)} aria-label="Edit">
+              <Tooltip title={`Edit ${record.displayName}`}>
+                <IconButton
+                  size="small"
+                  onClick={() => openEditor(record)}
+                  aria-label={`Edit ${record.displayName}`}
+                >
                   <Iconify icon="mdi:pencil-outline" />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={record.isActive ? 'Disable' : 'Enable'}>
+              <Tooltip title={`${record.isActive ? 'Disable' : 'Enable'} ${record.displayName}`}>
                 <span>
                   <IconButton
                     size="small"
                     disabled={isChangingStatus}
                     onClick={() => toggleStatus(record)}
-                    aria-label={record.isActive ? 'Disable' : 'Enable'}
+                    aria-label={`${record.isActive ? 'Disable' : 'Enable'} ${record.displayName}`}
                   >
                     <Iconify
                       icon={
@@ -340,19 +348,15 @@ export function PipelineCatalogSettings({ academicYearId }: { academicYearId: st
         alignItems={{ sm: 'center' }}
         justifyContent="space-between"
       >
-        <Box sx={{ overflowX: 'auto' }}>
-          <ToggleButtonGroup
-            exclusive
-            size="small"
-            value={view}
-            onChange={(_event, value: CatalogView | null) => {
-              if (value) setView(value);
-            }}
-            aria-label="Pipeline catalog"
-          >
-            <ToggleButton value="sources">Inquiry sources</ToggleButton>
-            <ToggleButton value="types">Inquiry types</ToggleButton>
-          </ToggleButtonGroup>
+        <Box>
+          <Typography component="h2" variant="subtitle1">
+            {view === 'sources' ? 'Inquiry Sources' : 'Inquiry Types'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {view === 'sources'
+              ? 'Sources answer where an inquiry came from and can participate in owner routing.'
+              : 'Types answer why a family contacted the school and stay independent of the intake channel.'}
+          </Typography>
         </Box>
         <Stack direction="row" alignItems="center" gap={1}>
           <FormControlLabel
