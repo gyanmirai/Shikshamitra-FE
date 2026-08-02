@@ -216,8 +216,13 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   const handleSubjectsChange = useCallback(
     async (value: any[]) => {
       const selectedType = examTypeOptions.find((item: any) => item.id === formik.values.examType);
-      const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
-      const defaultGradeScaleId = selectedType?.defaultGradeScaleId || null;
+      const marksEntryRequired = selectedType?.marksEntryRequired ?? true;
+      const gradeScaleRequired = selectedType?.gradeScaleRequired ?? true;
+      const defaultTotalMarks = marksEntryRequired ? (selectedType?.defaultTotalMarks ?? '') : '';
+      const defaultGradeScaleId =
+        gradeScaleRequired && selectedType?.defaultGradeScaleId
+          ? selectedType.defaultGradeScaleId
+          : null;
       const nextReadiness = { ...electiveReadiness };
       const normalizedResults = await Promise.all(
         value.map(async (sub) => {
@@ -251,8 +256,10 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     examDate: subjectItem.examDate || null,
                     startTime: subjectItem.startTime || null,
                     endTime: subjectItem.endTime || null,
-                    totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                    passingMarks: subjectItem.passingMarks ?? '',
+                    totalMarks: marksEntryRequired
+                      ? subjectItem.totalMarks || defaultTotalMarks
+                      : '',
+                    passingMarks: marksEntryRequired ? (subjectItem.passingMarks ?? '') : '',
                     notes: subjectItem.notes || '',
                     gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
                   };
@@ -268,8 +275,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             examDate: sub?.examDate || null,
             startTime: sub?.startTime || null,
             endTime: sub?.endTime || null,
-            totalMarks: sub?.totalMarks || defaultTotalMarks,
-            passingMarks: sub?.passingMarks ?? '',
+            totalMarks: marksEntryRequired ? sub?.totalMarks || defaultTotalMarks : '',
+            passingMarks: marksEntryRequired ? (sub?.passingMarks ?? '') : '',
             notes: sub?.notes || '',
             gradeScalingId: sub?.gradeScalingId || defaultGradeScaleId,
             subjectCode: isElective ? '' : sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
@@ -324,13 +331,46 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
                         // Sync gradeScaleRequired from the selected exam type configuration
                         const isGradeScaleRequired = selectedType?.gradeScaleRequired ?? true;
+                        const isMarksEntryRequired = selectedType?.marksEntryRequired ?? true;
                         formik.setFieldValue('gradeScaleRequired', isGradeScaleRequired);
+                        formik.setFieldValue('marksEntryRequired', isMarksEntryRequired);
 
                         if (isGradeScaleRequired && selectedType?.defaultGradeScaleId) {
                           formik.setFieldValue('gradingScaleId', selectedType.defaultGradeScaleId);
                         } else if (!isGradeScaleRequired) {
                           formik.setFieldValue('gradingScaleId', '');
                         }
+
+                        const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
+                        const defaultGradeScaleId =
+                          isGradeScaleRequired && selectedType?.defaultGradeScaleId
+                            ? selectedType.defaultGradeScaleId
+                            : null;
+
+                        const normalizeScheduleFields = (subject: any) => ({
+                          ...subject,
+                          totalMarks: isMarksEntryRequired
+                            ? subject.totalMarks || defaultTotalMarks
+                            : '',
+                          passingMarks: isMarksEntryRequired ? (subject.passingMarks ?? '') : '',
+                          gradeScalingId: isGradeScaleRequired
+                            ? subject.gradeScalingId || defaultGradeScaleId
+                            : null,
+                        });
+
+                        formik.setFieldValue(
+                          'subjects',
+                          formik.values.subjects.map((subject: any) => {
+                            const normalized = normalizeScheduleFields(subject);
+                            if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
+                              return {
+                                ...normalized,
+                                subjects: subject.subjects.map(normalizeScheduleFields),
+                              };
+                            }
+                            return normalized;
+                          })
+                        );
                       }}
                       labelKey="examType"
                       valueKey="id"
@@ -629,6 +669,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       labelKey="name"
                       valueKey="id"
                       label={`Grading Scale${formik.values.gradeScaleRequired ? ' *' : ''}`}
+                      disabled={!formik.values.gradeScaleRequired}
                       formControlProps={{ fullWidth: true }}
                       error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
                       helperText={

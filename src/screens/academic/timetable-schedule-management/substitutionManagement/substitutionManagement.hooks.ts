@@ -92,13 +92,16 @@ export const useTeacherAvailabilityDataQuery = (
     popupConfig: silentQueryPopup,
   }) as ReturnType<typeof useGetTeacherAvailabilityQuery>;
 
-export const useSubstitutionCreateMetadataDataQuery = (): ReturnType<
-  typeof useGetSubstitutionCreateMetadataQuery
-> =>
+export const useSubstitutionCreateMetadataDataQuery = (
+  params: QueryParams,
+  options?: QueryOptions
+): ReturnType<typeof useGetSubstitutionCreateMetadataQuery> =>
   useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubstitutionCreateMetadataQuery,
     popupConfig: silentQueryPopup,
+    params,
+    options,
   }) as ReturnType<typeof useGetSubstitutionCreateMetadataQuery>;
 
 export const useSubstitutionLecturesDataQuery = (

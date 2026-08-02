@@ -175,6 +175,8 @@ interface SubjectScheduleRowProps {
   currentYear: any;
   standardId?: string | null;
   isReadOnly?: boolean;
+  marksEntryRequired?: boolean;
+  gradeScaleRequired?: boolean;
 }
 
 const SubjectScheduleRow = memo(
@@ -189,6 +191,8 @@ const SubjectScheduleRow = memo(
     currentYear,
     standardId,
     isReadOnly = false,
+    marksEntryRequired = true,
+    gradeScaleRequired = true,
   }: SubjectScheduleRowProps) => (
     <TableRow
       sx={{
@@ -352,6 +356,7 @@ const SubjectScheduleRow = memo(
               size="small"
               options={gradeScalings || []}
               loading={isGradeScalingsLoading}
+              disabled={!gradeScaleRequired}
               value={
                 gradeScalings?.find((g: any) => String(g.id) === String(values.gradeScalingId)) ||
                 null
@@ -372,12 +377,16 @@ const SubjectScheduleRow = memo(
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Scale *"
+                  label={`Scale${gradeScaleRequired ? ' *' : ''}`}
                   size="small"
                   sx={{ width: 175 }}
                   error={!!(touched.gradeScalingId && errors.gradeScalingId)}
                   helperText={
-                    touched.gradeScalingId && errors.gradeScalingId ? errors.gradeScalingId : ' '
+                    touched.gradeScalingId && errors.gradeScalingId
+                      ? errors.gradeScalingId
+                      : gradeScaleRequired
+                        ? ' '
+                        : 'Not required'
                   }
                   FormHelperTextProps={HELPER_TEXT_PROPS}
                   InputLabelProps={LABEL_PROPS}
@@ -394,15 +403,22 @@ const SubjectScheduleRow = memo(
           <TextField
             value={values.totalMarks ?? ''}
             type="number"
-            label="Total Marks *"
+            label={`Total Marks${marksEntryRequired ? ' *' : ''}`}
             size="small"
+            disabled={!marksEntryRequired}
             onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
             onChange={(e) => {
               onFieldChange('totalMarks', e.target.value);
               onFieldBlur('totalMarks');
             }}
             error={!!(touched.totalMarks && errors.totalMarks)}
-            helperText={touched.totalMarks && errors.totalMarks ? errors.totalMarks : ' '}
+            helperText={
+              touched.totalMarks && errors.totalMarks
+                ? errors.totalMarks
+                : marksEntryRequired
+                  ? ' '
+                  : 'Not required'
+            }
             FormHelperTextProps={HELPER_TEXT_PROPS}
             InputLabelProps={LABEL_PROPS}
           />
@@ -425,8 +441,9 @@ const SubjectScheduleRow = memo(
               <TextField
                 value={values.passingMarks ?? ''}
                 type="number"
-                label="Passing Marks *"
+                label={`Passing Marks${marksEntryRequired ? ' *' : ''}`}
                 size="small"
+                disabled={!marksEntryRequired}
                 onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
                 onChange={(e) => {
                   onFieldChange('passingMarks', e.target.value);
@@ -438,7 +455,9 @@ const SubjectScheduleRow = memo(
                     ? 'Exceeds total marks'
                     : touched.passingMarks && errors.passingMarks
                       ? errors.passingMarks
-                      : ' '
+                      : marksEntryRequired
+                        ? ' '
+                        : 'Not required'
                 }
                 FormHelperTextProps={HELPER_TEXT_PROPS}
                 InputLabelProps={LABEL_PROPS}
@@ -479,22 +498,27 @@ interface ApplyToAllValues {
 
 interface ApplyToAllBarProps {
   onApply: (values: ApplyToAllValues) => void;
+  marksEntryRequired?: boolean;
 }
 
-const ApplyToAllBar = memo(({ onApply }: ApplyToAllBarProps) => {
+const ApplyToAllBar = memo(({ onApply, marksEntryRequired = true }: ApplyToAllBarProps) => {
   const [bulkStartTime, setBulkStartTime] = useState<any>(null);
   const [bulkEndTime, setBulkEndTime] = useState<any>(null);
   const [bulkTotalMarks, setBulkTotalMarks] = useState('');
   const [bulkPassingMarks, setBulkPassingMarks] = useState('');
 
-  const hasAnyValue = !!(bulkStartTime || bulkEndTime || bulkTotalMarks || bulkPassingMarks);
+  const hasAnyValue = !!(
+    bulkStartTime ||
+    bulkEndTime ||
+    (marksEntryRequired && (bulkTotalMarks || bulkPassingMarks))
+  );
 
   const handleApply = () => {
     const updates: ApplyToAllValues = {};
     if (bulkStartTime !== null) updates.startTime = bulkStartTime;
     if (bulkEndTime !== null) updates.endTime = bulkEndTime;
-    if (bulkTotalMarks !== '') updates.totalMarks = bulkTotalMarks;
-    if (bulkPassingMarks !== '') updates.passingMarks = bulkPassingMarks;
+    if (marksEntryRequired && bulkTotalMarks !== '') updates.totalMarks = bulkTotalMarks;
+    if (marksEntryRequired && bulkPassingMarks !== '') updates.passingMarks = bulkPassingMarks;
     if (!Object.keys(updates).length) return;
     onApply(updates);
     setBulkStartTime(null);
@@ -543,27 +567,31 @@ const ApplyToAllBar = memo(({ onApply }: ApplyToAllBarProps) => {
         viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
         slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
       />
-      <Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto' }} />
-      <TextField
-        value={bulkTotalMarks}
-        label="Total marks"
-        type="number"
-        size="small"
-        sx={{ width: 120 }}
-        inputProps={{ min: 0 }}
-        onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
-        onChange={(e) => setBulkTotalMarks(e.target.value)}
-      />
-      <TextField
-        value={bulkPassingMarks}
-        label="Passing marks"
-        type="number"
-        size="small"
-        sx={{ width: 130 }}
-        inputProps={{ min: 0 }}
-        onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
-        onChange={(e) => setBulkPassingMarks(e.target.value)}
-      />
+      {marksEntryRequired && (
+        <>
+          <Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto' }} />
+          <TextField
+            value={bulkTotalMarks}
+            label="Total marks"
+            type="number"
+            size="small"
+            sx={{ width: 120 }}
+            inputProps={{ min: 0 }}
+            onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
+            onChange={(e) => setBulkTotalMarks(e.target.value)}
+          />
+          <TextField
+            value={bulkPassingMarks}
+            label="Passing marks"
+            type="number"
+            size="small"
+            sx={{ width: 130 }}
+            inputProps={{ min: 0 }}
+            onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
+            onChange={(e) => setBulkPassingMarks(e.target.value)}
+          />
+        </>
+      )}
       <Box sx={{ ml: 'auto', flexShrink: 0 }}>
         <Tooltip title="Apply filled values to all subjects" arrow>
           <span>
@@ -815,7 +843,10 @@ const ElectiveGroupCard = memo(
               bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.03),
             }}
           >
-            <ApplyToAllBar onApply={handleApplyToGroup} />
+            <ApplyToAllBar
+              onApply={handleApplyToGroup}
+              marksEntryRequired={formik.values.marksEntryRequired}
+            />
             {showGroupScheduleError && (
               <Alert severity="error" variant="outlined" sx={{ mt: 1, py: 0.5 }}>
                 {groupSubjectsError}
@@ -858,6 +889,8 @@ const ElectiveGroupCard = memo(
                       currentYear={currentYear}
                       standardId={standardId}
                       isReadOnly={!!sub.isExamSelectionDisabled}
+                      marksEntryRequired={formik.values.marksEntryRequired}
+                      gradeScaleRequired={formik.values.gradeScaleRequired}
                     />
                   );
                 })}
@@ -1012,7 +1045,10 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 },
               ]}
             />
-            <ApplyToAllBar onApply={handleApplyAllCore} />
+            <ApplyToAllBar
+              onApply={handleApplyAllCore}
+              marksEntryRequired={formik.values.marksEntryRequired}
+            />
           </Box>
           <TableContainer>
             <Table size="small" sx={{ tableLayout: 'auto' }}>
@@ -1040,6 +1076,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                       isGradeScalingsLoading={isGradeScalingsLoading}
                       currentYear={currentYear}
                       standardId={formik.values.className}
+                      marksEntryRequired={formik.values.marksEntryRequired}
+                      gradeScaleRequired={formik.values.gradeScaleRequired}
                     />
                   );
                 })}

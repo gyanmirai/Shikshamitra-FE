@@ -19,10 +19,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Label } from 'src/components/label';
 import { useGetQuestionsQuery } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
-import {
-  useGetExamsQuery,
-  useGetExamScheduleQuery,
-} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+import { useGetQuestionPaperExamLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -433,10 +430,6 @@ export default function QuestionPaperScreen() {
   );
   const selectedPaper = (papers?.items || []).find((paper: any) => paper.id === selectedPaperId);
 
-  // Exams & schedules (for create dialog)
-  const { data: examsData } = useGetExamsQuery({ academicYearId }, { skip: !academicYearId });
-  const exams = examsData?.items || [];
-
   // Formik
   const formik = useFormik({
     initialValues: initialPaperValues(academicYearId),
@@ -475,17 +468,30 @@ export default function QuestionPaperScreen() {
   );
   const formSubjectOptions = useMemo(() => buildSubjectOptions(formSubjectData), [formSubjectData]);
 
-  // Exam schedules
-  const { data: examScheduleData } = useGetExamScheduleQuery(
-    { examId: formik.values.examId },
-    { skip: !formik.values.examId }
+  // Exams & schedules (for create dialog)
+  const { data: examLookupData } = useGetQuestionPaperExamLookupQuery(
+    {
+      academicMediumId: medium?.id,
+      standardId: formik.values.standardId,
+      subjectId: formik.values.subjectId,
+    },
+    { skip: !medium?.id || !formik.values.standardId || !formik.values.subjectId }
   );
-  const examSchedules = examScheduleData?.schedules || examScheduleData?.items || [];
-  const examScheduleOptions = examSchedules.map((sch: any) => ({
-    value: sch.id,
-    label: `${sch.subjectName || sch.subjectId} – ${sch.examDate ? new Date(sch.examDate).toLocaleDateString() : sch.id
+  const exams = useMemo<any[]>(() => examLookupData || [], [examLookupData]);
+  const examOptions = useMemo<any[]>(
+    () => Array.from(new Map<string, any>(exams.map((exam: any) => [exam.examId, exam])).values()),
+    [exams]
+  );
+  const examScheduleOptions = exams
+    .filter((exam: any) => exam.examId === formik.values.examId)
+    .map((exam: any) => ({
+      value: exam.examSubjectId,
+      label: `${new Date(exam.examDate).toLocaleDateString()}${
+        exam.startTime
+          ? ` - ${new Date(exam.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          : ''
       }`,
-  }));
+    }));
 
   // Chapters for blueprint (driven by selectedPaper)
   const { data: formChapters } = useGetChaptersByStandardQuery(
@@ -1838,6 +1844,8 @@ export default function QuestionPaperScreen() {
                         onChange={(val) => {
                           formik.setFieldValue('standardId', val);
                           formik.setFieldValue('subjectId', '');
+                          formik.setFieldValue('examId', '');
+                          formik.setFieldValue('examScheduleId', '');
                         }}
                         error={(formik.touched.standardId || formik.submitCount > 0) && !!formik.errors.standardId}
                         helperText={((formik.touched.standardId || formik.submitCount > 0) && formik.errors.standardId) || ''}
@@ -1852,7 +1860,11 @@ export default function QuestionPaperScreen() {
                         options={formSubjectOptions}
                         value={formik.values.subjectId}
                         disabled={!formik.values.standardId}
-                        onChange={(val) => formik.setFieldValue('subjectId', val)}
+                        onChange={(val) => {
+                          formik.setFieldValue('subjectId', val);
+                          formik.setFieldValue('examId', '');
+                          formik.setFieldValue('examScheduleId', '');
+                        }}
                         error={(formik.touched.subjectId || formik.submitCount > 0) && !!formik.errors.subjectId}
                         helperText={((formik.touched.subjectId || formik.submitCount > 0) && formik.errors.subjectId) || ''}
                       />
@@ -1873,12 +1885,14 @@ export default function QuestionPaperScreen() {
                       label="Exam"
                       options={[
                         { value: '', label: 'None / Custom Exam' },
-                        ...exams.map((ex: any) => ({ value: ex.id, label: ex.examName })),
+                        ...examOptions.map((ex: any) => ({ value: ex.examId, label: ex.examName })),
                       ]}
                       value={formik.values.examId || ''}
+                      disabled={!formik.values.standardId || !formik.values.subjectId}
                       onChange={(val) => {
                         formik.setFieldValue('examId', val);
-                        formik.setFieldValue('examScheduleId', '');
+                        const selectedExam = exams.find((exam: any) => exam.examId === val);
+                        formik.setFieldValue('examScheduleId', selectedExam?.examSubjectId || '');
                       }}
                     />
                   </Grid>

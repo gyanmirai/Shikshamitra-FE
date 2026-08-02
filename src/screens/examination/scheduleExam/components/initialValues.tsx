@@ -21,18 +21,18 @@ function toNullableNumber(value: any): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-function hasCompleteSchedule(value: any): boolean {
+function hasCompleteSchedule(value: any, options?: { marksEntryRequired?: boolean }): boolean {
   return Boolean(
     value?.examDate &&
     value?.startTime &&
     value?.endTime &&
-    value?.gradeScalingId &&
-    value?.totalMarks !== '' &&
-    value?.totalMarks !== undefined &&
-    value?.totalMarks !== null &&
-    value?.passingMarks !== '' &&
-    value?.passingMarks !== undefined &&
-    value?.passingMarks !== null
+    (options?.marksEntryRequired === false ||
+      (value?.totalMarks !== '' &&
+        value?.totalMarks !== undefined &&
+        value?.totalMarks !== null &&
+        value?.passingMarks !== '' &&
+        value?.passingMarks !== undefined &&
+        value?.passingMarks !== null))
   );
 }
 
@@ -47,6 +47,7 @@ export const defaultExamFormValues: IExamFormValues = {
   className: '',
   gradingScaleId: '',
   gradeScaleRequired: true,
+  marksEntryRequired: true,
   divisions: [],
   subjects: [],
   description: '',
@@ -368,6 +369,8 @@ export function mapBackendToFormik(
     gradingScaleId: basicData?.gradingScaleId ?? '',
     gradeScaleRequired:
       examTypes.find((t: any) => t.id === basicData?.examTypeId)?.gradeScaleRequired ?? true,
+    marksEntryRequired:
+      examTypes.find((t: any) => t.id === basicData?.examTypeId)?.marksEntryRequired ?? true,
     divisions: basicData?.divisionIds ?? [],
     subjects,
     description: basicData?.description ?? '',
@@ -386,7 +389,7 @@ export function serializeBasicDetailsPayload(values: IExamFormValues) {
     examTypeId: values.examType,
     examName: values.examName,
     standardId: values.className,
-    gradingScaleId: values.gradingScaleId || null,
+    gradingScaleId: values.gradeScaleRequired ? values.gradingScaleId || null : null,
     divisionIds: values.divisions.filter((id) => id !== 'all'),
     subjectIds: values.subjects.flatMap((s: any) => {
       // Elective group: send each individual subject's ID, not the group ID
@@ -423,12 +426,18 @@ export function serializeSchedulePayload(values: IExamFormValues) {
           subjects.push({
             subjectId: s.subjectId || s.id,
             electiveGroupId: sub.electiveGroupId,
-            examDate: toApiDateTime(s.examDate),
-            startTime: toApiDateTime(s.startTime),
-            endTime: toApiDateTime(s.endTime),
-            gradeScalingId: s.gradeScalingId ?? null,
-            totalMarks: toNullableNumber(s.totalMarks),
-            passingMarks: toNullableNumber(s.passingMarks),
+            examDate: s?.examDate?.format?.(dateFormat)
+              ? dateConvertor(s.examDate.format(dateFormat))
+              : null,
+            startTime: s?.startTime?.format?.(dateFormat)
+              ? dateConvertor(s?.startTime?.format?.(dateFormat))
+              : null,
+            endTime: s?.endTime?.format?.(dateFormat)
+              ? dateConvertor(s?.endTime?.format?.(dateFormat))
+              : null,
+            gradeScalingId: values.gradeScaleRequired ? (s.gradeScalingId ?? null) : null,
+            totalMarks: values.marksEntryRequired ? toNullableNumber(s.totalMarks) : null,
+            passingMarks: values.marksEntryRequired ? toNullableNumber(s.passingMarks) : null,
             notes: s.notes ?? '',
           });
         });
@@ -437,12 +446,18 @@ export function serializeSchedulePayload(values: IExamFormValues) {
       subjects.push({
         subjectId: sub.subjectId,
         electiveGroupId: sub.electiveGroupId ?? null,
-        examDate: toApiDateTime(sub.examDate),
-        startTime: toApiDateTime(sub.startTime),
-        endTime: toApiDateTime(sub.endTime),
-        gradeScalingId: sub.gradeScalingId ?? null,
-        totalMarks: toNullableNumber(sub.totalMarks),
-        passingMarks: toNullableNumber(sub.passingMarks),
+        examDate: sub?.examDate?.format?.(dateFormat)
+          ? dateConvertor(sub.examDate.format(dateFormat))
+          : null,
+        startTime: sub?.startTime?.format?.(dateFormat)
+          ? dateConvertor(sub?.startTime?.format?.(dateFormat))
+          : null,
+        endTime: sub?.endTime?.format?.(dateFormat)
+          ? dateConvertor(sub?.endTime?.format?.(dateFormat))
+          : null,
+        gradeScalingId: values.gradeScaleRequired ? (sub.gradeScalingId ?? null) : null,
+        totalMarks: values.marksEntryRequired ? toNullableNumber(sub.totalMarks) : null,
+        passingMarks: values.marksEntryRequired ? toNullableNumber(sub.passingMarks) : null,
         notes: sub.notes,
       });
     }
@@ -469,7 +484,9 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
         .filter((s: any) => !s.isExamSelectionDisabled)
         .forEach((s: any) => {
           const sId = s.subjectId || s.id;
-          const shouldAssignRooms = hasCompleteSchedule(s);
+          const shouldAssignRooms = hasCompleteSchedule(s, {
+            marksEntryRequired: values.marksEntryRequired,
+          });
           const mappedDivisions = validDivisionIds.map((divId) => ({
             divisionId: divId,
             roomIds: values.roomDetails[sId]?.[divId]?.roomIds ?? [],
@@ -478,7 +495,9 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
           subjectEntries.push({
             subjectId: sId,
             electiveGroupId: sub.electiveGroupId ?? null,
-            examDate: toApiDateTime(s.examDate),
+            examDate: s?.examDate?.format?.(dateFormat)
+              ? dateConvertor(s.examDate.format(dateFormat))
+              : null,
             divisions: values.isRoomAssign
               ? shouldAssignRooms
                 ? mappedDivisions.filter((div) => div.roomIds.length > 0)
@@ -496,7 +515,9 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
       subjectEntries.push({
         subjectId: sub.subjectId,
         electiveGroupId: null,
-        examDate: toApiDateTime(sub.examDate),
+        examDate: sub?.examDate?.format?.(dateFormat)
+          ? dateConvertor(sub.examDate.format(dateFormat))
+          : null,
         divisions: values.isRoomAssign
           ? mappedDivisions.filter((div) => div.roomIds.length > 0)
           : mappedDivisions,

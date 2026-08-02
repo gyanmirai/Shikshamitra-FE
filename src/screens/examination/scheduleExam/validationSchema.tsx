@@ -24,15 +24,14 @@ const hasAnyScheduleValue = (subject?: any) =>
       hasValue(subject.gradeScalingId))
   );
 
-const hasCompleteSchedule = (subject?: any) =>
+const hasCompleteSchedule = (subject?: any, options?: { marksEntryRequired?: boolean }) =>
   Boolean(
     subject &&
     subject.examDate &&
     subject.startTime &&
     subject.endTime &&
-    hasValue(subject.totalMarks) &&
-    hasValue(subject.passingMarks) &&
-    hasValue(subject.gradeScalingId)
+    (options?.marksEntryRequired === false ||
+      (hasValue(subject.totalMarks) && hasValue(subject.passingMarks)))
   );
 
 const getParentElectiveGroup = (context: any) =>
@@ -58,6 +57,15 @@ const getRootSubjects = (context: any) => {
   const rootContext = fromArray.find((f: any) => f.value && 'examName' in f.value);
   return rootContext?.value?.subjects || [];
 };
+
+const getRootValues = (context: any) => {
+  const fromArray = context.options?.from || [];
+  return fromArray.find((f: any) => f.value && 'examName' in f.value)?.value || {};
+};
+
+const isMarksEntryRequired = (context: any) => getRootValues(context)?.marksEntryRequired !== false;
+
+const isGradeScaleRequired = (context: any) => getRootValues(context)?.gradeScaleRequired !== false;
 
 const flattenSlots = (rootSubjects: any[]): ScheduledSlot[] => {
   const allSlots: ScheduledSlot[] = [];
@@ -228,6 +236,7 @@ const scheduleFieldsSchema = {
     .nullable()
     .test('total-marks-valid', 'Total Marks is required', function (value) {
       if (!shouldRequireScheduleField(this)) return true;
+      if (!isMarksEntryRequired(this)) return true;
       if (value === '' || value === undefined || value === null) return false;
       const n = Number(value);
       if (Number.isNaN(n)) return this.createError({ message: 'Must be a number' });
@@ -243,6 +252,7 @@ const scheduleFieldsSchema = {
     .test('passing-marks-valid', 'Passing Marks is required', function (value) {
       const { totalMarks } = this.parent || {};
       if (!shouldRequireScheduleField(this)) return true;
+      if (!isMarksEntryRequired(this)) return true;
       if (value === '' || value === undefined || value === null) return false;
       const n = Number(value);
       if (Number.isNaN(n)) return this.createError({ message: 'Must be a number' });
@@ -259,6 +269,7 @@ const scheduleFieldsSchema = {
     .nullable()
     .test('grade-scale-required', 'Grade Scale is required', function (value) {
       if (!shouldRequireScheduleField(this)) return true;
+      if (!isGradeScaleRequired(this)) return true;
       return !!value;
     }),
 };
@@ -312,11 +323,16 @@ export const validationSchema = [
                 .test(
                   'at-least-one-elective-scheduled',
                   'Schedule at least one subject in this elective group',
-                  (value) =>
-                    (value ?? []).some(
+                  function (value) {
+                    const rootValues = getRootValues(this);
+                    return (value ?? []).some(
                       (subject: any) =>
-                        !subject?.isExamSelectionDisabled && hasCompleteSchedule(subject)
-                    )
+                        !subject?.isExamSelectionDisabled &&
+                        hasCompleteSchedule(subject, {
+                          marksEntryRequired: rootValues?.marksEntryRequired !== false,
+                        })
+                    );
+                  }
                 ),
             otherwise: (schema) => schema.nullable().notRequired(),
           }),
@@ -345,7 +361,13 @@ export const validationSchema = [
           if (subject?.electiveGroupId && Array.isArray(subject?.subjects)) {
             return subject.subjects.some((nested: any) => {
               if (nested?.isExamSelectionDisabled) return false;
-              if (!hasCompleteSchedule(nested)) return false;
+              if (
+                !hasCompleteSchedule(nested, {
+                  marksEntryRequired: values?.marksEntryRequired !== false,
+                })
+              ) {
+                return false;
+              }
               const nestedSubjectId = nested?.subjectId;
               if (!nestedSubjectId) return false;
 
