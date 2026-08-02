@@ -5,6 +5,7 @@ import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Box, Card, Stack, Divider, TextField, Typography } from '@mui/material';
 import {
   RubricStatus,
@@ -100,6 +101,8 @@ export default function RubricEvaluationPanel({
       shikshaMitraToast.success({ message: 'Rubric created and published successfully.' });
     } catch (error) {
       console.error('Failed to create rubric', error);
+      const parsed = parseApiProblemDetail(error);
+      shikshaMitraToast.error({ message: parsed.detail || 'Failed to create rubric' });
     }
   };
 
@@ -139,6 +142,8 @@ export default function RubricEvaluationPanel({
       shikshaMitraToast.success({ message: 'Rubric evaluation approved successfully.' });
     } catch (error) {
       console.error('Failed to save rubric evaluation', error);
+      const parsed = parseApiProblemDetail(error);
+      shikshaMitraToast.error({ message: parsed.detail || 'Failed to save rubric evaluation' });
     }
   };
 

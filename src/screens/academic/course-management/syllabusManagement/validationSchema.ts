@@ -55,11 +55,11 @@ export const getChapterValidationSchema = (
       .transform((value, originalValue) => (originalValue === '' ? null : value))
       .min(0, 'Marks weightage cannot be negative'),
     startDate: Yup.mixed()
-      .required('Chapter Start Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
-        'Chapter Start Date must be a valid date',
-        (value) => value && dayjs(value as any).isValid()
+        'Expected Start Date for all Division must be a valid date',
+        (value) => !value || dayjs(value as any).isValid()
       )
       .test(
         'min-date',
@@ -78,11 +78,11 @@ export const getChapterValidationSchema = (
       ),
 
     endDate: Yup.mixed()
-      .required('Chapter End Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
-        'Chapter End Date must be a valid date',
-        (value) => value && dayjs(value as any).isValid()
+        'Expected End Date for all Division must be a valid date',
+        (value) => !value || dayjs(value as any).isValid()
       )
       // eslint-disable-next-line func-names
       .test('is-after-start-date', 'End Date cannot be before Start Date', function (value) {

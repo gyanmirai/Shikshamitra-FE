@@ -244,6 +244,24 @@ export function FeedbackStatusChip({ row }: { row: any }) {
   );
 }
 
+export function isRowEvaluationDisabled(
+  row: any,
+  taskSubmissionType?: number | string | null
+): boolean {
+  const rowSubmissionType = row?.submissionType || taskSubmissionType;
+  const normalizedSubmissionType = String(rowSubmissionType || '').toLowerCase();
+  const isInPerson =
+    Number(rowSubmissionType) === 2 ||
+    normalizedSubmissionType.includes('inperson') ||
+    normalizedSubmissionType.includes('in person') ||
+    String(row?.homeworkType || '')
+      .toLowerCase()
+      .includes('in person');
+
+  const status = Number(row?.status);
+  return status === 0 && !isInPerson;
+}
+
 export function EvaluationActionButton({
   row,
   onOpen,
@@ -257,6 +275,7 @@ export function EvaluationActionButton({
 }) {
   if (!canAdd) return null;
 
+  const isNotSubmitted = isRowEvaluationDisabled(row, taskSubmissionType);
   const rowSubmissionType = row?.submissionType || taskSubmissionType;
   const normalizedSubmissionType = String(rowSubmissionType || '').toLowerCase();
   const isInPerson =
@@ -269,7 +288,6 @@ export function EvaluationActionButton({
 
   const status = Number(row?.status);
   const isReviewed = status === 4;
-  const isNotSubmitted = status === 0 && !isInPerson;
   const title = isNotSubmitted
     ? 'Send Reminder'
     : isReviewed

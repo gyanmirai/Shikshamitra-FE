@@ -8,12 +8,20 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.',
   'ShikshaMitra.Submission:UseFeedbackToReview':
     'Please save the feedback before marking the homework as Reviewed.',
+  'ShikshaMitra.Submission.UseFeedbackToReview':
+    'Please save the feedback before marking the homework as Reviewed.',
+  'ShikshaMitra.Submission:CannotEvaluateMissingSubmission':
+    'Cannot evaluate feedback as the student has not submitted their work yet.',
+  'ShikshaMitra.Submission.CannotEvaluateMissingSubmission':
+    'Cannot evaluate feedback as the student has not submitted their work yet.',
 };
 
 const GENERIC_MESSAGES = new Set([
   'one or more business rules were violated',
   'one or more validation errors occurred',
   'something went wrong',
+  'business rule violated',
+  'validation error',
 ]);
 
 const normalizeMessage = (value: string) => value.trim().toLowerCase().replace(/[.]+$/, '');
@@ -82,10 +90,15 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   addCandidate(candidates, error?.message);
 
   const errorCode = data?.errorCode || data?.error?.code || data?.code;
-  const knownMessage = typeof errorCode === 'string' ? KNOWN_ERROR_MESSAGES[errorCode] : undefined;
+  const knownMessage =
+    typeof errorCode === 'string'
+      ? KNOWN_ERROR_MESSAGES[errorCode] ||
+        KNOWN_ERROR_MESSAGES[errorCode.replace(/:/g, '.')] ||
+        KNOWN_ERROR_MESSAGES[errorCode.replace(/\./g, ':')]
+      : undefined;
   const specificCandidate = candidates.find((candidate) => !isGenericMessage(candidate));
 
-  const detail = specificCandidate || knownMessage || candidates[0] || 'Something went wrong';
+  const detail = knownMessage || specificCandidate || candidates[0] || 'Something went wrong';
 
   return {
     detail: String(detail),
