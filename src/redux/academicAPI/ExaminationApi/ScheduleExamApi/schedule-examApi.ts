@@ -77,6 +77,15 @@ export const scheduleExamApi = academicApi.injectEndpoints({
       providesTags: [academicType.exam],
     }),
 
+    getQuestionPaperExamLookup: builder.query({
+      query: (params) => ({
+        url: `/academics/exams/question-paper-lookup`,
+        method: 'GET',
+        params,
+      }),
+      providesTags: [academicType.exam],
+    }),
+
     // Get Subjects of Exam
     getExamSubjects: builder.query({
       query: ({ examId }) => ({
@@ -126,6 +135,7 @@ export const {
   useGetExamRoomAssignmentsQuery,
   useUpdateExamRoomAssignmentMutation,
   useGetExamsQuery,
+  useGetQuestionPaperExamLookupQuery,
   useGetExamSubjectsQuery,
   useDeleteExamMutation,
   usePublishExamMutation,

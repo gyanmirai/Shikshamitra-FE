@@ -737,15 +737,22 @@ const SubstitutionManagementScreen = () => {
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
+  const academicContextParams = {
+    academicYearId: currentYear?.id || undefined,
+    academicMediumId: medium?.id || undefined,
+  };
   const { data: substitutionResult, refetch: refetchSubstitutions } = useSubstitutionsDataQuery({
+    ...academicContextParams,
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
   const { data: dashboardResult, refetch: refetchDashboard } = useSubstitutionDashboardDataQuery({
+    ...academicContextParams,
     date: toDateTimeOffset(dayjs(todayIso).startOf('day')),
   });
   const { data: myDutiesResult, refetch: refetchMyDuties } = useMySubstitutionDutiesDataQuery({
+    ...academicContextParams,
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
@@ -755,10 +762,14 @@ const SubstitutionManagementScreen = () => {
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
-  const { data: rawCreateMetadata } = useSubstitutionCreateMetadataDataQuery();
+  const { data: rawCreateMetadata } = useSubstitutionCreateMetadataDataQuery(
+    academicContextParams,
+    { skip: !medium?.id }
+  );
   const createMetadata = rawCreateMetadata as ApiSubstitutionCreateMetadata | undefined;
   const { data: rawCreateLectureResult } = useSubstitutionLecturesDataQuery(
     {
+      ...academicContextParams,
       date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
       standardId: substitutionForm.standardId,
       divisionId: substitutionForm.divisionId,
@@ -780,6 +791,7 @@ const SubstitutionManagementScreen = () => {
   );
   const { data: createSuggestedTeacherResult } = useSuggestedTeachersByContextDataQuery(
     {
+      ...academicContextParams,
       date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
       originalTeacherId: substitutionForm.originalTeacherId,
       originalTeacherName: substitutionForm.originalTeacherName,
@@ -841,6 +853,8 @@ const SubstitutionManagementScreen = () => {
         search: query,
         page,
         isTeaching: true,
+        academicYearId: currentYear?.id || undefined,
+        academicMediumId: medium?.id || undefined,
       }).unwrap();
       const hasMore = res.currentPage < res.totalPages;
       const data = (res?.items ?? [])
@@ -867,7 +881,7 @@ const SubstitutionManagementScreen = () => {
 
       return { data, hasMore };
     },
-    [getEmployeeOptions]
+    [currentYear?.id, getEmployeeOptions, medium?.id]
   );
 
   useEffect(() => {
@@ -1358,6 +1372,8 @@ const SubstitutionManagementScreen = () => {
         const createdRows = await Promise.all(
           assignmentSegments.map((segment) =>
             createSubstitution({
+              academicYearId: currentYear?.id || null,
+              academicMediumId: medium?.id || null,
               date: payloadDate,
               standardId: substitutionForm.standardId || null,
               className: substitutionForm.className,
@@ -1414,6 +1430,7 @@ const SubstitutionManagementScreen = () => {
       substitutions,
       suggestedTeacherRows,
       currentYear,
+      medium?.id,
     ]
   );
 
@@ -1436,6 +1453,7 @@ const SubstitutionManagementScreen = () => {
     try {
       const updated = await assignSubstitute({
         id: selectedSubstitutionId,
+        substituteTeacherId: selectedTeacher.teacherId || null,
         substituteTeacherName: selectedTeacher.teacherName,
         assignedRoomName: assignRoom,
         remarks: assignRemarks,
@@ -1960,7 +1978,8 @@ const SubstitutionManagementScreen = () => {
             border: (theme) => `1px solid ${theme.palette.divider}`,
             bgcolor: (theme) =>
               varAlpha(
-                theme.vars.palette[item.color as 'success']?.mainChannel || theme.vars.palette.text.primaryChannel,
+                theme.vars.palette[item.color as 'success']?.mainChannel ||
+                  theme.vars.palette.text.primaryChannel,
                 theme.palette.mode === 'dark' ? 0.12 : 0.04
               ),
             cursor: item.filterStatus ? 'pointer' : 'default',
@@ -1970,7 +1989,8 @@ const SubstitutionManagementScreen = () => {
                   borderColor: `${item.color}.main`,
                   bgcolor: (theme) =>
                     varAlpha(
-                      theme.vars.palette[item.color as 'success']?.mainChannel || theme.vars.palette.text.primaryChannel,
+                      theme.vars.palette[item.color as 'success']?.mainChannel ||
+                        theme.vars.palette.text.primaryChannel,
                       theme.palette.mode === 'dark' ? 0.18 : 0.08
                     ),
                   boxShadow: (theme) =>

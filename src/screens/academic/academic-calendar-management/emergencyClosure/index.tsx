@@ -11,7 +11,6 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Label } from 'src/components/label';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -29,6 +28,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { academicPermissions, academicPaths } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { CalendarDayStatus, CALENDAR_DAY_STATUS_LABELS } from 'src/enums/academic-calendar';
 import {
   useGetEmergencyClosuresQuery,
@@ -72,6 +72,8 @@ const shakeKeyframes = keyframes`
   20%, 60% { transform: translateX(-6px); }
   40%, 80% { transform: translateX(6px); }
 `;
+const getClosureId = (row: any): string | null =>
+  row?.id ?? row?.closureId ?? row?.closure_id ?? row?.Id ?? null;
 
 const emergencyClosureSchema = Yup.object().shape({
   startDate: Yup.mixed().required('Start date is required'),
@@ -138,6 +140,10 @@ const EmergencyClosureScreen = () => {
   const canDeclare = hasGrantedPermission(
     permissions,
     `${academicPermissions.academicCalendar.emergencyClosure}.Add`
+  );
+  const canEdit = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.academicCalendar.emergencyClosure}.Edit`
   );
   const canCancel = hasGrantedPermission(
     permissions,
@@ -247,7 +253,12 @@ const EmergencyClosureScreen = () => {
 
   const tableData = Array.isArray(closuresData) ? closuresData : (closuresData?.items ?? []);
 
-  // Status Filter Tabs (SKILL.md Section 2.9.5)
+  /**
+   * Memoization Justification:
+   * - Tab counts scan the closure table multiple times.
+   * - Keeping the derived tab array stable prevents unnecessary Tabs subtree updates.
+   * - The computation depends only on refreshed table data from the query.
+   */
   const statusTabs = useMemo(() => [
     { label: 'All', value: 'all', count: tableData.length, color: 'default' },
     { label: 'Active', value: CalendarDayStatus.Active, count: tableData.filter((r: any) => Number(r.status) === CalendarDayStatus.Active).length, color: 'success' },
@@ -255,6 +266,12 @@ const EmergencyClosureScreen = () => {
     { label: 'Rescheduled', value: CalendarDayStatus.Rescheduled, count: tableData.filter((r: any) => Number(r.status) === CalendarDayStatus.Rescheduled).length, color: 'warning' },
   ], [tableData]);
 
+  /**
+   * Memoization Justification:
+   * - Filtering the table data is recalculated only when data or the active tab changes.
+   * - CustomizableTable receives the filtered array, so a stable reference avoids redundant table work.
+   * - The table can hold up to the query page size and is user-filtered repeatedly.
+   */
   const filteredData = useMemo(() => {
     if (activeStatusTab === 'all') return tableData;
     return tableData.filter((r: any) => Number(r.status) === activeStatusTab);
@@ -295,6 +312,12 @@ const EmergencyClosureScreen = () => {
     closeAddDialog();
   };
 
+  const handleDeclareClick = () => {
+    formik.resetForm();
+    setEditingClosureId(null);
+    addDialog.onTrue();
+  };
+
   const handleCancelClick = (row: any) => {
     setSelectedClosure(row);
     cancelDialog.onTrue();
@@ -306,7 +329,15 @@ const EmergencyClosureScreen = () => {
   };
 
   const handleEditClick = (row: any) => {
-    setEditingClosureId(row.id);
+    const closureId = getClosureId(row);
+    if (!closureId) {
+      shikshaMitraToast.error({
+        message: 'Cannot edit this emergency closure because the record ID is missing.',
+      });
+      return;
+    }
+
+    setEditingClosureId(closureId);
     const hasTimeRange = Boolean(row.startTime && row.endTime);
     formik.setValues({
       date: row.date ?? null,
@@ -486,7 +517,7 @@ const EmergencyClosureScreen = () => {
             buttonText="Declare Closure"
             disabled={!canDeclare}
             startIcon={<Iconify icon="mdi:alert-octagon-outline" width={18} />}
-            onClick={addDialog.onTrue}
+            onClick={handleDeclareClick}
           />
         }
       />
@@ -1166,7 +1197,7 @@ const EmergencyClosureScreen = () => {
           </Button>
         }
       />
-    </Box >
+    </Box>
   );
 };
 

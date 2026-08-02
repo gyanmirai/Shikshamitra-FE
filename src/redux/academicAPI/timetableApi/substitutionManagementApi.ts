@@ -223,6 +223,7 @@ export type ApiSubstitutionLecture = {
 
 export type CreateSubstitutionPayload = {
   academicYearId?: string | null;
+  academicMediumId?: string | null;
   date: string;
   standardId?: string | null;
   className: string;
@@ -254,6 +255,7 @@ export type CreateSubstitutionPayload = {
 
 export type AssignSubstitutePayload = {
   id: string;
+  substituteTeacherId?: string | null;
   substituteTeacherName: string;
   assignedRoomName?: string;
   remarks?: string;
@@ -303,10 +305,11 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
       }),
       providesTags: [academicType.substitutionManagement],
     }),
-    getSubstitutionCreateMetadata: builder.query<ApiSubstitutionCreateMetadata, void>({
-      query: () => ({
+    getSubstitutionCreateMetadata: builder.query<ApiSubstitutionCreateMetadata, QueryParams | void>({
+      query: (params) => ({
         url: 'academics/timetable/substitutions/create-form-metadata',
         method: 'GET',
+        params: params ?? undefined,
       }),
       providesTags: [academicType.substitutionManagement],
     }),
