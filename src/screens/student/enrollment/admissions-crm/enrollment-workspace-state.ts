@@ -49,12 +49,17 @@ export type EnrollmentApplicantTab =
 export type EnrollmentSettingsPanel =
   | 'cycle'
   | 'pipeline'
+  | 'sources'
+  | 'types'
   | 'capture'
   | 'forms'
   | 'scoring'
   | 'routing'
   | 'registration'
+  | 'form-numbering'
   | 'documents'
+  | 'activation'
+  | 'numbering'
   | 'criteria'
   | 'routes'
   | 'policy-packs'
@@ -168,12 +173,17 @@ const applicantTabs = new Set<EnrollmentApplicantTab>([
 const settingsPanels = new Set<EnrollmentSettingsPanel>([
   'cycle',
   'pipeline',
+  'sources',
+  'types',
   'capture',
   'forms',
   'scoring',
   'routing',
   'registration',
+  'form-numbering',
   'documents',
+  'activation',
+  'numbering',
   'criteria',
   'routes',
   'policy-packs',

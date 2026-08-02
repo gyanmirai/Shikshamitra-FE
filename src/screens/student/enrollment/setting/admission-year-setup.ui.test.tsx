@@ -40,12 +40,14 @@ vi.mock('../admissions-crm/enrollment-workspace-context', () => ({
   }),
 }));
 
-vi.mock('../admissions-crm/workspace-header', () => ({
-  EnrollmentWorkspaceHeader: ({ title, actions }: { title: string; actions?: ReactNode }) => (
-    <header>
-      <h1>{title}</h1>
-      {actions}
-    </header>
+vi.mock('./enrollment-settings-page', () => ({
+  EnrollmentSettingsPage: ({ title, children }: { title: string; children: ReactNode }) => (
+    <main>
+      <header>
+        <h1>{title}</h1>
+      </header>
+      {children}
+    </main>
   ),
 }));
 
@@ -54,8 +56,18 @@ vi.mock('src/components/iconify', () => ({
 }));
 
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ isLoading }: { isLoading?: boolean }) => (
-    <div data-testid="version-history" data-loading={String(Boolean(isLoading))} />
+  default: ({
+    isLoading,
+    tableContainerProps,
+  }: {
+    isLoading?: boolean;
+    tableContainerProps?: { sx?: { height?: string } };
+  }) => (
+    <div
+      data-testid="version-history"
+      data-loading={String(Boolean(isLoading))}
+      data-height={tableContainerProps?.sx?.height}
+    />
   ),
 }));
 
@@ -94,12 +106,15 @@ describe('Admission Year Setup query safety', () => {
 
     render(<AdmissionYearSetup />);
 
-    expect(screen.getByRole('button', { name: 'Start setup' })).toBeDisabled();
+    const startSetup = screen.getByRole('button', { name: 'Start setup' });
+    expect(startSetup).toBeDisabled();
+    expect(screen.getByTestId('admission-year-context')).toContainElement(startSetup);
     expect(
       screen.getByRole('progressbar', { name: 'Loading Admission Year Setup' })
     ).toBeInTheDocument();
-    expect(screen.queryByText('Selected academic year')).not.toBeInTheDocument();
+    expect(screen.getByText('Selected academic year')).toBeInTheDocument();
     expect(screen.getByTestId('version-history')).toHaveAttribute('data-loading', 'true');
+    expect(screen.getByTestId('version-history')).toHaveAttribute('data-height', '100%');
   });
 
   it('fails closed without rendering stale setup or version-history content', () => {
@@ -107,7 +122,7 @@ describe('Admission Year Setup query safety', () => {
 
     render(<AdmissionYearSetup />);
 
-    expect(screen.getByRole('button', { name: 'Start setup' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Start setup' })).not.toBeInTheDocument();
     expect(screen.getByText('Admission Year Setup could not be loaded.')).toBeInTheDocument();
     expect(screen.queryByText('Selected academic year')).not.toBeInTheDocument();
     expect(screen.queryByTestId('version-history')).not.toBeInTheDocument();

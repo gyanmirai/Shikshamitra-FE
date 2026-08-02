@@ -8,11 +8,7 @@ import { ApplicationStagePolicyPanel } from './application-stage-policy-panel';
 import { CommunicationTemplateSettings } from './communication-template-settings';
 import { CommunicationReminderSettings } from './communication-reminder-settings';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
-import {
-  EnrollmentSettingsPage,
-  EnrollmentSettingsPanelTabs,
-  EnrollmentSettingsSetupSteps,
-} from './enrollment-settings-page';
+import { EnrollmentSettingsPage, EnrollmentSettingsTaskNav } from './enrollment-settings-page';
 
 import type { EnrollmentSettingsPanel } from '../admissions-crm/enrollment-workspace-state';
 import type { AdmissionsCrmConfigurationFocusSection } from './admissions-crm-configuration';
@@ -21,8 +17,12 @@ type SectionDefinition = {
   title: string;
   description: string;
   defaultPanel?: EnrollmentSettingsPanel;
-  panelNavigation?: 'tabs' | 'steps';
-  panels?: Array<{ value: EnrollmentSettingsPanel; label: string; description?: string }>;
+  panels?: Array<{
+    value: EnrollmentSettingsPanel;
+    label: string;
+    description?: string;
+    icon?: string;
+  }>;
 };
 
 const sectionDefinitions: Record<AdmissionsCrmConfigurationFocusSection, SectionDefinition> = {
@@ -31,17 +31,18 @@ const sectionDefinitions: Record<AdmissionsCrmConfigurationFocusSection, Section
     description:
       'Manage advanced cycle rules, service targets, applicant stages, and team handoffs.',
     defaultPanel: 'cycle',
-    panelNavigation: 'tabs',
     panels: [
       {
         value: 'cycle',
         label: 'Cycle Rules',
         description: 'Calendar, service levels, exam readiness, and inactivity rules.',
+        icon: 'mdi:calendar-cog-outline',
       },
       {
         value: 'pipeline',
         label: 'Stage Policy',
         description: 'Visible stage names, ownership, allowed next steps, and targets.',
+        icon: 'mdi:state-machine',
       },
     ],
   },
@@ -49,17 +50,18 @@ const sectionDefinitions: Record<AdmissionsCrmConfigurationFocusSection, Section
     title: 'Inquiry Forms & Sources',
     description: 'Choose where inquiries arrive and what information each intake form collects.',
     defaultPanel: 'capture',
-    panelNavigation: 'steps',
     panels: [
       {
         value: 'capture',
         label: 'Intake Sources',
         description: 'Enable channels, sources, consent, and acknowledgement defaults.',
+        icon: 'mdi:source-branch',
       },
       {
         value: 'forms',
         label: 'Inquiry Forms',
         description: 'Build and publish the forms used by staff and families.',
+        icon: 'mdi:form-select',
       },
     ],
   },
@@ -67,21 +69,29 @@ const sectionDefinitions: Record<AdmissionsCrmConfigurationFocusSection, Section
     title: 'Assignment & Priority',
     description: 'Prioritize inquiries and assign them to the right admissions staff.',
     defaultPanel: 'scoring',
-    panelNavigation: 'tabs',
     panels: [
-      { value: 'scoring', label: 'Priority Rules' },
-      { value: 'routing', label: 'Staff Assignment' },
+      {
+        value: 'scoring',
+        label: 'Priority Rules',
+        description: 'Recommend high-intent inquiries using transparent scoring signals.',
+        icon: 'mdi:speedometer',
+      },
+      {
+        value: 'routing',
+        label: 'Staff Assignment',
+        description: 'Distribute inquiries using owner pools, fallbacks, and match rules.',
+        icon: 'mdi:account-switch-outline',
+      },
     ],
   },
   communications: {
     title: 'Communication Settings',
     description: 'Manage approved messages, delivery channels, consent, and simple reminders.',
     defaultPanel: 'templates',
-    panelNavigation: 'tabs',
     panels: [
-      { value: 'templates', label: 'Message Content' },
-      { value: 'providers', label: 'Delivery Setup' },
-      { value: 'reminders', label: 'Reminders' },
+      { value: 'templates', label: 'Message Content', icon: 'mdi:message-text-outline' },
+      { value: 'providers', label: 'Delivery Setup', icon: 'mdi:connection' },
+      { value: 'reminders', label: 'Reminders', icon: 'mdi:bell-clock-outline' },
     ],
   },
   automation: {
@@ -117,19 +127,11 @@ export function CoreSettingsRoute({
         <ApplicationStagePolicyPanel academicYearId={academicYearId} />
       ) : null}
       {definition.panels && focusPanel ? (
-        definition.panelNavigation === 'steps' ? (
-          <EnrollmentSettingsSetupSteps
-            label={`${definition.title} setup sequence`}
-            value={focusPanel}
-            options={definition.panels}
-          />
-        ) : (
-          <EnrollmentSettingsPanelTabs
-            label={`${definition.title} settings`}
-            value={focusPanel}
-            options={definition.panels}
-          />
-        )
+        <EnrollmentSettingsTaskNav
+          label={`${definition.title} settings`}
+          value={focusPanel}
+          options={definition.panels}
+        />
       ) : null}
       {section === 'communications' ? (
         academicYearId ? (

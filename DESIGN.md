@@ -17,13 +17,15 @@ Apply these priorities in order.
 
 ## Reference implementations
 
-| Concern                                      | Current reference                                                            |
-| -------------------------------------------- | ---------------------------------------------------------------------------- |
-| Full-height table workspace                  | `src/screens/classManagement/assignElectiveSubject/index.tsx`                |
-| Persistent tab workspace                     | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                              |
-| Shared table                                 | `src/components/customizabaleTable/index.tsx`                                |
-| Enrollment page header                       | `src/screens/student/enrollment/admissions-crm/workspace-header.tsx`         |
-| Enrollment filters, empty states, and errors | `src/screens/student/enrollment/admissions-crm/workspace-table-patterns.tsx` |
+| Concern                                      | Current reference                                                              |
+| -------------------------------------------- | ------------------------------------------------------------------------------ |
+| Full-height table workspace                  | `src/screens/classManagement/assignElectiveSubject/index.tsx`                  |
+| Persistent tab workspace                     | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                                |
+| Shared table                                 | `src/components/customizabaleTable/index.tsx`                                  |
+| Enrollment page header                       | `src/screens/student/enrollment/admissions-crm/workspace-header.tsx`           |
+| Enrollment filters, empty states, and errors | `src/screens/student/enrollment/admissions-crm/workspace-table-patterns.tsx`   |
+| Enrollment settings task navigation          | `src/screens/student/enrollment/setting/enrollment-settings-page.tsx`          |
+| Guided settings editor drawer                | `src/screens/student/enrollment/setting/enrollment-settings-editor-drawer.tsx` |
 
 These files are reference implementations, not exemptions from this contract.
 When a reference conflicts with this document, follow this document and improve the shared primitive.
@@ -111,6 +113,28 @@ The active tab must have a corresponding tab panel relationship.
 Back and forward navigation must restore the visible state without a second competing state store.
 Dirty-state protection must be implemented once at the owning workspace boundary.
 The shared tab primitive must not own global confirmation behavior.
+
+## Settings navigation and decisions
+
+Settings navigation describes user tasks, not implementation buckets.
+Use the shared URL-backed task navigator for peer settings areas so each option has a clear name, outcome-focused description, and recognizable icon.
+Do not stack a second local tab switcher under a broad top-level option when the nested areas are themselves durable settings destinations.
+Flatten those peer areas into the owning task navigator, as with Inquiry Sources and Inquiry Types or Registration Forms and Form Numbering.
+Use a stepper only when the user must complete a genuinely ordered creation or publishing flow.
+
+Keep breadcrumbs informational.
+Place a context-sensitive action such as Start Setup, Save Draft, Publish, or Close beside the record or academic-year status it affects, not in the breadcrumb row.
+Use a concise context surface to show the selected year, lifecycle status, consequence, and next action together.
+
+Use decision cards instead of compact toggle tabs when a setting changes business behavior.
+Each decision must explain its consequence, identify a safe recommendation when one exists, and remain usable with a keyboard and screen reader.
+Show a workflow preview when the decision affects downstream handoffs or gates.
+Show scoring presets and representative outcome previews before exposing individual numeric weights.
+Group advanced numeric controls by purpose instead of rendering an unexplained wall of fields.
+
+Long policy and template editors use the shared right-side editor drawer.
+The drawer owns a stable title, concise description, ordered stepper, scrollable body, and sticky action footer.
+It becomes full width on small screens and keeps the underlying list in context on desktop.
 
 ## Loading contract
 

@@ -10,11 +10,9 @@ import {
   Stack,
   Alert,
   Button,
-  Switch,
   Divider,
   Typography,
   LinearProgress,
-  FormControlLabel,
 } from '@mui/material';
 import {
   AdmissionCrmIntegrationCapabilityState,
@@ -22,6 +20,10 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useAdmissionYearDraft } from './use-admission-year-draft';
+import {
+  EnrollmentSettingsFlowPreview,
+  EnrollmentSettingsDecisionCards,
+} from './enrollment-settings-decision-cards';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 
@@ -123,37 +125,82 @@ export function FinanceHandoffConfiguration({ academicYearId }: { academicYearId
           }
         />
       </Stack>
-      <FormControlLabel
-        control={
-          <Switch checked={required} onChange={(event) => setRequired(event.target.checked)} />
-        }
-        label="Finance verification is required before activation"
+      <EnrollmentSettingsDecisionCards
+        label="Finance verification gate"
+        value={required}
+        onChange={setRequired}
+        disabled={admissionYear.isCreating || admissionYear.isSaving}
+        options={[
+          {
+            value: true,
+            title: 'Require Finance Verification',
+            description:
+              'Activation waits until Finance confirms payment or records an approved waiver.',
+            icon: 'mdi:shield-check-outline',
+            recommended: true,
+            meta: 'Recommended when fees are collected before the student becomes active.',
+          },
+          {
+            value: false,
+            title: 'Do Not Block Activation',
+            description:
+              'Enrollment can activate the student while Finance continues payment follow-up independently.',
+            icon: 'mdi:arrow-right-circle-outline',
+            meta: 'Use only when school policy permits activation before fee verification.',
+          },
+        ]}
       />
 
       <Divider />
 
       <Box>
-        <Typography variant="subtitle1">Handoff behavior</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Finance remains the source of truth for every payment and waiver decision.
+        <Typography component="h2" variant="subtitle1">
+          Handoff Workflow
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Enrollment requests verification after registration is verified.
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 1.25 }}>
+          Enrollment requests and displays verification. Finance remains the source of truth for
+          payment, receipts, waivers, reconciliation, and refunds.
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Staff can see the Finance state, Finance reference, confirmed amount, and confirmation
-          time.
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Receipts, ledger posting, payment settlement, waivers, reconciliation, and refunds remain
-          in Finance.
-        </Typography>
+        <EnrollmentSettingsFlowPreview
+          label="Finance handoff workflow"
+          steps={[
+            {
+              label: 'Registration Verified',
+              description: 'The applicant completes registration and document checks.',
+              icon: 'mdi:file-document-check-outline',
+              status: 'Enrollment starts the handoff',
+            },
+            {
+              label: 'Finance Decision',
+              description: 'Finance records payment verification or an approved waiver reference.',
+              icon: 'mdi:cash-check',
+              status: isConnected
+                ? 'Connected synchronization available'
+                : 'Manual verification available',
+            },
+            {
+              label: required ? 'Activation Unblocked' : 'Activation Continues',
+              description: required
+                ? 'Activation becomes available after the Finance decision is confirmed.'
+                : 'Activation remains available while Finance follow-up continues.',
+              icon: required
+                ? 'mdi:lock-open-check-outline'
+                : 'mdi:arrow-right-bold-circle-outline',
+              status: required ? 'Blocking gate' : 'Non-blocking handoff',
+            },
+          ]}
+        />
       </Box>
 
-      <Alert severity={isConnected ? 'success' : 'info'}>
-        {financeCapability?.detail ||
-          'Finance synchronization is not connected. Authorized Finance staff can record the verified state and reference manually.'}
-      </Alert>
+      <Box>
+        <Typography component="h2" variant="subtitle1" sx={{ mb: 0.75 }}>
+          Connection Status
+        </Typography>
+        <Alert severity={isConnected ? 'success' : 'info'}>
+          {financeCapability?.detail ||
+            'Finance synchronization is not connected. Authorized Finance staff can record the verified state and reference manually.'}
+        </Alert>
+      </Box>
 
       {admissionYear.draft ? (
         <Alert severity="warning">
