@@ -5,17 +5,19 @@ import type { SelectChangeEvent } from '@mui/material';
 
 import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
   Card,
   Alert,
+  Stack,
+  Button,
   Select,
+  Skeleton,
   MenuItem,
   InputLabel,
   FormControl,
-  CircularProgress,
 } from '@mui/material';
 
 import DashboardTemplateView from './dashboard-template-view';
@@ -32,8 +34,34 @@ const isTemplateSwitcherEnabled =
   process.env.NODE_ENV !== 'production' ||
   process.env.NEXT_PUBLIC_ENABLE_DASHBOARD_TEMPLATE_SWITCHER === 'true';
 
+function DashboardInitialLoading() {
+  return (
+    <Stack
+      spacing={2.5}
+      sx={{ width: '100%', px: { xs: 2, sm: 3 }, py: 3 }}
+      aria-label="Loading dashboard"
+    >
+      <Skeleton variant="rounded" height={164} />
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', xl: 'repeat(4, 1fr)' },
+          gap: 2,
+        }}
+      >
+        {[0, 1, 2, 3].map((item) => (
+          <Skeleton key={item} variant="rounded" height={160} />
+        ))}
+      </Box>
+      <Skeleton variant="rounded" height={220} />
+    </Stack>
+  );
+}
+
 const MainDashboard = () => {
   const { data: session, status } = useSession() as any;
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { permissions, permissionsInitialized } = useSelector((state: RootState) => state.auth);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -51,13 +79,7 @@ const MainDashboard = () => {
     [session, templateOverride]
   );
 
-  const [selectedTemplate, setSelectedTemplate] = useState<DashboardTemplate>(resolvedTemplate);
-
-  useEffect(() => {
-    setSelectedTemplate(resolvedTemplate);
-  }, [resolvedTemplate]);
-
-  const currentTemplate = selectedTemplate || resolvedTemplate;
+  const currentTemplate = resolvedTemplate;
   const dashboardDataSourceMode = getDashboardDataSourceMode(
     searchParams.get('dashboardDataSource')
   );
@@ -68,19 +90,15 @@ const MainDashboard = () => {
   });
 
   if (status === 'loading') {
-    return (
-      <Box
-        sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <DashboardInitialLoading />;
   }
 
   const handleTemplateChange = (event: SelectChangeEvent) => {
     const nextTemplate = event.target.value;
     if (isDashboardTemplate(nextTemplate)) {
-      setSelectedTemplate(nextTemplate);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('dashboardTemplate', nextTemplate);
+      router.replace(`${pathname}?${params.toString()}`);
     }
   };
 
@@ -111,7 +129,18 @@ const MainDashboard = () => {
       )}
 
       {dashboardDataSource.globalError && (
-        <Alert severity="warning" sx={{ mb: 1 }} data-testid="dashboard-data-source-error">
+        <Alert
+          severity="warning"
+          sx={{ mx: { xs: 2, sm: 3 }, mt: 2 }}
+          data-testid="dashboard-data-source-error"
+          action={
+            dashboardDataSource.retry ? (
+              <Button color="inherit" size="small" onClick={dashboardDataSource.retry}>
+                Retry
+              </Button>
+            ) : undefined
+          }
+        >
           {dashboardDataSource.globalError}
         </Alert>
       )}
@@ -122,6 +151,7 @@ const MainDashboard = () => {
         enforcePermissions={permissionsInitialized}
         loadingZones={dashboardDataSource.loadingZones}
         zoneErrors={dashboardDataSource.zoneErrors}
+        onRetry={dashboardDataSource.retry}
       />
     </Box>
   );

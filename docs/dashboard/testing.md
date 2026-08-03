@@ -3,7 +3,7 @@ module: dashboard
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-08-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -44,3 +44,6 @@ Add or update tests when a change affects these areas.
 | Permission filtering | Permission unit test |
 | API payload mapping | Dashboard API or adapter test |
 | Route-level behavior | Playwright smoke test |
+| Responsive role composition | Codex in-app browser at 390 by 844, 768 by 1024, and 1440 by 900 |
+| Live API failure | Verify the retryable error and absence of mock operational widgets |
+| Dashboard navigation | Verify widgets expose normal link semantics and keyboard-visible focus |

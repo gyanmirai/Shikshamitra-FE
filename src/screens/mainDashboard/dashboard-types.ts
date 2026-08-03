@@ -12,6 +12,11 @@ export type DashboardTemplate = (typeof DASHBOARD_TEMPLATES)[keyof typeof DASHBO
 
 export type DashboardStatus = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error';
 
+export type DashboardWidgetKind =
+  'metric' | 'action' | 'risk' | 'health' | 'timeline' | 'announcement';
+
+export type DashboardPriority = 'low' | 'normal' | 'high' | 'critical';
+
 export const DASHBOARD_ZONE_KEYS = {
   kpis: 'kpis',
   actions: 'actions',
@@ -26,11 +31,7 @@ export type DashboardZoneKey = (typeof DASHBOARD_ZONE_KEYS)[keyof typeof DASHBOA
 export type DashboardZoneErrors = Partial<Record<DashboardZoneKey, string>>;
 
 export type DashboardDataSourceName =
-  | 'api'
-  | 'apiFallback'
-  | 'mock'
-  | 'contractPreview'
-  | 'contractPreviewFallback';
+  'api' | 'apiError' | 'mock' | 'contractPreview' | 'contractPreviewFallback';
 
 export type DashboardWidget = {
   id: string;
@@ -44,6 +45,10 @@ export type DashboardWidget = {
   owner?: string;
   drilldownUrl?: string;
   requiredPermissions?: PermissionName;
+  kind?: DashboardWidgetKind;
+  priority?: DashboardPriority;
+  actionLabel?: string;
+  health?: 'good' | 'attention' | 'critical';
 };
 
 export type DashboardActionItem = DashboardWidget & {
@@ -51,9 +56,7 @@ export type DashboardActionItem = DashboardWidget & {
   dueLabel?: string;
 };
 
-export type DashboardModuleSnapshot = DashboardWidget & {
-  health?: 'good' | 'attention' | 'critical';
-};
+export type DashboardModuleSnapshot = DashboardWidget;
 
 export type DashboardDateRange = {
   label: string;
@@ -65,6 +68,9 @@ export type DashboardDataContract = {
   dashboardTemplate: DashboardTemplate;
   academicYearId?: string;
   dateRange: DashboardDateRange;
+  scopeLabel?: string;
+  dataState?: 'live' | 'partial';
+  generatedAtUtc?: string;
   kpiCards: DashboardWidget[];
   actionItems: DashboardActionItem[];
   riskAlerts: DashboardActionItem[];
@@ -80,12 +86,15 @@ export type DashboardDataSourceResult = {
   zoneErrors: DashboardZoneErrors;
   source: DashboardDataSourceName;
   globalError?: string;
+  retry?: () => void;
 };
 
 export type DashboardTemplateMeta = {
   template: DashboardTemplate;
   label: string;
   description: string;
+  eyebrow: string;
+  primaryZoneTitle: string;
 };
 
 export const DASHBOARD_TEMPLATE_META: Record<DashboardTemplate, DashboardTemplateMeta> = {
@@ -93,26 +102,36 @@ export const DASHBOARD_TEMPLATE_META: Record<DashboardTemplate, DashboardTemplat
     template: DASHBOARD_TEMPLATES.leadership,
     label: 'Leadership',
     description: 'Whole-school health, finance, growth, compliance, and major risks.',
+    eyebrow: 'Whole-school command center',
+    primaryZoneTitle: 'School pulse',
   },
   [DASHBOARD_TEMPLATES.principalAdmin]: {
     template: DASHBOARD_TEMPLATES.principalAdmin,
     label: 'Principal/Admin',
     description: 'Daily school operations across academics, attendance, safety, and communication.',
+    eyebrow: 'Today’s operations',
+    primaryZoneTitle: 'Operational pulse',
   },
   [DASHBOARD_TEMPLATES.teacher]: {
     template: DASHBOARD_TEMPLATES.teacher,
     label: 'Teacher',
     description: 'Classes, attendance, homework, exams, student risks, and communication.',
+    eyebrow: 'My teaching day',
+    primaryZoneTitle: 'Teaching pulse',
   },
   [DASHBOARD_TEMPLATES.financeHr]: {
     template: DASHBOARD_TEMPLATES.financeHr,
     label: 'Finance/HR',
     description: 'Fee health, payroll readiness, staff attendance, leave, and HR actions.',
+    eyebrow: 'Finance and people operations',
+    primaryZoneTitle: 'Finance and workforce pulse',
   },
   [DASHBOARD_TEMPLATES.studentParent]: {
     template: DASHBOARD_TEMPLATES.studentParent,
     label: 'Student/Parent',
     description: 'Personal academic, attendance, fee, transport, and school communication.',
+    eyebrow: 'My school day',
+    primaryZoneTitle: 'Personal overview',
   },
 };
 

@@ -1,8 +1,8 @@
 import type { ComponentProps } from 'react';
 import type { PermissionName } from 'src/utils/permissions';
 
-import { it, vi, expect, describe, afterEach } from 'vitest';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { it, expect, describe } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
 
 import { getDashboardMockData } from './dashboard-mock-data';
 import DashboardTemplateView from './dashboard-template-view';
@@ -11,16 +11,6 @@ import { DASHBOARD_TEMPLATES, DASHBOARD_ZONE_KEYS } from './dashboard-types';
 import { createDashboardMockDataSourceResult } from './dashboard-data-source';
 
 import type { DashboardDataContract } from './dashboard-types';
-
-const navigationMock = vi.hoisted(() => ({
-  push: vi.fn(),
-}));
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: navigationMock.push,
-  }),
-}));
 
 const allZoneTestIds = [
   'dashboard-zone-kpis',
@@ -56,10 +46,6 @@ const permissionGrant = (permissionName: PermissionName) => ({
 });
 
 describe('DashboardTemplateView', () => {
-  afterEach(() => {
-    navigationMock.push.mockClear();
-  });
-
   Object.values(DASHBOARD_TEMPLATES).forEach((template) => {
     it(`renders all major zones for the ${template} template`, () => {
       renderDashboard(createDashboardMockDataSourceResult(template).data);
@@ -69,6 +55,25 @@ describe('DashboardTemplateView', () => {
         expect(screen.getByTestId(testId)).toBeVisible();
       });
     });
+  });
+
+  it('orders operational actions before metrics for the Principal/Admin template', () => {
+    renderDashboard(createDashboardMockDataSourceResult(DASHBOARD_TEMPLATES.principalAdmin).data);
+
+    const actions = screen.getByTestId('dashboard-zone-actions');
+    const metrics = screen.getByTestId('dashboard-zone-kpis');
+
+    expect(actions.compareDocumentPosition(metrics)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('keeps the school pulse first for the Leadership template', () => {
+    renderDashboard(createDashboardMockDataSourceResult(DASHBOARD_TEMPLATES.leadership).data);
+
+    const metrics = screen.getByTestId('dashboard-zone-kpis');
+    const actions = screen.getByTestId('dashboard-zone-actions');
+
+    expect(metrics.compareDocumentPosition(actions)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.getByRole('heading', { level: 1, name: 'Leadership dashboard' })).toBeVisible();
   });
 
   it('shows zone empty states when no permitted items are available', () => {
@@ -101,12 +106,13 @@ describe('DashboardTemplateView', () => {
     expect(screen.getByTestId('dashboard-widget-principal-student-attendance')).toBeVisible();
   });
 
-  it('renders drilldown widgets as clickable actions', () => {
+  it('renders drilldown widgets as links with normal navigation semantics', () => {
     renderDashboard(getDashboardMockData(DASHBOARD_TEMPLATES.principalAdmin));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open Academic Dashboard' }));
-
-    expect(navigationMock.push).toHaveBeenCalledWith('/academic/dashboard');
+    expect(screen.getByRole('link', { name: 'View details: Academic Dashboard' })).toHaveAttribute(
+      'href',
+      '/academic/dashboard'
+    );
   });
 
   it('keeps unknown widgets hidden when permission enforcement is enabled', () => {
@@ -147,7 +153,9 @@ describe('DashboardTemplateView', () => {
     expect(screen.queryByText('Staff Attendance')).not.toBeInTheDocument();
     expect(screen.queryByText('95.8%')).not.toBeInTheDocument();
     expect(screen.queryByText('HR Dashboard')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Open HR Dashboard' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'View details: HR Dashboard' })
+    ).not.toBeInTheDocument();
   });
 
   it('keeps every mock widget actionable through a drilldown or owner', () => {
