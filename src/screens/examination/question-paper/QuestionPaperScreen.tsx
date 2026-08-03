@@ -486,11 +486,10 @@ export default function QuestionPaperScreen() {
     .filter((exam: any) => exam.examId === formik.values.examId)
     .map((exam: any) => ({
       value: exam.examSubjectId,
-      label: `${new Date(exam.examDate).toLocaleDateString()}${
-        exam.startTime
+      label: `${new Date(exam.examDate).toLocaleDateString()}${exam.startTime
           ? ` - ${new Date(exam.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
           : ''
-      }`,
+        }`,
     }));
 
   // Chapters for blueprint (driven by selectedPaper)
@@ -1037,7 +1036,7 @@ export default function QuestionPaperScreen() {
           sx: { cursor: 'pointer' },
         })}
         noDataText={
-          <Stack alignItems="center" spacing={1} py={6}>
+          <Stack alignItems="center" spacing={1}>
             <Typography variant="subtitle2" color="text.secondary">
               No question papers found
             </Typography>

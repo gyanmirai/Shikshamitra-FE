@@ -108,18 +108,16 @@ const ScheduleExamPreviewDrawer = ({
   const isDetailsLoading = basicLoading || scheduleLoading || roomLoading || subjectsLoading;
   const hydratedExam = basicDetails
     ? mapBackendToFormik(
-        basicDetails,
-        scheduleDetails ?? null,
-        roomAssignmentData ?? null,
-        examSubjectsData ?? null,
-        examTypeData?.items ?? []
-      )
+      basicDetails,
+      scheduleDetails ?? null,
+      roomAssignmentData ?? null,
+      examSubjectsData ?? null,
+      examTypeData?.items ?? []
+    )
     : null;
   const subjectRows = getSubjectRows(hydratedExam?.subjects ?? []);
-  const scheduledDates = subjectRows
-    .map((subject: any) => subject.examDate)
-    .filter((date: any) => date && dayjs(date).isValid())
-    .map((date: any) => dayjs(date));
+  console.log("subjectRows----", subjectRows);
+
   const readiness = hydratedExam
     ? getReadinessSummary(buildExamPlanningIssues(hydratedExam))
     : null;
@@ -127,27 +125,18 @@ const ScheduleExamPreviewDrawer = ({
   const warningCount = readiness ? readiness.warnings.length : (exam?.warningCount ?? 0);
   const previewExam = hydratedExam
     ? {
-        ...exam,
-        ...hydratedExam,
-        examId,
-        examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
-        standardName: exam?.standardName,
-        divisions: exam?.divisions,
-        subjectCount: subjectRows.length,
-        issueCount,
-        warningCount,
-      }
+      ...exam,
+      ...hydratedExam,
+      examId,
+      examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
+      standardName: exam?.standardName,
+      divisions: exam?.divisions,
+      subjectCount: subjectRows.length,
+      issueCount,
+      warningCount,
+    }
     : exam;
-  const dateRange =
-    scheduledDates.length > 0
-      ? `${scheduledDates
-          .reduce((min, date) => (date.isBefore(min) ? date : min), scheduledDates[0])
-          .format('DD MMM YYYY')} - ${scheduledDates
-          .reduce((max, date) => (date.isAfter(max) ? date : max), scheduledDates[0])
-          .format('DD MMM YYYY')}`
-      : previewExam?.startDate && previewExam?.endDate
-        ? `${dayjs(previewExam.startDate).format('DD MMM YYYY')} - ${dayjs(previewExam.endDate).format('DD MMM YYYY')}`
-        : 'Not scheduled';
+  const dateRange = previewExam?.startDate && previewExam?.endDate ? `${dayjs(previewExam?.startDate).format('DD-MM-YYYY')} - ${dayjs(previewExam?.endDate).format('DD-MM-YYYY')}` : '';
 
   const dialogTitle = (
     <Box

@@ -126,14 +126,6 @@ export default function SeatingWorkspaceHeader({
         <CustomPopover open={morePopover.open} anchorEl={morePopover.anchorEl} onClose={morePopover.onClose}>
           <MenuList sx={{ minWidth: 200 }}>
             <MenuItem disabled>
-              <Iconify icon="mdi:auto-fix" width={16} style={{ marginRight: 8 }} />
-              Copy Previous Plan
-            </MenuItem>
-            <MenuItem disabled>
-              <Iconify icon="mdi:printer-outline" width={16} style={{ marginRight: 8 }} />
-              Print Room Plan
-            </MenuItem>
-            <MenuItem disabled>
               <Iconify icon="mdi:file-export-outline" width={16} style={{ marginRight: 8 }} />
               Export
             </MenuItem>

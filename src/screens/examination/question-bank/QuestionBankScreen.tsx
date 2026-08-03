@@ -1685,8 +1685,7 @@ export default function QuestionBankScreen() {
         data={data?.items || []}
         isLoading={isQuestionLoading || isQuestionFetching}
         noDataText={
-          <Stack alignItems="center" spacing={1} py={6}>
-            <Iconify icon="mingcute:question-line" width={40} sx={{ color: 'text.disabled' }} />
+          <Stack alignItems="center" spacing={1}>
             <Typography variant="subtitle2" color="text.secondary">
               No questions found
             </Typography>

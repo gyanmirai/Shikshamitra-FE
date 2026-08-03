@@ -161,5 +161,14 @@ export const sortAcademicStudents = (
 export const studentMatchesSearch = (item: StudentAcademicListItem, searchTerm: string): boolean => {
   const query = searchTerm.trim().toLowerCase();
   if (!query) return true;
-  return [item.name, item.grNo, item.rollNo].some((value) => value.toLowerCase().includes(query));
+  return [
+    item.name,
+    item.grNo,
+    item.rollNo,
+    item.student.standardName,
+    item.student.standard,
+    item.student.divisionName,
+    item.student.division,
+  ].some((value) => value && value.toString().toLowerCase().includes(query));
 };
+

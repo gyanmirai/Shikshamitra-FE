@@ -140,7 +140,7 @@ export const DialogScrollContent = ({
   children: React.ReactNode;
   scrollBarProps?: ScrollbarProps;
   onSubmit?: () => void;
-} & DialogContentProps) => {
+} & Omit<DialogContentProps, 'onSubmit'>) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

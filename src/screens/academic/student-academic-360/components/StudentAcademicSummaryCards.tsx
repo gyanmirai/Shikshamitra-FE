@@ -52,7 +52,7 @@ export function StudentAcademicSummaryCards({
       key: 'all',
       label: 'Total Students',
       value: String(items.length),
-      helper: 'Current class list',
+      helper: 'Enrolled student list',
       icon: 'mdi:account-group-outline',
     },
     {

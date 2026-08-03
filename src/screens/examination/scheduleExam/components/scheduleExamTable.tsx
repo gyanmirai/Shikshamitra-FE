@@ -171,13 +171,13 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
           {/* Menu item for publishing the timetable 
               Sets the selected timetable name and shows confirmation dialog */}
-	          {canAdd && row.status === examScheduledStatus.Pending && (
-	            <MenuItem
-	              onClick={() => {
-	                requestPublishExam(row);
-	                pop.onClose();
-	              }}
-	            >
+          {canAdd && row.status === examScheduledStatus.Pending && (
+            <MenuItem
+              onClick={() => {
+                requestPublishExam(row);
+                pop.onClose();
+              }}
+            >
               <Iconify icon="solar:cloud-upload-outline" />
               Publish Exam
             </MenuItem>
