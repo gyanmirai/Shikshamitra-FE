@@ -6,14 +6,16 @@ import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Typography } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
@@ -23,13 +25,13 @@ import {
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 import {
   FeedbackStatusChip,
-  EvaluationFilterBar,
   EvaluationStatusChip,
   filterEvaluationRows,
   getEvaluationSummary,
   dedupeEvaluationRows,
   EvaluationActionButton,
   EvaluationSummaryCards,
+  isRowEvaluationDisabled,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
 import AssignGrade from '../component/assignGradeForm';
@@ -114,7 +116,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     () => filteredData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
     [filteredData, selectedStudent?.studentId]
   );
-  const selectedSubmissionType = selectedStudent?.submissionType || selectedHomework?.submissionType;
+  const selectedSubmissionType =
+    selectedStudent?.submissionType || selectedHomework?.submissionType;
   const selectedSubmissionTypeLabel = String(selectedSubmissionType || '').toLowerCase();
   const isSelectedInPerson =
     Number(selectedSubmissionType) === 2 ||
@@ -131,23 +134,32 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       return null;
     }
 
-    const response = await ensureSubmissionFeedback({
-      homeworkId: selectedHomework.id,
-      studentId: selectedStudent.studentId,
-      academicMediumId: (medium as any)?.id,
-      body: {
-        feedback: null,
-        remarks: 'Rubric evaluation started.',
-        status: 6,
-      },
-    }).unwrap();
-    const submissionId = response?.data?.submissionId;
+    try {
+      const response = await ensureSubmissionFeedback({
+        homeworkId: selectedHomework.id,
+        studentId: selectedStudent.studentId,
+        academicMediumId: (medium as any)?.id,
+        body: {
+          feedback: null,
+          remarks: 'Rubric evaluation started.',
+          status: 6,
+        },
+      }).unwrap();
+      const submissionId = response?.data?.submissionId;
 
-    if (submissionId) {
-      setSelectedStudent((prev) => (prev ? { ...prev, id: submissionId, status: '6' } : prev));
+      if (submissionId) {
+        setSelectedStudent((prev) => (prev ? { ...prev, id: submissionId, status: '6' } : prev));
+      }
+
+      return submissionId ?? null;
+    } catch (error) {
+      console.error('Failed to start submission', error);
+      const parsed = parseApiProblemDetail(error);
+      shikshaMitraToast.error({
+        message: parsed.detail || 'Failed to start submission for student',
+      });
+      return null;
     }
-
-    return submissionId ?? null;
   };
 
   const moveStudent = React.useCallback(
@@ -204,7 +216,16 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', gap: 1.5 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+        height: '100%',
+        gap: 1.5,
+      }}
+    >
       <Stack spacing={1}>
         <EvaluationSummaryCards
           summary={summary}
@@ -305,7 +326,23 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               id: 'feedback',
               label: 'Feedback',
               render: (value, row) => {
+                const isDisabled = isRowEvaluationDisabled(row, selectedHomework?.submissionType);
                 const text = value && value !== '-' ? value : null;
+
+                if (isDisabled) {
+                  return (
+                    <CustomTooltip title="Student has not submitted homework yet" arrow>
+                      <Typography
+                        variant="caption"
+                        fontSize="13px"
+                        sx={{ color: 'text.disabled', fontStyle: 'italic', p: 0.5, display: 'block' }}
+                      >
+                        No submission
+                      </Typography>
+                    </CustomTooltip>
+                  );
+                }
+
                 return (
                   <Box
                     onClick={() => {

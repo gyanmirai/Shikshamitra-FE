@@ -68,21 +68,6 @@ export const DEFAULT_SUBSTITUTION_FILTERS: SubstitutionFiltersState = {
 export const getActiveFilters = (currentFilters: SubstitutionFiltersState) => {
   const active: { key: keyof SubstitutionFiltersState; label: string; value: any }[] = [];
 
-  // Date
-  if (!currentFilters.filterDate) {
-    active.push({
-      key: 'filterDate',
-      label: 'Date: None',
-      value: null,
-    });
-  } else if (!dayjs(currentFilters.filterDate).isSame(dayjs(todayIso), 'day')) {
-    active.push({
-      key: 'filterDate',
-      label: `Date: ${dayjs(currentFilters.filterDate).format('DD/MM/YYYY')}`,
-      value: currentFilters.filterDate,
-    });
-  }
-
   // Teacher
   if (currentFilters.teacherFilter !== 'all') {
     const opt = teacherOptions.find((o) => o.value === currentFilters.teacherFilter);

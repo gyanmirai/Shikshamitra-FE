@@ -97,4 +97,18 @@ describe('parseApiProblemDetail', () => {
       'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.'
     );
   });
+
+  it('maps CannotEvaluateMissingSubmission error code to user-friendly message', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        status: 400,
+        title: 'Business rule violated.',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'ShikshaMitra.Submission.CannotEvaluateMissingSubmission',
+      },
+    });
+
+    expect(parsed.detail).toBe('Cannot evaluate feedback as the student has not submitted their work yet.');
+    expect(parsed.errorCode).toBe('ShikshaMitra.Submission.CannotEvaluateMissingSubmission');
+  });
 });

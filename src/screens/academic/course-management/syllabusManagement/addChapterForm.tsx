@@ -472,7 +472,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     return (
                       <ShakingTextField error={!!startDateError}>
                         <DatePicker
-                          label="Chapter Start Date *"
+                          label="Expected Start Date for all Division"
                           format="DD/MM/YYYY"
                           value={formik.values.startDate}
                           standardId={classId}
@@ -528,7 +528,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     return (
                       <ShakingTextField error={!!endDateError}>
                         <DatePicker
-                          label="Chapter End Date *"
+                          label="Expected End Date for all Division"
                           format="DD/MM/YYYY"
                           disablePast
                           standardId={classId}

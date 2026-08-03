@@ -395,7 +395,10 @@ const timetableData: TimetableSlot[] = transformScheduleToGrid(mockDayScheduleDa
 
 const getTimetableApiErrorMessage = (error: unknown) => {
   const [issue] = extractTimetableApiIssues(error);
-  return issue?.description || 'Server validation failed. Please review timetable conflicts and try again.';
+  return (
+    issue?.description ||
+    'Server validation failed. Please review timetable conflicts and try again.'
+  );
 };
 
 const createValidationIssue = (
@@ -427,10 +430,10 @@ const DISPLAY_STATUS_COLORS: Record<string, LabelColor> = {
   'Not Ready': 'error',
   'Not Started': 'default',
   'Conflict Found': 'error',
-  'Published': 'success',
+  Published: 'success',
   'Ready to Publish': 'success',
   'In Progress': 'info',
-  'Draft': 'warning',
+  Draft: 'warning',
 };
 
 const DISPLAY_STATUS_FILTER_OPTIONS = Object.keys(DISPLAY_STATUS_COLORS).map((status) => ({
@@ -475,7 +478,13 @@ const SummaryTile = ({
         display: 'grid',
         placeItems: 'center',
         color: `${color}.main`,
-        bgcolor: (theme) => alpha(theme.palette[color as 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary']?.main || theme.palette.primary.main, 0.08),
+        bgcolor: (theme) =>
+          alpha(
+            theme.palette[
+              color as 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary'
+            ]?.main || theme.palette.primary.main,
+            0.08
+          ),
       }}
     >
       <Iconify icon={icon} width={24} />
@@ -585,7 +594,8 @@ const TimeTableGrid = () => {
         label: 'Filled Slots',
         filterType: 'number',
         align: 'left',
-        render: (value, row) => (row.weeklySlots === 0 ? '-' : `${row.filledSlots}/${row.weeklySlots}`),
+        render: (value, row) =>
+          row.weeklySlots === 0 ? '-' : `${row.filledSlots}/${row.weeklySlots}`,
       },
       {
         id: 'subjectProgressText',
@@ -593,7 +603,9 @@ const TimeTableGrid = () => {
         filterType: 'string',
         align: 'left',
         render: (value, row) =>
-          row.weeklySlots === 0 ? '-' : `${row.subjectCompletedCount}/${row.subjectTotalCount} complete`,
+          row.weeklySlots === 0
+            ? '-'
+            : `${row.subjectCompletedCount}/${row.subjectTotalCount} complete`,
       },
       {
         id: 'teacherAssignmentText',
@@ -616,7 +628,9 @@ const TimeTableGrid = () => {
           if (row.weeklySlots === 0) return '-';
           if (row.roomTotalCount === 0) return 'No slots filled';
           const pending = row.roomTotalCount - row.roomAssignedCount;
-          return pending === 0 ? 'All assigned' : `${row.roomAssignedCount}/${row.roomTotalCount} assigned`;
+          return pending === 0
+            ? 'All assigned'
+            : `${row.roomAssignedCount}/${row.roomTotalCount} assigned`;
         },
       },
       {
@@ -663,7 +677,9 @@ const TimeTableGrid = () => {
                 variant="outlined"
                 color="error"
                 sx={{ minWidth: '110px' }}
-                startIcon={<Iconify icon="lucide:settings" sx={{ height: '14px', width: '14px' }} />}
+                startIcon={
+                  <Iconify icon="lucide:settings" sx={{ height: '14px', width: '14px' }} />
+                }
                 onClick={() => {
                   setReadinessCheckDivision(row);
                 }}
@@ -675,7 +691,9 @@ const TimeTableGrid = () => {
 
           let buttonText = 'Edit';
           let buttonIcon = GlobalIcons.edit;
-          let buttonColor: 'inherit' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary' = 'primary';
+          let buttonColor:
+            'inherit' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary' =
+            'primary';
 
           if (displayStatus === 'Not Started') {
             buttonText = 'Create';
@@ -860,7 +878,8 @@ const TimeTableGrid = () => {
           {readinessCheckDivision && (
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-                Class {classes} · Division {readinessCheckDivision.divisionName} (Readiness: {readinessCheckDivision.readinessScore}%)
+                Class {classes} · Division {readinessCheckDivision.divisionName} (Readiness:{' '}
+                {readinessCheckDivision.readinessScore}%)
               </Typography>
               <LinearProgress
                 variant="determinate"
@@ -868,7 +887,11 @@ const TimeTableGrid = () => {
                 sx={{ mb: 2.5, height: 8, borderRadius: 4 }}
                 color={readinessCheckDivision.readinessScore === 100 ? 'success' : 'warning'}
               />
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                sx={{ mb: 1.5, fontWeight: 600 }}
+              >
                 Pending Setup Items:
               </Typography>
               <Stack spacing={1}>
@@ -885,7 +908,11 @@ const TimeTableGrid = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setReadinessCheckDivision(null)} variant="contained" color="primary">
+          <Button
+            onClick={() => setReadinessCheckDivision(null)}
+            variant="contained"
+            color="primary"
+          >
             Okay
           </Button>
         </DialogActions>
@@ -919,22 +946,52 @@ const TimeTableGrid = () => {
           </Card>
           <Grid container spacing={1} sx={{ mb: 2 }}>
             <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile label="Total Divisions" value={stats.total} icon="solar:users-group-two-rounded-bold" color="primary" />
+              <SummaryTile
+                label="Total Divisions"
+                value={stats.total}
+                icon="solar:users-group-two-rounded-bold"
+                color="primary"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile label="Published" value={stats.published} icon="mdi:check-circle-outline" color="success" />
+              <SummaryTile
+                label="Published"
+                value={stats.published}
+                icon="mdi:check-circle-outline"
+                color="success"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile label="Draft / In Progress" value={stats.draftInProgress} icon="mdi:play-circle-outline" color="warning" />
+              <SummaryTile
+                label="Draft / In Progress"
+                value={stats.draftInProgress}
+                icon="mdi:play-circle-outline"
+                color="warning"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile label="Ready to Publish" value={stats.readyToPublish} icon="mdi:eye-outline" color="info" />
+              <SummaryTile
+                label="Ready to Publish"
+                value={stats.readyToPublish}
+                icon="mdi:eye-outline"
+                color="info"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile label="Conflicts" value={stats.conflicts} icon="mdi:alert-circle-outline" color="error" />
+              <SummaryTile
+                label="Conflicts"
+                value={stats.conflicts}
+                icon="mdi:alert-circle-outline"
+                color="error"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile label="Not Ready" value={stats.notReady} icon="lucide:settings" color="error" />
+              <SummaryTile
+                label="Not Ready"
+                value={stats.notReady}
+                icon="lucide:settings"
+                color="error"
+              />
             </Grid>
           </Grid>
           <CustomizableTable
@@ -1403,7 +1460,8 @@ const TimeTableForm = ({
 
   const editorDisplayStatus = useMemo(() => {
     if (conflicts.length > 0) return 'Conflict Found';
-    const teacherPending = assignmentProgress.totalFilledSubjects - assignmentProgress.teacherAssigned;
+    const teacherPending =
+      assignmentProgress.totalFilledSubjects - assignmentProgress.teacherAssigned;
     const roomPending = assignmentProgress.totalFilledSubjects - assignmentProgress.roomAssigned;
     if (slotSummary.filled === slotSummary.total && teacherPending === 0 && roomPending === 0) {
       return 'Ready to Publish';
@@ -1553,10 +1611,17 @@ const TimeTableForm = ({
       return count !== subject.totalLectures;
     }).length;
 
-    const teacherPending = assignmentProgress.totalFilledSubjects - assignmentProgress.teacherAssigned;
+    const teacherPending =
+      assignmentProgress.totalFilledSubjects - assignmentProgress.teacherAssigned;
     const roomPending = assignmentProgress.totalFilledSubjects - assignmentProgress.roomAssigned;
 
-    if (conflicts.length > 0 || emptySlots > 0 || incompleteCount > 0 || teacherPending > 0 || roomPending > 0) {
+    if (
+      conflicts.length > 0 ||
+      emptySlots > 0 ||
+      incompleteCount > 0 ||
+      teacherPending > 0 ||
+      roomPending > 0
+    ) {
       handleValidate();
       return;
     }
@@ -1619,10 +1684,7 @@ const TimeTableForm = ({
               •
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Iconify
-                icon="mdi:door-open"
-                sx={{ width: 16, height: 16, color: 'primary.main' }}
-              />
+              <Iconify icon="mdi:door-open" sx={{ width: 16, height: 16, color: 'primary.main' }} />
               <Typography
                 variant="subtitle2"
                 sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.9rem' }}
@@ -1912,7 +1974,8 @@ const TimeTableForm = ({
                     sx={{
                       p: 2,
                       borderRadius: 2,
-                      borderColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.24),
+                      borderColor: (theme) =>
+                        varAlpha(theme.vars.palette.success.mainChannel, 0.24),
                       bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.06),
                       boxShadow: (theme) => `inset 4px 0 0 ${theme.palette.success.main}`,
                     }}
@@ -1931,7 +1994,8 @@ const TimeTableForm = ({
                           flexShrink: 0,
                           placeItems: 'center',
                           color: 'success.main',
-                          bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.12),
+                          bgcolor: (theme) =>
+                            varAlpha(theme.vars.palette.success.mainChannel, 0.12),
                         }}
                       >
                         <Iconify icon="mdi:check-decagram-outline" width={26} />
@@ -1979,7 +2043,8 @@ const TimeTableForm = ({
                             p: 1.5,
                             height: '100%',
                             borderRadius: 1,
-                            bgcolor: (theme) => varAlpha(theme.vars.palette.background.neutralChannel, 0.8),
+                            bgcolor: (theme) =>
+                              varAlpha(theme.vars.palette.background.neutralChannel, 0.8),
                           }}
                         >
                           <Stack spacing={1}>
@@ -2162,16 +2227,28 @@ const TimeTableForm = ({
             students, and parents.
           </Alert>
           <Stack spacing={1} sx={{ mb: 2.5, display: 'none' }}>
-            <Typography variant="caption" sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}
+            >
               ✓ {slotSummary.filled}/{slotSummary.total} slots filled
             </Typography>
-            <Typography variant="caption" sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}
+            >
               ✓ All subjects complete
             </Typography>
-            <Typography variant="caption" sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}
+            >
               ✓ All teachers & rooms assigned
             </Typography>
-            <Typography variant="caption" sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}
+            >
               ✓ 0 conflicts found
             </Typography>
           </Stack>
@@ -2204,13 +2281,10 @@ const TimeTableForm = ({
       </Dialog>
 
       {/* Preview Dialog */}
-      <Dialog
-        open={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+      <Dialog open={previewOpen} onClose={() => setPreviewOpen(false)} maxWidth="lg" fullWidth>
+        <DialogTitle
+          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}
+        >
           <Typography variant="h6">Timetable Preview (Read Only)</Typography>
           <IconButton onClick={() => setPreviewOpen(false)}>
             <Iconify icon="lucide:x" />
@@ -2219,7 +2293,7 @@ const TimeTableForm = ({
         <DialogContent dividers sx={{ height: '70vh', p: 0 }}>
           <TimetableBoard
             slots={formik.values.slots}
-            onChange={() => { }}
+            onChange={() => {}}
             subjects={subjects}
             readOnly
             selectedClass={selectedClass}
