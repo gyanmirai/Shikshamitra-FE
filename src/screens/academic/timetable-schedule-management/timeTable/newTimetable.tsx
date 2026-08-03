@@ -1685,7 +1685,7 @@ const TimeTableForm = ({
               size="small"
               color={
                 assignmentProgress.teacherAssigned === assignmentProgress.totalFilledSubjects &&
-                assignmentProgress.totalFilledSubjects > 0
+                  assignmentProgress.totalFilledSubjects > 0
                   ? 'success'
                   : 'default'
               }
@@ -1703,7 +1703,7 @@ const TimeTableForm = ({
               size="small"
               color={
                 assignmentProgress.roomAssigned === assignmentProgress.totalFilledSubjects &&
-                assignmentProgress.totalFilledSubjects > 0
+                  assignmentProgress.totalFilledSubjects > 0
                   ? 'success'
                   : 'default'
               }
