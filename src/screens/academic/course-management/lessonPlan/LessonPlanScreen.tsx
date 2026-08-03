@@ -1618,10 +1618,6 @@ const LessonPlanScreen = () => {
         lessonPlans={lessonPlans}
         onClose={() => setLessonModalOpen(false)}
         onSave={handleSaveLesson}
-        onAiGenerate={() => {
-          setLessonModalOpen(false);
-          setAiDrawerOpen(true);
-        }}
         isLoading={isSavingLesson}
       />
 

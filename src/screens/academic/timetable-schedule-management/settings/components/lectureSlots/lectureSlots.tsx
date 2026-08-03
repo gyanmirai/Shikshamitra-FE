@@ -52,7 +52,8 @@ const LectureSlots = () => {
       setEditData(null);
       setIsEdit(false);
     }
-  }, [searchParams, pathname, addLectureSlotDialog, assignSlotsDialog, viewSlotsDialog]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, pathname]);
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);

@@ -104,7 +104,6 @@ type Props = {
   lessonPlans?: LessonPlanRow[];
   onClose: () => void;
   onSave: (form: LessonFormState, submitAfterSave: boolean) => void;
-  onAiGenerate?: () => void;
   isLoading?: boolean;
 };
 
@@ -256,7 +255,6 @@ const AddLessonPlanModal = ({
   lessonPlans = [],
   onClose,
   onSave,
-  onAiGenerate,
   isLoading = false,
 }: Props) => {
   const [form, setForm] = useState<LessonFormState>(() => ({
@@ -556,8 +554,6 @@ const AddLessonPlanModal = ({
     onSave(form, submit);
   };
 
-  const aiQualityScore = form.topic && form.learningObjective && form.teachingMethod ? 75 : 0;
-
   const requiredFieldsFilled = [
     form.teacherId,
     form.plannedDate,
@@ -794,51 +790,6 @@ const AddLessonPlanModal = ({
               />
             </Stack>
           </FormSection>
-
-          {/* AI Quality Preview */}
-          {aiQualityScore > 0 && (
-            <Box
-              sx={{
-                p: 2,
-                bgcolor: 'primary.lighter',
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: 'primary.light',
-              }}
-            >
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ mb: 0.75 }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Iconify icon="mdi:auto-fix" width={16} sx={{ color: 'primary.dark' }} />
-                  <Typography variant="caption" color="primary.dark" fontWeight={600}>
-                    AI Lesson Plan Quality Preview
-                  </Typography>
-                </Stack>
-                <Label color={aiQualityScore >= 75 ? 'success' : 'warning'} variant="soft">
-                  {aiQualityScore}%
-                </Label>
-              </Stack>
-              <LinearProgress
-                variant="determinate"
-                value={aiQualityScore}
-                color={aiQualityScore >= 75 ? 'success' : 'warning'}
-                sx={{ borderRadius: 1, height: 6 }}
-              />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.75, display: 'block' }}
-              >
-                {!form.resourcesRequired && 'Add resources to improve quality. '}
-                {!form.learningObjective && 'Add learning objective. '}
-                {aiQualityScore >= 75 && 'Good plan quality!'}
-              </Typography>
-            </Box>
-          )}
         </Stack>
       </DialogScrollContent>
 
@@ -846,23 +797,10 @@ const AddLessonPlanModal = ({
       <Stack
         direction="row"
         spacing={1}
-        justifyContent="space-between"
+        justifyContent="flex-end"
         alignItems="center"
         sx={{ p: 2 }}
       >
-        {onAiGenerate ? (
-          <Button
-            size="small"
-            variant="outlined"
-            color="secondary"
-            startIcon={<Iconify icon="mdi:robot-outline" />}
-            onClick={onAiGenerate}
-          >
-            AI Generate
-          </Button>
-        ) : (
-          <Box />
-        )}
         <Stack direction="row" spacing={1}>
           <Button
             size="small"
