@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -28,13 +29,11 @@ import {
   Paper,
   Stack,
   Button,
-  Dialog,
   Checkbox,
+  Skeleton,
   TextField,
   Typography,
-  DialogTitle,
   DialogActions,
-  DialogContent,
   FormControlLabel,
 } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -125,21 +124,103 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     if (!standardId) setStandardId(allClasses[0]?.id || '');
   }, [currentMedium, standardId]);
 
-  const { data: divisionsData } = useQueryAndMutation({
+  // ── Queries via useQueryAndMutation (skill § 4.1) ───────────────────────
+  const {
+    data: divisionsData,
+    isLoading: isDivisionsLoading,
+    isFetching: isDivisionsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamDivisionsQuery,
     params: { examId, standardId },
     options: { skip: !examId || !standardId },
   });
-  console.log("divisionsData---", divisionsData);
 
-  const { data: scopesData } = useQueryAndMutation({
+  const {
+    data: scopesData,
+    isLoading: isScopesLoading,
+    isFetching: isScopesFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSeatingPlanScopesQuery,
     params: { examId },
     options: { skip: !examId },
   });
-  const [saveSeatingPlanScope, { isLoading: isSavingScope }] = useSaveSeatingPlanScopeMutation();
+
+  const {
+    data: roomsData,
+    isLoading: isRoomsLoading,
+    isFetching: isRoomsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamRoomsQuery,
+    params: { examId, divisionId: division, seatingPlanId: selectedPlanId },
+    options: { skip: !examId || !division || !selectedPlanId },
+  });
+
+  const {
+    data: studentsData,
+    isLoading: isStudentsLoading,
+    isFetching: isStudentsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatAllocationStudentsQuery,
+    params: { examId, divisionId: division, seatingPlanId: selectedPlanId },
+    options: { skip: !examId || !division || !selectedPlanId },
+  });
+
+  const {
+    data: seatLayoutData,
+    isLoading: isSeatLayoutLoading,
+    isFetching: isSeatLayoutFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatLayoutQuery,
+    params: { examId, divisionId: division, roomId: activeRoomId, seatingPlanId: selectedPlanId },
+    options: { skip: !examId || !division || !activeRoomId || !selectedPlanId },
+  });
+
+  const {
+    data: planDraftData,
+    isLoading: isPlanDraftLoading,
+    isFetching: isPlanDraftFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatingPlanDraftQuery,
+    params: { examId, seatingPlanId: selectedPlanId },
+    options: { skip: !examId || !selectedPlanId },
+  });
+
+  // ── Combined loading flags for queries (only show skeletons when data is missing) ──
+  const isScopesDataLoading = (isScopesLoading || isScopesFetching) && !scopesData;
+  const isDivisionsDataLoading = (isDivisionsLoading || isDivisionsFetching) && !divisionsData;
+  const isRoomsDataLoading = (isRoomsLoading || isRoomsFetching) && !roomsData;
+  const isStudentsDataLoading = (isStudentsLoading || isStudentsFetching) && !studentsData;
+  const isSeatLayoutDataLoading = (isSeatLayoutLoading || isSeatLayoutFetching) && !seatLayoutData;
+  const isPlanDraftDataLoading = (isPlanDraftLoading || isPlanDraftFetching) && !planDraftData;
+
+  // ── Mutations via useQueryAndMutation (skill § 4.2) ─────────────────────
+  const [saveSeatingPlanScope, { isLoading: isSavingScope }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSaveSeatingPlanScopeMutation,
+  });
+
+  const [saveSeatAllocation, { isLoading: isSavingSeatAllocation }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSaveSeatAllocationMutation,
+  });
+
+  const [saveSeatingPlanDraft, { isLoading: isSavingPlanDraft }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSaveSeatingPlanDraftMutation,
+  });
+
+  const [autoAllocatePreview] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAutoAllocatePreviewMutation,
+  });
+
+  const isSaving = isSavingSeatAllocation || isSavingPlanDraft;
 
   useEffect(() => {
     if (!selectedPlanId && scopesData?.items?.length) {
@@ -180,38 +261,6 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
   const selectedDialogHasOwnedSubject = selectedDialogSubjectIds.some((subjectId: string) =>
     subjectWiseSubjectOwners.has(subjectId)
   );
-
-  const { data: roomsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExamRoomsQuery,
-    params: { examId, divisionId: division, seatingPlanId: selectedPlanId },
-    options: { skip: !examId || !division || !selectedPlanId },
-  });
-
-  const { data: studentsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSeatAllocationStudentsQuery,
-    params: { examId, divisionId: division, seatingPlanId: selectedPlanId },
-    options: { skip: !examId || !division || !selectedPlanId },
-  });
-
-  const { data: seatLayoutData, isFetching: seatLayoutFetching } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSeatLayoutQuery,
-    params: { examId, divisionId: division, roomId: activeRoomId, seatingPlanId: selectedPlanId },
-    options: { skip: !examId || !division || !activeRoomId || !selectedPlanId },
-  });
-
-  const [saveSeatAllocation, { isLoading: isSaving }] = useSaveSeatAllocationMutation();
-  const [saveSeatingPlanDraft, { isLoading: isSavingPlan }] = useSaveSeatingPlanDraftMutation();
-  const [autoAllocatePreview] = useAutoAllocatePreviewMutation();
-
-  const { data: planDraftData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSeatingPlanDraftQuery,
-    params: { examId, seatingPlanId: selectedPlanId },
-    options: { skip: !examId || !selectedPlanId },
-  });
 
   const { draft, setDraft, counters, roomUtilization, actions, canUndo, canRedo } = useSeatingDraft(
     buildEmptyDraft(examId)
@@ -275,8 +324,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     [assignmentBySeat, draft.assignments, actions, selectedPlanIsLocked]
   );
 
-  // Merge server-persisted plan-level state (rules/excluded students) once, on first load,
-  // without clobbering in-progress local edits on every refetch.
+  // Merge server-persisted plan-level state once, on first load
   const [planLoaded, setPlanLoaded] = useState(false);
   useEffect(() => {
     setPlanLoaded(false);
@@ -297,8 +345,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     setPlanLoaded(true);
   }, [planDraftData, planLoaded, selectedScope, setDraft]);
 
-  // Load students into the draft once per division, marking anyone flagged as a special
-  // seating requirement on the persisted plan (re-runs once the plan draft itself arrives).
+  // Load students into draft once per division
   useEffect(() => {
     if (!studentsData?.items) return;
     const specialIds = new Set(planDraftData?.specialRequirementStudentIds ?? []);
@@ -325,9 +372,9 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     [setDraft, selectedPlanIsLocked]
   );
 
-  // Merge the active room's layout + existing assignments into the draft without dropping other rooms.
+  // Merge active room layout + existing assignments into draft
   useEffect(() => {
-    if (!activeRoomId || seatLayoutFetching || !seatLayoutData) return;
+    if (!activeRoomId || isSeatLayoutDataLoading || !seatLayoutData) return;
     const roomMeta = (roomsData?.items || []).find((r: any) => r.id === activeRoomId);
     const layout = toSeatingRoomLayout(
       seatLayoutData,
@@ -345,7 +392,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
       const roomIds = d.roomIds.includes(activeRoomId) ? d.roomIds : [...d.roomIds, activeRoomId];
       return { ...d, rooms, assignments, roomIds };
     });
-  }, [activeRoomId, seatLayoutData, seatLayoutFetching, roomsData, setDraft]);
+  }, [activeRoomId, seatLayoutData, isSeatLayoutDataLoading, roomsData, setDraft]);
 
   const validation = useMemo(() => validateSeatingDraft(draft), [draft]);
   const conflictStudentIds = useMemo(
@@ -390,33 +437,38 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
 
   const handleSaveDraft = useCallback(async () => {
     if (selectedPlanIsLocked) return;
-    await Promise.all(
-      draft.roomIds.map((roomId) =>
-        saveSeatAllocation({
-          examId,
-          body: { ...toSaveSeatingPlanPayload(draft, roomId), seatingPlanId: selectedPlanId },
-        })
-      )
-    );
-    await saveSeatingPlanDraft({
-      examId,
-      body: {
-        seatingPlanId: selectedPlanId,
-        name: selectedScope?.name,
-        scopeType: selectedScope?.scopeType,
-        examSubjectIds:
-          selectedScope?.subjects?.map((subject: SeatingPlanSubject) => subject.examSubjectId) ??
-          [],
-        roomIds: draft.roomIds,
-        allocationRulesJson: JSON.stringify(draft.allocationRules),
-        excludedStudentIds: draft.excludedStudentIds,
-        specialRequirementStudentIds: draft.students
-          .filter((s) => s.hasSpecialRequirement)
-          .map((s) => s.studentId),
-        lastKnownModifiedTime: planDraftData?.lastModifiedTime ?? null,
-      },
-    });
-    setDraft((d) => ({ ...d, isDirty: false }));
+    try {
+      await Promise.all(
+        draft.roomIds.map((roomId) =>
+          saveSeatAllocation({
+            examId,
+            body: { ...toSaveSeatingPlanPayload(draft, roomId), seatingPlanId: selectedPlanId },
+          })
+        )
+      );
+      await saveSeatingPlanDraft({
+        examId,
+        body: {
+          seatingPlanId: selectedPlanId,
+          name: selectedScope?.name,
+          scopeType: selectedScope?.scopeType,
+          examSubjectIds:
+            selectedScope?.subjects?.map((subject: SeatingPlanSubject) => subject.examSubjectId) ??
+            [],
+          roomIds: draft.roomIds,
+          allocationRulesJson: JSON.stringify(draft.allocationRules),
+          excludedStudentIds: draft.excludedStudentIds,
+          specialRequirementStudentIds: draft.students
+            .filter((s) => s.hasSpecialRequirement)
+            .map((s) => s.studentId),
+          lastKnownModifiedTime: planDraftData?.lastModifiedTime ?? null,
+        },
+      });
+      setDraft((d) => ({ ...d, isDirty: false }));
+      shikshaMitraToast.success({ message: 'Seating plan saved successfully.' });
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to save seating plan draft.' });
+    }
   }, [
     draft,
     examId,
@@ -490,8 +542,9 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
         ...proposedAssignments,
       ];
       actions.applyAssignments(next, 'auto-allocate');
+      shikshaMitraToast.success({ message: 'Auto-allocation applied.' });
     } catch {
-      // Backend unavailable — fall back to the client-side adapter so the workspace stays usable.
+      // Fall back to client-side auto allocate
       const result = autoAllocate(
         draft.students,
         draft.rooms,
@@ -500,6 +553,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
         draft.excludedStudentIds
       );
       actions.applyAssignments(result.assignments, 'auto-allocate');
+      shikshaMitraToast.info({ message: 'Applied local auto-allocation proposal.' });
     }
   }, [draft, actions, examId, autoAllocatePreview, selectedPlanId, selectedPlanIsLocked]);
 
@@ -565,31 +619,28 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
       subjectWiseSubjectOwners.has(subjectId)
     );
     if (ownedSubject) {
-      window.alert(
-        'One or more selected subjects already belong to another subject-wise seating plan.'
-      );
+      shikshaMitraToast.error({
+        message: 'One or more selected subjects already belong to another subject-wise plan.',
+      });
       return;
     }
-    if (
-      allSubjectPlanWithAllocations &&
-      !window.confirm(
-        'The all-subject seating plan already has allocations. Create this subject plan separately?'
-      )
-    ) {
-      return;
+    try {
+      const response = await saveSeatingPlanScope({
+        examId,
+        body: {
+          name: scopeName || 'Selected Subject Plan',
+          scopeType: chosenIds.length === subjects.length ? 0 : chosenIds.length === 1 ? 2 : 1,
+          examSubjectIds: chosenIds,
+        },
+      }).unwrap();
+      setSelectedPlanId(response.seatingPlanId);
+      setScopeDialogOpen(false);
+      setScopeName('');
+      setScopeSubjectIds([]);
+      shikshaMitraToast.success({ message: 'Seating plan scope created.' });
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to create seating plan scope.' });
     }
-    const response = await saveSeatingPlanScope({
-      examId,
-      body: {
-        name: scopeName || 'Selected Subject Plan',
-        scopeType: chosenIds.length === subjects.length ? 0 : chosenIds.length === 1 ? 2 : 1,
-        examSubjectIds: chosenIds,
-      },
-    }).unwrap();
-    setSelectedPlanId(response.seatingPlanId);
-    setScopeDialogOpen(false);
-    setScopeName('');
-    setScopeSubjectIds([]);
   };
 
   const handleCreateIndividualScopes = async () => {
@@ -604,28 +655,25 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
       if (firstExisting?.seatingPlanId) setSelectedPlanId(firstExisting.seatingPlanId);
       return;
     }
-    if (
-      allSubjectPlanWithAllocations &&
-      !window.confirm(
-        'The all-subject seating plan already has allocations. Create individual subject plans separately?'
-      )
-    ) {
-      return;
-    }
 
-    const created = await Promise.all(
-      missingSubjects.map((subject: SeatingPlanSubject) =>
-        saveSeatingPlanScope({
-          examId,
-          body: {
-            name: subject.subjectName,
-            scopeType: 2,
-            examSubjectIds: [subject.examSubjectId],
-          },
-        }).unwrap()
-      )
-    );
-    if (created[0]?.seatingPlanId) setSelectedPlanId(created[0].seatingPlanId);
+    try {
+      const created = await Promise.all(
+        missingSubjects.map((subject: SeatingPlanSubject) =>
+          saveSeatingPlanScope({
+            examId,
+            body: {
+              name: subject.subjectName,
+              scopeType: 2,
+              examSubjectIds: [subject.examSubjectId],
+            },
+          }).unwrap()
+        )
+      );
+      if (created[0]?.seatingPlanId) setSelectedPlanId(created[0].seatingPlanId);
+      shikshaMitraToast.success({ message: 'Subject-wise plans created successfully.' });
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to create subject-wise plans.' });
+    }
   };
 
   return (
@@ -636,7 +684,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
           examTypeName={draft.examTypeName}
           standardName={draft.standardName}
           isDirty={draft.isDirty}
-          isSaving={isSaving || isSavingPlan}
+          isSaving={isSaving}
           canAutoAllocate={!!activeRoom && canAutoAllocate && !selectedPlanIsLocked}
           canFinalize={counters.pendingCount === 0 && validation.blockers.length === 0}
           isReadOnly={selectedPlanIsLocked}
@@ -670,16 +718,20 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
           canRedo={canRedo && !selectedPlanIsLocked}
         />
 
-        <AllocationProgressSummary
-          totalStudents={counters.totalStudents}
-          allocatedCount={counters.allocatedCount}
-          pendingCount={counters.pendingCount}
-          emptySeats={emptySeats}
-          roomsUsed={draft.rooms.length}
-          utilization={overallUtilization}
-          conflicts={validation.blockers.length}
-          progress={counters.allocationProgress}
-        />
+        {isPlanDraftDataLoading || isScopesDataLoading ? (
+          <Skeleton variant="rounded" height={60} sx={{ mx: 2, mt: 1, borderRadius: 1 }} />
+        ) : (
+          <AllocationProgressSummary
+            totalStudents={counters.totalStudents}
+            allocatedCount={counters.allocatedCount}
+            pendingCount={counters.pendingCount}
+            emptySeats={emptySeats}
+            roomsUsed={draft.rooms.length}
+            utilization={overallUtilization}
+            conflicts={validation.blockers.length}
+            progress={counters.allocationProgress}
+          />
+        )}
 
         <Paper sx={{ mx: 2, mt: 1, p: 1, boxShadow: 'var(--shadows-2)' }}>
           <Stack
@@ -688,6 +740,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             alignItems={{ xs: 'stretch', md: 'center' }}
             flexWrap="wrap"
           >
+            {/* Seating Plan Select with built-in skeleton */}
             <CustomSelect
               options={scopesData?.items || []}
               label="Seating Plan"
@@ -695,8 +748,10 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
               onChange={(val) => setSelectedPlanId(val as string)}
               labelKey="name"
               valueKey="seatingPlanId"
+              isLoading={isScopesDataLoading}
               formControlProps={{ sx: { minWidth: 200 } }}
             />
+            {/* Division Select with built-in skeleton */}
             <CustomSelect
               options={divisionsData?.items || []}
               label="Division"
@@ -707,8 +762,10 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
               }}
               labelKey="name"
               valueKey="id"
+              isLoading={isDivisionsDataLoading}
               formControlProps={{ sx: { minWidth: 160 } }}
             />
+            {/* Room Select with built-in skeleton */}
             <CustomSelect
               options={roomsData?.items || []}
               label="Room"
@@ -716,8 +773,9 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
               onChange={(val) => val && setActiveRoomId(val as string)}
               labelKey="roomName"
               valueKey="id"
+              isLoading={isRoomsDataLoading}
               formControlProps={{ sx: { minWidth: 160 } }}
-              disabled={!division}
+              disabled={!division || isRoomsDataLoading}
             />
             <Box sx={{ flex: 1, minWidth: 150 }}>
               <Typography variant="body2" color="text.secondary">
@@ -734,14 +792,14 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             >
               Selected Subjects
             </Button>
-            <Button
+            <SubmitButton
               variant="outlined"
-              size="small"
+              buttonText="Subject Wise"
+              loading={isSavingScope}
               onClick={handleCreateIndividualScopes}
               disabled={isSavingScope || selectedPlanIsLocked}
-            >
-              Subject Wise
-            </Button>
+              type="button"
+            />
           </Stack>
           {(selectedPlanIsLocked ||
             selectedPlanHasAllocations ||
@@ -781,6 +839,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
         )}
 
         <Grid container spacing={1} sx={{ flex: 1, minHeight: 0, p: 1 }}>
+          {/* Left Panel: Student Queue */}
           <Grid size={2.75} sx={{ height: '100%' }}>
             <Paper elevation={2} sx={{ p: 1, height: '100%' }}>
               <StudentQueuePanel
@@ -788,6 +847,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
                 assignments={draft.assignments}
                 conflictStudentIds={conflictStudentIds}
                 multiSelectedIds={multiSelectedIds}
+                isLoading={isStudentsDataLoading}
                 onToggleMultiSelect={(id) =>
                   setMultiSelectedIds((prev) => {
                     if (selectedPlanIsLocked) return prev;
@@ -810,9 +870,29 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             </Paper>
           </Grid>
 
+          {/* Center Panel: Seat Layout Canvas */}
           <Grid size={7} sx={{ height: '100%' }}>
             <Paper elevation={2} sx={{ p: 1, height: '100%' }}>
-              {!activeRoom ? (
+              {isSeatLayoutDataLoading ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1.5,
+                    p: 2,
+                    height: '100%',
+                  }}
+                >
+                  <Skeleton variant="rounded" height={36} />
+                  <Grid container spacing={1.5} sx={{ flex: 1 }}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                      <Grid key={i} size={{ xs: 6, sm: 4, md: 3 }}>
+                        <Skeleton variant="rounded" height={72} />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              ) : !activeRoom ? (
                 <Box
                   sx={{
                     display: 'flex',
@@ -840,6 +920,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             </Paper>
           </Grid>
 
+          {/* Right Panel: Seat Inspector / Rules */}
           <Grid size={2.25} sx={{ height: '100%' }}>
             <Paper elevation={2} sx={{ height: '100%' }}>
               <SeatInspectorPanel
@@ -872,6 +953,8 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
           onApply={applyAutoAllocate}
           onCancelPreview={() => { }}
         />
+
+        {/* Scope Creation Dialog */}
         {scopeDialogOpen && (
           <Formik
             initialValues={{ planName: scopeName, subjectIds: scopeSubjectIds }}
@@ -895,18 +978,9 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
                 subjectWiseSubjectOwners.has(subjectId)
               );
               if (ownedSubject) {
-                window.alert(
-                  'One or more selected subjects already belong to another subject-wise seating plan.'
-                );
-                setSubmitting(false);
-                return;
-              }
-              if (
-                allSubjectPlanWithAllocations &&
-                !window.confirm(
-                  'The all-subject seating plan already has allocations. Create this subject plan separately?'
-                )
-              ) {
+                shikshaMitraToast.error({
+                  message: 'One or more selected subjects already belong to another subject-wise plan.',
+                });
                 setSubmitting(false);
                 return;
               }
@@ -923,8 +997,9 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
                 setScopeDialogOpen(false);
                 setScopeName('');
                 setScopeSubjectIds([]);
-              } catch (err) {
-                console.error(err);
+                shikshaMitraToast.success({ message: 'Seating plan scope created.' });
+              } catch {
+                shikshaMitraToast.error({ message: 'Failed to create seating plan scope.' });
               } finally {
                 setSubmitting(false);
               }
@@ -992,8 +1067,6 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
                       <Grid container spacing={1}>
                         {(scopesData?.availableSubjects || []).map((subject: any) => {
                           const owner = subjectWiseSubjectOwners.get(subject.examSubjectId);
-                          // Only append the owning plan's name when it differs from the subject
-                          // name; otherwise it reads "Science (Science)".
                           const label =
                             owner && owner.name !== subject.subjectName
                               ? `${subject.subjectName} (${owner.name})`
@@ -1040,3 +1113,4 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     </DndContext>
   );
 }
+

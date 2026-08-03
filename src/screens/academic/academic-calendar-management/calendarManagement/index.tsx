@@ -33,6 +33,7 @@ import {
 import CalendarYearView from './components/CalendarYearView';
 import CalendarMonthView from './components/CalendarMonthView';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
+import { Label } from 'src/components/label';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -182,7 +183,7 @@ const CalendarManagement = () => {
     permissions,
     `${academicPermissions.academicCalendar.management}.Edit`
   );
-
+  console.log("canPublish----", canPublish);
   // Dialog states
   const addDayDialog = useBoolean(false);
   const createCalendarDialog = useBoolean(false);
@@ -444,17 +445,67 @@ const CalendarManagement = () => {
                   <Typography variant="caption" color="text.secondary" fontWeight={500}>
                     Selected Calendar
                   </Typography>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    {selectedCalendar.name}
-                  </Typography>
+                  <Box display="flex" gap={1} alignItems="center">
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      {selectedCalendar.name}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        px: 1.25,
+                        py: 0.4,
+                        borderRadius: 2,
+                        backgroundColor: alpha(theme.palette.success.main, 0.1),
+                        border: `1px solid ${alpha(theme.palette.success.main, 0.25)}`,
+                      }}
+                    >
+                      <Iconify icon="mdi:briefcase-check-outline" width={13} color="success.main" />
+                      <Typography variant="caption" fontWeight={700} color="success.main">
+                        {calendarSummary.totalWorkingDays}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Working Days
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        px: 1.25,
+                        py: 0.4,
+                        borderRadius: 2,
+                        backgroundColor: alpha(theme.palette.error.main, 0.1),
+                        border: `1px solid ${alpha(theme.palette.error.main, 0.25)}`,
+                      }}
+                    >
+                      <Iconify icon="mdi:flag-outline" width={13} color="error.main" />
+                      <Typography variant="caption" fontWeight={700} color="error.main">
+                        {calendarSummary.totalHolidays}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Holidays
+                      </Typography>
+                    </Box>
+                  </Box>
                   <Stack direction="row" alignItems="center" gap={1}>
                     <Iconify icon="mdi:calendar-range-outline" width={15} color="text.secondary" />
                     <Typography variant="caption" color="text.secondary" fontWeight={500}>
                       {dayjs(calendarStartDate).format('DD MMM YYYY')} –{' '}
                       {dayjs(calendarEndDate).format('DD MMM YYYY')}
                     </Typography>
+                    <Label
+                      variant="soft"
+                      color={selectedCalendar?.status === CalendarStatus.Draft ? 'info' : 'success'}
+                    >
+                      {CalendarStatus[selectedCalendar?.status]}
+                    </Label>
                   </Stack>
+
                 </Stack>
+
               </Stack>
             ) : (
               <Stack direction="row" alignItems="center" gap={1}>
@@ -475,64 +526,16 @@ const CalendarManagement = () => {
               </Stack>
             )}
 
-            {/* Stats */}
-            {selectedCalendar && (
-              <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    px: 1.25,
-                    py: 0.4,
-                    borderRadius: 2,
-                    backgroundColor: alpha(theme.palette.success.main, 0.1),
-                    border: `1px solid ${alpha(theme.palette.success.main, 0.25)}`,
-                  }}
-                >
-                  <Iconify icon="mdi:briefcase-check-outline" width={13} color="success.main" />
-                  <Typography variant="caption" fontWeight={700} color="success.main">
-                    {calendarSummary.totalWorkingDays}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Working Days
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    px: 1.25,
-                    py: 0.4,
-                    borderRadius: 2,
-                    backgroundColor: alpha(theme.palette.error.main, 0.1),
-                    border: `1px solid ${alpha(theme.palette.error.main, 0.25)}`,
-                  }}
-                >
-                  <Iconify icon="mdi:flag-outline" width={13} color="error.main" />
-                  <Typography variant="caption" fontWeight={700} color="error.main">
-                    {calendarSummary.totalHolidays}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Holidays
-                  </Typography>
-                </Box>
-              </Stack>
-            )}
-
             {/* Actions */}
             {selectedCalendar && canPublish && (
               <Stack direction="row" gap={1} ml="auto">
-                {selectedCalendar.status === CalendarStatus.Draft && (
+                {selectedCalendar?.status === CalendarStatus.Draft && (
                   <LoadingButton
                     size="small"
                     variant="contained"
-                    color="success"
                     loading={publishing}
                     startIcon={<Iconify icon="mdi:publish" width={16} />}
                     onClick={() => handlePublish(selectedCalendar)}
-                    sx={{ borderRadius: 2 }}
                   >
                     Publish
                   </LoadingButton>

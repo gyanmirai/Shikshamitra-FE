@@ -4,12 +4,11 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { useGetStudentsByDivisionQuery } from 'src/redux/student';
+import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Stack, Typography } from '@mui/material';
+import { Box, Card, Stack } from '@mui/material';
 
 import { matchesAcademicFilter, normalizeAcademicStudent } from './listUtils';
 
@@ -28,30 +27,30 @@ const readStudents = (payload: unknown): Academic360StudentRow[] => {
   return list.items || [];
 };
 
+const ALL_OPTION_ID = 'ALL';
+
 const StudentAcademic360Screen = () => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [selectedClass, setSelectedClass] = useState('');
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const [selectedDivision, setSelectedDivision] = useState('');
+  const [selectedClass, setSelectedClass] = useState(ALL_OPTION_ID);
+  const [selectedDivision, setSelectedDivision] = useState(ALL_OPTION_ID);
+  const [students, setStudents] = useState<Academic360StudentRow[]>([]);
+  const [isStudentsLoading, setIsStudentsLoading] = useState(false);
+  const [isStudentsError, setIsStudentsError] = useState(false);
   const [activeFilter, setActiveFilter] = useState<AcademicSmartFilter>('all');
   const [selectedStudent, setSelectedStudent] = useState<Academic360StudentRow | null>(null);
   const lastFocusedStudentId = useRef('');
+
+  const [getStudentsByDivision] = useLazyGetStudentsByDivisionQuery();
 
   useEffect(() => {
     const classes =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(classes);
-    setSelectedClass(classes[0]?.id || '');
+    setSelectedClass(ALL_OPTION_ID);
+    setSelectedDivision(ALL_OPTION_ID);
   }, [medium]);
-
-  useEffect(() => {
-    const divisions = allClass.find((standard) => standard.id === selectedClass)?.divisions || [];
-
-    setAllDivision(divisions);
-    setSelectedDivision(divisions[0]?.id || '');
-  }, [allClass, selectedClass]);
 
   useEffect(() => {
     if (selectedStudent || !lastFocusedStudentId.current) return;
@@ -60,22 +59,89 @@ const StudentAcademic360Screen = () => {
     window.requestAnimationFrame(() => document.querySelector<HTMLElement>(selector)?.focus());
   }, [selectedStudent]);
 
-  const {
-    data: studentsData,
-    isError: isStudentsError,
-    isFetching: isStudentsLoading,
-    refetch: refetchStudents,
-  } = useGetStudentsByDivisionQuery(
-    {
-      divisionId: selectedDivision,
-      skipCount: 0,
-      maxResultCount: 100,
-      searchTerm: '',
-    },
-    { skip: !selectedDivision }
-  );
+  const classOptions = [
+    { id: ALL_OPTION_ID, name: 'All Classes' },
+    ...allClass,
+  ];
 
-  const students = readStudents(studentsData);
+  const currentClassObj = allClass.find((standard) => standard.id === selectedClass);
+  const availableDivisions = selectedClass === ALL_OPTION_ID ? [] : currentClassObj?.divisions || [];
+
+  const divisionOptions = [
+    { id: ALL_OPTION_ID, name: 'All Divisions' },
+    ...availableDivisions,
+  ];
+
+  const handleClassChange = (newClass: string) => {
+    setSelectedClass(newClass);
+    setSelectedDivision(ALL_OPTION_ID);
+  };
+
+  const fetchStudentRecords = useCallback(async () => {
+    let targetDivisionIds: string[] = [];
+
+    if (selectedClass === ALL_OPTION_ID || !selectedClass) {
+      targetDivisionIds = allClass
+        .flatMap((standard) => standard.divisions || [])
+        .map((d) => d.id)
+        .filter(Boolean);
+    } else if (selectedDivision === ALL_OPTION_ID || !selectedDivision) {
+      targetDivisionIds = (currentClassObj?.divisions || [])
+        .map((d) => d.id)
+        .filter(Boolean);
+    } else {
+      targetDivisionIds = [selectedDivision];
+    }
+
+    if (targetDivisionIds.length === 0) {
+      setStudents([]);
+      setIsStudentsLoading(false);
+      setIsStudentsError(false);
+      return;
+    }
+
+    setIsStudentsLoading(true);
+    setIsStudentsError(false);
+
+    try {
+      const responses = await Promise.all(
+        targetDivisionIds.map((divId) =>
+          getStudentsByDivision({
+            divisionId: divId,
+            skipCount: 0,
+            maxResultCount: 200,
+            searchTerm: '',
+          }).unwrap()
+        )
+      );
+
+      const combined: Academic360StudentRow[] = [];
+      const seenIds = new Set<string>();
+
+      responses.forEach((res) => {
+        const items = readStudents(res);
+        items.forEach((item) => {
+          const uniqueId = item.studentId || item.id || `${item.grNo}-${item.rollNo}-${item.studentName}`;
+          if (uniqueId && !seenIds.has(uniqueId)) {
+            seenIds.add(uniqueId);
+            combined.push(item);
+          }
+        });
+      });
+
+      setStudents(combined);
+    } catch (err) {
+      console.error('Failed to load 360 students:', err);
+      setIsStudentsError(true);
+    } finally {
+      setIsStudentsLoading(false);
+    }
+  }, [allClass, currentClassObj, selectedClass, selectedDivision, getStudentsByDivision]);
+
+  useEffect(() => {
+    fetchStudentRecords();
+  }, [fetchStudentRecords]);
+
   const academicItems = students.map(normalizeAcademicStudent);
   const searchedItems = academicItems;
   const filteredItems = searchedItems.filter((item) => matchesAcademicFilter(item, activeFilter));
@@ -107,22 +173,22 @@ const StudentAcademic360Screen = () => {
       <Card sx={{ p: 1, mb: 1 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
           <CustomSelect
-            options={allClass}
+            options={classOptions}
             label="Class"
             value={selectedClass}
-            onChange={(value) => setSelectedClass(value as string)}
+            onChange={(value) => handleClassChange(value as string)}
             labelKey="name"
             valueKey="id"
             formControlProps={{ sx: { minWidth: { md: 240 } } }}
           />
           <CustomSelect
-            options={allDivision}
+            options={divisionOptions}
             label="Division"
             value={selectedDivision}
             onChange={(value) => setSelectedDivision(value as string)}
             labelKey="name"
             valueKey="id"
-            disabled={!selectedClass}
+            disabled={selectedClass !== ALL_OPTION_ID && availableDivisions.length === 0}
             formControlProps={{ sx: { minWidth: { md: 220 } } }}
           />
         </Stack>
@@ -139,10 +205,10 @@ const StudentAcademic360Screen = () => {
         students={filteredStudents}
         isLoading={isStudentsLoading}
         isError={isStudentsError}
-        hasDivision={!!selectedDivision}
+        hasDivision={true}
         activeFilterLabel={activeFilterLabel}
         onOpenStudent={openStudent}
-        onRetry={refetchStudents}
+        onRetry={fetchStudentRecords}
       />
 
       <StudentAcademic360Drawer

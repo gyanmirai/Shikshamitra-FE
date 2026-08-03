@@ -26,6 +26,7 @@ interface Props {
   onBulkAllocateSequential: (studentIds: string[]) => void;
   onBulkExclude: (studentIds: string[]) => void;
   isReadOnly?: boolean;
+  isLoading?: boolean;
 }
 
 export default function StudentQueuePanel({
@@ -37,6 +38,7 @@ export default function StudentQueuePanel({
   onBulkAllocateSequential,
   onBulkExclude,
   isReadOnly,
+  isLoading = false,
 }: Props) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('roll-number');
@@ -140,22 +142,53 @@ export default function StudentQueuePanel({
 
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pr: 0.5 }}>
-          {sorted.length === 0 && (
+          {isLoading ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    p: 1,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      bgcolor: 'action.hover',
+                    }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ width: '70%', height: 12, bgcolor: 'action.hover', borderRadius: 0.5, mb: 0.5 }} />
+                    <Box sx={{ width: '40%', height: 10, bgcolor: 'action.hover', borderRadius: 0.5 }} />
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          ) : sorted.length === 0 ? (
             <Typography variant="body2" color="text.disabled" textAlign="center" py={4}>
               No students in this view
             </Typography>
+          ) : (
+            sorted.map((student) => (
+              <StudentCard
+                key={student.studentId}
+                student={student}
+                assignment={assignments.find((a) => a.studentId === student.studentId)}
+                isMultiSelected={multiSelectedIds.has(student.studentId)}
+                showCheckbox={!isReadOnly}
+                onToggleMultiSelect={onToggleMultiSelect}
+                isReadOnly={isReadOnly}
+              />
+            ))
           )}
-          {sorted.map((student) => (
-            <StudentCard
-              key={student.studentId}
-              student={student}
-              assignment={assignments.find((a) => a.studentId === student.studentId)}
-              isMultiSelected={multiSelectedIds.has(student.studentId)}
-              showCheckbox={!isReadOnly}
-              onToggleMultiSelect={onToggleMultiSelect}
-              isReadOnly={isReadOnly}
-            />
-          ))}
         </Box>
       </Scrollbar>
     </Box>

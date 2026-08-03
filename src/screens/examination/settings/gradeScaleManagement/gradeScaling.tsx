@@ -222,8 +222,8 @@ const GradingScale = () => {
         tableId="gradesTable"
         isLoading={isLoading || isFetching}
         noDataText={
-          <>
-            No Grade Scaling Data Found{' '}
+          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={1}>
+            No Grade Scaling Data Found
             {canAdd && (
               <Box
                 component="span"
@@ -238,7 +238,7 @@ const GradingScale = () => {
                 Add Grade Scale
               </Box>
             )}
-          </>
+          </Box>
         }
         columns={[
           {

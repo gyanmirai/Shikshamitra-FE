@@ -1,13 +1,7 @@
-import {
-  Table,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  Typography,
-  LinearProgress,
-  TableContainer,
-} from '@mui/material';
+import { useMemo } from 'react';
+import { Box, Typography, LinearProgress } from '@mui/material';
+import { Label } from 'src/components/label';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 interface RoomRow {
   roomId: string;
@@ -18,43 +12,75 @@ interface RoomRow {
   utilization: number;
 }
 
-export default function RoomAllocationSummary({ rooms }: { rooms: RoomRow[] }) {
+interface Props {
+  rooms: RoomRow[];
+  isLoading?: boolean;
+}
+
+export default function RoomAllocationSummary({ rooms, isLoading = false }: Props) {
+  const columns = useMemo(
+    () => [
+      { id: 'roomName', label: 'Room', sticky: true, minWidth: 130 },
+      { id: 'occupied', label: 'Students', filterType: 'number' as const },
+      { id: 'usable', label: 'Usable Capacity', filterType: 'number' as const },
+      { id: 'empty', label: 'Empty Seats', filterType: 'number' as const },
+      {
+        id: 'utilization',
+        label: 'Utilization',
+        isFilter: false,
+        isSort: false,
+        minWidth: 140,
+        render: (v: number) => (
+          <Box>
+            <LinearProgress
+              variant="determinate"
+              value={Math.min(v, 100)}
+              color={v > 100 ? 'error' : v < 40 ? 'warning' : 'success'}
+              sx={{ height: 5, borderRadius: 3, mb: 0.25 }}
+            />
+            <Typography variant="caption">{v}%</Typography>
+          </Box>
+        ),
+      },
+      {
+        id: 'statusLabel',
+        label: 'Status',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        stickyPosition: 'right' as const,
+        minWidth: 110,
+        render: (v: string) => (
+          <Label color={v === 'Over capacity' ? 'error' : v === 'Underused' ? 'warning' : 'success'}>
+            {v}
+          </Label>
+        ),
+      },
+    ],
+    []
+  );
+
+  const data = useMemo(
+    () =>
+      rooms.map((room) => ({
+        ...room,
+        statusLabel:
+          room.occupied > room.usable
+            ? 'Over capacity'
+            : room.utilization < 40
+              ? 'Underused'
+              : 'OK',
+      })),
+    [rooms]
+  );
+
   return (
-    <TableContainer>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Room</TableCell>
-            <TableCell>Students</TableCell>
-            <TableCell>Usable Capacity</TableCell>
-            <TableCell>Empty Seats</TableCell>
-            <TableCell>Utilization</TableCell>
-            <TableCell>Status</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rooms.map((room) => (
-            <TableRow key={room.roomId}>
-              <TableCell>{room.roomName}</TableCell>
-              <TableCell>{room.occupied}</TableCell>
-              <TableCell>{room.usable}</TableCell>
-              <TableCell>{room.empty}</TableCell>
-              <TableCell sx={{ minWidth: 140 }}>
-                <LinearProgress
-                  variant="determinate"
-                  value={room.utilization}
-                  color={room.utilization > 100 ? 'error' : room.utilization < 40 ? 'warning' : 'success'}
-                  sx={{ height: 5, borderRadius: 3, mb: 0.25 }}
-                />
-                <Typography variant="caption">{room.utilization}%</Typography>
-              </TableCell>
-              <TableCell>
-                {room.occupied > room.usable ? 'Over capacity' : room.utilization < 40 ? 'Underused' : 'OK'}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <CustomizableTable
+      tableId="room-allocation-summary"
+      isLoading={isLoading}
+      noDataText="No rooms assigned to this seating plan."
+      columns={columns}
+      data={data}
+    />
   );
 }

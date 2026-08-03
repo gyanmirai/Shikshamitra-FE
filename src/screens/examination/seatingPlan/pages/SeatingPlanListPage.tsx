@@ -14,7 +14,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Paper, Drawer, IconButton, Typography } from '@mui/material';
 import { useGetSeatAllocationTableDataQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
-import SeatingReviewPage from './SeatingReviewPage';
+import AllocationReviewDialog from '../components/review/AllocationReviewDialog';
 import { toSeatingPlanListRow } from '../utils/mappers';
 import SeatingAllocationPage from './SeatingAllocationPage';
 import SeatingPlanTable from '../components/list/SeatingPlanTable';
@@ -29,6 +29,7 @@ type WorkspaceDrawerState = {
   divisionId?: string;
   roomIds?: string[];
   seatingPlanId?: string;
+  standardId?: string;
 } | null;
 
 const SUMMARY_FILTER_PREDICATES: Record<string, (row: SeatingPlanListRow) => boolean> = {
@@ -166,7 +167,7 @@ export default function SeatingPlanListPage() {
             >
               <Box>
                 <Typography variant="subtitle1" fontWeight={700}>
-                  {workspaceDrawer.mode === 'review' ? 'Review Seating Plan' : 'Create Seating Plan'}
+                  Create Seating Plan
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {workspaceDrawer.row.examName} / {workspaceDrawer.row.standardName}
@@ -178,42 +179,49 @@ export default function SeatingPlanListPage() {
             </Box>
 
             <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-              {workspaceDrawer.mode === 'review' ? (
-                <SeatingReviewPage
-                  examId={workspaceDrawer.row.examId}
-                  standardId={classes}
-                  divisionId={workspaceDrawer.divisionId}
-                  roomIds={workspaceDrawer.roomIds}
-                  seatingPlanId={workspaceDrawer.seatingPlanId}
-                  onBackToAllocation={() =>
-                    setWorkspaceDrawer((current) =>
-                      current ? { ...current, mode: 'allocation' } : current
-                    )
-                  }
-                />
-              ) : (
-                <SeatingAllocationPage
-                  examId={workspaceDrawer.row.examId}
-                  onClose={closePlanWorkspace}
-                  onOpenReview={(context) =>
-                    setWorkspaceDrawer((current) =>
-                      current
-                        ? {
-                          ...current,
-                          mode: 'review',
-                          divisionId: context.divisionId,
-                          roomIds: context.roomIds,
-                          seatingPlanId: context.seatingPlanId,
-                        }
-                        : current
-                    )
-                  }
-                />
-              )}
+              <SeatingAllocationPage
+                examId={workspaceDrawer.row.examId}
+                onClose={closePlanWorkspace}
+                onOpenReview={(context) =>
+                  setWorkspaceDrawer((current) =>
+                    current
+                      ? {
+                        ...current,
+                        mode: 'review',
+                        divisionId: context.divisionId,
+                        roomIds: context.roomIds,
+                        seatingPlanId: context.seatingPlanId,
+                      }
+                      : current
+                  )
+                }
+              />
             </Box>
           </Box>
         )}
       </Drawer>
+
+      {/* Allocation review dialog — opens on top of the allocation workspace drawer */}
+      {workspaceDrawer && (
+        <AllocationReviewDialog
+          open={workspaceDrawer.mode === 'review'}
+          onClose={() =>
+            setWorkspaceDrawer((current) =>
+              current ? { ...current, mode: 'allocation' } : current
+            )
+          }
+          examId={workspaceDrawer.row.examId}
+          standardId={workspaceDrawer.standardId ?? classes}
+          divisionId={workspaceDrawer.divisionId}
+          roomIds={workspaceDrawer.roomIds}
+          seatingPlanId={workspaceDrawer.seatingPlanId}
+          onBackToAllocation={() =>
+            setWorkspaceDrawer((current) =>
+              current ? { ...current, mode: 'allocation' } : current
+            )
+          }
+        />
+      )}
     </Box>
   );
 }

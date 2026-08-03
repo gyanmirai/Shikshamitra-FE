@@ -1,23 +1,27 @@
 'use client';
 
-import type { RootState , AppDispatch } from 'src/redux/store';
+import type { RootState, AppDispatch } from 'src/redux/store';
 
-import { toast } from 'sonner';
 import { useMemo, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { shikshaMitraToast } from 'src/components/toast';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
+import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Button, Tooltip, Checkbox, Typography, FormControlLabel } from '@mui/material';
+import { Box, Skeleton, Stack, Typography } from '@mui/material';
 import {
   seatAllocationApi,
   useGetExamRoomsQuery,
   useGetExamDivisionsQuery,
   useGetSeatingPlanDraftQuery,
-  usePublishSeatingPlanMutation,
   useFinalizeSeatingPlanMutation,
+  usePublishSeatingPlanMutation,
   useGetSeatAllocationStudentsQuery,
   useLazyDownloadSeatingPrintPdfQuery,
   useLazyDownloadSeatingPrintExcelQuery,
@@ -40,9 +44,14 @@ interface Props {
   onBackToAllocation?: () => void;
 }
 
-// Mirrors backend SeatingPlanStatus enum order (NotStarted=0 … Published=5); the API does not
-// serialize enums as strings, so the numeric value has to be compared directly here.
-const SEATING_PLAN_STATUS_PUBLISHED = 5;
+function triggerBlobDownload(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function SeatingReviewPage({
   examId,
@@ -56,18 +65,17 @@ export default function SeatingReviewPage({
   const { permissions } = useSelector((state: RootState) => state.auth);
   const seatAllocationBase = academicPermissions.examination.seatAllocation;
   const canFinalize = hasGrantedPermission(permissions, `${seatAllocationBase}.Finalize`);
-  const canPublish = hasGrantedPermission(permissions, `${seatAllocationBase}.Publish`);
   const canPrint = hasGrantedPermission(permissions, `${seatAllocationBase}.Print`);
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const searchDivisionId = searchParams.get('divisionId') || '';
   const searchRoomIdsParam = searchParams.get('roomIds') || '';
   const seatingPlanId = drawerSeatingPlanId || searchParams.get('seatingPlanId') || '';
+
   /**
    * Memoization Justification:
    * - Parses the URL room ids once per query string change.
    * - Prevents a fresh array from invalidating review-loading dependencies on every render.
-   * - Needed because the review page can run either as a route or inside the list drawer.
    */
   const searchRoomIds = useMemo(
     () => searchRoomIdsParam.split(',').filter(Boolean),
@@ -77,19 +85,45 @@ export default function SeatingReviewPage({
   const [rooms, setRooms] = useState<SeatingRoomLayout[]>([]);
   const [assignments, setAssignments] = useState<SeatingAssignment[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [finalizeSeatingPlan, { isLoading: isFinalizing }] = useFinalizeSeatingPlanMutation();
-  const [publishSeatingPlan, { isLoading: isPublishing }] = usePublishSeatingPlanMutation();
-  const [downloadPdf, { isFetching: isDownloadingPdf }] = useLazyDownloadSeatingPrintPdfQuery();
-  const [downloadExcel, { isFetching: isDownloadingExcel }] = useLazyDownloadSeatingPrintExcelQuery();
 
-  const { data: planDraftData } = useQueryAndMutation({
+  // ── Mutations via useQueryAndMutation (skill § 4.2) ───────────────────
+  const [finalizeSeatingPlan, { isLoading: isFinalizing }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useFinalizeSeatingPlanMutation,
+  });
+
+  const [publishSeatingPlan, { isLoading: isPublishing }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePublishSeatingPlanMutation,
+  });
+
+  const [downloadPdf, { isFetching: isDownloadingPdf }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyDownloadSeatingPrintPdfQuery,
+  });
+
+  const [downloadExcel, { isFetching: isDownloadingExcel }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyDownloadSeatingPrintExcelQuery,
+  });
+
+  // ── Queries via useQueryAndMutation (skill § 4.1) ─────────────────────
+  const {
+    data: planDraftData,
+    isLoading: isPlanLoading,
+    isFetching: isPlanFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSeatingPlanDraftQuery,
     params: { examId, seatingPlanId },
     options: { skip: !examId },
   });
 
-  const { data: divisionsData } = useQueryAndMutation({
+  const {
+    data: divisionsData,
+    isLoading: isDivisionsLoading,
+    isFetching: isDivisionsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamDivisionsQuery,
     params: { examId, standardId },
@@ -97,27 +131,40 @@ export default function SeatingReviewPage({
   });
 
   const divisionId = drawerDivisionId || searchDivisionId || divisionsData?.items?.[0]?.id || '';
+
+  // Combined loading flags (skill § 4.4) — isLoading || isFetching always
+  const isPlanDataLoading = isPlanLoading || isPlanFetching;
+  const isDivisionsDataLoading = isDivisionsLoading || isDivisionsFetching;
+
   /**
    * Memoization Justification:
    * - Keeps the effective room id array stable for review data loading hooks.
-   * - Prevents the downstream review draft memo/effect dependencies from changing on every render.
-   * - The value may come from drawer props, URL params, or fetched draft context.
    */
-  const triggerBlobDownload = (blob: Blob, fileName: string) => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const { data: roomsData } = useQueryAndMutation({
+  const {
+    data: roomsData,
+    isLoading: isRoomsLoading,
+    isFetching: isRoomsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamRoomsQuery,
     params: { examId, divisionId, seatingPlanId },
     options: { skip: !examId || !divisionId },
   });
+
+  const {
+    data: studentsData,
+    isLoading: isStudentsLoading,
+    isFetching: isStudentsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatAllocationStudentsQuery,
+    params: { examId, divisionId, seatingPlanId },
+    options: { skip: !examId || !divisionId },
+  });
+
+  const isRoomsDataLoading = isRoomsLoading || isRoomsFetching;
+  const isStudentsDataLoading = isStudentsLoading || isStudentsFetching;
+  const isLayoutLoading = !loaded || isRoomsDataLoading || isDivisionsDataLoading;
 
   /**
    * Memoization Justification:
@@ -137,13 +184,6 @@ export default function SeatingReviewPage({
     [drawerRoomIds, searchRoomIds, planDraftData?.roomIds, roomsData]
   );
 
-  const { data: studentsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSeatAllocationStudentsQuery,
-    params: { examId, divisionId, seatingPlanId },
-    options: { skip: !examId || !divisionId },
-  });
-
   useEffect(() => {
     setLoaded(false);
     if (!examId || !divisionId || roomIds.length === 0 || !roomsData?.items) return;
@@ -152,7 +192,14 @@ export default function SeatingReviewPage({
     (async () => {
       const results = await Promise.all(
         roomIds.map((roomId: string) =>
-          dispatch(seatAllocationApi.endpoints.getSeatLayout.initiate({ examId, divisionId, roomId, seatingPlanId })).unwrap()
+          dispatch(
+            seatAllocationApi.endpoints.getSeatLayout.initiate({
+              examId,
+              divisionId,
+              roomId,
+              seatingPlanId,
+            })
+          ).unwrap()
         )
       );
       if (cancelled) return;
@@ -223,7 +270,57 @@ export default function SeatingReviewPage({
   const assignedIds = useMemo(() => new Set(assignments.map((a) => a.studentId)), [assignments]);
   const unallocatedStudents = students.filter((s) => !assignedIds.has(s.studentId));
   const totalStudents = students.length;
-  const allocationProgress = totalStudents === 0 ? 0 : Math.round((assignedIds.size / totalStudents) * 100);
+  const allocationProgress =
+    totalStudents === 0 ? 0 : Math.round((assignedIds.size / totalStudents) * 100);
+
+  const handleBack = () => {
+    if (onBackToAllocation) {
+      onBackToAllocation();
+      return;
+    }
+    router.push(`/academic/seatallocation/${examId}/allocate`);
+  };
+
+  const handleFinalize = async () => {
+    try {
+      await finalizeSeatingPlan({ examId, seatingPlanId }).unwrap();
+      shikshaMitraToast.success({ message: 'Seating plan finalized and locked.' });
+      handleBack();
+    } catch (err: unknown) {
+      const e = err as {
+        data?: { error?: { message?: string }; message?: string; detail?: string };
+      };
+      shikshaMitraToast.error({
+        message:
+          e?.data?.error?.message ||
+          e?.data?.detail ||
+          e?.data?.message ||
+          'Could not finalize the seating plan.',
+      });
+    }
+  };
+
+  const handlePublish = async () => {
+    try {
+      await publishSeatingPlan({
+        examId,
+        seatingPlanId,
+        body: { notifyStudents: true, notifyParents: true },
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Seating plan published successfully.' });
+    } catch (err: unknown) {
+      const e = err as {
+        data?: { error?: { message?: string }; message?: string; detail?: string };
+      };
+      shikshaMitraToast.error({
+        message:
+          e?.data?.error?.message ||
+          e?.data?.detail ||
+          e?.data?.message ||
+          'Could not publish the seating plan.',
+      });
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2 }}>
@@ -231,13 +328,7 @@ export default function SeatingReviewPage({
         sx={{ mb: 1 }}
         heading="Allocation Review"
         isBack
-        onBack={() => {
-          if (onBackToAllocation) {
-            onBackToAllocation();
-            return;
-          }
-          router.push(`/academic/seatallocation/${examId}/allocate`);
-        }}
+        onBack={handleBack}
         links={[
           { name: 'Academic', href: '/academic/dashboard' },
           { name: 'Examination' },
@@ -246,151 +337,106 @@ export default function SeatingReviewPage({
         ]}
       />
 
-      <SeatingReadinessBanner
-        blockers={validation.blockers.length}
-        warnings={validation.warnings.length}
-        allocationProgress={allocationProgress}
-      />
+      {isPlanDataLoading ? (
+        <Skeleton variant="rounded" height={56} sx={{ mb: 2, borderRadius: 1 }} />
+      ) : (
+        <SeatingReadinessBanner
+          blockers={validation.blockers.length}
+          warnings={validation.warnings.length}
+          allocationProgress={allocationProgress}
+        />
+      )}
 
       {canPrint && (
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          <Button
-            size="small"
+        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+          <SubmitButton
+            buttonText={isDownloadingPdf ? 'Preparing PDF…' : 'Download Master List (PDF)'}
+            loading={isDownloadingPdf}
             variant="outlined"
-            disabled={isDownloadingPdf}
-            onClick={async () => {
-              const blob = await downloadPdf({ examId, seatingPlanId }).unwrap();
-              triggerBlobDownload(blob as Blob, `seating-plan-${examId}.pdf`);
-            }}
-          >
-            {isDownloadingPdf ? 'Preparing PDF…' : 'Download Master List (PDF)'}
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            disabled={isDownloadingExcel}
-            onClick={async () => {
-              const blob = await downloadExcel({ examId, seatingPlanId }).unwrap();
-              triggerBlobDownload(blob as Blob, `seating-plan-${examId}.xlsx`);
-            }}
-          >
-            {isDownloadingExcel ? 'Preparing Excel…' : 'Download Master List (Excel)'}
-          </Button>
-        </Box>
-      )}
-
-      {!loaded ? (
-        <Typography variant="body2" color="text.secondary">
-          Loading review data…
-        </Typography>
-      ) : (
-        <>
-          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-            Room Summary
-          </Typography>
-          <RoomAllocationSummary rooms={roomSummaries} />
-
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 3 }} gutterBottom>
-            Student Exceptions
-          </Typography>
-          <StudentExceptionList
-            unallocatedStudents={unallocatedStudents}
-            excludedStudents={[]}
-            onFix={() => {
-              if (onBackToAllocation) {
-                onBackToAllocation();
-                return;
-              }
-              router.push(`/academic/seatallocation/${examId}/allocate`);
-            }}
-          />
-        </>
-      )}
-
-      <Box sx={{ display: 'flex', gap: 1, mt: 3 }}>
-        <Button
-          variant="outlined"
-          onClick={() => {
-            if (onBackToAllocation) {
-              onBackToAllocation();
-              return;
-            }
-            router.push(`/academic/seatallocation/${examId}/allocate`);
-          }}
-        >
-          Back to Allocation
-        </Button>
-        <Button
-          variant="contained"
-          disabled={!canFinalize || validation.blockers.length > 0 || allocationProgress < 100 || isFinalizing}
-          onClick={async () => {
-            try {
-              await finalizeSeatingPlan({ examId, seatingPlanId }).unwrap();
-              toast.success('Seating plan finalized and locked.');
-              if (onBackToAllocation) {
-                onBackToAllocation();
-                return;
-              }
-              router.push(`/academic/seatallocation/${examId}/allocate`);
-            } catch (err: any) {
-              toast.error(err?.data?.error?.message || 'Could not finalize the seating plan.');
-            }
-          }}
-        >
-          {isFinalizing ? 'Finalizing…' : 'Finalize Seating Plan'}
-        </Button>
-      </Box>
-
-      {planDraftData?.isLocked && canPublish && (
-        <Box sx={{ mt: 3, p: 2, border: '1px dashed', borderColor: 'divider', borderRadius: 1 }}>
-          <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-            Publish
-          </Typography>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-            Publishing marks the plan visible downstream. Notification channels below are not yet
-            connected to an email/SMS provider — publishing will not send anything until that is wired up.
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-            {['Exam Staff', 'Teachers', 'Students', 'Parents', 'Email'].map((label) => (
-              <Tooltip key={label} title="Coming soon — no notification provider connected yet">
-                <span>
-                  <FormControlLabel
-                    disabled
-                    control={<Checkbox size="small" checked={false} />}
-                    label={<Typography variant="caption">{label}</Typography>}
-                  />
-                </span>
-              </Tooltip>
-            ))}
-          </Box>
-          <Button
-            variant="contained"
-            color="success"
-            disabled={isPublishing || planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED}
+            type="button"
+            startIcon={<Iconify icon="mdi:file-pdf-box" />}
             onClick={async () => {
               try {
-                await publishSeatingPlan({
-                  examId,
-                  seatingPlanId,
-                  body: {
-                    notifyExamStaff: false,
-                    notifyTeachers: false,
-                    notifyStudents: false,
-                    notifyParents: false,
-                    sendEmail: false,
-                    scheduleAt: null,
-                  },
-                }).unwrap();
-                toast.success('Seating plan published.');
-              } catch (err: any) {
-                toast.error(err?.data?.error?.message || 'Could not publish the seating plan.');
+                const blob = await downloadPdf({ examId, seatingPlanId }).unwrap();
+                triggerBlobDownload(blob as Blob, `seating-plan-${examId}.pdf`);
+              } catch {
+                shikshaMitraToast.error({ message: 'Failed to download PDF.' });
               }
             }}
-          >
-            {planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED ? 'Published' : isPublishing ? 'Publishing…' : 'Publish Seating Plan'}
-          </Button>
-        </Box>
+          />
+          <SubmitButton
+            buttonText={isDownloadingExcel ? 'Preparing Excel…' : 'Download Master List (Excel)'}
+            loading={isDownloadingExcel}
+            variant="outlined"
+            type="button"
+            startIcon={<Iconify icon="mdi:microsoft-excel" />}
+            onClick={async () => {
+              try {
+                const blob = await downloadExcel({ examId, seatingPlanId }).unwrap();
+                triggerBlobDownload(blob as Blob, `seating-plan-${examId}.xlsx`);
+              } catch {
+                shikshaMitraToast.error({ message: 'Failed to download Excel.' });
+              }
+            }}
+          />
+        </Stack>
       )}
+
+      <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+        Room Summary
+      </Typography>
+      <RoomAllocationSummary rooms={roomSummaries} isLoading={isLayoutLoading} />
+
+      <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 3 }} gutterBottom>
+        Student Exceptions
+      </Typography>
+      {isStudentsDataLoading || isLayoutLoading ? (
+        <Stack spacing={1}>
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} variant="rectangular" height={48} sx={{ borderRadius: 1 }} />
+          ))}
+        </Stack>
+      ) : (
+        <StudentExceptionList
+          unallocatedStudents={unallocatedStudents}
+          excludedStudents={[]}
+          onFix={handleBack}
+        />
+      )}
+
+      <Stack direction="row" spacing={1} sx={{ mt: 3 }}>
+        <CancelButton buttonText="Back to Allocation" onClick={handleBack} />
+        {!planDraftData?.isLocked ? (
+          <SubmitButton
+            buttonText={isFinalizing ? 'Finalizing…' : 'Finalize Seating Plan'}
+            loading={isFinalizing}
+            disabled={
+              !canFinalize ||
+              validation.blockers.length > 0 ||
+              allocationProgress < 100 ||
+              isFinalizing
+            }
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={handleFinalize}
+            type="button"
+          />
+        ) : (
+          <SubmitButton
+            buttonText={
+              isPublishing
+                ? 'Publishing…'
+                : planDraftData?.status === 5
+                  ? 'Published'
+                  : 'Publish Seating Plan'
+            }
+            loading={isPublishing}
+            disabled={isPublishing || planDraftData?.status === 5}
+            startIcon={<Iconify icon="solar:eye-bold" />}
+            onClick={handlePublish}
+            type="button"
+          />
+        )}
+      </Stack>
     </Box>
   );
 }

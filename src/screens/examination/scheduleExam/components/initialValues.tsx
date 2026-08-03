@@ -11,8 +11,20 @@ function combineDateAndTime(dateObj: any, timeObj: any): string | null {
   return d.hour(t.hour()).minute(t.minute()).second(0).millisecond(0).toISOString();
 }
 
-function toApiDateTime(value: any): string | null {
-  return value?.format?.(dateFormat) ? dateConvertor(value.format(dateFormat)) : null;
+function toApiDateTime(dateObj: any, timeObj?: any): string | null {
+  if (!timeObj && (!dateObj || !dateObj.format)) return null;
+
+  if (dateObj && timeObj && dateObj.format && timeObj.format) {
+    const d = dayjs(dateObj);
+    const t = dayjs(timeObj);
+    if (d.isValid() && t.isValid()) {
+      const combined = d.hour(t.hour()).minute(t.minute()).second(0).millisecond(0);
+      return dateConvertor(combined.format(dateFormat));
+    }
+  }
+
+  const target = timeObj || dateObj;
+  return target?.format?.(dateFormat) ? dateConvertor(target.format(dateFormat)) : null;
 }
 
 function toNullableNumber(value: any): number | null {
@@ -177,13 +189,13 @@ export function mapBackendToFormik(
   const rawEntrySubjectIds: string[] =
     scheduleSubjectIds.size > 0
       ? Array.from(
-          new Set([
-            ...(basicData?.subjectIds ?? []).filter((subjectId: string) =>
-              scheduleSubjectIds.has(subjectId)
-            ),
-            ...Array.from(scheduleSubjectIds),
-          ])
-        )
+        new Set([
+          ...(basicData?.subjectIds ?? []).filter((subjectId: string) =>
+            scheduleSubjectIds.has(subjectId)
+          ),
+          ...Array.from(scheduleSubjectIds),
+        ])
+      )
       : (basicData?.subjectIds ?? []);
 
   const rawEntries: RawEntry[] = rawEntrySubjectIds.map((subjectId: string) => {
@@ -429,12 +441,8 @@ export function serializeSchedulePayload(values: IExamFormValues) {
             examDate: s?.examDate?.format?.(dateFormat)
               ? dateConvertor(s.examDate.format(dateFormat))
               : null,
-            startTime: s?.startTime?.format?.(dateFormat)
-              ? dateConvertor(s?.startTime?.format?.(dateFormat))
-              : null,
-            endTime: s?.endTime?.format?.(dateFormat)
-              ? dateConvertor(s?.endTime?.format?.(dateFormat))
-              : null,
+            startTime: toApiDateTime(s?.examDate, s?.startTime),
+            endTime: toApiDateTime(s?.examDate, s?.endTime),
             gradeScalingId: values.gradeScaleRequired ? (s.gradeScalingId ?? null) : null,
             totalMarks: values.marksEntryRequired ? toNullableNumber(s.totalMarks) : null,
             passingMarks: values.marksEntryRequired ? toNullableNumber(s.passingMarks) : null,
@@ -449,12 +457,8 @@ export function serializeSchedulePayload(values: IExamFormValues) {
         examDate: sub?.examDate?.format?.(dateFormat)
           ? dateConvertor(sub.examDate.format(dateFormat))
           : null,
-        startTime: sub?.startTime?.format?.(dateFormat)
-          ? dateConvertor(sub?.startTime?.format?.(dateFormat))
-          : null,
-        endTime: sub?.endTime?.format?.(dateFormat)
-          ? dateConvertor(sub?.endTime?.format?.(dateFormat))
-          : null,
+        startTime: toApiDateTime(sub?.examDate, sub?.startTime),
+        endTime: toApiDateTime(sub?.examDate, sub?.endTime),
         gradeScalingId: values.gradeScaleRequired ? (sub.gradeScalingId ?? null) : null,
         totalMarks: values.marksEntryRequired ? toNullableNumber(sub.totalMarks) : null,
         passingMarks: values.marksEntryRequired ? toNullableNumber(sub.passingMarks) : null,

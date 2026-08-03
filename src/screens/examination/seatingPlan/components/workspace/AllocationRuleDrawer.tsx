@@ -62,25 +62,25 @@ const RULE_TOGGLES: {
   label: string;
   description: string;
 }[] = [
-  {
-    key: 'leaveGap',
-    icon: 'mdi:seat-outline',
-    label: 'Leave one empty seat between students',
-    description: 'Helps reduce copying by spacing students apart',
-  },
-  {
-    key: 'mixDivisions',
-    icon: 'mdi:account-group-outline',
-    label: 'Keep same-division students separated',
-    description: 'Avoids seating classmates from the same division together',
-  },
-  {
-    key: 'specialRequirementPriority',
-    icon: 'mdi:wheelchair-accessibility',
-    label: 'Reserve front / accessible seats for special requirements',
-    description: 'Prioritizes accessible seating for students who need it',
-  },
-];
+    {
+      key: 'leaveGap',
+      icon: 'mdi:seat-outline',
+      label: 'Leave one empty seat between students',
+      description: 'Helps reduce copying by spacing students apart',
+    },
+    {
+      key: 'mixDivisions',
+      icon: 'mdi:account-group-outline',
+      label: 'Keep same-division students separated',
+      description: 'Avoids seating classmates from the same division together',
+    },
+    {
+      key: 'specialRequirementPriority',
+      icon: 'mdi:wheelchair-accessibility',
+      label: 'Reserve front / accessible seats for special requirements',
+      description: 'Prioritizes accessible seating for students who need it',
+    },
+  ];
 
 export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, onApply, onCancelPreview }: Props) {
   const theme = useTheme();

@@ -13,8 +13,7 @@ export function HrReportCenterEmptyState({
   description,
 }: HrReportCenterEmptyStateProps) {
   return (
-    <Stack spacing={1} alignItems="center" sx={{ py: 4, px: 2, color: 'text.secondary' }}>
-      <Iconify icon={icon} width={40} />
+    <Stack spacing={0.5} alignItems="center" sx={{ py: 4, px: 2, color: 'text.secondary' }}>
       <Typography variant="subtitle2" color="text.primary">
         {title}
       </Typography>
