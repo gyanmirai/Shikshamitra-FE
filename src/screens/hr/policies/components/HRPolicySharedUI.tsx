@@ -270,7 +270,6 @@ export function PolicyDrawerLayout({
       <Divider />
       <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
         <Stack spacing={2.5} sx={{ width: 1 }}>
-          {error ? <Alert severity="error">{error}</Alert> : null}
           {children}
         </Stack>
       </Box>

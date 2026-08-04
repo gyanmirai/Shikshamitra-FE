@@ -8,6 +8,7 @@ import {
   getEmployeeApplicationStatusLabel,
   normalizeEmployeeApplicationStatus,
   canRegenerateEmployeeApplicationLink,
+  canCopyEmployeeApplicationLink,
 } from './status';
 
 describe('employee application status utilities', () => {
@@ -54,5 +55,11 @@ describe('employee application status utilities', () => {
     );
     expect(canRegenerateEmployeeApplicationLink(EmployeeApplicationStatus.Applied)).toBe(false);
     expect(canRegenerateEmployeeApplicationLink(EmployeeApplicationStatus.Rejected)).toBe(false);
+  });
+
+  it('disables copy link when application is finalized', () => {
+    expect(canCopyEmployeeApplicationLink(EmployeeApplicationStatus.Applied)).toBe(true);
+    expect(canCopyEmployeeApplicationLink(EmployeeApplicationStatus.InvitationSent)).toBe(true);
+    expect(canCopyEmployeeApplicationLink(EmployeeApplicationStatus.Finalized)).toBe(false);
   });
 });

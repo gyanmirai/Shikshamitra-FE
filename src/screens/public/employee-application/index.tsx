@@ -164,16 +164,23 @@ const stepForPath = (path: string) => {
 const locationFromOption = (option: any): EmployeeApplicationLocation | null =>
   option?.name && option?.isoCode
     ? {
-        name: option.name,
-        isoCode: option.isoCode,
-        countryCode: option.countryCode,
-      }
+      name: option.name,
+      isoCode: option.isoCode,
+      countryCode: option.countryCode,
+    }
     : null;
 
 const cityValue = (name?: string | null) => (name ? { name } : null);
 
 const formatLocation = (location?: EmployeeApplicationLocation | null) =>
   [location?.name, location?.isoCode].filter(Boolean).join(' ');
+
+const toDatePickerValue = (val: any): dayjs.Dayjs | null => {
+  if (!val) return null;
+  if (dayjs.isDayjs(val)) return val;
+  const parsed = dayjs(val);
+  return parsed.isValid() ? parsed : null;
+};
 
 async function parseSubmitProblem(response: Response) {
   let payload: ProblemDetails | null = null;
@@ -600,21 +607,18 @@ function PersonalStep({
           <ShakingTextField error={Boolean(fe('dateOfBirth'))}>
             <DatePicker
               label="Date of Birth *"
-              value={
-                getIn(formik.values, fp('dateOfBirth'))
-                  ? dayjs(getIn(formik.values, fp('dateOfBirth')))
-                  : null
-              }
+              value={toDatePickerValue(getIn(formik.values, fp('dateOfBirth')))}
               onChange={(value) => {
-                formik.setFieldValue(fp('dateOfBirth'), value ? value.format('YYYY-MM-DD') : '');
+                formik.setFieldValue(fp('dateOfBirth'), value);
               }}
               disableFuture
               minDate={dayjs('1947-01-01')}
-              format="DD-MM-YYYY"
+              format="DD/MM/YYYY"
               slotProps={{
                 textField: {
                   size: 'small',
                   fullWidth: true,
+                  placeholder: 'DD/MM/YYYY',
                   error: Boolean(fe('dateOfBirth')),
                   helperText: fe('dateOfBirth'),
                 },
@@ -1311,23 +1315,17 @@ function WorkExperienceStep({
                   <ShakingTextField error={Boolean(fe('startDate'))}>
                     <DatePicker
                       label="Start Date"
-                      value={
-                        getIn(formik.values, fp('startDate'))
-                          ? dayjs(getIn(formik.values, fp('startDate')))
-                          : null
-                      }
+                      value={toDatePickerValue(getIn(formik.values, fp('startDate')))}
                       onChange={(value) => {
-                        formik.setFieldValue(
-                          fp('startDate'),
-                          value ? value.format('YYYY-MM-DD') : ''
-                        );
+                        formik.setFieldValue(fp('startDate'), value);
                       }}
                       disableFuture
-                      format="DD-MM-YYYY"
+                      format="DD/MM/YYYY"
                       slotProps={{
                         textField: {
                           size: 'small',
                           fullWidth: true,
+                          placeholder: 'DD/MM/YYYY',
                           error: Boolean(fe('startDate')),
                           helperText: fe('startDate'),
                         },
@@ -1341,23 +1339,17 @@ function WorkExperienceStep({
                   <ShakingTextField error={Boolean(fe('endDate'))}>
                     <DatePicker
                       label="End Date"
-                      value={
-                        getIn(formik.values, fp('endDate'))
-                          ? dayjs(getIn(formik.values, fp('endDate')))
-                          : null
-                      }
+                      value={toDatePickerValue(getIn(formik.values, fp('endDate')))}
                       onChange={(value) => {
-                        formik.setFieldValue(
-                          fp('endDate'),
-                          value ? value.format('YYYY-MM-DD') : ''
-                        );
+                        formik.setFieldValue(fp('endDate'), value);
                       }}
                       disableFuture
-                      format="DD-MM-YYYY"
+                      format="DD/MM/YYYY"
                       slotProps={{
                         textField: {
                           size: 'small',
                           fullWidth: true,
+                          placeholder: 'DD/MM/YYYY',
                           error: Boolean(fe('endDate')),
                           helperText: fe('endDate'),
                         },

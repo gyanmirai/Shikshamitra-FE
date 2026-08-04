@@ -544,10 +544,10 @@ const LeaveBalance = ({
             isSelfMode
               ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave Balance' }]
               : [
-                  { name: 'HR/Staff', href: '/hr/dashboard/' },
-                  { name: 'Leave Management', href: '/hr/leave-center/' },
-                  { name: 'Leave Balance' },
-                ]
+                { name: 'HR/Staff', href: '/hr/dashboard/' },
+                { name: 'Leave Management', href: '/hr/leave-center/' },
+                { name: 'Leave Balance' },
+              ]
           }
           description="Leave quota, breakdown by paid type, and request history."
         />
