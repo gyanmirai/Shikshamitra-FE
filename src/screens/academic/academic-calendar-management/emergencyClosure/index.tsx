@@ -967,7 +967,7 @@ const EmergencyClosureScreen = () => {
             onClick={() => formik.handleSubmit()}
           />
         </DialogActions >
-      </CustomDialog >
+      </CustomDialog>
 
       <CustomDialog
         open={viewDialog.value}
