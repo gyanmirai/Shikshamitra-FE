@@ -304,8 +304,7 @@ const AddLessonPlanModal = ({
     return lessonPlans
       .filter((plan) => {
         const sameDate = dayjs(plan.plannedDate).format('YYYY-MM-DD') === formattedDate;
-        const sameTeacher =
-          !form.teacherId || !plan.teacherId || plan.teacherId === form.teacherId;
+        const sameTeacher = !form.teacherId || !plan.teacherId || plan.teacherId === form.teacherId;
         const notCurrentPlan = !form.id || plan.id !== form.id;
         return sameDate && sameTeacher && notCurrentPlan;
       })
@@ -750,9 +749,6 @@ const AddLessonPlanModal = ({
                   <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Typography variant="body2" color="text.secondary">
                       Planned Completion
-                    </Typography>
-                    <Typography variant="body2" fontWeight={700}>
-                      {form.plannedCompletionPercentage}%
                     </Typography>
                   </Stack>
                   <LinearProgress

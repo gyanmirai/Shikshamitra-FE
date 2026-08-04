@@ -130,6 +130,7 @@ const defaultRequirements: ReservationRequirements = {
 interface SmartRoomReservationDrawerProps {
   open: boolean;
   prefilledRoom?: { roomId: string; roomName: string } | null;
+  prefillDate?: string;
   onClose: () => void;
   onSuccess?: (reservation: RoomReservation) => void;
 }
@@ -137,6 +138,7 @@ interface SmartRoomReservationDrawerProps {
 export const SmartRoomReservationDrawer = ({
   open,
   prefilledRoom,
+  prefillDate,
   onClose,
   onSuccess,
 }: SmartRoomReservationDrawerProps) => {
@@ -161,17 +163,21 @@ export const SmartRoomReservationDrawer = ({
         const reqs = {
           ...defaultRequirements,
           selectedRoomId: prefilledRoom.roomId,
+          date: prefillDate || dayjs().format('YYYY-MM-DD'),
         };
         setRequirements(reqs);
         suggest(reqs);
         setSearched(true);
       } else {
-        setRequirements({ ...defaultRequirements });
+        setRequirements({ 
+          ...defaultRequirements,
+          date: prefillDate || dayjs().format('YYYY-MM-DD'),
+        });
         setSearched(false);
       }
       setValidationError('');
     }
-  }, [open, prefilledRoom, suggest]);
+  }, [open, prefilledRoom, prefillDate, suggest]);
 
   const validateForm = (): boolean => {
     if (!requirements.reservationType) {

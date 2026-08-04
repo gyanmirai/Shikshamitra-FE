@@ -676,7 +676,7 @@ const TimeTableGrid = () => {
                 size="small"
                 variant="outlined"
                 color="error"
-                sx={{ minWidth: '110px' }}
+                sx={{ whiteSpace: 'nowrap' }}
                 startIcon={
                   <Iconify icon="lucide:settings" sx={{ height: '14px', width: '14px' }} />
                 }

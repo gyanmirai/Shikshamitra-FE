@@ -7,6 +7,7 @@ import {
   usePublishSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
+import { SubjectAssignmentStatus } from '../enum/subjectType';
 import { getSubjectDisplayLabel } from '../utils/getSubjectDisplayLabel';
 
 import type { ISubjectFormValues } from '../component/type';
@@ -44,8 +45,27 @@ export function useSubjectMutations({
    * Contains async mutation and optimistic cache update logic.
    */
   const handleConfirmDelete = useCallback(async () => {
+    if (!selectedSubject?.id) return;
     try {
-      await deleteSubjectAssignment({ assignmentId: selectedSubject?.id || '' }).unwrap();
+      await deleteSubjectAssignment({
+        assignmentId: selectedSubject.id,
+        force: true,
+        permanent: true,
+      }).unwrap();
+
+      // If subject was not already archived, issue second pass to purge from archived state in one action
+      if (selectedSubject.status !== SubjectAssignmentStatus.Archived) {
+        try {
+          await deleteSubjectAssignment({
+            assignmentId: selectedSubject.id,
+            force: true,
+            permanent: true,
+          }).unwrap();
+        } catch {
+          // If first call already purged record, catch silent 404
+        }
+      }
+
       const label = getSubjectDisplayLabel(selectedSubject);
       shikshaMitraToast.success({
         message: `"${label}" subject assignment deleted successfully`,

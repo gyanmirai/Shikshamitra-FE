@@ -50,9 +50,21 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
 
     // Delete assignment
     deleteSubjectAssignment: builder.mutation({
-      query: ({ assignmentId }) => ({
+      query: ({
+        assignmentId,
+        force = true,
+        permanent = true,
+      }: {
+        assignmentId: string;
+        force?: boolean;
+        permanent?: boolean;
+      }) => ({
         url: `/academics/curriculum/subject-assignments/${assignmentId}`,
         method: 'DELETE',
+        params: {
+          ...(force ? { force: true } : {}),
+          ...(permanent ? { permanent: true } : {}),
+        },
       }),
       invalidatesTags: [academicType.subjectAssignment],
     }),

@@ -475,6 +475,7 @@ const RoomAvailabilityScreen = () => {
       <SmartRoomReservationDrawer
         open={isReservationOpen}
         prefilledRoom={prefilledRoom}
+        prefillDate={filters.date}
         onClose={() => setReservationOpen(false)}
         onSuccess={handleReservationSuccess}
       />
@@ -483,6 +484,7 @@ const RoomAvailabilityScreen = () => {
       <DirectRoomReservationDrawer
         open={isDirectReservationOpen}
         room={directReservationRoom}
+        prefillDate={filters.date}
         onClose={() => {
           setDirectReservationOpen(false);
           setDirectReservationRoom(null);

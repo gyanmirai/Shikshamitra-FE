@@ -335,7 +335,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                       <Typography
                         variant="caption"
                         fontSize="13px"
-                        sx={{ color: 'text.disabled', fontStyle: 'italic', p: 0.5, display: 'block' }}
+                        sx={{
+                          color: 'text.disabled',
+                          fontStyle: 'italic',
+                          p: 0.5,
+                          display: 'block',
+                        }}
                       >
                         No submission
                       </Typography>

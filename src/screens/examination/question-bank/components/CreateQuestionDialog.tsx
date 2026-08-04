@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
+import { varAlpha, stylesMode } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
@@ -716,9 +717,9 @@ function QuestionFormFields({
               sx={{
                 p: 2,
                 borderRadius: 2,
-                bgcolor: alpha(theme.palette.info.main, 0.04),
+                bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.08),
                 border: '1px dashed',
-                borderColor: 'info.light',
+                borderColor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.24),
               }}
             >
               <Stack direction="row" spacing={1} alignItems="center">
@@ -726,17 +727,28 @@ function QuestionFormFields({
                   sx={{
                     p: 1.5,
                     borderRadius: 1.5,
-                    bgcolor: 'info.lighter',
+                    bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.16),
                     color: 'info.main',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    [stylesMode.dark]: {
+                      color: 'info.light',
+                    },
                   }}
                 >
                   <Iconify icon="solar:document-text-bold" width={24} />
                 </Box>
                 <Box>
-                  <Typography variant="subtitle2" color="info.darker">
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      color: 'info.darker',
+                      [stylesMode.dark]: {
+                        color: 'info.light',
+                      },
+                    }}
+                  >
                     Bulk Upload Guidelines
                   </Typography>
                   <Typography variant="caption" color="text.secondary" display="block">

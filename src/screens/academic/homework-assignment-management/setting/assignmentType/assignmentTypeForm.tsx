@@ -47,7 +47,11 @@ const STATUS_OPTIONS = [
   { value: AssignmentTypeStatus.Inactive, label: 'Inactive' },
 ];
 
-const AssignmentTypeForm = ({ onClose, editData, existingTypes = [] }: IAssignmentTypeFormProps) => {
+const AssignmentTypeForm = ({
+  onClose,
+  editData,
+  existingTypes = [],
+}: IAssignmentTypeFormProps) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const existingNames = new Set(
     existingTypes.map((assignmentType) => assignmentType.assignmentTypeName.trim().toLowerCase())
@@ -123,9 +127,7 @@ const AssignmentTypeForm = ({ onClose, editData, existingTypes = [] }: IAssignme
               value={formik.values.assignmentTypeName}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={
-                formik.touched.assignmentTypeName && Boolean(formik.errors.assignmentTypeName)
-              }
+              error={formik.touched.assignmentTypeName && Boolean(formik.errors.assignmentTypeName)}
               helperText={formik.touched.assignmentTypeName && formik.errors.assignmentTypeName}
             />
           </ShakingTextField>
@@ -154,8 +156,7 @@ const AssignmentTypeForm = ({ onClose, editData, existingTypes = [] }: IAssignme
               value={formik.values.defaultSubmissionType}
               onChange={formik.handleChange}
               error={
-                formik.touched.defaultSubmissionType &&
-                Boolean(formik.errors.defaultSubmissionType)
+                formik.touched.defaultSubmissionType && Boolean(formik.errors.defaultSubmissionType)
               }
               helperText={
                 formik.touched.defaultSubmissionType && formik.errors.defaultSubmissionType
@@ -165,24 +166,6 @@ const AssignmentTypeForm = ({ onClose, editData, existingTypes = [] }: IAssignme
                 <em>None</em>
               </MenuItem>
               {ASSIGNMENT_SUBMISSION_TYPE_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              fullWidth
-              select
-              size="small"
-              name="status"
-              label="Status"
-              value={formik.values.status}
-              onChange={formik.handleChange}
-              error={formik.touched.status && Boolean(formik.errors.status)}
-              helperText={formik.touched.status && formik.errors.status}
-            >
-              {STATUS_OPTIONS.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>
