@@ -5,6 +5,8 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 const admissionCrmPermissionRoot = 'Students.Enrollment.AdmissionsCrm';
 
 export const admissionCrmActionPermissions = {
+  scheduleExam: `${admissionCrmPermissionRoot}.ScheduleExam`,
+  overrideExamCapacity: `${admissionCrmPermissionRoot}.OverrideExamCapacity`,
   manageOffers: `${admissionCrmPermissionRoot}.ManageOffers`,
   approveOffers: `${admissionCrmPermissionRoot}.ApproveOffers`,
   manageWaitlist: `${admissionCrmPermissionRoot}.ManageWaitlist`,

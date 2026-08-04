@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
@@ -65,6 +65,7 @@ type Props = {
   leadId: string;
   academicYearId: string;
   hasRegistration: boolean;
+  requestedActionCode?: string;
 };
 
 const registrationStatusLabels: Record<AdmissionCrmRegistrationStatus, string> = {
@@ -110,6 +111,7 @@ export function ApplicantRegistrationOperations({
   leadId,
   academicYearId,
   hasRegistration,
+  requestedActionCode,
 }: Props) {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const canUploadDocuments = hasGrantedPermission(
@@ -192,6 +194,38 @@ export function ApplicantRegistrationOperations({
   const [documentValidUntilByKey, setDocumentValidUntilByKey] = useState<Record<string, string>>(
     {}
   );
+
+  useEffect(() => {
+    if (requestedActionCode === 'StartRegistration' && canIssueRegistration && !registration) {
+      setIssueFormOpen(true);
+    }
+  }, [canIssueRegistration, registration, requestedActionCode]);
+
+  useEffect(() => {
+    let targetId: string | undefined;
+    if (requestedActionCode === 'StartRegistration') {
+      targetId = 'registration-issue-operation';
+    } else if (requestedActionCode === 'ContinueRegistration') {
+      targetId = 'registration-response-operation';
+    } else if (
+      requestedActionCode === 'VerifyRegistration' ||
+      requestedActionCode === 'ReviewRegistrationCorrection' ||
+      requestedActionCode === 'ReissueRegistration'
+    ) {
+      targetId = 'registration-lifecycle-operation';
+    }
+    if (!targetId) return undefined;
+
+    const frame = window.requestAnimationFrame(() => {
+      const target = document.getElementById(targetId);
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({
+        block: 'start',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [issueFormOpen, registration?.id, requestedActionCode]);
 
   useApplicantWorkspaceDirtyState(
     `registration-operations-${leadId}`,
@@ -295,7 +329,7 @@ export function ApplicantRegistrationOperations({
 
   if (!registration) {
     return (
-      <Box component="section">
+      <Box id="registration-issue-operation" component="section" tabIndex={-1}>
         <Stack spacing={1.25}>
           <Typography variant="subtitle2">Registration</Typography>
           {templatesQuery.isError || seriesQuery.isError ? (
@@ -407,9 +441,11 @@ export function ApplicantRegistrationOperations({
 
   return (
     <Stack spacing={1.25}>
-      <RegistrationResponseEditor registration={registration} />
+      <Box id="registration-response-operation" tabIndex={-1}>
+        <RegistrationResponseEditor registration={registration} />
+      </Box>
 
-      <Box component="section">
+      <Box id="registration-lifecycle-operation" component="section" tabIndex={-1}>
         <Stack spacing={1.25}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
             <Box>

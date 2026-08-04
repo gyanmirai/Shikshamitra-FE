@@ -9,6 +9,8 @@ import {
 describe('admission CRM action permissions', () => {
   it('uses the authoritative action permission names', () => {
     expect(admissionCrmActionPermissions).toEqual({
+      scheduleExam: 'Students.Enrollment.AdmissionsCrm.ScheduleExam',
+      overrideExamCapacity: 'Students.Enrollment.AdmissionsCrm.OverrideExamCapacity',
       manageOffers: 'Students.Enrollment.AdmissionsCrm.ManageOffers',
       approveOffers: 'Students.Enrollment.AdmissionsCrm.ApproveOffers',
       manageWaitlist: 'Students.Enrollment.AdmissionsCrm.ManageWaitlist',

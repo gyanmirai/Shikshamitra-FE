@@ -15,9 +15,10 @@ export type ApplicantJourneyStepState =
   'not-started' | 'in-progress' | 'complete' | 'skipped' | 'blocked' | 'needs-review';
 
 export type ApplicantJourneyWorkspaceTab =
-  'overview' | 'exam' | 'registration' | 'finance' | 'offer' | 'activation';
+  'inquiry' | 'exam' | 'registration' | 'finance' | 'offer' | 'activation';
 
 export type ApplicantJourneyStep = {
+  stepKey: AdmissionCrmApplicantStepKey;
   id: ApplicantJourneyStepId;
   label: string;
   workspaceTab: ApplicantJourneyWorkspaceTab;
@@ -36,7 +37,7 @@ const stepMetadata: Record<
   AdmissionCrmApplicantStepKey,
   { id: ApplicantJourneyStepId; workspaceTab: ApplicantJourneyWorkspaceTab }
 > = {
-  [AdmissionCrmApplicantStepKey.Inquiry]: { id: 'inquiry', workspaceTab: 'overview' },
+  [AdmissionCrmApplicantStepKey.Inquiry]: { id: 'inquiry', workspaceTab: 'inquiry' },
   [AdmissionCrmApplicantStepKey.Exam]: { id: 'exam', workspaceTab: 'exam' },
   [AdmissionCrmApplicantStepKey.Registration]: {
     id: 'registration',
@@ -74,6 +75,7 @@ function mapStep(
     (metadata.id === 'activation' && !permissions.canViewActivation);
 
   return {
+    stepKey: step.step,
     ...metadata,
     label: step.title,
     state: permissionBlocked ? 'blocked' : statusState[step.status],

@@ -184,7 +184,7 @@ const readApplicantWorkItem = (key: string | undefined, identity: string) => {
       typeof workItem.recommendedSection !== 'number' ||
       typeof workItem.recommendedAction !== 'number'
     ) {
-        return undefined;
+      return undefined;
     }
     return workItem as ApplicantWorkContextItem;
   } catch {
@@ -224,7 +224,11 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
   const { permissions, user } = useSelector((root: RootState) => root.auth);
   const currentUserId = user?.sub || user?.id;
   const currentTenantId =
-    user?.tenantid || user?.tenantId || user?.profile?.tenantid || user?.profile?.tenantId || 'host';
+    user?.tenantid ||
+    user?.tenantId ||
+    user?.profile?.tenantid ||
+    user?.profile?.tenantId ||
+    'host';
   const sessionIdentity = `${currentTenantId}:${currentUserId || 'anonymous'}`;
   const workspace = getWorkspaceFromPathname(pathname);
   const persona = resolvePersona(permissions);
@@ -285,10 +289,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       const currentState =
         typeof window === 'undefined'
           ? state
-          : parseEnrollmentWorkspaceState(
-              new URLSearchParams(window.location.search),
-              defaults
-            );
+          : parseEnrollmentWorkspaceState(new URLSearchParams(window.location.search), defaults);
       const next = { ...currentState } as EnrollmentWorkspaceState;
       Object.entries(patch).forEach(([key, value]) => {
         if (value === undefined || value === null || value === '') {
@@ -329,10 +330,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     };
     const canonical = serializeEnrollmentWorkspaceState(next as EnrollmentWorkspaceState);
     if (!areSearchParamsEquivalent(canonical, current)) {
-      if (
-        pendingNavigationPathRef.current &&
-        pendingNavigationPathRef.current !== pathname
-      ) {
+      if (pendingNavigationPathRef.current && pendingNavigationPathRef.current !== pathname) {
         return;
       }
       if (window.location.pathname !== pathname) return;
@@ -357,7 +355,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
   ]);
 
   const getApplicantHref = useCallback(
-    (leadId: string, tab: EnrollmentApplicantTab = 'overview') => {
+    (leadId: string, tab: EnrollmentApplicantTab = 'next') => {
       const applicantParams = new URLSearchParams();
       const cycle = state.cycle || (currentYear?.id as string | undefined);
       const board = state.board || (currentBoard?.id as string | undefined);
@@ -368,33 +366,27 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       applicantParams.set('tab', tab);
       return `${studentPaths.enrollment.applicant(leadId)}?${applicantParams.toString()}`;
     },
-    [
-      currentBoard?.id,
-      currentMedium?.id,
-      currentYear?.id,
-      state.board,
-      state.cycle,
-      state.medium,
-    ]
+    [currentBoard?.id, currentMedium?.id, currentYear?.id, state.board, state.cycle, state.medium]
   );
 
   const openApplicant = useCallback(
     (
       leadId: string,
-      tab: EnrollmentApplicantTab = 'overview',
+      tab: EnrollmentApplicantTab = 'next',
       workItem?: AdmissionCrmMyWorkItemDto
     ) => {
       const sourceParams = new URLSearchParams(searchParams.toString());
       sourceParams.delete('applicant');
       sourceParams.delete('tab');
+      sourceParams.delete('activity');
+      sourceParams.delete('examAction');
       sourceParams.delete('return');
+      sourceParams.delete('applicantReturn');
       sourceParams.delete('workItem');
       const sourceQuery = sourceParams.toString();
       const returnTo = sourceQuery ? `${pathname}?${sourceQuery}` : pathname;
       const returnKey = storeApplicantReturnPath(returnTo);
-      const workItemKey = workItem
-        ? storeApplicantWorkItem(workItem, sessionIdentity)
-        : undefined;
+      const workItemKey = workItem ? storeApplicantWorkItem(workItem, sessionIdentity) : undefined;
       const applicantParams = new URLSearchParams();
       const cycle = state.cycle || (currentYear?.id as string | undefined);
       const board = state.board || (currentBoard?.id as string | undefined);

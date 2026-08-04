@@ -35,7 +35,6 @@ import {
 } from '@mui/material';
 import {
   AdmissionInquiryStage,
-  AdmissionCrmLeadPriority,
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmTasksQuery,
   useCreateAdmissionCrmTaskMutation,
@@ -43,61 +42,31 @@ import {
   useAddAdmissionCrmLeadNoteMutation,
   useArchiveAdmissionCrmLeadMutation,
   useCompleteAdmissionCrmTaskMutation,
-  useAssignAdmissionCrmLeadOwnerMutation,
   useChangeAdmissionCrmLeadStageMutation,
-  useChangeAdmissionCrmLeadPriorityMutation,
   useMergeAdmissionCrmDuplicateLeadMutation,
   useRecalculateAdmissionCrmLeadScoreMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { getAdmissionCrmStageLabel } from './admissions-crm-utils';
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
-import { getAdmissionCrmStageLabel, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import {
   formatEnrollmentDate,
-  formatApplicantContact,
   joinEnrollmentMetadata,
   getApplicantUpdateError,
-  getDistinctAdmissionIntent,
 } from './enrollment-display';
 import {
   ApplicantSection,
   ApplicantEmptyState,
   ApplicantActionPanel,
-  ApplicantSummaryGrid,
-  ApplicantSummaryItem,
   ApplicantInlineNotice,
 } from './applicant-workspace-primitives';
 
 const permissionRoot = 'Students.Enrollment.AdmissionsCrm';
 const permissionsByAction = {
-  assignOwner: `${permissionRoot}.AssignOwner`,
-  setPriority: `${permissionRoot}.SetPriority`,
   changeStage: `${permissionRoot}.ChangeStage`,
   manageTasks: `${permissionRoot}.ManageTasks`,
   archiveReopen: `${permissionRoot}.ArchiveReopen`,
   mergeDuplicate: `${permissionRoot}.MergeDuplicate`,
-};
-
-const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
-  [AdmissionCrmLeadPriority.None]: 'Not set',
-  [AdmissionCrmLeadPriority.Hot]: 'Hot',
-  [AdmissionCrmLeadPriority.Warm]: 'Warm',
-  [AdmissionCrmLeadPriority.Cold]: 'Cold',
-  [AdmissionCrmLeadPriority.Low]: 'Low',
-};
-
-const getNextAction = (stage: AdmissionInquiryStage) => {
-  if (stage === AdmissionInquiryStage.NewInquiry) return 'Qualify the inquiry and plan follow-up.';
-  if (stage === AdmissionInquiryStage.FollowUp) return 'Complete the next follow-up action.';
-  if (stage === AdmissionInquiryStage.ExamReady) return 'Schedule an entrance exam slot.';
-  if (stage === AdmissionInquiryStage.ExamScheduled) return 'Record attendance and exam result.';
-  if (stage === AdmissionInquiryStage.ExamCompleted) return 'Record the eligibility decision.';
-  if (stage === AdmissionInquiryStage.Eligible) return 'Issue or review the registration form.';
-  if (stage === AdmissionInquiryStage.Waitlisted)
-    return 'Review waitlist priority and seat movement.';
-  if (stage === AdmissionInquiryStage.Rejected) return 'No action unless the decision is reviewed.';
-  if (stage === AdmissionInquiryStage.Stale) return 'Re-engage the family or archive the inquiry.';
-  return 'Review the archived inquiry before reopening it.';
 };
 
 const getStaffLabel = (staff: AdmissionCrmStaffLookupDto) =>
@@ -121,11 +90,6 @@ export function ApplicantWorkspaceOverview({
   refetchLead,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const [ownerEditorOpen, setOwnerEditorOpen] = useState(false);
-  const [ownerSearch, setOwnerSearch] = useState('');
-  const [debouncedOwnerSearch, setDebouncedOwnerSearch] = useState('');
-  const [owner, setOwner] = useState<AdmissionCrmStaffLookupDto | null>(null);
-  const [priority, setPriority] = useState(lead.priority);
   const [announcement, setAnnouncement] = useState('');
   const [noteFormOpen, setNoteFormOpen] = useState(false);
   const [note, setNote] = useState('');
@@ -149,26 +113,12 @@ export function ApplicantWorkspaceOverview({
   const [completionNotes, setCompletionNotes] = useState('');
 
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
-  const distinctAdmissionIntent = getDistinctAdmissionIntent(
-    lead.admissionIntent,
-    lead.intendedRouteNameSnapshot
-  );
   const allowedStages = useMemo(
     () => stages.find((item) => item.systemStage === lead.stage)?.allowedNextStages ?? [],
     [lead.stage, stages]
   );
 
   const tasksQuery = useGetAdmissionCrmTasksQuery({ leadId: lead.id, maxResultCount: 50 });
-  const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
-    {
-      filter: debouncedOwnerSearch || undefined,
-      ids: lead.ownerUserId || undefined,
-      maxResultCount: 25,
-      academicYearId,
-      ownerOnly: true,
-    },
-    { skip: !ownerEditorOpen && !lead.ownerUserId }
-  );
   const taskStaffQuery = useGetAdmissionCrmStaffQuery(
     {
       filter: debouncedTaskSearch || undefined,
@@ -179,8 +129,6 @@ export function ApplicantWorkspaceOverview({
     { skip: !taskFormOpen }
   );
 
-  const [assignOwner, assignOwnerState] = useAssignAdmissionCrmLeadOwnerMutation();
-  const [changePriority, changePriorityState] = useChangeAdmissionCrmLeadPriorityMutation();
   const [changeStage, changeStageState] = useChangeAdmissionCrmLeadStageMutation();
   const [addNote, addNoteState] = useAddAdmissionCrmLeadNoteMutation();
   const [createTask, createTaskState] = useCreateAdmissionCrmTaskMutation();
@@ -190,24 +138,14 @@ export function ApplicantWorkspaceOverview({
   const [recalculateScore, recalculateState] = useRecalculateAdmissionCrmLeadScoreMutation();
   const [mergeDuplicate, mergeState] = useMergeAdmissionCrmDuplicateLeadMutation();
 
-  useEffect(() => setPriority(lead.priority), [lead.id, lead.priority]);
   useEffect(() => {
     const nextStage = allowedStages[0] ?? lead.stage;
     setStage(nextStage);
   }, [allowedStages, lead.stage]);
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedOwnerSearch(ownerSearch.trim()), 300);
-    return () => window.clearTimeout(timer);
-  }, [ownerSearch]);
-  useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedTaskSearch(taskSearch.trim()), 300);
     return () => window.clearTimeout(timer);
   }, [taskSearch]);
-  useEffect(() => {
-    const selectedOwner = ownerStaffQuery.data?.find((staff) => staff.id === lead.ownerUserId);
-    if (selectedOwner) setOwner(selectedOwner);
-    else if (!lead.ownerUserId) setOwner(null);
-  }, [lead.ownerUserId, ownerStaffQuery.data]);
 
   const hasUnsavedOverviewInput = Boolean(
     (noteFormOpen && note.trim()) ||
@@ -230,26 +168,6 @@ export function ApplicantWorkspaceOverview({
       shikshaMitraToast.error({ message: getApplicantUpdateError('The change was not saved.') });
       return false;
     }
-  };
-
-  const saveOwner = async (nextOwner: AdmissionCrmStaffLookupDto | null) => {
-    const previousOwner = owner;
-    setOwner(nextOwner);
-    const saved = await run(
-      () => assignOwner({ leadId: lead.id, body: { ownerUserId: nextOwner?.id || null } }).unwrap(),
-      'Lead owner updated.'
-    );
-    if (!saved) setOwner(previousOwner);
-  };
-
-  const savePriority = async (nextPriority: AdmissionCrmLeadPriority) => {
-    const previousPriority = priority;
-    setPriority(nextPriority);
-    const saved = await run(
-      () => changePriority({ leadId: lead.id, body: { priority: nextPriority } }).unwrap(),
-      'Lead priority updated.'
-    );
-    if (!saved) setPriority(previousPriority);
   };
 
   const openTasks = useMemo(
@@ -285,14 +203,9 @@ export function ApplicantWorkspaceOverview({
         gap={1}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" color="text.secondary">
-            Next action
-          </Typography>
-          <Typography variant="body1" fontWeight={600}>
-            {getNextAction(lead.stage)}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Current stage: {getAdmissionCrmStageLabel(lead.stage)}
+          <Typography variant="h6">Inquiry & Follow-up</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage inquiry communication, tasks, and governed lead actions.
           </Typography>
         </Box>
         <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
@@ -360,124 +273,6 @@ export function ApplicantWorkspaceOverview({
           Follow-up SLA was due {formatEnrollmentDate(slaDueAt.toDate(), true)}.
         </Alert>
       ) : null}
-
-      <ApplicantSection title="Applicant summary">
-        <ApplicantSummaryGrid>
-          <ApplicantSummaryItem
-            label="Admission pathway"
-            value={lead.intendedRouteNameSnapshot?.trim() || 'Not captured'}
-            secondary={
-              lead.intendedRouteDefinitionVersion != null
-                ? `Version ${lead.intendedRouteDefinitionVersion} captured at inquiry`
-                : undefined
-            }
-          />
-          {distinctAdmissionIntent ? (
-            <ApplicantSummaryItem
-              label={lead.intendedRouteNameSnapshot?.trim() ? 'Intent notes' : 'Admission intent'}
-              value={distinctAdmissionIntent}
-            />
-          ) : null}
-          <ApplicantSummaryItem label="Class" value={lead.desiredClassName || 'Not captured'} />
-          <ApplicantSummaryItem
-            label="Contact"
-            value={formatApplicantContact(lead.primaryContactNo, lead.email)}
-            secondary={lead.parentGuardianName || undefined}
-          />
-          <ApplicantSummaryItem
-            label="Inquiry channel"
-            value={getAdmissionCrmChannelLabel(lead.channel)}
-            secondary={!lead.inquirySourceSnapshot ? lead.campaignName || undefined : undefined}
-          />
-          {lead.inquirySourceSnapshot ? (
-            <ApplicantSummaryItem
-              label="Inquiry source"
-              value={lead.inquirySourceSnapshot}
-              secondary={lead.campaignName || undefined}
-            />
-          ) : null}
-          <ApplicantSummaryItem
-            label="Owner"
-            value={lead.ownerUserId ? owner?.displayName || 'Assigned' : 'Unassigned'}
-          />
-          <ApplicantSummaryItem label="Lead score" value={lead.leadScore.toString()} />
-          <ApplicantSummaryItem
-            label="SLA"
-            value={
-              slaDueAt
-                ? `${slaDueAt.isBefore(dayjs()) ? 'Overdue' : 'Due'} ${formatEnrollmentDate(
-                    slaDueAt.toDate(),
-                    true
-                  )}`
-                : 'No SLA configured'
-            }
-          />
-          <ApplicantSummaryItem label="Priority" value={priorityLabels[priority]} />
-        </ApplicantSummaryGrid>
-      </ApplicantSection>
-
-      {(can(permissionsByAction.assignOwner) || can(permissionsByAction.setPriority)) && (
-        <ApplicantSection
-          title="Ownership"
-          description="Changes save as soon as a value is selected."
-        >
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-              gap: 1.25,
-            }}
-          >
-            {can(permissionsByAction.assignOwner) ? (
-              <Autocomplete
-                fullWidth
-                open={ownerEditorOpen}
-                onOpen={() => setOwnerEditorOpen(true)}
-                onClose={() => setOwnerEditorOpen(false)}
-                options={ownerStaffQuery.data || []}
-                value={owner}
-                loading={ownerStaffQuery.isFetching || assignOwnerState.isLoading}
-                inputValue={ownerSearch}
-                onInputChange={(_, value, reason) => {
-                  if (reason !== 'reset') setOwnerSearch(value);
-                }}
-                onChange={(_, value) => {
-                  saveOwner(value);
-                }}
-                getOptionLabel={getStaffLabel}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Lead owner"
-                    placeholder={lead.ownerUserId ? 'Assigned owner' : 'Search staff'}
-                  />
-                )}
-              />
-            ) : null}
-            {can(permissionsByAction.setPriority) ? (
-              <TextField
-                select
-                size="small"
-                fullWidth
-                label="Priority"
-                value={priority}
-                disabled={changePriorityState.isLoading}
-                onChange={(event) => {
-                  savePriority(Number(event.target.value));
-                }}
-              >
-                {Object.entries(priorityLabels).map(([value, label]) => (
-                  <MenuItem key={value} value={Number(value)}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            ) : null}
-          </Box>
-        </ApplicantSection>
-      )}
 
       <Divider />
       <ApplicantSection

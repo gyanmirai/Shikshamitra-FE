@@ -297,7 +297,7 @@ export function OperationsQueueWorkspace({
   description,
   defaultQueue,
   allowedQueues = allQueues,
-  applicantTab = 'overview',
+  applicantTab = 'next',
   variant = 'operations',
   showOperationsUtilities = false,
   headerActions,

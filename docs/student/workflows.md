@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-07-31
+updated_on: 2026-08-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -15,22 +15,24 @@ Every worklist opens the same applicant workspace and uses the backend progress 
 
 ## Enrollment submodules
 
-| Area                  | Route                                     | Primary interaction                                                      |
-| --------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
-| My Work               | `/student/enrollment/my-work`             | Assigned tasks, due work, blockers, and one recommended action           |
-| Pipeline              | `/student/enrollment/pipeline`            | Board and list views over every pre-admission applicant                  |
-| Entrance Exams        | `/student/enrollment/entrance-exams`      | Scheduling, attendance, result, eligibility, absence, and retest work    |
-| Registration          | `/student/enrollment/registration`        | Form progress, missing items, corrections, documents, and verification   |
-| Class Placement       | `/student/enrollment/class-placement`     | Capacity review and division assignment                                  |
-| Activation            | `/student/enrollment/activation`          | Gate review, approval, repair state, and Student Records handoff         |
-| Follow-ups & Messages | `/student/enrollment/follow-ups-messages` | Due reminders, manual follow-ups, message history, and delivery failures |
-| Admission Reports     | `/student/enrollment/reports`             | Auditable funnel, source, standard, stage, and outcome analysis          |
-| Applicant workspace   | `/student/enrollment/applicants/{leadId}` | Full stepper, blockers, checklist, next action, messages, and activity   |
+| Area                  | Route                                     | Primary interaction                                                        |
+| --------------------- | ----------------------------------------- | -------------------------------------------------------------------------- |
+| My Work               | `/student/enrollment/my-work`             | Assigned tasks, due work, blockers, and one recommended action             |
+| Pipeline              | `/student/enrollment/pipeline`            | Board and list views over every pre-admission applicant                    |
+| Entrance Exams        | `/student/enrollment/entrance-exams`      | Scheduling, attendance, result, eligibility, absence, and retest work      |
+| Registration          | `/student/enrollment/registration`        | Form progress, missing items, corrections, documents, and verification     |
+| Class Placement       | `/student/enrollment/class-placement`     | Capacity review and division assignment                                    |
+| Activation            | `/student/enrollment/activation`          | Gate review, approval, repair state, and Student Records handoff           |
+| Follow-ups & Messages | `/student/enrollment/follow-ups-messages` | Due reminders, manual follow-ups, message history, and delivery failures   |
+| Admission Reports     | `/student/enrollment/reports`             | Auditable funnel, source, standard, stage, and outcome analysis            |
+| Applicant workspace   | `/student/enrollment/applicants/{leadId}` | Current command, six-stage journey, focused operations, context, and audit |
 
-## Applicant Stepper
+## Applicant command workspace
 
-The Applicant Stepper contains exactly these six school-facing steps.
+The applicant command workspace contains exactly these six school-facing stages.
 The backend applicant progress projection decides each step status, blocker, and next action.
+The projection `currentStep`, `nextAction`, `nextActionCode`, step status, and reason are the only lifecycle and primary-action authority.
+The workspace does not derive competing instructions from the lead stage.
 
 | Order | Step            | Completion meaning                                                                                             |
 | ----- | --------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -41,9 +43,15 @@ The backend applicant progress projection decides each step status, blocker, and
 | 5     | Class Placement | Board, medium, standard, and required division placement are confirmed                                         |
 | 6     | Activation      | Configured gates pass and the applicant is handed to Student Records as an active student                      |
 
-Step statuses are `Not Started`, `In Progress`, `Complete`, `Skipped`, `Blocked`, and `Needs Review`.
-Optional steps show `Skipped` only when the immutable Admission Year Setup snapshot permits the skip or an authorized bypass is recorded.
+Step statuses are `Not Started`, `In Progress`, `Complete`, `Skipped`, `Blocked`, and `Needs Review` in the API.
+The interface presents `Skipped` as `Not required` and never uses a completion check for it.
+Optional steps show `Not required` only when the immutable Admission Year Setup snapshot permits the skip or an authorized bypass is recorded.
 Blocked steps identify the missing field, document, Finance state, capacity issue, or permission requirement.
+Completed and current stages are navigable, while blocked, optional, and future stages remain readable without starting invalid work.
+Desktop renders one six-column journey without horizontal scrolling.
+Tablet and mobile render current-step progress plus a `View Journey` disclosure with a vertical status list.
+The main column owns the active operation, while the context rail owns applicant facts, pathway, ownership, priority, SLA, follow-ups, Activity and Audit, and Additional Checks.
+Activity and Audit opens as a URL-backed drawer rather than a competing applicant tab.
 Parent-facing status uses the same step order but hides internal notes, scoring details, duplicate evidence, and staff permissions.
 
 ## Pipeline
@@ -182,7 +190,14 @@ The UI must not claim a message was delivered without provider evidence.
 ## Navigation state
 
 The selected academic year travels through the `cycle` query key for compatibility with the existing global academic-year context.
-Applicant workspace views may use the `tab` query key.
+Pipeline and newly created inquiries open applicants with `tab=next`.
+Direct applicant URLs without an explicit stage resolve to the backend current stage.
+Focused worklists may use `tab=exam`, `tab=registration`, `tab=finance`, `tab=offer`, `tab=activation`, or `tab=governance`.
+Legacy `tab=overview` canonicalizes to `tab=next`.
+Legacy `tab=activity` canonicalizes to `tab=next&activity=1`.
+The Activity and Audit drawer uses `activity=1`.
+Targeted exam work uses `/student/enrollment/entrance-exams?cycle={academicYearId}&applicant={leadId}&examAction={action}`.
+A session-backed return token restores the applicant stage and the originating Pipeline filters and page.
 All other worklist filters use shareable URL state where the workspace supports them.
 Compatibility redirects preserve query state and then land on the canonical route.
 
