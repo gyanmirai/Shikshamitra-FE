@@ -2,11 +2,29 @@
 
 import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Chip, Stack, Tooltip, IconButton, Typography } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import {
+  Box,
+  Card,
+  Chip,
+  Stack,
+  Tooltip,
+  IconButton,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Alert,
+  Divider,
+} from '@mui/material';
 
 import { ApprovalStatusChip } from './RoomStatusChip';
 
@@ -20,7 +38,7 @@ interface RoomReservationsTabProps {
   pendingAction?: PendingAction;
   onCancel?: (id: string) => void;
   onApprove?: (id: string) => Promise<boolean> | void;
-  onReject?: (id: string) => Promise<boolean> | void;
+  onReject?: (id: string, reason: string) => Promise<boolean> | void;
   onEdit?: (reservation: RoomReservation) => void;
   onViewRoom?: (roomId: string) => void;
 }
@@ -36,6 +54,13 @@ export const RoomReservationsTab = ({
   onViewRoom,
 }: RoomReservationsTabProps) => {
   const [filter, setFilter] = useState<string>('all');
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [approveId, setApproveId] = useState<string | null>(null);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectTargetId, setRejectTargetId] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState('');
+  const [isRejecting, setIsRejecting] = useState(false);
 
   // True only for the specific row + action currently in flight; drives the
   // active button's loading spinner. Sibling/other-row actions are gated by
@@ -44,37 +69,96 @@ export const RoomReservationsTab = ({
     pendingAction?.id === id && pendingAction?.type === type;
   const isAnyActionPending = pendingAction !== null;
 
+  const handleOpenReject = (id: string) => {
+    setRejectTargetId(id);
+    setRejectReason('');
+    setRejectError('');
+    setRejectDialogOpen(true);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectReason.trim()) {
+      setRejectError('Rejection reason is mandatory.');
+      return;
+    }
+    setIsRejecting(true);
+    try {
+      const ok = await onReject?.(rejectTargetId, rejectReason);
+      if (ok === false) return; // parent already showed the error toast
+      setRejectDialogOpen(false);
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
   const filtered = useMemo(() => {
     if (filter === 'all') return reservations;
     return reservations.filter((r) => r.status === filter);
   }, [filter, reservations]);
 
   const statusFilters = [
-    { value: 'all', label: 'All' },
-    { value: 'active', label: 'Active' },
-    { value: 'pendingApproval', label: 'Pending' },
-    { value: 'approved', label: 'Approved' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
-    { value: 'rejected', label: 'Rejected' },
+    { value: 'all', label: 'All', icon: 'mdi:view-grid-outline', color: 'info.main', bgcolor: 'info.lighter' },
+    { value: 'active', label: 'Active', icon: 'mdi:calendar-check', color: 'primary.main', bgcolor: 'primary.lighter' },
+    { value: 'pendingApproval', label: 'Pending', icon: 'mdi:clock-outline', color: 'warning.main', bgcolor: 'warning.lighter' },
+    { value: 'approved', label: 'Approved', icon: 'mdi:check-decagram-outline', color: 'success.main', bgcolor: 'success.lighter' },
+    { value: 'completed', label: 'Completed', icon: 'mdi:flag-checkered', color: 'success.main', bgcolor: 'success.lighter' },
+    { value: 'cancelled', label: 'Cancelled', icon: 'mdi:cancel', color: 'error.main', bgcolor: 'error.lighter' },
+    { value: 'rejected', label: 'Rejected', icon: 'mdi:close-circle-outline', color: 'error.main', bgcolor: 'error.lighter' },
   ];
 
   return (
     <Stack spacing={1} sx={{ height: '100%' }}>
-      {/* Status filter chips */}
-      <Stack direction="row" flexWrap="wrap" gap={1}>
-        {statusFilters.map((sf) => (
-          <Chip
-            key={sf.value}
-            size="small"
-            label={`${sf.label} (${sf.value === 'all' ? reservations.length : reservations.filter((r) => r.status === sf.value).length})`}
-            onClick={() => setFilter(sf.value)}
-            variant={filter === sf.value ? 'filled' : 'outlined'}
-            color={filter === sf.value ? 'primary' : 'default'}
-            sx={{ cursor: 'pointer' }}
-          />
-        ))}
-      </Stack>
+      {/* Status filter cards */}
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 1.5,
+          gridTemplateColumns: {
+            xs: 'repeat(2, 1fr)',
+            sm: 'repeat(4, 1fr)',
+            md: 'repeat(7, 1fr)',
+          },
+          mb: 1,
+        }}
+      >
+        {statusFilters.map((sf) => {
+          const count = sf.value === 'all' ? reservations.length : reservations.filter((r) => r.status === sf.value).length;
+          const isSelected = filter === sf.value;
+          
+          return (
+            <Card
+              key={sf.value}
+              role="button"
+              tabIndex={0}
+              onClick={() => setFilter(sf.value)}
+              onKeyDown={(event) => event.key === 'Enter' && setFilter(sf.value)}
+              sx={{
+                p: 1.5,
+                cursor: 'pointer',
+                border: (theme) =>
+                  `1px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
+                boxShadow: isSelected ? 4 : 0,
+              }}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Iconify
+                  icon={sf.icon}
+                  width={20}
+                  sx={{ color: isSelected ? 'primary.main' : 'text.secondary' }}
+                />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="caption" color="text.secondary" noWrap display="block">
+                    {sf.label}
+                  </Typography>
+                  <Typography variant="subtitle1" noWrap>
+                    {count}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Card>
+          );
+        })}
+      </Box>
 
       <CustomizableTable
         tableContainerProps={{ sx: { height: '100%' } }}
@@ -106,8 +190,8 @@ export const RoomReservationsTab = ({
             render: (_v, row) => (
               <Box>
                 <Typography variant="body2">
-                  {row.date}
-                  {row.isRecurring && row.recurringUntilDate && ` to ${row.recurringUntilDate}`}
+                  {row.date ? dayjs(row.date).format('DD/MM/YYYY') : ''}
+                  {row.isRecurring && row.recurringUntilDate && ` to ${dayjs(row.recurringUntilDate).format('DD/MM/YYYY')}`}
                 </Typography>
                 {row.isRecurring && (
                   <Typography
@@ -190,17 +274,10 @@ export const RoomReservationsTab = ({
             sticky: true,
             stickyPosition: 'right',
             render: (_v, row) => (
-              <Stack direction="row" spacing={1} justifyContent="center">
+              <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                 <Tooltip title="View Room Details">
-                  <IconButton
-                    size="small"
-                    onClick={() => onViewRoom?.(row.roomId)}
-                    sx={{
-                      bgcolor: 'action.selected',
-                      '&:hover': { bgcolor: 'action.hover' },
-                    }}
-                  >
-                    <Iconify icon={GlobalIcons.eye} width={16} />
+                  <IconButton size="small" color="default" onClick={() => onViewRoom?.(row.roomId)}>
+                    <Iconify icon={GlobalIcons.eye} width={18} />
                   </IconButton>
                 </Tooltip>
 
@@ -210,12 +287,8 @@ export const RoomReservationsTab = ({
                       size="small"
                       color="primary"
                       onClick={() => onEdit(row as RoomReservation)}
-                      sx={{
-                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                        '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16) },
-                      }}
                     >
-                      <Iconify icon={GlobalIcons.edit} width={16} />
+                      <Iconify icon={GlobalIcons.edit} width={18} />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -230,19 +303,15 @@ export const RoomReservationsTab = ({
                           variant="text"
                           loading={isBusy(row.id, 'approve')}
                           disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
-                          onClick={() => onApprove?.(row.id)}
+                          onClick={() => setApproveId(row.id)}
                           sx={{
                             minWidth: 32,
                             width: 32,
                             height: 32,
                             borderRadius: '50%',
-                            bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-                            '&:hover': {
-                              bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
-                            },
                           }}
                         >
-                          <Iconify icon="mdi:check-circle" width={16} />
+                          <Iconify icon="mdi:check" width={20} />
                         </LoadingButton>
                       </span>
                     </Tooltip>
@@ -252,13 +321,9 @@ export const RoomReservationsTab = ({
                           size="small"
                           color="error"
                           disabled={isAnyActionPending}
-                          onClick={() => onReject?.(row.id)}
-                          sx={{
-                            bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-                            '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
-                          }}
+                          onClick={() => handleOpenReject(row.id)}
                         >
-                          <Iconify icon="mdi:close-circle" width={16} />
+                          <Iconify icon="mdi:close" width={20} />
                         </IconButton>
                       </span>
                     </Tooltip>
@@ -273,14 +338,10 @@ export const RoomReservationsTab = ({
                         color="error"
                         disabled={isAnyActionPending}
                         onClick={() => {
-                          onCancel(row.id);
-                        }}
-                        sx={{
-                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-                          '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
+                          setCancelId(row.id);
                         }}
                       >
-                        <Iconify icon={GlobalIcons.cancel} width={16} />
+                        <Iconify icon={GlobalIcons.delete} width={18} />
                       </IconButton>
                     </span>
                   </Tooltip>
@@ -290,6 +351,111 @@ export const RoomReservationsTab = ({
           },
         ]}
       />
+
+      <ConfirmDialog
+        open={!!cancelId}
+        onClose={() => setCancelId(null)}
+        title="Cancel Reservation"
+        content="Are you sure you want to cancel this reservation? This action cannot be undone."
+        icon="warning"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              if (cancelId && onCancel) {
+                onCancel(cancelId);
+              }
+              setCancelId(null);
+            }}
+          >
+            Cancel
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={!!approveId}
+        onClose={() => setApproveId(null)}
+        title="Approve Reservation"
+        content="Are you sure you want to approve this reservation?"
+        icon="success"
+        action={
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => {
+              if (approveId && onApprove) {
+                onApprove(approveId);
+              }
+              setApproveId(null);
+            }}
+          >
+            Approve
+          </Button>
+        }
+      />
+
+      <Dialog
+        open={rejectDialogOpen}
+        onClose={() => setRejectDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Iconify icon="mdi:close" width={22} color="error.main" />
+            <Typography variant="h6">Reject Reservation</Typography>
+            <Tooltip title="Provide a reason for rejecting this reservation request. The requester will be notified.">
+              <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={20} />
+              </Box>
+            </Tooltip>
+          </Stack>
+        </DialogTitle>
+        <Divider />
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1, pb: 2 }}>
+            <Alert severity="warning">
+              The requester will be notified with your rejection reason.
+            </Alert>
+            <TextField
+              size="small"
+              label="Rejection Reason *"
+              multiline
+              rows={3}
+              fullWidth
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              error={!!rejectError}
+              helperText={rejectError}
+              placeholder="e.g. Clashes with existing timetable. Please choose another slot."
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            disabled={isRejecting}
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
+            onClick={() => setRejectDialogOpen(false)}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            size="small"
+            variant="contained"
+            color="error"
+            loading={isRejecting}
+            startIcon={<Iconify icon={GlobalIcons.delete} width={16} />}
+            onClick={handleConfirmReject}
+          >
+            Confirm Rejection
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 };

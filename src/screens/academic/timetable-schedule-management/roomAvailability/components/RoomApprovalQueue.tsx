@@ -1,10 +1,12 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
@@ -42,6 +44,7 @@ export const RoomApprovalQueue = ({
   onReject,
 }: RoomApprovalQueueProps) => {
   const pending = reservations.filter((r) => r.approvalStatus === 'pending');
+  const [approveId, setApproveId] = useState<string | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectTargetId, setRejectTargetId] = useState('');
   const [rejectReason, setRejectReason] = useState('');
@@ -149,8 +152,10 @@ export const RoomApprovalQueue = ({
               render: (_v, row) => (
                 <Box>
                   <Typography variant="body2">
-                    {row.date}
-                    {row.isRecurring && row.recurringUntilDate && ` to ${row.recurringUntilDate}`}
+                    {row.date ? dayjs(row.date).format('DD/MM/YYYY') : ''}
+                    {row.isRecurring &&
+                      row.recurringUntilDate &&
+                      ` to ${dayjs(row.recurringUntilDate).format('DD/MM/YYYY')}`}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" display="block">
                     {row.startTime} – {row.endTime}
@@ -203,7 +208,7 @@ export const RoomApprovalQueue = ({
               minWidth: 120,
               render: (v) => (
                 <Typography variant="caption" color="text.secondary">
-                  {v || '—'}
+                  {v ? dayjs(v).format('DD-MM-YYYY, hh:mm A') : '—'}
                 </Typography>
               ),
             },
@@ -240,22 +245,18 @@ export const RoomApprovalQueue = ({
                         variant="text"
                         loading={isBusy(row.id, 'approve')}
                         disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
-                        onClick={() => onApprove?.(row.id)}
+                        onClick={() => setApproveId(row.id)}
                         sx={{
                           minWidth: 32,
                           width: 32,
                           height: 32,
                           borderRadius: '50%',
-                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-                          '&:hover': {
-                            bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
-                          },
                         }}
                       >
-                        <Iconify icon="mdi:check-circle" width={16} />
+                        <Iconify icon="mdi:check" width={20} />
                       </LoadingButton>
                     </span>
-                  </Tooltip >
+                  </Tooltip>
                   <Tooltip title="Reject">
                     <span>
                       <IconButton
@@ -263,45 +264,66 @@ export const RoomApprovalQueue = ({
                         color="error"
                         disabled={isAnyActionPending}
                         onClick={() => handleOpenReject(row.id)}
-                        sx={{
-                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-                          '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
-                        }}
                       >
-                        <Iconify icon="mdi:close-circle" width={16} />
+                        <Iconify icon="mdi:close" width={20} />
                       </IconButton>
                     </span>
                   </Tooltip>
-                </Stack >
+                </Stack>
               ),
             },
           ]}
         />
-      </Stack >
+      </Stack>
+
+      <ConfirmDialog
+        open={!!approveId}
+        onClose={() => setApproveId(null)}
+        title="Approve Reservation"
+        content="Are you sure you want to approve this reservation?"
+        icon="success"
+        action={
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => {
+              if (approveId && onApprove) {
+                onApprove(approveId);
+              }
+              setApproveId(null);
+            }}
+          >
+            Approve
+          </Button>
+        }
+      />
 
       {/* Reject Dialog */}
-      < Dialog
+      <Dialog
         open={rejectDialogOpen}
         onClose={() => setRejectDialogOpen(false)}
         maxWidth="sm"
         fullWidth
       >
         <DialogTitle>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Iconify icon="mdi:close-circle" width={22} color="error.main" />
-              <Typography variant="h6">Reject Reservation</Typography>
-            </Stack>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Iconify icon="mdi:close" width={22} color="error.main" />
+            <Typography variant="h6">Reject Reservation</Typography>
             <Tooltip title="Provide a reason for rejecting this reservation request. The requester will be notified.">
-              <IconButton size="small">
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" />
-              </IconButton>
+              <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                <Iconify
+                  icon={GlobalIcons.info}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                  width={20}
+                />
+              </Box>
             </Tooltip>
           </Stack>
         </DialogTitle>
         <Divider />
         <DialogContent>
-          <Stack spacing={1} sx={{ pt: 1 }}>
+          <Stack spacing={2} sx={{ pt: 1, pb: 2 }}>
             <Alert severity="warning">
               The requester will be notified with your rejection reason.
             </Alert>
@@ -341,7 +363,7 @@ export const RoomApprovalQueue = ({
             Confirm Rejection
           </LoadingButton>
         </DialogActions>
-      </Dialog >
+      </Dialog>
     </>
   );
 };

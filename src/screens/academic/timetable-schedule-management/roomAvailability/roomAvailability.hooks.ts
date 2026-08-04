@@ -94,7 +94,7 @@ export function useRoomAvailability(filters?: Partial<RoomAvailabilityFilters>) 
 // ─── useRoomSchedule ──────────────────────────────────────────────────────────
 export function useRoomSchedule(roomId: string | null, dateStr?: string) {
   const queryDate = dateStr || dayjs().format('YYYY-MM-DD');
-  const { data, isLoading, isError, refetch } = useGetRoomScheduleQuery(
+  const { data, isLoading, isError, refetch, isFetching } = useGetRoomScheduleQuery(
     { roomId, date: queryDate },
     { skip: !roomId }
   );
@@ -102,6 +102,7 @@ export function useRoomSchedule(roomId: string | null, dateStr?: string) {
   return {
     data: (data || null) as RoomSchedule | null,
     isLoading,
+    isFetching,
     error: isError ? 'Failed to load room schedule.' : null,
     refetch,
     fetch: refetch,

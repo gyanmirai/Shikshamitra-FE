@@ -4,6 +4,7 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -19,6 +20,7 @@ import {
   Drawer,
   Switch,
   Divider,
+  Tooltip,
   TextField,
   Typography,
   IconButton,
@@ -38,7 +40,6 @@ import {
 } from './directReservationSlots';
 
 import type { RoomReservation, RoomAvailabilityItem, ReservationRequirements } from '../types';
-import { GlobalIcons } from 'src/utils/icons';
 
 const StepBadge = ({ number }: { number: number }) => (
   <Box
@@ -91,6 +92,7 @@ const defaultRequirements: ReservationRequirements = {
 interface DirectRoomReservationDrawerProps {
   open: boolean;
   room: RoomAvailabilityItem | null;
+  prefillDate?: string;
   onClose: () => void;
   onSuccess?: (reservation: RoomReservation) => void;
 }
@@ -98,6 +100,7 @@ interface DirectRoomReservationDrawerProps {
 export const DirectRoomReservationDrawer = ({
   open,
   room,
+  prefillDate,
   onClose,
   onSuccess,
 }: DirectRoomReservationDrawerProps) => {
@@ -128,13 +131,13 @@ export const DirectRoomReservationDrawer = ({
     if (open && room) {
       setRequirements({
         ...defaultRequirements,
-        date: dayjs().format('YYYY-MM-DD'),
+        date: prefillDate || dayjs().format('YYYY-MM-DD'),
       });
       setSlotDurationMinutes(DEFAULT_SLOT_DURATION_MINUTES);
       setValidationError('');
       setFieldErrors({});
     }
-  }, [open, room]);
+  }, [open, room, prefillDate]);
 
   const isStartTimeOutOfRange = useMemo(() => {
     if (!requirements.startTime) return false;
@@ -235,7 +238,10 @@ export const DirectRoomReservationDrawer = ({
     }
 
     if (requirements.isRecurring && requirements.recurringConfig?.repeatType === 'weekly') {
-      if (!requirements.recurringConfig.repeatDays || requirements.recurringConfig.repeatDays.length === 0) {
+      if (
+        !requirements.recurringConfig.repeatDays ||
+        requirements.recurringConfig.repeatDays.length === 0
+      ) {
         errors.repeatDays = 'Please select at least one day for weekly recurrence.';
       }
     }
@@ -272,13 +278,13 @@ export const DirectRoomReservationDrawer = ({
         isRecurring: requirements.isRecurring,
         recurringConfig: requirements.isRecurring
           ? {
-            repeatType: requirements.recurringConfig?.repeatType || 'daily',
-            repeatDays: requirements.recurringConfig?.repeatDays || [],
-            untilDate: requirements.recurringConfig?.untilDate || requirements.date,
-            excludeHolidays: requirements.recurringConfig?.excludeHolidays ?? true,
-            excludeExamDays: requirements.recurringConfig?.excludeExamDays ?? false,
-            skipConflictDates: requirements.recurringConfig?.skipConflictDates ?? false,
-          }
+              repeatType: requirements.recurringConfig?.repeatType || 'daily',
+              repeatDays: requirements.recurringConfig?.repeatDays || [],
+              untilDate: requirements.recurringConfig?.untilDate || requirements.date,
+              excludeHolidays: requirements.recurringConfig?.excludeHolidays ?? true,
+              excludeExamDays: requirements.recurringConfig?.excludeExamDays ?? false,
+              skipConflictDates: requirements.recurringConfig?.skipConflictDates ?? false,
+            }
           : undefined,
       } as any);
 
@@ -333,8 +339,9 @@ export const DirectRoomReservationDrawer = ({
         endTime: generatedSlots[end].endTime,
       });
       shikshaMitraToast.success({
-        message: `Selected range: ${generatedSlots[start].time.split('-')[0]} to ${generatedSlots[end].time.split('-')[1]
-          }`,
+        message: `Selected range: ${generatedSlots[start].time.split('-')[0]} to ${
+          generatedSlots[end].time.split('-')[1]
+        }`,
       });
     } else {
       selectSingle();
@@ -485,8 +492,18 @@ export const DirectRoomReservationDrawer = ({
                 ))}
               </Stack>
 
-              <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
-                {schedule.isLoading && (
+              <Box
+                sx={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  pr: 1,
+                  '&::-webkit-scrollbar': { width: 6 },
+                  '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+                  '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 3 },
+                  '&::-webkit-scrollbar-thumb:hover': { bgcolor: 'action.disabled' },
+                }}
+              >
+                {(schedule.isLoading || schedule.isFetching) && (
                   <Box sx={{ py: 8, textAlign: 'center' }}>
                     <CircularProgress size={40} />
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
@@ -501,18 +518,22 @@ export const DirectRoomReservationDrawer = ({
                   </Alert>
                 )}
 
-                {!schedule.isLoading && !schedule.error && !schedule.data && (
-                  <Alert severity="info" sx={{ borderRadius: 1.5 }}>
-                    No periods scheduled for this date. Any time slot is available for booking.
-                  </Alert>
-                )}
+                {!(schedule.isLoading || schedule.isFetching) &&
+                  !schedule.error &&
+                  !schedule.data && (
+                    <Alert severity="info" sx={{ borderRadius: 1.5 }}>
+                      No periods scheduled for this date. Any time slot is available for booking.
+                    </Alert>
+                  )}
 
-                {!schedule.isLoading && schedule.data && (
+                {!(schedule.isLoading || schedule.isFetching) && schedule.data && (
                   <Box
                     sx={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                      gap: 1,
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                      gap: 1.5,
+                      pt: 1,
+                      pb: 2,
                     }}
                   >
                     {generatedSlots.map((slot, idx: number) => {
@@ -522,154 +543,167 @@ export const DirectRoomReservationDrawer = ({
                       const isConflict = slot.conflictMinutes > 0;
                       const isSelectedConflict = isOverlapping && isConflict;
                       return (
-                        <Box
+                        <Tooltip
                           key={idx}
-                          onClick={() => handleSelectSlot(idx)}
-                          sx={{
-                            position: 'relative',
-                            p: 1.5,
-                            borderRadius: 2,
-                            border: 1.5,
-                            borderColor: isSelected
-                              ? 'primary.main'
-                              : isConflict
-                                ? isSelectedConflict
-                                  ? 'warning.dark'
-                                  : 'warning.main'
-                                : isFree
-                                  ? alpha('#2e7d32', 0.3)
-                                  : 'divider',
-                            bgcolor: isSelected
-                              ? (theme) => alpha(theme.palette.primary.main, 0.1)
-                              : isConflict
-                                ? (theme) =>
-                                  alpha(
-                                    theme.palette.warning.main,
-                                    isSelectedConflict ? 0.18 : 0.1
-                                  )
-                                : isFree
-                                  ? (theme) => alpha(theme.palette.success.main, 0.06)
-                                  : 'background.neutral',
-                            cursor: 'pointer',
-                            opacity: 1,
-                            transition: 'all 0.15s',
-                            '&:hover': {
-                              borderColor: isConflict
-                                ? 'warning.dark'
-                                : isSelected
-                                  ? 'primary.dark'
-                                  : 'success.main',
-                              transform: 'translateY(-2px)',
-                              boxShadow: (theme) =>
-                                `0 6px 16px 0 ${alpha(
-                                  isConflict
-                                    ? theme.palette.warning.main
-                                    : isSelected
-                                      ? theme.palette.primary.main
-                                      : theme.palette.success.main,
-                                  0.22
-                                )}`,
-                            },
-                          }}
+                          title={
+                            <Stack spacing={0.5}>
+                              <Typography variant="subtitle2" fontWeight={600}>
+                                {slot.period || `Slot ${idx + 1}`} ({slot.time})
+                              </Typography>
+                              {!isFree && (
+                                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                                  {slot.details || slot.status.toUpperCase()}
+                                </Typography>
+                              )}
+                              {isConflict && (
+                                <Typography variant="caption" color="warning.main" fontWeight={600}>
+                                  Conflict: {slot.conflictMinutes} min
+                                </Typography>
+                              )}
+                            </Stack>
+                          }
+                          arrow
+                          placement="top"
+                          disableHoverListener={isFree && !isConflict} // Only show if not entirely free
                         >
-                          {isSelected && (
-                            <Box
-                              sx={{
-                                position: 'absolute',
-                                top: 6,
-                                right: 6,
-                                width: 16,
-                                height: 16,
-                                borderRadius: '50%',
-                                bgcolor: 'primary.main',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <Iconify icon="mdi:check" width={11} sx={{ color: 'common.white' }} />
-                            </Box>
-                          )}
-                          {isFree && !isSelected && (
-                            <Box
-                              sx={{
-                                position: 'absolute',
-                                top: 6,
-                                right: 6,
-                                width: 16,
-                                height: 16,
-                                borderRadius: '50%',
-                                border: 1.5,
-                                borderColor: alpha('#2e7d32', 0.4),
-                              }}
-                            />
-                          )}
-                          {isConflict && (
-                            <Box
-                              sx={{
-                                position: 'absolute',
-                                top: 6,
-                                right: 6,
-                                width: 16,
-                                height: 16,
-                                borderRadius: '50%',
-                                bgcolor: 'warning.main',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <Iconify icon="mdi:alert" width={11} sx={{ color: 'common.white' }} />
-                            </Box>
-                          )}
-                          <Typography
-                            variant="caption"
+                          <Box
+                            onClick={() => handleSelectSlot(idx)}
                             sx={{
-                              fontWeight: 700,
-                              display: 'block',
-                              color: isSelected
-                                ? 'primary.dark'
+                              position: 'relative',
+                              p: 1.5,
+                              borderRadius: 1.5,
+                              border: 1,
+                              borderColor: isSelected
+                                ? 'primary.main'
                                 : isConflict
-                                  ? 'warning.dark'
+                                  ? isSelectedConflict
+                                    ? 'warning.dark'
+                                    : 'warning.main'
                                   : isFree
-                                    ? 'success.dark'
-                                    : 'text.secondary',
+                                    ? alpha('#2e7d32', 0.4)
+                                    : 'divider',
+                              bgcolor: isSelected
+                                ? (theme) => alpha(theme.palette.primary.main, 0.1)
+                                : isConflict
+                                  ? (theme) =>
+                                      alpha(
+                                        theme.palette.warning.main,
+                                        isSelectedConflict ? 0.2 : 0.1
+                                      )
+                                  : isFree
+                                    ? (theme) => alpha(theme.palette.success.main, 0.05)
+                                    : 'background.neutral',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              textAlign: 'center',
+                              minHeight: 64,
+                              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                              '&:hover': {
+                                borderColor: isConflict
+                                  ? 'warning.dark'
+                                  : isSelected
+                                    ? 'primary.dark'
+                                    : 'success.main',
+                                bgcolor: isSelected
+                                  ? (theme) => alpha(theme.palette.primary.main, 0.15)
+                                  : isConflict
+                                    ? (theme) => alpha(theme.palette.warning.main, 0.15)
+                                    : (theme) => alpha(theme.palette.success.main, 0.1),
+                                transform: 'translateY(-2px)',
+                                boxShadow: (theme) =>
+                                  `0 4px 12px 0 ${alpha(
+                                    isConflict
+                                      ? theme.palette.warning.main
+                                      : isSelected
+                                        ? theme.palette.primary.main
+                                        : theme.palette.success.main,
+                                    0.16
+                                  )}`,
+                              },
                             }}
                           >
-                            {slot.period || `Slot ${idx + 1}`}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: 'block', fontSize: 11, mt: 0.25 }}
-                          >
-                            {slot.time}
-                          </Typography>
-                          {!isFree && (
+                            {isSelected && (
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  top: -8,
+                                  right: -8,
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: '50%',
+                                  bgcolor: 'primary.main',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxShadow: 2,
+                                  zIndex: 1,
+                                }}
+                              >
+                                <Iconify
+                                  icon="mdi:check-bold"
+                                  width={12}
+                                  sx={{ color: 'common.white' }}
+                                />
+                              </Box>
+                            )}
+                            {isConflict && !isSelected && (
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  top: -8,
+                                  right: -8,
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: '50%',
+                                  bgcolor: 'warning.main',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxShadow: 2,
+                                  zIndex: 1,
+                                }}
+                              >
+                                <Iconify
+                                  icon="mdi:alert"
+                                  width={14}
+                                  sx={{ color: 'common.white' }}
+                                />
+                              </Box>
+                            )}
                             <Typography
-                              variant="caption"
-                              color="text.disabled"
-                              noWrap
-                              sx={{ display: 'block', fontSize: 10.5, mt: 0.5 }}
-                            >
-                              {slot.details || slot.status.toUpperCase()}
-                            </Typography>
-                          )}
-                          {isConflict && (
-                            <Typography
-                              variant="caption"
+                              variant="subtitle2"
                               sx={{
-                                display: 'block',
-                                fontSize: 10.5,
-                                mt: 0.5,
-                                color: 'warning.dark',
                                 fontWeight: 700,
+                                lineHeight: 1.2,
+                                color: isSelected
+                                  ? 'primary.main'
+                                  : isConflict
+                                    ? 'warning.main'
+                                    : isFree
+                                      ? 'success.main'
+                                      : 'text.secondary',
                               }}
                             >
-                              Conflict: {slot.conflictMinutes} min
+                              {slot.period || `Slot ${idx + 1}`}
                             </Typography>
-                          )}
-                        </Box>
+                            <Typography
+                              variant="caption"
+                              color={isSelected ? 'text.primary' : 'text.secondary'}
+                              sx={{
+                                fontSize: 10,
+                                mt: 0.5,
+                                lineHeight: 1.2,
+                                opacity: isSelected ? 1 : 0.8,
+                                fontWeight: isSelected ? 600 : 400,
+                              }}
+                            >
+                              {slot.time}
+                            </Typography>
+                          </Box>
+                        </Tooltip>
                       );
                     })}
                   </Box>
@@ -747,7 +781,9 @@ export const DirectRoomReservationDrawer = ({
                     fullWidth
                     placeholder="e.g. Grade 9 Chemistry Lab"
                     error={!!fieldErrors.purpose}
-                    helperText={fieldErrors.purpose || 'Briefly describe why this room is being reserved'}
+                    helperText={
+                      fieldErrors.purpose || 'Briefly describe why this room is being reserved'
+                    }
                   />
 
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -772,12 +808,11 @@ export const DirectRoomReservationDrawer = ({
                         textField: {
                           size: 'small',
                           fullWidth: true,
-                          error: !!fieldErrors.startTime || isStartTimeOutOfRange || isTimeRangeInvalid,
+                          error:
+                            !!fieldErrors.startTime || isStartTimeOutOfRange || isTimeRangeInvalid,
                           helperText:
                             fieldErrors.startTime ||
-                            (isStartTimeOutOfRange
-                              ? 'Must be between 06:00 AM and 12:00 AM'
-                              : ' '),
+                            (isStartTimeOutOfRange ? 'Must be between 06:00 AM and 12:00 AM' : ' '),
                         },
                       }}
                     />
@@ -912,7 +947,10 @@ export const DirectRoomReservationDrawer = ({
                         <Stack spacing={1}>
                           <Typography
                             variant="caption"
-                            sx={{ fontWeight: 600, color: fieldErrors.repeatDays ? 'error.main' : 'text.secondary' }}
+                            sx={{
+                              fontWeight: 600,
+                              color: fieldErrors.repeatDays ? 'error.main' : 'text.secondary',
+                            }}
                           >
                             Repeat On Days *
                           </Typography>
@@ -933,7 +971,13 @@ export const DirectRoomReservationDrawer = ({
                                   key={day.value}
                                   label={day.label}
                                   clickable
-                                  color={isSelected ? 'primary' : fieldErrors.repeatDays ? 'error' : 'default'}
+                                  color={
+                                    isSelected
+                                      ? 'primary'
+                                      : fieldErrors.repeatDays
+                                        ? 'error'
+                                        : 'default'
+                                  }
                                   variant={isSelected ? 'filled' : 'outlined'}
                                   onClick={() => {
                                     const newDays = isSelected

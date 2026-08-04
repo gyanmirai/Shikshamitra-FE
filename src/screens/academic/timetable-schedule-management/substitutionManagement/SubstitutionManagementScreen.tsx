@@ -72,6 +72,7 @@ import {
   ToggleButton,
   ListItemIcon,
   ListItemText,
+  InputAdornment,
   LinearProgress,
   AccordionSummary,
   AccordionDetails,
@@ -704,6 +705,7 @@ const SubstitutionManagementScreen = () => {
   const [createSubmitType, setCreateSubmitType] = useState<'draft' | 'assign' | null>(null);
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
 
   const availabilityStartTimeStr = useMemo(() => {
     if (availabilityForm.isFullDay) return '09:00';
@@ -773,12 +775,12 @@ const SubstitutionManagementScreen = () => {
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
-  const { data: rawCreateMetadata } = useSubstitutionCreateMetadataDataQuery(
+  const { data: rawCreateMetadata, isFetching: isFetchingCreateMetadata } = useSubstitutionCreateMetadataDataQuery(
     academicContextParams,
     { skip: !medium?.id }
   );
   const createMetadata = rawCreateMetadata as ApiSubstitutionCreateMetadata | undefined;
-  const { data: rawCreateLectureResult } = useSubstitutionLecturesDataQuery(
+  const { data: rawCreateLectureResult, isFetching: isFetchingLectures } = useSubstitutionLecturesDataQuery(
     {
       ...academicContextParams,
       date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
@@ -800,7 +802,7 @@ const SubstitutionManagementScreen = () => {
   const selectedCreateLecture = createLectureResult.find(
     (lecture) => lecture.slotSubjectId === substitutionForm.timetableSlotSubjectId
   );
-  const { data: createSuggestedTeacherResult } = useSuggestedTeachersByContextDataQuery(
+  const { data: createSuggestedTeacherResult, isFetching: isFetchingSuggestedTeachers } = useSuggestedTeachersByContextDataQuery(
     {
       ...academicContextParams,
       date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
@@ -856,6 +858,9 @@ const SubstitutionManagementScreen = () => {
   const [getAffectedLectures] = useAffectedLecturesLazyQuery();
   const [getEmployeeOptions] = useEmployeeOptionsLazyQuery();
   const seenAvailabilityTeacherIdsRef = useRef<Set<string>>(new Set());
+
+  const isCreateDialogLoading =
+    isFetchingCreateMetadata || isFetchingLectures || isFetchingSuggestedTeachers;
 
   const fetchAvailabilityTeacherOptions = useCallback(
     async (query: string, page: number = 1) => {
@@ -1949,13 +1954,7 @@ const SubstitutionManagementScreen = () => {
         <Chip label={value} size="small" color={priorityColor[value]} variant="soft" />
       ),
     },
-    {
-      id: 'status',
-      label: 'Status',
-      filterType: 'string' as const,
-      minWidth: 170,
-      render: (value: SubstitutionStatus) => renderStatus(value),
-    },
+
     {
       id: 'acknowledgementStatus',
       label: 'Acknowledgement',
@@ -1973,11 +1972,12 @@ const SubstitutionManagementScreen = () => {
         renderConflict(value, row.conflictReason),
     },
     {
-      id: 'aiScore',
-      label: 'AI Score',
-      filterType: 'number' as const,
-      minWidth: 110,
-      render: (value: number) => (value ? `${value}%` : '-'),
+      id: 'status',
+      label: 'Status',
+      filterType: 'string' as const,
+      sticky: true,
+      minWidth: 170,
+      render: (value: SubstitutionStatus) => renderStatus(value),
     },
     {
       id: 'actions',
@@ -2669,6 +2669,7 @@ const SubstitutionManagementScreen = () => {
           zIndex: 10,
           borderRadius: 1,
           flexShrink: 0,
+          overflow: 'visible',
         }}
       >
         <Stack
@@ -2807,9 +2808,10 @@ const SubstitutionManagementScreen = () => {
 
       {/* ── Scrollable Tab Content ───────────────────────── */}
       <Scrollbar
+        fillContent
         sx={{ flex: 1, minHeight: 0 }}
         slotProps={{
-          content: { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+          content: { display: 'flex', flexDirection: 'column', gap: '12px' } as any,
         }}
       >
         {activeTab === 'overview' && (
@@ -3097,17 +3099,7 @@ const SubstitutionManagementScreen = () => {
                 tableId="daily-substitution-sheet-table"
                 tableTitle="Daily Substitution Sheet"
                 data={dailySheetResult?.items.map(mapApiSubstitution) ?? filteredSubstitutions}
-                columns={[
-                  ...substitutionColumns.filter((column) => column.id !== 'actions'),
-                  {
-                    id: 'signature',
-                    label: 'Signature',
-                    minWidth: 150,
-                    isSort: false,
-                    isFilter: false,
-                    render: () => '____________',
-                  },
-                ]}
+                columns={[...substitutionColumns.filter((column) => column.id !== 'actions')]}
               />
             </Box>
           </Card>
@@ -3832,6 +3824,11 @@ const SubstitutionManagementScreen = () => {
           handleClose={handleCloseCreateDialog}
         >
           <DialogScrollContent>
+            {isCreateDialogLoading && (
+              <Box sx={{ width: '100%', mb: 2 }}>
+                <LinearProgress />
+              </Box>
+            )}
             <Stack spacing={1}>
               {formError && <Alert severity="error">{formError}</Alert>}
               <Alert severity="info" icon={<AutoAwesome />}>
@@ -3846,7 +3843,7 @@ const SubstitutionManagementScreen = () => {
                   disablePast
                   minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
                   maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-                  onChange={(value) =>
+                  onChange={(value) => {
                     setSubstitutionForm((current) => ({
                       ...current,
                       date: value,
@@ -3865,8 +3862,9 @@ const SubstitutionManagementScreen = () => {
                       substituteTeacherId: '',
                       substituteTeacherName: '',
                       selectedSubstitutes: [],
-                    }))
-                  }
+                    }));
+                    setEmployeeSearchTerm('');
+                  }}
                   slotProps={{
                     textField: {
                       size: 'small',
@@ -4069,22 +4067,39 @@ const SubstitutionManagementScreen = () => {
                 />
               </Stack>
               <Card sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Available Substitute Employees
-                </Typography>
-                <Stack spacing={1}>
-                  {!selectedCreateLecture && (
-                    <Alert severity="info">
-                      Select date, class, division and lecture slot to load free employees.
-                    </Alert>
-                  )}
-                  {selectedCreateLecture && suggestedTeacherRows.length === 0 && (
-                    <Alert severity="warning">
-                      No employee is free for the selected slot. Try split coverage or review
-                      timetable conflicts.
-                    </Alert>
-                  )}
-                  {suggestedTeacherRows.map((teacher, index) => {
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                  <Typography variant="subtitle2">
+                    Available Substitute Employees
+                  </Typography>
+                  <TextField
+                    size="small"
+                    placeholder="Search employee..."
+                    value={employeeSearchTerm}
+                    onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ width: 250, bgcolor: 'background.paper', borderRadius: 1 }}
+                  />
+                </Stack>
+                <Scrollbar sx={{ maxHeight: 340, pr: 0.5 }}>
+                  <Stack spacing={1}>
+                    {!selectedCreateLecture && (
+                      <Alert severity="info">
+                        Select date, class, division and lecture slot to load free employees.
+                      </Alert>
+                    )}
+                    {selectedCreateLecture && suggestedTeacherRows.filter((teacher) => teacher.teacherName.toLowerCase().includes(employeeSearchTerm.toLowerCase())).length === 0 && (
+                      <Alert severity="warning">
+                        No employee is free for the selected slot. Try split coverage or review
+                        timetable conflicts.
+                      </Alert>
+                    )}
+                  {suggestedTeacherRows.filter((teacher) => teacher.teacherName.toLowerCase().includes(employeeSearchTerm.toLowerCase())).map((teacher, index) => {
                     const isSelected = substitutionForm.selectedSubstitutes.some(
                       (item) => item.teacherId === teacher.teacherId
                     );
@@ -4092,54 +4107,126 @@ const SubstitutionManagementScreen = () => {
                       <Box
                         key={teacher.teacherId}
                         sx={{
-                          p: 1,
+                          p: 1.25,
                           borderRadius: 1,
                           bgcolor: 'background.paper',
-                          border: (theme) => `1px solid ${theme.palette.divider}`,
+                          border: (theme) =>
+                            `1px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
                         }}
                       >
                         <Stack
                           direction={{ xs: 'column', sm: 'row' }}
                           justifyContent="space-between"
+                          alignItems={{ xs: 'flex-start', sm: 'center' }}
                           spacing={1}
                         >
-                          <Box>
-                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                              <Typography variant="subtitle2">
-                                #{index + 1} {teacher.teacherName} - {teacher.score}%
-                              </Typography>
-                              <Chip
-                                size="small"
-                                color={teacher.isPartialCoverage ? 'warning' : 'success'}
-                                label={
-                                  teacher.isPartialCoverage
-                                    ? `Partial ${getTeacherCoverageLabel(teacher)}`
-                                    : `Free ${getTeacherCoverageLabel(teacher)}`
-                                }
-                              />
-                            </Stack>
-                            <Typography
-                              variant="caption"
-                              color={teacher.hasConflict ? 'error.main' : 'text.secondary'}
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box
+                              sx={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: '50%',
+                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                                color: 'primary.main',
+                                display: 'grid',
+                                placeItems: 'center',
+                                fontWeight: 700,
+                                fontSize: '0.75rem',
+                                flexShrink: 0,
+                              }}
                             >
-                              {teacher.hasConflict
-                                ? teacher.conflictReason
-                                : teacher.recommendationReason}
-                            </Typography>
-                          </Box>
+                              #{index + 1}
+                            </Box>
+                            <Box>
+                              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                                <Typography variant="subtitle2" fontWeight={700}>
+                                  {teacher.teacherName}
+                                </Typography>
+                                <Label
+                                  color={
+                                    teacher.score >= 80
+                                      ? 'success'
+                                      : teacher.score >= 60
+                                        ? 'info'
+                                        : 'warning'
+                                  }
+                                  variant="soft"
+                                >
+                                  {teacher.score}% Match
+                                </Label>
+                                <Label
+                                  color={teacher.isPartialCoverage ? 'warning' : 'success'}
+                                  variant="soft"
+                                >
+                                  {teacher.isPartialCoverage
+                                    ? `Partial ${getTeacherCoverageLabel(teacher)}`
+                                    : `Free ${getTeacherCoverageLabel(teacher)}`}
+                                </Label>
+                              </Stack>
+                              <Typography
+                                variant="caption"
+                                color={teacher.hasConflict ? 'error.main' : 'text.secondary'}
+                                sx={{ mt: 0.25, display: 'block' }}
+                              >
+                                {teacher.hasConflict
+                                  ? teacher.conflictReason
+                                  : teacher.recommendationReason}
+                              </Typography>
+                            </Box>
+                          </Stack>
                           <Button
                             size="small"
                             variant={isSelected ? 'contained' : 'outlined'}
-                            color={isSelected ? 'error' : 'primary'}
+                            color={isSelected ? 'error' : 'success'}
                             startIcon={
                               isSelected ? <CloseIcon fontSize="small" /> : <Add fontSize="small" />
                             }
                             disabled={!isSelected && teacher.conflictSeverity === 'Hard Block'}
-                            onClick={() =>
-                              isSelected
-                                ? removeSubstituteCoverage(teacher.teacherId)
-                                : addSubstituteCoverage(teacher)
-                            }
+                            onClick={() => {
+                              setSubstitutionForm((current) => {
+                                const exists = current.selectedSubstitutes.some(
+                                  (item) => item.teacherId === teacher.teacherId
+                                );
+                                if (exists) {
+                                  return {
+                                    ...current,
+                                    selectedSubstitutes: current.selectedSubstitutes.filter(
+                                      (item) => item.teacherId !== teacher.teacherId
+                                    ),
+                                    substituteTeacherId:
+                                      current.substituteTeacherId === teacher.teacherId
+                                        ? ''
+                                        : current.substituteTeacherId,
+                                    substituteTeacherName:
+                                      current.substituteTeacherId === teacher.teacherId
+                                        ? ''
+                                        : current.substituteTeacherName,
+                                  };
+                                }
+                                return {
+                                  ...current,
+                                  substituteTeacherId:
+                                    current.selectedSubstitutes.length === 0
+                                      ? teacher.teacherId
+                                      : current.substituteTeacherId,
+                                  substituteTeacherName:
+                                    current.selectedSubstitutes.length === 0
+                                      ? teacher.teacherName
+                                      : current.substituteTeacherName,
+                                  selectedSubstitutes: [
+                                    ...current.selectedSubstitutes,
+                                    {
+                                      teacherId: teacher.teacherId,
+                                      teacherName: teacher.teacherName,
+                                      startTime: teacher.coverageStartTime || '',
+                                      endTime: teacher.coverageEndTime || '',
+                                      score: teacher.score,
+                                      isPartialCoverage: teacher.isPartialCoverage || false,
+                                    },
+                                  ],
+                                };
+                              });
+                            }}
                           >
                             {isSelected ? 'Remove' : 'Add'}
                           </Button>
@@ -4148,7 +4235,8 @@ const SubstitutionManagementScreen = () => {
                     );
                   })}
                 </Stack>
-              </Card>
+              </Scrollbar>
+            </Card>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <CustomSelect
                   label="Substitute Teacher"

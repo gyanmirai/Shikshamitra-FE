@@ -13,6 +13,7 @@ import type { AcademicCalendarDay } from './types';
 type Props = PickersDayProps & {
   day: Dayjs;
   calendarDaysByDate?: Record<string, AcademicCalendarDay[]>;
+  onBlockedClick?: (day: Dayjs) => void;
 };
 
 export default function AcademicCalendarPickersDay({
@@ -21,6 +22,7 @@ export default function AcademicCalendarPickersDay({
   outsideCurrentMonth,
   selected,
   sx,
+  onBlockedClick,
   ...other
 }: Props) {
   const markers = outsideCurrentMonth ? [] : calendarDaysByDate[toDateKey(day)] || [];
@@ -38,6 +40,11 @@ export default function AcademicCalendarPickersDay({
 
   const dayNode = (
     <Box
+      onClickCapture={() => {
+        if (other.disabled && onBlockedClick) {
+          onBlockedClick(day);
+        }
+      }}
       sx={{
         width: 40,
         height: 36,

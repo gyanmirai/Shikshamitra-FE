@@ -63,8 +63,14 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
     initialValues: {
       homeworkTypeName: editData?.homeworkTypeName || '',
       description: editData?.description || '',
-      defaultSubmissionType: editData?.defaultSubmissionType !== undefined && editData?.defaultSubmissionType !== null ? editData.defaultSubmissionType : '',
-      defaultDueDays: editData?.defaultDueDays !== undefined && editData?.defaultDueDays !== null ? editData.defaultDueDays : '',
+      defaultSubmissionType:
+        editData?.defaultSubmissionType !== undefined && editData?.defaultSubmissionType !== null
+          ? editData.defaultSubmissionType
+          : '',
+      defaultDueDays:
+        editData?.defaultDueDays !== undefined && editData?.defaultDueDays !== null
+          ? editData.defaultDueDays
+          : '',
       status: editData?.status !== undefined ? editData.status : 0,
     },
     enableReinitialize: true,
@@ -78,8 +84,11 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
           if (editData && editData.homeworkTypeName.trim().toLowerCase() === trimmed) return true;
           return !existingNamesRef.current.has(trimmed);
         }),
-      description: Yup.string().max(250, 'Description cannot exceed 250 characters'),
-      defaultDueDays: Yup.number().integer('Due days must be an integer').min(0, 'Default due days cannot be negative').nullable(),
+      description: Yup.string().nullable(),
+      defaultDueDays: Yup.number()
+        .integer('Due days must be an integer')
+        .min(0, 'Default due days cannot be negative')
+        .nullable(),
       defaultSubmissionType: Yup.number().nullable(),
       status: Yup.number().required('Status is required'),
     }),
@@ -97,7 +106,8 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
         const payload = {
           homeworkTypeName: values.homeworkTypeName,
           description: values.description || undefined,
-          defaultSubmissionType: values.defaultSubmissionType !== '' ? Number(values.defaultSubmissionType) : undefined,
+          defaultSubmissionType:
+            values.defaultSubmissionType !== '' ? Number(values.defaultSubmissionType) : undefined,
           defaultDueDays: values.defaultDueDays !== '' ? Number(values.defaultDueDays) : undefined,
           defaultMarks: undefined,
           evaluationRequired: false,
@@ -159,6 +169,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
                   .join(' ');
                 formik.setFieldValue('homeworkTypeName', value);
               }}
+              inputProps={{ maxLength: 50 }}
               error={formik.touched.homeworkTypeName && Boolean(formik.errors.homeworkTypeName)}
               helperText={formik.touched.homeworkTypeName && formik.errors.homeworkTypeName}
             />
@@ -173,6 +184,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
             rows={2}
             value={formik.values.description}
             onChange={formik.handleChange}
+            inputProps={{ maxLength: 250 }}
             error={formik.touched.description && Boolean(formik.errors.description)}
             helperText={formik.touched.description && formik.errors.description}
           />
@@ -185,7 +197,9 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
             label="Default Submission Type"
             value={formik.values.defaultSubmissionType}
             onChange={formik.handleChange}
-            error={formik.touched.defaultSubmissionType && Boolean(formik.errors.defaultSubmissionType)}
+            error={
+              formik.touched.defaultSubmissionType && Boolean(formik.errors.defaultSubmissionType)
+            }
             helperText={formik.touched.defaultSubmissionType && formik.errors.defaultSubmissionType}
           >
             <MenuItem value="">
@@ -197,25 +211,6 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
               </MenuItem>
             ))}
           </TextField>
-
-          <TextField
-            fullWidth
-            select
-            size="small"
-            name="status"
-            label="Status"
-            value={formik.values.status}
-            onChange={formik.handleChange}
-            error={formik.touched.status && Boolean(formik.errors.status)}
-            helperText={formik.touched.status && formik.errors.status}
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-
           <TextField
             fullWidth
             type="number"
@@ -224,6 +219,12 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
             label="Default Due Days"
             value={formik.values.defaultDueDays}
             onChange={formik.handleChange}
+            onInput={(e: any) => {
+              if (e.target.value.length > 3) {
+                e.target.value = e.target.value.slice(0, 3);
+              }
+            }}
+            inputProps={{ min: 0, max: 999 }}
             error={formik.touched.defaultDueDays && Boolean(formik.errors.defaultDueDays)}
             helperText={formik.touched.defaultDueDays && formik.errors.defaultDueDays}
           />

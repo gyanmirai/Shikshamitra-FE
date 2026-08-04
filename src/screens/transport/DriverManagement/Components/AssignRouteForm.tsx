@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha, stylesMode } from 'src/theme/styles';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -136,8 +137,14 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
                         px: 1,
                         py: 0.25,
                         borderRadius: 1,
-                        bgcolor: driverData?.assignedRoute ? 'info.lighter' : 'warning.lighter',
+                        bgcolor: (theme) =>
+                          driverData?.assignedRoute
+                            ? varAlpha(theme.vars.palette.info.mainChannel, 0.16)
+                            : varAlpha(theme.vars.palette.warning.mainChannel, 0.16),
                         color: driverData?.assignedRoute ? 'info.darker' : 'warning.darker',
+                        [stylesMode.dark]: {
+                          color: driverData?.assignedRoute ? 'info.light' : 'warning.light',
+                        },
                         typography: 'caption',
                         fontWeight: 600,
                       }}

@@ -278,61 +278,8 @@ const SubjectCopyDialog = ({
 
         <DialogContent sx={{ px: 3, py: 2.5 }}>
           <Stack spacing={2.5}>
-            {/* ── Balanced Target & Source Class Cards ── */}
-            <Grid container spacing={2} alignItems="stretch">
-              {/* Target Class (Copy To) */}
-              <Grid size={{ xs: 12, sm: 5.25 }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 1.75,
-                    borderRadius: 1.5,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
-                    borderColor: (theme) => alpha(theme.palette.primary.main, 0.24),
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    color="primary.main"
-                    fontWeight={700}
-                    textTransform="uppercase"
-                    letterSpacing={0.5}
-                    display="block"
-                    mb={0.5}
-                  >
-                    Target Class (Copy To)
-                  </Typography>
-                  <Typography variant="subtitle2" fontWeight={700} noWrap>
-                    {sourceClassName || '—'}
-                  </Typography>
-                </Paper>
-              </Grid>
-
-              {/* Center Arrow Icon */}
-              <Grid
-                size={{ xs: 12, sm: 1.5 }}
-                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                    color: 'primary.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <East fontSize="small" />
-                </Box>
-              </Grid>
-
+            {/* ── Balanced Source & Target Class Cards ── */}
+            <Grid container spacing={2} alignItems="stretch" sx={{ pt: 1 }}>
               {/* Source Class (Copy From Dropdown) */}
               <Grid size={{ xs: 12, sm: 5.25 }}>
                 <Paper
@@ -392,6 +339,59 @@ const SubjectCopyDialog = ({
                       noOptionsText="No eligible classes"
                     />
                   )}
+                </Paper>
+              </Grid>
+
+              {/* Center Arrow Icon */}
+              <Grid
+                size={{ xs: 12, sm: 1.5 }}
+                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <East fontSize="small" />
+                </Box>
+              </Grid>
+
+              {/* Target Class (Copy To) */}
+              <Grid size={{ xs: 12, sm: 5.25 }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 1.75,
+                    borderRadius: 1.5,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+                    borderColor: (theme) => alpha(theme.palette.primary.main, 0.24),
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    color="primary.main"
+                    fontWeight={700}
+                    textTransform="uppercase"
+                    letterSpacing={0.5}
+                    display="block"
+                    mb={0.5}
+                  >
+                    Target Class (Copy To)
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight={700} noWrap>
+                    {sourceClassName || '—'}
+                  </Typography>
                 </Paper>
               </Grid>
             </Grid>

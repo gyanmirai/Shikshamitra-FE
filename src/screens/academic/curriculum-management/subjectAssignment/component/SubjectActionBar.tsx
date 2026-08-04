@@ -98,7 +98,7 @@ const SubjectActionBar = ({
                     onClick={onCopySubjects}
                     sx={{ px: '20px' }}
                   >
-                    Copy from Class
+                    Copy Subject from Class
                   </Button>
                 </span>
               </Tooltip>
