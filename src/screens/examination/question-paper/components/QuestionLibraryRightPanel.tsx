@@ -1,23 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
+import CustomSelect from 'src/components/custom-select';
 import {
   Box,
   Card,
   Chip,
   Stack,
-  IconButton,
-  TextField,
-  Typography,
   Tooltip,
+  TextField,
+  IconButton,
+  Typography,
   InputAdornment,
+  CircularProgress,
 } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
-import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify';
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
-import type { QuestionItem } from '../types';
+
+import type { QuestionItem, QuestionLibraryFilters } from '../types';
 
 const DIFFICULTY_OPTIONS = [
   { value: '', label: 'All Difficulties' },
@@ -38,18 +40,24 @@ const BLOOM_OPTIONS = [
 
 interface QuestionLibraryRightPanelProps {
   bankQuestions: QuestionItem[];
+  availableCount: number;
   addedQuestionIds: string[];
   chapters: Array<{ id: string; chapterNumber: number; chapterName: string }>;
   onAddQuestion: (question: QuestionItem) => void;
+  onFiltersChange: (filters: QuestionLibraryFilters) => void;
   isLoading?: boolean;
+  isError?: boolean;
 }
 
 export default function QuestionLibraryRightPanel({
   bankQuestions,
+  availableCount,
   addedQuestionIds,
   chapters,
   onAddQuestion,
+  onFiltersChange,
   isLoading = false,
+  isError = false,
 }: QuestionLibraryRightPanelProps) {
   const theme = useTheme();
 
@@ -63,13 +71,38 @@ export default function QuestionLibraryRightPanel({
     ...chapters.map((c) => ({ value: c.id, label: `${c.chapterNumber}. ${c.chapterName}` })),
   ];
 
-  const filteredQuestions = bankQuestions.filter((q) => {
-    if (searchQuery && !q.questionText.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    if (selectedChapterId && q.chapterId !== selectedChapterId) return false;
-    if (selectedDifficulty && q.difficultyLevel !== selectedDifficulty) return false;
-    if (selectedBloom && q.bloomLevel !== selectedBloom) return false;
-    return true;
-  });
+  const hasAdditionalFilters = Boolean(searchQuery.trim() || selectedDifficulty || selectedBloom);
+  const emptyMessage = isError
+    ? 'Unable to load questions from the Question Bank.'
+    : selectedChapterId && !hasAdditionalFilters
+      ? 'No questions exist for this chapter.'
+      : hasAdditionalFilters
+        ? 'No questions match applied filters.'
+        : 'No approved questions exist for this class and subject.';
+
+  const emitFilters = (filters: QuestionLibraryFilters) => {
+    onFiltersChange(filters);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    emitFilters({ keyword: value, chapterId: selectedChapterId, difficultyLevel: selectedDifficulty, bloomLevel: selectedBloom });
+  };
+
+  const handleChapterChange = (value: string) => {
+    setSelectedChapterId(value);
+    emitFilters({ keyword: searchQuery, chapterId: value, difficultyLevel: selectedDifficulty, bloomLevel: selectedBloom });
+  };
+
+  const handleDifficultyChange = (value: number | '') => {
+    setSelectedDifficulty(value);
+    emitFilters({ keyword: searchQuery, chapterId: selectedChapterId, difficultyLevel: value, bloomLevel: selectedBloom });
+  };
+
+  const handleBloomChange = (value: number | '') => {
+    setSelectedBloom(value);
+    emitFilters({ keyword: searchQuery, chapterId: selectedChapterId, difficultyLevel: selectedDifficulty, bloomLevel: value });
+  };
 
   return (
     <Card
@@ -115,7 +148,7 @@ export default function QuestionLibraryRightPanel({
             </Typography>
           </Stack>
           <Label variant="soft" color="default" sx={{ fontWeight: 700 }}>
-            {filteredQuestions.length} Available
+            {availableCount} Available
           </Label>
         </Stack>
 
@@ -124,7 +157,7 @@ export default function QuestionLibraryRightPanel({
           size="small"
           placeholder="Search question bank..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -142,20 +175,20 @@ export default function QuestionLibraryRightPanel({
             label="Chapter"
             options={chapterSelectOptions}
             value={selectedChapterId}
-            onChange={(val) => setSelectedChapterId(val as string)}
+            onChange={(val) => handleChapterChange(val as string)}
           />
           <Stack direction="row" spacing={0.75}>
             <CustomSelect
               label="Difficulty"
               options={DIFFICULTY_OPTIONS}
               value={selectedDifficulty}
-              onChange={(val) => setSelectedDifficulty(val as any)}
+              onChange={(val) => handleDifficultyChange(val as number | '')}
             />
             <CustomSelect
               label="Bloom"
               options={BLOOM_OPTIONS}
               value={selectedBloom}
-              onChange={(val) => setSelectedBloom(val as any)}
+              onChange={(val) => handleBloomChange(val as number | '')}
             />
           </Stack>
         </Stack>
@@ -163,7 +196,23 @@ export default function QuestionLibraryRightPanel({
 
       {/* Scrollable Questions List using Scrollbar */}
       <Scrollbar sx={{ flex: 1, p: 1.25 }}>
-        {filteredQuestions.length === 0 ? (
+        {isLoading ? (
+          <Box
+            sx={{
+              py: 4,
+              px: 2,
+              textAlign: 'center',
+              borderRadius: 1.5,
+              border: '1px dashed',
+              borderColor: 'divider',
+            }}
+          >
+            <CircularProgress size={24} />
+            <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+              Loading questions...
+            </Typography>
+          </Box>
+        ) : bankQuestions.length === 0 ? (
           <Box
             sx={{
               py: 4,
@@ -176,12 +225,12 @@ export default function QuestionLibraryRightPanel({
           >
             <Iconify icon="solar:magnifer-bold-duotone" width={24} color="text.disabled" />
             <Typography variant="caption" color="text.secondary" display="block" mt={1}>
-              No questions found matching criteria.
+              {emptyMessage}
             </Typography>
           </Box>
         ) : (
           <Stack spacing={1}>
-            {filteredQuestions.map((question) => {
+            {bankQuestions.map((question) => {
               const isAdded = addedQuestionIds.includes(question.id) || addedQuestionIds.includes(question.questionBankItemId || '');
 
               return (

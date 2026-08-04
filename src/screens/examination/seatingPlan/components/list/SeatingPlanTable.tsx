@@ -1,6 +1,6 @@
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Chip, Stack, Button, Tooltip, Typography, LinearProgress } from '@mui/material';
 
 import CapacityBadge from '../common/CapacityBadge';
 import AllocationStatusBadge from '../common/AllocationStatusBadge';
@@ -15,6 +15,83 @@ const PRIMARY_ACTION: Record<SeatingPlanListRow['status'], { label: string; icon
   completed: { label: 'View Plan', icon: 'mdi:eye-outline' },
   published: { label: 'View / Print', icon: 'mdi:printer-outline' },
 };
+
+function progressColor(progress: number) {
+  if (progress >= 100) return 'success.main';
+  if (progress > 0) return 'warning.main';
+  return 'text.disabled';
+}
+
+function divisionLabel(name: string) {
+  if (name === 'Total') return name;
+  return /^div(ision)?\s+/i.test(name) ? name.replace(/^division\s+/i, 'Div ') : `Div ${name}`;
+}
+
+function DivisionProgressCell({ row }: { row: SeatingPlanListRow }) {
+  const divisionProgress = row.divisionProgress ?? [];
+  const divisions =
+    divisionProgress.length > 0
+      ? divisionProgress
+      : [
+          {
+            divisionId: row.examId,
+            divisionName: 'Total',
+            totalStudents: row.totalStudents,
+            allocatedStudents: row.allocatedStudents,
+            pendingStudents: row.pendingStudents,
+            progress: row.progress,
+          },
+        ];
+
+  return (
+    <Stack spacing={0.75} sx={{ minWidth: 220, maxWidth: 260 }}>
+      <Chip
+        size="small"
+        label={`Total: ${row.allocatedStudents}/${row.totalStudents} allocated`}
+        sx={{
+          alignSelf: 'flex-start',
+          height: 22,
+          borderRadius: 1,
+          bgcolor: 'action.hover',
+          color: 'text.secondary',
+          fontWeight: 600,
+        }}
+      />
+      {divisions.map((division) => (
+        <Tooltip
+          key={division.divisionId}
+          title={`${divisionLabel(division.divisionName)}: ${division.allocatedStudents}/${division.totalStudents} allocated`}
+          arrow
+        >
+          <Box>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+              <Typography variant="caption" color="text.primary" noWrap sx={{ maxWidth: 118, fontWeight: 600 }}>
+                {divisionLabel(division.divisionName)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                {division.allocatedStudents}/{division.totalStudents} allocated
+              </Typography>
+            </Stack>
+            <LinearProgress
+              variant="determinate"
+              value={Math.min(100, Math.max(0, division.progress))}
+              sx={{
+                mt: 0.25,
+                height: 5,
+                borderRadius: 3,
+                bgcolor: 'divider',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 3,
+                  bgcolor: progressColor(division.progress),
+                },
+              }}
+            />
+          </Box>
+        </Tooltip>
+      ))}
+    </Stack>
+  );
+}
 
 interface Props {
   rows: SeatingPlanListRow[];
@@ -53,20 +130,8 @@ export default function SeatingPlanTable({ rows, isLoading, canAdd, onRowClick, 
           id: 'progress',
           label: 'Progress',
           align: 'left',
-          minWidth: 160,
-          render: (value, row: any) => (
-            <Box sx={{ minWidth: 130 }}>
-              <Typography variant="caption" color="text.secondary">
-                {row.allocatedStudents} / {row.totalStudents} allocated
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={value as number}
-                color={row.status === 'needs-attention' ? 'error' : 'success'}
-                sx={{ height: 5, borderRadius: 3, mt: 0.25 }}
-              />
-            </Box>
-          ),
+          minWidth: 240,
+          render: (_value, row: any) => <DivisionProgressCell row={row} />,
         },
         {
           id: 'status',
