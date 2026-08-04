@@ -213,6 +213,8 @@ const sourceLabelMap: Record<number, SubstitutionRow['source']> = {
   6: 'Auto Created',
 };
 
+const DUTY_ACTION_REASON_MIN_LENGTH = 5;
+
 const availabilityStatusLabelMap: Record<number, string> = {
   0: 'Unavailable',
   1: 'Leave',
@@ -1204,7 +1206,7 @@ const SubstitutionManagementScreen = () => {
           const updated = await completeSubstitution(id).unwrap();
           updateSubstitution(id, () => mapApiSubstitution(updated));
         } else if (status === 'Acknowledged') {
-          const updated = await acknowledgeSubstitution(id).unwrap();
+          const updated = await acknowledgeSubstitution({ id }).unwrap();
           updateSubstitution(id, () => mapApiSubstitution(updated));
         } else if (status === 'Cancelled') {
           const updated = await cancelSubstitution({
@@ -1782,15 +1784,18 @@ const SubstitutionManagementScreen = () => {
       try {
         const updated =
           action === 'accept'
-            ? await acknowledgeSubstitution(id).unwrap()
+            ? await acknowledgeSubstitution({
+                id,
+                reason: reason || undefined,
+              }).unwrap()
             : action === 'reject'
               ? await rejectSubstitutionDuty({
                   id,
-                  reason: reason || 'Rejected from My Duties.',
+                  reason,
                 }).unwrap()
               : await requestSubstitutionChange({
                   id,
-                  reason: reason || 'Change requested from My Duties.',
+                  reason,
                 }).unwrap();
         if (updated) {
           updateSubstitution(id, () => mapApiSubstitution(updated));
@@ -3303,6 +3308,23 @@ const SubstitutionManagementScreen = () => {
                           </Box>
                         </Typography>
                       </Stack>
+
+                      {item.remarks && (
+                        <Stack
+                          direction="row"
+                          spacing={0.75}
+                          alignItems="flex-start"
+                          sx={{ gridColumn: { xs: 'auto', sm: '1 / -1' } }}
+                        >
+                          <Iconify icon="mdi:note-text-outline" width={14} color="text.disabled" />
+                          <Typography variant="caption" color="text.secondary">
+                            Action note:{' '}
+                            <Box component="span" fontWeight={600} color="text.primary">
+                              {item.remarks}
+                            </Box>
+                          </Typography>
+                        </Stack>
+                      )}
                     </Box>
                   </Box>
 
@@ -5176,7 +5198,7 @@ const SubstitutionManagementScreen = () => {
               ? 'Accept Duty'
               : dutyConfirmPayload?.action === 'reject'
                 ? 'Reject Duty'
-                : 'Request Change'
+                : 'Request Change / Transfer'
           }
           icon={
             dutyConfirmPayload?.action === 'accept'
@@ -5192,7 +5214,7 @@ const SubstitutionManagementScreen = () => {
                   ? 'You are about to accept this substitution duty. Add an optional note below.'
                   : dutyConfirmPayload?.action === 'reject'
                     ? 'Please provide a reason for rejecting this substitution duty.'
-                    : 'Please provide a reason for requesting a change to this substitution duty.'}
+                    : 'Please provide a reason for requesting a change or transfer for this duty.'}
               </Typography>
               <TextField
                 autoFocus
@@ -5207,6 +5229,11 @@ const SubstitutionManagementScreen = () => {
                 }
                 value={dutyConfirmNote}
                 onChange={(e) => setDutyConfirmNote(e.target.value)}
+                helperText={
+                  dutyConfirmPayload?.action === 'accept'
+                    ? 'Optional'
+                    : `Minimum ${DUTY_ACTION_REASON_MIN_LENGTH} characters required`
+                }
               />
             </Stack>
           }
@@ -5220,7 +5247,10 @@ const SubstitutionManagementScreen = () => {
                     ? 'error'
                     : 'warning'
               }
-              disabled={dutyConfirmPayload?.action !== 'accept' && !dutyConfirmNote.trim()}
+              disabled={
+                dutyConfirmPayload?.action !== 'accept' &&
+                dutyConfirmNote.trim().length < DUTY_ACTION_REASON_MIN_LENGTH
+              }
               loading={Boolean(dutyAction)}
               onClick={handleDutyConfirmSubmit}
               startIcon={

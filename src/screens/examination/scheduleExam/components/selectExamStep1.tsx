@@ -216,13 +216,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   const handleSubjectsChange = useCallback(
     async (value: any[]) => {
       const selectedType = examTypeOptions.find((item: any) => item.id === formik.values.examType);
-      const marksEntryRequired = selectedType?.marksEntryRequired ?? true;
-      const gradeScaleRequired = selectedType?.gradeScaleRequired ?? true;
-      const defaultTotalMarks = marksEntryRequired ? (selectedType?.defaultTotalMarks ?? '') : '';
-      const defaultGradeScaleId =
-        gradeScaleRequired && selectedType?.defaultGradeScaleId
-          ? selectedType.defaultGradeScaleId
-          : null;
+      const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
+      const defaultGradeScaleId = selectedType?.defaultGradeScaleId ?? null;
       const nextReadiness = { ...electiveReadiness };
       const normalizedResults = await Promise.all(
         value.map(async (sub) => {
@@ -256,10 +251,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     examDate: subjectItem.examDate || null,
                     startTime: subjectItem.startTime || null,
                     endTime: subjectItem.endTime || null,
-                    totalMarks: marksEntryRequired
-                      ? subjectItem.totalMarks || defaultTotalMarks
-                      : '',
-                    passingMarks: marksEntryRequired ? (subjectItem.passingMarks ?? '') : '',
+                    totalMarks: subjectItem.totalMarks || defaultTotalMarks,
+                    passingMarks: subjectItem.passingMarks ?? '',
                     notes: subjectItem.notes || '',
                     gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
                   };
@@ -275,8 +268,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             examDate: sub?.examDate || null,
             startTime: sub?.startTime || null,
             endTime: sub?.endTime || null,
-            totalMarks: marksEntryRequired ? sub?.totalMarks || defaultTotalMarks : '',
-            passingMarks: marksEntryRequired ? (sub?.passingMarks ?? '') : '',
+            totalMarks: sub?.totalMarks || defaultTotalMarks,
+            passingMarks: sub?.passingMarks ?? '',
             notes: sub?.notes || '',
             gradeScalingId: sub?.gradeScalingId || defaultGradeScaleId,
             subjectCode: isElective ? '' : sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
@@ -329,33 +322,18 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         formik.setFieldValue('examTypeName', selectedType?.examType ?? '');
                         formik.setFieldTouched(`examType`, false);
 
-                        // Sync gradeScaleRequired from the selected exam type configuration
-                        const isGradeScaleRequired = selectedType?.gradeScaleRequired ?? true;
-                        const isMarksEntryRequired = selectedType?.marksEntryRequired ?? true;
-                        formik.setFieldValue('gradeScaleRequired', isGradeScaleRequired);
-                        formik.setFieldValue('marksEntryRequired', isMarksEntryRequired);
-
-                        if (isGradeScaleRequired && selectedType?.defaultGradeScaleId) {
+                        if (selectedType?.defaultGradeScaleId) {
                           formik.setFieldValue('gradingScaleId', selectedType.defaultGradeScaleId);
-                        } else if (!isGradeScaleRequired) {
-                          formik.setFieldValue('gradingScaleId', '');
                         }
 
                         const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
-                        const defaultGradeScaleId =
-                          isGradeScaleRequired && selectedType?.defaultGradeScaleId
-                            ? selectedType.defaultGradeScaleId
-                            : null;
+                        const defaultGradeScaleId = selectedType?.defaultGradeScaleId ?? null;
 
                         const normalizeScheduleFields = (subject: any) => ({
                           ...subject,
-                          totalMarks: isMarksEntryRequired
-                            ? subject.totalMarks || defaultTotalMarks
-                            : '',
-                          passingMarks: isMarksEntryRequired ? (subject.passingMarks ?? '') : '',
-                          gradeScalingId: isGradeScaleRequired
-                            ? subject.gradeScalingId || defaultGradeScaleId
-                            : null,
+                          totalMarks: subject.totalMarks || defaultTotalMarks,
+                          passingMarks: subject.passingMarks ?? '',
+                          gradeScalingId: subject.gradeScalingId || defaultGradeScaleId,
                         });
 
                         formik.setFieldValue(
@@ -668,16 +646,13 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       }}
                       labelKey="name"
                       valueKey="id"
-                      label={`Grading Scale${formik.values.gradeScaleRequired ? ' *' : ''}`}
-                      disabled={!formik.values.gradeScaleRequired}
+                      label="Grading Scale *"
                       formControlProps={{ fullWidth: true }}
                       error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
                       helperText={
                         formik.touched.gradingScaleId && formik.errors.gradingScaleId
                           ? formik.errors.gradingScaleId
-                          : formik.values.gradeScaleRequired
-                            ? 'Select overall exam grading scale'
-                            : 'Optional for this exam type'
+                          : 'Select overall exam grading scale'
                       }
                       helperTextProps={{
                         sx: {

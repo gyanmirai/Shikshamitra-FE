@@ -11,6 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -19,9 +20,7 @@ import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/e
 import {
   Box,
   Grid,
-  Alert,
   Stack,
-  Switch,
   TextField,
   Typography,
   DialogActions,
@@ -36,7 +35,6 @@ import { getExamTypeInitialValues } from '../initialValues';
 import { examTypeValidationSchema } from '../validationSchema';
 
 import type { IExamType, IExamTypeFormProps } from '../type';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const CATEGORY_OPTIONS = [
   { value: 'Main Exam', label: 'Main Exam' },
@@ -56,33 +54,6 @@ const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
 
 const isSelectableSetting = (item: any) =>
   item?.status == null || SELECTABLE_SETTING_STATUSES.has(item.status);
-
-const TOGGLE_OPTIONS = [
-  {
-    name: 'includedInResult',
-    icon: 'solar:document-text-bold-duotone',
-    label: 'Include in Final Result',
-    description: 'Shown on report cards',
-  },
-  {
-    name: 'marksEntryRequired',
-    icon: 'solar:pen-new-square-bold-duotone',
-    label: 'Marks Entry Required',
-    description: 'Teachers must enter marks',
-  },
-  {
-    name: 'gradeScaleRequired',
-    icon: 'solar:medal-star-bold-duotone',
-    label: 'Grade Scale Required',
-    description: 'Applies grade scale to marks',
-  },
-  {
-    name: 'allowPracticalOral',
-    icon: 'solar:test-tube-bold-duotone',
-    label: 'Practical/Oral Split',
-    description: 'Allow bifurcated marks entry',
-  },
-] as const;
 
 const SectionHeader = ({
   icon,
@@ -173,10 +144,6 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
           defaultTotalMarks:
             values.defaultTotalMarks !== '' ? Number(values.defaultTotalMarks) : null,
           defaultWeightage: values.defaultWeightage !== '' ? Number(values.defaultWeightage) : null,
-          includedInResult: values.includedInResult,
-          marksEntryRequired: values.marksEntryRequired,
-          gradeScaleRequired: values.gradeScaleRequired,
-          allowPracticalOral: values.allowPracticalOral,
           defaultGradeScaleId: values.defaultGradeScaleId || null,
         };
 
@@ -402,95 +369,6 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     />
                   </CustomTooltip>
                 </Grid>
-              </Grid>
-            </Box>
-
-            {/* Section 3: System Rules & Behavior */}
-            <Box sx={sectionCardSx}>
-              <SectionHeader
-                icon="solar:shield-check-bold-duotone"
-                title="System Rules & Behavior"
-                caption="Toggle how this exam type behaves"
-                iconBg={alpha(theme.palette.primary.main, 0.1)}
-              />
-              <Grid container spacing={2}>
-                {TOGGLE_OPTIONS.map((toggle) => {
-                  const checked = Boolean(formik.values[toggle.name as keyof typeof formik.values]);
-                  return (
-                    <Grid key={toggle.name} size={{ xs: 12, sm: 6 }}>
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        justifyContent="space-between"
-                        spacing={1}
-                        onClick={() => formik.setFieldValue(toggle.name, !checked)}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: 1.5,
-                          cursor: 'pointer',
-                          border: `1px solid ${checked ? alpha(theme.palette.primary.main, 0.5) : theme.palette.divider}`,
-                          bgcolor: checked
-                            ? alpha(theme.palette.primary.main, 0.06)
-                            : 'background.paper',
-                          transition: theme.transitions.create([
-                            'background-color',
-                            'border-color',
-                          ]),
-                          '&:hover': {
-                            borderColor: alpha(theme.palette.primary.main, 0.5),
-                          },
-                        }}
-                      >
-                        <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
-                          <Box
-                            sx={{
-                              width: 30,
-                              height: 30,
-                              flexShrink: 0,
-                              borderRadius: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              bgcolor: checked
-                                ? alpha(theme.palette.primary.main, 0.14)
-                                : alpha(theme.palette.grey[500], 0.12),
-                              color: checked ? 'primary.main' : 'text.secondary',
-                            }}
-                          >
-                            <Iconify icon={toggle.icon} width={16} height={16} />
-                          </Box>
-                          <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="body2" fontWeight={600} noWrap>
-                              {toggle.label}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              noWrap
-                              component="div"
-                            >
-                              {toggle.description}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                        <Switch
-                          size="small"
-                          checked={checked}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => formik.setFieldValue(toggle.name, e.target.checked)}
-                        />
-                      </Stack>
-                    </Grid>
-                  );
-                })}
-                {data && (data as any).usageCount > 0 && (
-                  <Grid size={{ xs: 12 }}>
-                    <Alert severity="warning">
-                      This exam type is already used in academic modules. Major changes may affect
-                      existing records.
-                    </Alert>
-                  </Grid>
-                )}
               </Grid>
             </Box>
           </Stack>

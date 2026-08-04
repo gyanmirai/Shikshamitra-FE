@@ -19,6 +19,7 @@ import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -71,6 +72,8 @@ export const cardStyle = {
   boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
   border: '1px solid rgba(145, 158, 171, 0.08)',
 };
+
+const formatHomeworkDateTime = (value: any) => dayjs(value).format('YYYY-MM-DDTHH:mm:ss');
 
 const SubmissionTypeCard = ({
   value,
@@ -308,8 +311,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           attachment: values.attachments,
           divisionSchedules: values.divisions.map((division: any) => ({
             divisionId: division.divisionId,
-            publishAt: division.publishDate.toISOString(),
-            dueAt: division.dueDate.toISOString(),
+            publishAt: formatHomeworkDateTime(division.publishDate),
+            dueAt: formatHomeworkDateTime(division.dueDate),
           })),
         };
 
@@ -343,11 +346,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             updateFormData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
             updateFormData.append(
               `DivisionSchedules[${index}].PublishAt`,
-              division.publishDate.toISOString()
+              formatHomeworkDateTime(division.publishDate)
             );
             updateFormData.append(
               `DivisionSchedules[${index}].DueAt`,
-              division.dueDate.toISOString()
+              formatHomeworkDateTime(division.dueDate)
             );
           });
 
@@ -388,9 +391,12 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             formData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
             formData.append(
               `DivisionSchedules[${index}].PublishAt`,
-              division.publishDate.toISOString()
+              formatHomeworkDateTime(division.publishDate)
             );
-            formData.append(`DivisionSchedules[${index}].DueAt`, division.dueDate.toISOString());
+            formData.append(
+              `DivisionSchedules[${index}].DueAt`,
+              formatHomeworkDateTime(division.dueDate)
+            );
           });
 
           const response = await addHomework({
@@ -424,7 +430,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
         }
         onClose(null, true);
       } catch (error: any) {
-        shikshaMitraToast.error({ message: error?.data?.message || 'Failed to save assignment.' });
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Failed to save homework.',
+        });
       }
     },
   });
