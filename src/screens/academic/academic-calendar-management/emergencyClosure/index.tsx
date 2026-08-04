@@ -962,12 +962,12 @@ const EmergencyClosureScreen = () => {
           <SubmitButton
             type="button"
             buttonText={editingClosureId ? 'Update Closure' : 'Declare Closure'}
-            loading={creating || updateEmergencyClosure}
+            loading={creating || updating}
             startIcon={<Iconify icon={editingClosureId ? GlobalIcons.edit : 'mdi:alert-octagon-outline'} />}
             onClick={() => formik.handleSubmit()}
           />
         </DialogActions >
-      </CustomDialog >
+      </CustomDialog>
 
       <CustomDialog
         open={viewDialog.value}

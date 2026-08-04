@@ -128,18 +128,6 @@ export default function PaperBuilderCenterPanel({
             </Typography>
           </Box>
         </Stack>
-
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Button
-            size="small"
-            variant="contained"
-            color="primary"
-            onClick={onOpenQuestionBank}
-            startIcon={<Iconify icon="solar:library-bold-duotone" width={16} />}
-          >
-            Browse Question Library
-          </Button>
-        </Stack>
       </Paper>
 
       {/* ── Document Canvas Sheet (Single Screen Canvas View) ───────────────── */}
@@ -179,30 +167,9 @@ export default function PaperBuilderCenterPanel({
             <Typography variant="h6" fontWeight={700} gutterBottom>
               Your Examination Paper Canvas is Empty
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 460, mb: 3 }}>
-              Drag &amp; drop questions from the right Question Library, generate using AI, or click Browse Question Library to populate your exam paper.
+            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 460 }}>
+              Drag &amp; drop questions from the right Question Library to populate your exam paper.
             </Typography>
-
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <Button
-                variant="contained"
-                size="small"
-                color="primary"
-                onClick={onOpenQuestionBank}
-                startIcon={<Iconify icon="solar:library-bold-duotone" />}
-              >
-                Browse Question Library
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                color="info"
-                onClick={onGenerateAiQuestions}
-                startIcon={<Iconify icon="solar:sparkles-bold-duotone" />}
-              >
-                Generate Using AI
-              </Button>
-            </Stack>
           </Paper>
         ) : (
           /* Continuous Paper Sheet */

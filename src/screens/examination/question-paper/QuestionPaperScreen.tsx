@@ -870,14 +870,14 @@ export default function QuestionPaperScreen() {
             <Button
               variant="contained"
               size="small"
-              startIcon={<Iconify icon="mdi:plus" />}
               disabled={!academicYearId}
               onClick={() => {
                 formik.resetForm();
                 setDialogOpen(true);
               }}
+              startIcon={<Iconify icon="mdi:add" />}
             >
-              + Create Paper
+              Create Paper
             </Button>
           </Stack>
         }
