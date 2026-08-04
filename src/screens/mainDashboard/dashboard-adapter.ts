@@ -25,6 +25,9 @@ type DashboardPayload = {
   calendarItems?: unknown;
   moduleSnapshots?: unknown;
   announcements?: unknown;
+  scopeLabel?: unknown;
+  dataState?: unknown;
+  generatedAtUtc?: unknown;
 };
 
 type DashboardPayloadWithZoneErrors = DashboardPayload & {
@@ -97,6 +100,10 @@ export function mapDashboardPayload(
     academicYearId:
       typeof payload?.academicYearId === 'string' ? payload.academicYearId : undefined,
     dateRange: toDashboardDateRange(payload?.dateRange),
+    scopeLabel: typeof payload?.scopeLabel === 'string' ? payload.scopeLabel : undefined,
+    dataState: payload?.dataState === 'partial' ? 'partial' : 'live',
+    generatedAtUtc:
+      typeof payload?.generatedAtUtc === 'string' ? payload.generatedAtUtc : undefined,
     kpiCards: toWidgetList(payload?.kpiCards),
     actionItems: toWidgetList<DashboardActionItem>(payload?.actionItems),
     riskAlerts: toWidgetList<DashboardActionItem>(payload?.riskAlerts),

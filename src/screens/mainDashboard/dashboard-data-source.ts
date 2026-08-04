@@ -1,15 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
-import {
-  useGetDashboardSummaryQuery,
-  useGetDashboardWidgetMetadataQuery,
-} from 'src/redux/dashboard/dashboardApi';
+import { useGetDashboardSummaryQuery } from 'src/redux/dashboard/dashboardApi';
 
 import { getDashboardMockData } from './dashboard-mock-data';
 import { adaptDashboardSummaryPayload } from './dashboard-adapter';
-import {
-  normalizeDashboardWidgetMetadata,
-  mergeDashboardWidgetMetadataWithFallback,
-} from './dashboard-metadata';
 import {
   DASHBOARD_ZONE_KEYS,
   type DashboardTemplate,
@@ -61,6 +54,27 @@ export const createDashboardMockDataSourceResult = (
   source,
 });
 
+export const createEmptyDashboardDataSourceResult = (
+  template: DashboardTemplate,
+  source: DashboardDataSourceName = 'api'
+): DashboardDataSourceResult => ({
+  data: {
+    dashboardTemplate: template,
+    dateRange: { label: 'Current period' },
+    dataState: source === 'apiError' ? 'partial' : 'live',
+    kpiCards: [],
+    actionItems: [],
+    riskAlerts: [],
+    calendarItems: [],
+    moduleSnapshots: [],
+    announcements: [],
+  },
+  isLoading: false,
+  loadingZones: [],
+  zoneErrors: {},
+  source,
+});
+
 export async function fetchDashboardContractPreview(
   template: DashboardTemplate,
   fetcher: DashboardContractPreviewFetcher = fetch
@@ -96,6 +110,11 @@ export function useDashboardDataSource({
   to,
 }: DashboardDataSourceOptions): DashboardDataSourceResult {
   const mockResult = useMemo(() => createDashboardMockDataSourceResult(template), [template]);
+  const emptyResult = useMemo(() => createEmptyDashboardDataSourceResult(template), [template]);
+  const errorResult = useMemo(
+    () => createEmptyDashboardDataSourceResult(template, 'apiError'),
+    [template]
+  );
   const [result, setResult] = useState<DashboardDataSourceResult>(mockResult);
   const apiQueryArgs = useMemo(
     () => ({
@@ -109,57 +128,48 @@ export function useDashboardDataSource({
   const apiQuery = useGetDashboardSummaryQuery(apiQueryArgs, {
     skip: mode !== 'api',
   });
-  const metadataQuery = useGetDashboardWidgetMetadataQuery(undefined, {
-    skip: mode !== 'api',
-  });
-  const metadataRegistry = useMemo(
-    () =>
-      metadataQuery.data
-        ? mergeDashboardWidgetMetadataWithFallback(
-            normalizeDashboardWidgetMetadata(metadataQuery.data)
-          )
-        : undefined,
-    [metadataQuery.data]
-  );
-
   const apiResult = useMemo<DashboardDataSourceResult>(() => {
     if (mode !== 'api') {
       return mockResult;
     }
 
     if (apiQuery.data) {
-      const adapted = adaptDashboardSummaryPayload(apiQuery.data, template, metadataRegistry);
+      const adapted = adaptDashboardSummaryPayload(apiQuery.data, template);
 
       return {
         ...adapted,
         isLoading: false,
         loadingZones: [],
         source: 'api',
+        retry: apiQuery.refetch,
       };
     }
 
     if (apiQuery.isError) {
       return {
-        ...mockResult,
-        source: 'apiFallback',
-        globalError: 'Dashboard API is unavailable. Showing mock dashboard data instead.',
+        ...errorResult,
+        globalError: 'Dashboard data could not be loaded. Retry to see current school information.',
+        retry: apiQuery.refetch,
       };
     }
 
     return {
-      ...mockResult,
+      ...emptyResult,
       isLoading: apiQuery.isLoading || apiQuery.isFetching,
       loadingZones: apiQuery.isLoading || apiQuery.isFetching ? allDashboardZones : [],
       source: 'api',
+      retry: apiQuery.refetch,
     };
   }, [
     apiQuery.data,
     apiQuery.isError,
     apiQuery.isFetching,
     apiQuery.isLoading,
-    metadataRegistry,
-    mockResult,
+    apiQuery.refetch,
+    emptyResult,
+    errorResult,
     mode,
+    mockResult,
     template,
   ]);
 
@@ -207,7 +217,7 @@ export function useDashboardDataSource({
   }, [mockResult, mode, template]);
 
   if (mode === 'api') {
-    return apiResult.data.dashboardTemplate === template ? apiResult : mockResult;
+    return apiResult.data.dashboardTemplate === template ? apiResult : emptyResult;
   }
 
   return result.data.dashboardTemplate === template ? result : mockResult;

@@ -20,6 +20,9 @@ export type DashboardSummaryResponse = {
   dashboardTemplate?: string;
   academicYearId?: string;
   dateRange?: Partial<DashboardDateRange>;
+  scopeLabel?: string;
+  dataState?: 'live' | 'partial';
+  generatedAtUtc?: string;
   kpiCards?: DashboardWidget[];
   actionItems?: DashboardActionItem[];
   riskAlerts?: DashboardActionItem[];

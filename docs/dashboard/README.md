@@ -3,7 +3,7 @@ module: dashboard
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-08-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,6 +12,7 @@ audience: humans-and-agents
 
 TL;DR: use this page as the entrypoint for the main `/dashboard` command center.
 Dashboard frontend docs own template selection, widget rendering, client integration, and browser validation.
+The shared command-center renderer composes different information priorities for Leadership, Principal/Admin, Teacher, Finance/HR, and Student/Parent templates.
 
 ## Read order
 
@@ -26,7 +27,7 @@ Follow this order when changing Dashboard frontend behavior:
 
 ## Ownership boundary
 
-Frontend Dashboard docs own route wiring, template views, widget registry, data adapters, safe drilldown handling, and browser behavior.
+Frontend Dashboard docs own route wiring, role composition, semantic widget renderers, the defense-in-depth widget registry, data adapters, safe drilldown handling, and browser behavior.
 Backend Dashboard docs own summary API behavior, widget metadata contracts, slice execution, permissions, and tenant-scoped data.
 Do not duplicate backend behavior here when a link to the backend architecture decision is enough.
 

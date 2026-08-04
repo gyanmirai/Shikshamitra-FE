@@ -13,6 +13,7 @@ import {
   getDashboardDataSourceMode,
   fetchDashboardContractPreview,
   DASHBOARD_CONTRACT_PREVIEW_PATH,
+  createEmptyDashboardDataSourceResult,
   createDashboardMockDataSourceResult,
 } from './dashboard-data-source';
 
@@ -93,6 +94,18 @@ describe('dashboard data source', () => {
     expect(result.isLoading).toBe(false);
     expect(result.loadingZones).toEqual([]);
     expect(result.data.dashboardTemplate).toBe(DASHBOARD_TEMPLATES.teacher);
+  });
+
+  it('creates an honest empty API state without synthetic operational values', () => {
+    const result = createEmptyDashboardDataSourceResult(
+      DASHBOARD_TEMPLATES.principalAdmin,
+      'apiError'
+    );
+
+    expect(result.source).toBe('apiError');
+    expect(result.data.dataState).toBe('partial');
+    expect(result.data.kpiCards).toEqual([]);
+    expect(result.data.actionItems).toEqual([]);
   });
 
   it('fetches and adapts a contract preview payload', async () => {
@@ -201,7 +214,7 @@ describe('dashboard data source', () => {
     );
   });
 
-  it('loads API data by default without blanking the mock dashboard first', async () => {
+  it('loads API data into a stable empty shell before live values arrive', async () => {
     let resolveApiFetch: (response: Response) => void = () => {};
     const apiFetchPromise = new Promise<Response>((resolve) => {
       resolveApiFetch = resolve;
@@ -248,6 +261,7 @@ describe('dashboard data source', () => {
     });
     expect(result.current.loadingZones).toEqual(Object.values(DASHBOARD_ZONE_KEYS));
     expect(result.current.data.dashboardTemplate).toBe(DASHBOARD_TEMPLATES.principalAdmin);
+    expect(result.current.data.kpiCards).toEqual([]);
 
     resolveApiFetch(
       new Response(
@@ -267,6 +281,8 @@ describe('dashboard data source', () => {
               title: 'Staff leave approvals',
               count: 7,
               subtitle: '7 leave requests awaiting action',
+              drilldownUrl: '/backend-leave-approvals',
+              owner: 'Backend HR',
             },
           ],
           zoneErrors: {
@@ -288,8 +304,8 @@ describe('dashboard data source', () => {
       id: 'principal-leave-approvals',
       count: 7,
       subtitle: '7 leave requests awaiting action',
-      drilldownUrl: '/backend-leave-approvals',
-      owner: 'Backend HR',
+      drilldownUrl: dashboardWidgetRegistry['principal-leave-approvals'].drilldownUrl,
+      owner: dashboardWidgetRegistry['principal-leave-approvals'].owner,
     });
     expect(result.current.zoneErrors).toEqual({ kpis: 'Attendance slice degraded.' });
   });
@@ -362,34 +378,28 @@ describe('dashboard data source', () => {
     });
   });
 
-  it('falls back to local widget metadata when the metadata API fails', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn((input: RequestInfo | URL) => {
-        const url = getFetchUrl(input);
-        if (url.includes('/api/auth/session')) {
-          return sessionResponse();
-        }
+  it('uses local defense-in-depth metadata without requesting the metadata endpoint', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = getFetchUrl(input);
+      if (url.includes('/api/auth/session')) {
+        return sessionResponse();
+      }
 
-        if (url.includes('/dashboard/widgets')) {
-          return new Response(JSON.stringify({ error: 'down' }), { status: 500 });
-        }
-
-        return new Response(
-          JSON.stringify({
-            dashboardTemplate: DASHBOARD_TEMPLATES.principalAdmin,
-            actionItems: [
-              {
-                id: 'principal-leave-approvals',
-                title: 'Staff leave approvals',
-                count: 4,
-              },
-            ],
-          }),
-          { status: 200 }
-        );
-      })
-    );
+      return new Response(
+        JSON.stringify({
+          dashboardTemplate: DASHBOARD_TEMPLATES.principalAdmin,
+          actionItems: [
+            {
+              id: 'principal-leave-approvals',
+              title: 'Staff leave approvals',
+              count: 4,
+            },
+          ],
+        }),
+        { status: 200 }
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
 
     const { result } = renderHook(
       () =>
@@ -409,9 +419,12 @@ describe('dashboard data source', () => {
       drilldownUrl: dashboardWidgetRegistry['principal-leave-approvals'].drilldownUrl,
       owner: dashboardWidgetRegistry['principal-leave-approvals'].owner,
     });
+    expect(
+      fetchMock.mock.calls.some(([input]) => getFetchUrl(input).includes('/dashboard/widgets'))
+    ).toBe(false);
   });
 
-  it('falls back to mock data when the dashboard API fails', async () => {
+  it('shows an honest empty error state when the dashboard API fails', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn((input: RequestInfo | URL) =>
@@ -430,13 +443,12 @@ describe('dashboard data source', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.source).toBe('apiFallback');
+      expect(result.current.source).toBe('apiError');
     });
 
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.globalError).toContain('Dashboard API is unavailable');
-    expect(
-      result.current.data.kpiCards.some((widget) => widget.id === 'principal-student-attendance')
-    ).toBe(true);
+    expect(result.current.globalError).toContain('Dashboard data could not be loaded');
+    expect(result.current.data.kpiCards).toEqual([]);
+    expect(result.current.data.dataState).toBe('partial');
   });
 });

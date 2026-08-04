@@ -204,7 +204,9 @@ test.describe('role-based dashboard', () => {
     );
   });
 
-  test('falls back to mock dashboard data when the dashboard API fails', async ({ page }) => {
+  test('shows an honest error state without mock operational values when the dashboard API fails', async ({
+    page,
+  }) => {
     await page.route('**/api/dashboard/summary?**', async (route) => {
       await route.fulfill({
         status: 503,
@@ -219,9 +221,9 @@ test.describe('role-based dashboard', () => {
     });
 
     await expect(page).not.toHaveURL(/\/login/i);
-    await expect(page.locator('[data-dashboard-source="apiFallback"]')).toBeVisible();
+    await expect(page.locator('[data-dashboard-source="apiError"]')).toBeVisible();
     await expect(page.getByTestId('dashboard-data-source-error')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Staff Attendance' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Staff Attendance' })).toHaveCount(0);
   });
 
   test('renders an intercepted dashboard contract preview response', async ({ page }) => {
