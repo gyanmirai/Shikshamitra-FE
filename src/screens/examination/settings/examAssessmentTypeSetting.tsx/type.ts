@@ -6,10 +6,6 @@ export interface IExamType {
   status: number | string;
   defaultTotalMarks?: number | string;
   defaultWeightage?: number | string;
-  includedInResult: boolean;
-  marksEntryRequired: boolean;
-  gradeScaleRequired: boolean;
-  allowPracticalOral: boolean;
   defaultGradeScaleId?: string | null;
   usageCount?: number;
 }

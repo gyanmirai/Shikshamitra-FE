@@ -22,10 +22,6 @@ export const examTypeValidationSchema = (existingNames: Set<string>, editData?: 
       .nullable()
       .min(0, 'Weightage cannot be negative')
       .max(100, 'Weightage cannot exceed 100%'),
-    includedInResult: Yup.boolean(),
-    marksEntryRequired: Yup.boolean(),
-    gradeScaleRequired: Yup.boolean(),
-    allowPracticalOral: Yup.boolean(),
     defaultGradeScaleId: Yup.string().nullable(),
   });
 

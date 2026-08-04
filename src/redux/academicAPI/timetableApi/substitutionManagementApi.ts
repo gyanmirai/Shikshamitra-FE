@@ -305,14 +305,16 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
       }),
       providesTags: [academicType.substitutionManagement],
     }),
-    getSubstitutionCreateMetadata: builder.query<ApiSubstitutionCreateMetadata, QueryParams | void>({
-      query: (params) => ({
-        url: 'academics/timetable/substitutions/create-form-metadata',
-        method: 'GET',
-        params: params ?? undefined,
-      }),
-      providesTags: [academicType.substitutionManagement],
-    }),
+    getSubstitutionCreateMetadata: builder.query<ApiSubstitutionCreateMetadata, QueryParams | void>(
+      {
+        query: (params) => ({
+          url: 'academics/timetable/substitutions/create-form-metadata',
+          method: 'GET',
+          params: params ?? undefined,
+        }),
+        providesTags: [academicType.substitutionManagement],
+      }
+    ),
     getSubstitutionLectures: builder.query<ApiSubstitutionLecture[], QueryParams>({
       query: (params) => ({
         url: 'academics/timetable/substitutions/lectures',
@@ -359,10 +361,11 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.substitutionManagement],
     }),
-    acknowledgeSubstitution: builder.mutation<ApiSubstitutionRow, string>({
-      query: (id) => ({
+    acknowledgeSubstitution: builder.mutation<ApiSubstitutionRow, { id: string; reason?: string }>({
+      query: ({ id, reason }) => ({
         url: `academics/timetable/substitutions/${id}/acknowledge`,
         method: 'POST',
+        body: { reason },
       }),
       invalidatesTags: [academicType.substitutionManagement],
     }),

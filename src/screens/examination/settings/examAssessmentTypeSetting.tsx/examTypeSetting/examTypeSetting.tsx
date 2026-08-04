@@ -54,10 +54,6 @@ const ExamTypeSettings = () => {
       ...item,
       id: String(item.id),
       status: item.status === 'Publish' ? 0 : 1,
-      includedInResult: true,
-      marksEntryRequired: true,
-      gradeScaleRequired: true,
-      allowPracticalOral: false,
     }))
   );
   const addExamTypeDialog = useBoolean(false);
@@ -112,14 +108,13 @@ const ExamTypeSettings = () => {
   const [selectedExamType, setSelectedExamType] = useState<IExamType | null>(null);
 
   // Statistics calculations
-  const examTypeList = examTypeData?.items || [];
+  const examTypeList = useMemo(() => examTypeData?.items || [], [examTypeData?.items]);
   const totalTypes = examTypeList.length;
   const activeTypes = examTypeList.filter(
     (t: any) =>
       t.status === 0 || t.status === 'Active' || t.status === 2 || t.status === 'SystemDefault'
   ).length;
   const usedTypes = examTypeList.filter((t: any) => t.usageCount > 0).length;
-  const includedInResult = examTypeList.filter((t: any) => t.includedInResult).length;
 
   const existingNames = useMemo(
     () => new Set<string>(examTypeList.map((t: any) => t.examType.trim().toLowerCase())),
@@ -207,12 +202,6 @@ const ExamTypeSettings = () => {
             icon: 'solar:chart-square-bold-duotone',
             color: 'info',
           },
-          {
-            label: 'Included in Result',
-            value: includedInResult,
-            icon: 'solar:star-bold-duotone',
-            color: 'warning',
-          },
         ]}
       />
 
@@ -273,22 +262,6 @@ const ExamTypeSettings = () => {
             label: 'Weightage',
             filterType: 'number',
             render: (val) => (val && val !== '-' ? `${val}%` : '-'),
-          },
-          {
-            id: 'includedInResult',
-            label: 'Result Impact',
-            filterType: 'enum',
-            enumOptions: [
-              { value: true, label: 'Included' },
-              { value: false, label: 'Optional' },
-            ],
-            minWidth: 150,
-            render: (val) =>
-              val ? (
-                <Label color="success">Included</Label>
-              ) : (
-                <Label color="default">Optional</Label>
-              ),
           },
           {
             id: 'usageCount',

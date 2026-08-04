@@ -57,10 +57,6 @@ export interface IExamFormValues {
   examName: string;
   className: string;
   gradingScaleId?: string | null;
-  /** Whether the selected exam type requires a grading scale (synced from ExamType config) */
-  gradeScaleRequired: boolean;
-  /** Whether the selected exam type requires marks entry fields in the schedule */
-  marksEntryRequired: boolean;
   divisions: string[];
   /** Single array for ALL steps — replaces the old selectedSubjects + subjects split */
   subjects: IExamSubject[];

@@ -5,12 +5,14 @@ export const getExamTypeInitialValues = (editData: IExamType) => ({
   description: editData?.description || '',
   category: editData?.category || '',
   status: editData?.status !== undefined && editData?.status !== null ? editData.status : 0,
-  defaultTotalMarks: editData?.defaultTotalMarks !== undefined && editData?.defaultTotalMarks !== null ? editData.defaultTotalMarks : '',
-  defaultWeightage: editData?.defaultWeightage !== undefined && editData?.defaultWeightage !== null ? editData.defaultWeightage : '',
-  includedInResult: editData?.includedInResult !== undefined ? editData.includedInResult : true,
-  marksEntryRequired: editData?.marksEntryRequired !== undefined ? editData.marksEntryRequired : true,
-  gradeScaleRequired: editData?.gradeScaleRequired !== undefined ? editData.gradeScaleRequired : true,
-  allowPracticalOral: editData?.allowPracticalOral !== undefined ? editData.allowPracticalOral : false,
+  defaultTotalMarks:
+    editData?.defaultTotalMarks !== undefined && editData?.defaultTotalMarks !== null
+      ? editData.defaultTotalMarks
+      : '',
+  defaultWeightage:
+    editData?.defaultWeightage !== undefined && editData?.defaultWeightage !== null
+      ? editData.defaultWeightage
+      : '',
   defaultGradeScaleId: editData?.defaultGradeScaleId || '',
 });
 
