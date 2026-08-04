@@ -17,7 +17,7 @@ export function AdmissionsOperationsWorkspaceContent() {
         { key: AdmissionCrmPipelineColumnKey.ExamPending, label: 'Exam reminder' },
         { key: AdmissionCrmPipelineColumnKey.RegistrationPending, label: 'Registration reminder' },
       ]}
-      applicantTab="overview"
+      applicantTab="next"
     />
   );
 }

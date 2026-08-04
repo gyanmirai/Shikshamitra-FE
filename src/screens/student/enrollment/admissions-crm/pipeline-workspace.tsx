@@ -32,7 +32,6 @@ import {
   Button,
   Dialog,
   Select,
-  Switch,
   Tooltip,
   Collapse,
   Checkbox,
@@ -50,7 +49,6 @@ import {
   InputAdornment,
   FormHelperText,
   LinearProgress,
-  CircularProgress,
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -62,14 +60,12 @@ import {
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmLeadsQuery,
   AdmissionCrmPipelineColumnKey,
-  useGetAdmissionCrmExamSlotsQuery,
   useCreateAdmissionCrmLeadMutation,
   useGetAdmissionCrmPipelineStagesQuery,
   useBulkCreateAdmissionCrmTasksMutation,
   useBulkChangeAdmissionCrmStagesMutation,
   useBulkArchiveAdmissionCrmLeadsMutation,
   useGetAdmissionCrmQuickInquiryOptionsQuery,
-  useScheduleAdmissionCrmEntranceExamMutation,
   useBulkAssignAdmissionCrmLeadOwnersMutation,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
   useGetAdmissionCrmOperationalStandardOptionsQuery,
@@ -80,6 +76,8 @@ import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
+import { ApplicantWorkspaceDirtyProvider } from './applicant-workspace-dirty-context';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
@@ -115,6 +113,7 @@ const actionPermissions = {
   archiveReopen: `${permissionRoot}.ArchiveReopen`,
   scheduleExam: `${permissionRoot}.ScheduleExam`,
   issueRegistrationForm: `${permissionRoot}.IssueRegistrationForm`,
+  overrideExamCapacity: `${permissionRoot}.OverrideExamCapacity`,
 };
 
 const channels = Object.values(AdmissionInquiryChannel).filter(
@@ -435,7 +434,7 @@ function PipelineLeadCard({
   );
 }
 
-export function PipelineWorkspace() {
+function PipelineWorkspaceContent() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const {
     academicYearId,
@@ -480,9 +479,6 @@ export function PipelineWorkspace() {
   const channelInputRef = useRef<HTMLInputElement>(null);
   const duplicateReasonInputRef = useRef<HTMLInputElement>(null);
   const [scheduleLead, setScheduleLead] = useState<AdmissionCrmLeadDto | null>(null);
-  const [selectedSlotId, setSelectedSlotId] = useState('');
-  const [overrideCapacity, setOverrideCapacity] = useState(false);
-  const [capacityOverrideReason, setCapacityOverrideReason] = useState('');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
   const [bulkOwner, setBulkOwner] = useState<AdmissionCrmStaffLookupDto | null>(null);
@@ -557,12 +553,6 @@ export function PipelineWorkspace() {
     },
     { skip: !academicYearId || bulkAction !== 'task' }
   );
-  const slotsQuery = useGetAdmissionCrmExamSlotsQuery(
-    { academicYearId: academicYearId || '' },
-    { skip: !academicYearId || !scheduleLead }
-  );
-  const isExamSlotsLoading = slotsQuery.isLoading || slotsQuery.isFetching;
-  const activeExamSlots = (slotsQuery.data?.items || []).filter((slot) => slot.isActive);
   const quickInquiryOptionsQuery = useGetAdmissionCrmQuickInquiryOptionsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
@@ -723,7 +713,6 @@ export function PipelineWorkspace() {
   const [createLead, createLeadState] = useCreateAdmissionCrmLeadMutation();
   const [previewDuplicates, previewDuplicatesState] =
     usePreviewAdmissionCrmLeadDuplicatesMutation();
-  const [scheduleExam, scheduleExamState] = useScheduleAdmissionCrmEntranceExamMutation();
   const [bulkAssignOwners, bulkAssignOwnersState] = useBulkAssignAdmissionCrmLeadOwnersMutation();
   const [bulkCreateTasks, bulkCreateTasksState] = useBulkCreateAdmissionCrmTasksMutation();
   const [bulkChangeStages, bulkChangeStagesState] = useBulkChangeAdmissionCrmStagesMutation();
@@ -974,8 +963,8 @@ export function PipelineWorkspace() {
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
               <Link
                 {...createApplicantLinkNavigationProps({
-                  href: getApplicantHref(lead.id, 'overview'),
-                  onOpen: () => openApplicant(lead.id, 'overview'),
+                  href: getApplicantHref(lead.id, 'next'),
+                  onOpen: () => openApplicant(lead.id, 'next'),
                 })}
                 variant="subtitle2"
                 color="inherit"
@@ -1163,7 +1152,7 @@ export function PipelineWorkspace() {
               placement="right-top"
               showViewIcon
               viewLabel="Open Applicant"
-              handleViewClick={() => openApplicant(lead.id, 'overview')}
+              handleViewClick={() => openApplicant(lead.id, 'next')}
               showThreeDots={canSchedule || canManageRegistration}
               actions={({ popover }) => (
                 <MenuList>
@@ -1305,34 +1294,6 @@ export function PipelineWorkspace() {
     } catch {
       shikshaMitraToast.error({
         message: 'The inquiry could not be created. Review the fields and retry.',
-      });
-    }
-  };
-
-  const handleScheduleExam = async () => {
-    if (!scheduleLead || !selectedSlotId) return;
-    if (overrideCapacity && !capacityOverrideReason.trim()) {
-      shikshaMitraToast.error({ message: 'Enter a reason for the capacity override.' });
-      return;
-    }
-    try {
-      await scheduleExam({
-        leadId: scheduleLead.id,
-        body: {
-          entranceExamSlotId: selectedSlotId,
-          overrideCapacity,
-          capacityOverrideReason: overrideCapacity ? capacityOverrideReason.trim() : undefined,
-        },
-      }).unwrap();
-      refreshBoardData();
-      setScheduleLead(null);
-      setSelectedSlotId('');
-      setOverrideCapacity(false);
-      setCapacityOverrideReason('');
-      shikshaMitraToast.success({ message: 'Entrance exam scheduled.' });
-    } catch {
-      shikshaMitraToast.error({
-        message: 'The exam could not be scheduled. Check readiness and slot capacity.',
       });
     }
   };
@@ -1726,7 +1687,7 @@ export function PipelineWorkspace() {
               rowProps={(row) => ({
                 ...createApplicantRowNavigationProps({
                   applicantName: getAdmissionCrmLeadName(row as AdmissionCrmLeadDto),
-                  onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'overview'),
+                  onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'next'),
                 }),
                 'data-testid': 'student-enrollment-pipeline-row',
                 'data-lead-id': row.id,
@@ -2283,94 +2244,13 @@ export function PipelineWorkspace() {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={Boolean(scheduleLead)}
+      <ApplicantExamSchedulingDialog
+        lead={scheduleLead}
+        academicYearId={academicYearId}
+        canOverrideCapacity={can(actionPermissions.overrideExamCapacity)}
         onClose={() => setScheduleLead(null)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Schedule Entrance Exam</DialogTitle>
-        <DialogContent>
-          <Stack spacing={1.25} sx={{ pt: 1 }}>
-            {scheduleLead && (
-              <Alert severity="info">
-                {getAdmissionCrmLeadName(scheduleLead)} ·{' '}
-                {scheduleLead.desiredClassName || 'Class not captured'}
-              </Alert>
-            )}
-            <FormControl fullWidth>
-              <InputLabel id="pipeline-exam-slot-label">Exam slot</InputLabel>
-              <Select
-                labelId="pipeline-exam-slot-label"
-                label="Exam slot"
-                value={selectedSlotId}
-                disabled={isExamSlotsLoading}
-                onChange={(event) => setSelectedSlotId(event.target.value)}
-              >
-                {isExamSlotsLoading && (
-                  <MenuItem disabled value="">
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <CircularProgress size={16} />
-                      <Typography variant="body2">Loading exam slots...</Typography>
-                    </Stack>
-                  </MenuItem>
-                )}
-                {!isExamSlotsLoading && slotsQuery.isError && (
-                  <MenuItem disabled value="">
-                    Exam slots could not be loaded
-                  </MenuItem>
-                )}
-                {!isExamSlotsLoading && !slotsQuery.isError && !activeExamSlots.length && (
-                  <MenuItem disabled value="">
-                    No active exam slots available
-                  </MenuItem>
-                )}
-                {!isExamSlotsLoading &&
-                  activeExamSlots.map((slot) => (
-                    <MenuItem
-                      key={slot.id}
-                      value={slot.id}
-                      disabled={slot.remainingCapacity <= 0 && !overrideCapacity}
-                    >
-                      {slot.slotName} · {formatEnrollmentDate(slot.startDate, true)} ·{' '}
-                      {slot.remainingCapacity} seats
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={overrideCapacity}
-                  onChange={(_, checked) => setOverrideCapacity(checked)}
-                />
-              }
-              label="Override slot capacity"
-            />
-            {overrideCapacity && (
-              <TextField
-                required
-                label="Capacity override reason"
-                value={capacityOverrideReason}
-                onChange={(event) => setCapacityOverrideReason(event.target.value)}
-                multiline
-                minRows={2}
-              />
-            )}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setScheduleLead(null)}>Cancel</Button>
-          <LoadingButton
-            variant="contained"
-            loading={scheduleExamState.isLoading}
-            disabled={!selectedSlotId || (overrideCapacity && !capacityOverrideReason.trim())}
-            onClick={handleScheduleExam}
-          >
-            Schedule Exam
-          </LoadingButton>
-        </DialogActions>
-      </Dialog>
+        onScheduled={refreshBoardData}
+      />
 
       <Dialog
         open={Boolean(bulkAction)}
@@ -2501,5 +2381,13 @@ export function PipelineWorkspace() {
         </DialogActions>
       </Dialog>
     </Stack>
+  );
+}
+
+export function PipelineWorkspace() {
+  return (
+    <ApplicantWorkspaceDirtyProvider>
+      <PipelineWorkspaceContent />
+    </ApplicantWorkspaceDirtyProvider>
   );
 }

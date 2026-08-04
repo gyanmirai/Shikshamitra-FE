@@ -27,7 +27,21 @@ describe('Pipeline Board data revision', () => {
   });
 
   it('advances the revision only after successful membership-changing mutations', () => {
-    expect(source).toMatch(/await scheduleExam\([\s\S]*?\.unwrap\(\);\s*refreshBoardData\(\);/);
+    const schedulingDialog = fs.readFileSync(
+      path.join(
+        process.cwd(),
+        'src',
+        'screens',
+        'student',
+        'enrollment',
+        'admissions-crm',
+        'applicant-exam-scheduling-dialog.tsx'
+      ),
+      'utf8'
+    );
+    expect(source).toContain('onScheduled={refreshBoardData}');
+    expect(schedulingDialog).toContain('await scheduleExam({');
+    expect(schedulingDialog).toContain('await onScheduled?.();');
     expect(source).toMatch(
       /const result = await bulkChangeStages\([\s\S]*?\.unwrap\(\);\s*if \(result\.succeededCount > 0\) refreshBoardData\(\);/
     );

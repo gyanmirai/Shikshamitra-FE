@@ -38,14 +38,8 @@ export type PipelineView = 'board' | 'list';
 export type EnrollmentReportView = 'lifecycle' | 'sources' | 'standards' | 'outcomes';
 export type ScoreBandFilter = 'all' | 'hot' | 'warm' | 'needsAttention';
 export type EnrollmentApplicantTab =
-  | 'overview'
-  | 'activity'
-  | 'exam'
-  | 'registration'
-  | 'finance'
-  | 'offer'
-  | 'activation'
-  | 'governance';
+  'next' | 'inquiry' | 'exam' | 'registration' | 'finance' | 'offer' | 'activation' | 'governance';
+export type EnrollmentExamAction = 'record-result' | 'review-eligibility' | 'review-absence';
 export type EnrollmentSettingsPanel =
   | 'cycle'
   | 'pipeline'
@@ -74,9 +68,12 @@ export type EnrollmentWorkspaceState = {
   board?: string;
   medium?: string;
   returnTo?: string;
+  applicantReturn?: string;
   applicant?: string;
   workItem?: string;
   applicantTab?: EnrollmentApplicantTab;
+  applicantActivity?: boolean;
+  examAction?: EnrollmentExamAction;
   page: number;
   pageSize?: number;
   search?: string;
@@ -161,14 +158,19 @@ const eligibilityDecisions = enumValues<AdmissionCrmEligibilityDecision>(
 );
 const scoreBands = new Set<ScoreBandFilter>(['all', 'hot', 'warm', 'needsAttention']);
 const applicantTabs = new Set<EnrollmentApplicantTab>([
-  'overview',
-  'activity',
+  'next',
+  'inquiry',
   'exam',
   'registration',
   'finance',
   'offer',
   'activation',
   'governance',
+]);
+const examActions = new Set<EnrollmentExamAction>([
+  'record-result',
+  'review-eligibility',
+  'review-absence',
 ]);
 const settingsPanels = new Set<EnrollmentSettingsPanel>([
   'cycle',
@@ -240,6 +242,7 @@ export const getPersonaWorkspaceDefaults = (
   workspace: EnrollmentWorkspace,
   persona: EnrollmentPersona
 ): Partial<EnrollmentWorkspaceState> => {
+  if (workspace === 'applicant') return { applicantTab: 'next' };
   if (workspace === 'pipeline') {
     if (persona === 'receptionist')
       return { view: 'list', pipelineColumn: AdmissionCrmPipelineColumnKey.NewInquiry };
@@ -273,6 +276,8 @@ export const parseEnrollmentWorkspaceState = (
   const reportViewValue = searchParams.get('report') as EnrollmentReportView | null;
   const settingsPanelValue = searchParams.get('panel') as EnrollmentSettingsPanel | null;
   const applicantTabValue = searchParams.get('tab') as EnrollmentApplicantTab | null;
+  const rawApplicantTab = searchParams.get('tab');
+  const examActionValue = searchParams.get('examAction') as EnrollmentExamAction | null;
   const legacyStage = parseEnum(searchParams.get('stage'), stages);
 
   return {
@@ -281,12 +286,22 @@ export const parseEnrollmentWorkspaceState = (
     board: parseToken(searchParams.get('board')) ?? defaults.board,
     medium: parseToken(searchParams.get('medium')) ?? defaults.medium,
     returnTo: parseToken(searchParams.get('return'), 2_000) ?? defaults.returnTo,
+    applicantReturn:
+      parseToken(searchParams.get('applicantReturn'), 2_000) ?? defaults.applicantReturn,
     applicant: parseToken(searchParams.get('applicant')) ?? defaults.applicant,
     workItem: parseToken(searchParams.get('workItem')) ?? defaults.workItem,
     applicantTab:
-      applicantTabValue && applicantTabs.has(applicantTabValue)
-        ? applicantTabValue
-        : defaults.applicantTab,
+      rawApplicantTab === 'overview' || rawApplicantTab === 'activity'
+        ? 'next'
+        : applicantTabValue && applicantTabs.has(applicantTabValue)
+          ? applicantTabValue
+          : defaults.applicantTab,
+    applicantActivity:
+      searchParams.get('activity') === '1' || rawApplicantTab === 'activity'
+        ? true
+        : defaults.applicantActivity,
+    examAction:
+      examActionValue && examActions.has(examActionValue) ? examActionValue : defaults.examAction,
     page: parsePositiveInteger(searchParams.get('page')) ?? defaults.page ?? 1,
     pageSize: parsePositiveInteger(searchParams.get('pageSize'), 200) ?? defaults.pageSize,
     search: parseToken(searchParams.get('search'), 500) ?? defaults.search,
@@ -351,9 +366,12 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('board', state.board);
   set('medium', state.medium);
   set('return', state.returnTo);
+  set('applicantReturn', state.applicantReturn);
   set('applicant', state.applicant);
   set('workItem', state.workItem);
   set('tab', state.applicantTab);
+  if (state.applicantActivity) set('activity', 1);
+  set('examAction', state.examAction);
   if (state.page > 1) set('page', state.page);
   set('pageSize', state.pageSize);
   set('search', state.search);

@@ -165,3 +165,7 @@ export function useApplicantWorkspaceTransition() {
   }
   return context;
 }
+
+export function useOptionalApplicantWorkspaceTransition() {
+  return useContext(ApplicantWorkspaceDirtyContext);
+}

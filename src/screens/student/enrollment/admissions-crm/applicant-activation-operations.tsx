@@ -3,8 +3,8 @@
 import type { RootState } from 'src/redux/store';
 import type { AdmissionCrmActivationPreviewDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
@@ -50,7 +50,7 @@ import {
   ApplicantInlineNotice,
 } from './applicant-workspace-primitives';
 
-type Props = { leadId: string; academicYearId: string };
+type Props = { leadId: string; academicYearId: string; requestedActionCode?: string };
 const statusLabels = [
   'Draft',
   'Approval pending',
@@ -71,7 +71,11 @@ const serviceOptions = [
   AdmissionCrmServiceHandoffType.Device,
 ];
 
-export function ApplicantActivationOperations({ leadId, academicYearId }: Props) {
+export function ApplicantActivationOperations({
+  leadId,
+  academicYearId,
+  requestedActionCode,
+}: Props) {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const canPreviewActivation = hasGrantedPermission(
     permissions,
@@ -137,6 +141,27 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
   const [assignManualIdentifier, manualIdentifierState] =
     useAssignManualAdmissionCrmIdentifierMutation();
   const current = activation.data;
+  useEffect(() => {
+    if (requestedActionCode === 'RequestActivation' && !current) {
+      setActivationFormOpen(true);
+    }
+  }, [current, requestedActionCode]);
+  useEffect(() => {
+    if (!requestedActionCode?.endsWith('Activation')) return undefined;
+    const targetId =
+      requestedActionCode === 'RepairActivation'
+        ? 'activation-repair-operation'
+        : 'activation-current-operation';
+    const frame = window.requestAnimationFrame(() => {
+      const target = document.getElementById(targetId);
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({
+        block: 'start',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activationFormOpen, current?.id, current?.status, requestedActionCode]);
   const cancellationPreview = useGetAdmissionCrmActivationCancellationPreviewQuery(
     { activationId: current?.id || '' },
     {
@@ -192,7 +217,7 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
   };
 
   return (
-    <Box component="section">
+    <Box id="activation-current-operation" component="section" tabIndex={-1}>
       <Stack spacing={1.25}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle2">Student activation</Typography>
@@ -523,28 +548,32 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
                   </LoadingButton>
                 </Stack>
               )}
-            {((current.status === AdmissionCrmActivationStatus.Approved &&
-              canExecuteActivation) ||
+            {((current.status === AdmissionCrmActivationStatus.Approved && canExecuteActivation) ||
               (current.status === AdmissionCrmActivationStatus.RepairRequired &&
                 canRepairActivation)) && (
-                <LoadingButton
-                  variant="contained"
-                  startIcon={<PlayArrow />}
-                  loading={executeState.isLoading}
-                  onClick={() =>
-                    run(
-                      () => execute({ activationId: current.id }).unwrap(),
-                      current.status === AdmissionCrmActivationStatus.RepairRequired
-                        ? 'Activation repair attempted.'
-                        : 'Activation executed.'
-                    )
-                  }
-                >
-                  {current.status === AdmissionCrmActivationStatus.RepairRequired
-                    ? 'Retry repair'
-                    : 'Activate student'}
-                </LoadingButton>
-              )}
+              <LoadingButton
+                id={
+                  current.status === AdmissionCrmActivationStatus.RepairRequired
+                    ? 'activation-repair-operation'
+                    : undefined
+                }
+                variant="contained"
+                startIcon={<PlayArrow />}
+                loading={executeState.isLoading}
+                onClick={() =>
+                  run(
+                    () => execute({ activationId: current.id }).unwrap(),
+                    current.status === AdmissionCrmActivationStatus.RepairRequired
+                      ? 'Activation repair attempted.'
+                      : 'Activation executed.'
+                  )
+                }
+              >
+                {current.status === AdmissionCrmActivationStatus.RepairRequired
+                  ? 'Retry repair'
+                  : 'Activate student'}
+              </LoadingButton>
+            )}
             {current.repairReason && (
               <Alert severity="error">
                 {current.repairStep}: {current.repairReason}
@@ -561,9 +590,9 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
                       severity="error"
                       action={
                         <Button
-                        color="inherit"
-                        size="small"
-                        onClick={() => cancellationPreview.refetch()}
+                          color="inherit"
+                          size="small"
+                          onClick={() => cancellationPreview.refetch()}
                         >
                           Retry
                         </Button>
@@ -634,9 +663,7 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
                       variant="contained"
                       startIcon={<Gavel />}
                       loading={approveCancellationState.isLoading}
-                      disabled={
-                        cancellationPreview.isError || !cancellationPreview.data?.canCancel
-                      }
+                      disabled={cancellationPreview.isError || !cancellationPreview.data?.canCancel}
                       onClick={() =>
                         run(
                           () => approveCancellation({ activationId: current.id }).unwrap(),

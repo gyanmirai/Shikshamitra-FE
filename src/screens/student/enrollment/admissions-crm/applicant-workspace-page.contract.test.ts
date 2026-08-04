@@ -9,32 +9,41 @@ const read = (file: string) =>
   );
 
 describe('Student Enrollment applicant workspace page contracts', () => {
-  it('uses a dedicated, responsive, journey-led page instead of a drawer', () => {
+  it('uses a dedicated responsive command workspace with one journey and an audit drawer', () => {
     const page = read('applicant-workspace-page.tsx');
+    const journey = read('applicant-journey-navigator.tsx');
 
     expect(page).toContain('component="article"');
     expect(page).toContain('<CustomBreadcrumbs');
     expect(page).toContain('isBack');
     expect(page).toContain('onBack={handleClose}');
-    expect(page).toContain('<Stepper');
-    expect(page).toContain('journeySteps.map');
-    expect(page).toContain('<CustomTabs');
-    expect(page).toContain('visibleSections.map');
+    expect(page).toContain('<ApplicantJourneyNavigator');
+    expect(page).toContain('<ApplicantContextRail');
+    expect(page).toContain("maxWidth: 'xl'");
+    expect(page).toContain("overflowX: 'hidden'");
     expect(page).toContain('<ApplicantActivityTimeline');
-    expect(page).not.toContain('<Drawer');
+    expect(page).toContain('<Drawer');
+    expect(page).toContain('activityOpen');
+    expect(page).not.toContain('<CustomTabs');
+    expect(journey).toContain('gridTemplateColumns:');
+    expect(journey).toContain('minmax(0, 1fr)');
+    expect(journey).toContain("useMediaQuery(theme.breakpoints.down('md'))");
+    expect(journey).not.toContain("overflowX: 'auto'");
     expect(page).not.toContain("role: 'dialog'");
   });
 
-  it('keeps overview read-first and moves audit activity to its own section', () => {
+  it('keeps inquiry work focused and moves compact facts and audit to their owning surfaces', () => {
     const overview = read('applicant-workspace-overview.tsx');
+    const contextRail = read('applicant-context-rail.tsx');
     const activity = read('applicant-activity-timeline.tsx');
 
-    expect(overview).toContain('ApplicantSummaryGrid');
     expect(overview).toContain('noteFormOpen ?');
     expect(overview).toContain('taskFormOpen ?');
     expect(overview).toContain('visibleTasks');
     expect(overview).toContain('openTasks.slice(0, 3)');
     expect(overview).not.toContain('useGetAdmissionCrmTimelineQuery');
+    expect(contextRail).toContain('Applicant Details');
+    expect(contextRail).toContain('Activity & Audit');
     expect(activity).toContain('useGetAdmissionCrmTimelineQuery');
     expect(activity).toContain('Activity & Audit');
     expect(overview).not.toContain('Save Owner');
@@ -43,12 +52,13 @@ describe('Student Enrollment applicant workspace page contracts', () => {
 
   it('autosaves ownership controls and keeps staff searches independent and lazy', () => {
     const overview = read('applicant-workspace-overview.tsx');
+    const contextRail = read('applicant-context-rail.tsx');
 
-    expect(overview).toContain('const saveOwner = async');
-    expect(overview).toContain('const savePriority = async');
-    expect(overview).toContain('debouncedOwnerSearch');
+    expect(contextRail).toContain('const saveOwner = async');
+    expect(contextRail).toContain('const savePriority = async');
+    expect(contextRail).toContain('debouncedOwnerSearch');
     expect(overview).toContain('debouncedTaskSearch');
-    expect(overview).toContain('{ skip: !ownerEditorOpen && !lead.ownerUserId }');
+    expect(contextRail).toContain('ownerOnly: true');
     expect(overview).toContain('{ skip: !taskFormOpen }');
   });
 
@@ -72,50 +82,49 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     const operationColumns = read('operations-queue-columns.tsx');
 
     expect(pipeline).toContain(
-      "onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'overview')"
+      "onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'next')"
     );
     expect(exams).toContain("onOpen: () => openApplicant(row.leadId, 'exam')");
     expect(operations).toContain('onOpen: () => openApplicant(row.leadId, applicantTab)');
     expect(overview).toContain('createApplicantRowNavigationProps');
-    expect(pipeline).toMatch(
-      /`pipeline:\$\{academicYearId \|\| 'none'\}:\$\{sessionIdentity\}`/
-    );
-    expect(exams).toMatch(
-      /`exams:\$\{academicYearId \|\| 'none'\}:\$\{sessionIdentity\}`/
-    );
+    expect(pipeline).toMatch(/`pipeline:\$\{academicYearId \|\| 'none'\}:\$\{sessionIdentity\}`/);
+    expect(exams).toMatch(/`exams:\$\{academicYearId \|\| 'none'\}:\$\{sessionIdentity\}`/);
     expect(operations).toMatch(
       /`operations-\$\{variant\}:\$\{academicYearId \|\| 'none'\}:\$\{sessionIdentity\}`/
     );
     expect(pipeline).toContain('createApplicantLinkNavigationProps');
-    expect(pipeline).toContain("onOpen: () => openApplicant(lead.id, 'overview')");
+    expect(pipeline).toContain("onOpen: () => openApplicant(lead.id, 'next')");
     expect(exams).toContain("onOpen: () => openApplicant(exam.leadId, 'exam')");
-    expect(operationColumns).toContain(
-      'onOpen: () => openApplicant(item.leadId, applicantTab)'
-    );
+    expect(operationColumns).toContain('onOpen: () => openApplicant(item.leadId, applicantTab)');
     expect(pipeline).not.toContain('<ApplicantWorkspaceDrawer');
     expect(pipeline).not.toContain('component={NextLink}');
-    expect(exams).not.toContain('component={NextLink}');
+    expect(exams).toContain('component={NextLink}');
+    expect(exams).toContain('Back to Applicant');
     expect(operationColumns).not.toContain('component={NextLink}');
   });
 
-  it('derives visible sections from operational journey facts and permissions', () => {
+  it('uses backend progress as the only journey and next-action authority', () => {
     const page = read('applicant-workspace-page.tsx');
     const context = read('enrollment-workspace-context.tsx');
+    const model = read('applicant-command-workspace-model.ts');
 
     expect(page).toContain('useGetAdmissionCrmApplicantProgressQuery');
     expect(page).toContain('buildApplicantJourney');
     expect(page).toContain('buildApplicantJourney(progressQuery.data');
-    expect(page).toContain('journeyByTab');
+    expect(page).toContain('getApplicantPrimaryAction(progressQuery.data?.nextActionCode)');
+    expect(page).toContain('progressQuery.data?.nextAction');
     expect(page).toContain('canViewOffers');
     expect(page).toContain('canViewActivation');
     expect(page).toContain('canViewGovernance');
     expect(page).toContain('canViewRoutes ?');
     expect(page).toContain('canViewPolicies ?');
     expect(page).toContain('canViewHouseholds ?');
-    expect(page).toContain('visibleSections');
     expect(page).toContain('{ skip: !leadId || !lead }');
     expect(page).not.toContain('useGetAdmissionCrmQuickInquiryOptionsQuery');
     expect(page).not.toContain('useGetAdmissionCrmCycleConfigurationQuery');
+    expect(page).not.toContain('getNextAction(lead.stage)');
+    expect(model).toContain('ScheduleExam: {');
+    expect(model).toContain('RecordExamResult: {');
     expect(context).toContain('studentPaths.enrollment.applicant(leadId)');
     expect(context).toContain('window.sessionStorage.setItem');
     expect(context).toContain('router.replace(returnTo');
@@ -135,6 +144,45 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(exams).toContain('Upload Results');
     expect(exams).toContain('OMR Import');
     expect(exams).not.toContain('bulkObtainedMarks');
+  });
+
+  it('hands off an exact applicant exam action and preserves guarded return navigation', () => {
+    const page = read('applicant-workspace-page.tsx');
+    const exams = read('exams-workspace.tsx');
+    const schedulingDialog = read('applicant-exam-scheduling-dialog.tsx');
+
+    expect(page).toContain('studentPaths.enrollment.entranceExams');
+    expect(page).toContain('applicant: leadId');
+    expect(page).toContain('examAction: primaryAction.examAction');
+    expect(page).toContain("params.set('applicantReturn', returnTo)");
+    expect(page).toContain('requestTransition(() => router.push(href))');
+    expect(page).toContain('onClose={() => requestTransition(() => onActivityChange?.(false))}');
+    expect(exams).toContain('useGetAdmissionCrmEntranceExamByLeadQuery');
+    expect(exams).toContain("'record-result': 'exam-results-section'");
+    expect(exams).toContain("'review-eligibility': 'exam-eligibility-section'");
+    expect(exams).toContain("'review-absence': 'exam-attendance-section'");
+    expect(exams).toContain('Back to Applicant');
+    expect(exams).toContain('<ApplicantWorkspaceDirtyProvider>');
+    expect(exams).toContain("useApplicantWorkspaceDirtyState('entrance-exam-review'");
+    expect(exams).toContain('onClose={closeSelectedExam}');
+    expect(schedulingDialog).toContain('label="Override slot capacity"');
+    expect(schedulingDialog).toContain('canOverrideCapacity ?');
+    expect(schedulingDialog).toContain('label="Capacity Override Reason"');
+    expect(schedulingDialog).toContain('capacityOverrideReason.trim()');
+  });
+
+  it('suppresses invalid actions while preserving authoritative starts and recoveries', () => {
+    const page = read('applicant-workspace-page.tsx');
+    const model = read('applicant-command-workspace-model.ts');
+
+    expect(page).toContain('progressQuery.data?.closedOutcome == null');
+    expect(page).toContain('isApplicantJourneyActionable(currentJourneyStep)');
+    expect(model).toContain("step.state !== 'complete'");
+    expect(model).toContain("step.state !== 'skipped'");
+    expect(model).toContain("step.state === 'not-started'");
+    expect(model).toContain("step.state === 'blocked'");
+    expect(page).toContain('isApplicantPrimaryActionPermitted');
+    expect(page).toContain('You do not have permission to');
   });
 
   it('keeps generated documents in their owning workflow', () => {
@@ -186,19 +234,20 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     const page = read('applicant-workspace-page.tsx');
     const registration = read('applicant-registration-operations.tsx');
 
-    expect(page).toContain('hasRegistration={Boolean(');
+    expect(page).toContain('const hasRegistration = Boolean(');
+    expect(page).toContain('hasRegistration={hasRegistration}');
     expect(page).toContain('lead?.registrationFormIssuedAt || lead?.registrationFormNumber');
     expect(registration).toContain('{ skip: !hasRegistration }');
   });
 
   it('shows the captured pathway and protects every substantive registration draft', () => {
-    const overview = read('applicant-workspace-overview.tsx');
+    const contextRail = read('applicant-context-rail.tsx');
     const registration = read('applicant-registration-operations.tsx');
 
-    expect(overview).toContain('label="Admission pathway"');
-    expect(overview).toContain('lead.intendedRouteNameSnapshot');
-    expect(overview).toContain('lead.intendedRouteDefinitionVersion');
-    expect(overview).toContain('captured at inquiry');
+    expect(contextRail).toContain('Admission Pathway');
+    expect(contextRail).toContain('lead.intendedRouteNameSnapshot');
+    expect(contextRail).toContain('lead.intendedRouteDefinitionVersion');
+    expect(contextRail).toContain('captured at inquiry');
     expect(registration).toContain('hasApplicantRegistrationDraft');
     expect(registration).toContain('documentReasonByKey');
     expect(registration).toContain('documentFileByKey');

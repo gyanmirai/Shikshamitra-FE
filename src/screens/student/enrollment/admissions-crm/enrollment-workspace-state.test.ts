@@ -72,7 +72,7 @@ describe('Enrollment workspace URL state', () => {
     expect(serializeEnrollmentWorkspaceState(state).get('seatPool')).toBe('pool-1');
   });
 
-  it('round trips an applicant return location and Activity tab', () => {
+  it('canonicalizes the legacy Activity tab to next with a URL-backed drawer', () => {
     const returnTo = '/student/enrollment/pipeline?cycle=cycle-1&view=list&page=3';
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams({
@@ -85,13 +85,37 @@ describe('Enrollment workspace URL state', () => {
     expect(state).toMatchObject({
       applicant: 'lead-1',
       returnTo,
-      applicantTab: 'activity',
+      applicantTab: 'next',
+      applicantActivity: true,
     });
 
     const serialized = serializeEnrollmentWorkspaceState(state);
     expect(serialized.get('applicant')).toBe('lead-1');
     expect(serialized.get('return')).toBe(returnTo);
-    expect(serialized.get('tab')).toBe('activity');
+    expect(serialized.get('tab')).toBe('next');
+    expect(serialized.get('activity')).toBe('1');
+  });
+
+  it('canonicalizes the legacy Overview tab and preserves targeted exam handoffs', () => {
+    const legacy = parseEnrollmentWorkspaceState(new URLSearchParams({ tab: 'overview' }));
+    expect(legacy.applicantTab).toBe('next');
+    expect(serializeEnrollmentWorkspaceState(legacy).get('tab')).toBe('next');
+
+    const handoff = parseEnrollmentWorkspaceState(
+      new URLSearchParams({
+        applicant: 'lead-1',
+        examAction: 'review-eligibility',
+        applicantReturn: 'return-token',
+      })
+    );
+    expect(handoff).toMatchObject({
+      applicant: 'lead-1',
+      examAction: 'review-eligibility',
+      applicantReturn: 'return-token',
+    });
+    const serialized = serializeEnrollmentWorkspaceState(handoff);
+    expect(serialized.get('examAction')).toBe('review-eligibility');
+    expect(serialized.get('applicantReturn')).toBe('return-token');
   });
 
   it('keeps date-range state separate from the applicant return token', () => {
@@ -216,6 +240,9 @@ describe('Enrollment workspace URL state', () => {
   });
 
   it('provides role-focused defaults without changing persisted business state', () => {
+    expect(getPersonaWorkspaceDefaults('applicant', 'counselor')).toEqual({
+      applicantTab: 'next',
+    });
     expect(getPersonaWorkspaceDefaults('pipeline', 'receptionist')).toEqual({
       view: 'list',
       pipelineColumn: AdmissionCrmPipelineColumnKey.NewInquiry,

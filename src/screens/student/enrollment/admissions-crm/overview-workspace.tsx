@@ -134,7 +134,7 @@ const stepLabels: Record<AdmissionCrmApplicantStepKey, string> = {
 };
 
 const sectionTabs: Record<AdmissionCrmWorkspaceSection, ApplicantWorkspaceTab> = {
-  [AdmissionCrmWorkspaceSection.Overview]: 'overview',
+  [AdmissionCrmWorkspaceSection.Overview]: 'next',
   [AdmissionCrmWorkspaceSection.EntranceExam]: 'exam',
   [AdmissionCrmWorkspaceSection.Registration]: 'registration',
   [AdmissionCrmWorkspaceSection.Offer]: 'offer',

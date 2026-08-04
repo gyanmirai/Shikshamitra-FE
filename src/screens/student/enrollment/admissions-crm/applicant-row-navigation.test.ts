@@ -79,7 +79,7 @@ describe('applicant row navigation', () => {
     const onOpen = vi.fn();
     const preventDefault = vi.fn();
     const props = createApplicantLinkNavigationProps({
-      href: '/student/enrollment/applicants/lead-1?tab=overview',
+      href: '/student/enrollment/applicants/lead-1?tab=next',
       onOpen,
     });
 
@@ -93,7 +93,7 @@ describe('applicant row navigation', () => {
       preventDefault,
     } as never);
 
-    expect(props.href).toBe('/student/enrollment/applicants/lead-1?tab=overview');
+    expect(props.href).toBe('/student/enrollment/applicants/lead-1?tab=next');
     expect(preventDefault).toHaveBeenCalledOnce();
     expect(onOpen).toHaveBeenCalledOnce();
   });
@@ -102,7 +102,7 @@ describe('applicant row navigation', () => {
     const onOpen = vi.fn();
     const preventDefault = vi.fn();
     const props = createApplicantLinkNavigationProps({
-      href: '/student/enrollment/applicants/lead-1?tab=overview',
+      href: '/student/enrollment/applicants/lead-1?tab=next',
       onOpen,
     });
 

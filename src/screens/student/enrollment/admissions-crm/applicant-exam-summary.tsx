@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { studentPaths } from 'src/constants/student-menu';
 import { LoadingButton } from 'src/components/loading-button';
 import OpenInNewRounded from '@mui/icons-material/OpenInNewRounded';
 import {
@@ -46,7 +47,7 @@ export function ApplicantExamSummary({
   const query = useGetAdmissionCrmEntranceExamByLeadQuery({ leadId });
   const [decideEligibility, decisionState] = useDecideAdmissionCrmEligibilityMutation();
   const exam = query.data;
-  const examHref = `/student/enrollment/exams?cycle=${encodeURIComponent(academicYearId)}&applicant=${encodeURIComponent(leadId)}&tab=exam`;
+  const examHref = `${studentPaths.enrollment.entranceExams}?cycle=${encodeURIComponent(academicYearId)}&applicant=${encodeURIComponent(leadId)}`;
   const unresolvedAbsence =
     exam?.attendanceStatus === AdmissionCrmExamAttendanceStatus.Absent &&
     exam.eligibilityDecision === AdmissionCrmEligibilityDecision.Pending;
@@ -79,7 +80,7 @@ export function ApplicantExamSummary({
         description="Schedule an exam from the Entrance Exams workspace when the applicant is ready."
         action={
           <Button component={Link} href={examHref} color="inherit" size="small">
-            Open Exams
+            Open Entrance Exams
           </Button>
         }
       />
@@ -102,7 +103,7 @@ export function ApplicantExamSummary({
           variant="outlined"
           endIcon={<OpenInNewRounded />}
         >
-          Open Exams
+          Open Entrance Exams
         </Button>
       </Stack>
       <Stack direction="row" gap={0.75} flexWrap="wrap">
@@ -142,10 +143,21 @@ export function ApplicantExamSummary({
           severity="warning"
           action={
             <Stack direction="row" gap={0.75}>
-              <Button component={Link} href={examHref} color="inherit" size="small" variant="outlined">
+              <Button
+                component={Link}
+                href={examHref}
+                color="inherit"
+                size="small"
+                variant="outlined"
+              >
                 Reschedule exam
               </Button>
-              <Button color="error" size="small" variant="contained" onClick={() => setRejectOpen(true)}>
+              <Button
+                color="error"
+                size="small"
+                variant="contained"
+                onClick={() => setRejectOpen(true)}
+              >
                 Reject application
               </Button>
             </Stack>
@@ -158,7 +170,6 @@ export function ApplicantExamSummary({
         <DialogTitle>Reject application</DialogTitle>
         <DialogContent>
           <TextField
-            autoFocus
             fullWidth
             required
             multiline

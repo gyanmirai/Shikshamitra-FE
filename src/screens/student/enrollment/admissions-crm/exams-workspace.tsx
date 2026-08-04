@@ -6,14 +6,16 @@ import type { LabelColor } from 'src/components/label';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import NextLink from 'next/link';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import { studentPaths } from 'src/constants/student-menu';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { memo, useMemo, useState, useEffect, useCallback } from 'react';
+import { memo, useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Chip,
@@ -44,6 +46,7 @@ import {
   useGetAdmissionCrmEntranceExamsQuery,
   useUploadAdmissionCrmExamResultMutation,
   useDecideAdmissionCrmEligibilityMutation,
+  useGetAdmissionCrmEntranceExamByLeadQuery,
   useGetAdmissionCrmEligibilityHandoffQuery,
   useMarkAdmissionCrmExamAttendanceMutation,
   useGetAdmissionCrmQuickInquiryOptionsQuery,
@@ -66,6 +69,11 @@ import {
   createApplicantRowNavigationProps,
   createApplicantLinkNavigationProps,
 } from './applicant-row-navigation';
+import {
+  ApplicantWorkspaceDirtyProvider,
+  useApplicantWorkspaceDirtyState,
+  useApplicantWorkspaceTransition,
+} from './applicant-workspace-dirty-context';
 import {
   enrollmentActionsColumn,
   enrollmentTableWrapperSx,
@@ -120,6 +128,14 @@ const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   year: 'numeric',
 });
 const accessibleStatusSx = { color: 'text.primary' } as const;
+const focusedExamSectionSx = {
+  scrollMarginTop: 16,
+  '&:focus-visible': {
+    outline: '2px solid',
+    outlineColor: 'primary.main',
+    outlineOffset: 4,
+  },
+} as const;
 type BulkExamResultForm = {
   totalMarks: string;
   passingMarks: string;
@@ -361,7 +377,7 @@ const InlineExamMarks = memo(
   }
 );
 
-export function ExamsWorkspace() {
+function ExamsWorkspaceContent() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const { academicYearId, sessionIdentity, state, updateState, getApplicantHref, openApplicant } =
     useEnrollmentWorkspace();
@@ -399,6 +415,25 @@ export function ExamsWorkspace() {
   const [bulkMarksByExamId, setBulkMarksByExamId] = useState<Record<string, BulkExamResultForm>>(
     {}
   );
+  const [initializedExamId, setInitializedExamId] = useState('');
+  const handledTargetRef = useRef('');
+  const { requestTransition } = useApplicantWorkspaceTransition();
+  const selectedExamDirty = Boolean(
+    selectedExam &&
+      initializedExamId === selectedExam.id &&
+      (attendance !== selectedExam.attendanceStatus ||
+        totalMarks !== (selectedExam.totalMarks?.toString() || '100') ||
+        passingMarks !== (selectedExam.passingMarks?.toString() || '40') ||
+        obtainedMarks !== (selectedExam.obtainedMarks?.toString() || '') ||
+        meritRank !== (selectedExam.meritRank?.toString() || '') ||
+        resultCorrectionReason !== '' ||
+        eligibility !== selectedExam.eligibilityDecision ||
+        decisionReason !== (selectedExam.eligibilityDecisionReason || '') ||
+        overrideDecision ||
+        overrideReason !== '')
+  );
+
+  useApplicantWorkspaceDirtyState('entrance-exam-review', selectedExamDirty);
 
   const examsQuery = useGetAdmissionCrmEntranceExamsQuery(
     {
@@ -415,6 +450,10 @@ export function ExamsWorkspace() {
       sorting: state.sorting || 'ExamStartTime ASC',
     },
     { skip: !academicYearId }
+  );
+  const targetExamQuery = useGetAdmissionCrmEntranceExamByLeadQuery(
+    { leadId: state.applicant || '' },
+    { skip: !state.applicant }
   );
   const [markAttendance, markAttendanceState] = useMarkAdmissionCrmExamAttendanceMutation();
   const [bulkMarkAttendance, bulkAttendanceState] = useBulkMarkAdmissionCrmExamAttendanceMutation();
@@ -451,7 +490,55 @@ export function ExamsWorkspace() {
     setDecisionReason(selectedExam.eligibilityDecisionReason || '');
     setOverrideDecision(false);
     setOverrideReason('');
+    setInitializedExamId(selectedExam.id);
   }, [selectedExam]);
+
+  useEffect(() => {
+    const targetKey = `${state.applicant || ''}:${state.examAction || ''}`;
+    if (!state.applicant || !targetExamQuery.data || handledTargetRef.current === targetKey) return;
+    handledTargetRef.current = targetKey;
+    setSelectedExam(targetExamQuery.data);
+  }, [state.applicant, state.examAction, targetExamQuery.data]);
+
+  useEffect(() => {
+    if (!selectedExam || !state.examAction) return undefined;
+    const sectionId = {
+      'record-result': 'exam-results-section',
+      'review-eligibility': 'exam-eligibility-section',
+      'review-absence': 'exam-attendance-section',
+    }[state.examAction];
+    const frame = window.requestAnimationFrame(() => {
+      const section = document.getElementById(sectionId);
+      section?.focus({ preventScroll: true });
+      section?.scrollIntoView({
+        block: 'start',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [selectedExam, state.examAction]);
+
+  const targetActionLabel = state.examAction
+    ? {
+        'record-result': 'Record Exam Result',
+        'review-eligibility': 'Review Eligibility',
+        'review-absence': 'Review Exam Absence',
+      }[state.examAction]
+    : undefined;
+  const closeSelectedExam = () =>
+    requestTransition(() => {
+      setInitializedExamId('');
+      setSelectedExam(null);
+    });
+  const applicantReturnHref = state.applicant
+    ? (() => {
+        const params = new URLSearchParams();
+        if (academicYearId) params.set('cycle', academicYearId);
+        params.set('tab', 'exam');
+        if (state.applicantReturn) params.set('return', state.applicantReturn);
+        return `${studentPaths.enrollment.applicant(state.applicant)}?${params.toString()}`;
+      })()
+    : undefined;
 
   const selectionScopeKey = createEnrollmentQueryScopeKey({
     academicYearId,
@@ -945,6 +1032,43 @@ export function ExamsWorkspace() {
         description="Process attendance, results, merit, and eligibility decisions from one queue."
       />
 
+      {state.applicant ? (
+        <Alert
+          severity={targetExamQuery.isError ? 'error' : 'info'}
+          action={
+            <Stack direction="row" gap={0.75} flexWrap="wrap">
+              {targetExamQuery.data && !selectedExam ? (
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => setSelectedExam(targetExamQuery.data!)}
+                >
+                  {targetActionLabel || 'Open Applicant Exam'}
+                </Button>
+              ) : null}
+              {applicantReturnHref ? (
+                <Button
+                  component={NextLink}
+                  href={applicantReturnHref}
+                  color="inherit"
+                  size="small"
+                >
+                  Back to Applicant
+                </Button>
+              ) : null}
+            </Stack>
+          }
+        >
+          {targetExamQuery.isFetching
+            ? 'Loading the requested applicant exam.'
+            : targetExamQuery.isError
+              ? 'The requested applicant exam could not be resolved. Return to the applicant and retry.'
+              : targetExamQuery.data
+                ? `${targetActionLabel || 'Applicant exam'} for ${targetExamQuery.data.applicantName}.`
+                : 'Opening the requested applicant exam.'}
+        </Alert>
+      ) : null}
+
       {!entranceExamRequired ? (
         <Alert severity="info">
           Entrance exams are disabled for this admission year. Applicants follow the exam-waived
@@ -1323,7 +1447,7 @@ export function ExamsWorkspace() {
 
       <Dialog
         open={Boolean(selectedExam)}
-        onClose={() => setSelectedExam(null)}
+        onClose={closeSelectedExam}
         fullWidth
         maxWidth="md"
       >
@@ -1336,7 +1460,7 @@ export function ExamsWorkspace() {
                 {dateTimeFormatter.format(new Date(selectedExam.examStartTime))}
               </Alert>
             )}
-            <Box>
+            <Box id="exam-attendance-section" tabIndex={-1} sx={focusedExamSectionSx}>
               <Typography variant="subtitle2" gutterBottom>
                 Attendance
               </Typography>
@@ -1388,7 +1512,7 @@ export function ExamsWorkspace() {
               </Stack>
             </Box>
             <Divider />
-            <Box>
+            <Box id="exam-results-section" tabIndex={-1} sx={focusedExamSectionSx}>
               <Typography variant="subtitle2" gutterBottom>
                 Marks & Merit
               </Typography>
@@ -1488,7 +1612,7 @@ export function ExamsWorkspace() {
               ) : null}
             </Box>
             <Divider />
-            <Box>
+            <Box id="exam-eligibility-section" tabIndex={-1} sx={focusedExamSectionSx}>
               <Typography variant="subtitle2" gutterBottom>
                 Eligibility Decision
               </Typography>
@@ -1583,7 +1707,7 @@ export function ExamsWorkspace() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedExam(null)}>Close</Button>
+          <Button onClick={closeSelectedExam}>Close</Button>
         </DialogActions>
       </Dialog>
 
@@ -1666,5 +1790,13 @@ export function ExamsWorkspace() {
         </DialogActions>
       </Dialog>
     </Stack>
+  );
+}
+
+export function ExamsWorkspace() {
+  return (
+    <ApplicantWorkspaceDirtyProvider>
+      <ExamsWorkspaceContent />
+    </ApplicantWorkspaceDirtyProvider>
   );
 }
