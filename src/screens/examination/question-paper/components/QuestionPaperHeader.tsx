@@ -174,16 +174,6 @@ export default function QuestionPaperHeader({
           <Button
             size="small"
             variant="outlined"
-            color={aiSuggestionCount > 0 ? 'warning' : 'inherit'}
-            onClick={onToggleAiDrawer}
-            startIcon={<Iconify icon="solar:stars-minimalistic-bold-duotone" width={16} />}
-          >
-            AI Assist {aiSuggestionCount > 0 ? `(${aiSuggestionCount})` : ''}
-          </Button>
-
-          <Button
-            size="small"
-            variant="outlined"
             color="inherit"
             onClick={onToggleAnalyticsModal}
             startIcon={<Iconify icon="solar:chart-2-bold-duotone" width={16} />}
@@ -213,7 +203,7 @@ export default function QuestionPaperHeader({
                 loading={isGenerating}
                 disabled={!blueprintValid}
                 onClick={onGeneratePaper}
-                startIcon={<Iconify icon="solar:sparkles-bold-duotone" width={16} />}
+                startIcon={<Iconify icon={GlobalIcons.submit} width={16} />}
                 sx={{
                   px: 2,
                   boxShadow: (t) => `0 4px 14px 0 ${alpha(t.palette.primary.main, 0.35)}`,
@@ -226,6 +216,6 @@ export default function QuestionPaperHeader({
           </CustomTooltip>
         </Stack>
       </Stack>
-    </Paper>
+    </Paper >
   );
 }

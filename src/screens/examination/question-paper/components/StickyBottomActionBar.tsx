@@ -6,6 +6,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 
 interface StickyBottomActionBarProps {
   currentMarks: number;
@@ -102,7 +103,7 @@ export default function StickyBottomActionBar({
             loading={isGenerating}
             disabled={!blueprintValid}
             onClick={onGeneratePaper}
-            startIcon={<Iconify icon="solar:sparkles-bold-duotone" />}
+            startIcon={<Iconify icon={GlobalIcons.submit} width={16} />}
             sx={{
               px: 2.5,
               fontWeight: 700,
