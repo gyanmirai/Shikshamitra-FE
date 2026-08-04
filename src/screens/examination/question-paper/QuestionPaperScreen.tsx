@@ -1,59 +1,50 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { useReactToPrint } from 'react-to-print';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { academicPaths } from 'src/constants/academic-menu';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Label } from 'src/components/label';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { GlobalIcons } from 'src/utils/icons';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { shikshaMitraToast } from 'src/components/toast';
-import { Scrollbar } from 'src/components/scrollbar';
+import { useGetQuestionsQuery } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { academicPaths } from 'src/constants/academic-menu';
-import dayjs from 'dayjs';
-
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   Box,
-  Card,
   Grid,
   Paper,
   Stack,
   Alert,
   Button,
-  Dialog,
   Popover,
-  Divider,
   Tooltip,
   TextField,
+  Accordion,
   Typography,
   IconButton,
-  DialogTitle,
   DialogActions,
-  DialogContent,
-  Accordion,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import { useGetQuestionsQuery } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
-import { useGetQuestionPaperExamLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   useGetBlueprintQuery,
   useGetPaperPreviewQuery,
@@ -63,12 +54,7 @@ import {
   useValidateBlueprintMutation,
   useAddQuestionToPaperMutation,
   useCreateQuestionPaperMutation,
-  useSubmitQuestionPaperMutation,
-  useRejectQuestionPaperMutation,
   useDeleteQuestionPaperMutation,
-  useApproveQuestionPaperMutation,
-  usePublishQuestionPaperMutation,
-  useLockQuestionPaperMutation,
   useArchiveQuestionPaperMutation,
   useGetQuestionPaperSettingsQuery,
   useGetQuestionPaperDashboardQuery,
@@ -76,16 +62,24 @@ import {
   useSaveQuestionPaperSettingsMutation,
 } from 'src/redux/academicAPI/ExaminationApi/QuestionPaperApi/question-paper-api';
 
-// Subcomponents
-import type { QuestionItem, PaperSection, PaperRulesState, ValidationIssue, AISuggestion } from './types';
-import QuestionPaperHeader from './components/QuestionPaperHeader';
 import ProgressDashboard from './components/ProgressDashboard';
+import AIAssistantDrawer from './components/AIAssistantDrawer';
 import BlueprintLeftPanel from './components/BlueprintLeftPanel';
+import LiveAnalyticsModal from './components/LiveAnalyticsModal';
+import QuestionPaperHeader from './components/QuestionPaperHeader';
+import StickyBottomActionBar from './components/StickyBottomActionBar';
 import PaperBuilderCenterPanel from './components/PaperBuilderCenterPanel';
 import QuestionLibraryRightPanel from './components/QuestionLibraryRightPanel';
-import AIAssistantDrawer from './components/AIAssistantDrawer';
-import LiveAnalyticsModal from './components/LiveAnalyticsModal';
-import StickyBottomActionBar from './components/StickyBottomActionBar';
+
+// Subcomponents
+import type {
+  QuestionItem,
+  PaperSection,
+  AISuggestion,
+  ValidationIssue,
+  PaperRulesState,
+  QuestionLibraryFilters,
+} from './types';
 
 const DIFFICULTY_OPTIONS = [
   { value: 1, label: 'Easy' },
@@ -132,6 +126,12 @@ const STATUS_COLOR: Record<number, 'default' | 'info' | 'success' | 'error' | 'w
 
 const DEFAULT_DIFFICULTY_DIST: Record<number, number> = { 1: 30, 2: 50, 3: 20 };
 const DEFAULT_BLOOM_DIST: Record<number, number> = { 1: 20, 2: 20, 3: 15, 4: 15, 5: 15, 6: 15 };
+const DEFAULT_LIBRARY_FILTERS: QuestionLibraryFilters = {
+  keyword: '',
+  chapterId: '',
+  difficultyLevel: '',
+  bloomLevel: '',
+};
 
 const paperValidationSchema = Yup.object({
   paperTitle: Yup.string().required('Paper title is required').min(3, 'Title is too short'),
@@ -246,6 +246,26 @@ const initialPaperValues = (academicYearId?: string) => ({
   generalInstructions: 'All questions are compulsory unless internal choice is provided.',
 });
 
+function buildQuestionLibraryQueryParams(
+  selectedPaper: any,
+  filters: QuestionLibraryFilters,
+  academicYearId?: string
+) {
+  const keyword = filters.keyword.trim();
+
+  return {
+    academicYearId: selectedPaper?.academicYearId || academicYearId,
+    standardId: selectedPaper?.standardId,
+    subjectId: selectedPaper?.subjectId,
+    status: 3,
+    pageSize: 100,
+    ...(filters.chapterId ? { chapterId: filters.chapterId } : {}),
+    ...(filters.difficultyLevel ? { difficultyLevel: filters.difficultyLevel } : {}),
+    ...(filters.bloomLevel ? { bloomLevel: filters.bloomLevel } : {}),
+    ...(keyword ? { keyword } : {}),
+  };
+}
+
 export default function QuestionPaperScreen() {
   const theme = useTheme();
   const { currentYear, currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -259,6 +279,7 @@ export default function QuestionPaperScreen() {
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [localPaperSettings, setLocalPaperSettings] = useState<any>(null);
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
+  const [questionLibraryFilters, setQuestionLibraryFilters] = useState<QuestionLibraryFilters>(DEFAULT_LIBRARY_FILTERS);
 
   // Blueprint local states
   const [blueprintRules, setBlueprintRules] = useState<Record<string, { marks: number; count: number }>>({});
@@ -338,6 +359,10 @@ export default function QuestionPaperScreen() {
     }
   }, [blueprint]);
 
+  useEffect(() => {
+    setQuestionLibraryFilters(DEFAULT_LIBRARY_FILTERS);
+  }, [selectedPaperId]);
+
   // Populate canvas sections when selected paper questions arrive
   useEffect(() => {
     if (selectedPaper?.questions) {
@@ -414,12 +439,24 @@ export default function QuestionPaperScreen() {
     options: { skip: !selectedPaper?.standardId || !selectedPaper?.subjectId },
   });
 
+  const questionLibraryQueryParams = buildQuestionLibraryQueryParams(
+    selectedPaper,
+    questionLibraryFilters,
+    academicYearId
+  );
+
   // Bank questions via useQueryAndMutation
-  const { data: bankQuestionsData } = useQueryAndMutation({
+  const {
+    data: bankQuestionsData,
+    isLoading: bankQuestionsLoading,
+    isFetching: bankQuestionsFetching,
+    isError: bankQuestionsError,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetQuestionsQuery,
-    params: { standardId: selectedPaper?.standardId, subjectId: selectedPaper?.subjectId, status: 3, pageSize: 100 },
+    params: questionLibraryQueryParams,
     options: { skip: !selectedPaper?.standardId || !selectedPaper?.subjectId || viewMode !== 'workspace' },
+    popupConfig: { error: false },
   });
 
   const bankQuestions: QuestionItem[] = (bankQuestionsData?.items || []).map((q: any) => ({
@@ -1033,10 +1070,15 @@ export default function QuestionPaperScreen() {
                     {/* Right Panel: Question Library */}
                     <Grid size={{ xs: 12, md: 3.5, lg: 3 }} sx={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                       <QuestionLibraryRightPanel
+                        key={selectedPaper.id}
                         bankQuestions={bankQuestions}
+                        availableCount={bankQuestionsData?.totalCount ?? bankQuestions.length}
                         addedQuestionIds={canvasSections.flatMap((s) => (s.questions || []).map((q) => q.id))}
                         chapters={formChapters || []}
                         onAddQuestion={handleAddQuestionToPaperCanvas}
+                        onFiltersChange={setQuestionLibraryFilters}
+                        isLoading={bankQuestionsLoading || bankQuestionsFetching}
+                        isError={bankQuestionsError}
                       />
                     </Grid>
                   </Grid>

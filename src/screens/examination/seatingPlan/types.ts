@@ -159,6 +159,7 @@ export interface SeatingPlanListRow {
   examDate?: string;
   standardName: string;
   divisions: string[];
+  divisionProgress: SeatingPlanDivisionProgress[];
   subjectName?: string;
   totalStudents: number;
   allocatedStudents: number;
@@ -168,6 +169,15 @@ export interface SeatingPlanListRow {
   progress: number;
   status: SeatingPlanStatus;
   createdBy?: string;
+}
+
+export interface SeatingPlanDivisionProgress {
+  divisionId: string;
+  divisionName: string;
+  totalStudents: number;
+  allocatedStudents: number;
+  pendingStudents: number;
+  progress: number;
 }
 
 // ── Undo/redo action history ────────────────────────────────────────────────

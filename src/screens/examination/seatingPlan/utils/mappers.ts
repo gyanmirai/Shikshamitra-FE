@@ -34,6 +34,19 @@ export function toSeatingPlanListRow(exam: IExamAllocation): SeatingPlanListRow 
   const allocatedStudents = exam.allocatedStudents ?? 0;
   const pendingStudents = Math.max(0, totalStudents - allocatedStudents);
   const progress = totalStudents === 0 ? 0 : Math.round((allocatedStudents / totalStudents) * 100);
+  const divisionProgress = (exam.divisionProgress ?? []).map((division) => {
+    const divisionTotal = division.totalStudents ?? 0;
+    const divisionAllocated = division.allocatedStudents ?? 0;
+
+    return {
+      divisionId: division.divisionId,
+      divisionName: division.divisionName,
+      totalStudents: divisionTotal,
+      allocatedStudents: divisionAllocated,
+      pendingStudents: Math.max(0, divisionTotal - divisionAllocated),
+      progress: divisionTotal === 0 ? 0 : Math.round((divisionAllocated / divisionTotal) * 100),
+    };
+  });
 
   return {
     examId: exam.examId,
@@ -41,6 +54,7 @@ export function toSeatingPlanListRow(exam: IExamAllocation): SeatingPlanListRow 
     examTypeName: exam.examTypeName,
     standardName: exam.standardName,
     divisions: exam.divisions ?? [],
+    divisionProgress,
     totalStudents,
     allocatedStudents,
     pendingStudents,

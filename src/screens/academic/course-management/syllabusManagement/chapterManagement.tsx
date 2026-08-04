@@ -303,7 +303,7 @@ const Subjects = () => {
                     subjectOptionsData?.data?.items?.forEach((item: any) => {
                       if (item.status !== SubjectAssignmentStatus.Published) return;
 
-                      if (item.subjects?.length > 1 && item.electiveGroupName) {
+                      if (item.subjects?.length > 1) {
                         // Elective group — each subject as its own dropdown entry
                         // API shape confirmed: { subjectId, subjectName, subjectCode, color }
                         item.subjects.forEach((sub: any, index: number) => {

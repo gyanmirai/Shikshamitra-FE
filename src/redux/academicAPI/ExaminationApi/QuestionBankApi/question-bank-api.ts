@@ -2,6 +2,12 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../../academicApi';
 
+function omitEmptyQuestionParams(params: Record<string, unknown> = {}) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== '' && value !== null && value !== undefined)
+  );
+}
+
 export const questionBankApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getQuestionBankDashboard: builder.query({
@@ -24,7 +30,11 @@ export const questionBankApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.questionBank],
     }),
     getQuestions: builder.query({
-      query: (params) => ({ url: '/academics/question-bank/questions', method: 'GET', params }),
+      query: (params) => ({
+        url: '/academics/question-bank/questions',
+        method: 'GET',
+        params: omitEmptyQuestionParams(params),
+      }),
       providesTags: [academicType.questionBank],
     }),
     getQuestionById: builder.query({
