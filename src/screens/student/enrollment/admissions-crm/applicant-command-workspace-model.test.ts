@@ -5,8 +5,8 @@ import {
   canOpenJourneyStep,
   getJourneyStateLabel,
   getApplicantPrimaryAction,
-  isApplicantJourneyActionable,
   resolveApplicantCommandTab,
+  isApplicantJourneyActionable,
   isApplicantPrimaryActionPermitted,
 } from './applicant-command-workspace-model';
 

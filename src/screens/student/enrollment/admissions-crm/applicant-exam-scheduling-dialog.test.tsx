@@ -1,8 +1,8 @@
 import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import userEvent from '@testing-library/user-event';
-import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
 
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
 
