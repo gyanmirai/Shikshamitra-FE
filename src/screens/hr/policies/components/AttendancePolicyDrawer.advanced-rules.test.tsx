@@ -64,13 +64,28 @@ function AttendancePolicyDrawerHarness({
     canCreatePolicy: true,
     closeDrawer: vi.fn(),
     saveAttendance: vi.fn(),
-    getAttendanceNumericFieldProps: (field: keyof AttendanceForm) => ({
-      fullWidth: true,
-      size: 'small' as const,
-      value: attendanceForm[field] as string,
-      onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
-        setAttendanceForm((current) => ({ ...current, [field]: event.target.value })),
-    }),
+    getAttendanceNumericFieldProps: (field: keyof AttendanceForm) => {
+      const full = Number(attendanceForm.fullDayThresholdPercentage || 0);
+      const half = Number(attendanceForm.halfDayThresholdPercentage || 0);
+      let helperText = '';
+      let error = false;
+      if (field === 'fullDayThresholdPercentage' && full <= half) {
+        error = true;
+        helperText = `Must be greater than half day threshold (${half}%)`;
+      } else if (field === 'halfDayThresholdPercentage' && half >= full) {
+        error = true;
+        helperText = `Must be less than full day threshold (${full}%)`;
+      }
+      return {
+        fullWidth: true,
+        size: 'small' as const,
+        value: attendanceForm[field] as string,
+        error,
+        helperText,
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+          setAttendanceForm((current) => ({ ...current, [field]: event.target.value })),
+      };
+    },
   } as unknown as HRPolicyWorkspaceContext;
 
   return <AttendancePolicyDrawer ctx={ctx} />;
@@ -185,5 +200,20 @@ describe('AttendancePolicyDrawer advanced rules', () => {
 
     expect(screen.getByText('Minimum Overtime Minutes')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Fixed Rate')).toBeInTheDocument();
+  });
+
+  it('shows threshold validation error directly near the invalid input fields', () => {
+    renderWithProviders(
+      <AttendancePolicyDrawerHarness
+        initialForm={{
+          ...baseAttendanceForm,
+          fullDayThresholdPercentage: '10',
+          halfDayThresholdPercentage: '50',
+        }}
+      />
+    );
+
+    expect(screen.getByText(/Must be greater than half day threshold \(50%\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Must be less than full day threshold \(10%\)/i)).toBeInTheDocument();
   });
 });

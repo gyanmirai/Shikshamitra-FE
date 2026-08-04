@@ -89,3 +89,10 @@ export interface QuestionPaperMetadata {
   questions?: QuestionItem[];
   sections?: PaperSection[];
 }
+
+export interface QuestionLibraryFilters {
+  keyword: string;
+  chapterId: string;
+  difficultyLevel: number | '';
+  bloomLevel: number | '';
+}

@@ -119,6 +119,13 @@ const STATUS_COLOR: Record<number, 'default' | 'info' | 'success' | 'error' | 'w
   5: 'warning',
 };
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function displayNameOrPlaceholder(value?: string | null) {
+  if (!value || UUID_PATTERN.test(value)) return '—';
+  return value;
+}
+
 const DIFFICULTY_COLOR: Record<number, 'success' | 'warning' | 'error'> = {
   1: 'success',
   2: 'warning',
@@ -1277,6 +1284,38 @@ export default function QuestionBankScreen() {
     },
   ];
 
+  /**
+   * Memoization Justification:
+   * - Normalizes API/lookup values once per data refresh so the table renders, filters, and exports display labels.
+   * - Prevents repeated option scans from every Class/Subject/Chapter cell render in the grid.
+   * - Required because Question Bank can render hundreds of rows from the paged API response.
+   */
+  const questionRows = useMemo(
+    () =>
+      (data?.items || []).map((row: any) => ({
+        ...row,
+        standardName: displayNameOrPlaceholder(
+          row.standardName ||
+            row.standard?.name ||
+            classOptions.find((classOption: any) => classOption.value === row.standardId)?.label
+        ),
+        subjectName: displayNameOrPlaceholder(
+          row.subjectName ||
+            row.subject?.name ||
+            filterSubjectOptions.find((subjectOption: any) => subjectOption.value === row.subjectId)?.label
+        ),
+        chapterName: displayNameOrPlaceholder(
+          row.chapterName ||
+            row.chapter?.chapterName ||
+            row.chapter?.name ||
+            (row.chapterNumber
+              ? `${row.chapterNumber}. ${row.chapterName || ''}`
+              : filterChapterOptions.find((chapterOption: any) => chapterOption.value === row.chapterId)?.label)
+        ),
+      })),
+    [classOptions, data?.items, filterChapterOptions, filterSubjectOptions]
+  );
+
   const questionColumns = useMemo(
     () => [
       {
@@ -1682,7 +1721,7 @@ export default function QuestionBankScreen() {
         tableId="question-bank-questions"
         tableTitle="Questions"
         columns={questionColumns}
-        data={data?.items || []}
+        data={questionRows}
         isLoading={isQuestionLoading || isQuestionFetching}
         noDataText={
           <Stack alignItems="center" spacing={1}>

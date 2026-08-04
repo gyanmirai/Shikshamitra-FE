@@ -171,6 +171,9 @@ export function mapBackendToFormik(
     resolvedSubjectColor: string;
   }
 
+  const examSubjectIds = subjectsArr
+    .map((subject: any) => subject?.subjectId)
+    .filter(Boolean);
   const rawEntrySubjectIds: string[] =
     scheduleSubjectIds.size > 0
       ? Array.from(
@@ -179,9 +182,10 @@ export function mapBackendToFormik(
               scheduleSubjectIds.has(subjectId)
             ),
             ...Array.from(scheduleSubjectIds),
+            ...examSubjectIds,
           ])
         )
-      : (basicData?.subjectIds ?? []);
+      : Array.from(new Set([...(basicData?.subjectIds ?? []), ...examSubjectIds]));
 
   const rawEntries: RawEntry[] = rawEntrySubjectIds.map((subjectId: string) => {
     const sched = scheduleMap[subjectId] ?? {};

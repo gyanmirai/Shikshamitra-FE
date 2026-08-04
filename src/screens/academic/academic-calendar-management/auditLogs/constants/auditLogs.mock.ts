@@ -361,13 +361,16 @@ export const buildMockAnalytics = (logs: AuditLog[]) => {
   const byAction = new Map<string, number>();
   const byRisk = new Map<AuditRiskLevel, number>();
   const byUser = new Map<string, { name: string; role: string; count: number }>();
-  const byEntity = new Map<string, number>();
+  const byEntity = new Map<string, { label: string; count: number }>();
 
   logs.forEach((l) => {
     const riskLevel = l.riskLevel ?? AuditRiskLevel.Low;
     const changedByName = l.changedByName ?? 'Unknown user';
     const changedByRole = l.changedByRole ?? 'Unknown role';
-    const entityName = l.entityName ?? 'Unknown record';
+    const rawEntityName = (l.entityName ?? 'Unknown record').trim();
+
+    // Case-insensitive key for deduplication & consolidation
+    const entityKey = rawEntityName.toLowerCase();
 
     byAction.set(l.actionLabel, (byAction.get(l.actionLabel) ?? 0) + 1);
     byRisk.set(riskLevel, (byRisk.get(riskLevel) ?? 0) + 1);
@@ -378,7 +381,15 @@ export const buildMockAnalytics = (logs: AuditLog[]) => {
     };
     u.count += 1;
     byUser.set(l.changedByUserId, u);
-    byEntity.set(entityName, (byEntity.get(entityName) ?? 0) + 1);
+
+    const existingEntity = byEntity.get(entityKey);
+    if (existingEntity) {
+      existingEntity.count += 1;
+    } else {
+      // Capitalize words nicely for clean presentation
+      const cleanLabel = rawEntityName.replace(/\b[a-z]/g, (char) => char.toUpperCase());
+      byEntity.set(entityKey, { label: cleanLabel, count: 1 });
+    }
   });
 
   return {
@@ -389,8 +400,8 @@ export const buildMockAnalytics = (logs: AuditLog[]) => {
     topUsers: Array.from(byUser.values())
       .sort((a, b) => b.count - a.count)
       .slice(0, 5),
-    topEntities: Array.from(byEntity.entries())
-      .map(([label, count]) => ({ label, count }))
+    topEntities: Array.from(byEntity.values())
+      .map(({ label, count }) => ({ label, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5),
     criticalCount: logs.filter((l) => l.riskLevel === AuditRiskLevel.Critical).length,

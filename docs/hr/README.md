@@ -3,7 +3,7 @@ module: hr
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-08-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -53,6 +53,7 @@ Use this table before code search:
 | Which HR route or menu item is active? | [routes.md](./routes.md) |
 | Which API client owns a call? | [clients.md](./clients.md) |
 | Which workflow should I test? | [workflows.md](./workflows.md) |
+| How do I demo HR end to end? | [references/end-to-end-demo-guide.md](./references/end-to-end-demo-guide.md) |
 | Which command should I run? | [testing.md](./testing.md) |
 | Which backend API behavior is canonical? | `../../../Shikshamitra-BE/docs/modules/hr/api.md` |
 

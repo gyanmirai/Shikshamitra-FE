@@ -170,6 +170,13 @@ describe('Employee I-Card builder utilities', () => {
         (element) => element.x + element.w <= layout.width && element.y + element.h <= layout.height
       )
     ).toBe(true);
+    expect(layout.front.elements.some((element) => element.id === 'topline')).toBe(false);
+    expect(layout.front.elements.find((element) => element.id === 'school')?.style?.color).toBe(
+      '#FFFFFF'
+    );
+    expect(layout.front.elements.find((element) => element.id === 'name')?.style?.textAlign).toBe(
+      'center'
+    );
   });
 
   it('filters selected-card previews by employee identity fields', () => {

@@ -5,6 +5,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
   Chip,
+  Paper,
   Stack,
   Table,
   Tooltip,
@@ -39,42 +40,83 @@ const changeIcons = {
   unchanged: 'mdi:circle-small',
 } as const;
 
+const STATUS_ENUM_MAP: Record<string, string> = {
+  '1': 'Active',
+  '2': 'Cancelled',
+  '3': 'Rescheduled',
+  '4': 'Approved',
+  '5': 'Rejected',
+  '6': 'Published',
+  '7': 'Locked',
+  '8': 'Archived',
+};
+
+const DAY_TYPE_MAP: Record<string, string> = {
+  '1': 'Working Day',
+  '2': 'Holiday',
+  '3': 'Emergency Closure',
+  '4': 'Event / Activity',
+};
+
+const APPROVAL_STATUS_MAP: Record<string, string> = {
+  '0': 'Not Required',
+  '1': 'Pending Approval',
+  '2': 'Approved',
+  '3': 'Rejected',
+};
+
+/** Format raw database values & enum integers to human-readable labels. */
+const formatDiffValue = (fieldName: string, rawVal: string | null | undefined): string => {
+  if (rawVal === null || rawVal === undefined || rawVal === '') return '—';
+
+  const key = fieldName.toLowerCase();
+  if (key === 'status' || key === 'daystatus') {
+    return STATUS_ENUM_MAP[rawVal] || rawVal;
+  }
+  if (key === 'daytype') {
+    return DAY_TYPE_MAP[rawVal] || rawVal;
+  }
+  if (key === 'approvalstatus') {
+    return APPROVAL_STATUS_MAP[rawVal] || rawVal;
+  }
+  if (rawVal === 'true') return 'Yes';
+  if (rawVal === 'false') return 'No';
+
+  return rawVal;
+};
+
 /** Renders a before/after diff grid or table for an audit log. */
 const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
   const theme = useTheme();
 
-  if (!diff || diff.length === 0) {
+  // Compact / single-line empty state when expanded in table or when no diff exists
+  if (!diff || diff.length === 0 || (!hasRealChanges(diff) && variant !== 'full')) {
     return (
       <Box
         sx={{
-          p: 3,
-          textAlign: 'center',
-          borderRadius: 2,
+          py: 1.25,
+          px: 2,
+          borderRadius: 1.5,
           backgroundColor: alpha(theme.palette.grey[500], 0.04),
-          border: `1px dashed ${theme.palette.divider}`,
+          border: `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.25,
         }}
       >
-        <Iconify icon="mdi:file-document-outline" width={28} color="text.disabled" />
-        <Typography variant="body2" color="text.secondary" mt={1}>
+        <Iconify icon="mdi:file-document-outline" width={18} color="text.secondary" />
+        <Typography variant="body2" color="text.secondary" fontWeight={500}>
           No field-level changes recorded
         </Typography>
-        <Typography variant="caption" color="text.disabled" display="block" mt={0.5}>
-          This usually means the record was created new, so there is no earlier version to compare.
+        <Typography variant="caption" color="text.disabled" sx={{ ml: 'auto' }}>
+          New record creation (no prior version to compare)
         </Typography>
       </Box>
     );
   }
 
-  if (!hasRealChanges(diff) && variant !== 'full') {
-    return (
-      <Typography variant="caption" color="text.secondary">
-        No field-level changes detected.
-      </Typography>
-    );
-  }
-
-  // Table variant for drawers
-  if (variant === 'full' || variant === 'compact') {
+  // Table variant for drawers or dedicated diff modals
+  if (variant === 'full') {
     return (
       <Box>
         {title && (
@@ -149,6 +191,9 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
                 colorKey === 'default'
                   ? theme.palette.text.secondary
                   : theme.palette[colorKey].main;
+              const beforeVal = formatDiffValue(d.fieldName, d.oldValue);
+              const afterVal = formatDiffValue(d.fieldName, d.newValue);
+
               return (
                 <TableRow key={`${d.fieldName}-${i}`} hover>
                   <TableCell sx={{ py: 1, pr: 0, width: 40 }}>
@@ -156,27 +201,24 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
                       <Iconify icon={changeIcons[d.changeType]} width={16} sx={{ color }} />
                     </Tooltip>
                   </TableCell>
-                  <TableCell sx={{ py: 1, fontWeight: 600 }}>{d.displayName}</TableCell>
+                  <TableCell sx={{ py: 1, fontWeight: 700, color: 'text.primary' }}>
+                    {d.displayName || d.fieldName}
+                  </TableCell>
                   <TableCell sx={{ py: 1 }}>
-                    {d.oldValue ? (
-                      <Box
-                        component="span"
+                    {d.oldValue !== null && d.oldValue !== undefined ? (
+                      <Chip
+                        size="small"
+                        variant="soft"
+                        color="error"
+                        label={beforeVal}
                         sx={{
-                          px: 0.75,
-                          py: 0.25,
-                          borderRadius: 1,
-                          backgroundColor:
-                            d.changeType === 'updated'
-                              ? alpha(theme.palette.error.main, 0.06)
-                              : 'transparent',
-                          color: d.changeType === 'removed' ? 'error.main' : 'text.primary',
+                          fontWeight: 600,
+                          fontSize: 11,
                           textDecoration: d.changeType === 'updated' ? 'line-through' : 'none',
-                          fontFamily: d.dataType === 'date' ? 'inherit' : 'monospace',
-                          fontSize: 12,
+                          bgcolor: alpha(theme.palette.error.main, 0.08),
+                          color: theme.palette.error.dark,
                         }}
-                      >
-                        {d.oldValue}
-                      </Box>
+                      />
                     ) : (
                       <Typography variant="caption" color="text.disabled">
                         —
@@ -184,32 +226,19 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
                     )}
                   </TableCell>
                   <TableCell sx={{ py: 1 }}>
-                    {d.newValue ? (
-                      <Box
-                        component="span"
+                    {d.newValue !== null && d.newValue !== undefined ? (
+                      <Chip
+                        size="small"
+                        variant="soft"
+                        color="success"
+                        label={afterVal}
                         sx={{
-                          px: 0.75,
-                          py: 0.25,
-                          borderRadius: 1,
-                          backgroundColor:
-                            d.changeType === 'added'
-                              ? alpha(theme.palette.success.main, 0.08)
-                              : d.changeType === 'updated'
-                                ? alpha(theme.palette.warning.main, 0.08)
-                                : 'transparent',
-                          color:
-                            d.changeType === 'added'
-                              ? 'success.main'
-                              : d.changeType === 'updated'
-                                ? 'warning.dark'
-                                : 'text.primary',
-                          fontFamily: d.dataType === 'date' ? 'inherit' : 'monospace',
-                          fontSize: 12,
-                          fontWeight: 600,
+                          fontWeight: 700,
+                          fontSize: 11,
+                          bgcolor: alpha(theme.palette.success.main, 0.12),
+                          color: theme.palette.success.dark,
                         }}
-                      >
-                        {d.newValue}
-                      </Box>
+                      />
                     ) : (
                       <Typography variant="caption" color="text.disabled">
                         —
@@ -225,57 +254,90 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
     );
   }
 
-  // Inline "table" variant for row expansion
+  // Inline "compact" variant for table row expansion
   return (
     <Stack spacing={1}>
       {diff
         .filter((d) => d.changeType !== 'unchanged')
         .map((d, i) => {
-          const colorKey = changeColors[d.changeType];
-          const color =
-            colorKey === 'default' ? theme.palette.text.secondary : theme.palette[colorKey].main;
+          const isAdded = d.changeType === 'added';
+          const isRemoved = d.changeType === 'removed';
+          const beforeVal = formatDiffValue(d.fieldName, d.oldValue);
+          const afterVal = formatDiffValue(d.fieldName, d.newValue);
+
           return (
-            <Box
+            <Paper
               key={`${d.fieldName}-${i}`}
+              elevation={0}
               sx={{
                 p: 1.25,
+                px: 1.75,
                 borderRadius: 1.5,
-                border: `1px solid ${alpha(color, 0.2)}`,
-                backgroundColor: alpha(color, 0.03),
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: (t: any) => alpha(t.palette.background.neutral, 0.4),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 1,
               }}
             >
-              <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 0.5 }}>
-                <Iconify icon={changeIcons[d.changeType]} width={14} sx={{ color }} />
-                <Typography variant="caption" fontWeight={700} sx={{ color }}>
-                  {d.displayName}
+              <Stack direction="row" alignItems="center" gap={1} sx={{ minWidth: 160 }}>
+                <Iconify
+                  icon={changeIcons[d.changeType]}
+                  width={16}
+                  color={
+                    isAdded
+                      ? theme.palette.success.main
+                      : isRemoved
+                        ? theme.palette.error.main
+                        : theme.palette.info.main
+                  }
+                />
+                <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+                  {d.displayName || d.fieldName}
                 </Typography>
               </Stack>
-              <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
-                {d.oldValue && (
-                  <Typography
-                    variant="caption"
+
+              <Stack direction="row" alignItems="center" gap={1.25} flexWrap="wrap">
+                {d.oldValue !== null && d.oldValue !== undefined && (
+                  <Chip
+                    size="small"
+                    variant="soft"
+                    color="error"
+                    label={`Before: ${beforeVal}`}
                     sx={{
-                      textDecoration: 'line-through',
-                      color: 'error.main',
-                      fontFamily: 'monospace',
+                      fontWeight: 600,
+                      fontSize: 11,
+                      textDecoration: isAdded ? 'none' : 'line-through',
+                      bgcolor: alpha(theme.palette.error.main, 0.1),
+                      color: theme.palette.error.dark,
                     }}
-                  >
-                    {d.oldValue}
-                  </Typography>
+                  />
                 )}
-                {d.oldValue && d.newValue && (
-                  <Iconify icon="mdi:arrow-right" width={12} color="text.secondary" />
-                )}
-                {d.newValue && (
-                  <Typography
-                    variant="caption"
-                    sx={{ color: 'success.main', fontWeight: 700, fontFamily: 'monospace' }}
-                  >
-                    {d.newValue}
-                  </Typography>
+                {d.oldValue !== null &&
+                  d.oldValue !== undefined &&
+                  d.newValue !== null &&
+                  d.newValue !== undefined && (
+                    <Iconify icon="mdi:arrow-right" width={14} color="text.secondary" />
+                  )}
+                {d.newValue !== null && d.newValue !== undefined && (
+                  <Chip
+                    size="small"
+                    variant="soft"
+                    color="success"
+                    label={`After: ${afterVal}`}
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: 11,
+                      bgcolor: alpha(theme.palette.success.main, 0.12),
+                      color: theme.palette.success.dark,
+                    }}
+                  />
                 )}
               </Stack>
-            </Box>
+            </Paper>
           );
         })}
     </Stack>

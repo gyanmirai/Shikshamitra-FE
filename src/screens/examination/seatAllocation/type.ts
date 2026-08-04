@@ -52,10 +52,20 @@ export interface IExamAllocation {
   examTypeName: string;
   standardName: string;
   divisions: string[];
+  divisionProgress?: IExamAllocationDivisionProgress[];
   totalStudents: number;
   allocatedStudents: number;
   pendingStudents: number;
   status: number; // 0=pending, 1=partial, 2=allocated
+}
+
+export interface IExamAllocationDivisionProgress {
+  divisionId: string;
+  divisionName: string;
+  totalStudents: number;
+  allocatedStudents: number;
+  pendingStudents: number;
+  progress: number;
 }
 
 export interface IDroppedStudent {

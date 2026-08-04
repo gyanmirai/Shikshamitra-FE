@@ -1,6 +1,8 @@
+import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
 
 import {
+  formatDatePayload,
   emptyWorkExperience,
   type EmployeeApplicationFormValues,
   employeeApplicationValidationSchema,
@@ -242,5 +244,11 @@ describe('employee application validation schema', () => {
     const uploadError = 'Resume must be a PDF, DOC, or DOCX file.';
 
     expect(resolveEmployeeApplicationUploadError(uploadError, null, null)).toBe(uploadError);
+  });
+
+  it('formats Dayjs objects and valid date strings to YYYY-MM-DD for submission payloads', () => {
+    expect(formatDatePayload(dayjs('2002-12-31'))).toBe('2002-12-31');
+    expect(formatDatePayload('2002-12-31')).toBe('2002-12-31');
+    expect(formatDatePayload(null)).toBeNull();
   });
 });

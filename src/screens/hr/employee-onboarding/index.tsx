@@ -112,6 +112,7 @@ import {
   getEmployeeApplicationStatusLabel,
   normalizeEmployeeApplicationStatus,
   canRegenerateEmployeeApplicationLink,
+  canCopyEmployeeApplicationLink,
 } from './status';
 
 import type { FinalizeFormState } from './finalize-validation';
@@ -620,6 +621,7 @@ function EmployeeOnboardingDetailView({
   const canUpdateStatus = !isEmployeeApplicationTerminal(normalizedStatus);
   const canRegenerateLink =
     canRegenerateEmployeeApplicationLink(normalizedStatus) && !application.submittedAt;
+  const canCopyLink = canCopyEmployeeApplicationLink(normalizedStatus);
   const canDelete = normalizedStatus !== EmployeeApplicationStatus.Finalized;
   const hasStatusChanged = status !== normalizedStatus;
   const submittedPersonal = application.personalInfo;
@@ -720,6 +722,7 @@ function EmployeeOnboardingDetailView({
               <Button
                 size="small"
                 variant="outlined"
+                disabled={!canCopyLink}
                 onClick={() => onCopyInviteLink(application)}
                 startIcon={<Iconify icon="mdi:content-copy" />}
                 data-testid="employee-onboarding-copy-link"
@@ -1101,7 +1104,7 @@ function FinalizeDialog({
     validationSchema: Yup.object({}),
     validateOnChange: true,
     validateOnBlur: true,
-    onSubmit: () => {},
+    onSubmit: () => { },
   });
 
   // convenience alias
@@ -1274,9 +1277,9 @@ function FinalizeDialog({
           },
           ...(form.isTeaching
             ? {
-                academicYearId: currentYear!.id,
-                academicScopes: academicPermissionScopeRows.scopeRows,
-              }
+              academicYearId: currentYear!.id,
+              academicScopes: academicPermissionScopeRows.scopeRows,
+            }
             : {}),
           familyInfo: application.familyInfo || null,
           additionalInfo: application.additionalInfo || null,
@@ -2916,6 +2919,7 @@ export default function EmployeeOnboardingScreen() {
                     </MenuItem>
                     {application.publicPath && (
                       <MenuItem
+                        disabled={!canCopyEmployeeApplicationLink(normalizedStatus)}
                         onClick={() => {
                           popover.onClose();
                           handleCopyInviteLink(application).catch(() => undefined);

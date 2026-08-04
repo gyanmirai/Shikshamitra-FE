@@ -61,6 +61,7 @@ export type ICardLayoutElement = {
 };
 
 export type ICardLayout = {
+  presetKey?: string;
   orientation: 'Horizontal' | 'Vertical';
   width: number;
   height: number;
@@ -413,7 +414,7 @@ export const createICardLayoutPreset = (
   const backgroundColor = options.backgroundColor ?? '#F8FAFC';
   const qrCodeEnabled = options.qrCodeEnabled ?? true;
   const barcodeEnabled = options.barcodeEnabled ?? true;
-  const base = { orientation, width, height, backgroundColor, themeColor };
+  const base = { presetKey, orientation, width, height, backgroundColor, themeColor };
 
   if (orientation === 'Vertical') {
     const photoFirst = presetKey === 'photo-first';
@@ -628,11 +629,18 @@ export const reflowICardLayout = (
   const next = createICardLayoutPreset(presetKey, options);
   const currentById = new Map(layout.front.elements.map((item) => [item.id, item]));
   const nextIds = new Set(next.front.elements.map((item) => item.id));
-  const widthRatio = next.width / Math.max(1, layout.width);
-  const heightRatio = next.height / Math.max(1, layout.height);
+  const isOrientationChange = layout.orientation !== next.orientation;
+  const isPresetChange = layout.presetKey !== presetKey;
+  const resetLayoutStyles = isOrientationChange || isPresetChange;
+
+  const presetShapeIds = new Set(['header', 'accent', 'topline']);
 
   const presetElements = next.front.elements.map((item) => {
-    const current = currentById.get(item.id);
+    const current =
+      currentById.get(item.id) ||
+      (item.id === 'header' ? currentById.get('accent') : undefined) ||
+      (item.id === 'accent' ? currentById.get('header') : undefined);
+
     if (!current) return item;
 
     const visible =
@@ -652,21 +660,25 @@ export const reflowICardLayout = (
       }
     });
 
+    const mergedStyle = resetLayoutStyles
+      ? { ...current.style, ...item.style }
+      : { ...item.style, ...current.style };
+
     return {
       ...item,
       visible,
       paletteBindings,
-      style: {
-        ...item.style,
-        ...current.style,
-      },
+      style: mergedStyle,
       label: current.label ?? item.label,
       value: current.value ?? item.value,
     };
   });
 
+  const widthRatio = next.width / Math.max(1, layout.width);
+  const heightRatio = next.height / Math.max(1, layout.height);
+
   const customElements = layout.front.elements
-    .filter((item) => !nextIds.has(item.id))
+    .filter((item) => !nextIds.has(item.id) && !presetShapeIds.has(item.id))
     .map((item) => {
       const width = Math.min(next.width, Math.max(1, Math.round(item.w * widthRatio)));
       const height = Math.min(next.height, Math.max(1, Math.round(item.h * heightRatio)));

@@ -15,25 +15,25 @@ import type {
 } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
 
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
-import { alpha } from '@mui/material/styles';
-import { varAlpha } from 'src/theme/styles';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
+import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import { Label } from 'src/components/label';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Scrollbar } from 'src/components/scrollbar';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
@@ -69,7 +69,6 @@ import {
   Typography,
   IconButton,
   CardContent,
-  ToggleButton,
   ListItemIcon,
   ListItemText,
   InputAdornment,
@@ -77,7 +76,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   FormControlLabel,
-  ToggleButtonGroup,
 } from '@mui/material';
 
 import {
@@ -724,6 +722,7 @@ const SubstitutionManagementScreen = () => {
   }, [availabilityForm.isFullDay, availabilityForm.endTime]);
 
   const [settingsForm, setSettingsForm] = useState(settingsResultDefaults);
+  const teacherResponseActionsAllowed = settingsForm.allowTeacherReject;
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
   const [dutyAction, setDutyAction] = useState<{
@@ -1770,11 +1769,27 @@ const SubstitutionManagementScreen = () => {
     );
   }, [availabilityForm, availabilityDialogOpen]);
 
-  const openDutyConfirmModal = useCallback((id: string, action: 'accept' | 'reject' | 'change') => {
-    setDutyConfirmPayload({ id, action });
-    setDutyConfirmNote('');
-    setDutyConfirmOpen(true);
-  }, []);
+  /**
+   * Memoization Justification:
+   * - This handler is reused by repeated duty card actions.
+   * - Stable identity avoids rebuilding each card action handler when unrelated state changes.
+   * - It also keeps the teacher-response setting guard tied to one dependency.
+   */
+  const openDutyConfirmModal = useCallback(
+    (id: string, action: 'accept' | 'reject' | 'change') => {
+      if (action !== 'accept' && !teacherResponseActionsAllowed) {
+        shikshaMitraToast.info({
+          message: 'Rejecting or requesting changes is restricted by the administrator.',
+        });
+        return;
+      }
+
+      setDutyConfirmPayload({ id, action });
+      setDutyConfirmNote('');
+      setDutyConfirmOpen(true);
+    },
+    [teacherResponseActionsAllowed]
+  );
 
   const closeDutyConfirmModal = useCallback(() => {
     setDutyConfirmOpen(false);
@@ -1782,8 +1797,21 @@ const SubstitutionManagementScreen = () => {
     setDutyConfirmNote('');
   }, []);
 
+  /**
+   * Memoization Justification:
+   * - This async action is consumed by the confirmation submit callback.
+   * - Stable identity keeps the submit callback from changing outside duty/action data updates.
+   * - It centralizes action gating before any duty mutation can run.
+   */
   const handleTeacherDutyAction = useCallback(
     async (id: string, action: 'accept' | 'reject' | 'change', reason: string) => {
+      if (action !== 'accept' && !teacherResponseActionsAllowed) {
+        shikshaMitraToast.info({
+          message: 'Rejecting or requesting changes is restricted by the administrator.',
+        });
+        return;
+      }
+
       if (dutyAction) return;
       setDutyAction({ id, action });
       try {
@@ -1833,6 +1861,7 @@ const SubstitutionManagementScreen = () => {
       refetchMyDuties,
       refetchSubstitutions,
       refetchDashboard,
+      teacherResponseActionsAllowed,
     ]
   );
 
@@ -3371,32 +3400,44 @@ const SubstitutionManagementScreen = () => {
                       >
                         {isAccepting ? 'Accepting…' : isAccepted ? 'Accepted' : 'Accept Duty'}
                       </LoadingButton>
-                      <LoadingButton
-                        size="small"
-                        variant="outlined"
-                        color="warning"
-                        disabled={isCardBusy || isChangeRequested}
-                        loading={isChanging}
-                        startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
-                        onClick={() => openDutyConfirmModal(item.id, 'change')}
-                      >
-                        {isChanging
-                          ? 'Sending…'
-                          : isChangeRequested
-                            ? 'Change Requested'
-                            : 'Request Change'}
-                      </LoadingButton>
-                      <LoadingButton
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        disabled={isCardBusy || isChangeRequested}
-                        loading={isRejecting}
-                        startIcon={<Iconify icon="mdi:close" width={16} />}
-                        onClick={() => openDutyConfirmModal(item.id, 'reject')}
-                      >
-                        {isRejecting ? 'Rejecting…' : 'Reject'}
-                      </LoadingButton>
+                      {teacherResponseActionsAllowed && (
+                        <LoadingButton
+                          size="small"
+                          variant="outlined"
+                          color="warning"
+                          disabled={isCardBusy || isChangeRequested}
+                          loading={isChanging}
+                          startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
+                          onClick={() => openDutyConfirmModal(item.id, 'change')}
+                        >
+                          {isChanging
+                            ? 'Sending…'
+                            : isChangeRequested
+                              ? 'Change Requested'
+                              : 'Request Change'}
+                        </LoadingButton>
+                      )}
+                      {teacherResponseActionsAllowed && (
+                        <LoadingButton
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          disabled={isCardBusy || isChangeRequested}
+                          loading={isRejecting}
+                          startIcon={<Iconify icon="mdi:close" width={16} />}
+                          onClick={() => openDutyConfirmModal(item.id, 'reject')}
+                        >
+                          {isRejecting ? 'Rejecting…' : 'Reject'}
+                        </LoadingButton>
+                      )}
+                      {!teacherResponseActionsAllowed && (
+                        <Stack direction="row" spacing={0.75} alignItems="center">
+                          <Iconify icon="mdi:lock-outline" width={16} color="text.disabled" />
+                          <Typography variant="caption" color="text.secondary">
+                            Reject/change restricted by admin
+                          </Typography>
+                        </Stack>
+                      )}
                     </Stack>
                   )}
                 </Card>
