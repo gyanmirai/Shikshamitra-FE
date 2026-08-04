@@ -236,17 +236,26 @@ export const isAfterEmployeeApplicationInstitutionDate = (
   return dayjs(value).format('YYYY-MM-DD') > getEmployeeApplicationInstitutionDate(reference);
 };
 
-const dateOfBirthSchema = Yup.string()
+export const formatDatePayload = (value?: string | dayjs.Dayjs | null) => {
+  if (!value) return null;
+  if (dayjs.isDayjs(value)) {
+    return value.isValid() ? value.format('YYYY-MM-DD') : null;
+  }
+  const d = dayjs(value);
+  return d.isValid() ? d.format('YYYY-MM-DD') : null;
+};
+
+const dateOfBirthSchema = Yup.mixed()
   .required('Date of birth is required.')
   .test('past-date', 'Date of birth must be in the past.', (value) => {
     if (!value) return false;
-    const date = dayjs(value);
+    const date = dayjs(value as any);
     const today = dayjs(getEmployeeApplicationInstitutionDate());
     return date.isValid() && date.isBefore(today, 'day');
   })
   .test('adult', 'Applicant must be at least 18 years old.', (value) => {
     if (!value) return false;
-    const date = dayjs(value);
+    const date = dayjs(value as any);
     if (!date.isValid()) return false;
     const today = dayjs(getEmployeeApplicationInstitutionDate());
     let age = today.year() - date.year();
@@ -496,7 +505,7 @@ export const buildEmployeeApplicationSubmitPayload = (values: EmployeeApplicatio
     email: values.personalInfo.email.trim(),
     mobileNo: toRawMobile(values.personalInfo.mobileNo) ?? '',
     secondaryMobileNo: toRawMobile(values.personalInfo.secondaryMobileNo),
-    dateOfBirth: values.personalInfo.dateOfBirth || null,
+    dateOfBirth: formatDatePayload(values.personalInfo.dateOfBirth),
     gender: nullableNumber(values.personalInfo.gender),
     religion: values.personalInfo.religion
       ? (ReligionType[Number(values.personalInfo.religion)] ?? '')
@@ -538,7 +547,7 @@ export const buildEmployeeApplicationSubmitPayload = (values: EmployeeApplicatio
       country: locationPayload(experience.country),
       state: locationPayload(experience.state),
       city: emptyToNull(experience.city),
-      startDate: experience.startDate || null,
-      endDate: experience.endDate || null,
+      startDate: formatDatePayload(experience.startDate),
+      endDate: formatDatePayload(experience.endDate),
     })),
 });

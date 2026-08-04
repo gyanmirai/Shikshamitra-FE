@@ -93,6 +93,10 @@ export const canRegenerateEmployeeApplicationLink = (
   value: EmployeeApplicationStatus | string | number
 ) => normalizeEmployeeApplicationStatus(value) === EmployeeApplicationStatus.InvitationSent;
 
+export const canCopyEmployeeApplicationLink = (
+  value: EmployeeApplicationStatus | string | number
+) => normalizeEmployeeApplicationStatus(value) !== EmployeeApplicationStatus.Finalized;
+
 // Returns statuses that are valid targets from `currentStatus`.
 // Rules:
 //   - Forward transitions only (no going backward in the workflow)

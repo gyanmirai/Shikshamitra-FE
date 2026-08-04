@@ -190,7 +190,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     { id: 'attendancePolicyName', label: 'Attendance Policy', minWidth: 180 },
     { id: 'leavePolicyName', label: 'Leave Policy', minWidth: 180 },
     { id: 'effective', label: 'Effective', minWidth: 180 },
-    { id: 'priority', label: 'Priority', filterType: 'number', align: 'right', width: 110 },
+    { id: 'priority', label: 'Priority', filterType: 'number', width: 110 },
     { id: 'reason', label: 'Reason', minWidth: 220, defaultHidden: true },
     {
       id: 'status',
@@ -211,7 +211,6 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       id: 'actions',
       label: 'Actions',
       sticky: true,
-      align: 'right',
       isFilter: false,
       render: (_, row) => {
         const item = (row as AssignmentTableRow).assignment;
@@ -335,8 +334,8 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       </Card>
 
       {activePayroll.length === 0 ||
-      activeAttendance.length === 0 ||
-      activeLeavePolicies.length === 0 ? (
+        activeAttendance.length === 0 ||
+        activeLeavePolicies.length === 0 ? (
         <Alert severity="warning">
           Active payroll, attendance, and leave policies are required.
         </Alert>

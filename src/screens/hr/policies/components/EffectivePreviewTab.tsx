@@ -50,12 +50,14 @@ export function EffectivePreviewTab() {
     <Card sx={{ p: 2, width: '100%' }}>
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
         <Autocomplete
+          key="effective-employee-autocomplete"
           options={effectiveEmployeeOptions}
           getOptionLabel={optionLabel}
-          inputValue={employeeLookupSearch}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          inputValue={employeeLookupSearch ?? ''}
           onInputChange={(_event, value, reason) => {
             if (reason === 'input' || reason === 'clear') {
-              setEmployeeLookupSearch(value);
+              setEmployeeLookupSearch(value ?? '');
               if (
                 effectiveFilters.employeeId &&
                 (reason === 'clear' || value !== optionLabel(selectedEmployee))
@@ -82,8 +84,10 @@ export function EffectivePreviewTab() {
           renderInput={(params) => <TextField {...params} label="Employee" size="small" />}
         />
         <Autocomplete
+          key="effective-group-autocomplete"
           options={effectiveGroupOptions}
           getOptionLabel={optionLabel}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
           sx={{ minWidth: 220, flex: 1 }}
           value={groupOptions.find((item) => item.id === effectiveFilters.groupId) || null}
           onChange={(_, value) => {

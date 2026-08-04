@@ -1586,7 +1586,7 @@ export function useHRPolicyWorkspace({
       return;
     }
     if (!isAttendanceThresholdOrderValid(full, half, absent)) {
-      setFormError('Thresholds must be ordered as full day > half day >= absent.');
+      setFormError('');
       return;
     }
     const overtimeValidationError = getAttendanceOvertimeValidationError({
@@ -2235,9 +2235,39 @@ export function useHRPolicyWorkspace({
     (field: AttendanceNumericField) => {
       const rule = attendanceNumericRules[field];
       const value = attendanceForm[field] || '';
-      const helperText =
-        getNumericPolicyInputError(value, rule) || `Allowed range: ${rule.min}-${rule.max}`;
-      const hasError = Boolean(getNumericPolicyInputError(value, rule));
+      const baseError = getNumericPolicyInputError(value, rule);
+
+      let helperText = baseError || `Allowed range: ${rule.min}-${rule.max}`;
+      let hasError = Boolean(baseError);
+
+      if (
+        !baseError &&
+        (field === 'fullDayThresholdPercentage' ||
+          field === 'halfDayThresholdPercentage' ||
+          field === 'absentThresholdPercentage')
+      ) {
+        const full = Number(attendanceForm.fullDayThresholdPercentage || 0);
+        const half = Number(attendanceForm.halfDayThresholdPercentage || 0);
+        const absent = Number(attendanceForm.absentThresholdPercentage || 0);
+
+        if (!isAttendanceThresholdOrderValid(full, half, absent)) {
+          if (field === 'fullDayThresholdPercentage' && full <= half) {
+            hasError = true;
+            helperText = `Must be greater than half day threshold (${half}%)`;
+          } else if (field === 'halfDayThresholdPercentage') {
+            if (half >= full) {
+              hasError = true;
+              helperText = `Must be less than full day threshold (${full}%)`;
+            } else if (half < absent) {
+              hasError = true;
+              helperText = `Must be \u2265 absent threshold (${absent}%)`;
+            }
+          } else if (field === 'absentThresholdPercentage' && absent > half) {
+            hasError = true;
+            helperText = `Must be \u2264 half day threshold (${half}%)`;
+          }
+        }
+      }
 
       return {
         fullWidth: true,

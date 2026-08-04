@@ -42,6 +42,11 @@ import {
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 import type { PolicyAssignmentTargetType } from '../types/hr-policy-workspace.types';
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { EmployeeStatusType } from 'src/enums/employee-status-type';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+
 function getLeavePolicyName(item: any): string {
   return item?.policyTitle || item?.name || item?.title || item?.id || '-';
 }
@@ -96,27 +101,24 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Chip
             size="small"
-            label={`Payroll: ${
-              payroll.find((item) => item.id === assignmentForm.payrollPolicyId)?.name || '-'
-            }`}
+            label={`Payroll: ${payroll.find((item) => item.id === assignmentForm.payrollPolicyId)?.name || '-'
+              }`}
             color="primary"
             variant="outlined"
           />
           <Chip
             size="small"
-            label={`Attendance: ${
-              attendance.find((item) => item.id === assignmentForm.attendancePolicyId)?.name || '-'
-            }`}
+            label={`Attendance: ${attendance.find((item) => item.id === assignmentForm.attendancePolicyId)?.name || '-'
+              }`}
             color="success"
             variant="outlined"
           />
           <Chip
             size="small"
-            label={`Leave: ${
-              getLeavePolicyName(
-                leavePolicies.find((item: any) => item.id === assignmentForm.leavePolicyId)
-              ) || '-'
-            }`}
+            label={`Leave: ${getLeavePolicyName(
+              leavePolicies.find((item: any) => item.id === assignmentForm.leavePolicyId)
+            ) || '-'
+              }`}
             color="info"
             variant="outlined"
           />
@@ -188,10 +190,12 @@ function AssignmentTargetPicker({
     setAssignmentForm,
     employeeOptions,
     groupOptions,
-    employeeLookupSearch,
-    setEmployeeLookupSearch,
-    employeeSearchLoading,
   } = ctx;
+
+  const [getEmployees] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetEmployeeQuery,
+  });
 
   const setTarget = (key: string, displayName?: string) => {
     setAssignmentForm((current) => ({
@@ -201,34 +205,67 @@ function AssignmentTargetPicker({
     }));
   };
 
+  const selectedEmployee = React.useMemo(() => {
+    if (!assignmentForm.targetKey) return null;
+    const found = employeeOptions.find((item) => item.id === assignmentForm.targetKey);
+    if (found) return found;
+    return {
+      id: assignmentForm.targetKey,
+      name: assignmentForm.targetDisplayName || assignmentForm.targetKey,
+      label: assignmentForm.targetDisplayName || assignmentForm.targetKey,
+    };
+  }, [employeeOptions, assignmentForm.targetKey, assignmentForm.targetDisplayName]);
+
   if (assignmentForm.targetType === 'employee') {
     return (
       <DrawerField label="Employee *">
-        <Autocomplete
-          options={employeeOptions}
-          getOptionLabel={optionLabel}
-          inputValue={employeeLookupSearch}
-          onInputChange={(_event, value, reason) => {
-            if (reason === 'input') {
-              setEmployeeLookupSearch(value);
-              const selectedLabel = assignmentForm.targetDisplayName;
-              if (assignmentForm.targetKey && value !== selectedLabel) {
-                setTarget('');
+        <PaginatedSearchSelect
+          label=""
+          placeholder="Search employee..."
+          fetchOptions={async (query, page) => {
+            if (page > 1) return { data: [], hasMore: false };
+            try {
+              const res = await getEmployees({
+                page: 1,
+                pageSize: 500,
+                search: query,
+                status: EmployeeStatusType.Active,
+              }).unwrap();
+              const items = (Array.isArray(res) ? res : res?.items || []).map((item: any) => ({
+                id: item.id,
+                name: item.fullName || item.name || '',
+                label: item.fullName || item.name || '',
+              }));
+              if (items.length > 0) {
+                return { data: items, hasMore: false };
               }
-            } else if (reason === 'clear') {
-              setEmployeeLookupSearch('');
-              setTarget('');
+            } catch {
+              // fallback
             }
+            const q = query.trim().toLowerCase();
+            const fallback = employeeOptions.filter((item) =>
+              !q || optionLabel(item).toLowerCase().includes(q)
+            );
+            return { data: fallback, hasMore: false };
           }}
-          loading={employeeSearchLoading}
-          filterOptions={(options) => options}
-          value={employeeOptions.find((item) => item.id === assignmentForm.targetKey) || null}
-          onChange={(_, value) => {
+          value={selectedEmployee}
+          isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+          getOptionLabel={(option: any) => optionLabel(option)}
+          renderOption={(props: any, option: any) => {
+            const { key, ...optionProps } = props;
+            return (
+              <li key={key || option.id} {...optionProps}>
+                {optionLabel(option)}
+              </li>
+            );
+          }}
+          minChars={0}
+          onChange={(_, value: any) => {
             setTarget(value?.id || '', optionLabel(value));
-            setEmployeeLookupSearch(optionLabel(value));
           }}
+          debounceMs={400}
           disabled={disabled}
-          renderInput={(params) => <TextField {...params} size="small" />}
+          size="small"
         />
       </DrawerField>
     );
@@ -237,22 +274,27 @@ function AssignmentTargetPicker({
   return (
     <DrawerField label="Group *">
       <Autocomplete
+        key="group-target-autocomplete"
         options={groupOptions}
         getOptionLabel={optionLabel}
+        isOptionEqualToValue={(option, value) => option.id === value.id}
         value={groupOptions.find((item) => item.id === assignmentForm.targetKey) || null}
         onChange={(_, value) => setTarget(value?.id || '', optionLabel(value))}
         disabled={disabled}
-        renderOption={(props, option) => (
-          <li {...props} key={option.id}>
-            <Stack spacing={0} sx={{ minWidth: 0 }}>
-              <Typography variant="body2">{optionLabel(option)}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {formatNumber(option.employeeCount ?? option.memberCount ?? 0)} members
-              </Typography>
-            </Stack>
-          </li>
-        )}
-        renderInput={(params) => <TextField {...params} size="small" />}
+        renderOption={(props, option) => {
+          const { key, ...optionProps } = props;
+          return (
+            <Box component="li" key={key || option.id} {...optionProps}>
+              <Stack spacing={0} sx={{ minWidth: 0 }}>
+                <Typography variant="body2">{optionLabel(option)}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {formatNumber(option.employeeCount ?? option.memberCount ?? 0)} members
+                </Typography>
+              </Stack>
+            </Box>
+          );
+        }}
+        renderInput={(params) => <TextField {...params} size="small" placeholder="Select group..." />}
       />
     </DrawerField>
   );

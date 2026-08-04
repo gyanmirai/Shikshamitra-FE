@@ -542,17 +542,23 @@ export function getItems<T extends LookupOption>(data: unknown): T[] {
   return [];
 }
 
-export function optionLabel(item: LookupOption | null | undefined): string {
-  return (
-    item?.name ||
-    item?.displayName ||
-    item?.employeeName ||
-    item?.fullName ||
-    item?.shiftName ||
-    item?.userName ||
-    ''
-  );
+export function optionLabel(item: any): string {
+  if (!item) return '';
+  if (typeof item === 'string') return item;
+  const label =
+    item.name ||
+    item.displayName ||
+    item.employeeName ||
+    item.fullName ||
+    item.shiftName ||
+    item.userName ||
+    item.title ||
+    item.groupName ||
+    item.label ||
+    '';
+  return String(label ?? '');
 }
+
 
 export function getLookupOrganizationNames(item: LookupOption | null | undefined): string[] {
   if (!item) return [];

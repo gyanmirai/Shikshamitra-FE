@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { setNestedObjectValues } from 'formik';
@@ -96,8 +97,7 @@ const SalarySummaryCard = ({
         borderRadius: 1,
         border: (theme) => `1px solid ${theme.vars.palette.divider}`,
         borderTop: (theme) =>
-          `3px solid ${
-            emphasis ? theme.vars.palette.primary.main : theme.vars.palette.text.disabled
+          `3px solid ${emphasis ? theme.vars.palette.primary.main : theme.vars.palette.text.disabled
           }`,
         bgcolor: (theme) => theme.vars.palette.background.paper,
       }}
@@ -801,7 +801,7 @@ const RenderPayrollFields = (props: any) => {
                         ))}
                       </Select>
                       {formik.touched.policyOverridePayrollPolicyId &&
-                      formik.errors.policyOverridePayrollPolicyId ? (
+                        formik.errors.policyOverridePayrollPolicyId ? (
                         <FormHelperText error>
                           {formik.errors.policyOverridePayrollPolicyId}
                         </FormHelperText>
@@ -840,7 +840,7 @@ const RenderPayrollFields = (props: any) => {
                         ))}
                       </Select>
                       {formik.touched.policyOverrideAttendancePolicyId &&
-                      formik.errors.policyOverrideAttendancePolicyId ? (
+                        formik.errors.policyOverrideAttendancePolicyId ? (
                         <FormHelperText error>
                           {formik.errors.policyOverrideAttendancePolicyId}
                         </FormHelperText>
@@ -878,7 +878,7 @@ const RenderPayrollFields = (props: any) => {
                         ))}
                       </Select>
                       {formik.touched.policyOverrideLeavePolicyId &&
-                      formik.errors.policyOverrideLeavePolicyId ? (
+                        formik.errors.policyOverrideLeavePolicyId ? (
                         <FormHelperText error>
                           {formik.errors.policyOverrideLeavePolicyId}
                         </FormHelperText>
@@ -888,25 +888,33 @@ const RenderPayrollFields = (props: any) => {
                     </FormControl>
                   </Grid>
                   <Grid size={{ xs: 12, md: 4 }}>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      type="date"
+                    <DatePicker
                       label="Effective From *"
-                      InputLabelProps={{ shrink: true }}
-                      disabled={!isEditable.value}
-                      value={values.policyOverrideEffectiveFrom || ''}
-                      onChange={(event) =>
-                        formik.setFieldValue('policyOverrideEffectiveFrom', event.target.value)
+                      value={
+                        values.policyOverrideEffectiveFrom
+                          ? dayjs(values.policyOverrideEffectiveFrom)
+                          : null
                       }
-                      error={
-                        Boolean(formik.touched.policyOverrideEffectiveFrom) &&
-                        Boolean(formik.errors.policyOverrideEffectiveFrom)
-                      }
-                      helperText={
-                        formik.touched.policyOverrideEffectiveFrom &&
-                        formik.errors.policyOverrideEffectiveFrom
-                      }
+                      onChange={(val) => {
+                        const formatted = val && val.isValid() ? val.format('YYYY-MM-DD') : '';
+                        formik.setFieldValue('policyOverrideEffectiveFrom', formatted);
+                        formik.setFieldTouched('policyOverrideEffectiveFrom', true, false);
+                      }}
+                      format="DD/MM/YYYY"
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          disabled: !isEditable.value,
+                          error:
+                            Boolean(formik.touched.policyOverrideEffectiveFrom) &&
+                            Boolean(formik.errors.policyOverrideEffectiveFrom),
+                          helperText:
+                            (formik.touched.policyOverrideEffectiveFrom &&
+                              (formik.errors.policyOverrideEffectiveFrom as string)) ||
+                            '',
+                        },
+                      }}
                     />
                   </Grid>
                   <Grid size={{ xs: 12 }}>
@@ -1058,8 +1066,8 @@ const RenderPayrollFields = (props: any) => {
           <RenderPfRules
             disabled={!isEditable.value}
             formik={formik}
-            // value={values.pfRule || ''}
-            // onChange={(e) => setFormValues({ ...formValues, pfRule: e.target?.value ?? e })}
+          // value={values.pfRule || ''}
+          // onChange={(e) => setFormValues({ ...formValues, pfRule: e.target?.value ?? e })}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>

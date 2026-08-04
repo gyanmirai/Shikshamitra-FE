@@ -1933,7 +1933,7 @@ function ReviewFilterBar({
   onStatusChange: (value: string) => void;
 }) {
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} pt={1}>
       <TextField
         select
         size="small"

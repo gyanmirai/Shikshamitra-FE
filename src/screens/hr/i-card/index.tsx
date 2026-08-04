@@ -38,6 +38,7 @@ import {
   Button,
   Checkbox,
   TextField,
+  type TextFieldProps,
   ButtonBase,
   IconButton,
   Typography,
@@ -147,6 +148,66 @@ const iCardActionPermissions = {
   add: 'HR.Employee.ICard.Add',
   delete: 'HR.Employee.ICard.Delete',
 };
+
+type DebouncedColorPickerProps = Omit<TextFieldProps, 'onChange' | 'value'> & {
+  value: string;
+  onChange: (value: string) => void;
+  debounceMs?: number;
+};
+
+function DebouncedColorPicker({
+  value,
+  onChange,
+  debounceMs = 50,
+  ...props
+}: DebouncedColorPickerProps) {
+  const [localValue, setLocalValue] = useState(value);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextColor = event.target.value;
+    setLocalValue(nextColor);
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => {
+      onChange(nextColor);
+    }, debounceMs);
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (event.target.value !== value) {
+      onChange(event.target.value);
+    }
+  };
+
+  return (
+    <TextField
+      type="color"
+      {...props}
+      value={localValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
+  );
+}
 
 const steps = ['Template', 'Designer', 'Review', 'Employees', 'Export'];
 
@@ -1355,21 +1416,17 @@ const EmployeeICardBuilder = ({
                       minRows={2}
                     />
                     <Stack direction="row" spacing={2}>
-                      <TextField
+                      <DebouncedColorPicker
                         label="Theme Color"
-                        type="color"
                         value={state.themeColor}
-                        onChange={(event) => patchBuilderColor('themeColor', event.target.value)}
+                        onChange={(val) => patchBuilderColor('themeColor', val)}
                         size="small"
                         sx={{ width: 160 }}
                       />
-                      <TextField
+                      <DebouncedColorPicker
                         label="Background"
-                        type="color"
                         value={state.backgroundColor}
-                        onChange={(event) =>
-                          patchBuilderColor('backgroundColor', event.target.value)
-                        }
+                        onChange={(val) => patchBuilderColor('backgroundColor', val)}
                         size="small"
                         sx={{ width: 160 }}
                       />
@@ -1868,17 +1925,7 @@ const DesignerCanvas = ({
           : null
     : null;
 
-  const [localColor, setLocalColor] = useState(selected?.style?.color || DEFAULT_ICARD_TEXT_COLOR);
-  const colorDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    setLocalColor(selected?.style?.color || DEFAULT_ICARD_TEXT_COLOR);
-    return () => {
-      if (colorDebounceRef.current) {
-        clearTimeout(colorDebounceRef.current);
-      }
-    };
-  }, [selected?.id, selected?.style?.color]);
 
   return (
     <Grid container spacing={2}>
@@ -2092,20 +2139,11 @@ const DesignerCanvas = ({
                       onElementStyleChange({ fontSize: Number(event.target.value) })
                     }
                   />
-                  <TextField
+                  <DebouncedColorPicker
                     label="Text color"
-                    type="color"
                     size="small"
-                    value={localColor}
-                    onChange={(event) => {
-                      const color = event.target.value;
-                      setLocalColor(color);
-
-                      if (colorDebounceRef.current) clearTimeout(colorDebounceRef.current);
-                      colorDebounceRef.current = setTimeout(() => {
-                        onElementStyleChange({ color });
-                      }, 80);
-                    }}
+                    value={selected.style?.color || DEFAULT_ICARD_TEXT_COLOR}
+                    onChange={(color) => onElementStyleChange({ color })}
                   />
                   <FormControlLabel
                     control={
