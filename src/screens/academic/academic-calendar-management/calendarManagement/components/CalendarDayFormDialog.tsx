@@ -1,28 +1,25 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useFormik } from 'formik';
 import { useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { RootState } from 'src/redux/store';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { alpha, useTheme } from '@mui/material/styles';
-import { shikshaMitraToast } from 'src/components/toast';
 import { TimePicker } from '@mui/x-date-pickers';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
+import { alpha, useTheme } from '@mui/material/styles';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import {
-  useCreateCalendarDayMutation,
-  useUpdateCalendarDayMutation,
-} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   DayType,
   CalendarStatus,
@@ -30,6 +27,10 @@ import {
   DAY_TYPE_OPTIONS,
   HOLIDAY_CATEGORY_OPTIONS,
 } from 'src/enums/academic-calendar';
+import {
+  useCreateCalendarDayMutation,
+  useUpdateCalendarDayMutation,
+} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
   Grid,
@@ -51,7 +52,6 @@ import {
 
 import { calendarDayInitialValues } from '../initialValues';
 import { calendarDayValidationSchema } from '../validationSchema';
-import { RootState } from 'src/redux/store';
 
 interface Props {
   open: boolean;
@@ -197,7 +197,11 @@ const CalendarDayFormDialog = ({
     <>
       <CustomDialog open={open} handleClose={handleCloseDialog} title={dialogTitle} maxWidth="sm">
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-          <DialogScrollContent onSubmit={() => { formik.handleSubmit(); }}>
+          <DialogScrollContent
+            onSubmit={() => {
+              formik.handleSubmit();
+            }}
+          >
             <Grid container spacing={2}>
               {/* Day Type */}
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -309,7 +313,10 @@ const CalendarDayFormDialog = ({
                     minDate={formik.values.date ? dayjs(formik.values.date) : undefined}
                     blockedDayTypes={[]}
                     onChange={(val) =>
-                      formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
+                      formik.setFieldValue(
+                        'endDate',
+                        val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null
+                      )
                     }
                     slotProps={{
                       textField: {
@@ -342,7 +349,8 @@ const CalendarDayFormDialog = ({
                           fullWidth: true,
                           size: 'small',
                           error: formik.touched.startTime && Boolean(formik.errors.startTime),
-                          helperText: formik.touched.startTime && (formik.errors.startTime as string),
+                          helperText:
+                            formik.touched.startTime && (formik.errors.startTime as string),
                         },
                       }}
                     />
@@ -483,7 +491,8 @@ const CalendarDayFormDialog = ({
                               value={formik.values.standardIds}
                               onChange={(e) => {
                                 const { value } = e.target;
-                                const selected = typeof value === 'string' ? value.split(',') : value;
+                                const selected =
+                                  typeof value === 'string' ? value.split(',') : value;
                                 formik.setFieldValue('standardIds', selected);
                                 if (selected.length !== 1) {
                                   formik.setFieldValue('divisionId', '');
@@ -514,7 +523,11 @@ const CalendarDayFormDialog = ({
                           <Grid size={{ xs: 12, sm: 6 }}>
                             {/* Bug #5411: notched + shrink prevents label/placeholder collision */}
                             <FormControl fullWidth size="small">
-                              <InputLabel id="division-select-label" shrink htmlFor="division-select">
+                              <InputLabel
+                                id="division-select-label"
+                                shrink
+                                htmlFor="division-select"
+                              >
                                 Division
                               </InputLabel>
                               <Select
@@ -527,7 +540,12 @@ const CalendarDayFormDialog = ({
                                 displayEmpty
                                 notched
                                 renderValue={(selected) => {
-                                  if (!selected) return <em style={{ opacity: 0.6, fontStyle: 'normal' }}>All Divisions (optional)</em>;
+                                  if (!selected)
+                                    return (
+                                      <em style={{ opacity: 0.6, fontStyle: 'normal' }}>
+                                        All Divisions (optional)
+                                      </em>
+                                    );
                                   const selectedDivision = standards
                                     .find((s) => s.id === formik.values.standardIds[0])
                                     ?.divisions?.find((d: any) => d.id === selected);
@@ -605,9 +623,10 @@ const CalendarDayFormDialog = ({
           <Stack direction="row" gap={1}>
             <CancelButton onClick={() => handleCloseDialog()} />
             <SubmitButton
-              type="submit"
+              type="button"
               loading={creating || updating}
               disabled={deleting}
+              onClick={() => formik.handleSubmit()}
               buttonText={editData ? 'Update Day' : 'Add Day'}
               startIcon={
                 <Iconify
