@@ -14,6 +14,12 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     'Cannot evaluate feedback as the student has not submitted their work yet.',
   'ShikshaMitra.Submission.CannotEvaluateMissingSubmission':
     'Cannot evaluate feedback as the student has not submitted their work yet.',
+  'ShikshaMitra.Exam:ScheduleIncomplete':
+    'Cannot publish: one or more subjects have incomplete schedule details (date, time, or marks). Open the exam schedule and fill in all required fields.',
+  'ShikshaMitra.Exam:DivisionRequired':
+    'Cannot publish: no divisions are assigned to this exam.',
+  'ShikshaMitra.Exam:SubjectRequired':
+    'Cannot publish: no subjects are added to this exam.',
 };
 
 const GENERIC_MESSAGES = new Set([

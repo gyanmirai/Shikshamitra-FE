@@ -4,6 +4,8 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EffectivePreviewTab } from 'src/screens/hr/policies/components/EffectivePreviewTab';
 
+export const dynamic = 'force-dynamic';
+
 const EffectivePreviewPage = () => (
   <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
     <CustomBreadcrumbs
