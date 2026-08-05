@@ -1,5 +1,7 @@
 'use client';
 
+import type { HrPolicyAssignment, HrPolicyAssignmentConflict } from 'src/redux/hr/hr-policy-api';
+
 import React from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -41,7 +43,30 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     previewPolicyAssignmentImpactState,
     closeImpactDrawer,
     confirmPendingImpactAction,
+    openAssignmentDrawer,
   } = ctx;
+
+  const openConflictingAssignment = (conflict: HrPolicyAssignmentConflict) => {
+    closeImpactDrawer();
+    openAssignmentDrawer(
+      {
+        id: conflict.assignmentId,
+        academicYearId: impactPreview?.academicYearId || '',
+        targetType: conflict.targetType,
+        targetKey: conflict.targetKey,
+        targetDisplayName: conflict.targetDisplayName,
+        payrollPolicyId: conflict.payrollPolicyId,
+        attendancePolicyId: conflict.attendancePolicyId,
+        leavePolicyId: conflict.leavePolicyId || '',
+        effectiveFrom: conflict.effectiveFrom,
+        effectiveTo: conflict.effectiveTo,
+        priority: conflict.priority,
+        isActive: true,
+        assignmentReason: null,
+      } as HrPolicyAssignment,
+      'view'
+    );
+  };
 
   const displayedWarnings = [
     ...(impactPreview?.warnings ?? []),
@@ -165,8 +190,26 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                             key={`${warning.code}-${warning.message}`}
                             severity={warning.severity === 'blocking' ? 'error' : warning.severity}
                             sx={{ py: 0.75 }}
+                            action={
+                              warning.conflict ? (
+                                <Button
+                                  color="inherit"
+                                  size="small"
+                                  onClick={() => openConflictingAssignment(warning.conflict!)}
+                                >
+                                  View conflict
+                                </Button>
+                              ) : undefined
+                            }
                           >
-                            {warning.message}
+                            <Stack spacing={0.5}>
+                              <Typography variant="body2">{warning.message}</Typography>
+                              {warning.conflict ? (
+                                <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
+                                  Assignment ID: {warning.conflict.assignmentId}
+                                </Typography>
+                              ) : null}
+                            </Stack>
                           </Alert>
                         ))}
                         {impactPreview.requiresConfirmation ? (

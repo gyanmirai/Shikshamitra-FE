@@ -1197,6 +1197,35 @@ test.describe('HR Employee onboarding E2E', () => {
     });
   });
 
+  test('requires resume and photo before anonymous submission', async ({ browser, page }) => {
+    test.setTimeout(120_000);
+    const candidate = createCandidateFixture('Required Uploads');
+
+    await gotoOnboarding(page);
+    const invite = await createInviteThroughUi(page, candidate);
+
+    await withAnonymousPage(browser, async (publicPage) => {
+      await publicPage.goto(invite.publicPath, { waitUntil: 'domcontentloaded' });
+      await fillPublicApplication(publicPage, candidate);
+      await publicPage.getByTestId('employee-application-submit').click();
+
+      await expect(
+        publicPage.getByText('Upload the required documents before submitting.')
+      ).toBeVisible();
+      await expect(publicPage.getByText('Upload your resume before submitting.')).toBeVisible();
+      await expect(publicPage.getByText('Upload your photo before submitting.')).toBeVisible();
+      await expect(publicPage.getByRole('button', { name: 'Upload Resume' })).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      );
+      await expect(publicPage.getByRole('button', { name: 'Upload Photo' })).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      );
+      await expect(publicPage.getByText(/Application submitted successfully/i)).toBeHidden();
+    });
+  });
+
   test('blocks future work-experience dates before anonymous submission', async ({
     browser,
     page,

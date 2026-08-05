@@ -1,6 +1,7 @@
 'use client';
 
 import type { FormikTouched } from 'formik';
+import type { Dispatch, SetStateAction } from 'react';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
@@ -54,11 +55,15 @@ import {
   isEmptyWorkExperience,
   employeeApplicationValidationSchema,
   buildEmployeeApplicationSubmitPayload,
-  resolveEmployeeApplicationUploadError,
+  resolveEmployeeApplicationUploadErrors,
   createEmployeeApplicationInitialValues,
 } from './validation';
 
-import type { EmployeeApplicationLocation, EmployeeApplicationFormValues } from './validation';
+import type {
+  EmployeeApplicationLocation,
+  EmployeeApplicationFormValues,
+  EmployeeApplicationUploadErrors,
+} from './validation';
 
 type PublicApplication = {
   id: string;
@@ -164,10 +169,10 @@ const stepForPath = (path: string) => {
 const locationFromOption = (option: any): EmployeeApplicationLocation | null =>
   option?.name && option?.isoCode
     ? {
-      name: option.name,
-      isoCode: option.isoCode,
-      countryCode: option.countryCode,
-    }
+        name: option.name,
+        isoCode: option.isoCode,
+        countryCode: option.countryCode,
+      }
     : null;
 
 const cityValue = (name?: string | null) => (name ? { name } : null);
@@ -1434,16 +1439,16 @@ function UploadsReviewStep({
   photo,
   setResume,
   setPhoto,
-  fileError,
-  setFileError,
+  uploadErrors,
+  setUploadErrors,
 }: {
   formik: ReturnType<typeof useFormik<EmployeeApplicationFormValues>>;
   resume: File | null;
   photo: File | null;
   setResume: (file: File | null) => void;
   setPhoto: (file: File | null) => void;
-  fileError: string | null;
-  setFileError: (message: string | null) => void;
+  uploadErrors: EmployeeApplicationUploadErrors;
+  setUploadErrors: Dispatch<SetStateAction<EmployeeApplicationUploadErrors>>;
 }) {
   const father = formik.values.familyInfo.fatherDetails;
   const mother = formik.values.familyInfo.motherDetails;
@@ -1457,7 +1462,9 @@ function UploadsReviewStep({
 
   return (
     <Stack spacing={3} data-testid="employee-application-step-uploads-review">
-      {fileError && <Alert severity="error">{fileError}</Alert>}
+      {uploadErrors.resume || uploadErrors.photo ? (
+        <Alert severity="error">Upload the required documents before submitting.</Alert>
+      ) : null}
 
       <SectionCard title="Upload Documents">
         <Grid size={{ xs: 12, md: 6 }}>
@@ -1466,7 +1473,11 @@ function UploadsReviewStep({
               component="label"
               variant="outlined"
               startIcon={<Iconify icon="mdi:file-upload-outline" />}
-              color="primary"
+              color={uploadErrors.resume ? 'error' : 'primary'}
+              aria-invalid={Boolean(uploadErrors.resume)}
+              aria-describedby={
+                uploadErrors.resume ? 'employee-application-resume-error' : undefined
+              }
             >
               Upload Resume
               <input
@@ -1478,7 +1489,7 @@ function UploadsReviewStep({
                   const file = event.target.files?.[0] || null;
                   const validationError = validateResumeFile(file);
                   setResume(validationError ? null : file);
-                  setFileError(validationError);
+                  setUploadErrors((current) => ({ ...current, resume: validationError }));
                   event.currentTarget.value = '';
                 }}
               />
@@ -1489,14 +1500,17 @@ function UploadsReviewStep({
                 label="Resume"
                 onRemove={() => {
                   setResume(null);
-                  setFileError(null);
+                  setUploadErrors((current) => ({ ...current, resume: null }));
                 }}
                 testId="employee-application-resume"
               />
             ) : (
-              <Typography variant="body2" color="text.secondary">
-                PDF, DOC, DOCX up to 10MB
-              </Typography>
+              <FormHelperText
+                id="employee-application-resume-error"
+                error={Boolean(uploadErrors.resume)}
+              >
+                {uploadErrors.resume || 'PDF, DOC, DOCX up to 10MB'}
+              </FormHelperText>
             )}
           </Stack>
         </Grid>
@@ -1506,7 +1520,9 @@ function UploadsReviewStep({
               component="label"
               variant="outlined"
               startIcon={<Iconify icon="mdi:image-plus-outline" />}
-              color="primary"
+              color={uploadErrors.photo ? 'error' : 'primary'}
+              aria-invalid={Boolean(uploadErrors.photo)}
+              aria-describedby={uploadErrors.photo ? 'employee-application-photo-error' : undefined}
             >
               Upload Photo
               <input
@@ -1518,7 +1534,7 @@ function UploadsReviewStep({
                   const file = event.target.files?.[0] || null;
                   const validationError = validatePhotoFile(file);
                   setPhoto(validationError ? null : file);
-                  setFileError(validationError);
+                  setUploadErrors((current) => ({ ...current, photo: validationError }));
                   event.currentTarget.value = '';
                 }}
               />
@@ -1529,14 +1545,17 @@ function UploadsReviewStep({
                 label="Photo"
                 onRemove={() => {
                   setPhoto(null);
-                  setFileError(null);
+                  setUploadErrors((current) => ({ ...current, photo: null }));
                 }}
                 testId="employee-application-photo"
               />
             ) : (
-              <Typography variant="body2" color="text.secondary">
-                Image up to 5MB
-              </Typography>
+              <FormHelperText
+                id="employee-application-photo-error"
+                error={Boolean(uploadErrors.photo)}
+              >
+                {uploadErrors.photo || 'Image up to 5MB'}
+              </FormHelperText>
             )}
           </Stack>
         </Grid>
@@ -1622,7 +1641,10 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
+  const [uploadErrors, setUploadErrors] = useState<EmployeeApplicationUploadErrors>({
+    resume: null,
+    photo: null,
+  });
 
   const formik = useFormik<EmployeeApplicationFormValues>({
     initialValues: createEmployeeApplicationInitialValues(application || undefined),
@@ -1631,9 +1653,9 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, helpers) => {
-      const uploadError = resolveEmployeeApplicationUploadError(fileError, resume, photo);
-      if (uploadError) {
-        setFileError(uploadError);
+      const nextUploadErrors = resolveEmployeeApplicationUploadErrors(uploadErrors, resume, photo);
+      if (nextUploadErrors.resume || nextUploadErrors.photo) {
+        setUploadErrors(nextUploadErrors);
         setError(null);
         setActiveStep(4);
         helpers.setSubmitting(false);
@@ -1641,7 +1663,7 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
       }
 
       setError(null);
-      setFileError(null);
+      setUploadErrors({ resume: null, photo: null });
 
       try {
         const body = new FormData();
@@ -1763,8 +1785,8 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
             photo={photo}
             setResume={setResume}
             setPhoto={setPhoto}
-            fileError={fileError}
-            setFileError={setFileError}
+            uploadErrors={uploadErrors}
+            setUploadErrors={setUploadErrors}
           />
         );
     }

@@ -44,6 +44,7 @@ import {
   buildPayslipSelection,
   isPayslipNotFoundError,
   payslipMatchesSelection,
+  buildPayslipEmployeeSearch,
 } from './payslip-selection';
 
 // ---------------------------------------------------------------------------
@@ -183,7 +184,7 @@ const PaySlipGenerationScreen = () => {
               <PaginatedSearchSelect
                 label="Select Employee"
                 fetchOptions={async (query, page) => {
-                  const res = await getEmployees({ page, pageSize: 10 }).unwrap();
+                  const res = await getEmployees(buildPayslipEmployeeSearch(query, page)).unwrap();
                   const hasMore = res.currentPage !== res.totalPages;
                   return {
                     data: res?.items?.map((item: any) => ({
