@@ -17,6 +17,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
+import { useGetExamSubjectsLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
@@ -30,7 +31,6 @@ import {
   Autocomplete,
 } from '@mui/material';
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
@@ -127,6 +127,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
     pageSize: 10,
   });
 
+  const selectedDivisionIds = useMemo(
+    () => formik.values.divisions.filter((divisionId: string) => divisionId !== 'all'),
+    [formik.values.divisions]
+  );
+
   const {
     data: subjectTableData = [],
     isLoading: isTableLoading,
@@ -134,28 +139,22 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
     isFetching: isFetchingSubjects,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    currentQueryAndMutation: useGetExamSubjectsLookupQuery,
     params: {
-      standardId: formik.values.className,
-      ...query,
-      status: SubjectAssignmentStatus.Published,
+      classId: formik.values.className,
+      divisionIds: selectedDivisionIds,
     },
     options: { skip: !formik.values.className },
   });
 
   const subjectOptions: any = useMemo(
     () =>
-      subjectTableData?.data?.items
+      (subjectTableData || [])
         .filter((item: any) => item.status !== SubjectAssignmentStatus.Draft)
         .map((item: any) => ({
           ...item,
-        })) || [],
+        })),
     [subjectTableData]
-  );
-
-  const selectedDivisionIds = useMemo(
-    () => formik.values.divisions.filter((divisionId: string) => divisionId !== 'all'),
-    [formik.values.divisions]
   );
 
   useEffect(() => {
@@ -532,6 +531,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         option?.name ||
                         ''
                       }
+                      getOptionDisabled={(option: any) => !!option.isDisabled}
                       isOptionEqualToValue={(option: any, val: any) => {
                         const optId =
                           option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
@@ -556,8 +556,29 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
                         return (
                           <li key={key ?? optionKey} {...restOptionProps}>
-                            <Checkbox checked={selected} size="small" sx={{ mr: 0.5, p: 0.5 }} />
-                            {label}
+                            <Checkbox 
+                              checked={selected} 
+                              size="small" 
+                              sx={{ mr: 0.5, p: 0.5 }} 
+                              disabled={!!option.isDisabled} 
+                            />
+                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                              <Typography 
+                                variant="body2" 
+                                color={option.isDisabled ? 'text.disabled' : 'text.primary'}
+                              >
+                                {label}
+                              </Typography>
+                              {option.isDisabled && (
+                                <Typography 
+                                  variant="caption" 
+                                  color="error.main" 
+                                  sx={{ fontSize: '0.725rem', mt: -0.25 }}
+                                >
+                                  {option.disabledReason || 'This subject is not finalized from class management.'}
+                                </Typography>
+                              )}
+                            </Box>
                           </li>
                         );
                       }}
@@ -567,7 +588,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       }}
                       slotProps={{
                         chip: {
-                          variant: 'soft',
+                          variant: 'soft' as any,
                         },
                       }}
                       renderInput={(params) => (
