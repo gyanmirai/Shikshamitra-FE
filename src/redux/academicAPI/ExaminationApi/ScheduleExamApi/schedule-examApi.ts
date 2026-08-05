@@ -87,14 +87,17 @@ export const scheduleExamApi = academicApi.injectEndpoints({
     }),
 
     getExamSubjectsLookup: builder.query<any[], { classId: string; divisionIds: string[] }>({
-      query: ({ classId, divisionIds }) => ({
-        url: `/academics/exams/subjects-lookup`,
-        method: 'GET',
-        params: {
-          classId,
-          divisionIds,
-        },
-      }),
+      query: ({ classId, divisionIds }) => {
+        const queryParams = new URLSearchParams();
+        queryParams.append('classId', classId);
+        (divisionIds || []).forEach((id) => {
+          queryParams.append('divisionIds', id);
+        });
+        return {
+          url: `/academics/exams/subjects-lookup?${queryParams.toString()}`,
+          method: 'GET',
+        };
+      },
       providesTags: [academicType.exam],
     }),
 

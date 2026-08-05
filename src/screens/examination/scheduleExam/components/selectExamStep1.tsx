@@ -144,7 +144,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
       classId: formik.values.className,
       divisionIds: selectedDivisionIds,
     },
-    options: { skip: !formik.values.className },
+    options: { skip: !formik.values.className || selectedDivisionIds.length === 0 },
   });
 
   const subjectOptions: any = useMemo(
@@ -523,6 +523,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     <Autocomplete
                       multiple
                       options={subjectOptions}
+                      disabled={!formik.values.className || selectedDivisionIds.length === 0}
                       loading={isTableLoading || isFetchingSubjects}
                       getOptionLabel={(option: any) =>
                         option?.electiveGroupName ||
