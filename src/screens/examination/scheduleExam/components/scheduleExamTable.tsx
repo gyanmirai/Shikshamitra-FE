@@ -11,6 +11,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -87,7 +88,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         setSelectedTimetable(null);
       }
     } catch (error) {
-      console.error(error);
+      const parsed = parseApiProblemDetail(error);
+      shikshaMitraToast.error({ message: parsed.detail });
     }
   };
 
@@ -442,24 +444,48 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         open={publishExamDialog.value}
         onClose={() => {
           publishExamDialog.onFalse();
-          // setSelectedAssignment(null);
           setSelectedTimetable(null);
         }}
         title="Publish"
         content={
-          <>
-            Are you sure you want to publish{' '}
-            <Box component="span" fontWeight="bold" color="text.primary">
-              {selectedTimetable?.examName}
+          <Stack spacing={1}>
+            <Box>
+              Are you sure you want to publish{' '}
+              <Box component="span" fontWeight="bold" color="text.primary">
+                {selectedTimetable?.examName}
+              </Box>
+              ?
             </Box>
-            ?
-          </>
+            {(selectedTimetable?.issueCount ?? 0) > 0 && (
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1,
+                  bgcolor: 'warning.lighter',
+                  borderColor: 'warning.light',
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={0.75}>
+                  <Iconify icon="solar:danger-triangle-bold-duotone" width={20} color="warning.dark" />
+                  <Box>
+                    <Typography variant="body2" fontWeight={700} color="warning.dark">
+                      {selectedTimetable.issueCount} blocking issue{selectedTimetable.issueCount! > 1 ? 's' : ''} detected
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Publishing will fail. Open the exam schedule and fill in all required fields first.
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
+            )}
+          </Stack>
         }
         action={
           <LoadingButton
             variant="contained"
             loading={isPublishing}
-            disabled={isPublishing}
+            disabled={isPublishing || (selectedTimetable?.issueCount ?? 0) > 0}
             startIcon={<Iconify icon="solar:cloud-upload-outline" />}
             onClick={handlePublishExam}
             size="small"
