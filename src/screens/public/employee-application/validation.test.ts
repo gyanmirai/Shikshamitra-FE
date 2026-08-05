@@ -8,7 +8,7 @@ import {
   employeeApplicationValidationSchema,
   buildEmployeeApplicationSubmitPayload,
   getEmployeeApplicationInstitutionDate,
-  resolveEmployeeApplicationUploadError,
+  resolveEmployeeApplicationUploadErrors,
   createEmployeeApplicationInitialValues,
   isAfterEmployeeApplicationInstitutionDate,
 } from './validation';
@@ -240,10 +240,17 @@ describe('employee application validation schema', () => {
     expect(payloadText).not.toContain('bpl');
   });
 
-  it('preserves a selection-time upload error after rejecting the selected file', () => {
-    const uploadError = 'Resume must be a PDF, DOC, or DOCX file.';
+  it('requires both uploads and preserves field-specific selection errors', () => {
+    const errors = resolveEmployeeApplicationUploadErrors(
+      { resume: 'Resume must be a PDF, DOC, or DOCX file.', photo: null },
+      null,
+      null
+    );
 
-    expect(resolveEmployeeApplicationUploadError(uploadError, null, null)).toBe(uploadError);
+    expect(errors).toEqual({
+      resume: 'Resume must be a PDF, DOC, or DOCX file.',
+      photo: 'Upload your photo before submitting.',
+    });
   });
 
   it('formats Dayjs objects and valid date strings to YYYY-MM-DD for submission payloads', () => {

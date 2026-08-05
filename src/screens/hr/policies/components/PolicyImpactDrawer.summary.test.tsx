@@ -1,8 +1,8 @@
 import type React from 'react';
 
-import { screen } from '@testing-library/react';
 import { vi, it, expect, describe } from 'vitest';
 import { renderWithProviders } from 'src/test/test-utils';
+import { screen, fireEvent } from '@testing-library/react';
 
 import { PolicyImpactDrawer } from './PolicyImpactDrawer';
 
@@ -196,6 +196,75 @@ describe('PolicyImpactDrawer summary rendering', () => {
       screen.getByText('This policy is still referenced by active assignments.')
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /confirm archive policy/i })).toBeDisabled();
+  });
+
+  it('shows the conflicting assignment identity and a direct review action', () => {
+    const closeImpactDrawer = vi.fn();
+    const openAssignmentDrawer = vi.fn();
+    renderWithProviders(
+      <PolicyImpactDrawer
+        ctx={
+          {
+            impactDrawerOpen: true,
+            drawerTransitionDuration: 0,
+            impactPreviewError: null,
+            pendingImpactAction: null,
+            isPolicyOperationActive: false,
+            activePolicyOperation: null,
+            previewPolicyImpactState: { isLoading: false },
+            previewPolicyAssignmentImpactState: { isLoading: false },
+            closeImpactDrawer,
+            confirmPendingImpactAction: vi.fn(),
+            openAssignmentDrawer,
+            impactPreview: {
+              policyType: 'assignment',
+              academicYearId: 'academic-year-1',
+              action: 'update',
+              affectedEmployeeCount: 1,
+              affectedAssignmentCount: 1,
+              lockedPayrollMonths: [],
+              affectedEmployees: [],
+              affectedPayrollMonths: [],
+              affectedAttendanceEvaluationMonths: [],
+              hasStalePayrollRisk: false,
+              warnings: [],
+              blockingWarnings: [
+                {
+                  severity: 'blocking',
+                  code: 'ShikshaMitra:HrPolicyAssignmentOverlap',
+                  message: 'Conflicts with active assignment assignment-1 for Keyur Siddhapura.',
+                  conflict: {
+                    assignmentId: 'assignment-1',
+                    targetType: 'employee',
+                    targetKey: 'employee-1',
+                    targetDisplayName: 'Keyur Siddhapura',
+                    payrollPolicyId: 'payroll-1',
+                    payrollPolicyName: 'Standard Payroll',
+                    attendancePolicyId: 'attendance-1',
+                    attendancePolicyName: 'Standard Attendance',
+                    effectiveFrom: '2026-01-01',
+                    effectiveTo: null,
+                    priority: 100,
+                    suggestedFixes: [],
+                  },
+                },
+              ],
+              effectiveAssignmentConflicts: [],
+              requiresConfirmation: false,
+            },
+          } as any
+        }
+      />
+    );
+
+    expect(screen.getByText(/Keyur Siddhapura/)).toBeInTheDocument();
+    expect(screen.getByText(/Assignment ID: assignment-1/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View conflict' }));
+    expect(closeImpactDrawer).toHaveBeenCalledOnce();
+    expect(openAssignmentDrawer).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'assignment-1', targetDisplayName: 'Keyur Siddhapura' }),
+      'view'
+    );
   });
 
   it('formats effective assignment conflict candidate reasons for admins', () => {

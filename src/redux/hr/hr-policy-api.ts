@@ -275,6 +275,13 @@ export type PolicyHolidayImpactPreview = {
 
 export type HrPolicyImpactSeverity = 'info' | 'warning' | 'blocking';
 
+export type HrPolicyImpactWarning = {
+  severity: HrPolicyImpactSeverity;
+  code: string;
+  message: string;
+  conflict?: HrPolicyAssignmentConflict | null;
+};
+
 export type HrPolicyImpactPreview = {
   policyType: string;
   policyId?: string | null;
@@ -315,12 +322,12 @@ export type HrPolicyImpactPreview = {
     status: string;
   }>;
   hasStalePayrollRisk: boolean;
-  warnings: Array<{ severity: HrPolicyImpactSeverity; code: string; message: string }>;
+  warnings: HrPolicyImpactWarning[];
   effectiveAssignmentConflicts?: HrPolicyEffectiveAssignmentConflict[];
   requiresConfirmation?: boolean;
   confirmationToken?: string | null;
   expiresAt?: string | null;
-  blockingWarnings?: Array<{ severity: HrPolicyImpactSeverity; code: string; message: string }>;
+  blockingWarnings?: HrPolicyImpactWarning[];
   resolutionSummary?: string | null;
   riskSummary?: string | null;
   recommendedAction?: string | null;

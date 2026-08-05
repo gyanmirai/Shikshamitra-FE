@@ -428,11 +428,25 @@ export const validatePhotoFile = (file: File | null) => {
   return null;
 };
 
-export const resolveEmployeeApplicationUploadError = (
-  currentError: string | null,
+export type EmployeeApplicationUploadErrors = {
+  resume: string | null;
+  photo: string | null;
+};
+
+export const resolveEmployeeApplicationUploadErrors = (
+  currentErrors: EmployeeApplicationUploadErrors,
   resume: File | null,
   photo: File | null
-) => currentError || validateResumeFile(resume) || validatePhotoFile(photo);
+): EmployeeApplicationUploadErrors => ({
+  resume:
+    currentErrors.resume ||
+    validateResumeFile(resume) ||
+    (resume ? null : 'Upload your resume before submitting.'),
+  photo:
+    currentErrors.photo ||
+    validatePhotoFile(photo) ||
+    (photo ? null : 'Upload your photo before submitting.'),
+});
 
 type PartialFamilyMember = {
   [TKey in keyof EmployeeApplicationFamilyMemberValues]?:

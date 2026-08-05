@@ -6,6 +6,12 @@ export type PayslipSelection = {
   key: string;
 };
 
+export const buildPayslipEmployeeSearch = (query: string, page: number) => ({
+  page: Math.max(1, page),
+  pageSize: 10,
+  search: query.trim(),
+});
+
 export const buildPayslipSelection = (
   employeeId?: string | null,
   month?: Dayjs | null
