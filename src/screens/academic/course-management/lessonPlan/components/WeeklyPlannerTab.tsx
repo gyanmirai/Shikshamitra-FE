@@ -49,6 +49,7 @@ type Props = {
   onCreateHomework?: (plan: LessonPlanRow) => void;
   onMarkMissed: (plan: LessonPlanRow) => void;
   onCopyPreviousWeek: () => void;
+  currentTeacherId?: string;
 };
 
 const WeeklyPlannerTab = ({
@@ -60,6 +61,7 @@ const WeeklyPlannerTab = ({
   onCreateHomework,
   onMarkMissed,
   onCopyPreviousWeek,
+  currentTeacherId,
 }: Props) => {
   const [weekStart, setWeekStart] = useState<Dayjs | null>(dayjs());
   const [cardMenuAnchor, setCardMenuAnchor] = useState<{
@@ -366,52 +368,56 @@ const WeeklyPlannerTab = ({
           <Iconify icon="mdi:eye-outline" width={18} sx={{ mr: 1 }} />
           View Details
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (cardMenuAnchor) onSubmitDiary(cardMenuAnchor.plan);
-            closeCardMenu();
-          }}
-        >
-          <Iconify icon="mdi:notebook-edit-outline" width={18} sx={{ mr: 1 }} />
-          Create / Edit Diary
-        </MenuItem>
-        <MenuItem
-          disabled={cardMenuAnchor?.plan.planStatus !== 'Approved'}
-          onClick={() => {
-            if (cardMenuAnchor) onCreateHomework?.(cardMenuAnchor.plan);
-            closeCardMenu();
-          }}
-        >
-          <Iconify icon="mdi:book-plus-outline" width={18} sx={{ mr: 1 }} />
-          Create Homework
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (cardMenuAnchor) onEditLesson(cardMenuAnchor.plan);
-            closeCardMenu();
-          }}
-        >
-          <Iconify icon="mdi:pencil-outline" width={18} sx={{ mr: 1 }} />
-          Edit Plan
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (cardMenuAnchor) onMarkMissed(cardMenuAnchor.plan);
-            closeCardMenu();
-          }}
-        >
-          <Iconify icon="mdi:calendar-remove-outline" width={18} sx={{ mr: 1 }} />
-          Mark Missed
-        </MenuItem>
-        <Divider />
-        <MenuItem disabled onClick={closeCardMenu}>
-          <Iconify icon="mdi:robot-outline" width={18} sx={{ mr: 1 }} />
-          Generate Diary with AI
-        </MenuItem>
-        <MenuItem disabled onClick={closeCardMenu}>
-          <Iconify icon="mdi:calendar-arrow-right" width={18} sx={{ mr: 1 }} />
-          Reschedule
-        </MenuItem>
+        {cardMenuAnchor && (!currentTeacherId || cardMenuAnchor.plan.teacherId === currentTeacherId) && (
+          <>
+            <MenuItem
+              onClick={() => {
+                if (cardMenuAnchor) onSubmitDiary(cardMenuAnchor.plan);
+                closeCardMenu();
+              }}
+            >
+              <Iconify icon="mdi:notebook-edit-outline" width={18} sx={{ mr: 1 }} />
+              Create / Edit Diary
+            </MenuItem>
+            <MenuItem
+              disabled={cardMenuAnchor?.plan.planStatus !== 'Approved'}
+              onClick={() => {
+                if (cardMenuAnchor) onCreateHomework?.(cardMenuAnchor.plan);
+                closeCardMenu();
+              }}
+            >
+              <Iconify icon="mdi:book-plus-outline" width={18} sx={{ mr: 1 }} />
+              Create Homework
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                if (cardMenuAnchor) onEditLesson(cardMenuAnchor.plan);
+                closeCardMenu();
+              }}
+            >
+              <Iconify icon="mdi:pencil-outline" width={18} sx={{ mr: 1 }} />
+              Edit Plan
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                if (cardMenuAnchor) onMarkMissed(cardMenuAnchor.plan);
+                closeCardMenu();
+              }}
+            >
+              <Iconify icon="mdi:calendar-remove-outline" width={18} sx={{ mr: 1 }} />
+              Mark Missed
+            </MenuItem>
+            <Divider />
+            <MenuItem disabled onClick={closeCardMenu}>
+              <Iconify icon="mdi:robot-outline" width={18} sx={{ mr: 1 }} />
+              Generate Diary with AI
+            </MenuItem>
+            <MenuItem disabled onClick={closeCardMenu}>
+              <Iconify icon="mdi:calendar-arrow-right" width={18} sx={{ mr: 1 }} />
+              Reschedule
+            </MenuItem>
+          </>
+        )}
       </Menu>
     </Card>
   );

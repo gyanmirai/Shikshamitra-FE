@@ -242,12 +242,144 @@ const TABS = [
 
 type TabValue = (typeof TABS)[number]['value'];
 
+const PlanStatusHeaderTooltip = (
+  <Box sx={{ p: 1, minWidth: 250 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: '90px 1fr', rowGap: 0.75, columnGap: 1, alignItems: 'center' }}>
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}>
+        Draft :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Saved internally & editable
+      </Typography>
+
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}>
+        Submitted :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Awaiting reviewer approval
+      </Typography>
+
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}>
+        Approved :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Ready for class execution
+      </Typography>
+
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}>
+        Rejected :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Returned with feedback
+      </Typography>
+
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}>
+        Cancelled :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Withdrawn or cancelled
+      </Typography>
+    </Box>
+  </Box>
+);
+
+const DiaryStatusHeaderTooltip = (
+  <Box sx={{ p: 1, minWidth: 250 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: '90px 1fr', rowGap: 0.75, columnGap: 1, alignItems: 'center' }}>
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}>
+        Pending :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Entry not yet submitted
+      </Typography>
+
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}>
+        Draft :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Saved internally & editable
+      </Typography>
+
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}>
+        Submitted :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Completed for period
+      </Typography>
+
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}>
+        Approved :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Reviewed and approved
+      </Typography>
+
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}>
+        Rejected :
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+        Returned for corrections
+      </Typography>
+    </Box>
+  </Box>
+);
+
+const PLAN_STATUS_DESCRIPTIONS: Record<string, string> = {
+  Draft: 'Draft: Saved internally and editable before submission',
+  Submitted: 'Submitted: Submitted and awaiting coordinator/HOD approval',
+  Approved: 'Approved: Plan approved and ready for class execution',
+  Rejected: 'Rejected: Returned with feedback for revisions',
+  Cancelled: 'Cancelled: Lesson plan is withdrawn or cancelled',
+  Pending: 'Pending: Awaiting submission or approval action',
+};
+
+const DIARY_STATUS_DESCRIPTIONS: Record<string, string> = {
+  Draft: 'Draft: Saved internally and editable',
+  Submitted: 'Submitted: Completed teacher diary entry for the conducted period',
+  NotSubmitted: 'Pending: Teacher diary entry has not been submitted yet',
+  Pending: 'Pending: Teacher diary entry has not been submitted yet',
+  Approved: 'Approved: Teacher diary entry reviewed and approved',
+  Rejected: 'Rejected: Returned for corrections',
+};
+
+const renderPlanStatus = (status: PlanStatus) => {
+  const tooltipText = PLAN_STATUS_DESCRIPTIONS[status] || `${status} status`;
+  return (
+    <CustomTooltip title={tooltipText} placement="top" arrow>
+      <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
+        <Label color={planStatusColor[status] ?? 'default'} variant="soft">
+          {status}
+        </Label>
+      </Box>
+    </CustomTooltip>
+  );
+};
+
+const renderDiaryStatus = (status: DiaryStatus) => {
+  const displayLabel = status === 'NotSubmitted' ? 'Pending' : status;
+  const tooltipText = DIARY_STATUS_DESCRIPTIONS[status] || `${displayLabel} status`;
+  return (
+    <CustomTooltip title={tooltipText} placement="top" arrow>
+      <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
+        <Label color={diaryStatusColor[status] ?? 'default'} variant="soft">
+          {displayLabel}
+        </Label>
+      </Box>
+    </CustomTooltip>
+  );
+};
+
 const LessonPlanScreen = () => {
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const { employee, user } = useSelector((state: RootState) => state.auth);
   const canReviewSubmissions = readRoleNames(employee, user).some(canRoleReviewLessonPlans);
   const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
+
+  const currentTeacherId = useMemo(
+    () => employee?.id || employee?.employeeId || employee?.userId || user?.sub || user?.id || '',
+    [employee, user]
+  );
 
   // ─── RTK Queries & Mutations ──────────────────────────────────────────────────
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
@@ -259,15 +391,23 @@ const LessonPlanScreen = () => {
     refetch: refetchTimeline,
   } = useGetLessonPlanTimelineQuery({
     date: dateConvertor(selectedDate.format(dateFormat)),
+    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
   });
+
+  const isTimelineOwner = useMemo(
+    () => !timelineData?.teacherId || timelineData.teacherId === currentTeacherId,
+    [timelineData, currentTeacherId]
+  );
 
   const { data: lessonPlanList, refetch: refetchLessonPlans } = useGetLessonPlansQuery({
     academicYearId: currentYear?.id,
+    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
     maxResultCount: 1000,
   });
 
   const { data: teacherDiaryList, refetch: refetchTeacherDiaries } = useGetTeacherDiariesQuery({
     academicYearId: currentYear?.id,
+    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
     maxResultCount: 1000,
   });
   const { data: homeworkTypeData } = useGetHomeworkTypesQuery(
@@ -988,308 +1128,264 @@ const LessonPlanScreen = () => {
     [requestChanges, refetchTimeline, refetchLessonPlans]
   );
 
-  // ─── Status Descriptions & Rich Tooltips ───────────────────────────────────
-
-  const PlanStatusHeaderTooltip = (
-    <Box sx={{ p: 1, minWidth: 250 }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: '90px 1fr', rowGap: 0.75, columnGap: 1, alignItems: 'center' }}>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}>
-          Draft :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Saved internally & editable
-        </Typography>
-
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}>
-          Submitted :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Awaiting reviewer approval
-        </Typography>
-
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}>
-          Approved :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Ready for class execution
-        </Typography>
-
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}>
-          Rejected :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Returned with feedback
-        </Typography>
-
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}>
-          Cancelled :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Withdrawn or cancelled
-        </Typography>
-      </Box>
-    </Box>
-  );
-
-  const DiaryStatusHeaderTooltip = (
-    <Box sx={{ p: 1, minWidth: 250 }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: '90px 1fr', rowGap: 0.75, columnGap: 1, alignItems: 'center' }}>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}>
-          Pending :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Entry not yet submitted
-        </Typography>
-
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}>
-          Draft :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Saved internally & editable
-        </Typography>
-
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}>
-          Submitted :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Completed for period
-        </Typography>
-
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}>
-          Approved :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Reviewed and approved
-        </Typography>
-
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}>
-          Rejected :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Returned for corrections
-        </Typography>
-      </Box>
-    </Box>
-  );
-
-  const PLAN_STATUS_DESCRIPTIONS: Record<string, string> = {
-    Draft: 'Draft: Saved internally and editable before submission',
-    Submitted: 'Submitted: Submitted and awaiting coordinator/HOD approval',
-    Approved: 'Approved: Plan approved and ready for class execution',
-    Rejected: 'Rejected: Returned with feedback for revisions',
-    Cancelled: 'Cancelled: Lesson plan is withdrawn or cancelled',
-    Pending: 'Pending: Awaiting submission or approval action',
-  };
-
-  const DIARY_STATUS_DESCRIPTIONS: Record<string, string> = {
-    Draft: 'Draft: Saved internally and editable',
-    Submitted: 'Submitted: Completed teacher diary entry for the conducted period',
-    NotSubmitted: 'Pending: Teacher diary entry has not been submitted yet',
-    Pending: 'Pending: Teacher diary entry has not been submitted yet',
-    Approved: 'Approved: Teacher diary entry reviewed and approved',
-    Rejected: 'Rejected: Returned for corrections',
-  };
-
-  const renderPlanStatus = (status: PlanStatus) => {
-    const tooltipText = PLAN_STATUS_DESCRIPTIONS[status] || `${status} status`;
-    return (
-      <CustomTooltip title={tooltipText} placement="top" arrow>
-        <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
-          <Label color={planStatusColor[status] ?? 'default'} variant="soft">
-            {status}
-          </Label>
-        </Box>
-      </CustomTooltip>
-    );
-  };
-
-  const renderDiaryStatus = (status: DiaryStatus) => {
-    const displayLabel = status === 'NotSubmitted' ? 'Pending' : status;
-    const tooltipText = DIARY_STATUS_DESCRIPTIONS[status] || `${displayLabel} status`;
-    return (
-      <CustomTooltip title={tooltipText} placement="top" arrow>
-        <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
-          <Label color={diaryStatusColor[status] ?? 'default'} variant="soft">
-            {displayLabel}
-          </Label>
-        </Box>
-      </CustomTooltip>
-    );
-  };
-
-  const lessonColumns = [
-    {
-      id: 'plannedDate',
-      label: 'Date',
-      filterType: 'date' as const,
-      minWidth: 120,
-      sticky: true,
-      render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
-    },
-    { id: 'period', label: 'Period', minWidth: 110 },
-    {
-      id: 'plannedTime',
-      label: 'Time',
-      minWidth: 120,
-      render: (v: string) => v || '—',
-    },
-    {
-      id: 'className',
-      label: 'Class / Div',
-      minWidth: 120,
-      render: (_v: any, row: any) => `${row.className}-${row.divisionName}`,
-    },
-    { id: 'subjectName', label: 'Subject', minWidth: 130 },
-    { id: 'chapterName', label: 'Chapter', minWidth: 150 },
-    { id: 'topic', label: 'Topic', minWidth: 200 },
-    { id: 'teacherName', label: 'Teacher', minWidth: 160 },
-    {
-      id: 'planStatus',
-      label: (
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
-            Plan Status
-          </Typography>
-          <CustomTooltip title={PlanStatusHeaderTooltip} placement="top" arrow>
-            <Iconify
-              icon="lucide:info"
-              width={14}
-              height={14}
-              sx={{ color: 'text.secondary', cursor: 'pointer' }}
-            />
-          </CustomTooltip>
-        </Stack>
-      ),
-      minWidth: 140,
-      render: (v: PlanStatus) => renderPlanStatus(v),
-    },
-    {
-      id: 'diaryStatus',
-      label: (
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
-            Diary Status
-          </Typography>
-          <CustomTooltip title={DiaryStatusHeaderTooltip} placement="top" arrow>
-            <Iconify
-              icon="lucide:info"
-              width={14}
-              height={14}
-              sx={{ color: 'text.secondary', cursor: 'pointer' }}
-            />
-          </CustomTooltip>
-        </Stack>
-      ),
-      minWidth: 140,
-      render: (v: DiaryStatus) => renderDiaryStatus(v),
-    },
-    {
-      id: 'insightMessage',
-      label: 'Insight',
-      minWidth: 220,
-      isFilter: false,
-      render: (v: string, row: any) =>
-        v ? (
-          <CustomTooltip title={v} placement="top" arrow>
-            <Stack direction="row" spacing={0.75} alignItems="flex-start">
+  const lessonColumns = useMemo(
+    () => [
+      {
+        id: 'plannedDate',
+        label: 'Date',
+        filterType: 'date' as const,
+        minWidth: 120,
+        sticky: true,
+        render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
+      },
+      { id: 'period', label: 'Period', minWidth: 110 },
+      {
+        id: 'plannedTime',
+        label: 'Time',
+        minWidth: 120,
+        render: (v: string) => v || '—',
+      },
+      {
+        id: 'className',
+        label: 'Class / Div',
+        minWidth: 120,
+        render: (_v: any, row: any) => `${row.className}-${row.divisionName}`,
+      },
+      { id: 'subjectName', label: 'Subject', minWidth: 130 },
+      { id: 'chapterName', label: 'Chapter', minWidth: 150 },
+      { id: 'topic', label: 'Topic', minWidth: 200 },
+      { id: 'teacherName', label: 'Teacher', minWidth: 160 },
+      {
+        id: 'planStatus',
+        label: (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
+              Plan Status
+            </Typography>
+            <CustomTooltip title={PlanStatusHeaderTooltip} placement="top" arrow>
               <Iconify
-                icon="mdi:information-outline"
-                width={16}
-                sx={{
-                  mt: 0.25,
-                  flexShrink: 0,
-                  color: row.insightSeverity === 'error' ? 'error.main' : 'warning.main',
-                }}
+                icon="lucide:info"
+                width={14}
+                height={14}
+                sx={{ color: 'text.secondary', cursor: 'pointer' }}
               />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  lineHeight: 1.3,
-                  cursor: 'pointer',
-                }}
-              >
-                {v}
-              </Typography>
-            </Stack>
-          </CustomTooltip>
-        ) : (
-          '-'
+            </CustomTooltip>
+          </Stack>
         ),
-    },
-    {
-      id: 'plannedCompletionPercentage',
-      label: 'Planned %',
-      filterType: 'number' as const,
-      minWidth: 100,
-      render: (v: number) => (
-        <Stack spacing={1}>
-          <Typography variant="body2">{v}%</Typography>
-          <LinearProgress variant="determinate" value={v} sx={{ height: 4, borderRadius: 1 }} />
-        </Stack>
-      ),
-    },
-    {
-      id: 'actualCompletionPercentage',
-      label: 'Actual %',
-      filterType: 'number' as const,
-      minWidth: 100,
-      render: (v: number) => (
-        <Stack spacing={1}>
-          <Typography variant="body2">{v}%</Typography>
-          <LinearProgress
-            variant="determinate"
-            value={v}
-            color="success"
-            sx={{ height: 4, borderRadius: 1 }}
-          />
-        </Stack>
-      ),
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      minWidth: 120,
-      align: 'center' as const,
-      isSort: false,
-      isFilter: false,
-      sticky: true,
-      stickyPosition: 'right' as const,
-      render: (_v: unknown, row: any) => {
-        const plan = row as LessonPlanRow;
-        const diary = getDiaryForLesson(plan.id);
-        const isApproved = plan.planStatus === 'Approved';
-        const isCancelled = plan.planStatus === 'Cancelled';
-        const isDiaryDisabled = !isApproved || isCancelled;
+        minWidth: 140,
+        render: (v: PlanStatus) => renderPlanStatus(v),
+      },
+      {
+        id: 'diaryStatus',
+        label: (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
+              Diary Status
+            </Typography>
+            <CustomTooltip title={DiaryStatusHeaderTooltip} placement="top" arrow>
+              <Iconify
+                icon="lucide:info"
+                width={14}
+                height={14}
+                sx={{ color: 'text.secondary', cursor: 'pointer' }}
+              />
+            </CustomTooltip>
+          </Stack>
+        ),
+        minWidth: 140,
+        render: (v: DiaryStatus) => renderDiaryStatus(v),
+      },
+      {
+        id: 'insightMessage',
+        label: 'Insight',
+        minWidth: 220,
+        isFilter: false,
+        render: (v: string, row: any) =>
+          v ? (
+            <CustomTooltip title={v} placement="top" arrow>
+              <Stack direction="row" spacing={0.75} alignItems="flex-start">
+                <Iconify
+                  icon="mdi:information-outline"
+                  width={16}
+                  sx={{
+                    mt: 0.25,
+                    flexShrink: 0,
+                    color: row.insightSeverity === 'error' ? 'error.main' : 'warning.main',
+                  }}
+                />
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    lineHeight: 1.3,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {v}
+                </Typography>
+              </Stack>
+            </CustomTooltip>
+          ) : (
+            '-'
+          ),
+      },
+      {
+        id: 'plannedCompletionPercentage',
+        label: 'Planned %',
+        filterType: 'number' as const,
+        minWidth: 100,
+        render: (v: number) => (
+          <Stack spacing={1}>
+            <Typography variant="body2">{v}%</Typography>
+            <LinearProgress variant="determinate" value={v} sx={{ height: 4, borderRadius: 1 }} />
+          </Stack>
+        ),
+      },
+      {
+        id: 'actualCompletionPercentage',
+        label: 'Actual %',
+        filterType: 'number' as const,
+        minWidth: 100,
+        render: (v: number) => (
+          <Stack spacing={1}>
+            <Typography variant="body2">{v}%</Typography>
+            <LinearProgress
+              variant="determinate"
+              value={v}
+              color="success"
+              sx={{ height: 4, borderRadius: 1 }}
+            />
+          </Stack>
+        ),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        minWidth: 120,
+        align: 'center' as const,
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        stickyPosition: 'right' as const,
+        render: (_v: unknown, row: any) => {
+          const plan = row as LessonPlanRow;
+          const diary = getDiaryForLesson(plan.id);
+          const isApproved = plan.planStatus === 'Approved';
+          const isCancelled = plan.planStatus === 'Cancelled';
+          const isDiaryDisabled = !isApproved || isCancelled;
 
-        const diaryTooltipTitle = isCancelled
-          ? 'Lesson plan is cancelled.'
-          : !isApproved
-            ? 'Lesson plan must be approved to add or edit diary notes.'
-            : diary
-              ? 'Edit diary notes'
-              : 'Add diary notes';
+          const diaryTooltipTitle = isCancelled
+            ? 'Lesson plan is cancelled.'
+            : !isApproved
+              ? 'Lesson plan must be approved to add or edit diary notes.'
+              : diary
+                ? 'Edit diary notes'
+                : 'Add diary notes';
 
-        return (
-          <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-            <Tooltip title={diaryTooltipTitle}>
-              <span>
+          const isOwner = plan.teacherId === currentTeacherId;
+
+          return (
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+              {isOwner && (
+                <Tooltip title={diaryTooltipTitle}>
+                  <span>
+                    <IconButton
+                      size="small"
+                      disabled={isDiaryDisabled}
+                      onClick={() => openDiary(plan)}
+                      sx={{ color: isDiaryDisabled ? 'action.disabled' : 'primary.main' }}
+                    >
+                      <Iconify icon="mdi:notebook-edit-outline" width={18} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              )}
+              <Tooltip title="View Details">
                 <IconButton
                   size="small"
-                  disabled={isDiaryDisabled}
-                  onClick={() => openDiary(plan)}
-                  sx={{ color: isDiaryDisabled ? 'action.disabled' : 'primary.main' }}
+                  onClick={() => openDetails(plan)}
+                  sx={{ color: 'text.secondary' }}
                 >
-                  <Iconify icon="mdi:notebook-edit-outline" width={18} />
+                  <Iconify icon="carbon:view-filled" width={18} />
                 </IconButton>
-              </span>
-            </Tooltip>
-            <Tooltip title="View Details">
+              </Tooltip>
+            </Stack>
+          );
+        },
+      },
+    ],
+    [openDiary, openDetails, getDiaryForLesson, currentTeacherId]
+  );
+
+  const diaryColumns = useMemo(
+    () => [
+      {
+        id: 'plannedDate',
+        label: 'Date',
+        filterType: 'date' as const,
+        minWidth: 120,
+        sticky: true,
+        render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
+      },
+      { id: 'period', label: 'Period', minWidth: 110 },
+      {
+        id: 'className',
+        label: 'Class/Div',
+        minWidth: 120,
+        render: (_v: any, r: any) => `${r.className}-${r.divisionName}`,
+      },
+      { id: 'subjectName', label: 'Subject', minWidth: 130 },
+      { id: 'chapterName', label: 'Chapter', minWidth: 150 },
+      { id: 'topic', label: 'Topic', minWidth: 200 },
+      { id: 'teacherName', label: 'Teacher', minWidth: 160 },
+      {
+        id: 'diaryStatus',
+        label: (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
+              Diary Status
+            </Typography>
+            <CustomTooltip title={DiaryStatusHeaderTooltip} placement="top" arrow>
+              <Iconify
+                icon="lucide:info"
+                width={14}
+                height={14}
+                sx={{ color: 'text.secondary', cursor: 'pointer' }}
+              />
+            </CustomTooltip>
+          </Stack>
+        ),
+        minWidth: 140,
+        render: (v: DiaryStatus) => renderDiaryStatus(v),
+      },
+      {
+        id: 'actualCompletionPercentage',
+        label: 'Actual %',
+        filterType: 'number' as const,
+        minWidth: 100,
+        render: (v: number) => `${v}%`,
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        minWidth: 120,
+        align: 'center' as const,
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        stickyPosition: 'right' as const,
+        render: (_v: unknown, row: any) => {
+          const plan = row as LessonPlanRow;
+          const diary = getDiaryForLesson(plan.id);
+          const isOwner = plan.teacherId === currentTeacherId;
+
+          if (!isOwner) {
+            return (
               <IconButton
                 size="small"
                 onClick={() => openDetails(plan)}
@@ -1297,96 +1393,45 @@ const LessonPlanScreen = () => {
               >
                 <Iconify icon="carbon:view-filled" width={18} />
               </IconButton>
-            </Tooltip>
-          </Stack>
-        );
-      },
-    },
-  ];
+            );
+          }
 
-  const diaryColumns = [
-    {
-      id: 'plannedDate',
-      label: 'Date',
-      filterType: 'date' as const,
-      minWidth: 120,
-      sticky: true,
-      render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
-    },
-    { id: 'period', label: 'Period', minWidth: 110 },
-    {
-      id: 'className',
-      label: 'Class/Div',
-      minWidth: 120,
-      render: (_v: any, r: any) => `${r.className}-${r.divisionName}`,
-    },
-    { id: 'subjectName', label: 'Subject', minWidth: 130 },
-    { id: 'chapterName', label: 'Chapter', minWidth: 150 },
-    { id: 'topic', label: 'Topic', minWidth: 200 },
-    { id: 'teacherName', label: 'Teacher', minWidth: 160 },
-    {
-      id: 'diaryStatus',
-      label: (
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
-            Diary Status
-          </Typography>
-          <CustomTooltip title={DiaryStatusHeaderTooltip} placement="top" arrow>
-            <Iconify
-              icon="lucide:info"
-              width={14}
-              height={14}
-              sx={{ color: 'text.secondary', cursor: 'pointer' }}
+          return (
+            <ThreeDotsActions
+              showViewIcon
+              handleViewClick={() => openDetails(plan)}
+              placement="right-center"
+              actions={({ popover: pop }) => (
+                <MenuList>
+                  <MenuItem
+                    disabled={plan.planStatus === 'Cancelled'}
+                    onClick={() => {
+                      pop.onClose();
+                      openDiary(plan);
+                    }}
+                  >
+                    <Iconify icon="mdi:notebook-edit-outline" sx={{ mr: 1, width: 16, height: 16 }} />
+                    {diary ? 'Edit diary notes' : 'Add diary notes'}
+                  </MenuItem>
+                </MenuList>
+              )}
             />
-          </CustomTooltip>
-        </Stack>
-      ),
-      minWidth: 140,
-      render: (v: DiaryStatus) => renderDiaryStatus(v),
-    },
-    {
-      id: 'actualCompletionPercentage',
-      label: 'Actual %',
-      filterType: 'number' as const,
-      minWidth: 100,
-      render: (v: number) => `${v}%`,
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      minWidth: 120,
-      align: 'center' as const,
-      isSort: false,
-      isFilter: false,
-      sticky: true,
-      stickyPosition: 'right' as const,
-      render: (_v: unknown, row: any) => {
-        const plan = row as LessonPlanRow;
-        const diary = getDiaryForLesson(plan.id);
-        return (
-          <ThreeDotsActions
-            showViewIcon
-            handleViewClick={() => openDetails(plan)}
-            placement="right-center"
-            actions={({ popover: pop }) => (
-              <MenuList>
-                <MenuItem
-                  disabled={plan.planStatus === 'Cancelled'}
-                  onClick={() => {
-                    pop.onClose();
-                    openDiary(plan);
-                  }}
-                >
-                  <Iconify icon="mdi:notebook-edit-outline" sx={{ mr: 1, width: 16, height: 16 }} />
-                  {diary ? 'Edit diary notes' : 'Add diary notes'}
-                </MenuItem>
-              </MenuList>
-            )}
-          />
-        );
+          );
+        },
       },
-    },
-  ];
+    ],
+    [openDetails, openDiary, getDiaryForLesson, currentTeacherId]
+  );
+
+  const visibleLessonColumns = useMemo(
+    () => lessonColumns.filter((col) => col.id !== 'teacherName' || canReviewSubmissions),
+    [canReviewSubmissions, lessonColumns]
+  );
+
+  const visibleDiaryColumns = useMemo(
+    () => diaryColumns.filter((col) => col.id !== 'teacherName' || canReviewSubmissions),
+    [canReviewSubmissions, diaryColumns]
+  );
 
   const reportTeacherData = teacherOptions.map((t) => {
     const plans = lessonPlans.filter((p) => p.teacherName === t.value);
@@ -1415,6 +1460,11 @@ const LessonPlanScreen = () => {
     };
   });
 
+  const visibleTabs = useMemo(
+    () => TABS.filter((tab) => tab.value !== 'reviewQueue' || canReviewSubmissions),
+    [canReviewSubmissions]
+  );
+
   return (
     <Box
       sx={{
@@ -1442,11 +1492,20 @@ const LessonPlanScreen = () => {
           lessonPlans={lessonPlans}
           diaryEntries={diaryEntries}
           onCardClick={(key) => {
-            if (key === 'pending_approvals') setActiveTab('reviewQueue');
-            else if (key === 'missed_lessons') {
+            if (key === 'pending_approvals') {
+              if (canReviewSubmissions) {
+                setActiveTab('reviewQueue');
+              } else {
+                setQuickFilter('pending_approval');
+                setActiveTab('lessonList');
+              }
+            } else if (key === 'missed_lessons') {
               setQuickFilter('missed_lessons');
               setActiveTab('lessonList');
-            } else if (key === 'syllabus_delay') setActiveTab('lessonList');
+            } else if (key === 'syllabus_delay') {
+              setQuickFilter('delayed_progress');
+              setActiveTab('lessonList');
+            }
           }}
         />
 
@@ -1464,7 +1523,7 @@ const LessonPlanScreen = () => {
               variant="scrollable"
               scrollButtons="auto"
             >
-              {TABS.map((tab) => (
+              {visibleTabs.map((tab) => (
                 <Tab
                   key={tab.value}
                   value={tab.value}
@@ -1489,6 +1548,7 @@ const LessonPlanScreen = () => {
               onChangeDate={setSelectedDate}
               slots={timelineData?.slots || []}
               isLoading={isTimelineLoading || isTimelineFetching}
+              isReadOnly={!isTimelineOwner}
               onAddLesson={(date, prefill) => {
                 setEditPlan(null);
                 setPrefillDate(date ?? null);
@@ -1550,7 +1610,7 @@ const LessonPlanScreen = () => {
               tableId="lesson-plan-list-table"
               tableTitle={`Lesson Plans (${filteredPlans.length})`}
               data={filteredPlans}
-              columns={lessonColumns}
+              columns={visibleLessonColumns}
               noDataText="No lesson plans match the current filters. Try adjusting or clearing filters, or add a new lesson plan."
             />
           )}
@@ -1558,6 +1618,7 @@ const LessonPlanScreen = () => {
           {activeTab === 'weeklyPlanner' && (
             <WeeklyPlannerTab
               lessonPlans={lessonPlans}
+              currentTeacherId={currentTeacherId}
               onAddLesson={openAddLesson}
               onEditLesson={openEditLesson}
               onViewDetails={openDetails}
@@ -1579,7 +1640,7 @@ const LessonPlanScreen = () => {
               tableId="teacher-diary-tab-table"
               tableTitle="Teacher Diary"
               data={lessonPlans.filter((p) => p.plannedDate <= todayIso)}
-              columns={diaryColumns}
+              columns={visibleDiaryColumns}
               noDataText="No past or today lessons available for diary."
             />
           )}

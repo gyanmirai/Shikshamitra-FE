@@ -58,6 +58,7 @@ type Props = {
   onSubmitDiary: (plan: any) => void;
   onSubmitPlan: (planId: string) => void;
   onCreateHomework?: (plan: any) => void;
+  isReadOnly?: boolean;
 };
 
 const DailyTimelineTab = ({
@@ -71,6 +72,7 @@ const DailyTimelineTab = ({
   onSubmitDiary,
   onSubmitPlan,
   onCreateHomework,
+  isReadOnly = false,
 }: Props) => {
   const theme = useTheme();
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
@@ -515,53 +517,66 @@ const DailyTimelineTab = ({
                         justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
                         alignItems="center"
                       >
-                        {['Draft', 'NeedsChanges', 'Rejected'].includes(planStatus) && (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            color="primary"
-                            startIcon={<Iconify icon="solar:plain-bold" width={16} />}
-                            onClick={() => onSubmitPlan(plan.id || plan.Id)}
-                          >
-                            Submit
-                          </Button>
-                        )}
-                        {planStatus === 'Approved' && (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            color="success"
-                            startIcon={<Iconify icon="solar:notebook-bookmark-bold" width={16} />}
-                            onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
-                          >
-                            Record Diary
-                          </Button>
-                        )}
-                        {planStatus === 'Submitted' && (
+                        {isReadOnly ? (
                           <Button
                             variant="outlined"
                             size="small"
-                            disabled
-                            startIcon={<Iconify icon="solar:clock-circle-bold" width={16} />}
+                            startIcon={<Iconify icon="solar:eye-bold" width={16} />}
+                            onClick={() => normalizedPlan && onViewDetails(normalizedPlan)}
                           >
-                            Pending HOD
+                            View Details
                           </Button>
-                        )}
+                        ) : (
+                          <>
+                            {['Draft', 'NeedsChanges', 'Rejected'].includes(planStatus) && (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                color="primary"
+                                startIcon={<Iconify icon="solar:plain-bold" width={16} />}
+                                onClick={() => onSubmitPlan(plan.id || plan.Id)}
+                              >
+                                Submit
+                              </Button>
+                            )}
+                            {planStatus === 'Approved' && (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                color="success"
+                                startIcon={<Iconify icon="solar:notebook-bookmark-bold" width={16} />}
+                                onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
+                              >
+                                Record Diary
+                              </Button>
+                            )}
+                            {planStatus === 'Submitted' && (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                disabled
+                                startIcon={<Iconify icon="solar:clock-circle-bold" width={16} />}
+                              >
+                                Pending HOD
+                              </Button>
+                            )}
 
-                        {planStatus !== 'Submitted' && (
-                          <IconButton
-                            size="small"
-                            title="More actions"
-                            onClick={(e) =>
-                              normalizedPlan && openCardMenu(e.currentTarget, normalizedPlan)
-                            }
-                            sx={{
-                              border: (t) => `1px solid ${t.palette.divider}`,
-                              '&:hover': { bgcolor: 'action.hover' },
-                            }}
-                          >
-                            <Iconify icon="eva:more-vertical-fill" width={18} />
-                          </IconButton>
+                            {planStatus !== 'Submitted' && (
+                              <IconButton
+                                size="small"
+                                title="More actions"
+                                onClick={(e) =>
+                                  normalizedPlan && openCardMenu(e.currentTarget, normalizedPlan)
+                                }
+                                sx={{
+                                  border: (t) => `1px solid ${t.palette.divider}`,
+                                  '&:hover': { bgcolor: 'action.hover' },
+                                }}
+                              >
+                                <Iconify icon="eva:more-vertical-fill" width={18} />
+                              </IconButton>
+                            )}
+                          </>
                         )}
                       </Stack>
                     ) : (
@@ -571,27 +586,29 @@ const DailyTimelineTab = ({
                         justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
                         alignItems="center"
                       >
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          size="small"
-                          startIcon={<Iconify icon="mdi:plus-circle-outline" />}
-                          disabled={slot.isPlanCreationBlocked}
-                          onClick={() =>
-                            onAddLesson(selectedDate, {
-                              timetableSlotId: slot.timetableSlotId,
-                              period: slot.periodName,
-                              className: slot.standardName,
-                              divisionName: slot.divisionName,
-                              subjectName: slot.subjectName,
-                              standardId: slot.standardId,
-                              divisionId: slot.divisionId,
-                              subjectId: slot.subjectId,
-                            })
-                          }
-                        >
-                          {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
-                        </Button>
+                        {!isReadOnly && (
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            size="small"
+                            startIcon={<Iconify icon="mdi:plus-circle-outline" />}
+                            disabled={slot.isPlanCreationBlocked}
+                            onClick={() =>
+                              onAddLesson(selectedDate, {
+                                timetableSlotId: slot.timetableSlotId,
+                                period: slot.periodName,
+                                className: slot.standardName,
+                                divisionName: slot.divisionName,
+                                subjectName: slot.subjectName,
+                                standardId: slot.standardId,
+                                divisionId: slot.divisionId,
+                                subjectId: slot.subjectId,
+                              })
+                            }
+                          >
+                            {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
+                          </Button>
+                        )}
                       </Stack>
                     )}
                   </Grid>
