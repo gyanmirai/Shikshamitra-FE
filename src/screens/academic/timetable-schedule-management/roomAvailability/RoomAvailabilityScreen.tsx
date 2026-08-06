@@ -72,6 +72,7 @@ const RoomAvailabilityScreen = () => {
   const [filters, setFilters] = useState<RoomAvailabilityFilters>(
     DEFAULT_ROOM_AVAILABILITY_FILTERS
   );
+  const [reservationDateFilter, setReservationDateFilter] = useState<string>('');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [detailRoom, setDetailRoom] = useState<RoomAvailabilityItem | null>(null);
   const [isDetailOpen, setDetailOpen] = useState(false);
@@ -120,7 +121,10 @@ const RoomAvailabilityScreen = () => {
   }, [buildings, filters.building]);
 
   const availability = useRoomAvailability(filters);
-  const reservationsHook = useRoomReservations();
+  const reservationsHook = useRoomReservations({
+    isApprovalView: activeTab === 'approvals',
+    createdDate: reservationDateFilter || undefined,
+  });
 
   // Initial load
   useEffect(() => {
@@ -367,6 +371,19 @@ const RoomAvailabilityScreen = () => {
           </Tabs>
 
           {/* Right side: View Switcher & Filters — only for availability tab */}
+          {(activeTab === 'reservations' || activeTab === 'approvals') && (
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, py: 0.5 }}>
+              <AcademicDatePicker
+                label="Filter by Created Date"
+                value={reservationDateFilter ? dayjs(reservationDateFilter) : null}
+                onChange={(value) => {
+                  setReservationDateFilter(value ? value.format('YYYY-MM-DD') : '');
+                }}
+                slotProps={{ textField: { size: 'small', sx: { minWidth: 200 } } }}
+              />
+            </Stack>
+          )}
+
           {activeTab === 'availability' && (
             <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, py: 0.5 }}>
               <AcademicDatePicker
