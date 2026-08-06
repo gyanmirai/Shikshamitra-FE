@@ -195,8 +195,11 @@ export function useRoomReservations() {
             ? 'rejected'
             : r.status === 2
               ? 'pending'
-              : 'none',
+              : r.status === 7
+                ? 'cancelled'
+                : 'none',
       createdAt: r.creationTime || '',
+      creatorId: r.creatorId || undefined,
       remarks: r.remarks,
       isRecurring: r.isRecurring,
       recurringUntilDate: r.recurringUntilDate ? r.recurringUntilDate.split('T')[0] : undefined,
@@ -258,8 +261,10 @@ export function useRoomSuggestions() {
           endTime: requirements.endTime,
           requiredCapacity: requirements.requiredCapacity || 0,
           requiredFacilities: requirements.requiredFacilities,
-          preferredBuildingId: requirements.preferredBuilding,
+          preferredBuildingId: requirements.preferredBuilding === 'all' || !requirements.preferredBuilding ? undefined : requirements.preferredBuilding,
           standardId: undefined,
+          page: requirements.page,
+          limit: requirements.limit || 50,
         };
         const response = await suggestRooms(payload).unwrap();
 
@@ -441,7 +446,9 @@ export function useCreateRoomReservation() {
             ? 'approved'
             : response.status === 8
               ? 'rejected'
-              : 'pending',
+              : response.status === 7
+                ? 'cancelled'
+                : 'pending',
         createdAt: response.creationTime,
       } as any;
     },

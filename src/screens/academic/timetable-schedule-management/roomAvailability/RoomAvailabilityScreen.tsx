@@ -9,6 +9,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AcademicDatePicker } from 'src/components/academic-date-picker';
+import { useSession } from 'next-auth/react';
 import { EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import {
@@ -56,6 +57,16 @@ type BuildingWithFloors = {
 };
 
 const RoomAvailabilityScreen = () => {
+  const { data: session } = useSession() as any;
+
+  const isApprover = useMemo(() => {
+    const role = session?.profile?.role;
+    if (!role) return false;
+    const roles = Array.isArray(role) ? role : [role];
+    const approverRoles = ['admin', 'coordinator', 'hod', 'principal'];
+    return roles.some((r: any) => typeof r === 'string' && approverRoles.includes(r.toLowerCase()));
+  }, [session]);
+
   // ── State ──────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<TabType>('availability');
   const [filters, setFilters] = useState<RoomAvailabilityFilters>(
@@ -117,6 +128,12 @@ const RoomAvailabilityScreen = () => {
     reservationsHook.fetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!isApprover && activeTab === 'approvals') {
+      setActiveTab('availability');
+    }
+  }, [isApprover, activeTab]);
 
   // Re-fetch availability when filters change
   useEffect(() => {
@@ -328,23 +345,25 @@ const RoomAvailabilityScreen = () => {
               icon={<EventBusy />}
               iconPosition="start"
             />
-            <Tab
-              value="approvals"
-              label={
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <CheckCircle fontSize="small" />
-                  <span>Approvals</span>
-                  {pendingCount > 0 && (
-                    <Chip
-                      size="small"
-                      label={pendingCount}
-                      color="warning"
-                      sx={{ height: 18, fontSize: 10 }}
-                    />
-                  )}
-                </Stack>
-              }
-            />
+            {isApprover && (
+              <Tab
+                value="approvals"
+                label={
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <CheckCircle fontSize="small" />
+                    <span>Approvals</span>
+                    {pendingCount > 0 && (
+                      <Chip
+                        size="small"
+                        label={pendingCount}
+                        color="warning"
+                        sx={{ height: 18, fontSize: 10 }}
+                      />
+                    )}
+                  </Stack>
+                }
+              />
+            )}
           </Tabs>
 
           {/* Right side: View Switcher & Filters — only for availability tab */}
@@ -410,7 +429,7 @@ const RoomAvailabilityScreen = () => {
               isLoading={availability.isLoading || availability.isFetching}
               canReserve
               canMaintenance
-              canApprove
+              canApprove={isApprover}
               onViewRoom={handleViewRoom}
               onReserveRoom={handleOpenReservation}
               onViewSchedule={handleViewSchedule}
@@ -423,7 +442,7 @@ const RoomAvailabilityScreen = () => {
         {activeTab === 'reservations' && (
           <RoomReservationsTab
             reservations={reservationsHook.data}
-            canApprove
+            canApprove={isApprover}
             pendingAction={pendingAction}
             onCancel={handleCancelReservation}
             onApprove={handleApproveReservation}
@@ -433,7 +452,7 @@ const RoomAvailabilityScreen = () => {
         )}
 
         {/* Approvals Tab */}
-        {activeTab === 'approvals' && (
+        {isApprover && activeTab === 'approvals' && (
           <RoomApprovalQueue
             reservations={reservationsHook.data}
             pendingAction={pendingAction}
