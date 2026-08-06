@@ -32,6 +32,7 @@ import type {
   RoomAvailabilityItem,
   ReservationRequirements,
   RoomAvailabilityFilters,
+  GetReservationsParams,
 } from './types';
 
 const fakeDelay = (ms = 600) => new Promise((res) => setTimeout(res, ms));
@@ -130,8 +131,8 @@ export function useRoomDetails(roomId: string | null) {
 }
 
 // ─── useRoomReservations ──────────────────────────────────────────────────────
-export function useRoomReservations() {
-  const { data, isLoading, isError, refetch } = useGetReservationsQuery(undefined);
+export function useRoomReservations(params?: GetReservationsParams) {
+  const { data, isLoading, isError, refetch } = useGetReservationsQuery(params || {});
   const [cancelReservation] = useCancelRoomReservationMutation();
   const [approveReservation] = useApproveRoomReservationMutation();
   const [rejectReservation] = useRejectRoomReservationMutation();

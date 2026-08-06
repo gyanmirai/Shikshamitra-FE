@@ -236,6 +236,11 @@ export interface ReservationRequirements {
   limit?: number;
 }
 
+export interface GetReservationsParams {
+  createdDate?: string;
+  isApprovalView?: boolean;
+}
+
 export interface RecurringConfig {
   repeatType: 'daily' | 'weekly' | 'monthly' | 'custom';
   repeatDays?: number[];

@@ -13,9 +13,10 @@ export const roomAvailabilityApi = academicApi.injectEndpoints({
     }),
 
     getReservations: builder.query({
-      query: () => ({
+      query: (params) => ({
         url: 'academics/timetable/room-reservations',
         method: 'GET',
+        params,
       }),
       providesTags: [academicType.timetableManagement],
     }),
