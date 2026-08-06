@@ -66,6 +66,14 @@ export interface IExamFormValues {
   /** key: subjectId → divisionId → { roomIds, capacity } */
   roomDetails: IRoomDetails;
   status?: number;
+  startDate?: string;
+  endDate?: string;
+  creatorName?: string;
+  standardName?: string;
+  issueCount?: number;
+  warningCount?: number;
+  missingRoomAssignmentCount?: number;
+  subjectCount?: number;
 }
 
 // Legacy aliases kept for gradual migration — remove after all consumers are updated

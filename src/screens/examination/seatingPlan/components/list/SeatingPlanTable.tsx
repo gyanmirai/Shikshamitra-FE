@@ -1,3 +1,4 @@
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Chip, Stack, Button, Tooltip, Typography, LinearProgress } from '@mui/material';
@@ -15,12 +16,6 @@ const PRIMARY_ACTION: Record<SeatingPlanListRow['status'], { label: string; icon
   completed: { label: 'View Plan', icon: 'mdi:eye-outline' },
   published: { label: 'View / Print', icon: 'mdi:printer-outline' },
 };
-
-function progressColor(progress: number) {
-  if (progress >= 100) return 'success.main';
-  if (progress > 0) return 'warning.main';
-  return 'text.disabled';
-}
 
 function divisionLabel(name: string) {
   if (name === 'Total') return name;
@@ -43,52 +38,58 @@ function DivisionProgressCell({ row }: { row: SeatingPlanListRow }) {
           },
         ];
 
+  const totalProgress = row.totalStudents > 0 ? Math.round((row.allocatedStudents / row.totalStudents) * 100) : 0;
+  const chipColor = totalProgress >= 100 ? 'success' : totalProgress > 0 ? 'warning' : 'default';
+
   return (
-    <Stack spacing={0.75} sx={{ minWidth: 220, maxWidth: 260 }}>
+    <Stack spacing={0.75} sx={{ minWidth: 200, maxWidth: 260, py: 0.5 }}>
       <Chip
         size="small"
-        label={`Total: ${row.allocatedStudents}/${row.totalStudents} allocated`}
+        variant="soft"
+        color={chipColor}
+        label={`Total: ${row.allocatedStudents}/${row.totalStudents} allocated (${totalProgress}%)`}
         sx={{
           alignSelf: 'flex-start',
           height: 22,
-          borderRadius: 1,
-          bgcolor: 'action.hover',
-          color: 'text.secondary',
-          fontWeight: 600,
+          fontSize: '0.7rem',
+          fontWeight: 700,
         }}
       />
-      {divisions.map((division) => (
-        <Tooltip
-          key={division.divisionId}
-          title={`${divisionLabel(division.divisionName)}: ${division.allocatedStudents}/${division.totalStudents} allocated`}
-          arrow
-        >
-          <Box>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-              <Typography variant="caption" color="text.primary" noWrap sx={{ maxWidth: 118, fontWeight: 600 }}>
-                {divisionLabel(division.divisionName)}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
-                {division.allocatedStudents}/{division.totalStudents} allocated
-              </Typography>
-            </Stack>
-            <LinearProgress
-              variant="determinate"
-              value={Math.min(100, Math.max(0, division.progress))}
-              sx={{
-                mt: 0.25,
-                height: 5,
-                borderRadius: 3,
-                bgcolor: 'divider',
-                '& .MuiLinearProgress-bar': {
+      {divisions.map((division) => {
+        const divProgress = Math.min(100, Math.max(0, division.progress));
+        return (
+          <Tooltip
+            key={division.divisionId}
+            title={`${divisionLabel(division.divisionName)}: ${division.allocatedStudents}/${division.totalStudents} allocated`}
+            arrow
+          >
+            <Box>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                <Typography variant="caption" color="text.primary" noWrap sx={{ maxWidth: 110, fontWeight: 700 }}>
+                  {divisionLabel(division.divisionName)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, fontWeight: 600 }}>
+                  {division.allocatedStudents}/{division.totalStudents} allocated
+                </Typography>
+              </Stack>
+              <LinearProgress
+                variant="determinate"
+                value={divProgress}
+                color={divProgress >= 100 ? 'success' : divProgress > 0 ? 'warning' : 'inherit'}
+                sx={{
+                  mt: 0.35,
+                  height: 5,
                   borderRadius: 3,
-                  bgcolor: progressColor(division.progress),
-                },
-              }}
-            />
-          </Box>
-        </Tooltip>
-      ))}
+                  bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.16),
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 3,
+                  },
+                }}
+              />
+            </Box>
+          </Tooltip>
+        );
+      })}
     </Stack>
   );
 }

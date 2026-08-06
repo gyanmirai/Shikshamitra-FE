@@ -54,6 +54,21 @@ export function validateSeatingDraft(draft: SeatingPlanDraft): {
     }
   });
 
+  // Assigned seat is marked as reserved.
+  draft.assignments.forEach((a) => {
+    const room = draft.rooms.find((r) => r.roomId === a.roomId);
+    const seat = room?.seats.find((s) => s.seatId === a.seatId);
+    if (seat?.isReserved) {
+      blockers.push({
+        code: 'RESERVED_SEAT_OCCUPIED',
+        message: `Seat #${seat.seatNumber} in ${room?.roomName ?? 'room'} is reserved and cannot be assigned to a student.`,
+        studentId: a.studentId,
+        seatId: a.seatId,
+        roomId: a.roomId,
+      });
+    }
+  });
+
   // Room capacity exceeded.
   draft.rooms.forEach((room) => {
     const occupied = draft.assignments.filter((a) => a.roomId === room.roomId).length;

@@ -309,10 +309,12 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               label: 'Date Range',
               align: 'left',
               isFilter: false,
-              render: (_value, row) =>
-                row.startDate && row.endDate
-                  ? `${dayjs(row.startDate).format('DD-MM-YYYY')} - ${dayjs(row.endDate).format('DD-MM-YYYY')}`
-                  : 'Not scheduled',
+              render: (_value, row) => {
+                if (!row.startDate) return 'Not scheduled';
+                const start = dayjs(row.startDate).format('DD-MM-YYYY');
+                const end = row.endDate ? dayjs(row.endDate).format('DD-MM-YYYY') : start;
+                return start === end ? start : `${start} - ${end}`;
+              },
             },
             {
               id: 'issueCount',
@@ -470,7 +472,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                   <Iconify icon="solar:danger-triangle-bold-duotone" width={20} color="warning.dark" />
                   <Box>
                     <Typography variant="body2" fontWeight={700} color="warning.dark">
-                      {selectedTimetable.issueCount} blocking issue{selectedTimetable.issueCount! > 1 ? 's' : ''} detected
+                      {selectedTimetable?.issueCount} blocking issue{(selectedTimetable?.issueCount ?? 0) > 1 ? 's' : ''} detected
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Publishing will fail. Open the exam schedule and fill in all required fields first.

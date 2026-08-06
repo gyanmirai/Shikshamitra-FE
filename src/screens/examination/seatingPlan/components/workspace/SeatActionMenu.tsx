@@ -1,8 +1,8 @@
 import type { UsePopoverReturn } from 'src/components/custom-popover';
 
 import { Iconify } from 'src/components/iconify';
+import { MenuList, MenuItem, Typography } from '@mui/material';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { MenuList, MenuItem, ListItemText, ListItemIcon } from '@mui/material';
 
 interface Props {
   hasStudent: boolean;
@@ -34,7 +34,7 @@ export default function SeatActionMenu({
           sx: {
             minWidth: 160,
             borderRadius: 1.5,
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)',
             p: 0.5,
           },
         },
@@ -51,17 +51,18 @@ export default function SeatActionMenu({
               sx={{
                 borderRadius: 1,
                 color: 'error.main',
-                py: 1,
-                px: 1.5,
+                py: 0.75,
+                px: 1.25,
+                gap: 1,
                 '&:hover': {
                   bgcolor: 'error.lighter',
                 },
               }}
             >
-              <ListItemIcon sx={{ color: 'inherit', minWidth: '32px !important' }}>
-                <Iconify icon="mdi:account-remove-outline" width={18} />
-              </ListItemIcon>
-              <ListItemText primary="Remove from Seat" primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }} />
+              <Iconify icon="mdi:account-remove-outline" width={18} />
+              <Typography variant="body2" fontWeight={600}>
+                Remove from Seat
+              </Typography>
             </MenuItem>
 
             <MenuItem
@@ -71,15 +72,14 @@ export default function SeatActionMenu({
               }}
               sx={{
                 borderRadius: 1,
-                py: 1,
-                px: 1.5,
+                py: 0.75,
+                px: 1.25,
                 mt: 0.5,
+                gap: 1,
               }}
             >
-              <ListItemIcon sx={{ minWidth: '32px !important' }}>
-                <Iconify icon="mdi:note-plus-outline" width={18} />
-              </ListItemIcon>
-              <ListItemText primary="Add Note" primaryTypographyProps={{ variant: 'body2' }} />
+              <Iconify icon="mdi:note-plus-outline" width={18} />
+              <Typography variant="body2">Add Note</Typography>
             </MenuItem>
           </>
         ) : (
@@ -91,14 +91,18 @@ export default function SeatActionMenu({
               }}
               sx={{
                 borderRadius: 1,
-                py: 1,
-                px: 1.5,
+                py: 0.75,
+                px: 1.25,
+                gap: 1,
               }}
             >
-              <ListItemIcon sx={{ minWidth: '32px !important' }}>
-                <Iconify icon={isReserved ? 'mdi:lock-open-outline' : 'mdi:lock-outline'} width={18} />
-              </ListItemIcon>
-              <ListItemText primary={isReserved ? 'Unreserve Seat' : 'Reserve Seat'} primaryTypographyProps={{ variant: 'body2' }} />
+              <Iconify
+                icon={isReserved ? 'mdi:lock-open-outline' : 'mdi:lock-outline'}
+                width={18}
+              />
+              <Typography variant="body2">
+                {isReserved ? 'Unreserve Seat' : 'Reserve Seat'}
+              </Typography>
             </MenuItem>
 
             <MenuItem
@@ -108,15 +112,14 @@ export default function SeatActionMenu({
               }}
               sx={{
                 borderRadius: 1,
-                py: 1,
-                px: 1.5,
+                py: 0.75,
+                px: 1.25,
                 mt: 0.5,
+                gap: 1,
               }}
             >
-              <ListItemIcon sx={{ minWidth: '32px !important' }}>
-                <Iconify icon="mdi:note-plus-outline" width={18} />
-              </ListItemIcon>
-              <ListItemText primary="Add Note" primaryTypographyProps={{ variant: 'body2' }} />
+              <Iconify icon="mdi:note-plus-outline" width={18} />
+              <Typography variant="body2">Add Note</Typography>
             </MenuItem>
           </>
         )}

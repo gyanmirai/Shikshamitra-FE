@@ -1,14 +1,25 @@
-import { Box, Alert, Typography } from '@mui/material';
+import { Box, Alert, Skeleton, Typography } from '@mui/material';
 
 import type { SeatingValidationIssue } from '../../types';
 
 export default function AllocationConflictPanel({
   blockers,
   warnings,
+  isLoading = false,
 }: {
   blockers: SeatingValidationIssue[];
   warnings: SeatingValidationIssue[];
+  isLoading?: boolean;
 }) {
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Skeleton variant="rounded" height={44} />
+        <Skeleton variant="rounded" height={44} />
+      </Box>
+    );
+  }
+
   if (blockers.length === 0 && warnings.length === 0) {
     return (
       <Alert severity="success" variant="outlined" sx={{ fontSize: '0.8rem' }}>

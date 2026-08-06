@@ -3,8 +3,11 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useTheme, alpha } from '@mui/material/styles';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
@@ -20,9 +23,6 @@ import {
   Drawer,
   IconButton,
 } from '@mui/material';
-import { useTheme, alpha } from '@mui/material/styles';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
 import {
   useGetExamScheduleQuery,
   useGetExamSubjectsQuery,
@@ -136,7 +136,9 @@ const ScheduleExamPreviewDrawer = ({
       warningCount,
     }
     : exam;
-  const dateRange = previewExam?.startDate && previewExam?.endDate ? `${dayjs(previewExam?.startDate).format('DD-MM-YYYY')} - ${dayjs(previewExam?.endDate).format('DD-MM-YYYY')}` : '';
+  const startDateStr = previewExam?.startDate ? dayjs(previewExam.startDate).format('DD-MM-YYYY') : '';
+  const endDateStr = previewExam?.endDate ? dayjs(previewExam.endDate).format('DD-MM-YYYY') : startDateStr;
+  const dateRange = startDateStr ? (startDateStr === endDateStr ? startDateStr : `${startDateStr} - ${endDateStr}`) : '';
 
   const dialogTitle = (
     <Box
@@ -268,8 +270,8 @@ const ScheduleExamPreviewDrawer = ({
               sx={{
                 p: 2,
                 borderRadius: 1.5,
-                bgcolor: (theme) => alpha(theme.palette.grey[500], 0.03),
-                border: (theme) => `1px solid ${theme.palette.divider}`,
+                bgcolor: (t) => alpha(t.palette.grey[500], 0.03),
+                border: (t) => `1px solid ${t.palette.divider}`,
               }}
             >
               <Grid container spacing={2}>

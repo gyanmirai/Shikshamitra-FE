@@ -5,17 +5,43 @@ import {
   Box,
   Menu,
   Button,
+  Checkbox,
   MenuItem,
   TextField,
   Typography,
   InputAdornment,
+  FormControlLabel,
 } from '@mui/material';
 
 import StudentCard from './StudentCard';
 
 import type { SeatingStudent, SeatingAssignment } from '../../types';
 
-type SortKey = 'roll-number' | 'alphabetical' | 'division' | 'random';
+type SortKey =
+  | 'roll-number'
+  | 'alphabetical'
+  | 'division'
+  | 'unallocated-first'
+  | 'special-first'
+  | 'random';
+
+const SORT_OPTIONS: { key: SortKey; label: string; icon: string }[] = [
+  { key: 'roll-number', label: 'Roll Number (Ascending)', icon: 'mdi:format-list-numbered' },
+  { key: 'alphabetical', label: 'Student Name (A - Z)', icon: 'mdi:sort-alphabetical-ascending' },
+  { key: 'division', label: 'Division Name', icon: 'mdi:domain' },
+  { key: 'unallocated-first', label: 'Unallocated First', icon: 'mdi:account-clock-outline' },
+  { key: 'special-first', label: 'Special Requirements First', icon: 'mdi:star-outline' },
+  { key: 'random', label: 'Random Shuffle', icon: 'mdi:shuffle-variant' },
+];
+
+const SORT_KEY_LABELS: Record<SortKey, string> = {
+  'roll-number': 'Roll Number',
+  'alphabetical': 'Name (A-Z)',
+  division: 'Division',
+  'unallocated-first': 'Unallocated First',
+  'special-first': 'Special First',
+  random: 'Random Shuffle',
+};
 
 interface Props {
   students: SeatingStudent[];
@@ -23,6 +49,8 @@ interface Props {
   conflictStudentIds: Set<string>;
   multiSelectedIds: Set<string>;
   onToggleMultiSelect: (studentId: string) => void;
+  onSelectAll?: (studentIds: string[]) => void;
+  onDeselectAll?: () => void;
   onBulkAllocateSequential: (studentIds: string[]) => void;
   onBulkExclude: (studentIds: string[]) => void;
   isReadOnly?: boolean;
@@ -35,6 +63,8 @@ export default function StudentQueuePanel({
   conflictStudentIds,
   multiSelectedIds,
   onToggleMultiSelect,
+  onSelectAll,
+  onDeselectAll,
   onBulkAllocateSequential,
   onBulkExclude,
   isReadOnly,
@@ -65,18 +95,61 @@ export default function StudentQueuePanel({
         return list.sort((a, b) => a.studentName.localeCompare(b.studentName));
       case 'division':
         return list.sort((a, b) => (a.divisionName ?? '').localeCompare(b.divisionName ?? ''));
+      case 'unallocated-first':
+        return list.sort((a, b) => {
+          const aAlloc = assignedIds.has(a.studentId) ? 1 : 0;
+          const bAlloc = assignedIds.has(b.studentId) ? 1 : 0;
+          if (aAlloc !== bAlloc) return aAlloc - bAlloc;
+          return a.rollNo - b.rollNo;
+        });
+      case 'special-first':
+        return list.sort((a, b) => {
+          const aSpec = a.hasSpecialRequirement ? 0 : 1;
+          const bSpec = b.hasSpecialRequirement ? 0 : 1;
+          if (aSpec !== bSpec) return aSpec - bSpec;
+          return a.rollNo - b.rollNo;
+        });
       case 'random':
         return list.sort(() => Math.random() - 0.5);
       case 'roll-number':
       default:
         return list.sort((a, b) => a.rollNo - b.rollNo);
     }
-  }, [searched, sortKey]);
+  }, [searched, sortKey, assignedIds]);
+
+  const unallocatedVisibleStudents = useMemo(
+    () => sorted.filter((s) => !assignedIds.has(s.studentId)),
+    [sorted, assignedIds]
+  );
+  const unallocatedVisibleIds = useMemo(
+    () => unallocatedVisibleStudents.map((s) => s.studentId),
+    [unallocatedVisibleStudents]
+  );
+
+  const selectedUnallocatedIds = useMemo(
+    () => Array.from(multiSelectedIds).filter((id) => !assignedIds.has(id)),
+    [multiSelectedIds, assignedIds]
+  );
+
+  const isAllUnallocatedSelected =
+    unallocatedVisibleIds.length > 0 &&
+    unallocatedVisibleIds.every((id) => multiSelectedIds.has(id));
+  const isSomeSelected = unallocatedVisibleIds.some((id) => multiSelectedIds.has(id));
+  const isIndeterminate = isSomeSelected && !isAllUnallocatedSelected;
+
+  const handleMasterCheckboxToggle = () => {
+    if (isReadOnly || unallocatedVisibleIds.length === 0) return;
+    if (isAllUnallocatedSelected) {
+      onDeselectAll?.();
+    } else {
+      onSelectAll?.(unallocatedVisibleIds);
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-
-      <Box sx={{ display: 'flex', gap: 1, py: 1 }}>
+      {/* Search Bar */}
+      <Box sx={{ py: 1 }}>
         <TextField
           size="small"
           fullWidth
@@ -93,53 +166,114 @@ export default function StudentQueuePanel({
         />
       </Box>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+      {/* Select All Checkbox & Sort Header */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 0.5,
+          mb: 1,
+          px: 0.5,
+        }}
+      >
+        {!isReadOnly && (
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={isAllUnallocatedSelected}
+                indeterminate={isIndeterminate}
+                disabled={unallocatedVisibleIds.length === 0}
+                onChange={handleMasterCheckboxToggle}
+                sx={{ p: 0.5 }}
+              />
+            }
+            label={
+              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ userSelect: 'none' }}>
+                {isAllUnallocatedSelected ? 'Deselect All' : 'Select All'}
+                {multiSelectedIds.size > 0 && ` (${multiSelectedIds.size})`}
+              </Typography>
+            }
+            sx={{ mr: 0 }}
+          />
+        )}
+
         <Button
           size="small"
           variant="text"
+          startIcon={<Iconify icon="mdi:sort-variant" width={16} />}
           endIcon={<Iconify icon="mdi:chevron-down" width={16} />}
           onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
+          sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem', ml: 'auto' }}
         >
-          Sort
+          {SORT_KEY_LABELS[sortKey]}
         </Button>
         <Menu anchorEl={bulkMenuAnchor} open={!!bulkMenuAnchor} onClose={() => setBulkMenuAnchor(null)}>
-          {(['roll-number', 'alphabetical', 'division', 'random'] as SortKey[]).map((key) => (
+          {SORT_OPTIONS.map((opt) => (
             <MenuItem
-              key={key}
-              selected={sortKey === key}
+              key={opt.key}
+              selected={sortKey === opt.key}
               onClick={() => {
-                setSortKey(key);
+                setSortKey(opt.key);
                 setBulkMenuAnchor(null);
               }}
             >
-              {key}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Iconify icon={opt.icon} width={16} />
+                <Typography variant="body2">{opt.label}</Typography>
+              </Box>
             </MenuItem>
           ))}
         </Menu>
+      </Box>
 
-        {multiSelectedIds.size > 0 && (
+      {/* Bulk actions header bar */}
+      {multiSelectedIds.size > 0 && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 1,
+            py: 0.75,
+            mb: 1,
+            borderRadius: 1,
+            bgcolor: 'action.selected',
+            border: '1px solid',
+            borderColor: 'primary.main',
+            gap: 0.5,
+          }}
+        >
+          <Typography variant="caption" fontWeight={700} color="primary.main">
+            {multiSelectedIds.size} Selected
+          </Typography>
           <Box sx={{ display: 'flex', gap: 0.5 }}>
             <Button
               size="small"
-              variant="outlined"
-              disabled={isReadOnly}
-              onClick={() => onBulkAllocateSequential([...multiSelectedIds])}
+              variant="contained"
+              disabled={isReadOnly || selectedUnallocatedIds.length === 0}
+              onClick={() => onBulkAllocateSequential(selectedUnallocatedIds)}
+              sx={{ fontSize: '0.7rem', px: 1, py: 0.25 }}
             >
-              Allocate Sequentially ({multiSelectedIds.size})
+              Allocate ({selectedUnallocatedIds.length})
             </Button>
             <Button
               size="small"
               color="error"
-              variant="text"
+              variant="outlined"
               disabled={isReadOnly}
               onClick={() => onBulkExclude([...multiSelectedIds])}
+              sx={{ fontSize: '0.7rem', px: 1, py: 0.25 }}
             >
               Exclude
             </Button>
           </Box>
-        )}
-      </Box>
+        </Box>
+      )}
 
+      {/* Student List */}
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pr: 0.5 }}>
           {isLoading ? (
