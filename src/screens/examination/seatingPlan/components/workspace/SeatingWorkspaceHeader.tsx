@@ -1,6 +1,18 @@
 import { Iconify } from 'src/components/iconify';
+import SubmitButton from 'src/components/submit-button';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Box, Chip, Button, Divider, Tooltip, MenuList, MenuItem, Typography, IconButton } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Button,
+  Divider,
+  Tooltip,
+  MenuList,
+  MenuItem,
+  Typography,
+  IconButton,
+  LinearProgress,
+} from '@mui/material';
 
 interface Props {
   examName?: string;
@@ -8,6 +20,7 @@ interface Props {
   standardName?: string;
   isDirty?: boolean;
   isSaving?: boolean;
+  isFetching?: boolean;
   isReadOnly?: boolean;
   canAutoAllocate: boolean;
   canFinalize: boolean;
@@ -27,6 +40,7 @@ export default function SeatingWorkspaceHeader({
   standardName,
   isDirty,
   isSaving,
+  isFetching,
   isReadOnly,
   canAutoAllocate,
   canFinalize,
@@ -59,6 +73,12 @@ export default function SeatingWorkspaceHeader({
         gap: 1,
       }}
     >
+      {(isFetching || isSaving) && (
+        <LinearProgress
+          color="primary"
+          sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 12 }}
+        />
+      )}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <IconButton size="small" onClick={onBack}>
           <Iconify icon="mdi:arrow-left" width={18} />
@@ -72,7 +92,12 @@ export default function SeatingWorkspaceHeader({
           size="small"
           variant="outlined"
           color={isDirty ? 'warning' : 'success'}
-          icon={<Iconify icon={isDirty ? 'mdi:content-save-alert-outline' : 'mdi:check-circle-outline'} width={14} />}
+          icon={
+            <Iconify
+              icon={isDirty ? 'mdi:content-save-alert-outline' : 'mdi:check-circle-outline'}
+              width={14}
+            />
+          }
           label={isDirty ? 'Unsaved changes' : 'Saved'}
         />
       </Box>
@@ -93,15 +118,16 @@ export default function SeatingWorkspaceHeader({
           </span>
         </Tooltip>
         <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-        <Button
+        <SubmitButton
           size="small"
           variant="outlined"
+          buttonText={isSaving ? 'Saving…' : 'Save Draft'}
+          loading={!!isSaving}
           startIcon={<Iconify icon="mdi:content-save-outline" width={16} />}
           onClick={onSaveDraft}
           disabled={isSaving || isReadOnly}
-        >
-          {isSaving ? 'Saving…' : 'Save Draft'}
-        </Button>
+          type="button"
+        />
         <Button
           size="small"
           variant="outlined"
@@ -123,7 +149,11 @@ export default function SeatingWorkspaceHeader({
         <IconButton size="small" onClick={morePopover.onOpen}>
           <Iconify icon="eva:more-vertical-fill" width={18} />
         </IconButton>
-        <CustomPopover open={morePopover.open} anchorEl={morePopover.anchorEl} onClose={morePopover.onClose}>
+        <CustomPopover
+          open={morePopover.open}
+          anchorEl={morePopover.anchorEl}
+          onClose={morePopover.onClose}
+        >
           <MenuList sx={{ minWidth: 200 }}>
             <MenuItem disabled>
               <Iconify icon="mdi:file-export-outline" width={16} style={{ marginRight: 8 }} />

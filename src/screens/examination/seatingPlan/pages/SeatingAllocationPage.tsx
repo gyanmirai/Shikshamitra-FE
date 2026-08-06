@@ -199,6 +199,14 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
   const isSeatLayoutDataLoading = (isSeatLayoutLoading || isSeatLayoutFetching) && !seatLayoutData;
   const isPlanDraftDataLoading = (isPlanDraftLoading || isPlanDraftFetching) && !planDraftData;
 
+  const isFetchingAny =
+    isScopesFetching ||
+    isDivisionsFetching ||
+    isRoomsFetching ||
+    isStudentsFetching ||
+    isSeatLayoutFetching ||
+    isPlanDraftFetching;
+
   // ── Mutations via useQueryAndMutation (skill § 4.2) ─────────────────────
   const [saveSeatingPlanScope, { isLoading: isSavingScope }] = useQueryAndMutation({
     type: 'mutation',
@@ -292,7 +300,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
       const overData = over.data.current as
         | { type: string; seat?: SeatingSeat; roomId?: string }
         | undefined;
-      if (!activeData || overData?.type !== 'seat' || !overData.seat || !overData.roomId) {
+      if (!activeData || overData?.type !== 'seat' || !overData.seat || !overData.roomId || overData.seat.isDisabled) {
         return;
       }
       const existing = assignmentBySeat.get(overData.seat.seatId);
@@ -509,63 +517,32 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     [draft]
   );
 
-  const applyAutoAllocate = useCallback(async () => {
+  const applyAutoAllocate = useCallback(() => {
     if (selectedPlanIsLocked) return;
-    try {
-      const response = await autoAllocatePreview({
-        examId,
-        body: {
-          roomIds: draft.roomIds,
-          seatingPlanId: selectedPlanId,
-          strategy: draft.allocationRules.strategy,
-          fillDirection: draft.allocationRules.fillDirection,
-          leaveGap: draft.allocationRules.leaveGap,
-          mixDivisions: draft.allocationRules.mixDivisions,
-          specialRequirementPriority: draft.allocationRules.specialRequirementPriority,
-          excludedStudentIds: draft.excludedStudentIds,
-        },
-      }).unwrap();
-
-      const proposedAssignments = response.assignments.map((a: any) => ({
-        studentId: a.studentId,
-        roomId: a.roomId,
-        seatId: seatId(a.roomId, a.seatNumber),
-        seatNumber: a.seatNumber,
-        benchId: a.benchId,
-        assignedBy: 'auto' as const,
-      }));
-      const proposedStudentIds = new Set(
-        proposedAssignments.map((a: { studentId: string }) => a.studentId)
-      );
-      const next = [
-        ...draft.assignments.filter((a) => !proposedStudentIds.has(a.studentId)),
-        ...proposedAssignments,
-      ];
-      actions.applyAssignments(next, 'auto-allocate');
-      shikshaMitraToast.success({ message: 'Auto-allocation applied.' });
-    } catch {
-      // Fall back to client-side auto allocate
-      const result = autoAllocate(
-        draft.students,
-        draft.rooms,
-        draft.assignments,
-        draft.allocationRules,
-        draft.excludedStudentIds
-      );
-      actions.applyAssignments(result.assignments, 'auto-allocate');
-      shikshaMitraToast.info({ message: 'Applied local auto-allocation proposal.' });
-    }
-  }, [draft, actions, examId, autoAllocatePreview, selectedPlanId, selectedPlanIsLocked]);
+    const result = autoAllocate(
+      draft.students,
+      draft.rooms,
+      draft.assignments,
+      draft.allocationRules,
+      draft.excludedStudentIds
+    );
+    actions.applyAssignments(result.assignments, 'auto-allocate');
+    shikshaMitraToast.success({ message: 'Auto-allocation applied.' });
+  }, [draft, actions, selectedPlanIsLocked]);
 
   const handleBulkAllocateSequential = useCallback(
     (studentIds: string[]) => {
       if (selectedPlanIsLocked) return;
-      if (!activeRoom) return;
-      const occupiedSeatIds = new Set(draft.assignments.map((a) => a.seatId));
-      const freeSeats = activeRoom.seats.filter(
-        (s) => !s.isDisabled && !occupiedSeatIds.has(s.seatId)
+      if (!activeRoom || studentIds.length === 0) return;
+      const studentIdSet = new Set(studentIds);
+      const existingOtherAssignments = draft.assignments.filter(
+        (a) => !studentIdSet.has(a.studentId)
       );
-      const next = [...draft.assignments];
+      const occupiedSeatIds = new Set(existingOtherAssignments.map((a) => a.seatId));
+      const freeSeats = activeRoom.seats.filter(
+        (s) => !s.isDisabled && !s.isReserved && !occupiedSeatIds.has(s.seatId)
+      );
+      const next = [...existingOtherAssignments];
       studentIds.forEach((studentId, idx) => {
         const seat = freeSeats[idx];
         if (!seat) return;
@@ -685,6 +662,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
           standardName={draft.standardName}
           isDirty={draft.isDirty}
           isSaving={isSaving}
+          isFetching={isFetchingAny}
           canAutoAllocate={!!activeRoom && canAutoAllocate && !selectedPlanIsLocked}
           canFinalize={counters.pendingCount === 0 && validation.blockers.length === 0}
           isReadOnly={selectedPlanIsLocked}
@@ -857,6 +835,14 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
                     return next;
                   })
                 }
+                onSelectAll={(ids) => {
+                  if (selectedPlanIsLocked) return;
+                  setMultiSelectedIds(new Set(ids));
+                }}
+                onDeselectAll={() => {
+                  if (selectedPlanIsLocked) return;
+                  setMultiSelectedIds(new Set());
+                }}
                 onBulkAllocateSequential={handleBulkAllocateSequential}
                 onBulkExclude={(ids) => {
                   if (selectedPlanIsLocked) return;
@@ -864,6 +850,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
                     ...d,
                     excludedStudentIds: [...new Set([...d.excludedStudentIds, ...ids])],
                   }));
+                  setMultiSelectedIds(new Set());
                 }}
                 isReadOnly={selectedPlanIsLocked}
               />
@@ -926,6 +913,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
               <SeatInspectorPanel
                 blockers={validation.blockers}
                 warnings={validation.warnings}
+                isLoading={isPlanDraftDataLoading || isScopesDataLoading}
                 onOpenRules={() => setRulesOpen(true)}
               />
             </Paper>

@@ -2,20 +2,21 @@
 
 import type { RootState, AppDispatch } from 'src/redux/store';
 
+import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { academicPermissions } from 'src/constants/academic-menu';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Iconify } from 'src/components/iconify';
-import { GlobalIcons } from 'src/utils/icons';
-import { Label } from 'src/components/label';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
@@ -39,8 +40,8 @@ import {
   useLazyDownloadSeatingPrintExcelQuery,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
-import { validateSeatingDraft } from '../../utils/validate';
 import StudentExceptionList from './StudentExceptionList';
+import { validateSeatingDraft } from '../../utils/validate';
 import { toSeatingStudents, toSeatingRoomLayout, toSeatingAssignments } from '../../utils/mappers';
 
 import type { SeatingRoomLayout, SeatingAssignment } from '../../types';
@@ -86,9 +87,10 @@ function SectionPaper({
       sx={{
         p: { xs: 1.5, md: 2 },
         borderRadius: 1.5,
-        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.95),
-        borderColor: (theme) => alpha(theme.palette.divider, 0.9),
-        boxShadow: (theme) => `0 8px 24px -18px ${alpha(theme.palette.grey[500], 0.3)}`,
+        bgcolor: (theme) => varAlpha(theme.vars.palette.background.neutralChannel, 0.4),
+        borderColor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
+        boxShadow: (theme) =>
+          `0 8px 24px -18px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
       }}
     >
       <Stack spacing={1.75}>
@@ -147,11 +149,13 @@ function PublicSeatingStatusCard({ status }: { status?: number }) {
         p: 1.75,
         borderRadius: 1.25,
         borderColor: (theme) =>
-          isPublished ? alpha(theme.palette.success.main, 0.4) : theme.palette.divider,
+          isPublished
+            ? varAlpha(theme.vars.palette.success.mainChannel, 0.4)
+            : theme.vars.palette.divider,
         bgcolor: (theme) =>
           isPublished
-            ? alpha(theme.palette.success.main, 0.05)
-            : alpha(theme.palette.grey[500], 0.03),
+            ? varAlpha(theme.vars.palette.success.mainChannel, 0.08)
+            : varAlpha(theme.vars.palette.grey['500Channel'], 0.06),
       }}
     >
       <Box
@@ -165,8 +169,8 @@ function PublicSeatingStatusCard({ status }: { status?: number }) {
           color: isPublished ? 'success.main' : 'text.secondary',
           bgcolor: (theme) =>
             isPublished
-              ? alpha(theme.palette.success.main, 0.12)
-              : alpha(theme.palette.grey[500], 0.12),
+              ? varAlpha(theme.vars.palette.success.mainChannel, 0.16)
+              : varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
           flexShrink: 0,
         }}
       >
@@ -181,7 +185,7 @@ function PublicSeatingStatusCard({ status }: { status?: number }) {
           <Typography
             variant="subtitle2"
             fontWeight={700}
-            color={isPublished ? 'success.dark' : 'text.primary'}
+            color={isPublished ? 'success.main' : 'text.primary'}
           >
             {isPublished ? 'Publicly Published' : 'Draft / Private'}
           </Typography>
@@ -370,9 +374,7 @@ export default function AllocationReviewDialog({
       results.forEach((seatLayoutData: any, idx: number) => {
         const roomId = roomIds[idx];
         const roomMeta = (roomsData.items || []).find((r: any) => r.id === roomId);
-        loadedRooms.push(
-          toSeatingRoomLayout(seatLayoutData, roomId, roomMeta?.roomName ?? roomId)
-        );
+        loadedRooms.push(toSeatingRoomLayout(seatLayoutData, roomId, roomMeta?.roomName ?? roomId));
         loadedAssignments.push(...toSeatingAssignments(seatLayoutData.items, roomId));
       });
       setRooms(loadedRooms);
@@ -426,17 +428,13 @@ export default function AllocationReviewDialog({
           usable,
           empty: Math.max(0, usable - occupied),
           utilization,
-          statusLabel:
-            occupied > usable ? 'Over capacity' : utilization < 40 ? 'Underused' : 'OK',
+          statusLabel: occupied > usable ? 'Over capacity' : utilization < 40 ? 'Underused' : 'OK',
         };
       }),
     [rooms, assignments]
   );
 
-  const assignedIds = useMemo(
-    () => new Set(assignments.map((a) => a.studentId)),
-    [assignments]
-  );
+  const assignedIds = useMemo(() => new Set(assignments.map((a) => a.studentId)), [assignments]);
   const unallocatedStudents = students.filter((s) => !assignedIds.has(s.studentId));
   const totalStudents = students.length;
   const allocationProgress =
@@ -565,7 +563,9 @@ export default function AllocationReviewDialog({
         stickyPosition: 'right' as const,
         minWidth: 110,
         render: (v: string) => (
-          <Label color={v === 'Over capacity' ? 'error' : v === 'Underused' ? 'warning' : 'success'}>
+          <Label
+            color={v === 'Over capacity' ? 'error' : v === 'Underused' ? 'warning' : 'success'}
+          >
             {v}
           </Label>
         ),
@@ -587,12 +587,7 @@ export default function AllocationReviewDialog({
           title="Review room occupancy, student exceptions, readiness validation rules, and finalize the seating arrangement plan."
         >
           <Box component="span" sx={{ display: 'inline-flex', cursor: 'pointer' }}>
-            <Iconify
-              icon={GlobalIcons.info}
-              color="info.main"
-              width={18}
-              height={18}
-            />
+            <Iconify icon={GlobalIcons.info} color="info.main" width={18} height={18} />
           </Box>
         </CustomTooltip>
         {planDraftData?.isLocked ? (
@@ -702,11 +697,7 @@ export default function AllocationReviewDialog({
             <SubmitButton
               buttonText={isFinalizing ? 'Finalizing…' : 'Finalize Plan'}
               loading={isFinalizing}
-              disabled={
-                validation.blockers.length > 0 ||
-                allocationProgress < 100 ||
-                isFinalizing
-              }
+              disabled={validation.blockers.length > 0 || allocationProgress < 100 || isFinalizing}
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={handleFinalize}
               type="button"
@@ -721,10 +712,7 @@ export default function AllocationReviewDialog({
                     : 'Publish Plan'
               }
               loading={isPublishing}
-              disabled={
-                isPublishing ||
-                planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED
-              }
+              disabled={isPublishing || planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED}
               startIcon={<Iconify icon="solar:eye-bold" />}
               onClick={handlePublish}
               type="button"

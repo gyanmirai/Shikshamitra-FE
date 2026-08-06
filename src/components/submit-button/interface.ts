@@ -6,4 +6,5 @@ export interface SubmitButtonProps {
   variant?: 'text' | 'outlined' | 'contained';
   startIcon?: React.ReactNode;
   disabled?: boolean;
+  size?: 'small' | 'medium' | 'large';
 }

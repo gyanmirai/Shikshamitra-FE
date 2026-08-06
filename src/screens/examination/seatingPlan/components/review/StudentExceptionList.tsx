@@ -1,6 +1,6 @@
-import { Box, Chip, Stack, Paper, Button, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Chip, Stack, Paper, Button, Typography } from '@mui/material';
 
 import type { SeatingStudent } from '../../types';
 
@@ -10,7 +10,11 @@ interface Props {
   onFix: (student: SeatingStudent) => void;
 }
 
-export default function StudentExceptionList({ unallocatedStudents, excludedStudents, onFix }: Props) {
+export default function StudentExceptionList({
+  unallocatedStudents,
+  excludedStudents,
+  onFix,
+}: Props) {
   if (unallocatedStudents.length === 0 && excludedStudents.length === 0) {
     return (
       <Paper
@@ -18,15 +22,19 @@ export default function StudentExceptionList({ unallocatedStudents, excludedStud
         sx={{
           p: 1.5,
           borderRadius: 1,
-          bgcolor: (theme) => alpha(theme.palette.success.main, 0.04),
-          borderColor: (theme) => alpha(theme.palette.success.main, 0.2),
+          bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.08),
+          borderColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.24),
           display: 'flex',
           alignItems: 'center',
           gap: 1.25,
         }}
       >
         <Iconify icon="solar:check-circle-bold" color="success.main" width={20} height={20} />
-        <Typography variant="body2" color="success.dark" fontWeight={600}>
+        <Typography
+          variant="body2"
+          sx={{ color: (theme) => theme.vars.palette.success.main }}
+          fontWeight={600}
+        >
           No exceptions — every eligible student has been successfully allocated a seat.
         </Typography>
       </Paper>
@@ -45,12 +53,13 @@ export default function StudentExceptionList({ unallocatedStudents, excludedStud
             alignItems: 'center',
             p: 1.25,
             borderRadius: 1,
-            borderColor: (theme) => alpha(theme.palette.warning.main, 0.3),
-            bgcolor: (theme) => alpha(theme.palette.warning.main, 0.03),
+            borderColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.3),
+            bgcolor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
             transition: 'all 0.2s',
             '&:hover': {
               borderColor: 'warning.main',
-              boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.warning.main, 0.12)}`,
+              boxShadow: (theme) =>
+                `0 4px 12px ${varAlpha(theme.vars.palette.warning.mainChannel, 0.16)}`,
             },
           }}
         >
@@ -60,8 +69,8 @@ export default function StudentExceptionList({ unallocatedStudents, excludedStud
                 width: 32,
                 height: 32,
                 borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.warning.main, 0.1),
-                color: 'warning.dark',
+                bgcolor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.16),
+                color: (theme) => theme.vars.palette.warning.main,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -107,7 +116,7 @@ export default function StudentExceptionList({ unallocatedStudents, excludedStud
             p: 1.25,
             borderRadius: 1,
             borderColor: 'divider',
-            bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+            bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
           }}
         >
           <Stack direction="row" spacing={1.25} alignItems="center">
@@ -116,7 +125,7 @@ export default function StudentExceptionList({ unallocatedStudents, excludedStud
                 width: 32,
                 height: 32,
                 borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.grey[500], 0.12),
+                bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
                 color: 'text.secondary',
                 display: 'flex',
                 alignItems: 'center',
@@ -146,4 +155,3 @@ export default function StudentExceptionList({ unallocatedStudents, excludedStud
     </Stack>
   );
 }
-

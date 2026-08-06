@@ -98,9 +98,13 @@ export default function SeatCard({
           ? ''
           : assignment
             ? `${studentName ?? 'Student'} - Seat ${seat.seatNumber}`
-            : isReadOnly
-              ? `Seat ${seat.seatNumber}`
-              : `Drop a student on seat ${seat.seatNumber}`
+            : seat.isReserved
+              ? `Reserved Seat #${seat.seatNumber} (Excluded from allocation)`
+              : seat.isDisabled
+                ? `Disabled Seat #${seat.seatNumber}`
+                : isReadOnly
+                  ? `Seat ${seat.seatNumber}`
+                  : `Drop a student on seat ${seat.seatNumber}`
       }
       arrow
       enterDelay={500}

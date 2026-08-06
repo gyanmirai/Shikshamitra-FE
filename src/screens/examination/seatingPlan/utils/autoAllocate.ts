@@ -74,8 +74,17 @@ export function autoAllocate(
   rules: SeatingAllocationRules,
   excludedStudentIds: string[]
 ): AutoAllocateResult {
+  const seatMap = new Map<string, SeatingSeat>();
+  rooms.forEach((r) => r.seats.forEach((s) => seatMap.set(s.seatId, s)));
+
+  // Remove any existing assignments on seats that are now disabled or reserved
+  const validExistingAssignments = existingAssignments.filter((a) => {
+    const seat = seatMap.get(a.seatId);
+    return seat && !seat.isDisabled && !seat.isReserved;
+  });
+
   const eligible = students.filter((s) => !excludedStudentIds.includes(s.studentId));
-  const alreadyAssigned = new Set(existingAssignments.map((a) => a.studentId));
+  const alreadyAssigned = new Set(validExistingAssignments.map((a) => a.studentId));
   const pending = eligible.filter((s) => !alreadyAssigned.has(s.studentId));
 
   const orderedStudents = orderStudents(pending, rules.strategy);
@@ -88,13 +97,13 @@ export function autoAllocate(
     ? orderedStudents.filter((s) => !s.hasSpecialRequirement)
     : orderedStudents;
 
-  const occupiedSeatIds = new Set(existingAssignments.map((a) => a.seatId));
+  const occupiedSeatIds = new Set(validExistingAssignments.map((a) => a.seatId));
   const newAssignments: SeatingAssignment[] = [];
   const unallocatedStudentIds: string[] = [];
 
   rooms.forEach((room) => {
     const seatQueue = orderSeats(
-      room.seats.filter((s) => !s.isDisabled && !occupiedSeatIds.has(s.seatId)),
+      room.seats.filter((s) => !s.isDisabled && !s.isReserved && !occupiedSeatIds.has(s.seatId)),
       rules.fillDirection
     );
 
@@ -145,5 +154,5 @@ export function autoAllocate(
     if (!allocatedIds.has(s.studentId)) unallocatedStudentIds.push(s.studentId);
   });
 
-  return { assignments: [...existingAssignments, ...newAssignments], unallocatedStudentIds };
+  return { assignments: [...validExistingAssignments, ...newAssignments], unallocatedStudentIds };
 }
