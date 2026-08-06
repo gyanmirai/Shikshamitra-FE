@@ -4,26 +4,25 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { LoadingButton } from '@mui/lab';
-import { alpha } from '@mui/material/styles';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import { Box, IconButton } from '@mui/material';
+import { MenuItem } from '@mui/material';
+import Tooltip from '@mui/material/Tooltip';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import DialogActions from '@mui/material/DialogActions';
+
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Label } from 'src/components/label';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-import {
-  Box,
-  Alert,
-  Stack,
-  Button,
-  Dialog,
-  Divider,
-  Tooltip,
-  TextField,
-  Typography,
-  IconButton,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CancelButton from 'src/components/cancel-button';
 
 import { ApprovalStatusChip, ConflictSeverityChip } from './RoomStatusChip';
 
@@ -33,6 +32,7 @@ type PendingAction = { id: string; type: 'approve' | 'reject' } | null;
 
 interface RoomApprovalQueueProps {
   reservations: RoomReservation[];
+  isLoading?: boolean;
   pendingAction?: PendingAction;
   onApprove?: (id: string, remarks?: string) => Promise<boolean> | void;
   onReject?: (id: string, reason: string) => Promise<boolean> | void;
@@ -40,6 +40,7 @@ interface RoomApprovalQueueProps {
 
 export const RoomApprovalQueue = ({
   reservations,
+  isLoading = false,
   pendingAction,
   onApprove,
   onReject,
@@ -55,7 +56,7 @@ export const RoomApprovalQueue = ({
   const [isRejecting, setIsRejecting] = useState(false);
 
   // True only for the specific row + action currently in flight; drives the
-  // active button's loading spinner. Sibling/other-row buttons are gated by
+  // active action's loading spinner. Sibling/other-row buttons are gated by
   // `isAnyActionPending` to prevent concurrent requests.
   const isBusy = (id: string, type: 'approve' | 'reject') =>
     pendingAction?.id === id && pendingAction?.type === type;
@@ -91,24 +92,45 @@ export const RoomApprovalQueue = ({
     );
   }
 
+  // Row action menu rendered inside the ThreeDotsActions popover.
+  const renderRowActions = ({ popover, row }: { popover: any; row: RoomReservation }) => {
+    const close = () => popover.onClose();
+    const actionDisabled = (type: 'approve' | 'reject') =>
+      isAnyActionPending && !isBusy(row.id, type);
+
+    return (
+      <Box sx={{ py: 0.5 }}>
+        <MenuItem
+          disabled={actionDisabled('approve')}
+          onClick={() => {
+            close();
+            setApproveId(row.id);
+          }}
+        >
+          <Iconify icon="mdi:check" color="success.main" />
+          Approve
+        </MenuItem>
+        <MenuItem
+          disabled={actionDisabled('reject')}
+          onClick={() => {
+            close();
+            handleOpenReject(row.id);
+          }}
+        >
+          <Iconify icon="mdi:close" color="error.main" />
+          Reject
+        </MenuItem>
+      </Box>
+    );
+  };
+
   return (
     <>
       <Stack spacing={1} sx={{ height: '100%' }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="mdi:clock-outline" width={20} color="warning.main" />
           <Typography variant="h6">Approval Queue</Typography>
-          <Box
-            sx={{
-              px: 1,
-              borderRadius: 10,
-              bgcolor: 'warning.main',
-              color: 'warning.contrastText',
-              fontSize: 11,
-              fontWeight: 700,
-            }}
-          >
-            {pending.length}
-          </Box>
+          <Label color="warning">{pending.length}</Label>
         </Stack>
 
         <CustomizableTable
@@ -116,6 +138,7 @@ export const RoomApprovalQueue = ({
           tableId="room-approval-queue"
           tableTitle="Pending Approvals"
           data={pending}
+          isLoading={isLoading}
           columns={[
             {
               id: 'requestedBy',
@@ -155,10 +178,10 @@ export const RoomApprovalQueue = ({
               render: (_v, row) => (
                 <Box>
                   <Typography variant="body2">
-                    {row.date ? dayjs(row.date).format('DD/MM/YYYY') : ''}
+                    {row.date ? dayjs(row.date).format('DD-MM-YYYY') : ''}
                     {row.isRecurring &&
                       row.recurringUntilDate &&
-                      ` to ${dayjs(row.recurringUntilDate).format('DD/MM/YYYY')}`}
+                      ` to ${dayjs(row.recurringUntilDate).format('DD-MM-YYYY')}`}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" display="block">
                     {row.startTime} – {row.endTime}
@@ -180,7 +203,9 @@ export const RoomApprovalQueue = ({
                 { label: 'Meeting', value: 'meeting' },
                 { label: 'Other', value: 'other' },
               ],
-              render: (v) => <Box sx={{ textTransform: 'capitalize', fontSize: 13 }}>{v}</Box>,
+              render: (v) => (
+                <Box sx={{ textTransform: 'capitalize', fontSize: 13 }}>{v}</Box>
+              ),
             },
             {
               id: 'conflictStatus',
@@ -218,9 +243,10 @@ export const RoomApprovalQueue = ({
             {
               id: 'approvalStatus',
               label: 'Status',
-              minWidth: 80,
+              minWidth: 120,
               filterType: 'enum',
               sticky: true,
+              stickyPosition: 'right',
               enumOptions: [
                 { label: 'Pending', value: 'pending' },
                 { label: 'Approved', value: 'approved' },
@@ -233,7 +259,8 @@ export const RoomApprovalQueue = ({
             {
               id: 'actions',
               label: 'Actions',
-              minWidth: 180,
+              minWidth: 50,
+              width: 50,
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -292,9 +319,11 @@ export const RoomApprovalQueue = ({
         content="Are you sure you want to approve this reservation?"
         icon="success"
         action={
-          <Button
+          <LoadingButton
+            size="small"
             variant="contained"
             color="success"
+            loading={approveId ? isBusy(approveId, 'approve') : false}
             onClick={() => {
               if (approveId && onApprove) {
                 onApprove(approveId);
@@ -303,35 +332,45 @@ export const RoomApprovalQueue = ({
             }}
           >
             Approve
-          </Button>
+          </LoadingButton>
         }
       />
 
-      {/* Reject Dialog */}
-      <Dialog
+      <CustomDialog
         open={rejectDialogOpen}
-        onClose={() => setRejectDialogOpen(false)}
+        handleClose={() => setRejectDialogOpen(false)}
         maxWidth="sm"
-        fullWidth
+        hasForm
+        title={
+          <Box
+            display="flex"
+            flexDirection="row"
+            gap={1}
+            alignItems="center"
+            component="span"
+            sx={{ fontWeight: 'normal' }}
+          >
+            <Iconify icon="mdi:close-circle" color="error.main" width={22} height={22} />
+            <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+              Reject Reservation
+            </Box>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Provide a reason for rejecting this reservation request. The requester will be notified."
+            >
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+                width={16}
+                height={16}
+              />
+            </CustomTooltip>
+          </Box>
+        }
       >
-        <DialogTitle>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Iconify icon="mdi:close" width={22} color="error.main" />
-            <Typography variant="h6">Reject Reservation</Typography>
-            <Tooltip title="Provide a reason for rejecting this reservation request. The requester will be notified.">
-              <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
-                <Iconify
-                  icon={GlobalIcons.info}
-                  sx={{ cursor: 'pointer' }}
-                  color="info.main"
-                  width={20}
-                />
-              </Box>
-            </Tooltip>
-          </Stack>
-        </DialogTitle>
-        <Divider />
-        <DialogContent>
+        <DialogScrollContent>
           <Stack spacing={2} sx={{ pt: 1, pb: 2 }}>
             <Alert severity="warning">
               The requester will be notified with your rejection reason.
@@ -349,18 +388,10 @@ export const RoomApprovalQueue = ({
               placeholder="e.g. Clashes with existing timetable. Please choose another slot."
             />
           </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            disabled={isRejecting}
-            startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
-            onClick={() => setRejectDialogOpen(false)}
-          >
-            Cancel
-          </Button>
+        </DialogScrollContent>
+
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <CancelButton onClick={() => setRejectDialogOpen(false)} />
           <LoadingButton
             size="small"
             variant="contained"
@@ -372,7 +403,7 @@ export const RoomApprovalQueue = ({
             Confirm Rejection
           </LoadingButton>
         </DialogActions>
-      </Dialog>
+      </CustomDialog>
     </>
   );
 };

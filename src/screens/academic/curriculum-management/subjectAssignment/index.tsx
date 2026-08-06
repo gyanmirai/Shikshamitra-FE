@@ -126,7 +126,7 @@ const Subject = () => {
               classId={classId}
               addSubjectDialog={addSubjectDialog}
               editData={selectedSubject}
-              setEditData={() => {}}
+              setEditData={() => { }}
               subjectTableData={subjectTableData?.data?.items || []}
               onView={handleViewSubject}
               onEdit={handleEditSubject}

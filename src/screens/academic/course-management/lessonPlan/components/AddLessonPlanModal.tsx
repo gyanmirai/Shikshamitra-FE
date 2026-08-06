@@ -17,6 +17,7 @@ import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumM
 import {
   Box,
   Chip,
+  Paper,
   Stack,
   Alert,
   Button,
@@ -28,10 +29,14 @@ import {
   InputAdornment,
   LinearProgress,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { todayIso, lessonPlanTemplates, teachingMethodOptions } from '../lessonPlanData';
 
 import type { LessonSource, LessonPlanRow } from '../lessonPlanData';
+import { GlobalIcons } from 'src/utils/icons';
 
 export type LessonFormState = {
   id?: string;
@@ -132,44 +137,70 @@ type ChapterOption = SelectOption & {
   id: string;
 };
 
-const FormSection = ({
-  icon,
+/**
+ * SectionPaper (Strictly conforming to Section 2.18 of SKILL.md)
+ */
+const SectionPaper = ({
   title,
+  caption,
+  icon,
   children,
+  action,
 }: {
-  icon: string;
   title: string;
+  caption?: string;
+  icon: string;
   children: React.ReactNode;
+  action?: React.ReactNode;
 }) => (
-  <Box
+  <Paper
+    variant="outlined"
     sx={{
-      p: 2.5,
-      borderRadius: 2,
-      bgcolor: 'background.paper',
-      border: (theme) => `1px solid ${theme.palette.divider}`,
+      p: { xs: 1.5, md: 2 },
+      borderRadius: 1.5,
+      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
+      borderColor: (theme) => alpha(theme.palette.divider, 0.9),
+      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.4)}`,
     }}
   >
-    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-      <Box
-        sx={{
-          width: 30,
-          height: 30,
-          borderRadius: 1,
-          display: 'grid',
-          placeItems: 'center',
-          bgcolor: 'primary.lighter',
-          color: 'primary.main',
-          flexShrink: 0,
-        }}
+    <Stack spacing={1.5}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        gap={1}
       >
-        <Iconify icon={icon} width={16} />
-      </Box>
-      <Typography variant="subtitle2" sx={{ letterSpacing: 0.2 }}>
-        {title}
-      </Typography>
+        <Stack direction="row" spacing={1.25} alignItems="center">
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'primary.main',
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+            }}
+          >
+            <Iconify icon={icon} width={18} height={18} />
+          </Box>
+          <Stack spacing={0.2}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              {title}
+            </Typography>
+            {caption && (
+              <Typography variant="caption" color="text.secondary">
+                {caption}
+              </Typography>
+            )}
+          </Stack>
+        </Stack>
+        {action}
+      </Stack>
+      {children}
     </Stack>
-    {children}
-  </Box>
+  </Paper>
 );
 
 const AutoFilledField = ({ label, value }: { label: string; value: string }) => (
@@ -266,18 +297,11 @@ const AddLessonPlanModal = ({
   const [showValidation, setShowValidation] = useState(false);
   const isTimelinePrefill = Boolean(timelinePrefill?.timetableSlotId);
 
-  /**
-   * Memoization Justification:
-   * - Keeps the logged-in teacher option stable between local form updates inside the modal.
-   * - Prevents CustomSelect from receiving a new options array on every keystroke.
-   * - The option only changes when Redux auth/current teacher context changes.
-   */
   const teacherOptions = React.useMemo<SelectOption[]>(() => {
     if (!currentTeacher) return [];
     return [currentTeacher];
   }, [currentTeacher]);
 
-  // Load timetable slots based on selected teacher and date
   const selectedTeacherId = form.teacherId;
   const plannedDateStr = form.plannedDate ? dateConvertor(form.plannedDate.format(dateFormat)) : '';
 
@@ -292,12 +316,8 @@ const AddLessonPlanModal = ({
   const isLocked = !!editData;
   const isContextLocked = isLocked || isTimelinePrefill;
 
-  /**
-   * Identifies period slot IDs that already have a lesson plan created
-   * for the selected date and teacher, excluding the current plan being edited.
-   */
   const disabledPeriodValues = React.useMemo(() => {
-    if (isLocked) return []; // When editing, context is locked
+    if (isLocked) return [];
     const formattedDate = form.plannedDate?.format('YYYY-MM-DD');
     if (!formattedDate) return [];
 
@@ -312,12 +332,6 @@ const AddLessonPlanModal = ({
       .filter(Boolean) as string[];
   }, [form.id, form.plannedDate, form.teacherId, isLocked, lessonPlans]);
 
-  /**
-   * Memoization Justification:
-   * - Keeps period options stable while users fill the lesson details.
-   * - Prevents CustomSelect from reprocessing slot options on unrelated form edits.
-   * - The options only depend on fetched timeline data or the locked timeline prefill.
-   */
   const periodOptions = React.useMemo<SelectOption[]>(() => {
     if (isTimelinePrefill && timelinePrefill?.timetableSlotId) {
       return [
@@ -336,12 +350,6 @@ const AddLessonPlanModal = ({
     );
   }, [isTimelinePrefill, timelineData, timelinePrefill]);
 
-  /**
-   * Memoization Justification:
-   * - The selected slot is reused by both insight display and validation.
-   * - Avoids scanning timeline slots multiple times while users edit lesson text fields.
-   * - It only changes when the selected period or fetched timeline slots change.
-   */
   const selectedTimelineSlot = React.useMemo(
     () =>
       timelineData?.slots?.find(
@@ -359,7 +367,6 @@ const AddLessonPlanModal = ({
     timelineData?.slots?.find((slot: TimelineSlot) => slot.insightMessage)?.insightSeverity ||
     'warning';
 
-  // Load chapters based on auto-populated subjectId & standardId
   const { subjectId } = form;
   const { standardId } = form;
   const { data: chaptersData } = useGetChaptersByStandardQuery(
@@ -379,7 +386,6 @@ const AddLessonPlanModal = ({
     [chaptersData]
   );
 
-  // Handlers
   const handleTeacherChange = (teacherId: string) => {
     const selectedTeacher = teacherOptions.find((opt) => opt.value === teacherId);
     setForm((prev) => ({
@@ -553,255 +559,301 @@ const AddLessonPlanModal = ({
     onSave(form, submit);
   };
 
-  const requiredFieldsFilled = [
-    form.teacherId,
-    form.plannedDate,
-    form.period,
-    form.chapterId,
-    form.topic.trim(),
-  ].filter(Boolean).length;
-  const totalRequiredFields = 5;
+  const initialValues = React.useMemo(
+    () => ({
+      teacherId: editData
+        ? (editData as any).teacherId
+        : timelinePrefill?.teacherId || currentTeacher?.value || '',
+      plannedDate: (editData?.plannedDate
+        ? dayjs(editData.plannedDate)
+        : prefillDate || dayjs(todayIso)
+      )?.format('YYYY-MM-DD'),
+      period: editData?.period || timelinePrefill?.period || '',
+      timetableSlotId: (editData as any)?.timetableSlotId || timelinePrefill?.timetableSlotId || '',
+      chapterName: editData?.chapterName || '',
+      chapterId: (editData as any)?.chapterId || '',
+      topic: editData?.topic || '',
+      learningObjective: editData?.learningObjective || '',
+      teachingMethod: editData?.teachingMethod || 'ExplanationBoardWork',
+      resourcesRequired: editData?.resourcesRequired || '',
+      plannedCompletionPercentage: editData?.plannedCompletionPercentage || 0,
+    }),
+    [editData, timelinePrefill, currentTeacher, prefillDate]
+  );
+
+  const currentValues = React.useMemo(
+    () => ({
+      teacherId: form.teacherId,
+      plannedDate: form.plannedDate?.format('YYYY-MM-DD'),
+      period: form.period,
+      timetableSlotId: form.timetableSlotId,
+      chapterName: form.chapterName,
+      chapterId: form.chapterId,
+      topic: form.topic,
+      learningObjective: form.learningObjective,
+      teachingMethod: form.teachingMethod,
+      resourcesRequired: form.resourcesRequired,
+      plannedCompletionPercentage: form.plannedCompletionPercentage,
+    }),
+    [form]
+  );
 
   return (
-    <CustomDialog
-      open={open}
-      title={
-        <Stack spacing={1}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {form.id ? 'Edit Lesson Plan' : 'Add Lesson Plan'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Schedule a lesson, set its coverage plan, and track expected progress."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-            {form.source === 'AiGenerated' && (
-              <Label color="info" variant="soft" startIcon={<Iconify icon="mdi:robot-outline" />}>
-                AI Generated
-              </Label>
-            )}
-          </Stack>
-        </Stack>
-      }
-      maxWidth="md"
-      handleClose={onClose}
-    >
-      <DialogScrollContent sx={{ bgcolor: 'background.neutral', pb: 2 }}>
-        <Stack spacing={1}>
-          {error && (
-            <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
-              {error}
-            </Alert>
-          )}
-
-          {/* Template selector */}
-          <FormSection icon="mdi:lightning-bolt-outline" title="Quick Template">
-            <Stack direction="row" flexWrap="wrap" gap={1}>
-              {lessonPlanTemplates.map((t) => {
-                const selected = form.template === t.value;
-                return (
-                  <Chip
-                    key={t.value}
-                    label={t.label}
-                    size="small"
-                    icon={
-                      selected ? (
-                        <Iconify icon="mdi:check-circle" width={16} sx={{ ml: '4px !important' }} />
-                      ) : undefined
-                    }
-                    variant={selected ? 'filled' : 'outlined'}
-                    color={selected ? 'primary' : 'default'}
-                    onClick={() => applyTemplate(t.value)}
-                    sx={{
-                      cursor: 'pointer',
-                      fontWeight: selected ? 700 : 500,
-                      transition: (theme) =>
-                        theme.transitions.create(['background-color', 'box-shadow']),
-                      ...(!selected && {
-                        '&:hover': { bgcolor: 'action.hover' },
-                      }),
-                    }}
-                  />
-                );
-              })}
-            </Stack>
-          </FormSection>
-
-          {/* Schedule & context */}
-          <FormSection icon="mdi:calendar-clock-outline" title="Schedule & Context">
-            <Stack spacing={1}>
-              <CustomSelect
-                label="Teacher *"
-                options={teacherOptions}
-                value={form.teacherId || ''}
-                onChange={(v) => handleTeacherChange(v as string)}
-                disabled
-              />
-
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <DatePicker
-                  label="Planned Date *"
-                  value={form.plannedDate}
-                  onChange={handleDateChange}
-                  format="DD/MM/YYYY"
-                  slotProps={{
-                    textField: { size: 'small', fullWidth: true, disabled: isContextLocked },
-                  }}
-                />
-                <CustomSelect
-                  label="Period / Time *"
-                  options={periodOptions}
-                  value={form.timetableSlotId || form.period}
-                  onChange={(v) => handlePeriodChange(v as string)}
-                  disabled={isContextLocked}
-                  disabledValues={disabledPeriodValues}
-                  disabledLabel="Already Created"
-                />
-              </Stack>
-
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <AutoFilledField label="Class *" value={form.className} />
-                <AutoFilledField label="Division *" value={form.divisionName} />
-                <AutoFilledField label="Subject *" value={form.subjectName} />
-              </Stack>
-
-              {activeInsight && (
-                <Alert
-                  severity={activeInsightSeverity === 'error' ? 'error' : 'warning'}
-                  icon={<Iconify icon="mdi:information-outline" />}
-                >
-                  {activeInsight}
-                </Alert>
+    <BackPopUpChecked initialValues={initialValues} currentValues={currentValues}>
+      <CustomDialog
+        open={open}
+        title={
+          <Stack spacing={1}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                {form.id ? 'Edit Lesson Plan' : 'Add Lesson Plan'}
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="Schedule a lesson, set its coverage plan, and track expected progress."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+              {form.source === 'AiGenerated' && (
+                <Label color="info" variant="soft" startIcon={<Iconify icon="mdi:robot-outline" />}>
+                  AI Generated
+                </Label>
               )}
             </Stack>
-          </FormSection>
-
-          {/* Chapter & topic */}
-          <FormSection icon="mdi:book-open-page-variant-outline" title="Chapter & Topic">
-            <Stack spacing={1}>
-              <CustomSelect
-                label="Chapter *"
-                options={chapterOptions}
-                value={form.chapterName}
-                onChange={(v) => handleChapterChange(v as string)}
-                error={showValidation && (!form.chapterId || !form.chapterName)}
-                helperText={
-                  showValidation && (!form.chapterId || !form.chapterName)
-                    ? 'Chapter is required'
-                    : ''
-                }
-              />
-
-              <TextField
-                size="small"
-                label="Topic *"
-                value={form.topic}
-                onChange={(e) => set('topic', e.target.value)}
-                onBlur={handleTopicBlur}
-                fullWidth
-                placeholder="e.g. Addition of Fractions"
-                error={showValidation && !form.topic.trim()}
-                helperText={
-                  showValidation && !form.topic.trim()
-                    ? 'Topic is required'
-                    : 'Matches prior progress for this chapter automatically on blur'
-                }
-              />
-
-              <TextField
-                size="small"
-                label="Learning Objective"
-                value={form.learningObjective}
-                onChange={(e) => set('learningObjective', e.target.value)}
-                fullWidth
-                multiline
-                minRows={2}
-                placeholder="Students will be able to..."
-                helperText="Clearly state what students should achieve by the end of the lesson"
-              />
-            </Stack>
-          </FormSection>
-
-          {/* Teaching method & resources */}
-          <FormSection icon="mdi:teach" title="Teaching Method & Resources">
-            <Stack spacing={1}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
-                <CustomSelect
-                  label="Teaching Method"
-                  options={teachingMethodOptions}
-                  value={form.teachingMethod}
-                  onChange={(v) => set('teachingMethod', v as string)}
-                  formControlProps={{ sx: { flex: 1 } }}
-                />
-                <Box
-                  sx={{
-                    flex: 1,
-                    width: '100%',
-                    p: 1.5,
-                    borderRadius: 1.5,
-                    bgcolor: 'background.neutral',
-                  }}
-                >
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body2" color="text.secondary">
-                      Planned Completion
-                    </Typography>
-                  </Stack>
-                  <LinearProgress
-                    variant="determinate"
-                    value={form.plannedCompletionPercentage}
-                    sx={{ my: 1, height: 6, borderRadius: 1 }}
-                  />
-                  <Slider
-                    min={0}
-                    max={100}
-                    step={5}
-                    size="small"
-                    value={form.plannedCompletionPercentage}
-                    onChange={(_, v) => set('plannedCompletionPercentage', v as number)}
-                    valueLabelDisplay="auto"
-                    marks={[
-                      { value: 0, label: '0%' },
-                      { value: 50, label: '50%' },
-                      { value: 100, label: '100%' },
-                    ]}
-                  />
-                </Box>
-              </Stack>
-
-              <TextField
-                size="small"
-                label="Resources Required"
-                value={form.resourcesRequired}
-                onChange={(e) => set('resourcesRequired', e.target.value)}
-                fullWidth
-                multiline
-                minRows={2}
-                placeholder="Textbook, worksheet, projector..."
-                helperText="List materials, tools or aids needed to deliver this lesson"
-              />
-            </Stack>
-          </FormSection>
-        </Stack>
-      </DialogScrollContent>
-
-      <Divider />
-      <Stack
-        direction="row"
-        spacing={1}
-        justifyContent="flex-end"
-        alignItems="center"
-        sx={{ p: 2 }}
+          </Stack>
+        }
+        maxWidth="md"
+        handleClose={onClose}
       >
-        <Stack direction="row" spacing={1}>
+        <DialogScrollContent sx={{ bgcolor: 'background.neutral', pb: 2 }}>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            {error && (
+              <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
+                {error}
+              </Alert>
+            )}
+
+            {/* Section 1: Quick Template */}
+            <SectionPaper
+              title="Quick Template"
+              caption="Select a predefined structure to fill common fields automatically"
+              icon="solar:bolt-bold-duotone"
+            >
+              <Stack direction="row" flexWrap="wrap" gap={1}>
+                {lessonPlanTemplates.map((t) => {
+                  const selected = form.template === t.value;
+                  return (
+                    <Chip
+                      key={t.value}
+                      label={t.label}
+                      size="small"
+                      icon={
+                        selected ? (
+                          <Iconify icon="mdi:check-circle" width={16} sx={{ ml: '4px !important' }} />
+                        ) : undefined
+                      }
+                      variant={selected ? 'filled' : 'outlined'}
+                      color={selected ? 'primary' : 'default'}
+                      onClick={() => applyTemplate(t.value)}
+                      sx={{
+                        cursor: 'pointer',
+                        fontWeight: selected ? 700 : 500,
+                        transition: (theme) =>
+                          theme.transitions.create(['background-color', 'box-shadow']),
+                        ...(!selected && {
+                          '&:hover': { bgcolor: 'action.hover' },
+                        }),
+                      }}
+                    />
+                  );
+                })}
+              </Stack>
+            </SectionPaper>
+
+            {/* Section 2: Schedule & Context */}
+            <SectionPaper
+              title="Schedule & Context"
+              caption="Define teacher, lecture date, period slot, class, division and subject"
+              icon="solar:calendar-date-bold-duotone"
+            >
+              <Stack spacing={1.5}>
+                <CustomSelect
+                  label="Teacher *"
+                  options={teacherOptions}
+                  value={form.teacherId || ''}
+                  onChange={(v) => handleTeacherChange(v as string)}
+                  disabled
+                />
+
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                  <DatePicker
+                    label="Planned Date *"
+                    value={form.plannedDate}
+                    onChange={handleDateChange}
+                    format="DD/MM/YYYY"
+                    slotProps={{
+                      textField: { size: 'small', fullWidth: true, disabled: isContextLocked },
+                    }}
+                  />
+                  <CustomSelect
+                    label="Period / Time *"
+                    options={periodOptions}
+                    value={form.timetableSlotId || form.period}
+                    onChange={(v) => handlePeriodChange(v as string)}
+                    disabled={isContextLocked}
+                    disabledValues={disabledPeriodValues}
+                    disabledLabel="Already Created"
+                  />
+                </Stack>
+
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                  <AutoFilledField label="Class *" value={form.className} />
+                  <AutoFilledField label="Division *" value={form.divisionName} />
+                  <AutoFilledField label="Subject *" value={form.subjectName} />
+                </Stack>
+
+                {activeInsight && (
+                  <Alert
+                    severity={activeInsightSeverity === 'error' ? 'error' : 'warning'}
+                    icon={<Iconify icon="mdi:information-outline" />}
+                  >
+                    {activeInsight}
+                  </Alert>
+                )}
+              </Stack>
+            </SectionPaper>
+
+            {/* Section 3: Chapter & Topic */}
+            <SectionPaper
+              title="Chapter & Topic"
+              caption="Specify chapter, lesson topic, and target learning objectives"
+              icon="solar:notebook-bold-duotone"
+            >
+              <Stack spacing={1.5}>
+                <CustomSelect
+                  label="Chapter *"
+                  options={chapterOptions}
+                  value={form.chapterName}
+                  onChange={(v) => handleChapterChange(v as string)}
+                  error={showValidation && (!form.chapterId || !form.chapterName)}
+                  helperText={
+                    showValidation && (!form.chapterId || !form.chapterName)
+                      ? 'Chapter is required'
+                      : ''
+                  }
+                />
+
+                <TextField
+                  size="small"
+                  label="Topic *"
+                  value={form.topic}
+                  onChange={(e) => set('topic', e.target.value)}
+                  onBlur={handleTopicBlur}
+                  fullWidth
+                  placeholder="e.g. Addition of Fractions"
+                  error={showValidation && !form.topic.trim()}
+                  helperText={
+                    showValidation && !form.topic.trim()
+                      ? 'Topic is required'
+                      : 'Matches prior progress for this chapter automatically on blur'
+                  }
+                />
+
+                <TextField
+                  size="small"
+                  label="Learning Objective"
+                  value={form.learningObjective}
+                  onChange={(e) => set('learningObjective', e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  placeholder="Students will be able to..."
+                  helperText="Clearly state what students should achieve by the end of the lesson"
+                />
+              </Stack>
+            </SectionPaper>
+
+            {/* Section 4: Teaching Method & Resources */}
+            <SectionPaper
+              title="Teaching Method & Resources"
+              caption="Select teaching methodology, completion target, and required materials"
+              icon="solar:presentation-graph-bold-duotone"
+            >
+              <Stack spacing={1.5}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-start">
+                  <CustomSelect
+                    label="Teaching Method"
+                    options={teachingMethodOptions}
+                    value={form.teachingMethod}
+                    onChange={(v) => set('teachingMethod', v as string)}
+                    formControlProps={{ sx: { flex: 1 } }}
+                  />
+                  <Box
+                    sx={{
+                      flex: 1,
+                      width: '100%',
+                      p: 1.5,
+                      borderRadius: 1.5,
+                      bgcolor: 'background.neutral',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                        Planned Completion Target
+                      </Typography>
+                      <Label color="primary" variant="soft">
+                        {form.plannedCompletionPercentage}%
+                      </Label>
+                    </Stack>
+
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={5}
+                      size="small"
+                      value={form.plannedCompletionPercentage}
+                      onChange={(_, v) => set('plannedCompletionPercentage', v as number)}
+                      valueLabelDisplay="auto"
+                      marks={[
+                        { value: 0, label: '0%' },
+                        { value: 50, label: '50%' },
+                        { value: 100, label: '100%' },
+                      ]}
+                      sx={{ mt: 1 }}
+                    />
+                  </Box>
+                </Stack>
+
+                <TextField
+                  size="small"
+                  label="Resources Required"
+                  value={form.resourcesRequired}
+                  onChange={(e) => set('resourcesRequired', e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  placeholder="Textbook, worksheet, projector..."
+                  helperText="List materials, tools or aids needed to deliver this lesson"
+                />
+              </Stack>
+            </SectionPaper>
+          </Stack>
+        </DialogScrollContent>
+
+        <Divider />
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{ p: 2 }}
+        >
           <Button
             size="small"
-            variant="text"
-            color="inherit"
+            variant="outlined"
             startIcon={<Iconify icon="mdi:close" />}
             onClick={onClose}
             disabled={isLoading}
@@ -815,20 +867,20 @@ const AddLessonPlanModal = ({
             startIcon={<Iconify icon="mdi:content-save-outline" />}
             onClick={() => handleSave(false)}
           >
-            Save Draft
+            Draft
           </LoadingButton>
           <LoadingButton
             size="small"
             variant="contained"
             loading={isLoading}
-            startIcon={<Iconify icon="mdi:check-circle-outline" />}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
             onClick={() => handleSave(true)}
           >
-            Submit Plan
+            Submit
           </LoadingButton>
         </Stack>
-      </Stack>
-    </CustomDialog>
+      </CustomDialog>
+    </BackPopUpChecked>
   );
 };
 

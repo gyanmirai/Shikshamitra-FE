@@ -75,3 +75,6 @@ export function TimetableSettingsSummaryCards({ cards, cardsPerRow }: TimetableS
     </Grid>
   );
 }
+
+export default TimetableSettingsSummaryCards;
+

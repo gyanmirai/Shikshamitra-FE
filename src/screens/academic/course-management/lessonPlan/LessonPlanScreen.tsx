@@ -11,13 +11,16 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import LoadingButton from '@mui/lab/LoadingButton';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Scrollbar } from 'src/components/scrollbar';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import {
@@ -37,6 +40,9 @@ import {
   LinearProgress,
   Paper,
   Tooltip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   useGetLessonPlansQuery,
@@ -171,15 +177,15 @@ const normalizeSlotTime = (value: unknown) => {
 const getPlannedSlotTime = (plan: any) => {
   const start = normalizeSlotTime(
     plan.startTime ||
-      plan.slotStartTime ||
-      plan.timetableSlot?.startTime ||
-      plan.timetableSlot?.slotStartTime
+    plan.slotStartTime ||
+    plan.timetableSlot?.startTime ||
+    plan.timetableSlot?.slotStartTime
   );
   const end = normalizeSlotTime(
     plan.endTime ||
-      plan.slotEndTime ||
-      plan.timetableSlot?.endTime ||
-      plan.timetableSlot?.slotEndTime
+    plan.slotEndTime ||
+    plan.timetableSlot?.endTime ||
+    plan.timetableSlot?.slotEndTime
   );
 
   return start && end ? `${start} - ${end}` : '';
@@ -235,13 +241,13 @@ const allTeacherOptions = [{ value: 'all', label: 'All Teachers' }, ...teacherOp
 
 const TABS = [
   { value: 'dailyTimeline', label: 'Daily Timeline', icon: 'mdi:clock-outline' },
-  { value: 'weeklyPlanner', label: 'Weekly Planner', icon: 'mdi:calendar-week-outline' },
+  // { value: 'weeklyPlanner', label: 'Weekly Planner', icon: 'mdi:calendar-week-outline' },
   { value: 'lessonList', label: 'Lesson Plans', icon: 'mdi:book-open-outline' },
   { value: 'teacherDiary', label: 'Teacher Diary', icon: 'mdi:notebook-edit-outline' },
   { value: 'reviewQueue', label: 'Review Queue', icon: 'mdi:clipboard-check-outline' },
 ] as const;
 
-type TabValue = (typeof TABS)[number]['value'];
+type TabValue = (typeof TABS)[number]['value'] | 'weeklyPlanner';
 
 const PlanStatusHeaderTooltip = (
   <Box sx={{ p: 1, minWidth: 250 }}>
@@ -395,7 +401,7 @@ const LessonPlanScreen = () => {
     [employee, user]
   );
 
-  // ─── RTK Queries & Mutations ──────────────────────────────────────────────────
+  // ─── Queries & Mutations via useQueryAndMutation ─────────────────────────────
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
   const {
@@ -403,9 +409,13 @@ const LessonPlanScreen = () => {
     isLoading: isTimelineLoading,
     isFetching: isTimelineFetching,
     refetch: refetchTimeline,
-  } = useGetLessonPlanTimelineQuery({
-    date: dateConvertor(selectedDate.format(dateFormat)),
-    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLessonPlanTimelineQuery,
+    params: {
+      date: dateConvertor(selectedDate.format(dateFormat)),
+      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+    },
   });
 
   const isTimelineOwner = useMemo(
@@ -413,34 +423,85 @@ const LessonPlanScreen = () => {
     [timelineData, currentTeacherId]
   );
 
-  const { data: lessonPlanList, refetch: refetchLessonPlans } = useGetLessonPlansQuery({
-    academicYearId: currentYear?.id,
-    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-    maxResultCount: 1000,
+  const {
+    data: lessonPlanList,
+    isLoading: isPlansLoading,
+    isFetching: isPlansFetching,
+    refetch: refetchLessonPlans,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLessonPlansQuery,
+    params: {
+      academicYearId: currentYear?.id,
+      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+      maxResultCount: 1000,
+    },
   });
 
-  const { data: teacherDiaryList, refetch: refetchTeacherDiaries } = useGetTeacherDiariesQuery({
-    academicYearId: currentYear?.id,
-    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-    maxResultCount: 1000,
+  const {
+    data: teacherDiaryList,
+    isLoading: isDiariesLoading,
+    isFetching: isDiariesFetching,
+    refetch: refetchTeacherDiaries,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetTeacherDiariesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+      maxResultCount: 1000,
+    },
   });
-  const { data: homeworkTypeData } = useGetHomeworkTypesQuery(
-    { academicMediumId: currentMedium?.id },
-    { skip: !currentMedium?.id }
-  );
 
-  const [createLessonPlan, { isLoading: isCreatingLesson }] = useCreateLessonPlanMutation();
-  const [updateLessonPlan, { isLoading: isUpdatingLesson }] = useUpdateLessonPlanMutation();
-  const [submitLessonPlan, { isLoading: isSubmittingLesson }] = useSubmitLessonPlanMutation();
+  const { data: homeworkTypeData, isLoading: isHomeworkTypesLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkTypesQuery,
+    params: { academicMediumId: currentMedium?.id },
+    options: { skip: !currentMedium?.id },
+  });
+
+  const [createLessonPlan, { isLoading: isCreatingLesson }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateLessonPlanMutation,
+  });
+  const [updateLessonPlan, { isLoading: isUpdatingLesson }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateLessonPlanMutation,
+  });
+  const [submitLessonPlan, { isLoading: isSubmittingLesson }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSubmitLessonPlanMutation,
+  });
   const isSavingLesson = isCreatingLesson || isUpdatingLesson || isSubmittingLesson;
-  const [approveLessonPlan, { isLoading: isApproving }] = useApproveLessonPlanMutation();
-  const [rejectLessonPlan, { isLoading: isRejecting }] = useRejectLessonPlanMutation();
-  const [requestChanges, { isLoading: isRequestingPlanChanges }] = useRequestPlanChangesMutation();
+  const [approveLessonPlan, { isLoading: isApproving }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useApproveLessonPlanMutation,
+  });
+  const [rejectLessonPlan, { isLoading: isRejecting }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectLessonPlanMutation,
+  });
+  const [requestChanges, { isLoading: isRequestingPlanChanges }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRequestPlanChangesMutation,
+  });
   const [createHomeworkFromLessonPlan, { isLoading: isCreatingHomeworkFromPlan }] =
-    useCreateHomeworkFromLessonPlanMutation();
-  const [createTeacherDiary, { isLoading: isCreatingDiary }] = useCreateTeacherDiaryMutation();
-  const [updateTeacherDiary, { isLoading: isUpdatingDiary }] = useUpdateTeacherDiaryMutation();
-  const [submitTeacherDiary, { isLoading: isSubmittingDiary }] = useSubmitTeacherDiaryMutation();
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useCreateHomeworkFromLessonPlanMutation,
+    });
+  const [createTeacherDiary, { isLoading: isCreatingDiary }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateTeacherDiaryMutation,
+  });
+  const [updateTeacherDiary, { isLoading: isUpdatingDiary }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateTeacherDiaryMutation,
+  });
+  const [submitTeacherDiary, { isLoading: isSubmittingDiary }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSubmitTeacherDiaryMutation,
+  });
   const isSavingDiary = isCreatingDiary || isUpdatingDiary || isSubmittingDiary;
 
   const lessonPlans = useMemo<LessonPlanRow[]>(() => {
@@ -1142,76 +1203,216 @@ const LessonPlanScreen = () => {
     [requestChanges, refetchTimeline, refetchLessonPlans]
   );
 
+  // ─── Status Descriptions & Rich Tooltips ───────────────────────────────────
+
+  const PlanStatusHeaderTooltip = (
+    <Box sx={{ p: 1, minWidth: 250 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: '90px 1fr',
+          rowGap: 0.75,
+          columnGap: 1,
+          alignItems: 'center',
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}
+        >
+          Draft :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Saved internally & editable
+        </Typography>
+
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}
+        >
+          Submitted :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Awaiting reviewer approval
+        </Typography>
+
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}
+        >
+          Approved :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Ready for class execution
+        </Typography>
+
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}
+        >
+          Rejected :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Returned with feedback
+        </Typography>
+
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
+        >
+          Cancelled :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Withdrawn or cancelled
+        </Typography>
+      </Box>
+    </Box>
+  );
+
+  const DiaryStatusHeaderTooltip = (
+    <Box sx={{ p: 1, minWidth: 250 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: '90px 1fr',
+          rowGap: 0.75,
+          columnGap: 1,
+          alignItems: 'center',
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
+        >
+          Pending :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Entry not yet submitted
+        </Typography>
+
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}
+        >
+          Draft :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Saved internally & editable
+        </Typography>
+
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}
+        >
+          Submitted :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Completed for period
+        </Typography>
+
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}
+        >
+          Approved :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Reviewed and approved
+        </Typography>
+
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}
+        >
+          Rejected :
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
+          Returned for corrections
+        </Typography>
+      </Box>
+    </Box>
+  );
+
+  const PLAN_STATUS_DESCRIPTIONS: Record<string, string> = {
+    Draft: 'Draft: Saved internally and editable before submission',
+    Submitted: 'Submitted: Submitted and awaiting coordinator/HOD approval',
+    Approved: 'Approved: Plan approved and ready for class execution',
+    Rejected: 'Rejected: Returned with feedback for revisions',
+    Cancelled: 'Cancelled: Lesson plan is withdrawn or cancelled',
+    Pending: 'Pending: Awaiting submission or approval action',
+  };
+
+  const DIARY_STATUS_DESCRIPTIONS: Record<string, string> = {
+    Draft: 'Draft: Saved internally and editable',
+    Submitted: 'Submitted: Completed teacher diary entry for the conducted period',
+    NotSubmitted: 'Pending: Teacher diary entry has not been submitted yet',
+    Pending: 'Pending: Teacher diary entry has not been submitted yet',
+    Approved: 'Approved: Teacher diary entry reviewed and approved',
+    Rejected: 'Rejected: Returned for corrections',
+  };
+
+  const renderPlanStatus = (status: PlanStatus) => {
+    const tooltipText = PLAN_STATUS_DESCRIPTIONS[status] || `${status} status`;
+    return (
+      <CustomTooltip title={tooltipText} placement="top" arrow>
+        <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
+          <Label color={planStatusColor[status] ?? 'default'} variant="soft">
+            {status}
+          </Label>
+        </Box>
+      </CustomTooltip>
+    );
+  };
+
+  const renderDiaryStatus = (status: DiaryStatus) => {
+    const displayLabel = status === 'NotSubmitted' ? 'Pending' : status;
+    const tooltipText = DIARY_STATUS_DESCRIPTIONS[status] || `${displayLabel} status`;
+    return (
+      <CustomTooltip title={tooltipText} placement="top" arrow>
+        <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
+          <Label color={diaryStatusColor[status] ?? 'default'} variant="soft">
+            {displayLabel}
+          </Label>
+        </Box>
+      </CustomTooltip>
+    );
+  };
+
   const lessonColumns = useMemo(
     () => [
       {
         id: 'plannedDate',
         label: 'Date',
+        align: 'left' as const,
         filterType: 'date' as const,
         minWidth: 120,
         sticky: true,
         render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
       },
-      { id: 'period', label: 'Period', minWidth: 110 },
+      { id: 'period', label: 'Period', align: 'left' as const, minWidth: 110, filterType: 'string' as const },
       {
         id: 'plannedTime',
         label: 'Time',
+        align: 'left' as const,
         minWidth: 120,
         render: (v: string) => v || '—',
       },
       {
         id: 'className',
         label: 'Class / Div',
+        align: 'left' as const,
         minWidth: 120,
+        filterType: 'enum' as const,
         render: (_v: any, row: any) => `${row.className}-${row.divisionName}`,
       },
-      { id: 'subjectName', label: 'Subject', minWidth: 130 },
-      { id: 'chapterName', label: 'Chapter', minWidth: 150 },
-      { id: 'topic', label: 'Topic', minWidth: 200 },
-      { id: 'teacherName', label: 'Teacher', minWidth: 160 },
-      {
-        id: 'planStatus',
-        label: (
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
-              Plan Status
-            </Typography>
-            <CustomTooltip title={PlanStatusHeaderTooltip} placement="top" arrow>
-              <Iconify
-                icon="lucide:info"
-                width={14}
-                height={14}
-                sx={{ color: 'text.secondary', cursor: 'pointer' }}
-              />
-            </CustomTooltip>
-          </Stack>
-        ),
-        minWidth: 140,
-        render: (v: PlanStatus) => renderPlanStatus(v),
-      },
-      {
-        id: 'diaryStatus',
-        label: (
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
-              Diary Status
-            </Typography>
-            <CustomTooltip title={DiaryStatusHeaderTooltip} placement="top" arrow>
-              <Iconify
-                icon="lucide:info"
-                width={14}
-                height={14}
-                sx={{ color: 'text.secondary', cursor: 'pointer' }}
-              />
-            </CustomTooltip>
-          </Stack>
-        ),
-        minWidth: 140,
-        render: (v: DiaryStatus) => renderDiaryStatus(v),
-      },
+      { id: 'subjectName', label: 'Subject', align: 'left' as const, minWidth: 130, filterType: 'enum' as const },
+      { id: 'chapterName', label: 'Chapter', align: 'left' as const, minWidth: 150, filterType: 'string' as const },
+      { id: 'topic', label: 'Topic', align: 'left' as const, minWidth: 200, filterType: 'string' as const },
+      { id: 'teacherName', label: 'Teacher', align: 'left' as const, minWidth: 160, filterType: 'enum' as const },
       {
         id: 'insightMessage',
         label: 'Insight',
+        align: 'left' as const,
         minWidth: 220,
         isFilter: false,
         render: (v: string, row: any) =>
@@ -1251,8 +1452,9 @@ const LessonPlanScreen = () => {
       {
         id: 'plannedCompletionPercentage',
         label: 'Planned %',
+        align: 'left' as const,
         filterType: 'number' as const,
-        minWidth: 100,
+        minWidth: 110,
         render: (v: number) => (
           <Stack spacing={1}>
             <Typography variant="body2">{v}%</Typography>
@@ -1263,8 +1465,9 @@ const LessonPlanScreen = () => {
       {
         id: 'actualCompletionPercentage',
         label: 'Actual %',
+        align: 'left' as const,
         filterType: 'number' as const,
-        minWidth: 100,
+        minWidth: 110,
         render: (v: number) => (
           <Stack spacing={1}>
             <Typography variant="body2">{v}%</Typography>
@@ -1278,10 +1481,72 @@ const LessonPlanScreen = () => {
         ),
       },
       {
+        id: 'planStatus',
+        label: (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
+              Plan Status
+            </Typography>
+            <CustomTooltip title={PlanStatusHeaderTooltip} placement="top" arrow>
+              <Iconify
+                icon="lucide:info"
+                width={14}
+                height={14}
+                sx={{ color: 'text.secondary', cursor: 'pointer' }}
+              />
+            </CustomTooltip>
+          </Stack>
+        ),
+        align: 'left' as const,
+        sticky: true,
+        stickyPosition: 'right' as const,
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Draft', value: 'Draft' },
+          { label: 'Submitted', value: 'Submitted' },
+          { label: 'Approved', value: 'Approved' },
+          { label: 'Rejected', value: 'Rejected' },
+          { label: 'Cancelled', value: 'Cancelled' },
+        ],
+        minWidth: 140,
+        render: (v: PlanStatus) => renderPlanStatus(v),
+      },
+      {
+        id: 'diaryStatus',
+        label: (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
+              Diary Status
+            </Typography>
+            <CustomTooltip title={DiaryStatusHeaderTooltip} placement="top" arrow>
+              <Iconify
+                icon="lucide:info"
+                width={14}
+                height={14}
+                sx={{ color: 'text.secondary', cursor: 'pointer' }}
+              />
+            </CustomTooltip>
+          </Stack>
+        ),
+        align: 'left' as const,
+        sticky: true,
+        stickyPosition: 'right' as const,
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Pending', value: 'NotSubmitted' },
+          { label: 'Draft', value: 'Draft' },
+          { label: 'Submitted', value: 'Submitted' },
+          { label: 'Approved', value: 'Approved' },
+          { label: 'Rejected', value: 'Rejected' },
+        ],
+        minWidth: 140,
+        render: (v: DiaryStatus) => renderDiaryStatus(v),
+      },
+      {
         id: 'actions',
         label: 'Actions',
         minWidth: 120,
-        align: 'center' as const,
+        align: 'left' as const,
         isSort: false,
         isFilter: false,
         sticky: true,
@@ -1292,6 +1557,7 @@ const LessonPlanScreen = () => {
           const isApproved = plan.planStatus === 'Approved';
           const isCancelled = plan.planStatus === 'Cancelled';
           const isDiaryDisabled = !isApproved || isCancelled;
+          const isOwner = plan.teacherId === currentTeacherId;
 
           const diaryTooltipTitle = isCancelled
             ? 'Lesson plan is cancelled.'
@@ -1301,10 +1567,8 @@ const LessonPlanScreen = () => {
                 ? 'Edit diary notes'
                 : 'Add diary notes';
 
-          const isOwner = plan.teacherId === currentTeacherId;
-
           return (
-            <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+            <Stack direction="row" spacing={1} alignItems="center">
               {isOwner && (
                 <Tooltip title={diaryTooltipTitle}>
                   <span>
@@ -1341,22 +1605,33 @@ const LessonPlanScreen = () => {
       {
         id: 'plannedDate',
         label: 'Date',
+        align: 'left' as const,
         filterType: 'date' as const,
         minWidth: 120,
         sticky: true,
         render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
       },
-      { id: 'period', label: 'Period', minWidth: 110 },
+      { id: 'period', label: 'Period', align: 'left' as const, minWidth: 110, filterType: 'string' as const },
       {
         id: 'className',
         label: 'Class/Div',
+        align: 'left' as const,
         minWidth: 120,
+        filterType: 'enum' as const,
         render: (_v: any, r: any) => `${r.className}-${r.divisionName}`,
       },
-      { id: 'subjectName', label: 'Subject', minWidth: 130 },
-      { id: 'chapterName', label: 'Chapter', minWidth: 150 },
-      { id: 'topic', label: 'Topic', minWidth: 200 },
-      { id: 'teacherName', label: 'Teacher', minWidth: 160 },
+      { id: 'subjectName', label: 'Subject', align: 'left' as const, minWidth: 130, filterType: 'enum' as const },
+      { id: 'chapterName', label: 'Chapter', align: 'left' as const, minWidth: 150, filterType: 'string' as const },
+      { id: 'topic', label: 'Topic', align: 'left' as const, minWidth: 200, filterType: 'string' as const },
+      { id: 'teacherName', label: 'Teacher', align: 'left' as const, minWidth: 160, filterType: 'enum' as const },
+      {
+        id: 'actualCompletionPercentage',
+        label: 'Actual %',
+        align: 'left' as const,
+        filterType: 'number' as const,
+        minWidth: 110,
+        render: (v: number) => `${v}%`,
+      },
       {
         id: 'diaryStatus',
         label: (
@@ -1374,21 +1649,25 @@ const LessonPlanScreen = () => {
             </CustomTooltip>
           </Stack>
         ),
+        align: 'left' as const,
+        sticky: true,
+        stickyPosition: 'right' as const,
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Pending', value: 'NotSubmitted' },
+          { label: 'Draft', value: 'Draft' },
+          { label: 'Submitted', value: 'Submitted' },
+          { label: 'Approved', value: 'Approved' },
+          { label: 'Rejected', value: 'Rejected' },
+        ],
         minWidth: 140,
         render: (v: DiaryStatus) => renderDiaryStatus(v),
-      },
-      {
-        id: 'actualCompletionPercentage',
-        label: 'Actual %',
-        filterType: 'number' as const,
-        minWidth: 100,
-        render: (v: number) => `${v}%`,
       },
       {
         id: 'actions',
         label: 'Actions',
         minWidth: 120,
-        align: 'center' as const,
+        align: 'left' as const,
         isSort: false,
         isFilter: false,
         sticky: true,
@@ -1396,40 +1675,45 @@ const LessonPlanScreen = () => {
         render: (_v: unknown, row: any) => {
           const plan = row as LessonPlanRow;
           const diary = getDiaryForLesson(plan.id);
+          const isApproved = plan.planStatus === 'Approved';
+          const isCancelled = plan.planStatus === 'Cancelled';
+          const isDiaryDisabled = !isApproved || isCancelled;
           const isOwner = plan.teacherId === currentTeacherId;
 
-          if (!isOwner) {
-            return (
-              <IconButton
-                size="small"
-                onClick={() => openDetails(plan)}
-                sx={{ color: 'text.secondary' }}
-              >
-                <Iconify icon="carbon:view-filled" width={18} />
-              </IconButton>
-            );
-          }
+          const diaryTooltipTitle = isCancelled
+            ? 'Lesson plan is cancelled.'
+            : !isApproved
+              ? 'Lesson plan must be approved to add or edit diary notes.'
+              : diary
+                ? 'Edit diary notes'
+                : 'Add diary notes';
 
           return (
-            <ThreeDotsActions
-              showViewIcon
-              handleViewClick={() => openDetails(plan)}
-              placement="right-center"
-              actions={({ popover: pop }) => (
-                <MenuList>
-                  <MenuItem
-                    disabled={plan.planStatus === 'Cancelled'}
-                    onClick={() => {
-                      pop.onClose();
-                      openDiary(plan);
-                    }}
-                  >
-                    <Iconify icon="mdi:notebook-edit-outline" sx={{ mr: 1, width: 16, height: 16 }} />
-                    {diary ? 'Edit diary notes' : 'Add diary notes'}
-                  </MenuItem>
-                </MenuList>
+            <Stack direction="row" spacing={1} alignItems="center">
+              {isOwner && (
+                <Tooltip title={diaryTooltipTitle}>
+                  <span>
+                    <IconButton
+                      size="small"
+                      disabled={isDiaryDisabled}
+                      onClick={() => openDiary(plan)}
+                      sx={{ color: isDiaryDisabled ? 'action.disabled' : 'primary.main' }}
+                    >
+                      <Iconify icon="mdi:notebook-edit-outline" width={18} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
               )}
-            />
+              <Tooltip title="View Details">
+                <IconButton
+                  size="small"
+                  onClick={() => openDetails(plan)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <Iconify icon="carbon:view-filled" width={18} />
+                </IconButton>
+              </Tooltip>
+            </Stack>
           );
         },
       },
@@ -1501,53 +1785,78 @@ const LessonPlanScreen = () => {
           ]}
         />
 
-        {/* Teaching KPI Cards */}
-        <TeachingKpiCards
-          lessonPlans={lessonPlans}
-          diaryEntries={diaryEntries}
-          onCardClick={(key) => {
-            if (key === 'pending_approvals') {
-              if (canReviewSubmissions) {
-                setActiveTab('reviewQueue');
-              } else {
-                setQuickFilter('pending_approval');
-                setActiveTab('lessonList');
-              }
-            } else if (key === 'missed_lessons') {
-              setQuickFilter('missed_lessons');
-              setActiveTab('lessonList');
-            } else if (key === 'syllabus_delay') {
-              setQuickFilter('delayed_progress');
-              setActiveTab('lessonList');
-            }
+        {/* Teaching KPI Cards Accordion */}
+        <Accordion
+          defaultExpanded={false}
+          disableGutters
+          variant="outlined"
+          sx={{
+            mb: 1,
+            borderRadius: '12px',
+            '&:before': { display: 'none' },
           }}
-        />
+        >
+          <AccordionSummary
+            expandIcon={<Iconify icon="solar:alt-arrow-down-bold-duotone" width={18} />}
+            sx={{
+              minHeight: 44,
+              px: 2,
+              '& .MuiAccordionSummary-content': { my: 1 },
+            }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Iconify icon="solar:chart-bold-duotone" width={18} sx={{ color: 'primary.main' }} />
+              <Typography variant="subtitle2" fontWeight={700}>
+                Teaching Metrics & KPI Overview
+              </Typography>
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 1.5, pt: 0 }}>
+            <TeachingKpiCards
+              lessonPlans={lessonPlans}
+              diaryEntries={diaryEntries}
+              onCardClick={(key) => {
+                if (key === 'pending_approvals') {
+                  if (canReviewSubmissions) {
+                    setActiveTab('reviewQueue');
+                  } else {
+                    setQuickFilter('pending_approval');
+                    setActiveTab('lessonList');
+                  }
+                } else if (key === 'missed_lessons') {
+                  setQuickFilter('missed_lessons');
+                  setActiveTab('lessonList');
+                } else if (key === 'syllabus_delay') {
+                  setQuickFilter('delayed_progress');
+                  setActiveTab('lessonList');
+                }
+              }}
+            />
+          </AccordionDetails>
+        </Accordion>
 
         {/* Tab Navigation & Filters */}
-        <Paper sx={{ mb: 1 }}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ px: 1, borderBottom: 1, borderColor: 'divider' }}
+        <Paper
+          sx={{
+            mb: 1,
+            '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+          }}
+        >
+          <CustomTabs
+            value={activeTab}
+            onChange={(_, value) => setActiveTab(value as TabValue)}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
+            role="tablist"
           >
-            <Tabs
-              value={activeTab}
-              onChange={(_, value) => setActiveTab(value as TabValue)}
-              variant="scrollable"
-              scrollButtons="auto"
-            >
-              {visibleTabs.map((tab) => (
-                <Tab
-                  key={tab.value}
-                  value={tab.value}
-                  label={tab.label}
-                  icon={<Iconify icon={tab.icon} width={18} />}
-                  iconPosition="start"
-                />
-              ))}
-            </Tabs>
-          </Stack>
+            {visibleTabs.map((tab) => (
+              <Tab
+                key={tab.value}
+                value={tab.value}
+                label={tab.label}
+                icon={<Iconify icon={tab.icon} width={20} />}
+              />
+            ))}
+          </CustomTabs>
         </Paper>
       </Box>
 
@@ -1562,7 +1871,6 @@ const LessonPlanScreen = () => {
               onChangeDate={setSelectedDate}
               slots={timelineData?.slots || []}
               isLoading={isTimelineLoading || isTimelineFetching}
-              isReadOnly={!isTimelineOwner}
               onAddLesson={(date, prefill) => {
                 setEditPlan(null);
                 setPrefillDate(date ?? null);
@@ -1625,11 +1933,12 @@ const LessonPlanScreen = () => {
               tableTitle={`Lesson Plans (${filteredPlans.length})`}
               data={filteredPlans}
               columns={visibleLessonColumns}
+              isLoading={isPlansLoading || isPlansFetching}
               noDataText="No lesson plans match the current filters. Try adjusting or clearing filters, or add a new lesson plan."
             />
           )}
 
-          {activeTab === 'weeklyPlanner' && (
+          {/* {activeTab === 'weeklyPlanner' && (
             <WeeklyPlannerTab
               lessonPlans={lessonPlans}
               currentTeacherId={currentTeacherId}
@@ -1647,7 +1956,7 @@ const LessonPlanScreen = () => {
                 shikshaMitraToast.info({ message: 'Previous week lessons copied as draft.' })
               }
             />
-          )}
+          )} */}
 
           {activeTab === 'teacherDiary' && (
             <CustomizableTable
@@ -1655,6 +1964,7 @@ const LessonPlanScreen = () => {
               tableTitle="Teacher Diary"
               data={lessonPlans.filter((p) => p.plannedDate <= todayIso)}
               columns={visibleDiaryColumns}
+              isLoading={isPlansLoading || isPlansFetching || isDiariesLoading || isDiariesFetching}
               noDataText="No past or today lessons available for diary."
             />
           )}
@@ -1760,6 +2070,7 @@ const LessonPlanScreen = () => {
             <CustomSelect
               label="Homework Type *"
               options={homeworkTypeOptions}
+              isLoading={isHomeworkTypesLoading}
               value={homeworkForm.homeworkTypeId}
               onChange={(value) =>
                 setHomeworkForm((current) => ({
@@ -1833,25 +2144,24 @@ const LessonPlanScreen = () => {
         </DialogScrollContent>
 
         <Divider />
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
+        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             size="small"
-            variant="text"
-            color="inherit"
-            startIcon={<Iconify icon="mdi:close" />}
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={closeHomeworkFromPlan}
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="small"
             variant="contained"
+            loading={isCreatingHomeworkFromPlan}
             startIcon={<Iconify icon="mdi:book-plus-outline" />}
-            disabled={isCreatingHomeworkFromPlan}
             onClick={saveHomeworkFromPlan}
           >
             Create Homework
-          </Button>
+          </LoadingButton>
         </Stack>
       </CustomDialog>
 
