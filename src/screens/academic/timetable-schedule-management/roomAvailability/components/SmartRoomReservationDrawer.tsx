@@ -64,38 +64,38 @@ const StepBadge = ({ number }: { number: number }) => (
   </Box>
 );
 
-const MatchScoreRing = ({ score }: { score: number }) => {
-  const color = score >= 80 ? 'success.main' : score >= 60 ? 'warning.main' : 'text.disabled';
+const MatchScoreBadge = ({ score }: { score: number }) => {
+  const isHigh = score >= 80;
+  const isMedium = score >= 60;
+  const color = isHigh ? 'success.main' : isMedium ? 'warning.main' : 'text.secondary';
+
   return (
-    <Tooltip title={`${score}% match with your booking requirements`} arrow>
-      <Box sx={{ position: 'relative', width: 38, height: 38, flexShrink: 0, cursor: 'default' }}>
-        <CircularProgress
-          variant="determinate"
-          value={100}
-          size={38}
-          thickness={4}
-          sx={{ color: 'action.hover', position: 'absolute' }}
-        />
-        <CircularProgress
-          variant="determinate"
-          value={score}
-          size={38}
-          thickness={4}
-          sx={{ color, position: 'absolute' }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Typography sx={{ fontSize: 10.5, fontWeight: 700, lineHeight: 1 }}>{score}</Typography>
-        </Box>
-      </Box>
-    </Tooltip>
+    <Box
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0.75,
+        px: 1.25,
+        py: 0.5,
+        borderRadius: 1,
+        bgcolor: (theme) => {
+          if (isHigh) return alpha(theme.palette.success.main, 0.08);
+          if (isMedium) return alpha(theme.palette.warning.main, 0.08);
+          return alpha(theme.palette.text.secondary, 0.08);
+        },
+        border: 1,
+        borderColor: (theme) => {
+          if (isHigh) return alpha(theme.palette.success.main, 0.16);
+          if (isMedium) return alpha(theme.palette.warning.main, 0.16);
+          return alpha(theme.palette.text.secondary, 0.16);
+        },
+      }}
+    >
+      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: color }} />
+      <Typography sx={{ fontSize: 11, fontWeight: 700, color, lineHeight: 1 }}>
+        {score}% Match
+      </Typography>
+    </Box>
   );
 };
 
@@ -351,7 +351,7 @@ export const SmartRoomReservationDrawer = ({
 
         <Stack
           direction={{ xs: 'column', md: 'row' }}
-          spacing={1}
+          spacing={3}
           sx={{ height: '100%', alignItems: 'stretch', overflow: 'hidden' }}
         >
 
@@ -366,12 +366,35 @@ export const SmartRoomReservationDrawer = ({
 
             {/* Scrollable Fields */}
             <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
-              <Stack spacing={1}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <StepBadge number={1} />
-                  <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                    Booking Requirements
-                  </Typography>
+              <Stack spacing={1.5}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <StepBadge number={1} />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                      Booking Requirements
+                    </Typography>
+                  </Stack>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="medium"
+                    onClick={handleSearch}
+                    disabled={suggestions.isLoading}
+                    startIcon={
+                      suggestions.isLoading ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <Iconify icon="mdi:magnify" />
+                      )
+                    }
+                    sx={{
+                      borderRadius: 1.5,
+                      fontWeight: 700,
+                      boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.primary.main, 0.16)}`,
+                    }}
+                  >
+                    Find Rooms
+                  </Button>
                 </Stack>
 
                 <Stack
@@ -624,26 +647,6 @@ export const SmartRoomReservationDrawer = ({
               </Stack>
             </Box>
 
-            {/* Sticky Search Button at Bottom */}
-            <Box sx={{ pt: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.neutral' }}>
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                fullWidth
-                onClick={handleSearch}
-                disabled={suggestions.isLoading}
-                startIcon={suggestions.isLoading ? <CircularProgress size={20} color="inherit" /> : <Iconify icon="mdi:magnify" />}
-                sx={{
-                  py: 1.25,
-                  borderRadius: 1.5,
-                  fontWeight: 700,
-                  boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.24)}`,
-                }}
-              >
-                Find Available Rooms
-              </Button>
-            </Box>
           </Box>
 
           {/* Vertical Divider */}
@@ -740,7 +743,7 @@ export const SmartRoomReservationDrawer = ({
                       sx={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                        gap: 1,
+                        gap: 2,
                         alignItems: 'start',
                       }}
                     >
@@ -766,7 +769,7 @@ export const SmartRoomReservationDrawer = ({
                               bgcolor: 'background.paper',
                               display: 'flex',
                               flexDirection: 'column',
-                              gap: 1,
+                              gap: 1.5,
                               boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)',
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -775,28 +778,28 @@ export const SmartRoomReservationDrawer = ({
                               },
                             }}
                           >
-                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                              <Stack direction="row" spacing={1} alignItems="center">
-                                <MatchScoreRing score={room.matchScore} />
-                                <Box>
-                                  <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: 16 }}>
-                                    {room.roomName}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: 13 }}>
-                                    {room.buildingName} · {room.floorName} · {room.type} · {room.capacity} seats
-                                  </Typography>
-                                </Box>
+                            <Stack spacing={1}>
+                              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: 16 }}>
+                                  {room.roomName}
+                                </Typography>
+                                <Stack direction="row" spacing={0.75} alignItems="center">
+                                  <MatchScoreBadge score={room.matchScore} />
+                                  <RoomStatusChip
+                                    status={
+                                      isCritical
+                                        ? 'conflict'
+                                        : isWarning
+                                          ? 'reserved'
+                                          : 'available'
+                                    }
+                                    showIcon={false}
+                                  />
+                                </Stack>
                               </Stack>
-                              <RoomStatusChip
-                                status={
-                                  isCritical
-                                    ? 'conflict'
-                                    : isWarning
-                                      ? 'reserved'
-                                      : 'available'
-                                }
-                                showIcon={false}
-                              />
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12.5 }}>
+                                {room.buildingName} · {room.floorName} · {room.type} · {room.capacity} seats
+                              </Typography>
                             </Stack>
 
                             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
@@ -823,31 +826,36 @@ export const SmartRoomReservationDrawer = ({
 
                             {/* Facilities */}
                             {room.facilities.length > 0 && (
-                              <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
-                                {room.facilities.slice(0, 5).map((f) => {
+                              <Stack direction="row" flexWrap="wrap" gap={0.5} alignItems="center">
+                                {room.facilities.slice(0, 3).map((f) => {
                                   const { label, icon } = resolveFacility(f);
                                   return (
                                     <Stack
                                       key={f}
                                       direction="row"
                                       alignItems="center"
-                                      spacing={1}
+                                      spacing={0.5}
                                       sx={{
-                                        px: 1,
-                                        py: 0.4,
-                                        borderRadius: 1,
+                                        px: 0.75,
+                                        py: 0.25,
+                                        borderRadius: 0.5,
                                         border: 1,
                                         borderColor: 'divider',
                                         bgcolor: 'background.neutral',
                                       }}
                                     >
-                                      <Iconify icon={icon} width={13} sx={{ color: 'text.secondary', flexShrink: 0 }} />
-                                      <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary', whiteSpace: 'nowrap' }}>
+                                      <Iconify icon={icon} width={11} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+                                      <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', whiteSpace: 'nowrap' }}>
                                         {label}
                                       </Typography>
                                     </Stack>
                                   );
                                 })}
+                                {room.facilities.length > 3 && (
+                                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', ml: 0.5 }}>
+                                    +{room.facilities.length - 3} more
+                                  </Typography>
+                                )}
                               </Stack>
                             )}
 

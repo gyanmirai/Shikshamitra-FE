@@ -54,6 +54,7 @@ import {
   useCreateHomeworkFromLessonPlanMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
 
+import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 import ReviewQueueTab from './components/ReviewQueueTab';
 import DailyTimelineTab from './components/DailyTimelineTab';
 import TeachingKpiCards from './components/TeachingKpiCards';
@@ -372,7 +373,20 @@ const renderDiaryStatus = (status: DiaryStatus) => {
 const LessonPlanScreen = () => {
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const { employee, user } = useSelector((state: RootState) => state.auth);
-  const canReviewSubmissions = readRoleNames(employee, user).some(canRoleReviewLessonPlans);
+
+  const { data: mySubordinates } = useGetMyEmployeesUnderManagerQuery(undefined, {
+    skip: !employee?.id,
+  });
+
+  const hasSubordinates = useMemo(
+    () => mySubordinates?.employees && mySubordinates.employees.length > 0,
+    [mySubordinates]
+  );
+
+  const canReviewSubmissions = useMemo(() => {
+    const roleBasedCheck = readRoleNames(employee, user).some(canRoleReviewLessonPlans);
+    return roleBasedCheck || Boolean(hasSubordinates);
+  }, [employee, user, hasSubordinates]);
   const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
 

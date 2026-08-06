@@ -2,6 +2,7 @@
 
 import dayjs from 'dayjs';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { LoadingButton } from '@mui/lab';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
@@ -43,6 +44,8 @@ export const RoomApprovalQueue = ({
   onApprove,
   onReject,
 }: RoomApprovalQueueProps) => {
+  const { data: session } = useSession() as any;
+  const currentUserId = session?.profile?.sub;
   const pending = reservations.filter((r) => r.approvalStatus === 'pending');
   const [approveId, setApproveId] = useState<string | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -235,42 +238,48 @@ export const RoomApprovalQueue = ({
               isFilter: false,
               sticky: true,
               stickyPosition: 'right',
-              render: (_v, row) => (
-                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
-                  <Tooltip title="Approve">
-                    <span>
-                      <LoadingButton
-                        size="small"
-                        color="success"
-                        variant="text"
-                        loading={isBusy(row.id, 'approve')}
-                        disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
-                        onClick={() => setApproveId(row.id)}
-                        sx={{
-                          minWidth: 32,
-                          width: 32,
-                          height: 32,
-                          borderRadius: '50%',
-                        }}
-                      >
-                        <Iconify icon="mdi:check" width={20} />
-                      </LoadingButton>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title="Reject">
-                    <span>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        disabled={isAnyActionPending}
-                        onClick={() => handleOpenReject(row.id)}
-                      >
-                        <Iconify icon="mdi:close" width={20} />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                </Stack>
-              ),
+              render: (_v, row) => {
+                const isRequester = currentUserId && row.creatorId && currentUserId === row.creatorId;
+                if (isRequester) {
+                  return <Typography variant="caption" color="text.disabled">—</Typography>;
+                }
+                return (
+                  <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                    <Tooltip title="Approve">
+                      <span>
+                        <LoadingButton
+                          size="small"
+                          color="success"
+                          variant="text"
+                          loading={isBusy(row.id, 'approve')}
+                          disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
+                          onClick={() => setApproveId(row.id)}
+                          sx={{
+                            minWidth: 32,
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                          }}
+                        >
+                          <Iconify icon="mdi:check" width={20} />
+                        </LoadingButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Reject">
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={isAnyActionPending}
+                          onClick={() => handleOpenReject(row.id)}
+                        >
+                          <Iconify icon="mdi:close" width={20} />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </Stack>
+                );
+              },
             },
           ]}
         />

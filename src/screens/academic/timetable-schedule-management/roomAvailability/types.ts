@@ -133,13 +133,14 @@ export interface RoomReservation {
   teacherName?: string;
   subject?: string;
   status: ReservationStatus;
-  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'none';
+  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'none';
   conflictStatus?: ConflictSeverity | 'none';
   conflictReason?: string;
   remarks?: string;
   isRecurring?: boolean;
   recurringUntilDate?: string;
   createdAt?: string;
+  creatorId?: string;
   updatedAt?: string;
   approvedBy?: string;
   rejectionReason?: string;
@@ -231,6 +232,8 @@ export interface ReservationRequirements {
   remarks?: string;
   aiCommand?: string;
   selectedRoomId?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface RecurringConfig {

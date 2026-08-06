@@ -2,6 +2,7 @@
 
 import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
@@ -53,6 +54,8 @@ export const RoomReservationsTab = ({
   onEdit,
   onViewRoom,
 }: RoomReservationsTabProps) => {
+  const { data: session } = useSession() as any;
+  const currentUserId = session?.profile?.sub;
   const [filter, setFilter] = useState<string>('all');
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [approveId, setApproveId] = useState<string | null>(null);
@@ -273,81 +276,86 @@ export const RoomReservationsTab = ({
             isFilter: false,
             sticky: true,
             stickyPosition: 'right',
-            render: (_v, row) => (
-              <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
-                <Tooltip title="View Room Details">
-                  <IconButton size="small" color="default" onClick={() => onViewRoom?.(row.roomId)}>
-                    <Iconify icon={GlobalIcons.eye} width={18} />
-                  </IconButton>
-                </Tooltip>
+            render: (_v, row) => {
+              const isRequester = currentUserId && row.creatorId && currentUserId === row.creatorId;
+              const showApproveActions = canApprove && !isRequester;
 
-                {onEdit && ['draft', 'pendingApproval'].includes(row.status) && (
-                  <Tooltip title="Edit">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => onEdit(row as RoomReservation)}
-                    >
-                      <Iconify icon={GlobalIcons.edit} width={18} />
+              return (
+                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                  <Tooltip title="View Room Details">
+                    <IconButton size="small" color="default" onClick={() => onViewRoom?.(row.roomId)}>
+                      <Iconify icon={GlobalIcons.eye} width={18} />
                     </IconButton>
                   </Tooltip>
-                )}
 
-                {canApprove && row.approvalStatus === 'pending' && (
-                  <>
-                    <Tooltip title="Approve">
-                      <span>
-                        <LoadingButton
-                          size="small"
-                          color="success"
-                          variant="text"
-                          loading={isBusy(row.id, 'approve')}
-                          disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
-                          onClick={() => setApproveId(row.id)}
-                          sx={{
-                            minWidth: 32,
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
-                          }}
-                        >
-                          <Iconify icon="mdi:check" width={20} />
-                        </LoadingButton>
-                      </span>
+                  {onEdit && ['draft', 'pendingApproval'].includes(row.status) && (
+                    <Tooltip title="Edit">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => onEdit(row as RoomReservation)}
+                      >
+                        <Iconify icon={GlobalIcons.edit} width={18} />
+                      </IconButton>
                     </Tooltip>
-                    <Tooltip title="Reject">
+                  )}
+
+                  {showApproveActions && row.approvalStatus === 'pending' && (
+                    <>
+                      <Tooltip title="Approve">
+                        <span>
+                          <LoadingButton
+                            size="small"
+                            color="success"
+                            variant="text"
+                            loading={isBusy(row.id, 'approve')}
+                            disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
+                            onClick={() => setApproveId(row.id)}
+                            sx={{
+                              minWidth: 32,
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                            }}
+                          >
+                            <Iconify icon="mdi:check" width={20} />
+                          </LoadingButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="Reject">
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            disabled={isAnyActionPending}
+                            onClick={() => handleOpenReject(row.id)}
+                          >
+                            <Iconify icon="mdi:close" width={20} />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </>
+                  )}
+
+                  {onCancel && ['active', 'approved', 'pendingApproval'].includes(row.status) && (
+                    <Tooltip title="Cancel Reservation">
                       <span>
                         <IconButton
                           size="small"
                           color="error"
                           disabled={isAnyActionPending}
-                          onClick={() => handleOpenReject(row.id)}
+                          onClick={() => {
+                            setCancelId(row.id);
+                          }}
                         >
-                          <Iconify icon="mdi:close" width={20} />
+                          <Iconify icon={GlobalIcons.delete} width={18} />
                         </IconButton>
                       </span>
                     </Tooltip>
-                  </>
-                )}
-
-                {onCancel && ['active', 'approved', 'pendingApproval'].includes(row.status) && (
-                  <Tooltip title="Cancel Reservation">
-                    <span>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        disabled={isAnyActionPending}
-                        onClick={() => {
-                          setCancelId(row.id);
-                        }}
-                      >
-                        <Iconify icon={GlobalIcons.delete} width={18} />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                )}
-              </Stack>
-            ),
+                  )}
+                </Stack>
+              );
+            },
           },
         ]}
       />
