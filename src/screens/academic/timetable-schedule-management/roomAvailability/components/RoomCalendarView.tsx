@@ -6,7 +6,10 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Chip, Stack, Skeleton, Typography } from '@mui/material';
 
 import { MOCK_RESERVATIONS } from '../roomAvailability.mock';
 
@@ -35,31 +38,53 @@ const toCalendarEvents = (reservations: RoomReservation[]) =>
 
 interface RoomCalendarViewProps {
   reservations?: RoomReservation[];
+  isLoading?: boolean;
   onEventClick?: (reservation: RoomReservation) => void;
   onSlotClick?: (date: string, startTime: string) => void;
 }
 
 export const RoomCalendarView = ({
   reservations = MOCK_RESERVATIONS,
+  isLoading = false,
   onEventClick,
   onSlotClick,
 }: RoomCalendarViewProps) => {
   const calRef = useRef<FullCalendar>(null);
   const events = toCalendarEvents(reservations);
 
+  if (isLoading) {
+    return (
+      <Stack spacing={2}>
+        <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
+        <Skeleton variant="rectangular" height={440} sx={{ borderRadius: 1.5 }} />
+      </Stack>
+    );
+  }
+
   return (
     <Box>
       {/* Type legend */}
-      <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
-        {Object.entries(TYPE_COLORS).map(([type, color]) => (
-          <Chip
-            key={type}
-            size="small"
-            label={type.charAt(0).toUpperCase() + type.slice(1)}
-            sx={{ bgcolor: `${color}22`, color, borderColor: color, fontSize: 11 }}
-            variant="outlined"
-          />
-        ))}
+      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="subtitle2" fontWeight={700}>
+            Reservation Types
+          </Typography>
+          <CustomTooltip title="Interactive calendar displaying room bookings by date, time slot, and reservation type." arrow placement="right">
+            <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} sx={{ cursor: 'pointer' }} />
+          </CustomTooltip>
+        </Stack>
+
+        <Stack direction="row" flexWrap="wrap" gap={1}>
+          {Object.entries(TYPE_COLORS).map(([type, color]) => (
+            <Chip
+              key={type}
+              size="small"
+              label={type.charAt(0).toUpperCase() + type.slice(1)}
+              sx={{ bgcolor: `${color}22`, color, borderColor: color, fontSize: 11 }}
+              variant="outlined"
+            />
+          ))}
+        </Stack>
       </Stack>
 
       <Box

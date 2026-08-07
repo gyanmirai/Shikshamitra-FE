@@ -232,7 +232,6 @@ export const ReviewQueueTab = ({
               ? p.actualCompletionPercentage - (p.plannedCompletionPercentage ?? 0)
               : '-',
           evidenceCount: 0,
-          aiSummary: 'Plan aligns with national curriculum standards. Clear objectives stated.',
           submittedAt: p.plannedDate,
           status:
             p.planStatus === 'Approved'
@@ -491,6 +490,9 @@ export const ReviewQueueTab = ({
           {filteredReviewRows.map((row) => {
             const sourcePlan = lessonPlans.find((plan) => plan.id === row.id);
             const isSelf = Boolean(currentTeacherId && row.teacherId === currentTeacherId);
+            // Only the card whose target matches the active review dialog should
+            // reflect the in-flight mutation isLoading. Other cards stay idle.
+            const isReviewTarget = review.target?.id === row.id;
 
             return (
               <ReviewCard
@@ -499,6 +501,9 @@ export const ReviewQueueTab = ({
                 canReview={canReviewRow(row)}
                 canReviewSubmissions={canReviewSubmissions}
                 isSelfSubmission={isSelf}
+                isApproving={isApproving && isReviewTarget}
+                isRequesting={isRequesting && isReviewTarget}
+                isRejecting={isRejecting && isReviewTarget}
                 onApprove={() => openReview({ type: 'plan', id: row.id }, 'approve')}
                 onRequestChanges={() => openReview({ type: 'plan', id: row.id }, 'changes')}
                 onReject={() => openReview({ type: 'plan', id: row.id }, 'reject')}

@@ -4,7 +4,9 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { alpha } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { useBoolean } from 'src/hooks/use-boolean';
 import {
   Box,
@@ -16,7 +18,6 @@ import {
   Drawer,
   Button,
   Divider,
-  Tooltip,
   Skeleton,
   IconButton,
   Typography,
@@ -68,7 +69,7 @@ export const RoomDetailDrawer = ({
       onClose={onClose}
       PaperProps={{
         sx: {
-          width: { xs: '100%', sm: 460 },
+          width: { xs: '100%', sm: 480 },
           display: 'flex',
           flexDirection: 'column',
           borderTopLeftRadius: { sm: 16 },
@@ -82,19 +83,19 @@ export const RoomDetailDrawer = ({
         alignItems="center"
         justifyContent="space-between"
         sx={{
-          px: 2.5,
-          py: 2,
+          px: 3,
+          py: 2.5,
           borderBottom: 1,
           borderColor: 'divider',
           background: (theme) =>
-            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)} 0%, ${alpha(theme.palette.primary.main, 0.03)} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" alignItems="center" spacing={1.5}>
           <Box
             sx={{
-              width: 42,
-              height: 42,
+              width: 44,
+              height: 44,
               borderRadius: 2,
               display: 'grid',
               placeItems: 'center',
@@ -102,12 +103,27 @@ export const RoomDetailDrawer = ({
               boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.24)}`,
             }}
           >
-            <Iconify icon="mdi:door" width={22} sx={{ color: 'common.white' }} />
+            <Iconify icon="mdi:door" width={24} sx={{ color: 'common.white' }} />
           </Box>
           <Box>
-            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-              {room?.roomName || '—'}
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+                {room?.roomName || 'Room Details'}
+              </Typography>
+              <CustomTooltip
+                title="Inspect real-time room capacity, facilities, active schedules, and audit log history."
+                arrow
+                placement="right"
+              >
+                <Iconify
+                  icon={GlobalIcons.info}
+                  color="info.main"
+                  width={18}
+                  height={18}
+                  sx={{ cursor: 'pointer', mt: 0.25 }}
+                />
+              </CustomTooltip>
+            </Stack>
             <Typography variant="caption" color="text.secondary">
               {room?.buildingName} · {room?.floorName}
             </Typography>
@@ -128,7 +144,7 @@ export const RoomDetailDrawer = ({
 
       {/* ── Status Banner ─────────────────────────────────── */}
       {room && (
-        <Box sx={{ px: 2.5, pt: 2 }}>
+        <Box sx={{ px: 3, pt: 2 }}>
           <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
             <RoomStatusChip status={room.status} />
             <Chip size="small" label={room.type} variant="outlined" sx={{ borderRadius: 1 }} />
@@ -166,12 +182,12 @@ export const RoomDetailDrawer = ({
       <Divider />
 
       {/* ── Content ──────────────────────────────────────── */}
-      <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2, bgcolor: 'background.neutral' }}>
+      <Box sx={{ flex: 1, overflow: 'auto', px: 3, py: 2.5, bgcolor: 'background.neutral' }}>
         {activeTab === 'details' && room && (
-          <Stack spacing={1}>
+          <Stack spacing={2}>
             {/* Facilities */}
             <Box>
-              <Typography variant="subtitle2" gutterBottom>
+              <Typography variant="subtitle2" gutterBottom fontWeight={700}>
                 Facilities
               </Typography>
               <Stack direction="row" flexWrap="wrap" gap={1}>
@@ -197,7 +213,7 @@ export const RoomDetailDrawer = ({
               </Stack>
             </Box>
 
-            {/* Current Usage / Conflict — shown as a single banner when they describe the same thing */}
+            {/* Current Usage / Conflict */}
             {(() => {
               const usageText = room.occupiedBy || room.reservationPurpose;
               const isSameAsConflict = usageText && room.conflictReason && usageText === room.conflictReason;
@@ -210,7 +226,7 @@ export const RoomDetailDrawer = ({
                       icon={<Iconify icon="mdi:information" />}
                       sx={{ borderRadius: 1.5 }}
                     >
-                      <Typography variant="subtitle2" gutterBottom>
+                      <Typography variant="subtitle2" gutterBottom fontWeight={700}>
                         Current Usage
                       </Typography>
                       <Typography variant="body2">{usageText}</Typography>
@@ -228,7 +244,7 @@ export const RoomDetailDrawer = ({
                       sx={{ borderRadius: 1.5 }}
                     >
                       {isSameAsConflict && (
-                        <Typography variant="subtitle2" gutterBottom>
+                        <Typography variant="subtitle2" gutterBottom fontWeight={700}>
                           Current Usage
                         </Typography>
                       )}
@@ -286,7 +302,7 @@ export const RoomDetailDrawer = ({
                 onChange={(newDate) => setSelectedDate(newDate)}
                 slotProps={{ textField: { size: 'small', fullWidth: true, sx: { mb: 2 } } }}
               />
-              {scheduleHook.isLoading ? (
+              {scheduleHook.isLoading || scheduleHook.isFetching ? (
                 <Stack spacing={1}>
                   {[1, 2, 3].map((i) => (
                     <Skeleton key={i} height={44} sx={{ borderRadius: 1.5 }} />
@@ -360,6 +376,41 @@ export const RoomDetailDrawer = ({
         )}
       </Box>
 
+      {/* Footer */}
+      <Divider />
+      <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ p: 2.5, bgcolor: 'background.paper' }}>
+        {onReserve && room && (
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+            onClick={() => onReserve(room)}
+          >
+            Reserve Room
+          </Button>
+        )}
+        {onMaintenance && room && (
+          <Button
+            variant="outlined"
+            color="warning"
+            size="small"
+            startIcon={<Iconify icon="mdi:wrench" />}
+            onClick={() => onMaintenance(room)}
+          >
+            Mark Maintenance
+          </Button>
+        )}
+        <Button
+          variant="outlined"
+          color="inherit"
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+        >
+          Close
+        </Button>
+      </Stack>
     </Drawer>
   );
 };

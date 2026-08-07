@@ -129,7 +129,22 @@ export const RoomApprovalQueue = ({
       <Stack spacing={1} sx={{ height: '100%' }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="mdi:clock-outline" width={20} color="warning.main" />
-          <Typography variant="h6">Approval Queue</Typography>
+          <Typography variant="h6" fontWeight={700}>
+            Approval Queue
+          </Typography>
+          <CustomTooltip
+            title="Review and process pending room reservation requests requiring administrator approval."
+            arrow
+            placement="right"
+          >
+            <Iconify
+              icon={GlobalIcons.info}
+              color="info.main"
+              width={18}
+              height={18}
+              sx={{ cursor: 'pointer', mt: 0.25 }}
+            />
+          </CustomTooltip>
           <Label color="warning">{pending.length}</Label>
         </Stack>
 

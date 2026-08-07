@@ -2,6 +2,7 @@
 
 import dayjs from 'dayjs';
 import { useMemo, useState, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { MOCK_AI_PARSE_RESULT } from './roomAvailability.mock';
 import {
@@ -77,7 +78,11 @@ export function useRoomAvailability(filters?: Partial<RoomAvailabilityFilters>) 
     search: filters?.search,
   };
 
-  const { data, isLoading, isError, refetch, isFetching } = useGetRoomAvailabilityQuery(params);
+  const { data, isLoading, isError, refetch, isFetching } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomAvailabilityQuery,
+    params,
+  });
   const roomAvailabilityData = (data || []) as RoomAvailabilityItem[];
 
   return {
@@ -90,15 +95,15 @@ export function useRoomAvailability(filters?: Partial<RoomAvailabilityFilters>) 
   };
 }
 
-// Removed useRoomAvailabilitySummary hook
-
 // ─── useRoomSchedule ──────────────────────────────────────────────────────────
 export function useRoomSchedule(roomId: string | null, dateStr?: string) {
   const queryDate = dateStr || dayjs().format('YYYY-MM-DD');
-  const { data, isLoading, isError, refetch, isFetching } = useGetRoomScheduleQuery(
-    { roomId, date: queryDate },
-    { skip: !roomId }
-  );
+  const { data, isLoading, isError, refetch, isFetching } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomScheduleQuery,
+    params: { roomId, date: queryDate },
+    options: { skip: !roomId },
+  });
 
   return {
     data: (data || null) as RoomSchedule | null,
@@ -115,15 +120,22 @@ export function useRoomDetails(roomId: string | null) {
   const {
     data: list,
     isLoading,
+    isFetching,
     isError,
     refetch,
-  } = useGetRoomAvailabilityQuery(undefined, { skip: !roomId });
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomAvailabilityQuery,
+    params: undefined,
+    options: { skip: !roomId },
+  });
   const rooms = (list || []) as RoomAvailabilityItem[];
   const found = rooms.find((r) => r.roomId === roomId) || null;
 
   return {
     data: found,
     isLoading,
+    isFetching,
     error: isError ? 'Failed to load room details.' : null,
     refetch,
     fetch: refetch,
@@ -132,21 +144,37 @@ export function useRoomDetails(roomId: string | null) {
 
 // ─── useRoomReservations ──────────────────────────────────────────────────────
 export function useRoomReservations(params?: GetReservationsParams) {
-  const { data, isLoading, isError, refetch } = useGetReservationsQuery(params || {});
-  const [cancelReservation] = useCancelRoomReservationMutation();
-  const [approveReservation] = useApproveRoomReservationMutation();
-  const [rejectReservation] = useRejectRoomReservationMutation();
+  const { data, isLoading, isFetching, isError, refetch } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReservationsQuery,
+    params: params || {},
+  });
+  const [cancelReservation, { isLoading: isCancelLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCancelRoomReservationMutation,
+  });
+  const [approveReservation, { isLoading: isApproveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useApproveRoomReservationMutation,
+  });
+  const [rejectReservation, { isLoading: isRejectLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectRoomReservationMutation,
+  });
 
   const handleCancel = useCallback(
     async (id: string, reason?: string) => {
-      await cancelReservation({ id, reason: reason || 'Cancelled by user' }).unwrap();
-      refetch();
+      try {
+        await cancelReservation({ id, reason: reason || 'Cancelled by user' }).unwrap();
+        refetch();
+        return true;
+      } catch {
+        return false;
+      }
     },
     [cancelReservation, refetch]
   );
 
-  // Returns true on success, false on failure. Callers own the user-facing
-  // success/error messaging; we only surface the outcome so they can react.
   const handleUpdate = useCallback(
     async (id: string, payload: any): Promise<boolean> => {
       try {
@@ -210,6 +238,11 @@ export function useRoomReservations(params?: GetReservationsParams) {
   return {
     data: mapped,
     isLoading,
+    isFetching,
+    isCancelLoading,
+    isApproveLoading,
+    isRejectLoading,
+    isMutationLoading: isCancelLoading || isApproveLoading || isRejectLoading,
     error: isError ? 'Failed to load reservations.' : null,
     refetch,
     fetch: refetch,
@@ -221,11 +254,16 @@ export function useRoomReservations(params?: GetReservationsParams) {
 
 // ─── useRoomUsageReport ───────────────────────────────────────────────────────
 export function useRoomUsageReport() {
-  const { data, isLoading, isError, refetch } = useGetRoomUsageReportQuery(undefined);
+  const { data, isLoading, isFetching, isError, refetch } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomUsageReportQuery,
+    params: undefined,
+  });
 
   return {
     data: (data || []) as UsageReportData[],
     isLoading,
+    isFetching,
     error: isError ? 'Failed to load usage report.' : null,
     refetch,
     fetch: refetch,
@@ -234,13 +272,17 @@ export function useRoomUsageReport() {
 
 // ─── useRoomAuditLogs ─────────────────────────────────────────────────────────
 export function useRoomAuditLogs(roomId?: string | null, options?: { skip?: boolean }) {
-  const { data, isLoading, isError, refetch } = useGetRoomAuditLogsQuery(roomId || undefined, {
-    skip: options?.skip,
+  const { data, isLoading, isFetching, isError, refetch } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomAuditLogsQuery,
+    params: roomId || undefined,
+    options: { skip: options?.skip },
   });
 
   return {
     data: (data || []) as AuditLogEntry[],
     isLoading,
+    isFetching,
     error: isError ? 'Failed to load audit logs.' : null,
     refetch,
     fetch: refetch,
@@ -250,7 +292,10 @@ export function useRoomAuditLogs(roomId?: string | null, options?: { skip?: bool
 
 // ─── useRoomSuggestions ───────────────────────────────────────────────────────
 export function useRoomSuggestions() {
-  const [suggestRooms, { isLoading, isError }] = useSuggestAlternativeRoomsMutation();
+  const [suggestRooms, { isLoading, isError }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSuggestAlternativeRoomsMutation,
+  });
   const [localData, setLocalData] = useState<SuggestedRoom[]>([]);
 
   const suggest = useCallback(
@@ -262,7 +307,10 @@ export function useRoomSuggestions() {
           endTime: requirements.endTime,
           requiredCapacity: requirements.requiredCapacity || 0,
           requiredFacilities: requirements.requiredFacilities,
-          preferredBuildingId: requirements.preferredBuilding === 'all' || !requirements.preferredBuilding ? undefined : requirements.preferredBuilding,
+          preferredBuildingId:
+            requirements.preferredBuilding === 'all' || !requirements.preferredBuilding
+              ? undefined
+              : requirements.preferredBuilding,
           standardId: undefined,
           page: requirements.page,
           limit: requirements.limit || 50,
@@ -313,7 +361,10 @@ export function useRoomSuggestions() {
 
 // ─── useRoomConflictCheck ─────────────────────────────────────────────────────
 export function useRoomConflictCheck() {
-  const [checkConflicts, { isLoading, isError }] = useCheckRoomConflictsMutation();
+  const [checkConflicts, { isLoading, isError }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCheckRoomConflictsMutation,
+  });
   const [localData, setLocalData] = useState<ConflictCheck | null>(null);
 
   const check = useCallback(
@@ -390,7 +441,10 @@ export function useRoomConflictCheck() {
 
 // ─── useCreateRoomReservation ─────────────────────────────────────────────────
 export function useCreateRoomReservation() {
-  const [createReservation, { isLoading, isError, isSuccess }] = useCreateRoomReservationMutation();
+  const [createReservation, { isLoading, isError, isSuccess }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateRoomReservationMutation,
+  });
 
   const create = useCallback(
     async (payload: Partial<RoomReservation>): Promise<RoomReservation | null> => {
@@ -461,7 +515,10 @@ export function useCreateRoomReservation() {
 
 // ─── useUpdateRoomReservation ─────────────────────────────────────────────────
 export function useUpdateRoomReservation() {
-  const [updateReservation, { isLoading, isError }] = useUpdateRoomReservationMutation();
+  const [updateReservation, { isLoading, isError }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateRoomReservationMutation,
+  });
 
   const update = useCallback(
     async (id: string, updates: Partial<RoomReservation>) => {
@@ -493,7 +550,10 @@ export function useUpdateRoomReservation() {
 
 // ─── useCancelRoomReservation ─────────────────────────────────────────────────
 export function useCancelRoomReservation() {
-  const [cancelReservation, { isLoading, isError }] = useCancelRoomReservationMutation();
+  const [cancelReservation, { isLoading, isError }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCancelRoomReservationMutation,
+  });
 
   const cancel = useCallback(
     async (id: string, reason?: string) => {
@@ -512,7 +572,10 @@ export function useCancelRoomReservation() {
 
 // ─── useApproveRoomReservation ────────────────────────────────────────────────
 export function useApproveRoomReservation() {
-  const [approveReservation, { isLoading, isError }] = useApproveRoomReservationMutation();
+  const [approveReservation, { isLoading, isError }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useApproveRoomReservationMutation,
+  });
 
   const approve = useCallback(
     async (id: string, _remarks?: string) => {
@@ -531,7 +594,10 @@ export function useApproveRoomReservation() {
 
 // ─── useRejectRoomReservation ─────────────────────────────────────────────────
 export function useRejectRoomReservation() {
-  const [rejectReservation, { isLoading, isError }] = useRejectRoomReservationMutation();
+  const [rejectReservation, { isLoading, isError }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectRoomReservationMutation,
+  });
 
   const reject = useCallback(
     async (id: string, reason?: string) => {
@@ -550,7 +616,10 @@ export function useRejectRoomReservation() {
 
 // ─── useCreateMaintenanceBlock ────────────────────────────────────────────────
 export function useCreateMaintenanceBlock() {
-  const [createMaintenance, { isLoading, isError }] = useCreateMaintenanceBlockMutation();
+  const [createMaintenance, { isLoading, isError }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateMaintenanceBlockMutation,
+  });
 
   const create = useCallback(
     async (payload: MaintenanceBlock): Promise<MaintenanceBlock | null> => {

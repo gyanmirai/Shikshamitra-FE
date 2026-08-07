@@ -1,7 +1,9 @@
 'use client';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Stack, Paper, Tooltip, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Chip, Stack, Paper, Tooltip, Skeleton, Typography } from '@mui/material';
 
 import { MOCK_SCHEDULES } from '../roomAvailability.mock';
 import { SCHEDULE_STATUS_COLORS } from '../roomAvailability.constants';
@@ -27,16 +29,39 @@ const STATUS_BG: Record<string, string> = {
 
 interface RoomTimelineViewProps {
   rooms: RoomAvailabilityItem[];
+  isLoading?: boolean;
   onBlockClick?: (roomId: string, period: string) => void;
   onEmptySlotClick?: (roomId: string, period: string, startTime: string) => void;
 }
 
 export const RoomTimelineView = ({
   rooms,
+  isLoading = false,
   onBlockClick,
   onEmptySlotClick,
-}: RoomTimelineViewProps) => (
-  <Box sx={{ overflowX: 'auto' }}>
+}: RoomTimelineViewProps) => {
+  if (isLoading) {
+    return (
+      <Stack spacing={1}>
+        <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} variant="rectangular" height={52} sx={{ borderRadius: 1 }} />
+        ))}
+      </Stack>
+    );
+  }
+
+  return (
+    <Box sx={{ overflowX: 'auto' }}>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Iconify icon="mdi:timeline-text-outline" width={20} color="primary.main" />
+        <Typography variant="subtitle1" fontWeight={700}>
+          Period Matrix Timeline
+        </Typography>
+        <CustomTooltip title="Daily period-by-period matrix view showing free and booked room slots." arrow placement="right">
+          <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} sx={{ cursor: 'pointer' }} />
+        </CustomTooltip>
+      </Stack>
     <Box sx={{ minWidth: 700 }}>
       {/* Header row */}
       <Box
@@ -218,4 +243,5 @@ export const RoomTimelineView = ({
       ))}
     </Stack>
   </Box>
-);
+  );
+};

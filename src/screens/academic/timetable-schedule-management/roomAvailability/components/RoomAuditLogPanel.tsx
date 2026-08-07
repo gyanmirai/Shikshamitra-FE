@@ -309,7 +309,7 @@ export const RoomAuditLogPanel = ({
   compact = false,
   showRoomChip = false,
 }: RoomAuditLogPanelProps) => {
-  const { data, isLoading, error, fetch } = useRoomAuditLogs(roomId, {
+  const { data, isLoading, isFetching, error, fetch } = useRoomAuditLogs(roomId, {
     skip: Boolean(externalLogs),
   });
 
@@ -320,7 +320,7 @@ export const RoomAuditLogPanel = ({
 
   const logs = externalLogs || data;
 
-  if (isLoading) {
+  if (!externalLogs && (isLoading || isFetching)) {
     return (
       <Stack spacing={1}>
         {[1, 2, 3].map((i) => (

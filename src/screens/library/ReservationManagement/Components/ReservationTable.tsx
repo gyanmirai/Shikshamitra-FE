@@ -11,12 +11,14 @@ import type { IReservedBookData } from './type';
 const ReservedBookTable = ({
   addDialog,
   data,
+  isLoading,
   onEdit,
   onDelete,
   onIssueBook,
 }: {
   addDialog: UseBooleanReturn;
   data: IReservedBookData[];
+  isLoading?: boolean;
   onEdit: (row: IReservedBookData) => void;
   onDelete: (row: IReservedBookData) => void;
   onIssueBook: (row: IReservedBookData) => void;
@@ -41,6 +43,7 @@ const ReservedBookTable = ({
   return (
     <CustomizableTable
       tableId="reserved-book-table"
+      isLoading={isLoading}
       noDataText="No Reserved Student Data Found"
       columns={[
         { id: 'memberName', label: 'Member Name', align: 'left', sticky: true, minWidth: '150px' },

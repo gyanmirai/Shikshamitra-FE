@@ -15,12 +15,19 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+
 type ConfirmIconType = 'info' | 'warning' | 'success' | 'error';
 
 interface ConfirmOptions {
   title?: string;
   message: string | ReactNode;
   icon?: ConfirmIconType;
+  cancelText?: string;
+  confirmText?: string;
+  cancelStartIcon?: ReactNode;
+  confirmStartIcon?: ReactNode;
 }
 
 interface DialogState extends ConfirmOptions {
@@ -45,6 +52,10 @@ export function useConfirmDialog(): [(options: ConfirmOptions) => Promise<boolea
         title: options.title || 'Confirm',
         message: options.message,
         icon: options.icon || 'info',
+        cancelText: options.cancelText,
+        confirmText: options.confirmText,
+        cancelStartIcon: options.cancelStartIcon,
+        confirmStartIcon: options.confirmStartIcon,
         resolve,
       });
     });
@@ -68,11 +79,23 @@ export function useConfirmDialog(): [(options: ConfirmOptions) => Promise<boolea
         <Typography>{dialogState.message}</Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleClose(false)} variant="outlined" color="inherit" size="small">
-          Cancel
+        <Button
+          onClick={() => handleClose(false)}
+          variant="outlined"
+          color="inherit"
+          size="small"
+          startIcon={dialogState.cancelStartIcon ?? <Iconify icon={GlobalIcons.cancel} width={16} />}
+        >
+          {dialogState.cancelText || 'Cancel'}
         </Button>
-        <Button onClick={() => handleClose(true)} variant="contained" autoFocus size="small">
-          OK
+        <Button
+          onClick={() => handleClose(true)}
+          variant="contained"
+          autoFocus
+          size="small"
+          startIcon={dialogState.confirmStartIcon ?? <Iconify icon={GlobalIcons.approvedIcon} width={16} />}
+        >
+          {dialogState.confirmText || 'OK'}
         </Button>
       </DialogActions>
     </Dialog>

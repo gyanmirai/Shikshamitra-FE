@@ -10,6 +10,7 @@ import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import LoadingButton from '@mui/lab/LoadingButton';
 import { alpha, useTheme } from '@mui/material/styles';
 import dayjs from 'dayjs';
 
@@ -63,6 +64,12 @@ type ReviewCardProps = {
   canReview: boolean;
   canReviewSubmissions: boolean;
   isSelfSubmission?: boolean;
+  // Per-action loading flags wired from useQueryAndMutation isLoading states.
+  // When any action for this card is in-flight, all sibling review buttons are
+  // disabled to prevent duplicate submissions; the active one shows its spinner.
+  isApproving?: boolean;
+  isRequesting?: boolean;
+  isRejecting?: boolean;
   onApprove?: () => void;
   onRequestChanges?: () => void;
   onReject?: () => void;
@@ -75,6 +82,9 @@ export const ReviewCard = ({
   canReview,
   canReviewSubmissions,
   isSelfSubmission = false,
+  isApproving = false,
+  isRequesting = false,
+  isRejecting = false,
   onApprove,
   onRequestChanges,
   onReject,
@@ -85,6 +95,10 @@ export const ReviewCard = ({
 
   const isPending = item.status === 'pending';
   const formattedDate = item.submittedDate ? dayjs(item.submittedDate).format('DD-MM-YYYY') : '—';
+
+  // Any in-flight review mutation on this card locks all review buttons so the
+  // user can't kick off a second concurrent request for the same target.
+  const isReviewActionLoading = isApproving || isRequesting || isRejecting;
 
   return (
     <Card
@@ -216,33 +230,39 @@ export const ReviewCard = ({
 
         {isPending && canReview && (
           <>
-            <Button
+            <LoadingButton
               size="small"
               variant="contained"
               color="success"
+              loading={isApproving}
+              disabled={isReviewActionLoading && !isApproving}
               startIcon={<Iconify icon="mdi:check" width={16} />}
               onClick={onApprove}
             >
               Approve
-            </Button>
-            <Button
+            </LoadingButton>
+            <LoadingButton
               size="small"
               variant="outlined"
               color="warning"
+              loading={isRequesting}
+              disabled={isReviewActionLoading && !isRequesting}
               startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
               onClick={onRequestChanges}
             >
               Change
-            </Button>
-            <Button
+            </LoadingButton>
+            <LoadingButton
               size="small"
               variant="outlined"
               color="error"
+              loading={isRejecting}
+              disabled={isReviewActionLoading && !isRejecting}
               startIcon={<Iconify icon="mdi:close" width={16} />}
               onClick={onReject}
             >
               Reject
-            </Button>
+            </LoadingButton>
           </>
         )}
 

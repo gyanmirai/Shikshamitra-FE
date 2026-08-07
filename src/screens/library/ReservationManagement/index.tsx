@@ -5,6 +5,8 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import { libraryPaths } from 'src/constants/library-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -15,7 +17,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
-import { Box, Button, TextField, Typography, Autocomplete } from '@mui/material';
+import { Box, Button, TextField, Typography, Autocomplete, Skeleton, Stack } from '@mui/material';
 import { useGetReservationsQuery } from 'src/redux/reservationDataApi/reservationDataApi';
 import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
 
@@ -34,7 +36,7 @@ const ReservationManagement = () => {
   const addDialog = useBoolean();
   const issueDialog = useBoolean();
   const deleteDialog = useBoolean();
-  const { data: bookData } = useQueryAndMutation({
+  const { data: bookData, isLoading: isBookLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBooksQuery,
   });
@@ -44,8 +46,8 @@ const ReservationManagement = () => {
     currentQueryAndMutation: useGetBookCategoryOptionsQuery,
   });
 
-  //   Fetch reservations
-  const { data: reservations } = useQueryAndMutation({
+  // Fetch reservations
+  const { data: reservations, isLoading: isReservationsLoading, isFetching: isReservationsFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservationsQuery,
   });
@@ -73,15 +75,34 @@ const ReservationManagement = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Reservation Management"
+        heading={
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="h4" fontWeight={700}>
+              Reservation Management
+            </Typography>
+            <CustomTooltip
+              title="Search books, reserve library items for members, track reservation dates, and issue reserved books."
+              arrow
+              placement="right"
+            >
+              <Iconify
+                icon={GlobalIcons.info}
+                color="info.main"
+                width={18}
+                height={18}
+                sx={{ cursor: 'pointer', mt: 0.5 }}
+              />
+            </CustomTooltip>
+          </Stack>
+        }
         description={
           addDialog.value
             ? 'Make new reservations for books by selecting members and book details.'
             : 'Manage all reservations for different books and members.'
         }
         links={[
-          { name: 'Library', href: '/library/dashboard' },
-          { name: 'Reservation Management', href: '/library/reservation' },
+          { name: 'Library', href: libraryPaths.dashboard },
+          { name: 'Reservation Management' },
         ]}
         action={
           <Button
@@ -94,7 +115,7 @@ const ReservationManagement = () => {
           </Button>
         }
       />
-      <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
+      <Box sx={{ display: 'flex', gap: 2, ml: 1, mb: 1 }}>
         {/* Book Title Autocomplete */}
         <CustomTooltip
           placement="top"
@@ -105,35 +126,39 @@ const ReservationManagement = () => {
           }
         >
           <Box sx={{ width: '100%' }}>
-            <Autocomplete
-              options={
-                bookData?.map((item: ITitle) => ({
-                  id: item.id,
-                  label: `${item.title} (${item.category})`,
-                  value: item.id,
-                })) ?? []
-              }
-              getOptionLabel={(option) => option.label}
-              value={
-                selectedBook
-                  ? bookData
+            {isBookLoading ? (
+              <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+            ) : (
+              <Autocomplete
+                options={
+                  bookData?.map((item: ITitle) => ({
+                    id: item.id,
+                    label: `${item.title} (${item.category})`,
+                    value: item.id,
+                  })) ?? []
+                }
+                getOptionLabel={(option) => option.label}
+                value={
+                  selectedBook
+                    ? bookData
                       ?.map((item: ITitle) => ({
                         id: item.id,
                         label: item.title,
                         value: item.id,
                       }))
                       .find((option: { value: string }) => option.value === selectedBook) || null
-                  : null
-              }
-              onChange={(_, value) => {
-                setSelectedBook(value?.value ?? '');
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Book Title *" size="small" fullWidth />
-              )}
-              isOptionEqualToValue={(option, value) => option.value === value?.value}
-              sx={{ width: '100%' }}
-            />
+                    : null
+                }
+                onChange={(_, value) => {
+                  setSelectedBook(value?.value ?? '');
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} label="Book Title *" size="small" fullWidth />
+                )}
+                isOptionEqualToValue={(option, value) => option.value === value?.value}
+                sx={{ width: '100%' }}
+              />
+            )}
           </Box>
         </CustomTooltip>
       </Box>
@@ -161,7 +186,7 @@ const ReservationManagement = () => {
                   : 'This modal allows the librarian to select the required fields (such as member, book, and reservation date) to successfully make a reservation for a book.'
               }
             >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
@@ -185,7 +210,7 @@ const ReservationManagement = () => {
               sx={{ textAlign: 'justify' }}
               title="Select a member and book to issue with issue date and due date."
             >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
@@ -200,6 +225,7 @@ const ReservationManagement = () => {
       {/* Table */}
       <ReservedBookTable
         data={reservations}
+        isLoading={isReservationsLoading || isReservationsFetching}
         addDialog={addDialog}
         onEdit={(data) => {
           setSelectedRecord(data);
@@ -238,7 +264,6 @@ const ReservationManagement = () => {
             color="error"
             size="small"
             onClick={() => {
-              // Handle delete action here
               shikshaMitraToast.success({
                 message: (
                   <>
