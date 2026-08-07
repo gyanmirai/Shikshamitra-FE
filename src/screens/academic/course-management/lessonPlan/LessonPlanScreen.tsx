@@ -4,7 +4,8 @@ import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -12,7 +13,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import LoadingButton from '@mui/lab/LoadingButton';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -377,8 +378,13 @@ const renderDiaryStatus = (status: DiaryStatus) => {
 };
 
 const LessonPlanScreen = () => {
+  const dispatch = useDispatch();
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const { employee, user } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    dispatch(setIsChanges(false));
+  }, [dispatch]);
 
   const { data: mySubordinates } = useGetMyEmployeesUnderManagerQuery(undefined, {
     skip: !employee?.id,
@@ -1844,7 +1850,10 @@ const LessonPlanScreen = () => {
         >
           <CustomTabs
             value={activeTab}
-            onChange={(_, value) => setActiveTab(value as TabValue)}
+            onChange={(_, value) => {
+              dispatch(setIsChanges(false));
+              setActiveTab(value as TabValue);
+            }}
             sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
             role="tablist"
           >

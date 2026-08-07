@@ -29,6 +29,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { extractTimetableApiIssues } from 'src/components/timetable/timetableValidationIssues';
@@ -50,14 +51,12 @@ import {
   LinearProgress,
   Grid,
   Stack,
-  Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Tooltip,
-  IconButton,
   Tabs,
   Tab,
+  IconButton,
 } from '@mui/material';
 import {
   useCreateTimetableMutation,
@@ -441,56 +440,6 @@ const DISPLAY_STATUS_FILTER_OPTIONS = Object.keys(DISPLAY_STATUS_COLORS).map((st
   label: status,
 }));
 
-const SummaryTile = ({
-  label,
-  value,
-  icon,
-  color,
-}: {
-  label: string;
-  value: number;
-  icon: string;
-  color: string;
-}) => (
-  <Card
-    sx={{
-      p: 2,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      boxShadow: 'var(--shadows-2)',
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-    }}
-  >
-    <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>
-        {label}
-      </Typography>
-      <Typography variant="h4" sx={{ mt: 0.5 }}>
-        {value}
-      </Typography>
-    </Box>
-    <Box
-      sx={{
-        width: 40,
-        height: 40,
-        borderRadius: 1,
-        display: 'grid',
-        placeItems: 'center',
-        color: `${color}.main`,
-        bgcolor: (theme) =>
-          alpha(
-            theme.palette[
-              color as 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary'
-            ]?.main || theme.palette.primary.main,
-            0.08
-          ),
-      }}
-    >
-      <Iconify icon={icon} width={24} />
-    </Box>
-  </Card>
-);
 
 const TimeTableGrid = () => {
   const router = useRouter();
@@ -776,6 +725,48 @@ const TimeTableGrid = () => {
     return { total, published, draftInProgress, readyToPublish, conflicts, notReady };
   }, [timetableManagementData?.items]);
 
+  const summaryCards = useMemo(
+    () => [
+      {
+        label: 'Total Divisions',
+        value: stats.total,
+        icon: 'solar:users-group-two-rounded-bold',
+        color: 'primary' as const,
+      },
+      {
+        label: 'Published',
+        value: stats.published,
+        icon: 'mdi:check-circle-outline',
+        color: 'success' as const,
+      },
+      {
+        label: 'Draft / In Progress',
+        value: stats.draftInProgress,
+        icon: 'mdi:play-circle-outline',
+        color: 'warning' as const,
+      },
+      {
+        label: 'Ready to Publish',
+        value: stats.readyToPublish,
+        icon: 'mdi:eye-outline',
+        color: 'info' as const,
+      },
+      {
+        label: 'Conflicts',
+        value: stats.conflicts,
+        icon: 'mdi:alert-circle-outline',
+        color: 'error' as const,
+      },
+      {
+        label: 'Not Ready',
+        value: stats.notReady,
+        icon: 'lucide:settings',
+        color: 'error' as const,
+      },
+    ],
+    [stats]
+  );
+
   const timetableRows = useMemo(
     () =>
       (timetableManagementData?.items || []).map((row: any) => {
@@ -864,17 +855,28 @@ const TimeTableGrid = () => {
       </CustomDialog>
 
       {ConfirmDialog}
-      <Dialog
+      <CustomDialog
         open={Boolean(readinessCheckDivision)}
-        onClose={() => setReadinessCheckDivision(null)}
+        handleClose={() => setReadinessCheckDivision(null)}
         maxWidth="xs"
-        fullWidth
+        hasForm={false}
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            <Iconify icon="lucide:alert-triangle" color="warning.main" width={22} />
+            Readiness Checklist
+            <CustomTooltip
+              arrow
+              placement="bottom-start"
+              title="View the prerequisite checklist (subject assignments, teacher mappings, period structure) required before publishing a timetable for this division."
+            >
+              <IconButton size="small" color="info" sx={{ p: 0.5 }}>
+                <Iconify icon="lucide:info" width={18} />
+              </IconButton>
+            </CustomTooltip>
+          </Box>
+        }
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 1 }}>
-          <Iconify icon="lucide:alert-triangle" color="warning.main" />
-          <Typography variant="h6">Readiness Checklist</Typography>
-        </DialogTitle>
-        <DialogContent dividers sx={{ py: 2 }}>
+        <DialogContent sx={{ p: 2 }}>
           {readinessCheckDivision && (
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
@@ -907,16 +909,18 @@ const TimeTableGrid = () => {
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             onClick={() => setReadinessCheckDivision(null)}
             variant="contained"
             color="primary"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.approvedIcon} />}
           >
             Okay
           </Button>
         </DialogActions>
-      </Dialog>
+      </CustomDialog>
       {!open && (
         <>
           <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
@@ -944,56 +948,7 @@ const TimeTableGrid = () => {
               />
             </Box>
           </Card>
-          <Grid container spacing={1} sx={{ mb: 2 }}>
-            <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile
-                label="Total Divisions"
-                value={stats.total}
-                icon="solar:users-group-two-rounded-bold"
-                color="primary"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile
-                label="Published"
-                value={stats.published}
-                icon="mdi:check-circle-outline"
-                color="success"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile
-                label="Draft / In Progress"
-                value={stats.draftInProgress}
-                icon="mdi:play-circle-outline"
-                color="warning"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile
-                label="Ready to Publish"
-                value={stats.readyToPublish}
-                icon="mdi:eye-outline"
-                color="info"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile
-                label="Conflicts"
-                value={stats.conflicts}
-                icon="mdi:alert-circle-outline"
-                color="error"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-              <SummaryTile
-                label="Not Ready"
-                value={stats.notReady}
-                icon="lucide:settings"
-                color="error"
-              />
-            </Grid>
-          </Grid>
+          <TimetableSettingsSummaryCards cards={summaryCards} />
           <CustomizableTable
             tableId="timetable-table"
             noDataText={
@@ -1836,13 +1791,14 @@ const TimeTableForm = ({
               </Box>
             )}
 
-            <Button
+            <LoadingButton
               variant="outlined"
               size="small"
               color="inherit"
               startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
               onClick={() => handleSubmit(formik.values.slots, 1)}
-              disabled={isSubmitting}
+              loading={isSubmitting}
+              disabled={isValidating}
               sx={{
                 borderColor: 'divider',
                 color: 'text.primary',
@@ -1851,15 +1807,16 @@ const TimeTableForm = ({
               }}
             >
               Save Draft
-            </Button>
+            </LoadingButton>
 
-            <Button
+            <LoadingButton
               variant="outlined"
               size="small"
               color="inherit"
               startIcon={<Iconify icon="lucide:check-square" />}
               onClick={handleValidate}
-              disabled={isSubmitting || isValidating}
+              loading={isValidating}
+              disabled={isSubmitting}
               sx={{
                 borderColor: 'divider',
                 color: 'text.primary',
@@ -1868,15 +1825,15 @@ const TimeTableForm = ({
               }}
             >
               Validate
-            </Button>
+            </LoadingButton>
 
             <Button
               variant="outlined"
               size="small"
               color="inherit"
-              startIcon={<Iconify icon="lucide:eye" />}
+              startIcon={<Iconify icon={GlobalIcons.eye} />}
               onClick={() => setPreviewOpen(true)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isValidating}
               sx={{
                 borderColor: 'divider',
                 color: 'text.primary',
@@ -1894,6 +1851,7 @@ const TimeTableForm = ({
               startIcon={<Iconify icon={GlobalIcons.publish} />}
               onClick={handlePublishClick}
               loading={isSubmitting}
+              disabled={isValidating}
               sx={{ fontWeight: 600 }}
             >
               Publish
@@ -1924,47 +1882,60 @@ const TimeTableForm = ({
       </Box>
 
       {/* Validation Dialog */}
-      <Dialog
+      <CustomDialog
         open={Boolean(validationResult)}
-        onClose={() => setValidationResult(null)}
+        handleClose={() => setValidationResult(null)}
         maxWidth="md"
-        fullWidth
+        hasForm={false}
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1,
+                display: 'grid',
+                placeItems: 'center',
+                color: validationResult?.passed ? 'success.main' : 'error.main',
+                bgcolor: (theme) =>
+                  alpha(
+                    validationResult?.passed ? theme.palette.success.main : theme.palette.error.main,
+                    0.1
+                  ),
+              }}
+            >
+              <Iconify
+                icon={
+                  validationResult?.passed ? 'mdi:check-circle-outline' : 'mdi:alert-circle-outline'
+                }
+                width={24}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                  {validationResult?.passed ? 'Validation Passed' : 'Validation Failed'}
+                </Box>
+                <CustomTooltip
+                  arrow
+                  placement="bottom-start"
+                  title="Automated validation check verifying period slot coverage, subject load completion, and room/teacher conflict prevention."
+                >
+                  <IconButton size="small" color="info" sx={{ p: 0.5 }}>
+                    <Iconify icon="lucide:info" width={18} />
+                  </IconButton>
+                </CustomTooltip>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {validationResult?.passed
+                  ? 'The timetable is complete and ready to publish.'
+                  : 'Review the exact issues below before publishing.'}
+              </Typography>
+            </Box>
+          </Box>
+        }
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1.5 }}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: 1,
-              display: 'grid',
-              placeItems: 'center',
-              color: validationResult?.passed ? 'success.main' : 'error.main',
-              bgcolor: (theme) =>
-                alpha(
-                  validationResult?.passed ? theme.palette.success.main : theme.palette.error.main,
-                  0.1
-                ),
-            }}
-          >
-            <Iconify
-              icon={
-                validationResult?.passed ? 'mdi:check-circle-outline' : 'mdi:alert-circle-outline'
-              }
-              width={24}
-            />
-          </Box>
-          <Box>
-            <Typography variant="h6">
-              {validationResult?.passed ? 'Validation Passed' : 'Validation Failed'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {validationResult?.passed
-                ? 'The timetable is complete and ready to publish.'
-                : 'Review the exact issues below before publishing.'}
-            </Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent sx={{ p: 2 }}>
           {validationResult && (
             <Stack spacing={2}>
               {validationResult.passed ? (
@@ -2183,11 +2154,14 @@ const TimeTableForm = ({
             </Stack>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             onClick={() => setValidationResult(null)}
-            variant={validationResult?.passed ? 'outlined' : 'contained'}
-            color={validationResult?.passed ? 'inherit' : 'primary'}
+            variant="outlined"
+            color="inherit"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            disabled={isSubmitting}
           >
             Close
           </Button>
@@ -2196,29 +2170,41 @@ const TimeTableForm = ({
               onClick={handlePublishFromValidation}
               variant="contained"
               color="primary"
+              size="small"
               startIcon={<Iconify icon={GlobalIcons.publish} />}
               loading={isSubmitting}
+              disabled={isValidating}
             >
               Publish Now
             </LoadingButton>
           )}
         </DialogActions>
-      </Dialog>
+      </CustomDialog>
 
       {/* Publish Confirmation Dialog */}
-      <Dialog
+      <CustomDialog
         open={publishConfirmOpen}
-        onClose={() => {
-          if (!isSubmitting) setPublishConfirmOpen(false);
-        }}
+        handleClose={() => setPublishConfirmOpen(false)}
         maxWidth="xs"
-        fullWidth
+        hasForm={false}
+        disableClose={isSubmitting}
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Iconify icon="mdi:cloud-upload-outline" color="primary.main" width={22} />
+            Publish Timetable
+            <CustomTooltip
+              arrow
+              placement="bottom-start"
+              title="Publishing will update the timetable status to Active, making it visible to teachers, students, and parents."
+            >
+              <IconButton size="small" color="info" sx={{ p: 0.5 }}>
+                <Iconify icon="lucide:info" width={18} />
+              </IconButton>
+            </CustomTooltip>
+          </Box>
+        }
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Iconify icon="mdi:cloud-upload-outline" color="primary.main" />
-          <Typography variant="h6">Publish Timetable</Typography>
-        </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent sx={{ p: 2 }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
             Ready to publish Class {selectedClass} Division {selectedDivision}
           </Typography>
@@ -2226,41 +2212,17 @@ const TimeTableForm = ({
             Validation is complete. Publishing will make this timetable visible to teachers,
             students, and parents.
           </Alert>
-          <Stack spacing={1} sx={{ mb: 2.5, display: 'none' }}>
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}
-            >
-              ✓ {slotSummary.filled}/{slotSummary.total} slots filled
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}
-            >
-              ✓ All subjects complete
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}
-            >
-              ✓ All teachers & rooms assigned
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}
-            >
-              ✓ 0 conflicts found
-            </Typography>
-          </Stack>
           <Typography variant="body2" color="text.secondary">
             This action updates the timetable status to Published. Continue?
           </Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             onClick={() => setPublishConfirmOpen(false)}
             variant="outlined"
             color="inherit"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
             disabled={isSubmitting}
           >
             Cancel
@@ -2272,28 +2234,43 @@ const TimeTableForm = ({
             }}
             variant="contained"
             color="primary"
+            size="small"
             loading={isSubmitting}
+            disabled={isValidating}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
           >
             Publish
           </LoadingButton>
         </DialogActions>
-      </Dialog>
+      </CustomDialog>
 
       {/* Preview Dialog */}
-      <Dialog open={previewOpen} onClose={() => setPreviewOpen(false)} maxWidth="lg" fullWidth>
-        <DialogTitle
-          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}
-        >
-          <Typography variant="h6">Timetable Preview (Read Only)</Typography>
-          <IconButton onClick={() => setPreviewOpen(false)}>
-            <Iconify icon="lucide:x" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers sx={{ height: '70vh', p: 0 }}>
+      <CustomDialog
+        open={previewOpen}
+        handleClose={() => setPreviewOpen(false)}
+        maxWidth="lg"
+        hasForm={false}
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6" fontWeight={700}>
+              Timetable Preview (Read Only)
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="bottom-start"
+              title="Full-screen read-only preview of the complete weekly timetable board."
+            >
+              <IconButton size="small" color="info" sx={{ p: 0.5 }}>
+                <Iconify icon="lucide:info" width={18} />
+              </IconButton>
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <DialogContent sx={{ height: '70vh', p: 0 }}>
           <TimetableBoard
             slots={formik.values.slots}
-            onChange={() => {}}
+            onChange={() => { }}
             subjects={subjects}
             readOnly
             selectedClass={selectedClass}
@@ -2303,7 +2280,7 @@ const TimeTableForm = ({
             timetableStatus={timetableStatus}
           />
         </DialogContent>
-      </Dialog>
+      </CustomDialog>
     </DialogScrollContent>
   );
 };

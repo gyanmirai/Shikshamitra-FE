@@ -1,6 +1,8 @@
+import { useDispatch } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetSubjectAssignmentByIdQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
@@ -9,6 +11,7 @@ import {
   Checkbox,
   Divider,
   TextField,
+  IconButton,
   Typography,
   Autocomplete,
   DialogContent,
@@ -19,6 +22,7 @@ import {
 
 import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';
+import CustomTooltip from '../custom-tooltip';
 
 import type { TimeSlot, DayOfWeek, SlotSubject } from './types';
 import type { TimetableValidationIssue } from './timetableValidationIssues';
@@ -229,6 +233,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   onClose,
   onSave,
 }) => {
+  const dispatch = useDispatch();
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
   const [selectedNames, setSelectedNames] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -237,6 +242,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   const [applyTeacherToAllSubjectSlots, setApplyTeacherToAllSubjectSlots] = useState<
     Record<string, boolean>
   >({});
+
   // Reset selections when a new assignment is opened
   const prevRef = React.useRef<TeacherAssignment | null>(null);
   if (open !== prevRef.current) {
@@ -255,15 +261,22 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
       setErrors({});
       setConflictIssues([]);
       setApplyTeacherToAllSubjectSlots({});
+      dispatch(setIsChanges(false));
     }
   }
+
+  const handleCloseDialog = useCallback(() => {
+    dispatch(setIsChanges(false));
+    onClose();
+  }, [dispatch, onClose]);
 
   const splitSubjects = open ? splitPipeSubjects(open.subjects) : [];
 
   const handleChange = useCallback((subjectId: string, value: TeacherOption | null) => {
+    dispatch(setIsChanges(true));
     setSelectedIds((prev) => ({ ...prev, [subjectId]: value?.id ?? '' }));
     setSelectedNames((prev) => ({ ...prev, [subjectId]: value?.name ?? '' }));
-  }, []);
+  }, [dispatch]);
 
   const handleSave = async () => {
     if (!open) return;
@@ -321,6 +334,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
         return;
       }
 
+      dispatch(setIsChanges(false));
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -330,10 +344,26 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   return (
     <CustomDialog
       open={!!open}
-      handleClose={onClose}
+      handleClose={handleCloseDialog}
       maxWidth="xs"
       fullWidth
-      title="Assign Teacher"
+      hasForm={true}
+      title={
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h6" fontWeight={700}>
+            Assign Teacher
+          </Typography>
+          <CustomTooltip
+            arrow
+            placement="bottom-start"
+            title="Assign a primary or secondary teacher to this timetable slot. You can optionally apply the teacher selection to all slots of this subject."
+          >
+            <IconButton size="small" color="info" sx={{ p: 0.5 }}>
+              <Iconify icon="lucide:info" width={18} />
+            </IconButton>
+          </CustomTooltip>
+        </Box>
+      }
     >
       <DialogContent sx={{ pb: 2 }}>
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>

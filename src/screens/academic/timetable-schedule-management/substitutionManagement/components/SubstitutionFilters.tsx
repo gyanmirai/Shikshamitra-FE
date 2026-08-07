@@ -7,11 +7,13 @@ import { alpha } from '@mui/material/styles';
 import { varAlpha } from 'src/theme/styles';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import { Label } from 'src/components/label';
 import React, { useState, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Box, Chip, Stack, Button, Divider, Typography } from '@mui/material';
+import { Box, Chip, Stack, Button, Divider, Typography, TextField, Autocomplete } from '@mui/material';
 
 import {
   todayIso,
@@ -265,17 +267,9 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
       >
         Filters
         {activeFiltersCount > 0 && (
-          <Chip
-            size="small"
-            label={activeFiltersCount}
-            color="primary"
-            sx={{
-              ml: 0.75,
-              height: 18,
-              fontSize: 10,
-              fontWeight: 'bold',
-            }}
-          />
+          <Label color="primary" variant="soft" sx={{ ml: 0.75, height: 20 }}>
+            {activeFiltersCount}
+          </Label>
         )}
       </Button>
 
@@ -300,24 +294,22 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
           </Typography>
           <Stack direction="row" spacing={1}>
             <Button
-              variant="text"
+              variant="outlined"
               color="inherit"
               size="small"
               onClick={handleSaveView}
-              startIcon={<Iconify icon="mdi:bookmark-outline" width={14} />}
-              sx={{ color: 'text.secondary', typography: 'caption' }}
+              startIcon={<Iconify icon="mdi:bookmark-outline" width={16} />}
             >
               Save View
             </Button>
             <Button
-              variant="text"
+              variant="outlined"
               color="inherit"
               size="small"
               onClick={handleResetDraftFilters}
-              startIcon={<Iconify icon="mdi:refresh" width={14} />}
-              sx={{ color: 'text.secondary', typography: 'caption' }}
+              startIcon={<Iconify icon={GlobalIcons.refresh} width={16} />}
             >
-              Reset defaults
+              Reset Defaults
             </Button>
           </Stack>
         </Stack>
@@ -338,12 +330,21 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
               onChange={(value) => handleDraftChange({ filterDate: value })}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
             />
-            <CustomSelect
-              label="Teacher"
+            <Autocomplete
+              size="small"
+              fullWidth
               options={teacherFilterOptions}
-              value={draftFilters.teacherFilter}
-              onChange={(v) => handleDraftChange({ teacherFilter: v as string })}
-              formControlProps={{ fullWidth: true }}
+              value={
+                teacherFilterOptions.find((opt) => opt.value === draftFilters.teacherFilter) || null
+              }
+              getOptionLabel={(option) =>
+                typeof option === 'string' ? option : option.label || ''
+              }
+              isOptionEqualToValue={(option, value) => option?.value === value?.value}
+              onChange={(_event, newValue) => {
+                handleDraftChange({ teacherFilter: newValue?.value || 'all' });
+              }}
+              renderInput={(params) => <TextField {...params} label="Teacher" size="small" />}
             />
             <CustomSelect
               label="Department"
@@ -457,10 +458,22 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
         </Stack>
 
         <Stack direction="row" spacing={1} justifyContent="flex-end">
-          <Button variant="outlined" color="inherit" onClick={popover.onClose}>
+          <Button
+            variant="outlined"
+            color="inherit"
+            size="small"
+            onClick={popover.onClose}
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
+          >
             Cancel
           </Button>
-          <Button variant="contained" color="primary" onClick={handleApplyFilters}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={handleApplyFilters}
+            startIcon={<Iconify icon={GlobalIcons.submit} width={16} />}
+          >
             Apply Filters
           </Button>
         </Stack>
@@ -513,7 +526,9 @@ export const SubstitutionActiveFilters = ({
       <Button
         size="small"
         color="error"
+        variant="text"
         onClick={onReset}
+        startIcon={<Iconify icon={GlobalIcons.delete} width={14} />}
         sx={{ typography: 'caption', height: 24, ml: 'auto' }}
       >
         Clear All

@@ -2,9 +2,11 @@
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
@@ -306,9 +308,24 @@ export const RoomAvailabilityFilters = ({
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'fontWeightSemiBold' }}>
-            Filter Rooms
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="subtitle1" sx={{ fontWeight: 'fontWeightSemiBold' }}>
+              Filter Rooms
+            </Typography>
+            <CustomTooltip
+              title="Filter rooms by building, floor, capacity, facilities, and real-time status."
+              arrow
+              placement="right"
+            >
+              <Iconify
+                icon={GlobalIcons.info}
+                color="info.main"
+                width={16}
+                height={16}
+                sx={{ cursor: 'pointer', mt: 0.25 }}
+              />
+            </CustomTooltip>
+          </Stack>
           <Button
             variant="text"
             color="inherit"

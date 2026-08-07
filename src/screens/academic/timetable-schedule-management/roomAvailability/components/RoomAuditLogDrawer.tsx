@@ -2,7 +2,9 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { alpha } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Chip,
@@ -10,6 +12,7 @@ import {
   Drawer,
   Button,
   Divider,
+  Skeleton,
   TextField,
   IconButton,
   Typography,
@@ -45,7 +48,7 @@ export const RoomAuditLogDrawer = ({
   const [selectedRoomId, setSelectedRoomId] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const { data, isLoading, error, fetch } = useRoomAuditLogs(
+  const { data, isLoading, isFetching, error, fetch } = useRoomAuditLogs(
     selectedRoomId === 'all' ? null : selectedRoomId
   );
 
@@ -89,6 +92,8 @@ export const RoomAuditLogDrawer = ({
     );
   }, [data, search]);
 
+  const isDataLoading = isLoading || isFetching;
+
   return (
     <Drawer
       anchor="right"
@@ -96,7 +101,7 @@ export const RoomAuditLogDrawer = ({
       onClose={onClose}
       PaperProps={{
         sx: {
-          width: { xs: '100%', sm: 520 },
+          width: { xs: '100%', sm: 540 },
           display: 'flex',
           flexDirection: 'column',
           borderTopLeftRadius: { sm: 16 },
@@ -110,19 +115,19 @@ export const RoomAuditLogDrawer = ({
         alignItems="center"
         justifyContent="space-between"
         sx={{
-          px: 2.5,
-          py: 2,
+          px: 3,
+          py: 2.5,
           borderBottom: 1,
           borderColor: 'divider',
           background: (theme) =>
-            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)} 0%, ${alpha(theme.palette.primary.main, 0.03)} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" alignItems="center" spacing={1.5}>
           <Box
             sx={{
-              width: 42,
-              height: 42,
+              width: 44,
+              height: 44,
               borderRadius: 2,
               display: 'grid',
               placeItems: 'center',
@@ -130,12 +135,27 @@ export const RoomAuditLogDrawer = ({
               boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.24)}`,
             }}
           >
-            <Iconify icon="mdi:history" width={22} sx={{ color: 'common.white' }} />
+            <Iconify icon="mdi:history" width={24} sx={{ color: 'common.white' }} />
           </Box>
           <Box>
-            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-              Room Audit Trail
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+                Room Audit Trail
+              </Typography>
+              <CustomTooltip
+                title="Track full history of room reservations, maintenance blocks, and approval status changes."
+                arrow
+                placement="right"
+              >
+                <Iconify
+                  icon={GlobalIcons.info}
+                  color="info.main"
+                  width={18}
+                  height={18}
+                  sx={{ cursor: 'pointer', mt: 0.25 }}
+                />
+              </CustomTooltip>
+            </Stack>
             <Typography variant="caption" color="text.secondary">
               Every reservation, approval and maintenance action across all rooms
             </Typography>
@@ -155,7 +175,7 @@ export const RoomAuditLogDrawer = ({
       </Stack>
 
       {/* Filters */}
-      <Stack spacing={1} sx={{ px: 2.5, py: 2, borderBottom: 1, borderColor: 'divider' }}>
+      <Stack spacing={2} sx={{ px: 3, py: 2.5, borderBottom: 1, borderColor: 'divider' }}>
         <Autocomplete
           size="small"
           options={roomOptions}
@@ -201,10 +221,10 @@ export const RoomAuditLogDrawer = ({
       </Stack>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2, bgcolor: 'background.neutral' }}>
+      <Box sx={{ flex: 1, overflow: 'auto', px: 3, py: 2.5, bgcolor: 'background.neutral' }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
           <Typography variant="caption" color="text.secondary">
-            {isLoading ? 'Loading…' : `${filteredLogs.length} of ${data.length} entries`}
+            {isDataLoading ? 'Loading logs…' : `${filteredLogs.length} of ${data.length} entries`}
           </Typography>
           {(selectedRoomId !== 'all' || search) && (
             <Chip
@@ -233,7 +253,13 @@ export const RoomAuditLogDrawer = ({
             bgcolor: 'background.paper',
           }}
         >
-          {error ? (
+          {isDataLoading ? (
+            <Stack spacing={1.5}>
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} variant="rectangular" height={72} sx={{ borderRadius: 1.5 }} />
+              ))}
+            </Stack>
+          ) : error ? (
             <Typography variant="body2" color="error">
               {error}
             </Typography>
@@ -245,8 +271,13 @@ export const RoomAuditLogDrawer = ({
 
       {/* Footer */}
       <Divider />
-      <Stack direction="row" justifyContent="flex-end" sx={{ p: 2, bgcolor: 'background.paper' }}>
-        <Button variant="outlined" color="inherit" onClick={onClose} sx={{ borderRadius: 1.5, px: 3 }}>
+      <Stack direction="row" justifyContent="flex-end" sx={{ p: 2.5, bgcolor: 'background.paper' }}>
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
           Close
         </Button>
       </Stack>

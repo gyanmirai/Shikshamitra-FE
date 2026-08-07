@@ -1,6 +1,8 @@
+import { useDispatch } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { useGetRoomAvailabilityQuery } from 'src/redux/academicAPI/timetableApi/roomAvailabilityApi';
 import {
@@ -10,6 +12,7 @@ import {
   Checkbox,
   Divider,
   TextField,
+  IconButton,
   Typography,
   Autocomplete,
   DialogContent,
@@ -101,6 +104,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
   onClose,
   onSave,
 }) => {
+  const dispatch = useDispatch();
   const { data: rooms } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomsQuery,
@@ -182,8 +186,14 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
       setConflictIssues([]);
       setApplyToAllSlots({});
       setApplyToAllSubjectSlots({});
+      dispatch(setIsChanges(false));
     }
   }
+
+  const handleCloseDialog = useCallback(() => {
+    dispatch(setIsChanges(false));
+    onClose();
+  }, [dispatch, onClose]);
 
   const roomList: any[] = React.useMemo(() => {
     if (availableRoomsData && availableRoomsData.length > 0) {
@@ -207,8 +217,9 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
   const splitSubjects = open ? splitPipeSubjects(open.subjects) : [];
 
   const handleChange = useCallback((subjectId: string, value: any) => {
+    dispatch(setIsChanges(true));
     setSelectedIds((prev) => ({ ...prev, [subjectId]: value?.id ?? '' }));
-  }, []);
+  }, [dispatch]);
 
   const handleSave = async () => {
     if (!open) return;
@@ -272,6 +283,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
         return;
       }
 
+      dispatch(setIsChanges(false));
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -279,7 +291,29 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
   };
 
   return (
-    <CustomDialog open={!!open} handleClose={onClose} maxWidth="xs" fullWidth title="Assign Room">
+    <CustomDialog
+      open={!!open}
+      handleClose={handleCloseDialog}
+      maxWidth="xs"
+      fullWidth
+      hasForm={true}
+      title={
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h6" fontWeight={700}>
+            Assign Room
+          </Typography>
+          <CustomTooltip
+            arrow
+            placement="bottom-start"
+            title="Select an available classroom or lab for this period slot. Options include applying to all slots of this subject or all slots in the timetable."
+          >
+            <IconButton size="small" color="info" sx={{ p: 0.5 }}>
+              <Iconify icon="lucide:info" width={18} />
+            </IconButton>
+          </CustomTooltip>
+        </Box>
+      }
+    >
       <DialogContent sx={{ pb: 2 }}>
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
           {conflictIssues.length > 0 && (

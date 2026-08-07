@@ -12,6 +12,9 @@ import { AcademicDatePicker } from 'src/components/academic-date-picker';
 import { useSession } from 'next-auth/react';
 import { EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { academicPaths } from 'src/constants/academic-menu';
 import { Label } from 'src/components/label';
 import { CustomTabs } from 'src/components/custom-tabs';
 import {
@@ -25,6 +28,7 @@ import {
   IconButton,
   LinearProgress,
   Chip,
+  Typography,
 } from '@mui/material';
 
 // Removed MOCK_SUMMARY
@@ -89,16 +93,17 @@ const RoomAvailabilityScreen = () => {
   );
   const [maintenanceRoom, setMaintenanceRoom] = useState<RoomAvailabilityItem | null>(null);
   const [showAudit, setShowAudit] = useState(false);
-  // Tracks the in-flight approve/reject action so the active row shows a
-  // loading spinner and sibling/other-row actions are disabled while the
-  // async request is in progress. `null` = no action pending.
   const [pendingAction, setPendingAction] = useState<{
     id: string;
     type: 'approve' | 'reject';
   } | null>(null);
 
   // ── Data Hooks ─────────────────────────────────────────────────────────────
-  const { data: buildingsData } = useGetBuildingsQuery(undefined);
+  const { data: buildingsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBuildingsQuery,
+    params: undefined,
+  });
   const buildings = useMemo(() => (buildingsData || []) as BuildingWithFloors[], [buildingsData]);
 
   const buildingOptions = useMemo(() => {
@@ -196,10 +201,15 @@ const RoomAvailabilityScreen = () => {
   );
 
   const handleCancelReservation = useCallback(
-    (id: string) => {
-      reservationsHook.cancelReservation(id);
-      availability.fetch();
-      shikshaMitraToast.info({ message: 'Reservation cancelled. Audit record remains visible.' });
+    async (id: string) => {
+      setPendingAction({ id, type: 'cancel' as any });
+      try {
+        await reservationsHook.cancelReservation(id);
+        availability.fetch();
+        shikshaMitraToast.success({ message: 'Reservation cancelled successfully.' });
+      } finally {
+        setPendingAction(null);
+      }
     },
     [availability, reservationsHook]
   );
@@ -264,8 +274,15 @@ const RoomAvailabilityScreen = () => {
   }, [availability, reservationsHook]);
 
   // ── Screen Loading States ──────────────────────────────────────────────────
-  const isScreenLoading = availability.isLoading || reservationsHook.isLoading;
-  const isScreenFetching = availability.isFetching || reservationsHook.isLoading;
+  const isScreenLoading =
+    availability.isLoading ||
+    reservationsHook.isLoading ||
+    reservationsHook.isFetching ||
+    reservationsHook.isMutationLoading;
+  const isScreenFetching =
+    availability.isFetching ||
+    reservationsHook.isFetching ||
+    reservationsHook.isMutationLoading;
 
   // ── Pending count for approval badge ──────────────────────────────────────
   const pendingCount = useMemo(
@@ -282,7 +299,7 @@ const RoomAvailabilityScreen = () => {
           heading="Room Availability"
           description="Find free rooms, inspect conflicts, reserve rooms, and review room usage."
           links={[
-            { name: 'Academic', href: '/academic/dashboard' },
+            { name: 'Academic', href: academicPaths.dashboard },
             { name: 'Timetable' },
             { name: 'Room Availability' },
           ]}
@@ -334,12 +351,12 @@ const RoomAvailabilityScreen = () => {
           alignItems="center"
           justifyContent="space-between"
           flexWrap="wrap"
-          sx={{ px: 0.5, py: 0.25 }}
+          sx={{ p: 0 }}
         >
           <CustomTabs
             value={activeTab}
             onChange={(_, v) => setActiveTab(v as TabType)}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px', p: 0 }}
             role="tablist"
           >
             <Tab

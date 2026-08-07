@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Card,
   Chip,
   Stack,
   Tooltip,
+  Skeleton,
   Typography,
   CardContent,
   CardActionArea,
@@ -47,11 +50,17 @@ const STATUS_BG: Record<string, string> = {
 
 interface RoomFloorViewProps {
   rooms: RoomAvailabilityItem[];
+  isLoading?: boolean;
   onRoomClick?: (room: RoomAvailabilityItem) => void;
   onReserveRoom?: (room: RoomAvailabilityItem) => void;
 }
 
-export const RoomFloorView = ({ rooms, onRoomClick, onReserveRoom }: RoomFloorViewProps) => {
+export const RoomFloorView = ({
+  rooms,
+  isLoading = false,
+  onRoomClick,
+  onReserveRoom,
+}: RoomFloorViewProps) => {
   const [selectedBuilding, setSelectedBuilding] = useState('all');
   const [selectedFloor, setSelectedFloor] = useState('all');
 
@@ -75,30 +84,69 @@ export const RoomFloorView = ({ rooms, onRoomClick, onReserveRoom }: RoomFloorVi
     return acc;
   }, {});
 
+  if (isLoading) {
+    return (
+      <Stack spacing={2}>
+        <Stack direction="row" spacing={2}>
+          <Skeleton variant="rectangular" width={180} height={40} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="rectangular" width={150} height={40} sx={{ borderRadius: 1 }} />
+        </Stack>
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 1.5,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+              lg: 'repeat(4, 1fr)',
+            },
+          }}
+        >
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <Skeleton key={i} variant="rectangular" height={130} sx={{ borderRadius: 2 }} />
+          ))}
+        </Box>
+      </Stack>
+    );
+  }
+
   return (
-    <Stack spacing={1}>
+    <Stack spacing={2}>
       {/* Controls */}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-        <CustomSelect
-          label="Building"
-          options={buildingOpts}
-          value={selectedBuilding}
-          onChange={(v) => setSelectedBuilding(v as string)}
-          formControlProps={{ sx: { minWidth: 180 } }}
-        />
-        <CustomSelect
-          label="Floor"
-          options={[
-            { value: 'all', label: 'All Floors' },
-            ...Array.from(new Set(rooms.map((r) => r.floorName).filter(Boolean))).map((f) => ({
-              value: f!,
-              label: f!,
-            })),
-          ]}
-          value={selectedFloor}
-          onChange={(v) => setSelectedFloor(v as string)}
-          formControlProps={{ sx: { minWidth: 150 } }}
-        />
+      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1.5}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Iconify icon="mdi:floor-plan" width={20} color="primary.main" />
+          <Typography variant="subtitle1" fontWeight={700}>
+            Floor & Room Map
+          </Typography>
+          <CustomTooltip title="Visual grid layout of all rooms organized by building and floor." arrow placement="right">
+            <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} sx={{ cursor: 'pointer' }} />
+          </CustomTooltip>
+        </Stack>
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <CustomSelect
+            label="Building"
+            options={buildingOpts}
+            value={selectedBuilding}
+            onChange={(v) => setSelectedBuilding(v as string)}
+            formControlProps={{ sx: { minWidth: 180 } }}
+          />
+          <CustomSelect
+            label="Floor"
+            options={[
+              { value: 'all', label: 'All Floors' },
+              ...Array.from(new Set(rooms.map((r) => r.floorName).filter(Boolean))).map((f) => ({
+                value: f!,
+                label: f!,
+              })),
+            ]}
+            value={selectedFloor}
+            onChange={(v) => setSelectedFloor(v as string)}
+            formControlProps={{ sx: { minWidth: 150 } }}
+          />
+        </Stack>
       </Stack>
 
       {/* Building groups */}

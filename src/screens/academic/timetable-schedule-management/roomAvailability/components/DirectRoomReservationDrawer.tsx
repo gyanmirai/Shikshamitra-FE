@@ -6,7 +6,9 @@ import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomSelect from 'src/components/custom-select';
+import LoadingButton from '@mui/lab/LoadingButton';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
@@ -278,13 +280,13 @@ export const DirectRoomReservationDrawer = ({
         isRecurring: requirements.isRecurring,
         recurringConfig: requirements.isRecurring
           ? {
-              repeatType: requirements.recurringConfig?.repeatType || 'daily',
-              repeatDays: requirements.recurringConfig?.repeatDays || [],
-              untilDate: requirements.recurringConfig?.untilDate || requirements.date,
-              excludeHolidays: requirements.recurringConfig?.excludeHolidays ?? true,
-              excludeExamDays: requirements.recurringConfig?.excludeExamDays ?? false,
-              skipConflictDates: requirements.recurringConfig?.skipConflictDates ?? false,
-            }
+            repeatType: requirements.recurringConfig?.repeatType || 'daily',
+            repeatDays: requirements.recurringConfig?.repeatDays || [],
+            untilDate: requirements.recurringConfig?.untilDate || requirements.date,
+            excludeHolidays: requirements.recurringConfig?.excludeHolidays ?? true,
+            excludeExamDays: requirements.recurringConfig?.excludeExamDays ?? false,
+            skipConflictDates: requirements.recurringConfig?.skipConflictDates ?? false,
+          }
           : undefined,
       } as any);
 
@@ -339,9 +341,8 @@ export const DirectRoomReservationDrawer = ({
         endTime: generatedSlots[end].endTime,
       });
       shikshaMitraToast.success({
-        message: `Selected range: ${generatedSlots[start].time.split('-')[0]} to ${
-          generatedSlots[end].time.split('-')[1]
-        }`,
+        message: `Selected range: ${generatedSlots[start].time.split('-')[0]} to ${generatedSlots[end].time.split('-')[1]
+          }`,
       });
     } else {
       selectSingle();
@@ -394,9 +395,24 @@ export const DirectRoomReservationDrawer = ({
             <Iconify icon="mdi:calendar-lock" width={24} sx={{ color: 'common.white' }} />
           </Box>
           <Box>
-            <Typography variant="h6" fontWeight={700} lineHeight={1.3}>
-              Direct Reservation: {room?.roomName}
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h6" fontWeight={700} lineHeight={1.3}>
+                Direct Reservation: {room?.roomName}
+              </Typography>
+              <CustomTooltip
+                title="Select a specific time slot and confirm booking details directly for this room."
+                arrow
+                placement="right"
+              >
+                <Iconify
+                  icon={GlobalIcons.info}
+                  color="info.main"
+                  width={18}
+                  height={18}
+                  sx={{ cursor: 'pointer', mt: 0.25 }}
+                />
+              </CustomTooltip>
+            </Stack>
             <Typography variant="body2" color="text.secondary">
               Pick a time slot and confirm the booking details
             </Typography>
@@ -586,10 +602,10 @@ export const DirectRoomReservationDrawer = ({
                                 ? (theme) => alpha(theme.palette.primary.main, 0.1)
                                 : isConflict
                                   ? (theme) =>
-                                      alpha(
-                                        theme.palette.warning.main,
-                                        isSelectedConflict ? 0.2 : 0.1
-                                      )
+                                    alpha(
+                                      theme.palette.warning.main,
+                                      isSelectedConflict ? 0.2 : 0.1
+                                    )
                                   : isFree
                                     ? (theme) => alpha(theme.palette.success.main, 0.05)
                                     : 'background.neutral',
@@ -1101,34 +1117,26 @@ export const DirectRoomReservationDrawer = ({
       >
         <Button
           variant="outlined"
-          color="inherit"
           onClick={handleClose}
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           variant="contained"
-          color="primary"
           size="small"
+          loading={createReservation.isLoading}
           disabled={
-            createReservation.isLoading ||
             isTimeRangeInvalid ||
             !requirements.startTime ||
             !requirements.endTime
           }
           onClick={handleBook}
-          startIcon={
-            createReservation.isLoading ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              <Iconify icon="mdi:calendar-check" />
-            )
-          }
+          startIcon={<Iconify icon="mdi:calendar-check" />}
         >
           Book Instantly
-        </Button>
+        </LoadingButton>
       </Stack>
     </Drawer>
   );
