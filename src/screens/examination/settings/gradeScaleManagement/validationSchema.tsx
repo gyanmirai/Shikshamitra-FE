@@ -1,6 +1,11 @@
 import * as Yup from 'yup';
 
-export const validationSchema = Yup.object().shape({
+// ---------------------------------------------------------------------------
+// Step 1 — Basic Details
+// Only the identity/marks fields are validated here so users never see
+// "Grade Range" errors before reaching that step.
+// ---------------------------------------------------------------------------
+export const basicDetailsSchema = Yup.object().shape({
   name: Yup.string().required('Grading Scale Title is Required'),
   totalMarks: Yup.number()
     .required('Total Marks is Required')
@@ -17,6 +22,15 @@ export const validationSchema = Yup.object().shape({
   description: Yup.string().max(500, 'Description cannot exceed 500 characters'),
   isDefault: Yup.boolean(),
   status: Yup.number().required('Status is Required'),
+});
+
+// ---------------------------------------------------------------------------
+// Step 2 — Grade Ranges
+// Only the gradingScale array is validated here. The range tests read
+// totalMarks from the actual form values (this.parent / options.from), so they
+// keep working even though totalMarks is declared in the Basic Details schema.
+// ---------------------------------------------------------------------------
+export const gradeRangesSchema = Yup.object().shape({
   gradingScale: Yup.array()
     .min(1, 'At least one grade range is required')
     .of(
@@ -151,3 +165,20 @@ export const validationSchema = Yup.object().shape({
       }
     ),
 });
+
+// ---------------------------------------------------------------------------
+// Full schema — used for the final submit (last step) so the complete form is
+// validated before the API call.
+// ---------------------------------------------------------------------------
+export const fullValidationSchema = basicDetailsSchema.concat(gradeRangesSchema);
+
+// Per-step schemas consumed by the stepper. The last entry is the full schema
+// so the final submission validates the entire form.
+export const stepValidationSchemas = [
+  basicDetailsSchema,
+  gradeRangesSchema,
+  fullValidationSchema,
+];
+
+// Backward-compatible default export (the complete schema).
+export const validationSchema = fullValidationSchema;

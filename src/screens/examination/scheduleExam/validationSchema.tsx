@@ -260,13 +260,20 @@ const scheduleFieldsSchema = {
       if (!shouldRequireScheduleField(this)) return true;
       return !!value;
     }),
+  notes: yup
+    .string()
+    .nullable()
+    .max(100, 'Notes cannot exceed 100 characters'),
 };
 
 export const validationSchema = [
   // Step 0: Select Exam Type
   yup.object().shape({
     examType: yup.string().required('Exam Type is required'),
-    examName: yup.string().required('Exam Name is required'),
+    examName: yup
+      .string()
+      .max(100, 'Exam Name cannot exceed 100 characters')
+      .required('Exam Name is required'),
     className: yup.string().required('Class is required'),
     gradingScaleId: yup.mixed().required('Grading Scale is required'),
     divisions: yup.array().min(1, 'At least one division is required'),

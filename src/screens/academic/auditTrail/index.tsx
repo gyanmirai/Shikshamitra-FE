@@ -7,23 +7,25 @@ import type {
   AcademicAuditEventListArgs,
 } from 'src/redux/academicAPI/AuditApi/academic-audit-api';
 
-import { useMemo, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useMemo, useState, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Stack, Alert, Tooltip, Typography, IconButton } from '@mui/material';
 import { useGetAcademicAuditEventsQuery } from 'src/redux/academicAPI/AuditApi/academic-audit-api';
 
-import AcademicAuditFilter, { type AcademicAuditFilters } from './components/AcademicAuditFilter';
+import { isAllSentinel } from './utils/academicAuditActionMapper';
 import AcademicAuditDetailsDrawer from './components/AcademicAuditDetailsDrawer';
-import { ACADEMIC_AUDIT_SOURCE_LABELS } from './academicAudit.constants';
+import { AUDIT_ALL_SENTINEL, ACADEMIC_AUDIT_SOURCE_LABELS } from './academicAudit.constants';
+import AcademicAuditFilter, { type AcademicAuditFilters } from './components/AcademicAuditFilter';
 
 const DEFAULT_FILTERS: AcademicAuditFilters = {
   search: '',
-  subModuleCode: '',
-  action: '',
+  subModuleCode: AUDIT_ALL_SENTINEL,
+  action: AUDIT_ALL_SENTINEL,
   fromDate: null,
   toDate: null,
 };
@@ -41,7 +43,11 @@ const actionColor = (action: string): 'success' | 'warning' | 'error' | 'info' |
 
 const isFiltered = (filters: AcademicAuditFilters) =>
   Boolean(
-    filters.search || filters.subModuleCode || filters.action || filters.fromDate || filters.toDate
+    filters.search ||
+    !isAllSentinel(filters.subModuleCode) ||
+    !isAllSentinel(filters.action) ||
+    filters.fromDate ||
+    filters.toDate
   );
 
 const buildQueryArgs = (
@@ -51,8 +57,8 @@ const buildQueryArgs = (
   rowsPerPage: number
 ): AcademicAuditEventListArgs => ({
   academicYearId,
-  subModuleCode: filters.subModuleCode || undefined,
-  action: filters.action || undefined,
+  subModuleCode: isAllSentinel(filters.subModuleCode) ? undefined : filters.subModuleCode,
+  action: isAllSentinel(filters.action) ? undefined : filters.action,
   fromDate: filters.fromDate || undefined,
   toDate: filters.toDate || undefined,
   search: filters.search.trim().length >= 2 ? filters.search.trim() : undefined,
@@ -217,62 +223,78 @@ const AcademicAuditTrail = () => {
   }, []);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <CustomBreadcrumbs
-        heading="Academic Audits"
-        description="Unified audit trail for calendar, curriculum, timetable, and examination actions."
-        links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Academic Audits' }]}
-      />
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'calc(100vh - 91px)',
+        maxHeight: 'calc(100vh - 91px)',
+        overflow: 'hidden',
+      }}
+    >
+      <Box sx={{ flexShrink: 0, mb: 1 }}>
+        <CustomBreadcrumbs
+          heading="Academic Audits"
+          description="Unified audit trail for calendar, curriculum, timetable, and examination actions."
+          links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Academic Audits' }]}
+        />
 
-      <AcademicAuditFilter
-        filters={filters}
-        isFiltered={isFiltered(filters)}
-        onChange={handleFilterChange}
-        onReset={handleReset}
-      />
+        <AcademicAuditFilter
+          filters={filters}
+          isFiltered={isFiltered(filters)}
+          onChange={handleFilterChange}
+          onReset={handleReset}
+        />
 
-      {isError && (
-        <Alert
-          severity="error"
-          action={
-            <IconButton size="small" color="inherit" onClick={() => refetch()}>
-              <Iconify icon="mdi:refresh" width={18} />
-            </IconButton>
-          }
-        >
-          Unable to load academic audit events.
-        </Alert>
-      )}
+        {isError && (
+          <Alert
+            severity="error"
+            action={
+              <IconButton size="small" color="inherit" onClick={() => refetch()}>
+                <Iconify icon="mdi:refresh" width={18} />
+              </IconButton>
+            }
+            sx={{ mt: 1 }}
+          >
+            Unable to load academic audit events.
+          </Alert>
+        )}
+      </Box>
 
-      <CustomizableTable
-        tableId="academic-audit-trail"
-        tableTitle="Academic Audits"
-        columns={columns}
-        data={data?.items ?? []}
-        totalCount={data?.totalCount ?? 0}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        isLoading={isLoading || isFetching}
-        isSearch={false}
-        isFilter={false}
-        isPagination
-        serverSidePagination
-        defaultRowsPerPage={10}
-        maxServerRowsPerPage={100}
-        handleRowClick={(row) => setSelectedEvent(row as AcademicAuditEvent)}
-        onServerPagination={(nextPage, nextRowsPerPage) => {
-          setPage(Math.max(nextPage - 1, 0));
-          setRowsPerPage(nextRowsPerPage);
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
-        noDataText={
-          <Stack alignItems="center" spacing={1} sx={{ py: 5 }}>
-            <Iconify icon="mdi:history" width={42} sx={{ color: 'text.disabled' }} />
-            <Typography variant="subtitle2" color="text.secondary">
-              No academic audit history found
-            </Typography>
-          </Stack>
-        }
-      />
+      >
+        <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
+          <CustomizableTable
+            tableId="academic-audit-trail"
+            tableTitle="Academic Audits"
+            columns={columns}
+            data={data?.items ?? []}
+            totalCount={data?.totalCount ?? 0}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            isLoading={isLoading || isFetching}
+            isSearch={false}
+            isFilter={false}
+            isPagination
+            serverSidePagination
+            defaultRowsPerPage={10}
+            maxServerRowsPerPage={100}
+            handleRowClick={(row) => setSelectedEvent(row as AcademicAuditEvent)}
+            onServerPagination={(nextPage, nextRowsPerPage) => {
+              setPage(Math.max(nextPage - 1, 0));
+              setRowsPerPage(nextRowsPerPage);
+            }}
+            noDataText="No academic audit history found"
+          />
+        </Scrollbar>
+      </Box>
 
       <AcademicAuditDetailsDrawer
         event={selectedEvent}

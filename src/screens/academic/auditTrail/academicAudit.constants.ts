@@ -1,5 +1,12 @@
+/**
+ * Sentinel value for "show all" dropdown options.
+ * MUI Select treats value="" as "no selection" and won't display the label
+ * or fire onChange reliably, so we use a non-empty sentinel instead.
+ */
+export const AUDIT_ALL_SENTINEL = '_all';
+
 export const ACADEMIC_AUDIT_SUBMODULE_OPTIONS = [
-  { label: 'All Modules', value: '' },
+  { label: 'All Modules', value: AUDIT_ALL_SENTINEL },
   { label: 'Academic Calendar', value: 'academic_calendar' },
   { label: 'Subject Creation', value: 'subject_creation' },
   { label: 'Elective Group Creation', value: 'elective_group_creation' },
@@ -10,7 +17,7 @@ export const ACADEMIC_AUDIT_SUBMODULE_OPTIONS = [
 ];
 
 export const ACADEMIC_AUDIT_ACTION_OPTIONS = [
-  { label: 'All Actions', value: '' },
+  { label: 'All Actions', value: AUDIT_ALL_SENTINEL },
   { label: 'Created', value: 'created' },
   { label: 'Updated', value: 'updated' },
   { label: 'Deleted', value: 'deleted' },

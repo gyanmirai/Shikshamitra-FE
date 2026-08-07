@@ -171,45 +171,10 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
         };
       }
 
-      const divisionResults = await Promise.all(
-        selectedDivisionIds.map((divisionId) =>
-          checkElectiveAssignments({
-            academicMediumId: medium.id,
-            classId: formik.values.className,
-            divisionId,
-            electiveGroupId,
-          }).unwrap()
-        )
-      );
-      const firstPendingResult = divisionResults.find((result) => {
-        const records = result?.records ?? [];
-        return !(
-          records.length > 0 &&
-          result?.isLocked === true &&
-          records.every((record: any) => !!record.selectedSubjectId)
-        );
-      });
-
-      if (firstPendingResult) {
-        return {
-          isReady: false,
-          message:
-            'This class and division elective subject assignment is pending. Please assign every student and lock elective subject selection first.',
-          assignedCounts: {},
-        };
-      }
-
-      const assignedCounts = divisionResults
-        .flatMap((result) => result?.records ?? [])
-        .reduce((acc: Record<string, number>, record: any) => {
-          if (!record.selectedSubjectId) return acc;
-          acc[record.selectedSubjectId] = (acc[record.selectedSubjectId] ?? 0) + 1;
-          return acc;
-        }, {});
-
-      return { isReady: true, assignedCounts };
+      // With the readiness API disabled, treat every elective group as ready to select.
+      return { isReady: true, assignedCounts: {} };
     },
-    [checkElectiveAssignments, formik.values.className, medium?.id, selectedDivisionIds]
+    [formik.values.className, medium?.id, selectedDivisionIds]
   );
 
   const handleSubjectsChange = useCallback(
@@ -236,28 +201,30 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           }
 
           const assignedElectiveSubjects = isElective
-            ? (sub.subjects ?? [])
-                .map((subjectItem: any) => {
-                  const assignedStudentCount =
-                    readiness?.assignedCounts?.[subjectItem.subjectId] ??
-                    readiness?.assignedCounts?.[subjectItem.id] ??
-                    0;
-                  return {
-                    ...subjectItem,
-                    assignedStudentCount,
-                    isExamSelectionDisabled: assignedStudentCount === 0,
-                    subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
-                    examDate: subjectItem.examDate || null,
-                    startTime: subjectItem.startTime || null,
-                    endTime: subjectItem.endTime || null,
-                    totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                    passingMarks: subjectItem.passingMarks ?? '',
-                    notes: subjectItem.notes || '',
-                    gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
-                  };
-                })
-                .filter((subjectItem: any) => subjectItem.assignedStudentCount > 0)
-            : sub.subjects;
+            ? (sub.subjects ?? []).map((subjectItem: any) => {
+                const assignedStudentCount =
+                  readiness?.assignedCounts?.[subjectItem.subjectId] ??
+                  readiness?.assignedCounts?.[subjectItem.id] ??
+                  0;
+                return {
+                  ...subjectItem,
+                  assignedStudentCount,
+                  // Readiness API disabled: never lock elective subjects on count.
+                  isExamSelectionDisabled: false,
+                  subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
+                  examDate: subjectItem.examDate || null,
+                  startTime: subjectItem.startTime || null,
+                  endTime: subjectItem.endTime || null,
+                  totalMarks: subjectItem.totalMarks || defaultTotalMarks,
+                  passingMarks: subjectItem.passingMarks ?? '',
+                  notes: subjectItem.notes || '',
+                  gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
+                };
+              })
+            : // Readiness API disabled: keep every elective subject instead of
+              // filtering by assigned-student count (which would all be 0).
+              // .filter((subjectItem: any) => subjectItem.assignedStudentCount > 0)
+              sub.subjects;
 
           return {
             ...sub,
@@ -557,26 +524,27 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
                         return (
                           <li key={key ?? optionKey} {...restOptionProps}>
-                            <Checkbox 
-                              checked={selected} 
-                              size="small" 
-                              sx={{ mr: 0.5, p: 0.5 }} 
-                              disabled={!!option.isDisabled} 
+                            <Checkbox
+                              checked={selected}
+                              size="small"
+                              sx={{ mr: 0.5, p: 0.5 }}
+                              disabled={!!option.isDisabled}
                             />
                             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                              <Typography 
-                                variant="body2" 
+                              <Typography
+                                variant="body2"
                                 color={option.isDisabled ? 'text.disabled' : 'text.primary'}
                               >
                                 {label}
                               </Typography>
                               {option.isDisabled && (
-                                <Typography 
-                                  variant="caption" 
-                                  color="error.main" 
+                                <Typography
+                                  variant="caption"
+                                  color="error.main"
                                   sx={{ fontSize: '0.725rem', mt: -0.25 }}
                                 >
-                                  {option.disabledReason || 'This subject is not finalized from class management.'}
+                                  {option.disabledReason ||
+                                    'This subject is not finalized from class management.'}
                                 </Typography>
                               )}
                             </Box>
@@ -622,7 +590,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                  <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName)}>
+                  <ShakingTextField
+                    error={Boolean(
+                      formik.errors.examName || (formik.touched.examName && formik.errors.examName)
+                    )}
+                  >
                     <TextField
                       fullWidth
                       label="Exam Name *"
@@ -633,11 +605,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
                         formik.setFieldValue('examName', value);
-                        formik.setFieldTouched(`examName`, false);
+                        formik.setFieldTouched('examName', true);
                       }}
-                      error={formik.touched.examName && Boolean(formik.errors.examName)}
+                      error={Boolean(
+                        formik.errors.examName ||
+                        (formik.touched.examName && formik.errors.examName)
+                      )}
                       helperText={
-                        formik.touched.examName && formik.errors.examName
+                        formik.errors.examName ||
+                        (formik.touched.examName && formik.errors.examName)
                           ? formik.errors.examName
                           : 'A short, descriptive name for this exam'
                       }

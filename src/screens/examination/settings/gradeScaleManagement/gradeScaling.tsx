@@ -57,6 +57,7 @@ const GradingScale = () => {
   // Dialog control for delete confirmation
   const deleteConfirmDialog = useBoolean();
   const archiveDialog = useBoolean();
+  const restoreDialog = useBoolean();
 
   const addGradeScalingDialog = useBoolean(false);
 
@@ -246,6 +247,23 @@ const GradingScale = () => {
             label: 'Grade Scale Title',
             sticky: true,
             minWidth: 180,
+            render: (value: any, row: any) =>
+              row?.isDefault ? (
+                <Stack direction="row" alignItems="center" spacing={0.75}>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    {value}
+                  </Typography>
+                  <Label
+                    color="info"
+                    startIcon={<Iconify icon="mdi:star" />}
+                    sx={{ height: 20, fontSize: 11 }}
+                  >
+                    Default
+                  </Label>
+                </Stack>
+              ) : (
+                value
+              ),
           },
           {
             id: 'totalMarks',
@@ -323,20 +341,9 @@ const GradingScale = () => {
                       icon="solar:restart-bold"
                       color="success"
                       disabled={!canAdd || isRestoreLoading}
-                      onClick={async () => {
-                        try {
-                          await restoreGradeScaling({
-                            academicMediumId: (currentMedium as any).id,
-                            id: scale.id,
-                          }).unwrap();
-                          shikshaMitraToast.success({
-                            message: 'Grade scale restored successfully.',
-                          });
-                        } catch (error: any) {
-                          shikshaMitraToast.error({
-                            message: error?.data?.message || 'Failed to restore grade scale.',
-                          });
-                        }
+                      onClick={() => {
+                        setSelectedGrade(row as any);
+                        restoreDialog.onTrue();
                       }}
                     />
                   ) : (
@@ -529,6 +536,52 @@ const GradingScale = () => {
             }}
           >
             Archive
+          </LoadingButton>
+        }
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Restore confirmation                                               */}
+      {/* ----------------------------------------------------------------- */}
+      <ConfirmDialog
+        open={restoreDialog.value}
+        onClose={() => {
+          setSelectedGrade(null);
+          restoreDialog.onFalse();
+        }}
+        title="Restore Grade Scale"
+        content={
+          <>
+            Restore <strong>&quot;{selectedGrade?.name}&quot;</strong>? It will become available
+            again for future exams.
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isRestoreLoading}
+            variant="contained"
+            color="success"
+            size="small"
+            startIcon={<Iconify icon="solar:restart-bold" />}
+            onClick={async () => {
+              try {
+                await restoreGradeScaling({
+                  academicMediumId: (currentMedium as any).id,
+                  id: (selectedGrade as any).id,
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: 'Grade scale restored successfully.',
+                });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to restore grade scale.',
+                });
+              }
+              restoreDialog.onFalse();
+              setSelectedGrade(null);
+            }}
+          >
+            Restore
           </LoadingButton>
         }
       />

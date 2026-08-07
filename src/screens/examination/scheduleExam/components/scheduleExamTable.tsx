@@ -19,7 +19,7 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
-import { Box, Tab, Chip, Tabs, Paper, Stack, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Tab, Chip, Tabs, Paper, Stack, Button, MenuList, MenuItem, Typography, Alert } from '@mui/material';
 import {
   usePublishExamMutation,
   useUpdateExamStatusMutation,
@@ -459,27 +459,14 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               ?
             </Box>
             {(selectedTimetable?.issueCount ?? 0) > 0 && (
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 1.5,
-                  borderRadius: 1,
-                  bgcolor: 'warning.lighter',
-                  borderColor: 'warning.light',
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={0.75}>
-                  <Iconify icon="solar:danger-triangle-bold-duotone" width={20} color="warning.dark" />
-                  <Box>
-                    <Typography variant="body2" fontWeight={700} color="warning.dark">
-                      {selectedTimetable?.issueCount} blocking issue{(selectedTimetable?.issueCount ?? 0) > 1 ? 's' : ''} detected
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Publishing will fail. Open the exam schedule and fill in all required fields first.
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Paper>
+              <Alert severity="warning" sx={{ mt: 1 }}>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  {selectedTimetable?.issueCount} blocking issue{(selectedTimetable?.issueCount ?? 0) > 1 ? 's' : ''} detected
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Publishing will fail. Open the exam schedule and fill in all required fields first.
+                </Typography>
+              </Alert>
             )}
           </Stack>
         }
