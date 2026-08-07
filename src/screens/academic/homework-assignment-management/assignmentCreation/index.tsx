@@ -89,7 +89,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
   // State to store and update the selected date using dayjs
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const [date, setDate] = useState<Dayjs | null>(dayjs().startOf('day'));
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -111,7 +111,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       StandardId: selectedClassData?.id,
       DivisionId: selectedDivisionData?.id,
       SubjectId: subject,
-      AssignmentDate: isValidDate ? date!.toISOString() : undefined,
+      AssignmentDate: isValidDate ? date!.format('YYYY-MM-DD') : undefined,
     },
     options: {
       skip: !(medium as Medium)?.id || !classes || !division || !subject || !isValidDate,
@@ -418,7 +418,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
                 StandardId: selectedClassData?.id,
                 DivisionId: selectedDivisionData?.id,
                 SubjectId: subject,
-                AssignmentDate: isValidDate ? date.toISOString() : undefined,
+                AssignmentDate: isValidDate ? date.format('YYYY-MM-DD') : undefined,
               };
 
               try {

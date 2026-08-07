@@ -205,8 +205,8 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                             <Stack spacing={0.5}>
                               <Typography variant="body2">{warning.message}</Typography>
                               {warning.conflict ? (
-                                <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
-                                  Assignment ID: {warning.conflict.assignmentId}
+                                <Typography variant="caption" sx={{ mt: 1, display: 'block', opacity: 0.8 }}>
+                                  Reference ID: {warning.conflict.assignmentId.substring(0, 8).toUpperCase()}
                                 </Typography>
                               ) : null}
                             </Stack>

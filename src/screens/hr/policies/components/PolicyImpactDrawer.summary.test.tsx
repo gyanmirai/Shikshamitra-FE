@@ -258,7 +258,7 @@ describe('PolicyImpactDrawer summary rendering', () => {
     );
 
     expect(screen.getByText(/Keyur Siddhapura/)).toBeInTheDocument();
-    expect(screen.getByText(/Assignment ID: assignment-1/)).toBeInTheDocument();
+    expect(screen.getByText(/Reference ID: ASSIGNME/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'View conflict' }));
     expect(closeImpactDrawer).toHaveBeenCalledOnce();
     expect(openAssignmentDrawer).toHaveBeenCalledWith(

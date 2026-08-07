@@ -147,13 +147,30 @@ const SeatBox = ({
           },
         }}
       >
+        {/* Top Border Indicator (Green for assigned, Grey for external) */}
+        {(seat.isAssigned || seat.isExternalExamOccupied) && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -1,
+              left: -1,
+              right: -1,
+              height: 4,
+              bgcolor: seat.isExternalExamOccupied ? 'text.disabled' : 'success.main',
+              borderTopLeftRadius: 1.5,
+              borderTopRightRadius: 1.5,
+            }}
+          />
+        )}
+
+        {/* Seat Number */}
         <Box
           sx={{
             position: 'absolute',
             top: 6,
             left: 8,
-            bgcolor: seat.isAssigned ? 'primary.main' : 'action.disabledBackground',
-            color: seat.isAssigned ? 'primary.contrastText' : 'text.disabled',
+            bgcolor: seat.isAssigned && !seat.isExternalExamOccupied ? 'primary.main' : 'action.disabledBackground',
+            color: seat.isAssigned && !seat.isExternalExamOccupied ? 'primary.contrastText' : 'text.disabled',
             px: 0.75,
             py: 0.25,
             borderRadius: 0.5,
@@ -165,15 +182,15 @@ const SeatBox = ({
           {seat.seatNumber.toString().padStart(2, '0')}
         </Box>
 
-        {seat.isAssigned && (
+        {(seat.isAssigned || seat.isExternalExamOccupied) && (
           <Box sx={{ width: '100%', px: 1.5, pt: 1 }}>
             <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
               <Typography
                 variant="subtitle2"
                 noWrap
-                sx={{ maxWidth: '100%', fontSize: '0.8rem', fontWeight: 600 }}
+                sx={{ maxWidth: '100%', fontSize: '0.8rem', fontWeight: 600, color: seat.isExternalExamOccupied ? 'text.disabled' : 'text.primary' }}
               >
-                {seat.studentName}
+                {seat.isExternalExamOccupied ? 'Blocked' : seat.studentName}
               </Typography>
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Typography
@@ -186,7 +203,7 @@ const SeatBox = ({
                     borderRadius: 0.5,
                   }}
                 >
-                  {seat.standardName}
+                  {seat.isExternalExamOccupied ? 'Other Exam' : seat.standardName}
                 </Typography>
                 <Typography
                   variant="caption"
