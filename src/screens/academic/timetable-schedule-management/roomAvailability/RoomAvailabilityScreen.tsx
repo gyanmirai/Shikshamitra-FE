@@ -12,17 +12,19 @@ import { AcademicDatePicker } from 'src/components/academic-date-picker';
 import { useSession } from 'next-auth/react';
 import { EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
+import { Label } from 'src/components/label';
+import { CustomTabs } from 'src/components/custom-tabs';
 import {
   Box,
   Tab,
-  Card,
-  Chip,
-  Tabs,
+  Paper,
   Stack,
   Alert,
   Button,
   Tooltip,
   IconButton,
+  LinearProgress,
+  Chip,
 } from '@mui/material';
 
 // Removed MOCK_SUMMARY
@@ -261,6 +263,10 @@ const RoomAvailabilityScreen = () => {
     shikshaMitraToast.success({ message: 'Data refreshed.' });
   }, [availability, reservationsHook]);
 
+  // ── Screen Loading States ──────────────────────────────────────────────────
+  const isScreenLoading = availability.isLoading || reservationsHook.isLoading;
+  const isScreenFetching = availability.isFetching || reservationsHook.isLoading;
+
   // ── Pending count for approval badge ──────────────────────────────────────
   const pendingCount = useMemo(
     () => reservationsHook.data.filter((r) => r.approvalStatus === 'pending').length,
@@ -268,11 +274,11 @@ const RoomAvailabilityScreen = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', gap: 0.5 }}>
       {/* ── Breadcrumbs & Header ─────────────────────────── */}
       <Box sx={{ flexShrink: 0 }}>
         <CustomBreadcrumbs
-          sx={{ mb: 1 }}
+          sx={{ mb: 0.5 }}
           heading="Room Availability"
           description="Find free rooms, inspect conflicts, reserve rooms, and review room usage."
           links={[
@@ -311,43 +317,40 @@ const RoomAvailabilityScreen = () => {
         />
       </Box>
 
-      {/* ── Sticky Tabs Card ─────────────────────────────── */}
-      <Card
+      {/* ── Sticky Tabs Paper (matching Learning Tasks tab styling) ───── */}
+      <Paper
         sx={{
           position: 'sticky',
           top: 0,
           zIndex: 10,
           flexShrink: 0,
-          borderRadius: 1,
+          borderRadius: '12px',
+          p: 0.25,
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
         <Stack
           direction="row"
           alignItems="center"
           justifyContent="space-between"
-          sx={{ px: 1, borderBottom: 1, borderColor: 'divider' }}
+          flexWrap="wrap"
+          sx={{ px: 0.5, py: 0.25 }}
         >
-          <Tabs
+          <CustomTabs
             value={activeTab}
             onChange={(_, v) => setActiveTab(v as TabType)}
-            variant="scrollable"
-            scrollButtons="auto"
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
+            role="tablist"
           >
             <Tab
               value="availability"
               label="Availability"
-              icon={<MeetingRoom />}
-              iconPosition="start"
+              icon={<Iconify icon="mdi:meeting-room" width={20} />}
             />
             <Tab
               value="reservations"
-              label={
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <span>Reservations</span>
-                </Stack>
-              }
-              icon={<EventBusy />}
-              iconPosition="start"
+              label="Reservations"
+              icon={<Iconify icon="mdi:calendar-lock" width={20} />}
             />
             {isApprover && (
               <Tab
@@ -368,7 +371,7 @@ const RoomAvailabilityScreen = () => {
                 }
               />
             )}
-          </Tabs>
+          </CustomTabs>
 
           {/* Right side: View Switcher & Filters — only for availability tab */}
           {(activeTab === 'reservations' || activeTab === 'approvals') && (
@@ -385,7 +388,7 @@ const RoomAvailabilityScreen = () => {
           )}
 
           {activeTab === 'availability' && (
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, py: 0.5 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, py: 0.25 }}>
               <AcademicDatePicker
                 label="Date"
                 value={dayjs(filters.date)}
@@ -420,7 +423,12 @@ const RoomAvailabilityScreen = () => {
             </Stack>
           )}
         </Stack>
-      </Card>
+      </Paper>
+
+      {/* Screen Loading Progress Bar */}
+      {isScreenFetching && (
+        <LinearProgress sx={{ height: 2, borderRadius: 1, flexShrink: 0 }} color="primary" />
+      )}
 
       {/* ── Tab Content Container with Scrollbar ──────────────────── */}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -460,6 +468,7 @@ const RoomAvailabilityScreen = () => {
           <RoomReservationsTab
             reservations={reservationsHook.data}
             canApprove={isApprover}
+            isLoading={isScreenLoading}
             pendingAction={pendingAction}
             onCancel={handleCancelReservation}
             onApprove={handleApproveReservation}
@@ -472,6 +481,7 @@ const RoomAvailabilityScreen = () => {
         {isApprover && activeTab === 'approvals' && (
           <RoomApprovalQueue
             reservations={reservationsHook.data}
+            isLoading={isScreenLoading}
             pendingAction={pendingAction}
             onApprove={handleApproveReservation}
             onReject={handleRejectReservation}

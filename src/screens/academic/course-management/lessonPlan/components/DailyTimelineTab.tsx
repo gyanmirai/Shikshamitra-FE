@@ -4,10 +4,13 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
+import LoadingButton from '@mui/lab/LoadingButton';
+import { GlobalIcons } from 'src/utils/icons';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
@@ -15,7 +18,6 @@ import {
   Grid,
   Stack,
   Alert,
-  Menu,
   Paper,
   Button,
   MenuItem,
@@ -58,7 +60,6 @@ type Props = {
   onSubmitDiary: (plan: any) => void;
   onSubmitPlan: (planId: string) => void;
   onCreateHomework?: (plan: any) => void;
-  isReadOnly?: boolean;
 };
 
 const DailyTimelineTab = ({
@@ -72,22 +73,21 @@ const DailyTimelineTab = ({
   onSubmitDiary,
   onSubmitPlan,
   onCreateHomework,
-  isReadOnly = false,
 }: Props) => {
   const theme = useTheme();
-  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const popover = usePopover();
   const [menuPlan, setMenuPlan] = useState<any | null>(null);
 
   const handlePrevDay = () => onChangeDate(selectedDate.subtract(1, 'day'));
   const handleNextDay = () => onChangeDate(selectedDate.add(1, 'day'));
   const handleToday = () => onChangeDate(dayjs());
 
-  const openCardMenu = (target: HTMLElement, plan: any) => {
-    setMenuAnchorEl(target);
+  const openCardMenu = (event: React.MouseEvent<HTMLElement>, plan: any) => {
     setMenuPlan(plan);
+    popover.onOpen(event);
   };
   const closeCardMenu = () => {
-    setMenuAnchorEl(null);
+    popover.onClose();
     setMenuPlan(null);
   };
 
@@ -285,13 +285,13 @@ const DailyTimelineTab = ({
             const planStatus = toPlanStatusLabel(plan?.status);
             const normalizedPlan = hasPlan
               ? {
-                  ...plan,
-                  status: planStatus,
-                  planStatus,
-                  className: plan.className || plan.standardName || slot.standardName,
-                  divisionName: plan.divisionName || slot.divisionName,
-                  subjectName: plan.subjectName || slot.subjectName,
-                }
+                ...plan,
+                status: planStatus,
+                planStatus,
+                className: plan.className || plan.standardName || slot.standardName,
+                divisionName: plan.divisionName || slot.divisionName,
+                subjectName: plan.subjectName || slot.subjectName,
+              }
               : null;
             const insightSeverity =
               slot.insightSeverity === 'error' || slot.insightSeverity === 'warning'
@@ -517,66 +517,53 @@ const DailyTimelineTab = ({
                         justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
                         alignItems="center"
                       >
-                        {isReadOnly ? (
+                        {['Draft', 'NeedsChanges', 'Rejected'].includes(planStatus) && (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            color="primary"
+                            startIcon={<Iconify icon="solar:plain-bold" width={16} />}
+                            onClick={() => onSubmitPlan(plan.id || plan.Id)}
+                          >
+                            Submit
+                          </Button>
+                        )}
+                        {planStatus === 'Approved' && (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            color="success"
+                            startIcon={<Iconify icon="solar:notebook-bookmark-bold" width={16} />}
+                            onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
+                          >
+                            Record Diary
+                          </Button>
+                        )}
+                        {planStatus === 'Submitted' && (
                           <Button
                             variant="outlined"
                             size="small"
-                            startIcon={<Iconify icon="solar:eye-bold" width={16} />}
-                            onClick={() => normalizedPlan && onViewDetails(normalizedPlan)}
+                            disabled
+                            startIcon={<Iconify icon="solar:clock-circle-bold" width={16} />}
                           >
-                            View Details
+                            Pending HOD
                           </Button>
-                        ) : (
-                          <>
-                            {['Draft', 'NeedsChanges', 'Rejected'].includes(planStatus) && (
-                              <Button
-                                variant="contained"
-                                size="small"
-                                color="primary"
-                                startIcon={<Iconify icon="solar:plain-bold" width={16} />}
-                                onClick={() => onSubmitPlan(plan.id || plan.Id)}
-                              >
-                                Submit
-                              </Button>
-                            )}
-                            {planStatus === 'Approved' && (
-                              <Button
-                                variant="contained"
-                                size="small"
-                                color="success"
-                                startIcon={<Iconify icon="solar:notebook-bookmark-bold" width={16} />}
-                                onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
-                              >
-                                Record Diary
-                              </Button>
-                            )}
-                            {planStatus === 'Submitted' && (
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                disabled
-                                startIcon={<Iconify icon="solar:clock-circle-bold" width={16} />}
-                              >
-                                Pending HOD
-                              </Button>
-                            )}
+                        )}
 
-                            {planStatus !== 'Submitted' && (
-                              <IconButton
-                                size="small"
-                                title="More actions"
-                                onClick={(e) =>
-                                  normalizedPlan && openCardMenu(e.currentTarget, normalizedPlan)
-                                }
-                                sx={{
-                                  border: (t) => `1px solid ${t.palette.divider}`,
-                                  '&:hover': { bgcolor: 'action.hover' },
-                                }}
-                              >
-                                <Iconify icon="eva:more-vertical-fill" width={18} />
-                              </IconButton>
-                            )}
-                          </>
+                        {planStatus !== 'Submitted' && (
+                          <IconButton
+                            size="small"
+                            title="More actions"
+                            onClick={(e) =>
+                              normalizedPlan && openCardMenu(e, normalizedPlan)
+                            }
+                            sx={{
+                              border: (t) => `1px solid ${t.palette.divider}`,
+                              '&:hover': { bgcolor: 'action.hover' },
+                            }}
+                          >
+                            <Iconify icon="eva:more-vertical-fill" width={18} />
+                          </IconButton>
                         )}
                       </Stack>
                     ) : (
@@ -586,29 +573,27 @@ const DailyTimelineTab = ({
                         justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
                         alignItems="center"
                       >
-                        {!isReadOnly && (
-                          <Button
-                            variant="outlined"
-                            color="primary"
-                            size="small"
-                            startIcon={<Iconify icon="mdi:plus-circle-outline" />}
-                            disabled={slot.isPlanCreationBlocked}
-                            onClick={() =>
-                              onAddLesson(selectedDate, {
-                                timetableSlotId: slot.timetableSlotId,
-                                period: slot.periodName,
-                                className: slot.standardName,
-                                divisionName: slot.divisionName,
-                                subjectName: slot.subjectName,
-                                standardId: slot.standardId,
-                                divisionId: slot.divisionId,
-                                subjectId: slot.subjectId,
-                              })
-                            }
-                          >
-                            {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
-                          </Button>
-                        )}
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="small"
+                          startIcon={<Iconify icon="mdi:plus-circle-outline" />}
+                          disabled={slot.isPlanCreationBlocked}
+                          onClick={() =>
+                            onAddLesson(selectedDate, {
+                              timetableSlotId: slot.timetableSlotId,
+                              period: slot.periodName,
+                              className: slot.standardName,
+                              divisionName: slot.divisionName,
+                              subjectName: slot.subjectName,
+                              standardId: slot.standardId,
+                              divisionId: slot.divisionId,
+                              subjectId: slot.subjectId,
+                            })
+                          }
+                        >
+                          {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
+                        </Button>
                       </Stack>
                     )}
                   </Grid>
@@ -657,12 +642,11 @@ const DailyTimelineTab = ({
       )}
 
       {/* Overflow menu */}
-      <Menu
-        anchorEl={menuAnchorEl}
-        open={Boolean(menuAnchorEl)}
+      <CustomPopover
+        open={popover.open}
+        anchorEl={popover.anchorEl}
         onClose={closeCardMenu}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        slotProps={{ arrow: { placement: 'right-top' } }}
       >
         <MenuItem
           onClick={() => {
@@ -670,7 +654,7 @@ const DailyTimelineTab = ({
             closeCardMenu();
           }}
         >
-          <Iconify icon="solar:eye-bold" width={18} sx={{ mr: 1, color: 'text.secondary' }} />
+          <Iconify icon={GlobalIcons.eye} width={18} sx={{ mr: 1, color: 'text.secondary' }} />
           View Details
         </MenuItem>
         {['Draft', 'NeedsChanges', 'Rejected'].includes(menuPlan?.status) && (
@@ -680,7 +664,7 @@ const DailyTimelineTab = ({
               closeCardMenu();
             }}
           >
-            <Iconify icon="solar:pen-bold" width={18} sx={{ mr: 1, color: 'primary.main' }} />
+            <Iconify icon={GlobalIcons.edit} width={18} sx={{ mr: 1, color: 'primary.main' }} />
             Edit Plan
           </MenuItem>
         )}
@@ -699,7 +683,7 @@ const DailyTimelineTab = ({
             Create Homework
           </MenuItem>
         )}
-      </Menu>
+      </CustomPopover>
     </Card>
   );
 };

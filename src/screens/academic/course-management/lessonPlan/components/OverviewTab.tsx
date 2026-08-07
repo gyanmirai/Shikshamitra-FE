@@ -349,8 +349,8 @@ const OverviewTab = ({
           const plans = lessonPlans.filter((p) => p.subjectName === subject.value);
           const avgPlanned = plans.length
             ? Math.round(
-                plans.reduce((s, p) => s + p.plannedCompletionPercentage, 0) / plans.length
-              )
+              plans.reduce((s, p) => s + p.plannedCompletionPercentage, 0) / plans.length
+            )
             : 0;
           const avgActual = plans.length
             ? Math.round(plans.reduce((s, p) => s + p.actualCompletionPercentage, 0) / plans.length)

@@ -3,35 +3,35 @@
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
-import { LoadingButton } from '@mui/lab';
-import { Label } from 'src/components/label';
-import { alpha } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
-import React, { useState, useCallback } from 'react';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
+import LoadingButton from '@mui/lab/LoadingButton';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Box,
-  Tab,
   List,
-  Tabs,
   Alert,
+  Paper,
   Stack,
   Button,
   Switch,
+  Slider,
   Divider,
   TextField,
   Typography,
   IconButton,
+  DialogActions,
   LinearProgress,
   FormControlLabel,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+
+import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import { Label } from 'src/components/label';
+import CustomTooltip from 'src/components/custom-tooltip';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 
 import {
   todayIso,
@@ -126,6 +126,68 @@ type Props = {
 const TABS = ['Teaching', 'Reflection', 'Evidence'] as const;
 type TabKey = (typeof TABS)[number];
 
+const SectionCard = ({
+  title,
+  icon,
+  children,
+  action,
+}: {
+  title: string;
+  icon: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) => (
+  <Paper
+    elevation={0}
+    sx={{
+      p: { xs: 2, md: 2 },
+      mb: 1.5,
+      position: 'relative',
+      borderRadius: 2,
+      border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
+      boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+      overflow: 'clip',
+      transition: 'all 0.3s ease-in-out',
+      '&:hover': {
+        boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.08)',
+      },
+    }}
+  >
+    <Box
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      mb={2}
+      sx={{
+        borderBottom: (theme) => `1px dashed ${alpha(theme.palette.grey[500], 0.2)}`,
+        pb: 1.25,
+      }}
+    >
+      <Stack direction="row" spacing={1.25} alignItems="center">
+        <Box
+          sx={{
+            width: 32,
+            height: 32,
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+            color: 'primary.main',
+          }}
+        >
+          <Iconify icon={icon} width={20} />
+        </Box>
+        <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+          {title}
+        </Typography>
+      </Stack>
+      {action}
+    </Box>
+    {children}
+  </Paper>
+);
+
 const SubmitDiaryModal = ({
   open,
   plan,
@@ -173,7 +235,7 @@ const SubmitDiaryModal = ({
     return defaultDiaryForm;
   });
 
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState('');
   const [previewFile, setPreviewFile] = useState<{
     name: string;
@@ -181,6 +243,7 @@ const SubmitDiaryModal = ({
     size: string;
     previewUrl?: string;
   } | null>(null);
+
   const [mockFiles, setMockFiles] = useState<
     {
       id: string;
@@ -194,11 +257,10 @@ const SubmitDiaryModal = ({
     }[]
   >([]);
 
-  const handleSelectActualFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const handleSelectActualFiles = (files: FileList | File[] | null) => {
     if (!files || files.length === 0) return;
 
-    const filesArray = Array.from(files);
+    const filesArray: File[] = Array.from(files);
     const newStagedFiles = filesArray.map((file, i) => {
       const isPdf = file.type.includes('pdf') || file.name.endsWith('.pdf');
       const isDoc = file.name.endsWith('.doc') || file.name.endsWith('.docx');
@@ -222,7 +284,7 @@ const SubmitDiaryModal = ({
     });
 
     setMockFiles((prev) => [...prev, ...newStagedFiles]);
-    e.target.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleTriggerFilePicker = () => {
@@ -303,7 +365,6 @@ const SubmitDiaryModal = ({
 
     setError('');
 
-    // Auto upload remaining staged files on save/submit
     const hasStaged = mockFiles.some((f) => f.status === 'staged' || f.status === 'uploading');
     if (hasStaged) {
       handleStartUpload();
@@ -315,29 +376,6 @@ const SubmitDiaryModal = ({
 
     onSave(form, submit);
   };
-
-  const tabIcon = (t: TabKey): string => {
-    switch (t) {
-      case 'Teaching':
-        return 'mdi:school-outline';
-      case 'Reflection':
-        return 'mdi:thought-bubble-outline';
-      case 'Evidence':
-        return 'mdi:paperclip';
-
-      default:
-        return 'mdi:circle-outline';
-    }
-  };
-
-  const sectionHeader = (icon: string, label: string) => (
-    <Stack direction="row" spacing={1} alignItems="center">
-      <Iconify icon={icon} width={16} sx={{ color: 'text.disabled' }} />
-      <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.6 }}>
-        {label}
-      </Typography>
-    </Stack>
-  );
 
   const diaryQualityScore = (): number => {
     let score = 0;
@@ -383,20 +421,28 @@ const SubmitDiaryModal = ({
     <>
       <CustomDialog
         open={open}
+        handleClose={onClose}
         title={
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+            <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
               {existingDiary ? 'Edit Teacher Diary' : 'Submit Teacher Diary'}
-            </Typography>
+            </Box>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Record actual classroom coverage, student responses, teacher reflections, and attach evidence."
+            >
+              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+            </CustomTooltip>
             {form.isBackdated && (
-              <Label color="warning" variant="soft" startIcon={<Iconify icon="mdi:history" />}>
+              <Label color="warning" variant="soft" startIcon={<Iconify icon={GlobalIcons.history} />}>
                 Backdated
               </Label>
             )}
-          </Stack>
+          </Box>
         }
         maxWidth="md"
-        handleClose={onClose}
+        hasForm={true}
       >
         {/* Streamlined Plan Context Summary */}
         {plan && (
@@ -457,7 +503,7 @@ const SubmitDiaryModal = ({
           </Box>
         )}
 
-        {/* Professional Stepper Tab Navigation Bar */}
+        {/* Stepper Tab Navigation Bar */}
         <Box
           sx={{
             px: 3,
@@ -494,10 +540,10 @@ const SubmitDiaryModal = ({
                     borderColor: isActive ? 'primary.main' : 'divider',
                     bgcolor: isActive
                       ? (theme) =>
-                          alpha(
-                            theme.palette.primary.main,
-                            theme.palette.mode === 'dark' ? 0.16 : 0.08
-                          )
+                        alpha(
+                          theme.palette.primary.main,
+                          theme.palette.mode === 'dark' ? 0.16 : 0.08
+                        )
                       : 'background.paper',
                     transition: 'all 0.2s ease-in-out',
                     boxShadow: isActive ? '0px 2px 6px rgba(0,0,0,0.04)' : 'none',
@@ -576,11 +622,34 @@ const SubmitDiaryModal = ({
           </Stack>
         </Box>
 
-        <DialogScrollContent>
+        <DialogScrollContent onSubmit={() => handleSave(true)}>
           <Stack spacing={1}>
             {error && (
               <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
                 {error}
+              </Alert>
+            )}
+
+            {/* Backdated Warning & Reason */}
+            {form.isBackdated && (
+              <Alert severity="warning" icon={<Iconify icon={GlobalIcons.history} />}>
+                <Stack spacing={1} sx={{ width: '100%' }}>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Backdated Entry Notice
+                  </Typography>
+                  <Typography variant="caption">
+                    This diary is being submitted after the scheduled date. Please provide a reason for the delayed entry.
+                  </Typography>
+                  <TextField
+                    size="small"
+                    label="Backdated Reason *"
+                    value={form.backdatedReason}
+                    onChange={(e) => set('backdatedReason', e.target.value)}
+                    fullWidth
+                    required
+                    placeholder="State reason for delayed submission..."
+                  />
+                </Stack>
               </Alert>
             )}
 
@@ -621,57 +690,38 @@ const SubmitDiaryModal = ({
             })()}
 
             {tab === 'Teaching' && (
-              <>
-                <Box
-                  sx={{
-                    p: 2.5,
-                    borderRadius: '12px',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    {sectionHeader('mdi:calendar-check-outline', 'Class Status')}
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
-                      <DatePicker
-                        label="Actual Date *"
-                        value={form.actualDate}
-                        onChange={(v) => set('actualDate', v)}
-                        slotProps={{ textField: { size: 'small', sx: { maxWidth: 200 } } }}
-                      />
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={form.classConducted}
-                            onChange={(e) => set('classConducted', e.target.checked)}
-                          />
-                        }
-                        label="Class Conducted"
-                      />
-                    </Stack>
+              <Stack>
+                <SectionCard title="Class Status" icon="mdi:calendar-check-outline">
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                    <DatePicker
+                      label="Actual Date *"
+                      value={form.actualDate}
+                      onChange={(v) => set('actualDate', v)}
+                      slotProps={{ textField: { size: 'small', sx: { maxWidth: 220, width: '100%' } } }}
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={form.classConducted}
+                          onChange={(e) => set('classConducted', e.target.checked)}
+                        />
+                      }
+                      label="Class Conducted"
+                    />
                   </Stack>
-                </Box>
+                </SectionCard>
 
                 {form.classConducted ? (
                   <>
-                    <Box
-                      sx={{
-                        p: 2.5,
-                        borderRadius: '12px',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        bgcolor: 'background.paper',
-                      }}
-                    >
-                      <Stack spacing={1}>
-                        {sectionHeader('mdi:book-open-variant', 'Lesson Coverage')}
+                    <SectionCard title="Lesson Coverage" icon="mdi:book-open-variant">
+                      <Stack spacing={2}>
                         <TextField
                           size="small"
                           label="Actual Topic Covered *"
                           value={form.actualTopicCovered}
                           onChange={(e) => set('actualTopicCovered', e.target.value)}
                           fullWidth
+                          required
                         />
                         <TextField
                           size="small"
@@ -684,36 +734,37 @@ const SubmitDiaryModal = ({
                           placeholder="Describe what was taught in detail..."
                           helperText="Summarize the concepts, examples and activities actually covered"
                         />
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                          <Box sx={{ flex: 1 }}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
+                          <Box sx={{ flex: 1, width: '100%' }}>
                             <Stack
                               direction="row"
                               justifyContent="space-between"
                               alignItems="center"
+                              sx={{ mb: 0.5 }}
                             >
-                              <Typography variant="body2" color="text.secondary">
-                                Actual Completion
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                                Actual Completion (%)
                               </Typography>
-                              <Typography variant="body2" fontWeight={700}>
+                              <Typography variant="subtitle2" fontWeight={700} color="primary.main">
                                 {form.actualCompletionPercentage}%
                               </Typography>
                             </Stack>
-                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1 }}>
-                              <Box sx={{ flex: 1 }}>
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={form.actualCompletionPercentage}
-                                  sx={{ height: 8, borderRadius: 1 }}
-                                />
-                              </Box>
-                              <TextField
-                                size="small"
-                                type="number"
+                            <Box sx={{ px: 0.5, pt: 0.5 }}>
+                              <Slider
                                 value={form.actualCompletionPercentage}
-                                onChange={(e) =>
-                                  set('actualCompletionPercentage', Number(e.target.value))
-                                }
-                                inputProps={{ min: 0, max: 100, style: { width: 60 } }}
+                                onChange={(_, val) => set('actualCompletionPercentage', val as number)}
+                                valueLabelDisplay="auto"
+                                min={0}
+                                max={100}
+                                step={5}
+                                size="small"
+                                sx={{
+                                  height: 6,
+                                  '& .MuiSlider-thumb': {
+                                    width: 16,
+                                    height: 16,
+                                  },
+                                }}
                               />
                             </Box>
                           </Box>
@@ -722,31 +773,20 @@ const SubmitDiaryModal = ({
                             options={teachingMethodOptions}
                             value={form.teachingMethodUsed}
                             onChange={(v) => set('teachingMethodUsed', v as string)}
-                            formControlProps={{ sx: { flex: 1 } }}
+                            formControlProps={{ sx: { flex: 1, width: '100%' } }}
                           />
                         </Stack>
                       </Stack>
-                    </Box>
+                    </SectionCard>
 
-                    <Box
-                      sx={{
-                        p: 2.5,
-                        borderRadius: '12px',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        bgcolor: 'background.paper',
-                      }}
-                    >
-                      <Stack spacing={1}>
-                        {sectionHeader('mdi:account-group-outline', 'Classroom Feedback')}
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <SectionCard title="Classroom Feedback" icon="mdi:account-group-outline">
+                      <Stack spacing={2}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                           <CustomSelect
                             label="Class Understanding Level"
                             options={understandingLevelOptions}
                             value={form.classUnderstandingLevel}
-                            onChange={(v) =>
-                              set('classUnderstandingLevel', v as UnderstandingLevel)
-                            }
+                            onChange={(v) => set('classUnderstandingLevel', v as UnderstandingLevel)}
                             formControlProps={{ sx: { flex: 1 } }}
                           />
                           <CustomSelect
@@ -767,11 +807,7 @@ const SubmitDiaryModal = ({
                           minRows={2}
                           placeholder="How did students respond to the lesson?"
                         />
-                        <Stack
-                          direction={{ xs: 'column', sm: 'row' }}
-                          spacing={1}
-                          alignItems="center"
-                        >
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
                           <TextField
                             size="small"
                             label="Homework Assigned"
@@ -787,57 +823,40 @@ const SubmitDiaryModal = ({
                               />
                             }
                             label="Needs Revision"
-                            sx={{ whiteSpace: 'nowrap' }}
+                            sx={{ whiteSpace: 'nowrap', m: 0 }}
                           />
                         </Stack>
                       </Stack>
-                    </Box>
+                    </SectionCard>
                   </>
                 ) : (
-                  <Box
-                    sx={{
-                      p: 2.5,
-                      borderRadius: '12px',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <Stack spacing={1}>
+                  <SectionCard title="Missed Class Details" icon="mdi:alert-outline">
+                    <Stack spacing={2}>
                       <Alert severity="warning" icon={<Iconify icon="mdi:alert-outline" />}>
-                        Class not conducted. Please provide a reason and reschedule date if needed.
+                        Class was not conducted. Please select a reason and reschedule date if applicable.
                       </Alert>
                       <CustomSelect
                         label="Missed Reason *"
                         options={missedReasonOptions}
                         value={form.missedReason}
                         onChange={(v) => set('missedReason', v as MissedReason)}
-                        formControlProps={{ sx: { maxWidth: 320 } }}
+                        formControlProps={{ sx: { maxWidth: 360, width: '100%' } }}
                       />
                       <DatePicker
                         label="Rescheduled To"
                         value={form.rescheduledToDate}
                         onChange={(v) => set('rescheduledToDate', v)}
-                        slotProps={{ textField: { size: 'small', sx: { maxWidth: 220 } } }}
+                        slotProps={{ textField: { size: 'small', sx: { maxWidth: 240, width: '100%' } } }}
                       />
                     </Stack>
-                  </Box>
+                  </SectionCard>
                 )}
-              </>
+              </Stack>
             )}
 
             {tab === 'Reflection' && (
-              <Box
-                sx={{
-                  p: 2.5,
-                  borderRadius: '12px',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <Stack spacing={1}>
-                  {sectionHeader('mdi:thought-bubble-outline', 'Teacher Reflection')}
+              <SectionCard title="Teacher Reflection & Notes" icon="mdi:thought-bubble-outline">
+                <Stack spacing={2}>
                   <TextField
                     size="small"
                     label="Overall Reflection"
@@ -848,24 +867,26 @@ const SubmitDiaryModal = ({
                     minRows={3}
                     placeholder="Overall thoughts on today's lesson..."
                   />
-                  <TextField
-                    size="small"
-                    label="What Went Well?"
-                    value={form.whatWentWell}
-                    onChange={(e) => set('whatWentWell', e.target.value)}
-                    fullWidth
-                    multiline
-                    minRows={2}
-                  />
-                  <TextField
-                    size="small"
-                    label="What Was Difficult?"
-                    value={form.whatWasDifficult}
-                    onChange={(e) => set('whatWasDifficult', e.target.value)}
-                    fullWidth
-                    multiline
-                    minRows={2}
-                  />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <TextField
+                      size="small"
+                      label="What Went Well?"
+                      value={form.whatWentWell}
+                      onChange={(e) => set('whatWentWell', e.target.value)}
+                      fullWidth
+                      multiline
+                      minRows={2}
+                    />
+                    <TextField
+                      size="small"
+                      label="What Was Difficult?"
+                      value={form.whatWasDifficult}
+                      onChange={(e) => set('whatWasDifficult', e.target.value)}
+                      fullWidth
+                      multiline
+                      minRows={2}
+                    />
+                  </Stack>
                   <TextField
                     size="small"
                     label="Students Needing Support"
@@ -874,24 +895,26 @@ const SubmitDiaryModal = ({
                     fullWidth
                     placeholder="Names or roll numbers of students who need extra attention"
                   />
-                  <TextField
-                    size="small"
-                    label="Next Class Follow-up"
-                    value={form.nextClassFollowUp}
-                    onChange={(e) => set('nextClassFollowUp', e.target.value)}
-                    fullWidth
-                    multiline
-                    minRows={2}
-                  />
-                  <TextField
-                    size="small"
-                    label="Remedial Action Required"
-                    value={form.remedialActionRequired}
-                    onChange={(e) => set('remedialActionRequired', e.target.value)}
-                    fullWidth
-                    multiline
-                    minRows={2}
-                  />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <TextField
+                      size="small"
+                      label="Next Class Follow-up"
+                      value={form.nextClassFollowUp}
+                      onChange={(e) => set('nextClassFollowUp', e.target.value)}
+                      fullWidth
+                      multiline
+                      minRows={2}
+                    />
+                    <TextField
+                      size="small"
+                      label="Remedial Action Required"
+                      value={form.remedialActionRequired}
+                      onChange={(e) => set('remedialActionRequired', e.target.value)}
+                      fullWidth
+                      multiline
+                      minRows={2}
+                    />
+                  </Stack>
                   <TextField
                     size="small"
                     label="Teacher Remarks"
@@ -902,51 +925,40 @@ const SubmitDiaryModal = ({
                     minRows={2}
                   />
                 </Stack>
-              </Box>
+              </SectionCard>
             )}
 
             {tab === 'Evidence' && (
-              <Box
-                sx={{
-                  p: 2.5,
-                  borderRadius: '12px',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  bgcolor: 'background.paper',
-                }}
+              <SectionCard
+                title="Supporting Evidence"
+                icon="mdi:paperclip"
+                action={
+                  mockFiles.some((f) => f.status === 'staged') ? (
+                    <Stack direction="row" spacing={1}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="inherit"
+                        onClick={handleClearStaged}
+                      >
+                        Clear Staged
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="primary"
+                        startIcon={<Iconify icon={GlobalIcons.upload} />}
+                        onClick={() => handleStartUpload()}
+                      >
+                        Upload Selected ({mockFiles.filter((f) => f.status === 'staged').length})
+                      </Button>
+                    </Stack>
+                  ) : undefined
+                }
               >
                 <Stack spacing={2}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    {sectionHeader('mdi:paperclip', 'Supporting Evidence')}
-                    <Stack direction="row" spacing={1}>
-                      {mockFiles.some((f) => f.status === 'staged') && (
-                        <>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="inherit"
-                            onClick={handleClearStaged}
-                          >
-                            Clear Staged
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            color="primary"
-                            startIcon={<Iconify icon="mdi:cloud-upload-outline" />}
-                            onClick={() => handleStartUpload()}
-                          >
-                            Upload Selected ({mockFiles.filter((f) => f.status === 'staged').length}
-                            )
-                          </Button>
-                        </>
-                      )}
-                    </Stack>
-                  </Stack>
-
-                  <Alert severity="info" icon={<Iconify icon="mdi:information-outline" />}>
-                    Select or drop classroom evidence files to stage them locally. Choose the file
-                    type before uploading.
+                  <Alert severity="info" icon={<Iconify icon={GlobalIcons.info} />}>
+                    Select or drop classroom evidence files to stage them locally. Choose the file type before uploading.
                   </Alert>
 
                   {/* Hidden File Input */}
@@ -956,7 +968,7 @@ const SubmitDiaryModal = ({
                     multiple
                     accept="image/*,.pdf,.doc,.docx,.png,.jpg,.jpeg"
                     style={{ display: 'none' }}
-                    onChange={handleSelectActualFiles}
+                    onChange={(e) => handleSelectActualFiles(e.target.files)}
                   />
 
                   {/* Dropzone */}
@@ -964,7 +976,7 @@ const SubmitDiaryModal = ({
                     sx={{
                       border: '2px dashed',
                       borderColor: 'divider',
-                      borderRadius: 2,
+                      borderRadius: 1.5,
                       p: 3,
                       textAlign: 'center',
                       cursor: 'pointer',
@@ -977,12 +989,12 @@ const SubmitDiaryModal = ({
                     onDrop={(e) => {
                       e.preventDefault();
                       if (e.dataTransfer.files?.length) {
-                        handleSelectActualFiles({ target: { files: e.dataTransfer.files } } as any);
+                        handleSelectActualFiles(e.dataTransfer.files);
                       }
                     }}
                   >
                     <Iconify
-                      icon="mdi:cloud-upload-outline"
+                      icon={GlobalIcons.upload}
                       width={36}
                       sx={{ color: 'primary.main', mb: 1 }}
                     />
@@ -990,18 +1002,14 @@ const SubmitDiaryModal = ({
                       Click or drag files to select evidence (Images, PDF, Worksheets)
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Files from your computer will be staged locally for type tagging before
-                      uploading. Max 10 MB each.
+                      Files from your computer will be staged locally for type tagging before uploading. Max 10 MB each.
                     </Typography>
                   </Box>
 
-                  {/* Staged & Uploaded File List */}
+                  {/* File List */}
                   {mockFiles.length > 0 && (
-                    <Stack spacing={1.5} sx={{ mt: 1 }}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
-                      >
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
                         Evidence Files ({mockFiles.length})
                       </Typography>
 
@@ -1082,10 +1090,10 @@ const SubmitDiaryModal = ({
                                         <Iconify
                                           icon={
                                             isPdf
-                                              ? 'mdi:file-pdf-box'
+                                              ? GlobalIcons.pdf
                                               : isPhoto
-                                                ? 'mdi:file-image-outline'
-                                                : 'mdi:file-document-outline'
+                                                ? GlobalIcons.image
+                                                : GlobalIcons.doc
                                           }
                                           width={22}
                                         />
@@ -1110,7 +1118,6 @@ const SubmitDiaryModal = ({
                                     </Box>
                                   </Stack>
 
-                                  {/* File Type Tag Selector */}
                                   <CustomSelect
                                     label="Type"
                                     options={evidenceTypeOptions}
@@ -1120,12 +1127,11 @@ const SubmitDiaryModal = ({
                                     formControlProps={{ sx: { minWidth: 160 } }}
                                   />
 
-                                  {/* Status Label */}
                                   {file.status === 'staged' && (
                                     <Label
                                       color="info"
                                       variant="soft"
-                                      startIcon={<Iconify icon="mdi:clock-outline" />}
+                                      startIcon={<Iconify icon={GlobalIcons.clock} />}
                                     >
                                       Staged
                                     </Label>
@@ -1139,7 +1145,7 @@ const SubmitDiaryModal = ({
                                     <Label
                                       color="success"
                                       variant="soft"
-                                      startIcon={<Iconify icon="mdi:check-circle" />}
+                                      startIcon={<Iconify icon={GlobalIcons.tick} />}
                                     >
                                       Uploaded
                                     </Label>
@@ -1154,7 +1160,6 @@ const SubmitDiaryModal = ({
                                     </Label>
                                   )}
 
-                                  {/* Item Actions */}
                                   <Stack direction="row" spacing={0.5} alignItems="center">
                                     <IconButton
                                       size="small"
@@ -1169,7 +1174,7 @@ const SubmitDiaryModal = ({
                                         })
                                       }
                                     >
-                                      <Iconify icon="mdi:eye-outline" />
+                                      <Iconify icon={GlobalIcons.eye} />
                                     </IconButton>
                                     {file.status === 'staged' && (
                                       <IconButton
@@ -1178,7 +1183,7 @@ const SubmitDiaryModal = ({
                                         title="Upload File"
                                         onClick={() => handleStartUpload(file.id)}
                                       >
-                                        <Iconify icon="mdi:cloud-upload-outline" />
+                                        <Iconify icon={GlobalIcons.upload} />
                                       </IconButton>
                                     )}
                                     {file.status === 'failed' && (
@@ -1196,12 +1201,11 @@ const SubmitDiaryModal = ({
                                       title="Remove"
                                       onClick={() => handleRemoveFile(file.id)}
                                     >
-                                      <Iconify icon="mdi:close" />
+                                      <Iconify icon={GlobalIcons.cancel} />
                                     </IconButton>
                                   </Stack>
                                 </Stack>
 
-                                {/* Progress bar when uploading */}
                                 {file.status === 'uploading' && (
                                   <LinearProgress
                                     variant="determinate"
@@ -1218,19 +1222,14 @@ const SubmitDiaryModal = ({
                     </Stack>
                   )}
                 </Stack>
-              </Box>
+              </SectionCard>
             )}
           </Stack>
         </DialogScrollContent>
 
+        {/* Dialog Action Footer - Fixed at bottom outside scroll area */}
         <Divider />
-        <Stack
-          direction="row"
-          spacing={1.5}
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ p: 2, bgcolor: 'background.paper' }}
-        >
+        <DialogActions sx={{ p: 2, justifyContent: 'space-between', bgcolor: 'background.paper', boxShadow: 'var(--shadows-10)' }}>
           <Stack direction="row" spacing={1}>
             <Button
               size="small"
@@ -1263,110 +1262,93 @@ const SubmitDiaryModal = ({
           <Stack direction="row" spacing={1}>
             <Button
               size="small"
-              variant="text"
-              color="inherit"
-              startIcon={<Iconify icon="mdi:close" />}
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={onClose}
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               size="small"
               variant="outlined"
-              color="primary"
-              startIcon={<Iconify icon="mdi:content-save-outline" />}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              loading={loading}
               onClick={() => handleSave(false)}
             >
-              Save Draft
-            </Button>
+              Draft
+            </LoadingButton>
             <LoadingButton
               size="small"
               variant="contained"
               loading={loading}
-              startIcon={<Iconify icon="mdi:check-circle-outline" />}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={() => handleSave(true)}
             >
-              Submit Diary
+              Submit
             </LoadingButton>
           </Stack>
-        </Stack>
-      </CustomDialog>
-      {/* File Preview Lightbox Dialog */}
-      <Dialog
-        open={Boolean(previewFile)}
-        onClose={() => setPreviewFile(null)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            m: 0,
-            p: 2,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-            <Iconify
-              icon="mdi:file-eye-outline"
-              width={22}
-              sx={{ color: 'primary.main', flexShrink: 0 }}
-            />
-            <Typography variant="subtitle1" fontWeight={700} noWrap>
-              {previewFile?.name}
-            </Typography>
-          </Stack>
-          <IconButton size="small" onClick={() => setPreviewFile(null)}>
-            <Iconify icon="mdi:close" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers sx={{ p: 2, textAlign: 'center', bgcolor: 'background.neutral' }}>
-          {previewFile?.previewUrl ? (
-            <Box
-              component="img"
-              src={previewFile.previewUrl}
-              alt={previewFile.name}
-              sx={{
-                maxHeight: 400,
-                maxWidth: '100%',
-                borderRadius: 1.5,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-                objectFit: 'contain',
-              }}
-            />
-          ) : (
-            <Box
-              sx={{ py: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}
-            >
-              <Iconify
-                icon="mdi:file-document-outline"
-                width={56}
-                sx={{ color: 'text.secondary' }}
-              />
-              <Typography variant="body2" color="text.primary" fontWeight={600}>
-                {previewFile?.name}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Size: {previewFile?.size}
-              </Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ px: 2, py: 1.5, justifyContent: 'space-between' }}>
-          <Label color="primary" variant="soft">
-            Type: {previewFile?.type}
-          </Label>
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            onClick={() => setPreviewFile(null)}
-          >
-            Close
-          </Button>
         </DialogActions>
-      </Dialog>
+      </CustomDialog>
+
+      {/* File Preview Lightbox Dialog */}
+      {previewFile && (
+        <CustomDialog
+          open={Boolean(previewFile)}
+          handleClose={() => setPreviewFile(null)}
+          title={
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Iconify icon={GlobalIcons.eye} width={20} color="primary.main" />
+              <Typography variant="subtitle1" fontWeight={700} noWrap>
+                {previewFile.name}
+              </Typography>
+            </Stack>
+          }
+          maxWidth="sm"
+          hasForm={false}
+        >
+          <DialogScrollContent>
+            <Stack spacing={2} alignItems="center" sx={{ py: 1 }}>
+              {previewFile.previewUrl ? (
+                <Box
+                  component="img"
+                  src={previewFile.previewUrl}
+                  alt={previewFile.name}
+                  sx={{
+                    maxHeight: 400,
+                    maxWidth: '100%',
+                    borderRadius: 1.5,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+                    objectFit: 'contain',
+                  }}
+                />
+              ) : (
+                <Box sx={{ py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <Iconify icon={GlobalIcons.doc} width={56} sx={{ color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.primary" fontWeight={600}>
+                    {previewFile.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Size: {previewFile.size}
+                  </Typography>
+                </Box>
+              )}
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ width: '100%', pt: 1 }}>
+                <Label color="primary" variant="soft">
+                  Type: {previewFile.type}
+                </Label>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  onClick={() => setPreviewFile(null)}
+                >
+                  Close
+                </Button>
+              </Stack>
+            </Stack>
+          </DialogScrollContent>
+        </CustomDialog>
+      )}
     </>
   );
 };

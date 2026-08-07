@@ -1,40 +1,38 @@
 'use client';
 
-import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import dayjs from 'dayjs';
-import { alpha } from '@mui/material/styles';
+import { LoadingButton } from '@mui/lab';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import { Box, Paper, MenuItem, Tooltip, IconButton } from '@mui/material';
+import { Tab } from '@mui/material';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import DialogActions from '@mui/material/DialogActions';
+
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { Label, LabelColor } from 'src/components/label';
+import { CustomTabs } from 'src/components/custom-tabs';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import {
-  Box,
-  Card,
-  Chip,
-  Stack,
-  Tooltip,
-  IconButton,
-  Typography,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Alert,
-  Divider,
-} from '@mui/material';
+import CustomizableTable from 'src/components/customizabaleTable';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CancelButton from 'src/components/cancel-button';
 
 import { ApprovalStatusChip } from './RoomStatusChip';
 
-import type { RoomReservation } from '../types';
+import type { RoomReservation, ReservationStatus } from '../types';
 
 type PendingAction = { id: string; type: 'approve' | 'reject' } | null;
 
 interface RoomReservationsTabProps {
   reservations: RoomReservation[];
+  isLoading?: boolean;
   canApprove?: boolean;
   pendingAction?: PendingAction;
   onCancel?: (id: string) => void;
@@ -44,8 +42,23 @@ interface RoomReservationsTabProps {
   onViewRoom?: (roomId: string) => void;
 }
 
+const STATUS_TABS: {
+  value: ReservationStatus | 'all';
+  label: string;
+  color: LabelColor;
+}[] = [
+    { value: 'all', label: 'All', color: 'info' },
+    { value: 'active', label: 'Active', color: 'primary' },
+    { value: 'pendingApproval', label: 'Pending', color: 'warning' },
+    { value: 'approved', label: 'Approved', color: 'success' },
+    { value: 'completed', label: 'Completed', color: 'success' },
+    { value: 'cancelled', label: 'Cancelled', color: 'error' },
+    { value: 'rejected', label: 'Rejected', color: 'error' },
+  ];
+
 export const RoomReservationsTab = ({
   reservations,
+  isLoading = false,
   canApprove = false,
   pendingAction,
   onCancel,
@@ -56,7 +69,7 @@ export const RoomReservationsTab = ({
 }: RoomReservationsTabProps) => {
   const { data: session } = useSession() as any;
   const currentUserId = session?.profile?.sub;
-  const [filter, setFilter] = useState<string>('all');
+  const [filter, setFilter] = useState<ReservationStatus | 'all'>('all');
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [approveId, setApproveId] = useState<string | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -66,7 +79,7 @@ export const RoomReservationsTab = ({
   const [isRejecting, setIsRejecting] = useState(false);
 
   // True only for the specific row + action currently in flight; drives the
-  // active button's loading spinner. Sibling/other-row actions are gated by
+  // active action's loading spinner. Sibling/other-row actions are gated by
   // `isAnyActionPending` to prevent concurrent requests.
   const isBusy = (id: string, type: 'approve' | 'reject') =>
     pendingAction?.id === id && pendingAction?.type === type;
@@ -99,75 +112,137 @@ export const RoomReservationsTab = ({
     return reservations.filter((r) => r.status === filter);
   }, [filter, reservations]);
 
-  const statusFilters = [
-    { value: 'all', label: 'All', icon: 'mdi:view-grid-outline', color: 'info.main', bgcolor: 'info.lighter' },
-    { value: 'active', label: 'Active', icon: 'mdi:calendar-check', color: 'primary.main', bgcolor: 'primary.lighter' },
-    { value: 'pendingApproval', label: 'Pending', icon: 'mdi:clock-outline', color: 'warning.main', bgcolor: 'warning.lighter' },
-    { value: 'approved', label: 'Approved', icon: 'mdi:check-decagram-outline', color: 'success.main', bgcolor: 'success.lighter' },
-    { value: 'completed', label: 'Completed', icon: 'mdi:flag-checkered', color: 'success.main', bgcolor: 'success.lighter' },
-    { value: 'cancelled', label: 'Cancelled', icon: 'mdi:cancel', color: 'error.main', bgcolor: 'error.lighter' },
-    { value: 'rejected', label: 'Rejected', icon: 'mdi:close-circle-outline', color: 'error.main', bgcolor: 'error.lighter' },
-  ];
+  // Count per status for the tab badges.
+  const statusCounts = useMemo(() => {
+    const counts: Record<ReservationStatus | 'all', number> = {
+      all: reservations.length,
+      draft: 0,
+      pendingApproval: 0,
+      approved: 0,
+      active: 0,
+      checkedIn: 0,
+      completed: 0,
+      cancelled: 0,
+      rejected: 0,
+      noShow: 0,
+      expired: 0,
+    };
+    reservations.forEach((r) => {
+      counts[r.status] = (counts[r.status] || 0) + 1;
+    });
+    return counts;
+  }, [reservations]);
+
+  // Row action menu rendered inside the ThreeDotsActions popover. Visibility
+  // mirrors the previous Tooltip+IconButton gating.
+  const renderRowActions = ({ popover, row }: { popover: any; row: RoomReservation }) => {
+    const close = () => popover.onClose();
+    const canEditRow = Boolean(onEdit) && ['draft', 'pendingApproval'].includes(row.status);
+    const canApproveRow = canApprove && row.approvalStatus === 'pending';
+    const canCancelRow = Boolean(onCancel) && ['active', 'approved', 'pendingApproval'].includes(row.status);
+    const actionDisabled = (type: 'approve' | 'reject') =>
+      isAnyActionPending && !isBusy(row.id, type);
+
+    return (
+      <Box sx={{ py: 0.5 }}>
+        {canEditRow && (
+          <MenuItem
+            onClick={() => {
+              close();
+              onEdit?.(row);
+            }}
+          >
+            <Iconify icon={GlobalIcons.edit} />
+            Edit
+          </MenuItem>
+        )}
+
+        {canApproveRow && (
+          <MenuItem
+            disabled={actionDisabled('approve')}
+            onClick={() => {
+              close();
+              setApproveId(row.id);
+            }}
+          >
+            <Iconify icon="mdi:check" color="success.main" />
+            Approve
+          </MenuItem>
+        )}
+
+        {canApproveRow && (
+          <MenuItem
+            disabled={actionDisabled('reject')}
+            onClick={() => {
+              close();
+              handleOpenReject(row.id);
+            }}
+          >
+            <Iconify icon="mdi:close" color="error.main" />
+            Reject
+          </MenuItem>
+        )}
+
+        {canCancelRow && (
+          <MenuItem
+            disabled={isAnyActionPending}
+            onClick={() => {
+              close();
+              setCancelId(row.id);
+            }}
+          >
+            <Iconify icon={GlobalIcons.delete} color="error.main" />
+            Cancel Reservation
+          </MenuItem>
+        )}
+      </Box>
+    );
+  };
+
+  const hasAnyRowActions = (row: RoomReservation) =>
+    (onEdit && ['draft', 'pendingApproval'].includes(row.status)) ||
+    (canApprove && row.approvalStatus === 'pending') ||
+    (onCancel && ['active', 'approved', 'pendingApproval'].includes(row.status));
 
   return (
     <Stack spacing={1} sx={{ height: '100%' }}>
-      {/* Status filter cards */}
-      <Box
+      {/* Status filter — tab bar with count badges in CustomTabs/Paper matching Learning Tasks */}
+      <Paper
         sx={{
-          display: 'grid',
-          gap: 1.5,
-          gridTemplateColumns: {
-            xs: 'repeat(2, 1fr)',
-            sm: 'repeat(4, 1fr)',
-            md: 'repeat(7, 1fr)',
-          },
-          mb: 1,
+          borderRadius: '12px',
+          p: 0.5,
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
-        {statusFilters.map((sf) => {
-          const count = sf.value === 'all' ? reservations.length : reservations.filter((r) => r.status === sf.value).length;
-          const isSelected = filter === sf.value;
-          
-          return (
-            <Card
-              key={sf.value}
-              role="button"
-              tabIndex={0}
-              onClick={() => setFilter(sf.value)}
-              onKeyDown={(event) => event.key === 'Enter' && setFilter(sf.value)}
-              sx={{
-                p: 1.5,
-                cursor: 'pointer',
-                border: (theme) =>
-                  `1px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
-                boxShadow: isSelected ? 4 : 0,
-              }}
-            >
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Iconify
-                  icon={sf.icon}
-                  width={20}
-                  sx={{ color: isSelected ? 'primary.main' : 'text.secondary' }}
-                />
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="caption" color="text.secondary" noWrap display="block">
-                    {sf.label}
-                  </Typography>
-                  <Typography variant="subtitle1" noWrap>
-                    {count}
-                  </Typography>
+        <CustomTabs
+          value={filter}
+          onChange={(_, v) => setFilter(v as ReservationStatus | 'all')}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
+          role="tablist"
+        >
+          {STATUS_TABS.map((tab) => (
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              label={
+                <Box display="flex" gap={1} alignItems="center">
+                  {tab.label}
+                  <Label color={tab.color} variant="soft">
+                    {statusCounts[tab.value] || 0}
+                  </Label>
                 </Box>
-              </Stack>
-            </Card>
-          );
-        })}
-      </Box>
+              }
+            />
+          ))}
+        </CustomTabs>
+      </Paper>
 
       <CustomizableTable
         tableContainerProps={{ sx: { height: '100%' } }}
         tableId="room-reservations-enhanced"
         tableTitle="Room Reservations"
         data={filtered}
+        isLoading={isLoading}
         columns={[
           {
             id: 'roomName',
@@ -193,8 +268,10 @@ export const RoomReservationsTab = ({
             render: (_v, row) => (
               <Box>
                 <Typography variant="body2">
-                  {row.date ? dayjs(row.date).format('DD/MM/YYYY') : ''}
-                  {row.isRecurring && row.recurringUntilDate && ` to ${dayjs(row.recurringUntilDate).format('DD/MM/YYYY')}`}
+                  {row.date ? dayjs(row.date).format('DD-MM-YYYY') : ''}
+                  {row.isRecurring &&
+                    row.recurringUntilDate &&
+                    ` to ${dayjs(row.recurringUntilDate).format('DD-MM-YYYY')}`}
                 </Typography>
                 {row.isRecurring && (
                   <Typography
@@ -239,19 +316,17 @@ export const RoomReservationsTab = ({
               { label: 'Other', value: 'other' },
             ],
             render: (v) => (
-              <Chip
-                size="small"
-                label={v}
-                variant="outlined"
-                sx={{ textTransform: 'capitalize' }}
-              />
+              <Label variant="soft" color="default" sx={{ textTransform: 'capitalize' }}>
+                {v}
+              </Label>
             ),
           },
           {
             id: 'approvalStatus',
             label: 'Approval',
-            minWidth: 90,
+            minWidth: 120,
             sticky: true,
+            stickyPosition: 'right',
             filterType: 'enum',
             enumOptions: [
               { label: 'Approved', value: 'approved' },
@@ -271,7 +346,8 @@ export const RoomReservationsTab = ({
           {
             id: 'actions',
             label: 'Actions',
-            minWidth: 90,
+            minWidth: 50,
+            width: 50,
             isSort: false,
             isFilter: false,
             sticky: true,
@@ -368,6 +444,7 @@ export const RoomReservationsTab = ({
         icon="warning"
         action={
           <Button
+            size="small"
             variant="contained"
             color="error"
             onClick={() => {
@@ -389,9 +466,11 @@ export const RoomReservationsTab = ({
         content="Are you sure you want to approve this reservation?"
         icon="success"
         action={
-          <Button
+          <LoadingButton
+            size="small"
             variant="contained"
             color="success"
+            loading={approveId ? isBusy(approveId, 'approve') : false}
             onClick={() => {
               if (approveId && onApprove) {
                 onApprove(approveId);
@@ -400,29 +479,45 @@ export const RoomReservationsTab = ({
             }}
           >
             Approve
-          </Button>
+          </LoadingButton>
         }
       />
 
-      <Dialog
+      <CustomDialog
         open={rejectDialogOpen}
-        onClose={() => setRejectDialogOpen(false)}
+        handleClose={() => setRejectDialogOpen(false)}
         maxWidth="sm"
-        fullWidth
+        hasForm
+        title={
+          <Box
+            display="flex"
+            flexDirection="row"
+            gap={1}
+            alignItems="center"
+            component="span"
+            sx={{ fontWeight: 'normal' }}
+          >
+            <Iconify icon="mdi:close-circle" color="error.main" width={22} height={22} />
+            <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+              Reject Reservation
+            </Box>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Provide a reason for rejecting this reservation request. The requester will be notified."
+            >
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+                width={16}
+                height={16}
+              />
+            </CustomTooltip>
+          </Box>
+        }
       >
-        <DialogTitle>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Iconify icon="mdi:close" width={22} color="error.main" />
-            <Typography variant="h6">Reject Reservation</Typography>
-            <Tooltip title="Provide a reason for rejecting this reservation request. The requester will be notified.">
-              <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
-                <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={20} />
-              </Box>
-            </Tooltip>
-          </Stack>
-        </DialogTitle>
-        <Divider />
-        <DialogContent>
+        <DialogScrollContent>
           <Stack spacing={2} sx={{ pt: 1, pb: 2 }}>
             <Alert severity="warning">
               The requester will be notified with your rejection reason.
@@ -440,18 +535,10 @@ export const RoomReservationsTab = ({
               placeholder="e.g. Clashes with existing timetable. Please choose another slot."
             />
           </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            disabled={isRejecting}
-            startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
-            onClick={() => setRejectDialogOpen(false)}
-          >
-            Cancel
-          </Button>
+        </DialogScrollContent>
+
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <CancelButton onClick={() => setRejectDialogOpen(false)} />
           <LoadingButton
             size="small"
             variant="contained"
@@ -463,7 +550,7 @@ export const RoomReservationsTab = ({
             Confirm Rejection
           </LoadingButton>
         </DialogActions>
-      </Dialog>
+      </CustomDialog>
     </Stack>
   );
 };

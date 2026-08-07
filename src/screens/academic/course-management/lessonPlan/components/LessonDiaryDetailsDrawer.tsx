@@ -5,8 +5,13 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import Drawer from '@mui/material/Drawer';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Stack, Button, Divider, Typography, IconButton, LinearProgress, Card } from '@mui/material';
 
 import type { LessonPlanRow, TeacherDiaryRow } from '../lessonPlanData';
@@ -110,26 +115,51 @@ const diaryStatusColor: Record<string, LabelColor> = {
 
 const formatDate = (value?: string | null) => (value ? dayjs(value).format('DD-MM-YYYY') : '-');
 
-const SectionCard = ({
-  icon,
-  title,
-  action,
-  children,
-}: {
+type AccordionCardProps = {
   icon: string;
+  iconBgColor?: string;
+  iconColor?: string;
   title: string;
   action?: ReactNode;
   children: ReactNode;
-}) => (
-  <Box
+  defaultExpanded?: boolean;
+};
+
+const AccordionCard = ({
+  icon,
+  iconBgColor = 'primary.lighter',
+  iconColor = 'primary.main',
+  title,
+  action,
+  children,
+  defaultExpanded = true,
+}: AccordionCardProps) => (
+  <Accordion
+    defaultExpanded={defaultExpanded}
     sx={{
-      p: 2.5,
-      borderRadius: 2,
+      borderRadius: '12px !important',
       bgcolor: 'background.paper',
       border: (theme) => `1px solid ${theme.palette.divider}`,
+      '&:before': { display: 'none' },
+      '&.Mui-expanded': { margin: 0 },
+      overflow: 'hidden',
+      boxShadow: 'none',
     }}
   >
-    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+    <AccordionSummary
+      expandIcon={<Iconify icon="solar:alt-arrow-down-bold" width={16} />}
+      sx={{
+        px: 2,
+        py: 0.5,
+        minHeight: 48,
+        '& .MuiAccordionSummary-content': {
+          my: 1,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mr: 1,
+        },
+      }}
+    >
       <Stack direction="row" alignItems="center" spacing={1}>
         <Box
           sx={{
@@ -138,21 +168,27 @@ const SectionCard = ({
             borderRadius: 1,
             display: 'grid',
             placeItems: 'center',
-            bgcolor: 'primary.lighter',
-            color: 'primary.main',
+            bgcolor: iconBgColor,
+            color: iconColor,
             flexShrink: 0,
           }}
         >
           <Iconify icon={icon} width={16} />
         </Box>
-        <Typography variant="subtitle2" sx={{ letterSpacing: 0.2 }}>
+        <Typography variant="subtitle2" fontWeight={700}>
           {title}
         </Typography>
       </Stack>
-      {action}
-    </Stack>
-    <Stack spacing={1}>{children}</Stack>
-  </Box>
+      {action && (
+        <Box onClick={(e) => e.stopPropagation()} sx={{ flexShrink: 0, ml: 'auto', mr: 1 }}>
+          {action}
+        </Box>
+      )}
+    </AccordionSummary>
+    <AccordionDetails sx={{ px: 2, pt: 0, pb: 2 }}>
+      <Stack spacing={1.5}>{children}</Stack>
+    </AccordionDetails>
+  </Accordion>
 );
 
 const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
@@ -169,16 +205,38 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
       PaperProps={{ sx: { width: { xs: '100%', sm: 520 }, maxWidth: '100%' } }}
     >
       <Stack sx={{ height: 1, overflow: 'hidden' }}>
-        {/* Header */}
+        {/* Header with Info Icon and Status Badges */}
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2.5 }}>
-          <Box>
-            <Typography variant="h6">Lesson & Diary Details</Typography>
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ flex: 1, mr: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={1}>
+              <Typography variant="h6" fontWeight={700}>
+                Lesson & Diary Details
+              </Typography>
+              <CustomTooltip
+                title="Comprehensive overview of lesson plan details and actual teacher diary execution logs."
+                placement="right"
+                arrow
+              >
+                <Iconify icon="lucide:info" width={18} height={18} color="info.main" sx={{ cursor: 'pointer' }} />
+              </CustomTooltip>
+              {planStatus && (
+                <Label color={planStatusColor[planStatus] ?? 'default'} variant="soft">
+                  Plan: {planStatus}
+                </Label>
+              )}
+              <Label
+                color={diary ? (diaryStatusColor[diary.diaryStatus] ?? 'default') : 'default'}
+                variant="soft"
+              >
+                Diary: {diary ? diary.diaryStatus : 'Pending'}
+              </Label>
+            </Stack>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               {plan.subjectName} &mdash; {plan.chapterName}
             </Typography>
           </Box>
           <IconButton size="small" onClick={onClose}>
-            <Iconify icon="mdi:close" />
+            <Iconify icon={GlobalIcons.cancel} />
           </IconButton>
         </Stack>
 
@@ -186,22 +244,15 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
 
         {/* Content */}
         <Stack
-          spacing={1}
+          spacing={1.5}
           sx={{ p: 2.5, pb: 4, overflowY: 'auto', flex: 1, bgcolor: 'background.neutral' }}
         >
-          {/* Plan Details */}
-          <SectionCard
+          {/* Plan Details Accordion */}
+          <AccordionCard
             icon="mdi:clipboard-text-outline"
             title="Plan Details"
-            action={
-              planStatus ? (
-                <Label color={planStatusColor[planStatus] ?? 'default'} variant="soft">
-                  {planStatus}
-                </Label>
-              ) : null
-            }
           >
-            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2} sx={{ mb: 1.5 }}>
+            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2} sx={{ mb: 1 }}>
               <DetailItem label="Date" value={formatDate(plan.plannedDate)} />
               <DetailItem label="Period" value={plan.period} />
               <DetailItem label="Time" value={plan.plannedTime} />
@@ -218,7 +269,7 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
               </Box>
             </Box>
 
-            <Stack spacing={1.5} sx={{ mb: 1.5 }}>
+            <Stack spacing={1.5}>
               <TextBlock label="Topic" value={plan.topic} />
               <TextBlock label="Learning Objective" value={plan.learningObjective} />
               <TextBlock label="Teaching Method" value={plan.teachingMethod} />
@@ -244,60 +295,18 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
                 </Typography>
               </Box>
             ) : null}
-          </SectionCard>
-
-          {/* Diary Entry Header */}
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ mt: 1.5, mb: 1, px: 0.5, flexShrink: 0 }}
-          >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Box
-                sx={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 1,
-                  display: 'grid',
-                  placeItems: 'center',
-                  bgcolor: 'success.lighter',
-                  color: 'success.main',
-                  flexShrink: 0,
-                }}
-              >
-                <Iconify icon="mdi:notebook-outline" width={16} />
-              </Box>
-              <Typography variant="subtitle1" fontWeight={700}>
-                Diary Entry
-              </Typography>
-            </Stack>
-            <Label
-              color={diary ? (diaryStatusColor[diary.diaryStatus] ?? 'default') : 'default'}
-              variant="soft"
-            >
-              {diary ? diary.diaryStatus : 'Pending'}
-            </Label>
-          </Stack>
+          </AccordionCard>
 
           {diary ? (
             <Stack spacing={1.5}>
-              {/* Card 1: Core Execution Details */}
-              <Card
-                sx={{
-                  p: 2.5,
-                  borderRadius: 2,
-                  bgcolor: 'background.paper',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
+              {/* Card 1: Core Execution Details Accordion */}
+              <AccordionCard
+                icon="mdi:calendar-check"
+                iconBgColor="primary.lighter"
+                iconColor="primary.main"
+                title="Core Execution Details"
               >
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                  <Iconify icon="mdi:calendar-check" width={18} color="primary.main" />
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Core Execution Details
-                  </Typography>
-                </Stack>
-                <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2} sx={{ mb: 1.5 }}>
+                <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2}>
                   <Box>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                       Actual Date
@@ -325,24 +334,16 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
                   label="Actual Topic Covered"
                   value={diary.actualTopicCovered || diary.actualTopicTaught}
                 />
-              </Card>
+              </AccordionCard>
 
-              {/* Card 2: Classroom Metrics & Engagement */}
-              <Card
-                sx={{
-                  p: 2.5,
-                  borderRadius: 2,
-                  bgcolor: 'background.paper',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
+              {/* Card 2: Classroom Metrics & Engagement Accordion */}
+              <AccordionCard
+                icon="mdi:chart-bar"
+                iconBgColor="warning.lighter"
+                iconColor="warning.main"
+                title="Classroom Metrics & Engagement"
               >
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                  <Iconify icon="mdi:chart-bar" width={18} color="warning.main" />
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Classroom Metrics & Engagement
-                  </Typography>
-                </Stack>
-                <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2} sx={{ mb: 2 }}>
+                <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2}>
                   <Box>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                       Understanding Level
@@ -383,55 +384,34 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
                   value={diary.actualCompletionPercentage}
                   color="success"
                 />
-              </Card>
+              </AccordionCard>
 
-              {/* Card 3: Reflections & Takeaways */}
-              <Card
-                sx={{
-                  p: 2.5,
-                  borderRadius: 2,
-                  bgcolor: 'background.paper',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
+              {/* Card 3: Reflections & Takeaways Accordion */}
+              <AccordionCard
+                icon="mdi:comment-quote"
+                iconBgColor="info.lighter"
+                iconColor="info.main"
+                title="Reflections & Takeaways"
               >
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                  <Iconify icon="mdi:comment-quote" width={18} color="info.main" />
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Reflections & Takeaways
-                  </Typography>
-                </Stack>
-                <Stack spacing={1.5}>
-                  <TextBlock label="Content Summary" value={diary.actualContentSummary} />
-                  <TextBlock label="Student Response" value={diary.studentResponse} />
-                  <TextBlock label="Reflection" value={diary.reflection} />
-                  <TextBlock label="What Went Well" value={diary.whatWentWell} />
-                  <TextBlock label="Difficulties Encountered" value={diary.whatWasDifficult} />
-                </Stack>
-              </Card>
+                <TextBlock label="Content Summary" value={diary.actualContentSummary} />
+                <TextBlock label="Student Response" value={diary.studentResponse} />
+                <TextBlock label="Reflection" value={diary.reflection} />
+                <TextBlock label="What Went Well" value={diary.whatWentWell} />
+                <TextBlock label="Difficulties Encountered" value={diary.whatWasDifficult} />
+              </AccordionCard>
 
-              {/* Card 4: Targeted Student Support */}
-              <Card
-                sx={{
-                  p: 2.5,
-                  borderRadius: 2,
-
-                  bgcolor: 'background.paper',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
+              {/* Card 4: Targeted Student Support Accordion */}
+              <AccordionCard
+                icon="mdi:account-group"
+                iconBgColor="success.lighter"
+                iconColor="success.main"
+                title="Targeted Student Support & Follow-up"
               >
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                  <Iconify icon="mdi:account-group" width={18} color="success.main" />
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Targeted Student Support & Follow-up
-                  </Typography>
-                </Stack>
-                <Stack spacing={1.5}>
-                  <TextBlock label="Students Needing Support" value={diary.studentsNeedingSupport} />
-                  <TextBlock label="Next Class Follow-up" value={diary.nextClassFollowUp} />
-                  <TextBlock label="Homework Assigned" value={diary.homeworkAssigned} />
-                  <TextBlock label="Teacher Remarks" value={diary.teacherRemarks} />
-                </Stack>
-              </Card>
+                <TextBlock label="Students Needing Support" value={diary.studentsNeedingSupport} />
+                <TextBlock label="Next Class Follow-up" value={diary.nextClassFollowUp} />
+                <TextBlock label="Homework Assigned" value={diary.homeworkAssigned} />
+                <TextBlock label="Teacher Remarks" value={diary.teacherRemarks} />
+              </AccordionCard>
             </Stack>
           ) : (
             <Card
