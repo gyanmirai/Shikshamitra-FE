@@ -12,6 +12,7 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
+import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import {
   Box,
   Chip,
@@ -80,6 +81,12 @@ const ScheduleExamPreviewDrawer = ({
     params: { academicMediumId: (medium as any)?.id },
     options: { skip: !open || !(medium as any)?.id },
   });
+  const { data: gradeScalingsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGradeScalingsQuery,
+    params: { academicMediumId: (medium as any)?.id },
+    options: { skip: !open || !(medium as any)?.id },
+  });
   const { data: basicDetails, isLoading: basicLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamBasicDetailsQuery,
@@ -139,6 +146,12 @@ const ScheduleExamPreviewDrawer = ({
   const startDateStr = previewExam?.startDate ? dayjs(previewExam.startDate).format('DD-MM-YYYY') : '';
   const endDateStr = previewExam?.endDate ? dayjs(previewExam.endDate).format('DD-MM-YYYY') : startDateStr;
   const dateRange = startDateStr ? (startDateStr === endDateStr ? startDateStr : `${startDateStr} - ${endDateStr}`) : '';
+
+  const gradingScaleId = previewExam?.gradingScaleId || exam?.gradingScaleId;
+  const gradeScalingsList = gradeScalingsData?.data ?? [];
+  const gradingScaleName = gradingScaleId
+    ? gradeScalingsList.find((item: any) => item.id === gradingScaleId)?.name || '-'
+    : '-';
 
   const dialogTitle = (
     <Box
@@ -275,7 +288,7 @@ const ScheduleExamPreviewDrawer = ({
               }}
             >
               <Grid container spacing={2}>
-                <Grid size={{ xs: 6, sm: 3 }}>
+                <Grid size={{ xs: 6, sm: 4 }}>
                   <Box>
                     <Typography
                       variant="caption"
@@ -289,7 +302,7 @@ const ScheduleExamPreviewDrawer = ({
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid size={{ xs: 6, sm: 3 }}>
+                <Grid size={{ xs: 6, sm: 4 }}>
                   <Box>
                     <Typography
                       variant="caption"
@@ -303,7 +316,21 @@ const ScheduleExamPreviewDrawer = ({
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid size={{ xs: 6, sm: 3 }}>
+                <Grid size={{ xs: 6, sm: 4 }}>
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}
+                    >
+                      Grading Scale
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                      {gradingScaleName}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 4 }}>
                   <Box>
                     <Typography
                       variant="caption"
@@ -317,7 +344,7 @@ const ScheduleExamPreviewDrawer = ({
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid size={{ xs: 6, sm: 3 }}>
+                <Grid size={{ xs: 6, sm: 4 }}>
                   <Box>
                     <Typography
                       variant="caption"

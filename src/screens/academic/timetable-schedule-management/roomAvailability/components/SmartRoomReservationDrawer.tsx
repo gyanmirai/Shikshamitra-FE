@@ -4,15 +4,16 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
+import { useSession } from 'next-auth/react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import LoadingButton from '@mui/lab/LoadingButton';
+import CustomSelect from 'src/components/custom-select';
 import { useState, useEffect, useCallback } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
-import { Iconify } from 'src/components/iconify';
-import { GlobalIcons } from 'src/utils/icons';
-import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
-import LoadingButton from '@mui/lab/LoadingButton';
-import { shikshaMitraToast } from 'src/components/toast';
 import {
   Box,
   Chip,
@@ -32,10 +33,7 @@ import {
 } from '@mui/material';
 
 import { RoomStatusChip } from './RoomStatusChip';
-import {
-  useRoomSuggestions,
-  useCreateRoomReservation,
-} from '../roomAvailability.hooks';
+import { useRoomSuggestions, useCreateRoomReservation } from '../roomAvailability.hooks';
 import {
   resolveFacility,
   PRIORITY_OPTIONS,
@@ -43,11 +41,7 @@ import {
   RESERVATION_TYPE_OPTIONS,
 } from '../roomAvailability.constants';
 
-import type {
-  SuggestedRoom,
-  RoomReservation,
-  ReservationRequirements,
-} from '../types';
+import type { SuggestedRoom, RoomReservation, ReservationRequirements } from '../types';
 
 const StepBadge = ({ number }: { number: number }) => (
   <Box
@@ -147,6 +141,13 @@ export const SmartRoomReservationDrawer = ({
   onClose,
   onSuccess,
 }: SmartRoomReservationDrawerProps) => {
+  const { data: session } = useSession() as any;
+  const userRoles = session?.profile?.role || [];
+  const rolesList = Array.isArray(userRoles) ? userRoles : [userRoles];
+  const isAdmin = rolesList.some(
+    (r: string) => r.toLowerCase() === 'administrator' || r.toLowerCase() === 'admin'
+  );
+
   const [requirements, setRequirements] = useState<ReservationRequirements>({
     ...defaultRequirements,
   });
@@ -226,7 +227,9 @@ export const SmartRoomReservationDrawer = ({
 
   const handleBookRoom = async (room: SuggestedRoom) => {
     try {
-      const isApprovalRequired = room.conflictStatus === 'warning' || room.needsApproval;
+      // Only admins can bypass approval if the room doesn't strictly need it
+      const isApprovalRequired =
+        !isAdmin || room.conflictStatus === 'warning' || room.needsApproval;
       const statusVal = isApprovalRequired ? 'pendingApproval' : 'active';
 
       const result = await createReservation.create({
@@ -246,14 +249,16 @@ export const SmartRoomReservationDrawer = ({
         status: statusVal as any,
         remarks: requirements.remarks,
         isRecurring: requirements.isRecurring,
-        recurringConfig: requirements.isRecurring ? {
-          repeatType: requirements.recurringConfig?.repeatType || 'daily',
-          repeatDays: requirements.recurringConfig?.repeatDays || [],
-          untilDate: requirements.recurringConfig?.untilDate || requirements.date,
-          excludeHolidays: requirements.recurringConfig?.excludeHolidays ?? true,
-          excludeExamDays: requirements.recurringConfig?.excludeExamDays ?? false,
-          skipConflictDates: requirements.recurringConfig?.skipConflictDates ?? false,
-        } : undefined
+        recurringConfig: requirements.isRecurring
+          ? {
+              repeatType: requirements.recurringConfig?.repeatType || 'daily',
+              repeatDays: requirements.recurringConfig?.repeatDays || [],
+              untilDate: requirements.recurringConfig?.untilDate || requirements.date,
+              excludeHolidays: requirements.recurringConfig?.excludeHolidays ?? true,
+              excludeExamDays: requirements.recurringConfig?.excludeExamDays ?? false,
+              skipConflictDates: requirements.recurringConfig?.skipConflictDates ?? false,
+            }
+          : undefined,
       } as any);
 
       if (result) {
@@ -368,20 +373,25 @@ export const SmartRoomReservationDrawer = ({
           spacing={3}
           sx={{ height: '100%', alignItems: 'stretch', overflow: 'hidden' }}
         >
-
           {/* Left Column: Form Fields (No scrolling on column container) */}
-          <Box sx={{
-            flex: 1,
-            minWidth: { md: 450 },
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%'
-          }}>
-
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: { md: 450 },
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+            }}
+          >
             {/* Scrollable Fields */}
             <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
               <Stack spacing={2}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  spacing={1}
+                >
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <StepBadge number={1} />
                     <Typography variant="subtitle1" fontWeight={700} color="text.primary">
@@ -404,7 +414,8 @@ export const SmartRoomReservationDrawer = ({
                     sx={{
                       borderRadius: 1.5,
                       fontWeight: 700,
-                      boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.primary.main, 0.16)}`,
+                      boxShadow: (theme) =>
+                        `0 4px 12px 0 ${alpha(theme.palette.primary.main, 0.16)}`,
                     }}
                   >
                     Find Rooms
@@ -424,7 +435,10 @@ export const SmartRoomReservationDrawer = ({
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                     <CustomSelect
                       label="Reservation Type *"
-                      options={RESERVATION_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                      options={RESERVATION_TYPE_OPTIONS.map((o) => ({
+                        value: o.value,
+                        label: o.label,
+                      }))}
                       value={requirements.reservationType}
                       onChange={(v) => patchRequirements({ reservationType: v as any })}
                       error={!!fieldErrors.reservationType}
@@ -497,9 +511,7 @@ export const SmartRoomReservationDrawer = ({
                       label="End Time *"
                       format="hh:mm A"
                       value={
-                        requirements.endTime
-                          ? dayjs(`2000-01-01T${requirements.endTime}`)
-                          : null
+                        requirements.endTime ? dayjs(`2000-01-01T${requirements.endTime}`) : null
                       }
                       onChange={(v: Dayjs | null) => {
                         patchRequirements({
@@ -531,7 +543,9 @@ export const SmartRoomReservationDrawer = ({
                       border: 1,
                       borderColor: requirements.isRecurring ? 'primary.main' : 'divider',
                       bgcolor: (theme) =>
-                        requirements.isRecurring ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
+                        requirements.isRecurring
+                          ? alpha(theme.palette.primary.main, 0.06)
+                          : 'transparent',
                       transition: 'all 0.2s',
                     }}
                   >
@@ -573,9 +587,13 @@ export const SmartRoomReservationDrawer = ({
                           onChange={(v) => {
                             patchRequirements({
                               recurringConfig: {
-                                ...(requirements.recurringConfig || { excludeHolidays: true, excludeExamDays: false, skipConflictDates: false }),
+                                ...(requirements.recurringConfig || {
+                                  excludeHolidays: true,
+                                  excludeExamDays: false,
+                                  skipConflictDates: false,
+                                }),
                                 repeatType: v as any,
-                              }
+                              },
                             });
                           }}
                         />
@@ -588,9 +606,14 @@ export const SmartRoomReservationDrawer = ({
                             if (v) {
                               patchRequirements({
                                 recurringConfig: {
-                                  ...(requirements.recurringConfig || { repeatType: 'daily', excludeHolidays: true, excludeExamDays: false, skipConflictDates: false }),
+                                  ...(requirements.recurringConfig || {
+                                    repeatType: 'daily',
+                                    excludeHolidays: true,
+                                    excludeExamDays: false,
+                                    skipConflictDates: false,
+                                  }),
                                   untilDate: v.format('YYYY-MM-DD'),
-                                }
+                                },
                               });
                             }
                           }}
@@ -607,7 +630,9 @@ export const SmartRoomReservationDrawer = ({
 
                       {requirements.recurringConfig?.repeatType === 'weekly' && (
                         <Stack spacing={1}>
-                          <Typography variant="caption" sx={{ fontWeight: 600 }}>Repeat On Days</Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                            Repeat On Days
+                          </Typography>
                           <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
                             {[
                               { label: 'Mon', value: 1 },
@@ -633,9 +658,14 @@ export const SmartRoomReservationDrawer = ({
                                       : [...daysList, day.value];
                                     patchRequirements({
                                       recurringConfig: {
-                                        ...(requirements.recurringConfig || { repeatType: 'weekly', excludeHolidays: true, excludeExamDays: false, skipConflictDates: false }),
+                                        ...(requirements.recurringConfig || {
+                                          repeatType: 'weekly',
+                                          excludeHolidays: true,
+                                          excludeExamDays: false,
+                                          skipConflictDates: false,
+                                        }),
                                         repeatDays: newDays,
-                                      }
+                                      },
                                     });
                                   }}
                                 />
@@ -653,9 +683,13 @@ export const SmartRoomReservationDrawer = ({
                               onChange={(e) => {
                                 patchRequirements({
                                   recurringConfig: {
-                                    ...(requirements.recurringConfig || { repeatType: 'daily', excludeExamDays: false, skipConflictDates: false }),
+                                    ...(requirements.recurringConfig || {
+                                      repeatType: 'daily',
+                                      excludeExamDays: false,
+                                      skipConflictDates: false,
+                                    }),
                                     excludeHolidays: e.target.checked,
-                                  }
+                                  },
                                 });
                               }}
                             />
@@ -670,9 +704,13 @@ export const SmartRoomReservationDrawer = ({
                               onChange={(e) => {
                                 patchRequirements({
                                   recurringConfig: {
-                                    ...(requirements.recurringConfig || { repeatType: 'daily', excludeHolidays: true, skipConflictDates: false }),
+                                    ...(requirements.recurringConfig || {
+                                      repeatType: 'daily',
+                                      excludeHolidays: true,
+                                      skipConflictDates: false,
+                                    }),
                                     excludeExamDays: e.target.checked,
-                                  }
+                                  },
                                 });
                               }}
                             />
@@ -687,9 +725,13 @@ export const SmartRoomReservationDrawer = ({
                               onChange={(e) => {
                                 patchRequirements({
                                   recurringConfig: {
-                                    ...(requirements.recurringConfig || { repeatType: 'daily', excludeHolidays: true, excludeExamDays: false }),
+                                    ...(requirements.recurringConfig || {
+                                      repeatType: 'daily',
+                                      excludeHolidays: true,
+                                      excludeExamDays: false,
+                                    }),
                                     skipConflictDates: e.target.checked,
-                                  }
+                                  },
                                 });
                               }}
                             />
@@ -712,20 +754,21 @@ export const SmartRoomReservationDrawer = ({
                 </Stack>
               </Stack>
             </Box>
-
           </Box>
 
           {/* Vertical Divider */}
           <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
 
           {/* Right Column: Search Results (Independently Scrollable) */}
-          <Box sx={{
-            flex: 1.6,
-            minWidth: { md: 450 },
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%'
-          }}>
+          <Box
+            sx={{
+              flex: 1.6,
+              minWidth: { md: 450 },
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+            }}
+          >
             <Stack spacing={1} sx={{ height: '100%' }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Stack direction="row" alignItems="center" spacing={1}>
@@ -759,7 +802,7 @@ export const SmartRoomReservationDrawer = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     px: 3,
-                    flex: 1
+                    flex: 1,
                   }}
                 >
                   <Box
@@ -780,7 +823,8 @@ export const SmartRoomReservationDrawer = ({
                     No Search Conducted Yet
                   </Typography>
                   <Typography variant="caption" color="text.disabled" sx={{ maxWidth: 320 }}>
-                    Select your booking requirements on the left, then click &ldquo;Find Available Rooms&rdquo; to view matching rooms here.
+                    Select your booking requirements on the left, then click &ldquo;Find Available
+                    Rooms&rdquo; to view matching rooms here.
                   </Typography>
                 </Box>
               )}
@@ -811,26 +855,51 @@ export const SmartRoomReservationDrawer = ({
                         >
                           <Stack direction="row" justifyContent="space-between" alignItems="center">
                             <Skeleton variant="text" width={130} height={24} />
-                            <Skeleton variant="rectangular" width={70} height={22} sx={{ borderRadius: 1 }} />
+                            <Skeleton
+                              variant="rectangular"
+                              width={70}
+                              height={22}
+                              sx={{ borderRadius: 1 }}
+                            />
                           </Stack>
                           <Skeleton variant="text" width="75%" height={16} />
                           <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
-                            <Skeleton variant="rectangular" width={65} height={20} sx={{ borderRadius: 1 }} />
-                            <Skeleton variant="rectangular" width={75} height={20} sx={{ borderRadius: 1 }} />
+                            <Skeleton
+                              variant="rectangular"
+                              width={65}
+                              height={20}
+                              sx={{ borderRadius: 1 }}
+                            />
+                            <Skeleton
+                              variant="rectangular"
+                              width={75}
+                              height={20}
+                              sx={{ borderRadius: 1 }}
+                            />
                           </Stack>
-                          <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 1.5, mt: 1 }} />
+                          <Skeleton
+                            variant="rectangular"
+                            height={36}
+                            sx={{ borderRadius: 1.5, mt: 1 }}
+                          />
                         </Box>
                       ))}
                     </Box>
                   )}
 
-                  {suggestions.error && <Alert severity="error" sx={{ borderRadius: 1.5 }}>{suggestions.error}</Alert>}
-
-                  {!suggestions.isLoading && !suggestions.error && suggestions.data.length === 0 && (
-                    <Alert severity="warning" sx={{ borderRadius: 1.5 }}>
-                      No matching rooms found. Try modifying your search criteria.
+                  {suggestions.error && (
+                    <Alert severity="error" sx={{ borderRadius: 1.5 }}>
+                      {suggestions.error}
                     </Alert>
                   )}
+
+                  {!suggestions.isLoading &&
+                    !suggestions.error &&
+                    suggestions.data.length === 0 && (
+                      <Alert severity="warning" sx={{ borderRadius: 1.5 }}>
+                        No matching rooms found. Try modifying your search criteria.
+                      </Alert>
+                    )}
 
                   {!suggestions.isLoading && suggestions.data.length > 0 && (
                     <Box
@@ -873,30 +942,43 @@ export const SmartRoomReservationDrawer = ({
                             }}
                           >
                             <Stack spacing={1}>
-                              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: 16 }}>
+                              <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                              >
+                                <Typography
+                                  variant="subtitle2"
+                                  fontWeight={700}
+                                  sx={{ fontSize: 16 }}
+                                >
                                   {room.roomName}
                                 </Typography>
                                 <Stack direction="row" spacing={0.75} alignItems="center">
                                   <MatchScoreBadge score={room.matchScore} />
                                   <RoomStatusChip
                                     status={
-                                      isCritical
-                                        ? 'conflict'
-                                        : isWarning
-                                          ? 'reserved'
-                                          : 'available'
+                                      isCritical ? 'conflict' : isWarning ? 'reserved' : 'available'
                                     }
                                     showIcon={false}
                                   />
                                 </Stack>
                               </Stack>
-                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12.5 }}>
-                                {room.buildingName} · {room.floorName} · {room.type} · {room.capacity} seats
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ fontSize: 12.5 }}
+                              >
+                                {room.buildingName} · {room.floorName} · {room.type} ·{' '}
+                                {room.capacity} seats
                               </Typography>
                             </Stack>
 
-                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ lineHeight: 1.5 }}
+                            >
                               {room.reason}
                             </Typography>
 
@@ -909,7 +991,9 @@ export const SmartRoomReservationDrawer = ({
                                     size="small"
                                     label={SUGGESTION_BADGE_LABELS[badge]}
                                     color={
-                                      badge === 'warning' || badge === 'needsApproval' ? 'warning' : 'info'
+                                      badge === 'warning' || badge === 'needsApproval'
+                                        ? 'warning'
+                                        : 'info'
                                     }
                                     variant="outlined"
                                     sx={{ fontSize: 10, height: 18 }}
@@ -938,15 +1022,29 @@ export const SmartRoomReservationDrawer = ({
                                         bgcolor: 'background.neutral',
                                       }}
                                     >
-                                      <Iconify icon={icon} width={11} sx={{ color: 'text.secondary', flexShrink: 0 }} />
-                                      <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', whiteSpace: 'nowrap' }}>
+                                      <Iconify
+                                        icon={icon}
+                                        width={11}
+                                        sx={{ color: 'text.secondary', flexShrink: 0 }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          fontSize: 10,
+                                          color: 'text.secondary',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
                                         {label}
                                       </Typography>
                                     </Stack>
                                   );
                                 })}
                                 {room.facilities.length > 3 && (
-                                  <Typography variant="caption" sx={{ fontSize: 10, color: 'text.disabled', ml: 0.5 }}>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ fontSize: 10, color: 'text.disabled', ml: 0.5 }}
+                                  >
                                     +{room.facilities.length - 3} more
                                   </Typography>
                                 )}
@@ -961,7 +1059,11 @@ export const SmartRoomReservationDrawer = ({
                               size="medium"
                               disabled={isCritical || createReservation.isLoading}
                               onClick={() => handleBookRoom(room)}
-                              startIcon={createReservation.isLoading ? <CircularProgress size={16} color="inherit" /> : undefined}
+                              startIcon={
+                                createReservation.isLoading ? (
+                                  <CircularProgress size={16} color="inherit" />
+                                ) : undefined
+                              }
                               sx={{ mt: 0.5, py: 1, fontWeight: 600, borderRadius: 1.5 }}
                             >
                               {isCritical

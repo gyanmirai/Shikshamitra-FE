@@ -9,6 +9,7 @@ export interface ISeat {
   row: number;
   studentId: string | null; // uuid
   benchId?: string; // uuid
+  isExternalExamOccupied?: boolean;
 }
 
 export interface IRoom {
@@ -44,6 +45,7 @@ export interface ISeatAllocation {
   studentId: string | null; // uuid
   isRoomAssign: boolean;
   benchId?: string; // uuid
+  isExternalExamOccupied?: boolean;
 }
 
 export interface IExamAllocation {

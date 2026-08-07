@@ -81,6 +81,7 @@ const SeatManagement = ({
         standardName: assigned.standardName,
         rollNo: assigned.rollNo,
         benchId: assigned.benchId,
+        isExternalExamOccupied: assigned.isExternalExamOccupied,
       };
     }
     return seat;

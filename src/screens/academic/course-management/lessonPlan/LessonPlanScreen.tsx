@@ -4,37 +4,33 @@ import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { useSelector, useDispatch } from 'react-redux';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import LoadingButton from '@mui/lab/LoadingButton';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import LoadingButton from '@mui/lab/LoadingButton';
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { Scrollbar } from 'src/components/scrollbar';
-import { CustomTabs } from 'src/components/custom-tabs';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import {
   Box,
   Tab,
-  Card,
-  Tabs,
   Stack,
   Alert,
   Button,
   Divider,
-  MenuItem,
-  MenuList,
   TextField,
   Typography,
   IconButton,
@@ -61,11 +57,9 @@ import {
   useCreateHomeworkFromLessonPlanMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
 
-import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
-import ReviewQueueTab from './components/ReviewQueueTab';
+import { ReviewQueueTab } from './components/ReviewQueueTab';
 import DailyTimelineTab from './components/DailyTimelineTab';
 import TeachingKpiCards from './components/TeachingKpiCards';
-import WeeklyPlannerTab from './components/WeeklyPlannerTab';
 import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
@@ -178,15 +172,15 @@ const normalizeSlotTime = (value: unknown) => {
 const getPlannedSlotTime = (plan: any) => {
   const start = normalizeSlotTime(
     plan.startTime ||
-    plan.slotStartTime ||
-    plan.timetableSlot?.startTime ||
-    plan.timetableSlot?.slotStartTime
+      plan.slotStartTime ||
+      plan.timetableSlot?.startTime ||
+      plan.timetableSlot?.slotStartTime
   );
   const end = normalizeSlotTime(
     plan.endTime ||
-    plan.slotEndTime ||
-    plan.timetableSlot?.endTime ||
-    plan.timetableSlot?.slotEndTime
+      plan.slotEndTime ||
+      plan.timetableSlot?.endTime ||
+      plan.timetableSlot?.slotEndTime
   );
 
   return start && end ? `${start} - ${end}` : '';
@@ -252,36 +246,59 @@ type TabValue = (typeof TABS)[number]['value'] | 'weeklyPlanner';
 
 const PlanStatusHeaderTooltip = (
   <Box sx={{ p: 1, minWidth: 250 }}>
-    <Box sx={{ display: 'grid', gridTemplateColumns: '90px 1fr', rowGap: 0.75, columnGap: 1, alignItems: 'center' }}>
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: '90px 1fr',
+        rowGap: 0.75,
+        columnGap: 1,
+        alignItems: 'center',
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}
+      >
         Draft :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Saved internally & editable
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}
+      >
         Submitted :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Awaiting reviewer approval
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}
+      >
         Approved :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Ready for class execution
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}
+      >
         Rejected :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Returned with feedback
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
+      >
         Cancelled :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
@@ -293,36 +310,59 @@ const PlanStatusHeaderTooltip = (
 
 const DiaryStatusHeaderTooltip = (
   <Box sx={{ p: 1, minWidth: 250 }}>
-    <Box sx={{ display: 'grid', gridTemplateColumns: '90px 1fr', rowGap: 0.75, columnGap: 1, alignItems: 'center' }}>
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: '90px 1fr',
+        rowGap: 0.75,
+        columnGap: 1,
+        alignItems: 'center',
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
+      >
         Pending :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Entry not yet submitted
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}
+      >
         Draft :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Saved internally & editable
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}
+      >
         Submitted :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Completed for period
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}
+      >
         Approved :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Reviewed and approved
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}
+      >
         Rejected :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
@@ -415,13 +455,10 @@ const LessonPlanScreen = () => {
     isLoading: isTimelineLoading,
     isFetching: isTimelineFetching,
     refetch: refetchTimeline,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLessonPlanTimelineQuery,
-    params: {
-      date: dateConvertor(selectedDate.format(dateFormat)),
-      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-    },
+  } = useGetLessonPlanTimelineQuery({
+    date: dateConvertor(selectedDate.format(dateFormat)),
+    academicMediumId: currentMedium?.id,
+    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
   });
 
   const isTimelineOwner = useMemo(
@@ -431,33 +468,26 @@ const LessonPlanScreen = () => {
 
   const {
     data: lessonPlanList,
+    refetch: refetchLessonPlans,
     isLoading: isPlansLoading,
     isFetching: isPlansFetching,
-    refetch: refetchLessonPlans,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLessonPlansQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-      maxResultCount: 1000,
-    },
-    options: { skip: !currentYear?.id },
+  } = useGetLessonPlansQuery({
+    academicYearId: currentYear?.id,
+    academicMediumId: currentMedium?.id,
+    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+    maxResultCount: 1000,
   });
 
   const {
     data: teacherDiaryList,
+    refetch: refetchTeacherDiaries,
     isLoading: isDiariesLoading,
     isFetching: isDiariesFetching,
-    refetch: refetchTeacherDiaries,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetTeacherDiariesQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-      maxResultCount: 1000,
-    },
+  } = useGetTeacherDiariesQuery({
+    academicYearId: currentYear?.id,
+    academicMediumId: currentMedium?.id,
+    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+    maxResultCount: 1000,
   });
 
   const { data: homeworkTypeData, isLoading: isHomeworkTypesLoading } = useQueryAndMutation({
@@ -1212,179 +1242,6 @@ const LessonPlanScreen = () => {
 
   // ─── Status Descriptions & Rich Tooltips ───────────────────────────────────
 
-  const PlanStatusHeaderTooltip = (
-    <Box sx={{ p: 1, minWidth: 250 }}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: '90px 1fr',
-          rowGap: 0.75,
-          columnGap: 1,
-          alignItems: 'center',
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}
-        >
-          Draft :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Saved internally & editable
-        </Typography>
-
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}
-        >
-          Submitted :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Awaiting reviewer approval
-        </Typography>
-
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}
-        >
-          Approved :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Ready for class execution
-        </Typography>
-
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}
-        >
-          Rejected :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Returned with feedback
-        </Typography>
-
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
-        >
-          Cancelled :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Withdrawn or cancelled
-        </Typography>
-      </Box>
-    </Box>
-  );
-
-  const DiaryStatusHeaderTooltip = (
-    <Box sx={{ p: 1, minWidth: 250 }}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: '90px 1fr',
-          rowGap: 0.75,
-          columnGap: 1,
-          alignItems: 'center',
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
-        >
-          Pending :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Entry not yet submitted
-        </Typography>
-
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}
-        >
-          Draft :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Saved internally & editable
-        </Typography>
-
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'info.main', fontSize: '0.75rem' }}
-        >
-          Submitted :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Completed for period
-        </Typography>
-
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}
-        >
-          Approved :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Reviewed and approved
-        </Typography>
-
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}
-        >
-          Rejected :
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-          Returned for corrections
-        </Typography>
-      </Box>
-    </Box>
-  );
-
-  const PLAN_STATUS_DESCRIPTIONS: Record<string, string> = {
-    Draft: 'Draft: Saved internally and editable before submission',
-    Submitted: 'Submitted: Submitted and awaiting coordinator/HOD approval',
-    Approved: 'Approved: Plan approved and ready for class execution',
-    Rejected: 'Rejected: Returned with feedback for revisions',
-    Cancelled: 'Cancelled: Lesson plan is withdrawn or cancelled',
-    Pending: 'Pending: Awaiting submission or approval action',
-  };
-
-  const DIARY_STATUS_DESCRIPTIONS: Record<string, string> = {
-    Draft: 'Draft: Saved internally and editable',
-    Submitted: 'Submitted: Completed teacher diary entry for the conducted period',
-    NotSubmitted: 'Pending: Teacher diary entry has not been submitted yet',
-    Pending: 'Pending: Teacher diary entry has not been submitted yet',
-    Approved: 'Approved: Teacher diary entry reviewed and approved',
-    Rejected: 'Rejected: Returned for corrections',
-  };
-
-  const renderPlanStatus = (status: PlanStatus) => {
-    const tooltipText = PLAN_STATUS_DESCRIPTIONS[status] || `${status} status`;
-    return (
-      <CustomTooltip title={tooltipText} placement="top" arrow>
-        <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
-          <Label color={planStatusColor[status] ?? 'default'} variant="soft">
-            {status}
-          </Label>
-        </Box>
-      </CustomTooltip>
-    );
-  };
-
-  const renderDiaryStatus = (status: DiaryStatus) => {
-    const displayLabel = status === 'NotSubmitted' ? 'Pending' : status;
-    const tooltipText = DIARY_STATUS_DESCRIPTIONS[status] || `${displayLabel} status`;
-    return (
-      <CustomTooltip title={tooltipText} placement="top" arrow>
-        <Box component="span" sx={{ display: 'inline-flex', cursor: 'help' }}>
-          <Label color={diaryStatusColor[status] ?? 'default'} variant="soft">
-            {displayLabel}
-          </Label>
-        </Box>
-      </CustomTooltip>
-    );
-  };
-
   const lessonColumns = useMemo(
     () => [
       {
@@ -1396,7 +1253,13 @@ const LessonPlanScreen = () => {
         sticky: true,
         render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
       },
-      { id: 'period', label: 'Period', align: 'left' as const, minWidth: 110, filterType: 'string' as const },
+      {
+        id: 'period',
+        label: 'Period',
+        align: 'left' as const,
+        minWidth: 110,
+        filterType: 'string' as const,
+      },
       {
         id: 'plannedTime',
         label: 'Time',
@@ -1412,10 +1275,34 @@ const LessonPlanScreen = () => {
         filterType: 'enum' as const,
         render: (_v: any, row: any) => `${row.className}-${row.divisionName}`,
       },
-      { id: 'subjectName', label: 'Subject', align: 'left' as const, minWidth: 130, filterType: 'enum' as const },
-      { id: 'chapterName', label: 'Chapter', align: 'left' as const, minWidth: 150, filterType: 'string' as const },
-      { id: 'topic', label: 'Topic', align: 'left' as const, minWidth: 200, filterType: 'string' as const },
-      { id: 'teacherName', label: 'Teacher', align: 'left' as const, minWidth: 160, filterType: 'enum' as const },
+      {
+        id: 'subjectName',
+        label: 'Subject',
+        align: 'left' as const,
+        minWidth: 130,
+        filterType: 'enum' as const,
+      },
+      {
+        id: 'chapterName',
+        label: 'Chapter',
+        align: 'left' as const,
+        minWidth: 150,
+        filterType: 'string' as const,
+      },
+      {
+        id: 'topic',
+        label: 'Topic',
+        align: 'left' as const,
+        minWidth: 200,
+        filterType: 'string' as const,
+      },
+      {
+        id: 'teacherName',
+        label: 'Teacher',
+        align: 'left' as const,
+        minWidth: 160,
+        filterType: 'enum' as const,
+      },
       {
         id: 'insightMessage',
         label: 'Insight',
@@ -1618,7 +1505,13 @@ const LessonPlanScreen = () => {
         sticky: true,
         render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
       },
-      { id: 'period', label: 'Period', align: 'left' as const, minWidth: 110, filterType: 'string' as const },
+      {
+        id: 'period',
+        label: 'Period',
+        align: 'left' as const,
+        minWidth: 110,
+        filterType: 'string' as const,
+      },
       {
         id: 'className',
         label: 'Class/Div',
@@ -1627,10 +1520,34 @@ const LessonPlanScreen = () => {
         filterType: 'enum' as const,
         render: (_v: any, r: any) => `${r.className}-${r.divisionName}`,
       },
-      { id: 'subjectName', label: 'Subject', align: 'left' as const, minWidth: 130, filterType: 'enum' as const },
-      { id: 'chapterName', label: 'Chapter', align: 'left' as const, minWidth: 150, filterType: 'string' as const },
-      { id: 'topic', label: 'Topic', align: 'left' as const, minWidth: 200, filterType: 'string' as const },
-      { id: 'teacherName', label: 'Teacher', align: 'left' as const, minWidth: 160, filterType: 'enum' as const },
+      {
+        id: 'subjectName',
+        label: 'Subject',
+        align: 'left' as const,
+        minWidth: 130,
+        filterType: 'enum' as const,
+      },
+      {
+        id: 'chapterName',
+        label: 'Chapter',
+        align: 'left' as const,
+        minWidth: 150,
+        filterType: 'string' as const,
+      },
+      {
+        id: 'topic',
+        label: 'Topic',
+        align: 'left' as const,
+        minWidth: 200,
+        filterType: 'string' as const,
+      },
+      {
+        id: 'teacherName',
+        label: 'Teacher',
+        align: 'left' as const,
+        minWidth: 160,
+        filterType: 'enum' as const,
+      },
       {
         id: 'actualCompletionPercentage',
         label: 'Actual %',
@@ -2154,7 +2071,12 @@ const LessonPlanScreen = () => {
         </DialogScrollContent>
 
         <Divider />
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
+          sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}
+        >
           <Button
             size="small"
             variant="outlined"

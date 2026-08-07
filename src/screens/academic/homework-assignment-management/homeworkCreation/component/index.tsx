@@ -137,7 +137,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       StandardId: selectedClassData?.id,
       DivisionId: selectedDivisionData?.id,
       SubjectId: subject,
-      HomeworkDate: isValidDate ? date!.toISOString() : undefined,
+      HomeworkDate: isValidDate ? date!.format('YYYY-MM-DD') : undefined,
     }),
     [date, isValidDate, medium, selectedClassData?.id, selectedDivisionData?.id, subject]
   );
@@ -482,7 +482,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
                 StandardId: selectedClassData?.id,
                 DivisionId: selectedDivisionData?.id,
                 SubjectId: subject,
-                HomeworkDate: isValidDate ? date!.toISOString() : undefined,
+                HomeworkDate: isValidDate ? date!.format('YYYY-MM-DD') : undefined,
               };
 
               try {

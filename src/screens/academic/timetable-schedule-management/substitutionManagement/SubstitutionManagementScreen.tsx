@@ -26,8 +26,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomTabs } from 'src/components/custom-tabs';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -36,9 +34,6 @@ import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import TimetableSettingsSummaryCards, {
-  ITimetableSummaryCard,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
@@ -59,10 +54,8 @@ import {
   Tab,
   Card,
   Chip,
-  Grid,
   Menu,
   Tabs,
-  Paper,
   Alert,
   Stack,
   Drawer,
@@ -70,7 +63,6 @@ import {
   Button,
   Tooltip,
   Divider,
-  Skeleton,
   MenuItem,
   TextField,
   Accordion,
@@ -79,14 +71,11 @@ import {
   CardContent,
   ListItemIcon,
   ListItemText,
-  DialogActions,
   InputAdornment,
   LinearProgress,
   AccordionSummary,
   AccordionDetails,
   FormControlLabel,
-  Autocomplete,
-  Avatar,
 } from '@mui/material';
 
 import {
@@ -243,73 +232,10 @@ const sourceTypeLabelMap: Record<number, string> = {
   5: 'Event',
 };
 
-const SectionCard = ({
-  title,
-  icon,
-  children,
-  action,
-}: {
-  title: string;
-  icon: string;
-  children?: React.ReactNode;
-  action?: React.ReactNode;
-}) => (
-  <Paper
-    elevation={0}
-    sx={{
-      p: { xs: 2, md: 2 },
-      mb: 1.5,
-      mt: 1.5,
-      position: 'relative',
-      borderRadius: 2,
-      border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
-      boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
-      overflow: 'clip',
-      transition: 'all 0.3s ease-in-out',
-      '&:hover': {
-        boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.08)',
-      },
-    }}
-  >
-    <Box
-      display="flex"
-      justifyContent="space-between"
-      alignItems="center"
-      mb={2}
-      sx={{
-        borderBottom: (theme) => `1px dashed ${alpha(theme.palette.grey[500], 0.2)}`,
-        pb: 1.25,
-      }}
-    >
-      <Stack direction="row" spacing={1.25} alignItems="center">
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-            color: 'primary.main',
-          }}
-        >
-          <Iconify icon={icon} width={20} />
-        </Box>
-        <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-          {title}
-        </Typography>
-      </Stack>
-      {action}
-    </Box>
-    <Grid container spacing={2}>
-      {children}
-    </Grid>
-  </Paper>
-);
+const viewDateFormat = 'DD-MM-YYYY';
 
 const formatViewDate = (value?: string | null) =>
-  value && dayjs(value).isValid() ? dayjs(value).format('DD-MM-YYYY') : '-';
+  value && dayjs(value).isValid() ? dayjs(value).format(viewDateFormat) : '-';
 
 const toDateTimeOffset = (value?: Dayjs | null) =>
   value?.isValid() ? dateConvertor(value.format(dateFormat)) : '';
@@ -490,7 +416,8 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
 });
 
 const formatLectureLabel = (item: ApiSubstitutionLecture) =>
-  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${item.originalTeacherName || 'Teacher not assigned'
+  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${
+    item.originalTeacherName || 'Teacher not assigned'
   }`;
 
 const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
@@ -673,12 +600,12 @@ const acknowledgementColor: Record<
 };
 
 const conflictColor: Record<ConflictStatus, 'default' | 'success' | 'error' | 'warning' | 'info'> =
-{
-  Clear: 'success',
-  'Hard Block': 'error',
-  Warning: 'warning',
-  Info: 'info',
-};
+  {
+    Clear: 'success',
+    'Hard Block': 'error',
+    Warning: 'warning',
+    Info: 'info',
+  };
 
 const priorityColor: Record<SubstitutionPriority, 'default' | 'primary' | 'error' | 'warning'> = {
   Low: 'default',
@@ -757,7 +684,7 @@ const uniqueLookupOptions = <T extends ApiLookupOption>(items: T[]): T[] => {
 
 const SubstitutionManagementScreen = () => {
   const [activeTab, setActiveTab] = useState('board');
-  const isViewportTab = ['board', 'availability', 'dailySheet'].includes(activeTab);
+  const isViewportTab = ['board', 'availability'].includes(activeTab);
   const [boardView, setBoardView] = useState<SubstitutionViewType>('table');
   const [filters, setFilters] = useState(DEFAULT_SUBSTITUTION_FILTERS);
   const [substitutions, setSubstitutions] = useState<SubstitutionRow[]>([]);
@@ -771,22 +698,12 @@ const SubstitutionManagementScreen = () => {
   const [assignRoom, setAssignRoom] = useState('');
   const [assignRemarks, setAssignRemarks] = useState('');
   const [formError, setFormError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [availabilityError, setAvailabilityError] = useState('');
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
   const [createSubmitType, setCreateSubmitType] = useState<'draft' | 'assign' | null>(null);
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
-
-  const clearFieldError = useCallback((field: string) => {
-    setFieldErrors((prev) => {
-      if (!prev[field]) return prev;
-      const copy = { ...prev };
-      delete copy[field];
-      return copy;
-    });
-  }, []);
 
   const availabilityStartTimeStr = useMemo(() => {
     if (availabilityForm.isFullDay) return '09:00';
@@ -829,6 +746,13 @@ const SubstitutionManagementScreen = () => {
   );
   const createFormSnapshotRef = useRef<string>(JSON.stringify(defaultSubstitutionForm));
   const availabilityFormSnapshotRef = useRef<string>(JSON.stringify(defaultAvailabilityForm));
+  const { user: profile, employee: currentEmployee } = useSelector((state: any) => state.auth);
+  const hasRole = (role: unknown, expectedRoles: string[]) => {
+    const roleArray = Array.isArray(role) ? role : [role];
+    return roleArray.some((item) => expectedRoles.includes(String(item || '').toLowerCase()));
+  };
+  const isAdminOrManager = hasRole(profile?.role, ['admin', 'coordinator', 'manager']);
+
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
@@ -836,152 +760,76 @@ const SubstitutionManagementScreen = () => {
     academicYearId: currentYear?.id || undefined,
     academicMediumId: medium?.id || undefined,
   };
-
-  const {
-    data: substitutionResult,
-    isLoading: isSubstitutionsLoading,
-    isFetching: isSubstitutionsFetching,
-    refetch: refetchSubstitutions,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useSubstitutionsDataQuery,
-    params: {
-      ...academicContextParams,
-      fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
-      toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
-      maxResultCount: 200,
-    },
+  const { data: substitutionResult, refetch: refetchSubstitutions } = useSubstitutionsDataQuery({
+    ...academicContextParams,
+    fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
+    toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
+    maxResultCount: 200,
   });
-
-  const {
-    data: dashboardResult,
-    isLoading: isDashboardLoading,
-    isFetching: isDashboardFetching,
-    refetch: refetchDashboard,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useSubstitutionDashboardDataQuery,
-    params: {
-      ...academicContextParams,
-      date: toDateTimeOffset(dayjs(todayIso).startOf('day')),
-    },
+  const { data: dashboardResult, refetch: refetchDashboard } = useSubstitutionDashboardDataQuery({
+    ...academicContextParams,
+    date: toDateTimeOffset(dayjs(todayIso).startOf('day')),
   });
-
-  const {
-    data: myDutiesResult,
-    isLoading: isMyDutiesLoading,
-    isFetching: isMyDutiesFetching,
-    refetch: refetchMyDuties,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useMySubstitutionDutiesDataQuery,
-    params: {
-      ...academicContextParams,
-      fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
-      toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
-      maxResultCount: 200,
-    },
+  const { data: myDutiesResult, refetch: refetchMyDuties } = useMySubstitutionDutiesDataQuery({
+    ...academicContextParams,
+    fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
+    toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
+    maxResultCount: 200,
   });
-
-  const {
-    data: availabilityResult,
-    isLoading: isAvailabilityLoading,
-    isFetching: isAvailabilityFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useTeacherAvailabilityDataQuery,
-    params: {
-      fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
-      toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
-      maxResultCount: 200,
-    },
+  const { data: availabilityResult } = useTeacherAvailabilityDataQuery({
+    fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
+    toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
+    maxResultCount: 200,
   });
-
-  const {
-    data: rawCreateMetadata,
-    isLoading: isMetadataLoading,
-    isFetching: isFetchingCreateMetadata,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useSubstitutionCreateMetadataDataQuery,
-    params: academicContextParams,
-    options: { skip: !medium?.id },
-  });
+  const { data: rawCreateMetadata, isFetching: isFetchingCreateMetadata } =
+    useSubstitutionCreateMetadataDataQuery(academicContextParams, { skip: !medium?.id });
   const createMetadata = rawCreateMetadata as ApiSubstitutionCreateMetadata | undefined;
-
-  const {
-    data: rawCreateLectureResult,
-    isLoading: isLecturesLoading,
-    isFetching: isFetchingLectures,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useSubstitutionLecturesDataQuery,
-    params: {
-      ...academicContextParams,
-      date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
-      standardId: substitutionForm.standardId,
-      divisionId: substitutionForm.divisionId,
-    },
-    options: {
-      skip:
-        !createDialogOpen ||
-        !substitutionForm.date ||
-        !substitutionForm.standardId ||
-        !substitutionForm.divisionId,
-    },
-  });
+  const { data: rawCreateLectureResult, isFetching: isFetchingLectures } =
+    useSubstitutionLecturesDataQuery(
+      {
+        ...academicContextParams,
+        date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
+        standardId: substitutionForm.standardId,
+        divisionId: substitutionForm.divisionId,
+      },
+      {
+        skip:
+          !createDialogOpen ||
+          !substitutionForm.date ||
+          !substitutionForm.standardId ||
+          !substitutionForm.divisionId,
+      }
+    );
   const createLectureResult = (rawCreateLectureResult ?? []) as ApiSubstitutionLecture[];
-
-  const {
-    data: suggestedTeacherResult,
-    isLoading: isSuggestedTeachersLoading,
-    isFetching: isSuggestedTeachersFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useSuggestedTeachersDataQuery,
-    params: selectedSubstitutionId,
-    options: { skip: !selectedSubstitutionId || !assignDialogOpen },
+  const { data: suggestedTeacherResult } = useSuggestedTeachersDataQuery(selectedSubstitutionId, {
+    skip: !selectedSubstitutionId || !assignDialogOpen,
   });
-
   const selectedCreateLecture = createLectureResult.find(
     (lecture) => lecture.slotSubjectId === substitutionForm.timetableSlotSubjectId
   );
-
-  const {
-    data: createSuggestedTeacherResult,
-    isLoading: isContextTeachersLoading,
-    isFetching: isFetchingSuggestedTeachers,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useSuggestedTeachersByContextDataQuery,
-    params: {
-      ...academicContextParams,
-      date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
-      originalTeacherId: substitutionForm.originalTeacherId,
-      originalTeacherName: substitutionForm.originalTeacherName,
-      standardId: substitutionForm.standardId,
-      subjectId: substitutionForm.subjectId,
-      subjectName: substitutionForm.subjectName,
-      startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
-      endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
-    },
-    options: {
-      skip:
-        !createDialogOpen ||
-        !substitutionForm.date ||
-        !(selectedCreateLecture || (substitutionForm.startTime && substitutionForm.endTime)) ||
-        !substitutionForm.originalTeacherName,
-    },
-  });
-
-  const {
-    data: affectedLectureResult,
-    isLoading: isAffectedLecturesLoading,
-    isFetching: isAffectedLecturesFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useAffectedLecturesDataQuery,
-    params: {
+  const { data: createSuggestedTeacherResult, isFetching: isFetchingSuggestedTeachers } =
+    useSuggestedTeachersByContextDataQuery(
+      {
+        ...academicContextParams,
+        date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
+        originalTeacherId: substitutionForm.originalTeacherId,
+        originalTeacherName: substitutionForm.originalTeacherName,
+        standardId: substitutionForm.standardId,
+        subjectId: substitutionForm.subjectId,
+        subjectName: substitutionForm.subjectName,
+        startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
+        endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
+      },
+      {
+        skip:
+          !createDialogOpen ||
+          !substitutionForm.date ||
+          !(selectedCreateLecture || (substitutionForm.startTime && substitutionForm.endTime)) ||
+          !substitutionForm.originalTeacherName,
+      }
+    );
+  const { data: affectedLectureResult } = useAffectedLecturesDataQuery(
+    {
       teacherId: availabilityForm.teacherId || undefined,
       teacherName: availabilityForm.teacherName || undefined,
       availabilityDate: toDateTimeOffset(availabilityForm.availabilityDate?.startOf('day')),
@@ -991,76 +839,28 @@ const SubstitutionManagementScreen = () => {
       reason: availabilityForm.reason || 'Preview',
       maxResultCount: 100,
     },
-    options: {
+    {
       skip: !availabilityForm.teacherId && !availabilityForm.teacherName,
-    },
+    }
+  );
+  const { data: dailySheetResult } = useDailySheetDataQuery({
+    date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
+    maxResultCount: 500,
   });
-
-  const {
-    data: dailySheetResult,
-    isLoading: isDailySheetLoading,
-    isFetching: isDailySheetFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useDailySheetDataQuery,
-    params: {
-      date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
-      maxResultCount: 500,
-    },
-  });
-
-  const {
-    data: settingsResult,
-    isLoading: isSettingsLoading,
-    isFetching: isSettingsFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useSubstitutionSettingsDataQuery,
-    params: undefined,
-  });
-
-  const [createSubstitution, { isLoading: isCreatingSubstitution }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCreateSubstitutionAction,
-  });
-  const [assignSubstitute, { isLoading: isAssigning }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAssignSubstituteAction,
-  });
-  const [sendSubstitutionReminder, { isLoading: isSendingReminder }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useSendSubstitutionReminderAction,
-  });
-  const [completeSubstitution, { isLoading: isCompletingSubstitution }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCompleteSubstitutionAction,
-  });
-  const [cancelSubstitution, { isLoading: isCancellingSubstitution }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCancelSubstitutionAction,
-  });
-  const [acknowledgeSubstitution, { isLoading: isAcknowledgingSubstitution }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAcknowledgeSubstitutionAction,
-  });
-  const [requestSubstitutionChange, { isLoading: isRequestingChange }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useRequestSubstitutionChangeAction,
-  });
-  const [rejectSubstitutionDuty, { isLoading: isRejectingDuty }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useRejectSubstitutionDutyAction,
-  });
-  const [createTeacherAvailability, { isLoading: isCreatingAvailability }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCreateTeacherAvailabilityAction,
-  });
-  const [updateSubstitutionSettings, { isLoading: isSettingsSaving }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateSubstitutionSettingsAction,
-  });
-  const [downloadDailyPdf, { isLoading: isPdfDownloading }] = useDailySheetPdfLazyQuery();
-  const [downloadDailyExcel, { isLoading: isExcelDownloading }] = useDailySheetExcelLazyQuery();
+  const { data: settingsResult } = useSubstitutionSettingsDataQuery();
+  const [createSubstitution] = useCreateSubstitutionAction();
+  const [assignSubstitute, { isLoading: isAssigning }] = useAssignSubstituteAction();
+  const [sendSubstitutionReminder] = useSendSubstitutionReminderAction();
+  const [completeSubstitution] = useCompleteSubstitutionAction();
+  const [cancelSubstitution] = useCancelSubstitutionAction();
+  const [acknowledgeSubstitution] = useAcknowledgeSubstitutionAction();
+  const [requestSubstitutionChange] = useRequestSubstitutionChangeAction();
+  const [rejectSubstitutionDuty] = useRejectSubstitutionDutyAction();
+  const [createTeacherAvailability] = useCreateTeacherAvailabilityAction();
+  const [updateSubstitutionSettings, { isLoading: isSettingsSaving }] =
+    useUpdateSubstitutionSettingsAction();
+  const [downloadDailyPdf] = useDailySheetPdfLazyQuery();
+  const [downloadDailyExcel] = useDailySheetExcelLazyQuery();
   const [getAffectedLectures] = useAffectedLecturesLazyQuery();
   const [getEmployeeOptions] = useEmployeeOptionsLazyQuery();
   const seenAvailabilityTeacherIdsRef = useRef<Set<string>>(new Set());
@@ -1137,30 +937,30 @@ const SubstitutionManagementScreen = () => {
   const classSelectOptions: SelectOption[] = academicStandards.length
     ? academicStandards.map((item: Standards) => ({ value: item.id, label: item.name }))
     : uniqueLookupOptions(metadataStandards).map((item) => ({
-      value: item.id,
-      label: item.name,
-    }));
+        value: item.id,
+        label: item.name,
+      }));
   const divisionSelectOptions: SelectOption[] = selectedAcademicStandard?.divisions?.length
     ? selectedAcademicStandard.divisions.map((item: Standards['divisions'][number]) => ({
-      value: item.id,
-      label: item.name,
-    }))
+        value: item.id,
+        label: item.name,
+      }))
     : metadataDivisions.length > 0
       ? uniqueLookupOptions(metadataDivisions)
-        .filter(
-          (item) =>
-            !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-        )
-        .map((item) => ({ value: item.id, label: item.name }))
+          .filter(
+            (item) =>
+              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+          )
+          .map((item) => ({ value: item.id, label: item.name }))
       : [];
   const subjectSelectOptions: SelectOption[] =
     metadataSubjects.length > 0
       ? metadataSubjects
-        .filter(
-          (item) =>
-            !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-        )
-        .map((item) => ({ value: item.id, label: item.name }))
+          .filter(
+            (item) =>
+              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+          )
+          .map((item) => ({ value: item.id, label: item.name }))
       : subjectOptions;
   const teacherSelectOptions: SelectOption[] =
     metadataTeachers.length > 0
@@ -1173,9 +973,9 @@ const SubstitutionManagementScreen = () => {
   const lectureSelectOptions =
     createLectureResult.length > 0
       ? createLectureResult.map((item) => ({
-        value: item.slotSubjectId,
-        label: formatLectureLabel(item),
-      }))
+          value: item.slotSubjectId,
+          label: formatLectureLabel(item),
+        }))
       : lectureSlotOptions;
 
   const filteredSubstitutions = useMemo(() => {
@@ -1254,11 +1054,11 @@ const SubstitutionManagementScreen = () => {
   const availableTeacherSelectOptions =
     suggestedTeacherRows.length > 0
       ? suggestedTeacherRows
-        .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
-        .map((teacher) => ({
-          value: teacher.teacherId,
-          label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
-        }))
+          .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
+          .map((teacher) => ({
+            value: teacher.teacherId,
+            label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
+          }))
       : [];
 
   const affectedLectures = useMemo<AffectedLectureRow[]>(() => {
@@ -1500,66 +1300,51 @@ const SubstitutionManagementScreen = () => {
 
   const handleCreateSubstitution = useCallback(
     async (assignNow: boolean) => {
-      setFormError('');
-      const errors: Record<string, string> = {};
+      if (
+        !substitutionForm.date ||
+        !substitutionForm.standardId ||
+        !substitutionForm.divisionId ||
+        !substitutionForm.timetableSlotSubjectId ||
+        !substitutionForm.subjectId ||
+        !substitutionForm.originalTeacherName ||
+        !substitutionForm.roomName ||
+        !substitutionForm.reason
+      ) {
+        setFormError(
+          'Date, class, division, slot, subject, original teacher, room and reason are required.'
+        );
+        return;
+      }
 
-      if (!substitutionForm.date) {
-        errors.date = 'Date is required';
-      } else {
+      if (substitutionForm.date) {
         const dateVal = substitutionForm.date;
         if (!dayjs(dateVal).isValid()) {
-          errors.date = 'Date must be a valid date.';
-        } else if (dayjs(dateVal).isBefore(dayjs(), 'day')) {
-          errors.date = 'Date cannot be in the past.';
-        } else if (
+          setFormError('Date must be a valid date.');
+          return;
+        }
+        if (dayjs(dateVal).isBefore(dayjs(), 'day')) {
+          setFormError('Date cannot be in the past.');
+          return;
+        }
+        if (
           currentYear?.startDate &&
           dayjs(dateVal).isBefore(dayjs(currentYear.startDate), 'day')
         ) {
-          errors.date = `Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`;
-        } else if (
-          currentYear?.endDate &&
-          dayjs(dateVal).isAfter(dayjs(currentYear.endDate), 'day')
-        ) {
-          errors.date = `Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`;
+          setFormError(
+            `Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`
+          );
+          return;
+        }
+        if (currentYear?.endDate && dayjs(dateVal).isAfter(dayjs(currentYear.endDate), 'day')) {
+          setFormError(
+            `Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`
+          );
+          return;
         }
       }
 
-      if (!substitutionForm.standardId) {
-        errors.standardId = 'Class is required';
-      }
-      if (!substitutionForm.divisionId) {
-        errors.divisionId = 'Division is required';
-      }
-      if (!substitutionForm.timetableSlotSubjectId) {
-        errors.timetableSlotSubjectId = 'Lecture slot is required';
-      }
-      if (!substitutionForm.subjectId && !substitutionForm.subjectName) {
-        errors.subjectId = 'Subject is required';
-      }
-      if (!substitutionForm.originalTeacherName) {
-        errors.originalTeacherName = 'Original teacher is required';
-      }
-      if (!substitutionForm.roomName) {
-        errors.roomName = 'Original room is required';
-      }
-      if (!substitutionForm.reason) {
-        errors.reason = 'Reason is required';
-      }
-
       if (assignNow && substitutionForm.selectedSubstitutes.length === 0) {
-        errors.substituteTeacher = 'Select at least one available substitute teacher before Assign & Notify.';
-      }
-
-      if (Object.keys(errors).length > 0) {
-        setFieldErrors(errors);
-        shikshaMitraToast.error({
-          message: 'Please fill all required fields highlighted in red.',
-        });
-        return;
-      }
-      setFieldErrors({});
-
-      if (!substitutionForm.date) {
+        setFormError('Select at least one available substitute teacher before Assign & Notify.');
         return;
       }
 
@@ -1581,9 +1366,7 @@ const SubstitutionManagementScreen = () => {
       );
 
       if (hasActiveSlot) {
-        shikshaMitraToast.error({
-          message: 'This slot already has an active substitution assignment.',
-        });
+        setFormError('This slot already has an active substitution assignment.');
         return;
       }
 
@@ -1594,9 +1377,7 @@ const SubstitutionManagementScreen = () => {
         .filter(Boolean) as AvailableTeacherRow[];
 
       if (assignNow && selectedTeachers.some((teacher) => teacher.hasConflict)) {
-        shikshaMitraToast.error({
-          message: 'One selected teacher has a hard conflict. Remove that teacher first.',
-        });
+        setFormError('One selected teacher has a hard conflict. Remove that teacher first.');
         return;
       }
 
@@ -1606,15 +1387,15 @@ const SubstitutionManagementScreen = () => {
         const assignmentSegments = assignNow
           ? substitutionForm.selectedSubstitutes
           : [
-            {
-              teacherId: '',
-              teacherName: '',
-              startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
-              endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
-              score: 0,
-              isPartialCoverage: false,
-            },
-          ];
+              {
+                teacherId: '',
+                teacherName: '',
+                startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
+                endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
+                score: 0,
+                isPartialCoverage: false,
+              },
+            ];
         const createdRows = await Promise.all(
           assignmentSegments.map((segment) =>
             createSubstitution({
@@ -1871,7 +1652,7 @@ const SubstitutionManagementScreen = () => {
       reason: !availabilityForm.reason.trim() ? 'Reason is required.' : '',
       time:
         !availabilityForm.isFullDay &&
-          toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
+        toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
           ? 'End time must be later than start time.'
           : '',
     }),
@@ -1941,7 +1722,6 @@ const SubstitutionManagementScreen = () => {
   ]);
 
   const handleCloseCreateDialog = useCallback(() => {
-    setFieldErrors({});
     if (createFormDirty) {
       setCreateUnsavedConfirmOpen(true);
     } else {
@@ -2045,18 +1825,18 @@ const SubstitutionManagementScreen = () => {
         const updated =
           action === 'accept'
             ? await acknowledgeSubstitution({
-              id,
-              reason: reason || undefined,
-            }).unwrap()
+                id,
+                reason: reason || undefined,
+              }).unwrap()
             : action === 'reject'
               ? await rejectSubstitutionDuty({
-                id,
-                reason,
-              }).unwrap()
+                  id,
+                  reason,
+                }).unwrap()
               : await requestSubstitutionChange({
-                id,
-                reason,
-              }).unwrap();
+                  id,
+                  reason,
+                }).unwrap();
         if (updated) {
           updateSubstitution(id, () => mapApiSubstitution(updated));
         }
@@ -2094,15 +1874,12 @@ const SubstitutionManagementScreen = () => {
 
   const handleDutyConfirmSubmit = useCallback(async () => {
     if (!dutyConfirmPayload) return;
-    try {
-      await handleTeacherDutyAction(
-        dutyConfirmPayload.id,
-        dutyConfirmPayload.action,
-        dutyConfirmNote.trim()
-      );
-    } finally {
-      closeDutyConfirmModal();
-    }
+    closeDutyConfirmModal();
+    await handleTeacherDutyAction(
+      dutyConfirmPayload.id,
+      dutyConfirmPayload.action,
+      dutyConfirmNote.trim()
+    );
   }, [dutyConfirmPayload, dutyConfirmNote, closeDutyConfirmModal, handleTeacherDutyAction]);
 
   const handleDownloadDailySheet = async (format: 'pdf' | 'excel') => {
@@ -2241,27 +2018,24 @@ const SubstitutionManagementScreen = () => {
     {
       id: 'actions',
       label: 'Action',
-      minWidth: 170,
+      minWidth: 160,
+      align: 'center' as const,
       isSort: false,
       isFilter: false,
       sticky: true,
       stickyPosition: 'right' as const,
       render: (_value: unknown, row: SubstitutionRow) => (
         <Stack direction="row" spacing={1} justifyContent="center">
-          <Button
-            size="small"
-            variant={row.substituteTeacherName ? 'outlined' : 'contained'}
-            disabled={['Completed', 'Cancelled'].includes(row.status)}
-            startIcon={
-              <Iconify
-                icon={row.substituteTeacherName ? 'solar:user-speak-bold' : 'solar:user-plus-bold'}
-                width={16}
-              />
-            }
-            onClick={() => openAssignDialog(row.id)}
-          >
-            {row.substituteTeacherName ? 'Reassign' : 'Assign'}
-          </Button>
+          {isAdminOrManager && (
+            <Button
+              size="small"
+              variant={row.substituteTeacherName ? 'outlined' : 'contained'}
+              disabled={['Completed', 'Cancelled'].includes(row.status)}
+              onClick={() => openAssignDialog(row.id)}
+            >
+              {row.substituteTeacherName ? 'Reassign' : 'Assign'}
+            </Button>
+          )}
           <Tooltip title="More actions">
             <IconButton size="small" onClick={(event) => openActionMenu(event, row.id)}>
               <MoreVert fontSize="small" />
@@ -2272,37 +2046,126 @@ const SubstitutionManagementScreen = () => {
     },
   ] as any[];
 
-  const renderMetricCards = () => {
-    if (isDashboardLoading || isSubstitutionsLoading) {
-      return (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.5, mb: 1 }}>
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: 2 }} />
-          ))}
-        </Box>
-      );
-    }
+  const renderMetricCards = () => (
+    <Box
+      display="grid"
+      gridTemplateColumns={{
+        xs: 'repeat(2, 1fr)',
+        sm: 'repeat(4, 1fr)',
+        md: 'repeat(7, 1fr)',
+      }}
+      gap={1}
+    >
+      {metrics.map((item) => (
+        <Card
+          key={item.label}
+          sx={{
+            height: '100%',
+            borderRadius: 1.5,
+            boxShadow: 'none',
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+            bgcolor: (theme) =>
+              varAlpha(
+                theme.vars.palette[item.color as 'success']?.mainChannel ||
+                  theme.vars.palette.text.primaryChannel,
+                theme.palette.mode === 'dark' ? 0.12 : 0.04
+              ),
+            cursor: item.filterStatus ? 'pointer' : 'default',
+            transition: 'all 0.15s ease-in-out',
+            '&:hover': item.filterStatus
+              ? {
+                  borderColor: `${item.color}.main`,
+                  bgcolor: (theme) =>
+                    varAlpha(
+                      theme.vars.palette[item.color as 'success']?.mainChannel ||
+                        theme.vars.palette.text.primaryChannel,
+                      theme.palette.mode === 'dark' ? 0.18 : 0.08
+                    ),
+                  boxShadow: (theme) =>
+                    `0 4px 12px ${varAlpha(theme.vars.palette[item.color as 'success']?.mainChannel ?? theme.vars.palette.common.blackChannel, 0.12)}`,
+                }
+              : undefined,
+          }}
+          onClick={() => {
+            if (item.filterStatus) {
+              setFilters((prev) => ({ ...prev, statusFilter: item.filterStatus as any }));
+              setActiveTab('board');
+            }
+          }}
+        >
+          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="flex-start"
+              sx={{ mb: 0.5 }}
+            >
+              <Typography
+                variant="h5"
+                fontWeight={700}
+                sx={{ color: 'text.primary', lineHeight: 1.1 }}
+              >
+                {item.value}
+              </Typography>
+              <Box
+                sx={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 1,
+                  display: 'grid',
+                  placeItems: 'center',
+                  bgcolor: (theme) =>
+                    varAlpha(
+                      theme.vars.palette[item.color as 'success']?.mainChannel ||
+                        theme.vars.palette.primary.mainChannel,
+                      0.08
+                    ),
+                  color: `${item.color}.main`,
+                  flexShrink: 0,
+                }}
+              >
+                <Iconify icon={item.icon} width={15} />
+              </Box>
+            </Stack>
 
-    const summaryCards: ITimetableSummaryCard[] = metrics.map((item) => ({
-      label: item.label,
-      value: item.value,
-      icon: item.icon,
-      color: (item.color || 'primary') as any,
-      isActive: filters.statusFilter === item.filterStatus,
-      onClick: item.filterStatus
-        ? () => {
-          setFilters((prev) => ({ ...prev, statusFilter: item.filterStatus as any }));
-          setActiveTab('board');
-        }
-        : undefined,
-    }));
+            <Tooltip title={item.label}>
+              <Typography
+                variant="caption"
+                fontWeight={600}
+                color="text.secondary"
+                sx={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  lineHeight: 1.2,
+                }}
+              >
+                {item.label}
+              </Typography>
+            </Tooltip>
 
-    return (
-      <Box sx={{ mb: 1 }}>
-        <TimetableSettingsSummaryCards cards={summaryCards} />
-      </Box>
-    );
-  };
+            <Typography
+              variant="caption"
+              color="text.disabled"
+              sx={{
+                display: '-webkit-box',
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                fontSize: 11,
+                mt: 0.5,
+                lineHeight: 1.2,
+                minHeight: '1.2em',
+              }}
+            >
+              {item.helper}
+            </Typography>
+          </CardContent>
+        </Card>
+      ))}
+    </Box>
+  );
 
   const renderSectionHeader = (icon: string, title: string, trailing?: React.ReactNode) => (
     <Stack
@@ -2357,112 +2220,102 @@ const SubstitutionManagementScreen = () => {
         spacing={1}
         sx={isBoardView ? { flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 } : undefined}
       >
-        {isSubstitutionsLoading || isSubstitutionsFetching ? (
-          <Stack spacing={1.5}>
-            <Skeleton variant="rounded" height={64} />
-            <Skeleton variant="rounded" height={64} />
-            <Skeleton variant="rounded" height={64} />
-          </Stack>
-        ) : (
-          <>
-            {todayRows.length === 0 && (
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
-                No periods scheduled for today.
-              </Typography>
-            )}
-            {[...todayRows]
-              .sort((a, b) => a.startTime.localeCompare(b.startTime))
-              .map((item) => (
-                <Box
-                  key={item.id}
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 1.5,
-                    borderLeftWidth: 3,
-                    borderLeftStyle: 'solid',
-                    borderColor:
-                      statusColor[item.status] === 'default'
-                        ? 'divider'
-                        : `${statusColor[item.status]}.main`,
-                    bgcolor: 'background.paper',
-                    boxShadow: (theme) => `0 0 0 1px ${theme.palette.divider}`,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Stack
-                    direction={{ xs: 'column', md: 'row' }}
-                    spacing={1}
-                    alignItems={{ xs: 'flex-start', md: 'center' }}
-                    justifyContent="space-between"
-                  >
-                    <Box>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.25 }}>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          {item.time}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                          • {item.period} • {item.className}-{item.divisionName} • {item.subjectName}
-                        </Typography>
-                      </Stack>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8125rem' }}>
-                        <Box component="span" sx={{ color: 'text.primary', fontWeight: 500 }}>
-                          {item.originalTeacherName}
-                        </Box>{' '}
-                        →{' '}
-                        <Box
-                          component="span"
-                          sx={{
-                            color: item.substituteTeacherName ? 'text.primary' : 'warning.main',
-                            fontWeight: item.substituteTeacherName ? 600 : 500,
-                          }}
-                        >
-                          {item.substituteTeacherName || 'Not assigned'}
-                        </Box>
-                        {' · '}
-                        <Box component="span" sx={{ color: 'text.secondary' }}>
-                          Room {item.assignedRoomName || item.roomName}
-                        </Box>
-                      </Typography>
-                    </Box>
-
-                    <Stack
-                      direction="row"
-                      spacing={0.75}
-                      alignItems="center"
-                      flexShrink={0}
-                      flexWrap="wrap"
-                    >
-                      <Label
-                        color={statusColor[item.status]}
-                        variant="soft"
-                        sx={{ minWidth: 92, justifyContent: 'center', textAlign: 'center' }}
-                      >
-                        {item.status}
-                      </Label>
-                      {item.acknowledgementStatus && (
-                        <Label
-                          color={acknowledgementColor[item.acknowledgementStatus]}
-                          variant="soft"
-                          sx={{ minWidth: 92, justifyContent: 'center', textAlign: 'center' }}
-                        >
-                          {item.acknowledgementStatus}
-                        </Label>
-                      )}
-                      {item.priority && (
-                        <Label
-                          color={priorityColor[item.priority]}
-                          variant="outlined"
-                          sx={{ minWidth: 72, justifyContent: 'center', textAlign: 'center' }}
-                        >
-                          {item.priority}
-                        </Label>
-                      )}
-                    </Stack>
-                  </Stack>
-                </Box>
-              ))}
-          </>
+        {todayRows.length === 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
+            No periods scheduled for today.
+          </Typography>
         )}
+        {[...todayRows]
+          .sort((a, b) => a.startTime.localeCompare(b.startTime))
+          .map((item) => (
+            <Box
+              key={item.id}
+              sx={{
+                p: 1.5,
+                borderRadius: 1.5,
+                borderLeftWidth: 3,
+                borderLeftStyle: 'solid',
+                borderColor:
+                  statusColor[item.status] === 'default'
+                    ? 'divider'
+                    : `${statusColor[item.status]}.main`,
+                bgcolor: 'background.paper',
+                boxShadow: (theme) => `0 0 0 1px ${theme.palette.divider}`,
+                flexShrink: 0,
+              }}
+            >
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={1}
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                justifyContent="space-between"
+              >
+                <Box>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.25 }}>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      {item.time}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                      • {item.period} • {item.className}-{item.divisionName} • {item.subjectName}
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8125rem' }}>
+                    <Box component="span" sx={{ color: 'text.primary', fontWeight: 500 }}>
+                      {item.originalTeacherName}
+                    </Box>{' '}
+                    →{' '}
+                    <Box
+                      component="span"
+                      sx={{
+                        color: item.substituteTeacherName ? 'text.primary' : 'warning.main',
+                        fontWeight: item.substituteTeacherName ? 600 : 500,
+                      }}
+                    >
+                      {item.substituteTeacherName || 'Not assigned'}
+                    </Box>
+                    {' · '}
+                    <Box component="span" sx={{ color: 'text.secondary' }}>
+                      Room {item.assignedRoomName || item.roomName}
+                    </Box>
+                  </Typography>
+                </Box>
+
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  alignItems="center"
+                  flexShrink={0}
+                  flexWrap="wrap"
+                >
+                  <Label
+                    color={statusColor[item.status]}
+                    variant="soft"
+                    sx={{ minWidth: 92, justifyContent: 'center', textAlign: 'center' }}
+                  >
+                    {item.status}
+                  </Label>
+                  {item.acknowledgementStatus && (
+                    <Label
+                      color={acknowledgementColor[item.acknowledgementStatus]}
+                      variant="soft"
+                      sx={{ minWidth: 92, justifyContent: 'center', textAlign: 'center' }}
+                    >
+                      {item.acknowledgementStatus}
+                    </Label>
+                  )}
+                  {item.priority && (
+                    <Label
+                      color={priorityColor[item.priority]}
+                      variant="outlined"
+                      sx={{ minWidth: 72, justifyContent: 'center', textAlign: 'center' }}
+                    >
+                      {item.priority}
+                    </Label>
+                  )}
+                </Stack>
+              </Stack>
+            </Box>
+          ))}
       </Stack>
     </Card>
   );
@@ -2500,63 +2353,54 @@ const SubstitutionManagementScreen = () => {
         }}
       >
         {renderSectionHeader('mdi:radar', 'AI Risk Panel')}
-        {isDashboardLoading || isDashboardFetching ? (
-          <Stack spacing={1.5} sx={{ py: 1 }}>
-            <Skeleton variant="rounded" height={50} />
-            <Skeleton variant="rounded" height={40} />
-          </Stack>
-        ) : (
-          <>
-            <Stack direction="row" divider={<Divider orientation="vertical" flexItem />} sx={{ mb: 2 }}>
-              {riskStats.map((stat) => (
-                <Stack key={stat.label} spacing={1} alignItems="center" sx={{ flex: 1 }}>
-                  <Iconify icon={stat.icon} width={18} sx={{ opacity: 0.6 }} />
-                  <Typography variant="h6" sx={{ lineHeight: 1.1 }}>
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {stat.label}
+        <Stack direction="row" divider={<Divider orientation="vertical" flexItem />} sx={{ mb: 2 }}>
+          {riskStats.map((stat) => (
+            <Stack key={stat.label} spacing={1} alignItems="center" sx={{ flex: 1 }}>
+              <Iconify icon={stat.icon} width={18} sx={{ opacity: 0.6 }} />
+              <Typography variant="h6" sx={{ lineHeight: 1.1 }}>
+                {stat.value}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {stat.label}
+              </Typography>
+            </Stack>
+          ))}
+        </Stack>
+        <Stack spacing={1}>
+          {riskMessages.map((message, index) => {
+            const isClear = message.startsWith('No active');
+            return (
+              <Stack
+                key={`${message}-${index}`}
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={1}
+                sx={{
+                  p: 1.25,
+                  borderRadius: 1.5,
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+                  <Iconify
+                    icon={isClear ? 'mdi:check-circle-outline' : 'mdi:alert-circle-outline'}
+                    width={18}
+                    color={isClear ? 'success.main' : 'warning.main'}
+                  />
+                  <Typography variant="body2" noWrap={false}>
+                    {message}
                   </Typography>
                 </Stack>
-              ))}
-            </Stack>
-            <Stack spacing={1}>
-              {riskMessages.map((message, index) => {
-                const isClear = message.startsWith('No active');
-                return (
-                  <Stack
-                    key={`${message}-${index}`}
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    spacing={1}
-                    sx={{
-                      p: 1.25,
-                      borderRadius: 1.5,
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-                      <Iconify
-                        icon={isClear ? 'mdi:check-circle-outline' : 'mdi:alert-circle-outline'}
-                        width={18}
-                        color={isClear ? 'success.main' : 'warning.main'}
-                      />
-                      <Typography variant="body2" noWrap={false}>
-                        {message}
-                      </Typography>
-                    </Stack>
-                    {!isClear && (
-                      <Button size="small" sx={{ flexShrink: 0 }}>
-                        Review
-                      </Button>
-                    )}
-                  </Stack>
-                );
-              })}
-            </Stack>
-          </>
-        )}
+                {!isClear && (
+                  <Button size="small" sx={{ flexShrink: 0 }}>
+                    Review
+                  </Button>
+                )}
+              </Stack>
+            );
+          })}
+        </Stack>
       </Card>
     );
   };
@@ -2574,50 +2418,42 @@ const SubstitutionManagementScreen = () => {
       }}
     >
       {renderSectionHeader('mdi:account-group-outline', 'Teacher Load Snapshot')}
-      {isDashboardLoading || isDashboardFetching ? (
-        <Stack spacing={1.5} sx={{ py: 1 }}>
-          <Skeleton variant="rounded" height={44} />
-          <Skeleton variant="rounded" height={44} />
-          <Skeleton variant="rounded" height={44} />
-        </Stack>
-      ) : (
-        <Stack spacing={1}>
-          {(
-            dashboardResult?.workloadSnapshot?.map((teacher: ApiSuggestedTeacher) =>
-              mapApiSuggestedTeacher(teacher)
-            ) ?? suggestedTeacherRows
-          )
-            .slice(0, 3)
-            .map((teacher: AvailableTeacherRow) => (
-              <Box key={teacher.teacherId}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="subtitle2">{teacher.teacherName}</Typography>
-                  <Chip
-                    size="small"
-                    label={teacher.loadStatus}
-                    color={
-                      teacher.loadStatus === 'Low'
-                        ? 'success'
-                        : teacher.loadStatus === 'Medium'
-                          ? 'warning'
-                          : 'error'
-                    }
-                    variant="soft"
-                  />
-                </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  {teacher.todayTeachingLoad} lectures · {teacher.todaySubstitutionCount}{' '}
-                  substitutions · {teacher.freePeriods} free periods
-                </Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={Math.min(100, teacher.todayTeachingLoad * 14)}
-                  sx={{ mt: 0.75, height: 5, borderRadius: 1 }}
+      <Stack spacing={1}>
+        {(
+          dashboardResult?.workloadSnapshot?.map((teacher: ApiSuggestedTeacher) =>
+            mapApiSuggestedTeacher(teacher)
+          ) ?? suggestedTeacherRows
+        )
+          .slice(0, 3)
+          .map((teacher: AvailableTeacherRow) => (
+            <Box key={teacher.teacherId}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="subtitle2">{teacher.teacherName}</Typography>
+                <Chip
+                  size="small"
+                  label={teacher.loadStatus}
+                  color={
+                    teacher.loadStatus === 'Low'
+                      ? 'success'
+                      : teacher.loadStatus === 'Medium'
+                        ? 'warning'
+                        : 'error'
+                  }
+                  variant="soft"
                 />
-              </Box>
-            ))}
-        </Stack>
-      )}
+              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                {teacher.todayTeachingLoad} lectures · {teacher.todaySubstitutionCount}{' '}
+                substitutions · {teacher.freePeriods} free periods
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min(100, teacher.todayTeachingLoad * 14)}
+                sx={{ mt: 0.75, height: 5, borderRadius: 1 }}
+              />
+            </Box>
+          ))}
+      </Stack>
     </Card>
   );
 
@@ -2662,44 +2498,40 @@ const SubstitutionManagementScreen = () => {
                 <Chip size="small" label={rows.length} variant="outlined" />
               </Stack>
               <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
-                {isSubstitutionsLoading || isSubstitutionsFetching ? (
-                  <Stack spacing={1}>
-                    <Skeleton variant="rounded" height={90} />
-                    <Skeleton variant="rounded" height={90} />
-                  </Stack>
-                ) : rows.length === 0 ? (
+                {rows.length === 0 && (
                   <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
                     <Typography variant="body2">No duties here</Typography>
                   </Box>
-                ) : (
-                  rows.map((item) => (
-                    <Box
-                      key={item.id}
-                      sx={{
-                        p: 1.25,
-                        borderRadius: 1,
-                        border: (theme) => `1px solid ${theme.palette.divider}`,
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Typography variant="subtitle2">
-                        {item.period} | {item.className}-{item.divisionName} | {item.subjectName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                        Original: {item.originalTeacherName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                        Substitute: {item.substituteTeacherName || 'Not Assigned'}
-                      </Typography>
-                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
-                        <Chip
-                          size="small"
-                          label={item.priority}
-                          color={priorityColor[item.priority]}
-                          variant="outlined"
-                        />
-                        {renderConflict(item.conflictStatus, item.conflictReason)}
-                      </Stack>
+                )}
+                {rows.map((item) => (
+                  <Box
+                    key={item.id}
+                    sx={{
+                      p: 1.25,
+                      borderRadius: 1,
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Typography variant="subtitle2">
+                      {item.period} | {item.className}-{item.divisionName} | {item.subjectName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                      Original: {item.originalTeacherName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                      Substitute: {item.substituteTeacherName || 'Not Assigned'}
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+                      <Chip
+                        size="small"
+                        label={item.priority}
+                        color={priorityColor[item.priority]}
+                        variant="outlined"
+                      />
+                      {renderConflict(item.conflictStatus, item.conflictReason)}
+                    </Stack>
+                    {isAdminOrManager && (
                       <Button
                         size="small"
                         fullWidth
@@ -2709,9 +2541,9 @@ const SubstitutionManagementScreen = () => {
                       >
                         {item.substituteTeacherName ? 'Reassign' : 'Assign Teacher'}
                       </Button>
-                    </Box>
-                  ))
-                )}
+                    )}
+                  </Box>
+                ))}
               </Stack>
             </Card>
           );
@@ -2798,7 +2630,7 @@ const SubstitutionManagementScreen = () => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 1,
+        gap: 1.5,
         height: '100%',
         overflow: 'hidden',
       }}
@@ -2813,31 +2645,35 @@ const SubstitutionManagementScreen = () => {
           { name: 'Substitution Management' },
         ]}
         action={
-          <Stack direction="row" spacing={1}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:account-off-outline" />}
-              onClick={() => {
-                setAvailabilityError('');
-                setAvailabilityForm(defaultAvailabilityForm);
-                setAvailabilityDialogOpen(true);
-              }}
-            >
-              Mark Unavailable
-            </Button>
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              onClick={() => {
-                setFormError('');
-                setSubstitutionForm(defaultSubstitutionForm);
-                setCreateDialogOpen(true);
-              }}
-            >
-              Create Substitution
-            </Button>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {isAdminOrManager && (
+              <>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<PersonOff />}
+                  onClick={() => {
+                    setAvailabilityError('');
+                    setAvailabilityForm(defaultAvailabilityForm);
+                    setAvailabilityDialogOpen(true);
+                  }}
+                >
+                  Mark Unavailable
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => {
+                    setFormError('');
+                    setSubstitutionForm(defaultSubstitutionForm);
+                    setCreateDialogOpen(true);
+                  }}
+                >
+                  Create Substitution
+                </Button>
+              </>
+            )}
           </Stack>
         }
       />
@@ -2869,17 +2705,15 @@ const SubstitutionManagementScreen = () => {
         <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>{renderMetricCards()}</AccordionDetails>
       </Accordion>
 
-      {/* ── Sticky Tabs Paper (styled like Homework Creation) ─────────────────────────────── */}
-      <Paper
+      {/* ── Sticky Tabs Card ─────────────────────────────── */}
+      <Card
         sx={{
           position: 'sticky',
           top: 0,
           zIndex: 10,
           borderRadius: 1,
           flexShrink: 0,
-          pb: 0,
           overflow: 'visible',
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
         <Stack
@@ -2888,11 +2722,12 @@ const SubstitutionManagementScreen = () => {
           justifyContent="space-between"
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <CustomTabs
+          <Tabs
             value={activeTab}
             onChange={(_, value) => setActiveTab(value)}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
-            role="tablist"
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ px: 2 }}
           >
             <Tab
               value="board"
@@ -2906,7 +2741,6 @@ const SubstitutionManagementScreen = () => {
               icon={<PersonOff />}
               iconPosition="start"
             />
-            <Tab value="dailySheet" label="Daily Sheet" icon={<Print />} iconPosition="start" />
             <Tab value="myDuties" label="My Duties" icon={<FactCheck />} iconPosition="start" />
             <Tab
               value="analytics"
@@ -2914,11 +2748,11 @@ const SubstitutionManagementScreen = () => {
               icon={<Iconify icon="mdi:cog-outline" />}
               iconPosition="start"
             />
-          </CustomTabs>
+          </Tabs>
 
           {/* Date Picker & Filters Button aligned on the right side of the Tabs row */}
           {activeTab === 'board' && (
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 2 }}>
               <Stack direction="row" alignItems="center" spacing={0.5}>
                 <Tooltip title="Previous Day">
                   <span>
@@ -2974,7 +2808,6 @@ const SubstitutionManagementScreen = () => {
                     : 'outlined'
                 }
                 color="primary"
-                startIcon={<Iconify icon="solar:calendar-bold" width={16} />}
                 onClick={() =>
                   setFilters((current) => ({ ...current, filterDate: dayjs(todayIso) }))
                 }
@@ -2997,7 +2830,7 @@ const SubstitutionManagementScreen = () => {
           )}
         </Stack>
 
-        {/* Active Chips Row (under the borderBottom divider, inside the Paper) */}
+        {/* Active Chips Row (under the borderBottom divider, inside the Card) */}
         {activeTab === 'board' && getActiveFilters(filters).length > 0 && (
           <Box
             sx={{
@@ -3013,17 +2846,16 @@ const SubstitutionManagementScreen = () => {
             />
           </Box>
         )}
-      </Paper>
+      </Card>
 
       {/* ── Scrollable Tab Content ───────────────────────── */}
       <Scrollbar
         fillContent
         sx={{ flex: 1, minHeight: 0 }}
         slotProps={{
-          content: { display: 'flex', flexDirection: 'column' } as any,
+          content: { display: 'flex', flexDirection: 'column', gap: '12px' } as any,
         }}
       >
-
         {activeTab === 'board' && (
           <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
             <CustomizableTable
@@ -3031,7 +2863,6 @@ const SubstitutionManagementScreen = () => {
               tableTitle="Substitution Board"
               data={filteredSubstitutions}
               columns={substitutionColumns}
-              isLoading={isSubstitutionsLoading || isSubstitutionsFetching}
             />
           </Box>
         )}
@@ -3042,127 +2873,66 @@ const SubstitutionManagementScreen = () => {
               tableId="teacher-availability-table"
               tableTitle="Teacher Availability"
               data={teacherAvailability}
-              isLoading={isAvailabilityLoading || isAvailabilityFetching}
               columns={[
                 {
                   id: 'teacherName',
                   label: 'Teacher',
-                  filterType: 'string' as const,
-                  minWidth: 180,
+                  filterType: 'string',
+                  minWidth: 170,
                   sticky: true,
-                  render: (value: string) => (
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      {value}
-                    </Typography>
-                  ),
                 },
-                { id: 'departmentName', label: 'Department', filterType: 'string' as const, minWidth: 140 },
+                { id: 'departmentName', label: 'Department', filterType: 'string', minWidth: 140 },
                 {
                   id: 'availabilityDate',
                   label: 'Date',
-                  filterType: 'date' as const,
+                  filterType: 'date',
                   minWidth: 120,
                   render: (value: string) => formatViewDate(value),
                 },
-                { id: 'startTime', label: 'Start', filterType: 'string' as const, minWidth: 90 },
-                { id: 'endTime', label: 'End', filterType: 'string' as const, minWidth: 90 },
+                { id: 'startTime', label: 'Start', filterType: 'string', minWidth: 90 },
+                { id: 'endTime', label: 'End', filterType: 'string', minWidth: 90 },
                 {
-                  id: 'sourceType',
-                  label: 'Source',
-                  filterType: 'string' as const,
+                  id: 'availabilityStatus',
+                  label: 'Status',
+                  filterType: 'string',
                   minWidth: 130,
-                  render: (value: string) => (
-                    <Label variant="soft" color="default">
-                      {value}
-                    </Label>
-                  ),
                 },
-                { id: 'reason', label: 'Reason', filterType: 'string' as const, minWidth: 200 },
+                { id: 'sourceType', label: 'Source', filterType: 'string', minWidth: 130 },
+                { id: 'reason', label: 'Reason', filterType: 'string', minWidth: 220 },
                 {
                   id: 'affectedLectureCount',
                   label: 'Affected Lectures',
-                  filterType: 'number' as const,
+                  filterType: 'number',
                   minWidth: 150,
-                  render: (value: number) => (
-                    <Label color={value > 0 ? 'error' : 'default'} variant="outlined">
-                      {value} {value === 1 ? 'lecture' : 'lectures'}
-                    </Label>
-                  ),
                 },
                 {
                   id: 'autoCreateSubstitutions',
                   label: 'Auto Create',
-                  filterType: 'enum' as const,
-                  enumOptions: [
-                    { label: 'Yes', value: true },
-                    { label: 'No', value: false },
-                  ],
-                  minWidth: 120,
-                  render: (value: boolean) => (
-                    <Label color={value ? 'success' : 'default'} variant="soft">
-                      {value ? 'Yes' : 'No'}
-                    </Label>
-                  ),
+                  filterType: 'string',
+                  minWidth: 130,
+                  render: (value: boolean) => (value ? 'Yes' : 'No'),
                 },
                 {
                   id: 'attachmentName',
                   label: 'Attachment',
-                  filterType: 'string' as const,
+                  filterType: 'string',
                   minWidth: 150,
-                  render: (value: string) =>
-                    value ? (
-                      <Stack direction="row" spacing={0.5} alignItems="center">
-                        <Iconify icon="mdi:paperclip" width={14} color="primary.main" />
-                        <Typography variant="body2" color="primary.main" noWrap>
-                          {value}
-                        </Typography>
-                      </Stack>
-                    ) : (
-                      '-'
-                    ),
+                  render: (value: string) => value || '-',
                 },
                 {
                   id: 'remarks',
                   label: 'Remarks',
-                  filterType: 'string' as const,
+                  filterType: 'string',
                   minWidth: 180,
                   render: (value: string) => value || '-',
                 },
                 {
-                  id: 'availabilityStatus',
-                  label: 'Status',
-                  filterType: 'enum' as const,
-                  enumOptions: [
-                    { label: 'Unavailable', value: 'Unavailable' },
-                    { label: 'Partial', value: 'Partial' },
-                    { label: 'Available', value: 'Available' },
-                  ],
-                  sticky: true,
-                  stickyPosition: 'right' as const,
-                  minWidth: 140,
-                  render: (value: string) => (
-                    <Label
-                      color={
-                        value === 'Unavailable'
-                          ? 'error'
-                          : value === 'Partial'
-                            ? 'warning'
-                            : 'success'
-                      }
-                      variant="soft"
-                    >
-                      {value}
-                    </Label>
-                  ),
-                },
-                {
                   id: 'actions',
                   label: 'Action',
-                  minWidth: 190,
+                  minWidth: 180,
                   isFilter: false,
-                  isSort: false,
                   sticky: true,
-                  stickyPosition: 'right' as const,
+                  stickyPosition: 'right',
                   render: (_value, row) => {
                     const availability = row as TeacherAvailabilityRow;
                     const isDisabled =
@@ -3174,15 +2944,9 @@ const SubstitutionManagementScreen = () => {
                         size="small"
                         variant="outlined"
                         disabled={isDisabled}
-                        startIcon={
-                          <Iconify
-                            icon={isDisabled ? 'mdi:check-circle' : 'solar:user-plus-bold'}
-                            width={16}
-                          />
-                        }
                         onClick={() => handleCreateSubstitutionFromAvailability(availability)}
                       >
-                        {isDisabled ? 'Already Created' : 'Create Substitution'}
+                        {isDisabled ? 'Already created' : 'Create substitution'}
                       </Button>
                     );
                   },
@@ -3192,812 +2956,643 @@ const SubstitutionManagementScreen = () => {
           </Box>
         )}
 
-        {activeTab === 'dailySheet' && (
-          <Card
-            sx={{
-              p: 2,
-              borderRadius: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              flex: 1,
-              minHeight: 0,
-            }}
-          >
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              justifyContent="space-between"
-              alignItems={{ sm: 'center' }}
-              spacing={1.5}
-              sx={{ mb: 2, flexShrink: 0 }}
-            >
-              <Box>
-                <Typography variant="h6">Daily Substitution Sheet</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Class-wise, teacher-wise, period-wise and room-wise printable coverage sheet.
-                </Typography>
-              </Box>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Print />}
-                  onClick={() =>
-                    shikshaMitraToast.info({
-                      message: 'Daily substitution sheet is ready to print.',
-                    })
-                  }
-                >
-                  Print Sheet
-                </Button>
-                <LoadingButton
-                  size="small"
-                  variant="outlined"
-                  loading={isPdfDownloading}
-                  startIcon={<Iconify icon="mdi:file-pdf-box" />}
-                  onClick={() => handleDownloadDailySheet('pdf')}
-                >
-                  Download PDF
-                </LoadingButton>
-                <LoadingButton
-                  size="small"
-                  variant="outlined"
-                  loading={isExcelDownloading}
-                  startIcon={<Iconify icon="mdi:microsoft-excel" />}
-                  onClick={() => handleDownloadDailySheet('excel')}
-                >
-                  Export Excel
-                </LoadingButton>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Iconify icon="mdi:whatsapp" />}
-                  onClick={() => shikshaMitraToast.info({ message: 'Staff group share queued.' })}
-                >
-                  Staff Group
-                </Button>
-              </Stack>
-            </Stack>
-            <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-              <CustomizableTable
-                tableId="daily-substitution-sheet-table"
-                tableTitle="Daily Substitution Sheet"
-                data={dailySheetResult?.items.map(mapApiSubstitution) ?? filteredSubstitutions}
-                columns={[...substitutionColumns.filter((column) => column.id !== 'actions')]}
-                isLoading={isDailySheetLoading || isDailySheetFetching}
-              />
-            </Box>
-          </Card>
-        )}
-
         {activeTab === 'myDuties' && (
           <Stack spacing={1.5} sx={{ flexShrink: 0 }}>
-            {isMyDutiesLoading || isMyDutiesFetching ? (
-              <Stack spacing={1.5}>
-                <Skeleton variant="rounded" height={140} sx={{ borderRadius: 2 }} />
-                <Skeleton variant="rounded" height={140} sx={{ borderRadius: 2 }} />
-                <Skeleton variant="rounded" height={140} sx={{ borderRadius: 2 }} />
-              </Stack>
-            ) : (
-              <>
-                {myDutyRows.length === 0 && (
-                  <Card
-                    sx={{
-                      p: 4,
-                      py: 6,
-                      borderRadius: 2,
-                      boxShadow: 'none',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <Iconify
-                      icon="mdi:clipboard-check-outline"
-                      width={40}
-                      color="text.disabled"
-                      sx={{ mb: 1.5 }}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      No substitution duties are assigned to you.
-                    </Typography>
-                  </Card>
-                )}
+            {myDutyRows.length === 0 && (
+              <Card
+                sx={{
+                  p: 4,
+                  py: 6,
+                  borderRadius: 2,
+                  boxShadow: 'none',
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                }}
+              >
+                <Iconify
+                  icon="mdi:clipboard-check-outline"
+                  width={40}
+                  color="text.disabled"
+                  sx={{ mb: 1.5 }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  No substitution duties are assigned to you.
+                </Typography>
+              </Card>
+            )}
 
-                {myDutyRows.map((item) => {
-                  const isTerminal = ['Completed', 'Cancelled', 'Rejected'].includes(item.status);
-                  const isAccepted = item.acknowledgementStatus === 'Accepted';
-                  const cardAction = dutyAction?.id === item.id ? dutyAction.action : null;
-                  const isAccepting = cardAction === 'accept';
-                  const isChanging = cardAction === 'change';
-                  const isRejecting = cardAction === 'reject';
-                  const isCardBusy = Boolean(cardAction);
-                  const isChangeRequested = item.acknowledgementStatus === 'Change Requested';
-                  return (
-                    <Card
-                      key={item.id}
-                      sx={{
-                        borderRadius: 2,
-                        boxShadow: 'none',
-                        border: (theme) => `1px solid ${theme.palette.divider}`,
-                        borderLeftWidth: 4,
-                        borderLeftStyle: 'solid',
-                        borderLeftColor:
-                          statusColor[item.status] === 'default'
-                            ? 'divider'
-                            : `${statusColor[item.status]}.main`,
-                        overflow: 'hidden',
-                      }}
+            {myDutyRows.map((item) => {
+              const isTerminal = ['Completed', 'Cancelled', 'Rejected'].includes(item.status);
+              const isAccepted = item.acknowledgementStatus === 'Accepted';
+              const cardAction = dutyAction?.id === item.id ? dutyAction.action : null;
+              const isAccepting = cardAction === 'accept';
+              const isChanging = cardAction === 'change';
+              const isRejecting = cardAction === 'reject';
+              const isCardBusy = Boolean(cardAction);
+              const isChangeRequested = item.acknowledgementStatus === 'Change Requested';
+              return (
+                <Card
+                  key={item.id}
+                  sx={{
+                    borderRadius: 2,
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    borderLeftWidth: 4,
+                    borderLeftStyle: 'solid',
+                    borderLeftColor:
+                      statusColor[item.status] === 'default'
+                        ? 'divider'
+                        : `${statusColor[item.status]}.main`,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* ── Card Header ───────────────────────────────── */}
+                  <Box sx={{ px: 2, pt: 2, pb: 1 }}>
+                    {/* Row 1 – date chip + status badges */}
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      sx={{ mb: 0.75 }}
                     >
-                      {/* ── Card Header ───────────────────────────────── */}
-                      <Box sx={{ px: 2, pt: 2, pb: 1 }}>
-                        {/* Row 1 – date chip + status badges */}
-                        <Stack
-                          direction="row"
-                          justifyContent="space-between"
-                          alignItems="center"
-                          sx={{ mb: 0.75 }}
-                        >
-                          {(() => {
-                            const dutyDate = dayjs(item.date);
-                            const isToday = item.date === todayIso;
-                            const isTomorrow = dutyDate.isSame(dayjs(todayIso).add(1, 'day'), 'day');
-                            const dateLabel = isToday
-                              ? 'Today'
-                              : isTomorrow
-                                ? 'Tomorrow'
-                                : dutyDate.format('ddd, DD MMM YYYY');
-                            return (
-                              <Chip
-                                size="small"
-                                icon={<Iconify icon="mdi:calendar-blank-outline" width={14} />}
-                                label={
-                                  isToday || isTomorrow
-                                    ? `${dateLabel} · ${dutyDate.format('DD MMM')}`
-                                    : dateLabel
-                                }
-                                color={isToday ? 'primary' : 'default'}
-                                variant={isToday ? 'filled' : 'outlined'}
-                              />
-                            );
-                          })()}
-
-                          {/* Status badges – right side */}
-                          {isAccepted ? (
-                            <Chip
-                              size="small"
-                              color="success"
-                              variant="soft"
-                              icon={<Iconify icon="mdi:check-circle" width={14} />}
-                              label="Accepted"
-                            />
-                          ) : isChangeRequested ? (
-                            <Chip
-                              size="small"
-                              color="warning"
-                              variant="soft"
-                              icon={<Iconify icon="mdi:swap-horizontal" width={14} />}
-                              label="Change Requested"
-                            />
-                          ) : (
-                            <Stack direction="row" spacing={0.75} flexWrap="wrap" alignItems="center">
-                              {renderStatus(item.status)}
-                              {item.acknowledgementStatus !== 'Not Sent' &&
-                                renderAck(item.acknowledgementStatus)}
-                            </Stack>
-                          )}
-                        </Stack>
-
-                        {/* Row 2 – class / period / subject title */}
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          {item.period} · Class {item.className}-{item.divisionName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.2 }}>
-                          {item.subjectName} · {item.time} · Room{' '}
-                          {item.assignedRoomName || item.roomName}
-                        </Typography>
-                      </Box>
-
-                      {/* ── Card Body – detail metadata ────────────────── */}
-                      <Box
-                        sx={{
-                          mx: 2,
-                          mb: 1.5,
-                          px: 1.5,
-                          py: 1,
-                          borderRadius: 1.5,
-                          bgcolor: (theme) => varAlpha(theme.vars.palette.text.primaryChannel, 0.04),
-                          border: (theme) => `1px solid ${theme.palette.divider}`,
-                        }}
-                      >
-                        <Box
-                          display="grid"
-                          gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)' }}
-                          gap={0.75}
-                        >
-                          <Stack direction="row" spacing={0.75} alignItems="center">
-                            <Iconify icon="mdi:account-outline" width={14} color="text.disabled" />
-                            <Typography variant="caption" color="text.secondary">
-                              Covering for{' '}
-                              <Box component="span" fontWeight={600} color="text.primary">
-                                {item.originalTeacherName}
-                              </Box>
-                            </Typography>
-                          </Stack>
-
-                          {item.reason && (
-                            <Stack direction="row" spacing={0.75} alignItems="center">
-                              <Iconify
-                                icon="mdi:information-outline"
-                                width={14}
-                                color="text.disabled"
-                              />
-                              <Typography variant="caption" color="text.secondary">
-                                Reason:{' '}
-                                <Box component="span" fontWeight={600} color="text.primary">
-                                  {item.reason}
-                                </Box>
-                              </Typography>
-                            </Stack>
-                          )}
-
-                          <Stack direction="row" spacing={0.75} alignItems="center">
-                            <Iconify icon="mdi:tag-outline" width={14} color="text.disabled" />
-                            <Typography variant="caption" color="text.secondary">
-                              Source:{' '}
-                              <Box component="span" fontWeight={600} color="text.primary">
-                                {item.source}
-                              </Box>
-                            </Typography>
-                          </Stack>
-
-                          <Stack direction="row" spacing={0.75} alignItems="center">
-                            <Iconify icon="mdi:flag-outline" width={14} color="text.disabled" />
-                            <Typography variant="caption" color="text.secondary">
-                              Priority:{' '}
-                              <Box
-                                component="span"
-                                fontWeight={600}
-                                color={
-                                  item.priority === 'Urgent'
-                                    ? 'error.main'
-                                    : item.priority === 'High'
-                                      ? 'warning.main'
-                                      : 'text.primary'
-                                }
-                              >
-                                {item.priority}
-                              </Box>
-                            </Typography>
-                          </Stack>
-
-                          {item.remarks && (
-                            <Stack
-                              direction="row"
-                              spacing={0.75}
-                              alignItems="flex-start"
-                              sx={{ gridColumn: { xs: 'auto', sm: '1 / -1' } }}
-                            >
-                              <Iconify icon="mdi:note-text-outline" width={14} color="text.disabled" />
-                              <Typography variant="caption" color="text.secondary">
-                                Action note:{' '}
-                                <Box component="span" fontWeight={600} color="text.primary">
-                                  {item.remarks}
-                                </Box>
-                              </Typography>
-                            </Stack>
-                          )}
-                        </Box>
-                      </Box>
-
-                      {/* ── Card Footer – actions ──────────────────────── */}
-                      {isTerminal ? (
-                        <Box
-                          sx={{
-                            px: 2,
-                            py: 1.25,
-                            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-                          }}
-                        >
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Iconify
-                              icon={
-                                item.status === 'Completed'
-                                  ? 'mdi:check-circle-outline'
-                                  : 'mdi:information-outline'
-                              }
-                              width={16}
-                              color="text.disabled"
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                              {item.status === 'Completed'
-                                ? 'Duty completed - no further action needed.'
-                                : `Duty ${item.status.toLowerCase()} - no further action needed.`}
-                            </Typography>
-                          </Stack>
-                        </Box>
-                      ) : (
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="flex-end"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                          sx={{
-                            px: 2,
-                            py: 1.25,
-                            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-                          }}
-                        >
-                          <LoadingButton
+                      {(() => {
+                        const dutyDate = dayjs(item.date);
+                        const isToday = item.date === todayIso;
+                        const isTomorrow = dutyDate.isSame(dayjs(todayIso).add(1, 'day'), 'day');
+                        const dateLabel = isToday
+                          ? 'Today'
+                          : isTomorrow
+                            ? 'Tomorrow'
+                            : dutyDate.format('ddd, DD MMM YYYY');
+                        return (
+                          <Chip
                             size="small"
-                            variant="contained"
-                            color="success"
-                            disabled={isAccepted || isChangeRequested || isCardBusy}
-                            loading={isAccepting}
-                            startIcon={<Iconify icon="mdi:check" width={16} />}
-                            onClick={() => openDutyConfirmModal(item.id, 'accept')}
-                          >
-                            {isAccepting ? 'Accepting…' : isAccepted ? 'Accepted' : 'Accept Duty'}
-                          </LoadingButton>
-                          {teacherResponseActionsAllowed && (
-                            <LoadingButton
-                              size="small"
-                              variant="outlined"
-                              color="warning"
-                              disabled={isCardBusy || isChangeRequested}
-                              loading={isChanging}
-                              startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
-                              onClick={() => openDutyConfirmModal(item.id, 'change')}
-                            >
-                              {isChanging
-                                ? 'Sending…'
-                                : isChangeRequested
-                                  ? 'Change Requested'
-                                  : 'Request Change'}
-                            </LoadingButton>
-                          )}
-                          {teacherResponseActionsAllowed && (
-                            <LoadingButton
-                              size="small"
-                              variant="outlined"
-                              color="error"
-                              disabled={isCardBusy || isChangeRequested}
-                              loading={isRejecting}
-                              startIcon={<Iconify icon="mdi:close" width={16} />}
-                              onClick={() => openDutyConfirmModal(item.id, 'reject')}
-                            >
-                              {isRejecting ? 'Rejecting…' : 'Reject'}
-                            </LoadingButton>
-                          )}
-                          {!teacherResponseActionsAllowed && (
-                            <Stack direction="row" spacing={0.75} alignItems="center">
-                              <Iconify icon="mdi:lock-outline" width={16} color="text.disabled" />
-                              <Typography variant="caption" color="text.secondary">
-                                Reject/change restricted by admin
-                              </Typography>
-                            </Stack>
-                          )}
+                            icon={<Iconify icon="mdi:calendar-blank-outline" width={14} />}
+                            label={
+                              isToday || isTomorrow
+                                ? `${dateLabel} · ${dutyDate.format('DD MMM')}`
+                                : dateLabel
+                            }
+                            color={isToday ? 'primary' : 'default'}
+                            variant={isToday ? 'filled' : 'outlined'}
+                          />
+                        );
+                      })()}
+
+                      {/* Status badges – right side */}
+                      {isAccepted ? (
+                        <Chip
+                          size="small"
+                          color="success"
+                          variant="soft"
+                          icon={<Iconify icon="mdi:check-circle" width={14} />}
+                          label="Accepted"
+                        />
+                      ) : isChangeRequested ? (
+                        <Chip
+                          size="small"
+                          color="warning"
+                          variant="soft"
+                          icon={<Iconify icon="mdi:swap-horizontal" width={14} />}
+                          label="Change Requested"
+                        />
+                      ) : (
+                        <Stack direction="row" spacing={0.75} flexWrap="wrap" alignItems="center">
+                          {renderStatus(item.status)}
+                          {item.acknowledgementStatus !== 'Not Sent' &&
+                            renderAck(item.acknowledgementStatus)}
                         </Stack>
                       )}
-                    </Card>
-                  );
-                })}
-              </>
-            )}
+                    </Stack>
+
+                    {/* Row 2 – class / period / subject title */}
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {item.period} · Class {item.className}-{item.divisionName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.2 }}>
+                      {item.subjectName} · {item.time} · Room{' '}
+                      {item.assignedRoomName || item.roomName}
+                    </Typography>
+                  </Box>
+
+                  {/* ── Card Body – detail metadata ────────────────── */}
+                  <Box
+                    sx={{
+                      mx: 2,
+                      mb: 1.5,
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: 1.5,
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.text.primaryChannel, 0.04),
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Box
+                      display="grid"
+                      gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)' }}
+                      gap={0.75}
+                    >
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        <Iconify icon="mdi:account-outline" width={14} color="text.disabled" />
+                        <Typography variant="caption" color="text.secondary">
+                          Covering for{' '}
+                          <Box component="span" fontWeight={600} color="text.primary">
+                            {item.originalTeacherName}
+                          </Box>
+                        </Typography>
+                      </Stack>
+
+                      {item.reason && (
+                        <Stack direction="row" spacing={0.75} alignItems="center">
+                          <Iconify
+                            icon="mdi:information-outline"
+                            width={14}
+                            color="text.disabled"
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            Reason:{' '}
+                            <Box component="span" fontWeight={600} color="text.primary">
+                              {item.reason}
+                            </Box>
+                          </Typography>
+                        </Stack>
+                      )}
+
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        <Iconify icon="mdi:tag-outline" width={14} color="text.disabled" />
+                        <Typography variant="caption" color="text.secondary">
+                          Source:{' '}
+                          <Box component="span" fontWeight={600} color="text.primary">
+                            {item.source}
+                          </Box>
+                        </Typography>
+                      </Stack>
+
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        <Iconify icon="mdi:flag-outline" width={14} color="text.disabled" />
+                        <Typography variant="caption" color="text.secondary">
+                          Priority:{' '}
+                          <Box
+                            component="span"
+                            fontWeight={600}
+                            color={
+                              item.priority === 'Urgent'
+                                ? 'error.main'
+                                : item.priority === 'High'
+                                  ? 'warning.main'
+                                  : 'text.primary'
+                            }
+                          >
+                            {item.priority}
+                          </Box>
+                        </Typography>
+                      </Stack>
+
+                      {item.remarks && (
+                        <Stack
+                          direction="row"
+                          spacing={0.75}
+                          alignItems="flex-start"
+                          sx={{ gridColumn: { xs: 'auto', sm: '1 / -1' } }}
+                        >
+                          <Iconify icon="mdi:note-text-outline" width={14} color="text.disabled" />
+                          <Typography variant="caption" color="text.secondary">
+                            Action note:{' '}
+                            <Box component="span" fontWeight={600} color="text.primary">
+                              {item.remarks}
+                            </Box>
+                          </Typography>
+                        </Stack>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* ── Card Footer – actions ──────────────────────── */}
+                  {isTerminal ? (
+                    <Box
+                      sx={{
+                        px: 2,
+                        py: 1.25,
+                        borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                      }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Iconify
+                          icon={
+                            item.status === 'Completed'
+                              ? 'mdi:check-circle-outline'
+                              : 'mdi:information-outline'
+                          }
+                          width={16}
+                          color="text.disabled"
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {item.status === 'Completed'
+                            ? 'Duty completed - no further action needed.'
+                            : `Duty ${item.status.toLowerCase()} - no further action needed.`}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  ) : (
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="flex-end"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                      sx={{
+                        px: 2,
+                        py: 1.25,
+                        borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                      }}
+                    >
+                      <LoadingButton
+                        size="small"
+                        variant="contained"
+                        color="success"
+                        disabled={isAccepted || isChangeRequested || isCardBusy}
+                        loading={isAccepting}
+                        startIcon={<Iconify icon="mdi:check" width={16} />}
+                        onClick={() => openDutyConfirmModal(item.id, 'accept')}
+                      >
+                        {isAccepting ? 'Accepting…' : isAccepted ? 'Accepted' : 'Accept Duty'}
+                      </LoadingButton>
+                      {teacherResponseActionsAllowed && (
+                        <LoadingButton
+                          size="small"
+                          variant="outlined"
+                          color="warning"
+                          disabled={isCardBusy || isChangeRequested}
+                          loading={isChanging}
+                          startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
+                          onClick={() => openDutyConfirmModal(item.id, 'change')}
+                        >
+                          {isChanging
+                            ? 'Sending…'
+                            : isChangeRequested
+                              ? 'Change Requested'
+                              : 'Request Change'}
+                        </LoadingButton>
+                      )}
+                      {teacherResponseActionsAllowed && (
+                        <LoadingButton
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          disabled={isCardBusy || isChangeRequested}
+                          loading={isRejecting}
+                          startIcon={<Iconify icon="mdi:close" width={16} />}
+                          onClick={() => openDutyConfirmModal(item.id, 'reject')}
+                        >
+                          {isRejecting ? 'Rejecting…' : 'Reject'}
+                        </LoadingButton>
+                      )}
+                      {!teacherResponseActionsAllowed && (
+                        <Stack direction="row" spacing={0.75} alignItems="center">
+                          <Iconify icon="mdi:lock-outline" width={16} color="text.disabled" />
+                          <Typography variant="caption" color="text.secondary">
+                            Reject/change restricted by admin
+                          </Typography>
+                        </Stack>
+                      )}
+                    </Stack>
+                  )}
+                </Card>
+              );
+            })}
           </Stack>
         )}
 
         {activeTab === 'analytics' && (
           <Stack spacing={1} sx={{ flexShrink: 0 }}>
-            {isSettingsLoading || isSettingsFetching ? (
-              <Stack spacing={1} sx={{ p: 2 }}>
-                <Skeleton variant="rounded" height={60} />
-                <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: 'repeat(3, 1fr)' }} gap={2}>
-                  <Skeleton variant="rounded" height={220} />
-                  <Skeleton variant="rounded" height={220} />
-                  <Skeleton variant="rounded" height={220} />
-                </Box>
-              </Stack>
-            ) : (
-              <>
-                <Paper
-                  variant="outlined"
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              spacing={1}
+            >
+              <Box>
+                <Typography variant="h6">Substitution Rules</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Set limits and default behaviour applied whenever a substitution duty is created
+                  or assigned.
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                onClick={handleSaveSettings}
+                disabled={isSettingsSaving}
+                startIcon={<Iconify icon="mdi:content-save-check-outline" width={18} />}
+                sx={{ borderRadius: 2, px: 3, alignSelf: { xs: 'stretch', sm: 'center' } }}
+              >
+                {isSettingsSaving ? 'Saving…' : 'Save Settings'}
+              </Button>
+            </Stack>
+
+            <Box
+              display="grid"
+              gridTemplateColumns={{ xs: '1fr', md: 'repeat(3, 1fr)' }}
+              gap={1}
+              alignItems="stretch"
+            >
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  boxShadow: 'none',
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
                   sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: (theme) => alpha(theme.palette.background.paper, 0.95),
-                    borderColor: 'divider',
+                    px: 2.5,
+                    py: 2,
+                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    justifyContent="space-between"
-                    alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    spacing={1.5}
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: 'action.hover',
+                      color: 'text.secondary',
+                      flexShrink: 0,
+                    }}
                   >
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Box
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 1.5,
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                          color: 'primary.main',
-                        }}
-                      >
-                        <Iconify icon="solar:settings-bold-duotone" width={22} />
-                      </Box>
+                    <Iconify icon="mdi:scale-balance" width={18} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      Workload Limits
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Keep duties fairly spread across teachers
+                    </Typography>
+                  </Box>
+                </Stack>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Stack spacing={1}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Max duties per teacher / day"
+                      helperText="Stops a teacher being assigned more than this many duties in one day"
+                      value={settingsForm.maxSubstitutionsPerTeacherPerDay}
+                      onChange={(event) =>
+                        setSettingsForm((current) => ({
+                          ...current,
+                          maxSubstitutionsPerTeacherPerDay: Number(event.target.value),
+                        }))
+                      }
+                      fullWidth
+                      inputProps={{ min: 1 }}
+                    />
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Max duties per teacher / week"
+                      helperText="Weekly cap used when suggesting or auto-assigning substitutes"
+                      value={settingsForm.maxSubstitutionsPerTeacherPerWeek}
+                      onChange={(event) =>
+                        setSettingsForm((current) => ({
+                          ...current,
+                          maxSubstitutionsPerTeacherPerWeek: Number(event.target.value),
+                        }))
+                      }
+                      fullWidth
+                      inputProps={{ min: 1 }}
+                    />
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  boxShadow: 'none',
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  sx={{
+                    px: 2.5,
+                    py: 2,
+                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: 'action.hover',
+                      color: 'text.secondary',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Iconify icon="mdi:bell-check-outline" width={18} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      Acknowledgement & Reminders
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Confirm duties reach the right teacher on time
+                    </Typography>
+                  </Box>
+                </Stack>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Stack spacing={1}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={1}
+                      sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
+                    >
                       <Box>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Typography variant="h6">
-                            Substitution Rules & Operational Policy
-                          </Typography>
-                          <Label color="primary" variant="soft">
-                            Active Policy
-                          </Label>
-                        </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                          Configure workload caps, default acknowledgement workflows, auto-reminders, and escalation rules.
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Acknowledgement required by default
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Substitute teacher must confirm the duty
                         </Typography>
                       </Box>
+                      <Switch
+                        checked={settingsForm.acknowledgementRequiredByDefault}
+                        onChange={(event) =>
+                          setSettingsForm((current) => ({
+                            ...current,
+                            acknowledgementRequiredByDefault: event.target.checked,
+                          }))
+                        }
+                      />
                     </Stack>
-
-                    <LoadingButton
-                      size="small"
-                      variant="contained"
-                      onClick={handleSaveSettings}
-                      loading={isSettingsSaving}
-                      startIcon={<Iconify icon={GlobalIcons.submit} width={16} />}
+                    <Divider sx={{ borderStyle: 'dashed' }} />
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={1}
+                      sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
                     >
-                      Save
-                    </LoadingButton>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Send automatic reminder
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Nudges the substitute teacher before the period starts
+                        </Typography>
+                      </Box>
+                      <Switch
+                        checked={settingsForm.autoReminderEnabled}
+                        onChange={(event) =>
+                          setSettingsForm((current) => ({
+                            ...current,
+                            autoReminderEnabled: event.target.checked,
+                          }))
+                        }
+                      />
+                    </Stack>
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Minutes before period"
+                      disabled={!settingsForm.autoReminderEnabled}
+                      value={settingsForm.reminderBeforeMinutes}
+                      onChange={(event) =>
+                        setSettingsForm((current) => ({
+                          ...current,
+                          reminderBeforeMinutes: Number(event.target.value),
+                        }))
+                      }
+                      fullWidth
+                      inputProps={{ min: 0, max: 240 }}
+                    />
                   </Stack>
-                </Paper>
+                </CardContent>
+              </Card>
 
-                <Box
-                  display="grid"
-                  gridTemplateColumns={{ xs: '1fr', md: 'repeat(3, 1fr)' }}
-                  gap={2}
-                  alignItems="stretch"
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  boxShadow: 'none',
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  sx={{
+                    px: 2.5,
+                    py: 2,
+                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
                 >
-                  {/* Card 1: Workload Limits */}
-                  <Paper
-                    variant="outlined"
+                  <Box
                     sx={{
-                      p: 2.5,
-                      borderRadius: 2,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
-                      borderColor: 'divider',
-                      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.25)}`,
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: 'action.hover',
+                      color: 'text.secondary',
+                      flexShrink: 0,
                     }}
                   >
-                    <Stack spacing={2} sx={{ height: '100%' }}>
-                      <Stack
-                        direction="row"
-                        spacing={1.25}
-                        alignItems="center"
-                        sx={{ pb: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}
-                      >
-                        <Box
-                          sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 1.5,
-                            display: 'grid',
-                            placeItems: 'center',
-                            bgcolor: (theme) => alpha(theme.palette.warning.main, 0.12),
-                            color: 'warning.main',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Iconify icon="mdi:scale-balance" width={20} />
-                        </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            Workload Limits
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            Cap daily & weekly duties per teacher
-                          </Typography>
-                        </Box>
-                      </Stack>
-
-                      <Stack spacing={2} sx={{ flex: 1 }}>
-                        <TextField
-                          size="small"
-                          type="number"
-                          label="Max duties per teacher / day"
-                          helperText="Stops auto-assigning when daily duty limit is reached"
-                          value={settingsForm.maxSubstitutionsPerTeacherPerDay}
-                          onChange={(event) =>
-                            setSettingsForm((current) => ({
-                              ...current,
-                              maxSubstitutionsPerTeacherPerDay: Number(event.target.value),
-                            }))
-                          }
-                          fullWidth
-                          inputProps={{ min: 1 }}
-                        />
-
-                        <TextField
-                          size="small"
-                          type="number"
-                          label="Max duties per teacher / week"
-                          helperText="Weekly cap used when suggesting substitute candidates"
-                          value={settingsForm.maxSubstitutionsPerTeacherPerWeek}
-                          onChange={(event) =>
-                            setSettingsForm((current) => ({
-                              ...current,
-                              maxSubstitutionsPerTeacherPerWeek: Number(event.target.value),
-                            }))
-                          }
-                          fullWidth
-                          inputProps={{ min: 1 }}
-                        />
-                      </Stack>
+                    <Iconify icon="mdi:account-alert-outline" width={18} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      Escalation & Teacher Response
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Decide how urgent gaps and pushback are handled
+                    </Typography>
+                  </Box>
+                </Stack>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Stack spacing={1}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={1}
+                      sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
+                    >
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Notify leadership for urgent duties
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Alerts admins/principal when a high priority duty stays unassigned
+                        </Typography>
+                      </Box>
+                      <Switch
+                        checked={settingsForm.notifyLeadershipForUrgent}
+                        onChange={(event) =>
+                          setSettingsForm((current) => ({
+                            ...current,
+                            notifyLeadershipForUrgent: event.target.checked,
+                          }))
+                        }
+                      />
                     </Stack>
-                  </Paper>
-
-                  {/* Card 2: Acknowledgement & Reminders */}
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2.5,
-                      borderRadius: 2,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
-                      borderColor: 'divider',
-                      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.25)}`,
-                    }}
-                  >
-                    <Stack spacing={2} sx={{ height: '100%' }}>
-                      <Stack
-                        direction="row"
-                        spacing={1.25}
-                        alignItems="center"
-                        sx={{ pb: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}
-                      >
-                        <Box
-                          sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 1.5,
-                            display: 'grid',
-                            placeItems: 'center',
-                            bgcolor: (theme) => alpha(theme.palette.info.main, 0.12),
-                            color: 'info.main',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Iconify icon="mdi:bell-check-outline" width={20} />
-                        </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            Acknowledgement & Reminders
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            Confirm duty reach & delivery lead time
-                          </Typography>
-                        </Box>
-                      </Stack>
-
-                      <Stack spacing={1.5} sx={{ flex: 1 }}>
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          spacing={1}
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            bgcolor: (theme) => alpha(theme.palette.action.hover, 0.5),
-                            '&:hover': { bgcolor: 'action.hover' },
-                          }}
-                        >
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
-                              Acknowledgement required
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" display="block">
-                              Substitutes must confirm assignment
-                            </Typography>
-                          </Box>
-                          <Switch
-                            size="small"
-                            checked={settingsForm.acknowledgementRequiredByDefault}
-                            onChange={(event) =>
-                              setSettingsForm((current) => ({
-                                ...current,
-                                acknowledgementRequiredByDefault: event.target.checked,
-                              }))
-                            }
-                          />
-                        </Stack>
-
-                        <Divider sx={{ borderStyle: 'dashed' }} />
-
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          spacing={1}
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            bgcolor: (theme) => alpha(theme.palette.action.hover, 0.5),
-                            '&:hover': { bgcolor: 'action.hover' },
-                          }}
-                        >
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
-                              Automatic reminder
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" display="block">
-                              Nudge substitute before period start
-                            </Typography>
-                          </Box>
-                          <Switch
-                            size="small"
-                            checked={settingsForm.autoReminderEnabled}
-                            onChange={(event) =>
-                              setSettingsForm((current) => ({
-                                ...current,
-                                autoReminderEnabled: event.target.checked,
-                              }))
-                            }
-                          />
-                        </Stack>
-
-                        <TextField
-                          size="small"
-                          type="number"
-                          label="Minutes before period"
-                          disabled={!settingsForm.autoReminderEnabled}
-                          value={settingsForm.reminderBeforeMinutes}
-                          onChange={(event) =>
-                            setSettingsForm((current) => ({
-                              ...current,
-                              reminderBeforeMinutes: Number(event.target.value),
-                            }))
-                          }
-                          fullWidth
-                          inputProps={{ min: 0, max: 240 }}
-                        />
-                      </Stack>
+                    <Divider sx={{ borderStyle: 'dashed' }} />
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={1}
+                      sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
+                    >
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Allow teachers to reject / request change
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Substitutes can reject a duty or ask for a change from My Duties
+                        </Typography>
+                      </Box>
+                      <Switch
+                        checked={settingsForm.allowTeacherReject}
+                        onChange={(event) =>
+                          setSettingsForm((current) => ({
+                            ...current,
+                            allowTeacherReject: event.target.checked,
+                          }))
+                        }
+                      />
                     </Stack>
-                  </Paper>
-
-                  {/* Card 3: Escalation & Teacher Response */}
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2.5,
-                      borderRadius: 2,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
-                      borderColor: 'divider',
-                      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.25)}`,
-                    }}
-                  >
-                    <Stack spacing={2} sx={{ height: '100%' }}>
-                      <Stack
-                        direction="row"
-                        spacing={1.25}
-                        alignItems="center"
-                        sx={{ pb: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}
-                      >
-                        <Box
-                          sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 1.5,
-                            display: 'grid',
-                            placeItems: 'center',
-                            bgcolor: (theme) => alpha(theme.palette.error.main, 0.12),
-                            color: 'error.main',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Iconify icon="mdi:account-alert-outline" width={20} />
-                        </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            Escalation & Response
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            Handle urgent gaps & pushback rules
-                          </Typography>
-                        </Box>
-                      </Stack>
-
-                      <Stack spacing={1.5} sx={{ flex: 1 }}>
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          spacing={1}
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            bgcolor: (theme) => alpha(theme.palette.action.hover, 0.5),
-                            '&:hover': { bgcolor: 'action.hover' },
-                          }}
-                        >
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
-                              Notify leadership for urgent duties
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" display="block">
-                              Alert HOD/Principal when urgent slot is unassigned
-                            </Typography>
-                          </Box>
-                          <Switch
-                            size="small"
-                            checked={settingsForm.notifyLeadershipForUrgent}
-                            onChange={(event) =>
-                              setSettingsForm((current) => ({
-                                ...current,
-                                notifyLeadershipForUrgent: event.target.checked,
-                              }))
-                            }
-                          />
-                        </Stack>
-
-                        <Divider sx={{ borderStyle: 'dashed' }} />
-
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          spacing={1}
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            bgcolor: (theme) => alpha(theme.palette.action.hover, 0.5),
-                            '&:hover': { bgcolor: 'action.hover' },
-                          }}
-                        >
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
-                              Allow teacher rejections / change requests
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" display="block">
-                              Teachers can ask for duty change from My Duties
-                            </Typography>
-                          </Box>
-                          <Switch
-                            size="small"
-                            checked={settingsForm.allowTeacherReject}
-                            onChange={(event) =>
-                              setSettingsForm((current) => ({
-                                ...current,
-                                allowTeacherReject: event.target.checked,
-                              }))
-                            }
-                          />
-                        </Stack>
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                </Box>
-              </>
-            )}
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Box>
           </Stack>
         )}
 
         <Menu anchorEl={actionAnchor} open={Boolean(actionAnchor)} onClose={closeActionMenu}>
           <MenuItem
-            disabled={isSendingReminder || isCompletingSubstitution || isCancellingSubstitution || isAcknowledgingSubstitution}
             onClick={() => {
               if (actionRow) {
                 setSelectedSubstitutionId(actionRow.id);
@@ -4015,7 +3610,8 @@ const SubstitutionManagementScreen = () => {
             disabled={
               !actionRow ||
               !['Waiting Ack', 'Assigned'].includes(actionRow.status) ||
-              isAcknowledgingSubstitution
+              (!isAdminOrManager &&
+                actionRow.substituteTeacherName !== currentEmployee?.employeeName)
             }
             onClick={() => {
               if (actionRow) updateSubstitutionStatus(actionRow.id, 'Acknowledged');
@@ -4025,15 +3621,14 @@ const SubstitutionManagementScreen = () => {
             <ListItemIcon>
               <Iconify icon={GlobalIcons.tick} />
             </ListItemIcon>
-            <ListItemText>
-              {isAcknowledgingSubstitution ? 'Marking...' : 'Mark acknowledged'}
-            </ListItemText>
+            <ListItemText>Mark acknowledged</ListItemText>
           </MenuItem>
           <MenuItem
             disabled={
               !actionRow ||
               !['Assigned', 'Waiting Ack', 'Acknowledged'].includes(actionRow.status) ||
-              isCompletingSubstitution
+              (!isAdminOrManager &&
+                actionRow.substituteTeacherName !== currentEmployee?.employeeName)
             }
             onClick={() => {
               if (actionRow) updateSubstitutionStatus(actionRow.id, 'Completed');
@@ -4043,12 +3638,14 @@ const SubstitutionManagementScreen = () => {
             <ListItemIcon>
               <Iconify icon="mdi:check-decagram-outline" />
             </ListItemIcon>
-            <ListItemText>
-              {isCompletingSubstitution ? 'Marking...' : 'Mark completed'}
-            </ListItemText>
+            <ListItemText>Mark completed</ListItemText>
           </MenuItem>
           <MenuItem
-            disabled={!actionRow || ['Completed', 'Cancelled'].includes(actionRow.status) || isSendingReminder}
+            disabled={
+              !actionRow ||
+              ['Completed', 'Cancelled'].includes(actionRow.status) ||
+              !isAdminOrManager
+            }
             onClick={async () => {
               if (actionRow) {
                 try {
@@ -4067,12 +3664,14 @@ const SubstitutionManagementScreen = () => {
             <ListItemIcon>
               <Iconify icon="mdi:bell-ring-outline" />
             </ListItemIcon>
-            <ListItemText>
-              {isSendingReminder ? 'Sending...' : 'Send reminder'}
-            </ListItemText>
+            <ListItemText>Send reminder</ListItemText>
           </MenuItem>
           <MenuItem
-            disabled={!actionRow || ['Completed', 'Cancelled'].includes(actionRow.status) || isCancellingSubstitution}
+            disabled={
+              !actionRow ||
+              ['Completed', 'Cancelled'].includes(actionRow.status) ||
+              !isAdminOrManager
+            }
             onClick={() => {
               if (actionRow) updateSubstitutionStatus(actionRow.id, 'Cancelled');
               closeActionMenu();
@@ -4081,9 +3680,7 @@ const SubstitutionManagementScreen = () => {
             <ListItemIcon>
               <Iconify icon={GlobalIcons.cancel} />
             </ListItemIcon>
-            <ListItemText>
-              {isCancellingSubstitution ? 'Cancelling...' : 'Cancel substitution'}
-            </ListItemText>
+            <ListItemText>Cancel substitution</ListItemText>
           </MenuItem>
         </Menu>
 
@@ -4091,9 +3688,7 @@ const SubstitutionManagementScreen = () => {
           open={createDialogOpen}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5" fontWeight={700}>
-                Create Substitution
-              </Typography>
+              <Typography variant="h5">Create Substitution</Typography>
               <CustomTooltip
                 arrow
                 placement="right"
@@ -4113,651 +3708,575 @@ const SubstitutionManagementScreen = () => {
                 <LinearProgress />
               </Box>
             )}
-            <Stack sx={{ pt: 1 }}>
+            <Stack spacing={1}>
+              {formError && <Alert severity="error">{formError}</Alert>}
               <Alert severity="info" icon={<AutoAwesome />}>
                 Select the affected lecture, review auto-filled details, choose a substitute
                 teacher, then save draft or assign and notify.
               </Alert>
-
-              {/* Section 1: Select Lecture Schedule */}
-              <SectionCard title="1. Select Lecture Schedule" icon="solar:calendar-bold">
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <DatePicker
-                    label="Date *"
-                    value={substitutionForm.date}
-                    format="DD/MM/YYYY"
-                    disablePast
-                    minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
-                    maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-                    onChange={(value) => {
-                      clearFieldError('date');
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        date: value,
-                        timetableId: '',
-                        timetableSlotId: '',
-                        timetableSlotSubjectId: '',
-                        period: '',
-                        startTime: '',
-                        endTime: '',
-                        subjectId: '',
-                        subjectName: '',
-                        originalTeacherId: '',
-                        originalTeacherName: '',
-                        originalRoomId: '',
-                        roomName: '',
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                      }));
-                      setEmployeeSearchTerm('');
-                    }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: Boolean(fieldErrors.date),
-                        helperText: fieldErrors.date || '',
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <CustomSelect
-                    label="Class *"
-                    options={classSelectOptions}
-                    value={substitutionForm.standardId || substitutionForm.className}
-                    error={Boolean(fieldErrors.standardId)}
-                    helperText={fieldErrors.standardId || ''}
-                    onChange={(value) => {
-                      clearFieldError('standardId');
-                      const selected =
-                        academicStandards.find((item) => item.id === value) ||
-                        createMetadata?.standards.find((item) => item.id === value);
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        standardId: selected?.id || '',
-                        className: selected?.name || (value as string),
-                        divisionId: '',
-                        divisionName: '',
-                        timetableId: '',
-                        timetableSlotId: '',
-                        timetableSlotSubjectId: '',
-                        period: '',
-                        startTime: '',
-                        endTime: '',
-                        subjectId: '',
-                        subjectName: '',
-                        originalTeacherId: '',
-                        originalTeacherName: '',
-                        originalRoomId: '',
-                        roomName: '',
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                      }));
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <CustomSelect
-                    label="Division *"
-                    options={divisionSelectOptions}
-                    value={substitutionForm.divisionId || substitutionForm.divisionName}
-                    disabled={!substitutionForm.standardId}
-                    error={Boolean(fieldErrors.divisionId)}
-                    helperText={fieldErrors.divisionId || ''}
-                    noOptionsMessage={
-                      substitutionForm.standardId ? 'No divisions found' : 'Select class first'
-                    }
-                    onChange={(value) => {
-                      clearFieldError('divisionId');
-                      const selected =
-                        selectedAcademicStandard?.divisions?.find((item) => item.id === value) ||
-                        createMetadata?.divisions.find((item) => item.id === value);
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        divisionId: selected?.id || '',
-                        divisionName: selected?.name || (value as string),
-                        timetableId: '',
-                        timetableSlotId: '',
-                        timetableSlotSubjectId: '',
-                        period: '',
-                        startTime: '',
-                        endTime: '',
-                        subjectId: '',
-                        subjectName: '',
-                        originalTeacherId: '',
-                        originalTeacherName: '',
-                        originalRoomId: '',
-                        roomName: '',
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                      }));
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Lecture Slot *"
-                    options={lectureSelectOptions}
-                    value={substitutionForm.timetableSlotSubjectId || substitutionForm.period}
-                    disabled={
-                      !substitutionForm.date ||
-                      !substitutionForm.standardId ||
-                      !substitutionForm.divisionId
-                    }
-                    isLoading={isLecturesLoading || isFetchingLectures}
-                    error={Boolean(fieldErrors.timetableSlotSubjectId)}
-                    helperText={fieldErrors.timetableSlotSubjectId || ''}
-                    noOptionsMessage="No lecture slots found for the selected date, class and division"
-                    onChange={(value) => {
-                      clearFieldError('timetableSlotSubjectId');
-                      const lecture = createLectureResult.find(
-                        (item) => item.slotSubjectId === value
-                      );
-                      const template = affectedLectureTemplates.find((item) => item.period === value);
-                      const assignedSubject = createMetadata?.subjects.find(
-                        (item) =>
-                          item.id === lecture?.subjectId &&
-                          item.standardId === (lecture?.standardId || substitutionForm.standardId)
-                      );
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        timetableId: lecture?.timetableId || current.timetableId,
-                        timetableSlotId: lecture?.timetableSlotId || current.timetableSlotId,
-                        timetableSlotSubjectId: lecture?.slotSubjectId || '',
-                        period: lecture?.period || (value as string),
-                        startTime: lecture?.startTime || current.startTime,
-                        endTime: lecture?.endTime || current.endTime,
-                        subjectId: lecture?.subjectId || current.subjectId,
-                        subjectName:
-                          lecture?.subjectName || template?.subjectName || current.subjectName,
-                        originalTeacherId:
-                          lecture?.originalTeacherId ||
-                          assignedSubject?.primaryTeacherId ||
-                          current.originalTeacherId,
-                        originalTeacherName:
-                          lecture?.originalTeacherName ||
-                          assignedSubject?.primaryTeacherName ||
-                          template?.teacherName ||
-                          current.originalTeacherName,
-                        originalRoomId: lecture?.originalRoomId || current.originalRoomId,
-                        roomName: lecture?.roomName || template?.roomName || current.roomName,
-                        assignedRoomId: lecture?.originalRoomId || current.assignedRoomId,
-                        assignedRoomName: lecture?.roomName || current.assignedRoomName,
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                        standardId: lecture?.standardId || current.standardId,
-                        className: lecture?.className || template?.className || current.className,
-                        divisionId: lecture?.divisionId || current.divisionId,
-                        divisionName:
-                          lecture?.divisionName || template?.divisionName || current.divisionName,
-                      }));
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Subject *"
-                    options={subjectSelectOptions}
-                    value={substitutionForm.subjectId || substitutionForm.subjectName}
-                    disabled={!substitutionForm.timetableSlotSubjectId}
-                    error={Boolean(fieldErrors.subjectId)}
-                    helperText={fieldErrors.subjectId || ''}
-                    onChange={(value) => {
-                      clearFieldError('subjectId');
-                      const selected = createMetadata?.subjects.find(
-                        (item) =>
-                          item.id === value &&
-                          (!substitutionForm.standardId ||
-                            item.standardId === substitutionForm.standardId)
-                      );
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        subjectId: selected?.id || '',
-                        subjectName: selected?.name || (value as string),
-                        originalTeacherId: selected?.primaryTeacherId || current.originalTeacherId,
-                        originalTeacherName:
-                          selected?.primaryTeacherName || current.originalTeacherName,
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                      }));
-                    }}
-                  />
-                </Grid>
-              </SectionCard>
-
-              {/* Section 2: Original Teacher & Room Details */}
-              <SectionCard title="2. Original Teacher & Room Details" icon="solar:user-bold">
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Autocomplete
-                    size="small"
-                    fullWidth
-                    disabled={!substitutionForm.timetableSlotSubjectId}
-                    options={teacherSelectOptions}
-                    value={
-                      teacherSelectOptions.find(
-                        (opt) =>
-                          opt.value === substitutionForm.originalTeacherId ||
-                          opt.label === substitutionForm.originalTeacherName
-                      ) || null
-                    }
-                    getOptionLabel={(option) =>
-                      typeof option === 'string' ? option : option.label || ''
-                    }
-                    isOptionEqualToValue={(option, value) => option?.value === value?.value}
-                    onChange={(_event, newValue) => {
-                      clearFieldError('originalTeacherName');
-                      const selectedId = newValue?.value || '';
-                      const selectedName = newValue?.label || '';
-                      const selected = createMetadata?.teachers.find(
-                        (item) => item.id === selectedId
-                      );
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        originalTeacherId: selected?.id || selectedId,
-                        originalTeacherName: selected?.name || selectedName,
-                      }));
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Original Teacher *"
-                        size="small"
-                        error={Boolean(fieldErrors.originalTeacherName)}
-                        helperText={fieldErrors.originalTeacherName || ''}
-                      />
-                    )}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Original Room *"
-                    options={roomSelectOptions}
-                    value={substitutionForm.originalRoomId || substitutionForm.roomName}
-                    disabled={!substitutionForm.timetableSlotSubjectId}
-                    error={Boolean(fieldErrors.roomName)}
-                    helperText={fieldErrors.roomName || ''}
-                    onChange={(value) => {
-                      clearFieldError('roomName');
-                      const selected = createMetadata?.rooms.find((item) => item.id === value);
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        originalRoomId: selected?.id || '',
-                        roomName: selected?.name || (value as string),
-                      }));
-                    }}
-                  />
-                </Grid>
-              </SectionCard>
-
-              {/* Section 3: Available Substitute Employees */}
-              <SectionCard title="3. Available Substitute Employees" icon="solar:user-plus-bold">
-                {fieldErrors.substituteTeacher && (
-                  <Grid size={{ xs: 12 }}>
-                    <Alert severity="error" sx={{ mb: 1 }}>
-                      {fieldErrors.substituteTeacher}
-                    </Alert>
-                  </Grid>
-                )}
-
-                <Grid size={{ xs: 12 }}>
-                  <Card sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'background.neutral', mb: 1 }}>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        Suggested Free Teachers
-                      </Typography>
-                      <TextField
-                        size="small"
-                        placeholder="Search employee..."
-                        value={employeeSearchTerm}
-                        onChange={(e) => setEmployeeSearchTerm(e.target.value)}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
-                            </InputAdornment>
-                          ),
-                        }}
-                        sx={{ width: 250, bgcolor: 'background.paper', borderRadius: 1 }}
-                      />
-                    </Stack>
-
-                    {(isContextTeachersLoading || isFetchingSuggestedTeachers) ? (
-                      <Stack spacing={1}>
-                        <Skeleton variant="rectangular" height={54} sx={{ borderRadius: 1 }} />
-                        <Skeleton variant="rectangular" height={54} sx={{ borderRadius: 1 }} />
-                        <Skeleton variant="rectangular" height={54} sx={{ borderRadius: 1 }} />
-                      </Stack>
-                    ) : (
-                      <Scrollbar sx={{ maxHeight: 300, pr: 0.5 }}>
-                        <Stack spacing={1}>
-                          {!selectedCreateLecture && (
-                            <Alert severity="info">
-                              Select date, class, division and lecture slot to load free employees.
-                            </Alert>
-                          )}
-                          {selectedCreateLecture && suggestedTeacherRows.filter((teacher) => teacher.teacherName.toLowerCase().includes(employeeSearchTerm.toLowerCase())).length === 0 && (
-                            <Alert severity="warning">
-                              No employee is free for the selected slot. Try split coverage or review timetable conflicts.
-                            </Alert>
-                          )}
-                          {suggestedTeacherRows.filter((teacher) => teacher.teacherName.toLowerCase().includes(employeeSearchTerm.toLowerCase())).map((teacher, index) => {
-                            const isSelected = substitutionForm.selectedSubstitutes.some(
-                              (item) => item.teacherId === teacher.teacherId
-                            );
-                            return (
-                              <Box
-                                key={teacher.teacherId}
-                                sx={{
-                                  p: 1.25,
-                                  borderRadius: 1,
-                                  bgcolor: 'background.paper',
-                                  border: (theme) =>
-                                    `1px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
-                                }}
-                              >
-                                <Stack
-                                  direction={{ xs: 'column', sm: 'row' }}
-                                  justifyContent="space-between"
-                                  alignItems={{ xs: 'flex-start', sm: 'center' }}
-                                  spacing={1}
-                                >
-                                  <Stack direction="row" spacing={1.5} alignItems="center">
-                                    <Box
-                                      sx={{
-                                        width: 30,
-                                        height: 30,
-                                        borderRadius: '50%',
-                                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                                        color: 'primary.main',
-                                        display: 'grid',
-                                        placeItems: 'center',
-                                        fontWeight: 700,
-                                        fontSize: '0.75rem',
-                                        flexShrink: 0,
-                                      }}
-                                    >
-                                      #{index + 1}
-                                    </Box>
-                                    <Box>
-                                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                                        <Typography variant="subtitle2" fontWeight={700}>
-                                          {teacher.teacherName}
-                                        </Typography>
-                                        <Label
-                                          color={
-                                            teacher.score >= 80
-                                              ? 'success'
-                                              : teacher.score >= 60
-                                                ? 'info'
-                                                : 'warning'
-                                          }
-                                          variant="soft"
-                                        >
-                                          {teacher.score}% Match
-                                        </Label>
-                                        <Label
-                                          color={teacher.isPartialCoverage ? 'warning' : 'success'}
-                                          variant="soft"
-                                        >
-                                          {teacher.isPartialCoverage
-                                            ? `Partial ${getTeacherCoverageLabel(teacher)}`
-                                            : `Free ${getTeacherCoverageLabel(teacher)}`}
-                                        </Label>
-                                      </Stack>
-                                      <Typography
-                                        variant="caption"
-                                        color={teacher.hasConflict ? 'error.main' : 'text.secondary'}
-                                        sx={{ mt: 0.25, display: 'block' }}
-                                      >
-                                        {teacher.hasConflict
-                                          ? teacher.conflictReason
-                                          : teacher.recommendationReason}
-                                      </Typography>
-                                    </Box>
-                                  </Stack>
-                                  <Button
-                                    size="small"
-                                    variant={isSelected ? 'contained' : 'outlined'}
-                                    color={isSelected ? 'error' : 'success'}
-                                    startIcon={
-                                      isSelected ? <CloseIcon fontSize="small" /> : <Add fontSize="small" />
-                                    }
-                                    disabled={!isSelected && teacher.conflictSeverity === 'Hard Block'}
-                                    onClick={() => {
-                                      clearFieldError('substituteTeacher');
-                                      setSubstitutionForm((current) => {
-                                        const exists = current.selectedSubstitutes.some(
-                                          (item) => item.teacherId === teacher.teacherId
-                                        );
-                                        if (exists) {
-                                          return {
-                                            ...current,
-                                            selectedSubstitutes: current.selectedSubstitutes.filter(
-                                              (item) => item.teacherId !== teacher.teacherId
-                                            ),
-                                            substituteTeacherId:
-                                              current.substituteTeacherId === teacher.teacherId
-                                                ? ''
-                                                : current.substituteTeacherId,
-                                            substituteTeacherName:
-                                              current.substituteTeacherId === teacher.teacherId
-                                                ? ''
-                                                : current.substituteTeacherName,
-                                          };
-                                        }
-                                        return {
-                                          ...current,
-                                          substituteTeacherId:
-                                            current.selectedSubstitutes.length === 0
-                                              ? teacher.teacherId
-                                              : current.substituteTeacherId,
-                                          substituteTeacherName:
-                                            current.selectedSubstitutes.length === 0
-                                              ? teacher.teacherName
-                                              : current.substituteTeacherName,
-                                          selectedSubstitutes: [
-                                            ...current.selectedSubstitutes,
-                                            {
-                                              teacherId: teacher.teacherId,
-                                              teacherName: teacher.teacherName,
-                                              startTime: teacher.coverageStartTime || '',
-                                              endTime: teacher.coverageEndTime || '',
-                                              score: teacher.score,
-                                              isPartialCoverage: teacher.isPartialCoverage || false,
-                                            },
-                                          ],
-                                        };
-                                      });
-                                    }}
-                                  >
-                                    {isSelected ? 'Remove' : 'Add'}
-                                  </Button>
-                                </Stack>
-                              </Box>
-                            );
-                          })}
-                        </Stack>
-                      </Scrollbar>
-                    )}
-                  </Card>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Substitute Teacher"
-                    options={availableTeacherSelectOptions}
-                    value={
-                      substitutionForm.substituteTeacherId || substitutionForm.substituteTeacherName
-                    }
-                    disabled={!selectedCreateLecture}
-                    noOptionsMessage="No free employees found for this slot"
-                    onChange={(value) => {
-                      clearFieldError('substituteTeacher');
-                      const selected = suggestedTeacherRows.find((item) => item.teacherId === value);
-                      if (selected) addSubstituteCoverage(selected);
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Assigned Room"
-                    options={[{ value: '', label: 'Keep original room' }, ...roomSelectOptions]}
-                    value={substitutionForm.assignedRoomId || ''}
-                    onChange={(value) => {
-                      const selected = createMetadata?.rooms.find((item) => item.id === value);
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        assignedRoomId: selected?.id || '',
-                        assignedRoomName: selected?.name || '',
-                      }));
-                    }}
-                  />
-                </Grid>
-              </SectionCard>
-
-              {/* Section 4: Assignment & Notification Settings */}
-              <SectionCard title="4. Assignment & Notification Settings" icon="solar:settings-bold">
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <CustomSelect
-                    label="Reason *"
-                    options={reasonOptions}
-                    value={substitutionForm.reason}
-                    error={Boolean(fieldErrors.reason)}
-                    helperText={fieldErrors.reason || ''}
-                    onChange={(value) => {
-                      clearFieldError('reason');
-                      setSubstitutionForm((current) => ({ ...current, reason: value as string }));
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <CustomSelect
-                    label="Priority"
-                    options={priorityOptions}
-                    value={substitutionForm.priority}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        priority: value as SubstitutionPriority,
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <CustomSelect
-                    label="Assignment Source"
-                    options={sourceCreateOptions}
-                    value={substitutionForm.assignmentSource}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        assignmentSource: value as SubstitutionRow['source'],
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Notification Method"
-                    options={notificationMethods}
-                    value={substitutionForm.notificationMethod}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        notificationMethod: value as string,
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Auto Reminder"
-                    options={autoReminderOptions}
-                    value={substitutionForm.autoReminderRule}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        autoReminderRule: value as string,
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={substitutionForm.acknowledgementRequired}
-                        onChange={(event) =>
-                          setSubstitutionForm((current) => ({
-                            ...current,
-                            acknowledgementRequired: event.target.checked,
-                          }))
-                        }
-                      />
-                    }
-                    label="Acknowledgement required"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={substitutionForm.sendNotification}
-                        onChange={(event) =>
-                          setSubstitutionForm((current) => ({
-                            ...current,
-                            sendNotification: event.target.checked,
-                          }))
-                        }
-                      />
-                    }
-                    label="Send notification"
-                  />
-                </Grid>
-              </SectionCard>
-
-              {/* Section 5: Remarks & Preview */}
-              <SectionCard title="5. Remarks & Preview" icon="solar:document-text-bold">
-                <Grid size={{ xs: 12 }}>
-                  <Alert severity="success" sx={{ mb: 2 }}>
-                    {substitutionForm.selectedSubstitutes.length > 0
-                      ? `You are assigning ${substitutionForm.selectedSubstitutes
-                        .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
-                        .join(
-                          ', '
-                        )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
-                      : 'Select a substitute teacher to preview the final notification.'}
-                  </Alert>
-                </Grid>
-
-                <Grid size={{ xs: 12 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <DatePicker
+                  label="Date"
+                  value={substitutionForm.date}
+                  format={viewDateFormat}
+                  disablePast
+                  minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                  maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
+                  onChange={(value) => {
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      date: value,
+                      timetableId: '',
+                      timetableSlotId: '',
+                      timetableSlotSubjectId: '',
+                      period: '',
+                      startTime: '',
+                      endTime: '',
+                      subjectId: '',
+                      subjectName: '',
+                      originalTeacherId: '',
+                      originalTeacherName: '',
+                      originalRoomId: '',
+                      roomName: '',
+                      substituteTeacherId: '',
+                      substituteTeacherName: '',
+                      selectedSubstitutes: [],
+                    }));
+                    setEmployeeSearchTerm('');
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error:
+                        !!formError &&
+                        (!substitutionForm.date ||
+                          !dayjs(substitutionForm.date).isValid() ||
+                          dayjs(substitutionForm.date).isBefore(dayjs(), 'day') ||
+                          (!!currentYear?.startDate &&
+                            dayjs(substitutionForm.date).isBefore(
+                              dayjs(currentYear.startDate),
+                              'day'
+                            )) ||
+                          (!!currentYear?.endDate &&
+                            dayjs(substitutionForm.date).isAfter(
+                              dayjs(currentYear.endDate),
+                              'day'
+                            ))),
+                    },
+                  }}
+                />
+                <CustomSelect
+                  label="Class"
+                  options={classSelectOptions}
+                  value={substitutionForm.standardId || substitutionForm.className}
+                  onChange={(value) => {
+                    const selected =
+                      academicStandards.find((item) => item.id === value) ||
+                      createMetadata?.standards.find((item) => item.id === value);
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      standardId: selected?.id || '',
+                      className: selected?.name || (value as string),
+                      divisionId: '',
+                      divisionName: '',
+                      timetableId: '',
+                      timetableSlotId: '',
+                      timetableSlotSubjectId: '',
+                      period: '',
+                      startTime: '',
+                      endTime: '',
+                      subjectId: '',
+                      subjectName: '',
+                      originalTeacherId: '',
+                      originalTeacherName: '',
+                      originalRoomId: '',
+                      roomName: '',
+                      substituteTeacherId: '',
+                      substituteTeacherName: '',
+                      selectedSubstitutes: [],
+                    }));
+                  }}
+                />
+                <CustomSelect
+                  label="Division"
+                  options={divisionSelectOptions}
+                  value={substitutionForm.divisionId || substitutionForm.divisionName}
+                  onChange={(value) => {
+                    const selected =
+                      selectedAcademicStandard?.divisions?.find((item) => item.id === value) ||
+                      createMetadata?.divisions.find((item) => item.id === value);
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      divisionId: selected?.id || '',
+                      divisionName: selected?.name || (value as string),
+                      timetableId: '',
+                      timetableSlotId: '',
+                      timetableSlotSubjectId: '',
+                      period: '',
+                      startTime: '',
+                      endTime: '',
+                      subjectId: '',
+                      subjectName: '',
+                      originalTeacherId: '',
+                      originalTeacherName: '',
+                      originalRoomId: '',
+                      roomName: '',
+                      substituteTeacherId: '',
+                      substituteTeacherName: '',
+                      selectedSubstitutes: [],
+                    }));
+                  }}
+                  disabled={!substitutionForm.standardId}
+                  noOptionsMessage={
+                    substitutionForm.standardId ? 'No divisions found' : 'Select class first'
+                  }
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <CustomSelect
+                  label="Lecture Slot"
+                  options={lectureSelectOptions}
+                  value={substitutionForm.timetableSlotSubjectId || substitutionForm.period}
+                  disabled={
+                    !substitutionForm.date ||
+                    !substitutionForm.standardId ||
+                    !substitutionForm.divisionId
+                  }
+                  noOptionsMessage="No lecture slots found for the selected date, class and division"
+                  onChange={(value) => {
+                    const lecture = createLectureResult.find(
+                      (item) => item.slotSubjectId === value
+                    );
+                    const template = affectedLectureTemplates.find((item) => item.period === value);
+                    const assignedSubject = createMetadata?.subjects.find(
+                      (item) =>
+                        item.id === lecture?.subjectId &&
+                        item.standardId === (lecture?.standardId || substitutionForm.standardId)
+                    );
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      timetableId: lecture?.timetableId || current.timetableId,
+                      timetableSlotId: lecture?.timetableSlotId || current.timetableSlotId,
+                      timetableSlotSubjectId: lecture?.slotSubjectId || '',
+                      period: lecture?.period || (value as string),
+                      startTime: lecture?.startTime || current.startTime,
+                      endTime: lecture?.endTime || current.endTime,
+                      subjectId: lecture?.subjectId || current.subjectId,
+                      subjectName:
+                        lecture?.subjectName || template?.subjectName || current.subjectName,
+                      originalTeacherId:
+                        lecture?.originalTeacherId ||
+                        assignedSubject?.primaryTeacherId ||
+                        current.originalTeacherId,
+                      originalTeacherName:
+                        lecture?.originalTeacherName ||
+                        assignedSubject?.primaryTeacherName ||
+                        template?.teacherName ||
+                        current.originalTeacherName,
+                      originalRoomId: lecture?.originalRoomId || current.originalRoomId,
+                      roomName: lecture?.roomName || template?.roomName || current.roomName,
+                      assignedRoomId: lecture?.originalRoomId || current.assignedRoomId,
+                      assignedRoomName: lecture?.roomName || current.assignedRoomName,
+                      substituteTeacherId: '',
+                      substituteTeacherName: '',
+                      selectedSubstitutes: [],
+                      standardId: lecture?.standardId || current.standardId,
+                      className: lecture?.className || template?.className || current.className,
+                      divisionId: lecture?.divisionId || current.divisionId,
+                      divisionName:
+                        lecture?.divisionName || template?.divisionName || current.divisionName,
+                    }));
+                  }}
+                />
+                <CustomSelect
+                  label="Subject"
+                  options={subjectSelectOptions}
+                  value={substitutionForm.subjectId || substitutionForm.subjectName}
+                  disabled={!substitutionForm.timetableSlotSubjectId}
+                  onChange={(value) => {
+                    const selected = createMetadata?.subjects.find(
+                      (item) =>
+                        item.id === value &&
+                        (!substitutionForm.standardId ||
+                          item.standardId === substitutionForm.standardId)
+                    );
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      subjectId: selected?.id || '',
+                      subjectName: selected?.name || (value as string),
+                      originalTeacherId: selected?.primaryTeacherId || current.originalTeacherId,
+                      originalTeacherName:
+                        selected?.primaryTeacherName || current.originalTeacherName,
+                      substituteTeacherId: '',
+                      substituteTeacherName: '',
+                      selectedSubstitutes: [],
+                    }));
+                  }}
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <CustomSelect
+                  label="Original Teacher"
+                  options={teacherSelectOptions}
+                  value={substitutionForm.originalTeacherId || substitutionForm.originalTeacherName}
+                  disabled={!substitutionForm.timetableSlotSubjectId}
+                  onChange={(value) => {
+                    const selected = createMetadata?.teachers.find((item) => item.id === value);
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      originalTeacherId: selected?.id || '',
+                      originalTeacherName: selected?.name || (value as string),
+                    }));
+                  }}
+                />
+                <CustomSelect
+                  label="Original Room"
+                  options={roomSelectOptions}
+                  value={substitutionForm.originalRoomId || substitutionForm.roomName}
+                  disabled={!substitutionForm.timetableSlotSubjectId}
+                  onChange={(value) => {
+                    const selected = createMetadata?.rooms.find((item) => item.id === value);
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      originalRoomId: selected?.id || '',
+                      roomName: selected?.name || (value as string),
+                    }));
+                  }}
+                />
+              </Stack>
+              <Card sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  sx={{ mb: 1.5 }}
+                >
+                  <Typography variant="subtitle2">Available Substitute Employees</Typography>
                   <TextField
                     size="small"
-                    label="Attachment / Note"
-                    value={substitutionForm.remarks}
-                    onChange={(event) =>
-                      setSubstitutionForm((current) => ({ ...current, remarks: event.target.value }))
-                    }
-                    fullWidth
-                    multiline
-                    minRows={3}
+                    placeholder="Search employee..."
+                    value={employeeSearchTerm}
+                    onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ width: 250, bgcolor: 'background.paper', borderRadius: 1 }}
                   />
-                </Grid>
-              </SectionCard>
+                </Stack>
+                <Scrollbar sx={{ maxHeight: 340, pr: 0.5 }}>
+                  <Stack spacing={1}>
+                    {!selectedCreateLecture && (
+                      <Alert severity="info">
+                        Select date, class, division and lecture slot to load free employees.
+                      </Alert>
+                    )}
+                    {selectedCreateLecture &&
+                      suggestedTeacherRows.filter((teacher) =>
+                        teacher.teacherName.toLowerCase().includes(employeeSearchTerm.toLowerCase())
+                      ).length === 0 && (
+                        <Alert severity="warning">
+                          No employee is free for the selected slot. Try split coverage or review
+                          timetable conflicts.
+                        </Alert>
+                      )}
+                    {suggestedTeacherRows
+                      .filter((teacher) =>
+                        teacher.teacherName.toLowerCase().includes(employeeSearchTerm.toLowerCase())
+                      )
+                      .map((teacher, index) => {
+                        const isSelected = substitutionForm.selectedSubstitutes.some(
+                          (item) => item.teacherId === teacher.teacherId
+                        );
+                        return (
+                          <Box
+                            key={teacher.teacherId}
+                            sx={{
+                              p: 1.25,
+                              borderRadius: 1,
+                              bgcolor: 'background.paper',
+                              border: (theme) =>
+                                `1px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
+                            }}
+                          >
+                            <Stack
+                              direction={{ xs: 'column', sm: 'row' }}
+                              justifyContent="space-between"
+                              alignItems={{ xs: 'flex-start', sm: 'center' }}
+                              spacing={1}
+                            >
+                              <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Box
+                                  sx={{
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: '50%',
+                                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                                    color: 'primary.main',
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                    fontWeight: 700,
+                                    fontSize: '0.75rem',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  #{index + 1}
+                                </Box>
+                                <Box>
+                                  <Stack
+                                    direction="row"
+                                    spacing={1}
+                                    alignItems="center"
+                                    flexWrap="wrap"
+                                  >
+                                    <Typography variant="subtitle2" fontWeight={700}>
+                                      {teacher.teacherName}
+                                    </Typography>
+                                    <Label
+                                      color={
+                                        teacher.score >= 80
+                                          ? 'success'
+                                          : teacher.score >= 60
+                                            ? 'info'
+                                            : 'warning'
+                                      }
+                                      variant="soft"
+                                    >
+                                      {teacher.score}% Match
+                                    </Label>
+                                    <Label
+                                      color={teacher.isPartialCoverage ? 'warning' : 'success'}
+                                      variant="soft"
+                                    >
+                                      {teacher.isPartialCoverage
+                                        ? `Partial ${getTeacherCoverageLabel(teacher)}`
+                                        : `Free ${getTeacherCoverageLabel(teacher)}`}
+                                    </Label>
+                                  </Stack>
+                                  <Typography
+                                    variant="caption"
+                                    color={teacher.hasConflict ? 'error.main' : 'text.secondary'}
+                                    sx={{ mt: 0.25, display: 'block' }}
+                                  >
+                                    {teacher.hasConflict
+                                      ? teacher.conflictReason
+                                      : teacher.recommendationReason}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                              <Button
+                                size="small"
+                                variant={isSelected ? 'contained' : 'outlined'}
+                                color={isSelected ? 'error' : 'success'}
+                                startIcon={
+                                  isSelected ? (
+                                    <CloseIcon fontSize="small" />
+                                  ) : (
+                                    <Add fontSize="small" />
+                                  )
+                                }
+                                disabled={!isSelected && teacher.conflictSeverity === 'Hard Block'}
+                                onClick={() => {
+                                  setSubstitutionForm((current) => {
+                                    const exists = current.selectedSubstitutes.some(
+                                      (item) => item.teacherId === teacher.teacherId
+                                    );
+                                    if (exists) {
+                                      return {
+                                        ...current,
+                                        selectedSubstitutes: current.selectedSubstitutes.filter(
+                                          (item) => item.teacherId !== teacher.teacherId
+                                        ),
+                                        substituteTeacherId:
+                                          current.substituteTeacherId === teacher.teacherId
+                                            ? ''
+                                            : current.substituteTeacherId,
+                                        substituteTeacherName:
+                                          current.substituteTeacherId === teacher.teacherId
+                                            ? ''
+                                            : current.substituteTeacherName,
+                                      };
+                                    }
+                                    return {
+                                      ...current,
+                                      substituteTeacherId:
+                                        current.selectedSubstitutes.length === 0
+                                          ? teacher.teacherId
+                                          : current.substituteTeacherId,
+                                      substituteTeacherName:
+                                        current.selectedSubstitutes.length === 0
+                                          ? teacher.teacherName
+                                          : current.substituteTeacherName,
+                                      selectedSubstitutes: [
+                                        ...current.selectedSubstitutes,
+                                        {
+                                          teacherId: teacher.teacherId,
+                                          teacherName: teacher.teacherName,
+                                          startTime: teacher.coverageStartTime || '',
+                                          endTime: teacher.coverageEndTime || '',
+                                          score: teacher.score,
+                                          isPartialCoverage: teacher.isPartialCoverage || false,
+                                        },
+                                      ],
+                                    };
+                                  });
+                                }}
+                              >
+                                {isSelected ? 'Remove' : 'Add'}
+                              </Button>
+                            </Stack>
+                          </Box>
+                        );
+                      })}
+                  </Stack>
+                </Scrollbar>
+              </Card>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <CustomSelect
+                  label="Substitute Teacher"
+                  options={availableTeacherSelectOptions}
+                  value={
+                    substitutionForm.substituteTeacherId || substitutionForm.substituteTeacherName
+                  }
+                  disabled={!selectedCreateLecture}
+                  noOptionsMessage="No free employees found for this slot"
+                  onChange={(value) => {
+                    const selected = suggestedTeacherRows.find((item) => item.teacherId === value);
+                    if (selected) addSubstituteCoverage(selected);
+                  }}
+                />
+                <CustomSelect
+                  label="Assigned Room"
+                  options={[{ value: '', label: 'Keep original room' }, ...roomSelectOptions]}
+                  value={substitutionForm.assignedRoomId || ''}
+                  onChange={(value) => {
+                    const selected = createMetadata?.rooms.find((item) => item.id === value);
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      assignedRoomId: selected?.id || '',
+                      assignedRoomName: selected?.name || '',
+                    }));
+                  }}
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <CustomSelect
+                  label="Reason"
+                  options={reasonOptions}
+                  value={substitutionForm.reason}
+                  onChange={(value) =>
+                    setSubstitutionForm((current) => ({ ...current, reason: value as string }))
+                  }
+                />
+                <CustomSelect
+                  label="Priority"
+                  options={priorityOptions}
+                  value={substitutionForm.priority}
+                  onChange={(value) =>
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      priority: value as SubstitutionPriority,
+                    }))
+                  }
+                />
+                <CustomSelect
+                  label="Assignment Source"
+                  options={sourceCreateOptions}
+                  value={substitutionForm.assignmentSource}
+                  onChange={(value) =>
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      assignmentSource: value as SubstitutionRow['source'],
+                    }))
+                  }
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <CustomSelect
+                  label="Notification Method"
+                  options={notificationMethods}
+                  value={substitutionForm.notificationMethod}
+                  onChange={(value) =>
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      notificationMethod: value as string,
+                    }))
+                  }
+                />
+                <CustomSelect
+                  label="Auto Reminder"
+                  options={autoReminderOptions}
+                  value={substitutionForm.autoReminderRule}
+                  onChange={(value) =>
+                    setSubstitutionForm((current) => ({
+                      ...current,
+                      autoReminderRule: value as string,
+                    }))
+                  }
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={substitutionForm.acknowledgementRequired}
+                      onChange={(event) =>
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          acknowledgementRequired: event.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label="Acknowledgement required"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={substitutionForm.sendNotification}
+                      onChange={(event) =>
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          sendNotification: event.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label="Send notification"
+                />
+              </Stack>
+              <Alert severity="success">
+                {substitutionForm.selectedSubstitutes.length > 0
+                  ? `You are assigning ${substitutionForm.selectedSubstitutes
+                      .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
+                      .join(
+                        ', '
+                      )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
+                  : 'Select a substitute teacher to preview the final notification.'}
+              </Alert>
+              <TextField
+                size="small"
+                label="Attachment / Note"
+                value={substitutionForm.remarks}
+                onChange={(event) =>
+                  setSubstitutionForm((current) => ({ ...current, remarks: event.target.value }))
+                }
+                fullWidth
+                multiline
+                minRows={3}
+              />
             </Stack>
           </DialogScrollContent>
           <Divider />
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
             <Button
               size="small"
               variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              startIcon={<CloseIcon />}
               onClick={handleCloseCreateDialog}
             >
               Cancel
@@ -4765,7 +4284,7 @@ const SubstitutionManagementScreen = () => {
             <LoadingButton
               size="small"
               variant="outlined"
-              startIcon={<Iconify icon="mdi:content-save-outline" />}
+              startIcon={<Save />}
               loading={isCreateSubmitting && createSubmitType === 'draft'}
               disabled={isCreateSubmitting}
               onClick={() => handleCreateSubstitution(false)}
@@ -4775,14 +4294,14 @@ const SubstitutionManagementScreen = () => {
             <LoadingButton
               size="small"
               variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              startIcon={<Send />}
               loading={isCreateSubmitting && createSubmitType === 'assign'}
               disabled={isCreateSubmitting}
               onClick={() => handleCreateSubstitution(true)}
             >
               Assign & Notify
             </LoadingButton>
-          </DialogActions>
+          </Stack>
         </CustomDialog>
 
         <ConfirmDialog
@@ -4825,7 +4344,7 @@ const SubstitutionManagementScreen = () => {
               flexShrink: 0,
             }}
           >
-            <Stack direction="row" spacing={0.75} alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="h6" fontWeight={700}>
                 Assign Substitute Teacher
               </Typography>
@@ -4856,7 +4375,7 @@ const SubstitutionManagementScreen = () => {
                   </Box>
                 }
               >
-                <IconButton size="small" color="info" sx={{ p: 0.5, ml: 0.25 }}>
+                <IconButton size="small" color="info">
                   <Iconify icon="lucide:info" width={18} />
                 </IconButton>
               </CustomTooltip>
@@ -4951,9 +4470,9 @@ const SubstitutionManagementScreen = () => {
                     bgcolor: (theme) =>
                       selected
                         ? alpha(
-                          theme.palette.primary.main,
-                          theme.palette.mode === 'dark' ? 0.18 : 0.04
-                        )
+                            theme.palette.primary.main,
+                            theme.palette.mode === 'dark' ? 0.18 : 0.04
+                          )
                         : 'background.paper',
                     boxShadow: selected
                       ? (theme) => `0 4px 14px ${alpha(theme.palette.primary.main, 0.14)}`
@@ -4962,17 +4481,20 @@ const SubstitutionManagementScreen = () => {
                     opacity: teacher.hasConflict ? 0.6 : 1,
                     '&:hover': !teacher.hasConflict
                       ? {
-                        borderColor: 'primary.main',
-                        bgcolor: (theme) =>
-                          alpha(
-                            theme.palette.primary.main,
-                            theme.palette.mode === 'dark' ? 0.12 : 0.02
-                          ),
-                      }
-                      : {},
+                          borderColor: (theme) =>
+                            selected ? theme.palette.primary.main : theme.palette.primary.light,
+                          boxShadow: (theme) =>
+                            `0 3px 10px ${alpha(theme.palette.common.black, 0.08)}`,
+                        }
+                      : undefined,
                   }}
                 >
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                  <Stack
+                    direction="row"
+                    spacing={1.5}
+                    alignItems="flex-start"
+                    justifyContent="space-between"
+                  >
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <Box
                         sx={{
@@ -4991,7 +4513,6 @@ const SubstitutionManagementScreen = () => {
                       >
                         #{index + 1}
                       </Box>
-
                       <Box>
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Typography variant="subtitle2" fontWeight={700}>
@@ -5016,6 +4537,7 @@ const SubstitutionManagementScreen = () => {
                         </Typography>
                       </Box>
                     </Stack>
+
                     <Iconify
                       icon={selected ? 'solar:check-circle-bold' : 'solar:circle-linear'}
                       width={22}
@@ -5147,21 +4669,16 @@ const SubstitutionManagementScreen = () => {
             sx={{ p: 2.5, bgcolor: 'background.paper', flexShrink: 0 }}
           >
             <Button
-              size="small"
               variant="outlined"
-              color="inherit"
               disabled={isAssigning}
-              startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
               onClick={() => setAssignDialogOpen(false)}
             >
               Cancel
             </Button>
             <LoadingButton
-              size="small"
               variant="contained"
-              color="primary"
               loading={isAssigning}
-              startIcon={<Iconify icon={GlobalIcons.submit} width={16} />}
+              startIcon={<Send />}
               onClick={handleAssignTeacher}
             >
               Assign &amp; Notify
@@ -5173,9 +4690,7 @@ const SubstitutionManagementScreen = () => {
           open={availabilityDialogOpen}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5" fontWeight={700}>
-                Mark Teacher Unavailable
-              </Typography>
+              <Typography variant="h5">Mark Teacher Unavailable</Typography>
               <CustomTooltip
                 arrow
                 placement="right"
@@ -5190,386 +4705,280 @@ const SubstitutionManagementScreen = () => {
           handleClose={handleCloseAvailabilityDialog}
         >
           <DialogScrollContent>
-            {(isAffectedLecturesLoading || isAffectedLecturesFetching || isCreatingAvailability) && (
-              <Box sx={{ width: '100%', mb: 2 }}>
-                <LinearProgress />
-              </Box>
-            )}
-            <Stack sx={{ pt: 1 }}>
-              {availabilityError && (
-                <Alert severity="error" sx={{ mb: 1.5 }}>
-                  {availabilityError}
-                </Alert>
-              )}
-              <Alert severity="info" icon={<AutoAwesome />} sx={{ mb: 1 }}>
-                Mark a teacher as unavailable. Affected lectures will be detected automatically so you can trigger substitution assignments.
-              </Alert>
-
-              {/* Section 1: Teacher & Schedule Details */}
-              <SectionCard title="1. Teacher & Schedule Details" icon="solar:user-bold">
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <PaginatedSearchSelect<EmployeeOption>
-                    label="Teacher *"
-                    fetchOptions={fetchAvailabilityTeacherOptions}
-                    value={
-                      availabilityForm.teacherId
-                        ? {
+            <Stack spacing={1}>
+              {availabilityError && <Alert severity="error">{availabilityError}</Alert>}
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <PaginatedSearchSelect<EmployeeOption>
+                  label="Teacher"
+                  fetchOptions={fetchAvailabilityTeacherOptions}
+                  value={
+                    availabilityForm.teacherId
+                      ? {
                           id: availabilityForm.teacherId,
                           label: availabilityForm.teacherName,
                           departmentName: availabilityForm.departmentName,
                         }
-                        : null
-                    }
-                    onChange={(_, value) =>
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        teacherId: value?.id || '',
-                        teacherName: value?.label || '',
-                        departmentName: value?.departmentName || '',
-                      }))
-                    }
-                    getOptionLabel={(option) => option?.label || ''}
-                    isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                    minChars={0}
-                    debounceMs={1500}
-                    size="small"
-                    fullWidth
-                    error={availabilitySubmitted && !!availabilityFieldErrors.teacherName}
-                    helperText={availabilitySubmitted ? availabilityFieldErrors.teacherName : ''}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <DatePicker
-                    label="Date *"
-                    value={availabilityForm.availabilityDate}
-                    format="DD/MM/YYYY"
-                    disablePast
-                    minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
-                    maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-                    onChange={(value) =>
-                      setAvailabilityForm((current) => ({ ...current, availabilityDate: value }))
-                    }
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: availabilitySubmitted && !!availabilityFieldErrors.availabilityDate,
-                        helperText: availabilitySubmitted
-                          ? availabilityFieldErrors.availabilityDate
-                          : '',
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={availabilityForm.isFullDay}
-                        onChange={(event) =>
-                          setAvailabilityForm((current) => ({
-                            ...current,
-                            isFullDay: event.target.checked,
-                            startTime: event.target.checked ? '09:00' : current.startTime,
-                            endTime: event.target.checked ? '14:15' : current.endTime,
-                          }))
-                        }
-                      />
-                    }
-                    label="Full day unavailable"
-                  />
-                </Grid>
-                {!availabilityForm.isFullDay && (
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <TimePicker
-                      label="Start Time"
-                      value={
-                        availabilityForm.startTime
-                          ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
-                          : null
-                      }
-                      onChange={(newValue: Dayjs | null) => {
-                        setAvailabilityForm((current) => ({
-                          ...current,
-                          startTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
-                        }));
-                      }}
-                      viewRenderers={{
-                        hours: renderTimeViewClock,
-                        minutes: renderTimeViewClock,
-                      }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          fullWidth: true,
-                          error: availabilitySubmitted && !!availabilityFieldErrors.time,
-                        },
-                      }}
-                    />
-                  </Grid>
-                )}
-                {!availabilityForm.isFullDay && (
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <TimePicker
-                      label="End Time"
-                      value={
-                        availabilityForm.endTime
-                          ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
-                          : null
-                      }
-                      onChange={(newValue: Dayjs | null) => {
-                        setAvailabilityForm((current) => ({
-                          ...current,
-                          endTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
-                        }));
-                      }}
-                      viewRenderers={{
-                        hours: renderTimeViewClock,
-                        minutes: renderTimeViewClock,
-                      }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          fullWidth: true,
-                          error: availabilitySubmitted && !!availabilityFieldErrors.time,
-                          helperText: availabilitySubmitted ? availabilityFieldErrors.time : '',
-                        },
-                      }}
-                    />
-                  </Grid>
-                )}
-              </SectionCard>
-
-              {/* Section 2: Availability & Automation Settings */}
-              <SectionCard title="2. Availability & Automation Settings" icon="solar:settings-bold">
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Availability Status"
-                    options={availabilityStatusOptions}
-                    value={availabilityForm.availabilityStatus}
-                    onChange={(value) =>
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        availabilityStatus: value as string,
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    label="Source"
-                    options={sourceTypeOptions}
-                    value={availabilityForm.sourceType}
-                    onChange={(value) =>
-                      setAvailabilityForm((current) => ({ ...current, sourceType: value as string }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={availabilityForm.autoCreateSubstitutions}
-                        onChange={(event) =>
-                          setAvailabilityForm((current) => ({
-                            ...current,
-                            autoCreateSubstitutions: event.target.checked,
-                          }))
-                        }
-                      />
-                    }
-                    label="Auto-create substitutions"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={availabilityForm.notifyLeadership}
-                        onChange={(event) =>
-                          setAvailabilityForm((current) => ({
-                            ...current,
-                            notifyLeadership: event.target.checked,
-                          }))
-                        }
-                      />
-                    }
-                    label="Notify admin/principal"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    size="small"
-                    label="Reason *"
-                    value={availabilityForm.reason}
-                    onChange={(event) =>
-                      setAvailabilityForm((current) => ({ ...current, reason: event.target.value }))
-                    }
-                    error={availabilitySubmitted && !!availabilityFieldErrors.reason}
-                    helperText={availabilitySubmitted ? availabilityFieldErrors.reason : ''}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    size="small"
-                    label="Attachment file name"
-                    value={availabilityForm.attachmentName}
+                      : null
+                  }
+                  onChange={(_, value) =>
+                    setAvailabilityForm((current) => ({
+                      ...current,
+                      teacherId: value?.id || '',
+                      teacherName: value?.label || '',
+                      departmentName: value?.departmentName || '',
+                    }))
+                  }
+                  getOptionLabel={(option) => option?.label || ''}
+                  isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                  minChars={0}
+                  debounceMs={1500}
+                  size="small"
+                  fullWidth
+                  error={availabilitySubmitted && !!availabilityFieldErrors.teacherName}
+                  helperText={availabilitySubmitted ? availabilityFieldErrors.teacherName : ''}
+                />
+                <DatePicker
+                  label="Date"
+                  value={availabilityForm.availabilityDate}
+                  format={viewDateFormat}
+                  disablePast
+                  minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                  maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
+                  onChange={(value) =>
+                    setAvailabilityForm((current) => ({ ...current, availabilityDate: value }))
+                  }
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: availabilitySubmitted && !!availabilityFieldErrors.availabilityDate,
+                      helperText: availabilitySubmitted
+                        ? availabilityFieldErrors.availabilityDate
+                        : '',
+                    },
+                  }}
+                />
+              </Stack>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={availabilityForm.isFullDay}
                     onChange={(event) =>
                       setAvailabilityForm((current) => ({
                         ...current,
-                        attachmentName: event.target.value,
+                        isFullDay: event.target.checked,
+                        startTime: event.target.checked ? '09:00' : current.startTime,
+                        endTime: event.target.checked ? '14:15' : current.endTime,
                       }))
                     }
-                    fullWidth
                   />
-                </Grid>
-              </SectionCard>
-
-              {/* Section 3: Affected Lectures Preview */}
-              <SectionCard
-                title="3. Affected Lectures Preview"
-                icon="solar:calendar-mark-bold"
-                action={
-                  <Label color={affectedLectures.length > 0 ? 'warning' : 'default'} variant="soft">
-                    {affectedLectures.length} {affectedLectures.length === 1 ? 'Lecture' : 'Lectures'}
-                  </Label>
                 }
-              >
-                <Grid size={{ xs: 12 }}>
-                  {isAffectedLecturesLoading || isAffectedLecturesFetching ? (
-                    <Stack spacing={1.5}>
-                      <Skeleton variant="rounded" height={60} />
-                      <Skeleton variant="rounded" height={60} />
-                    </Stack>
-                  ) : affectedLectures.length === 0 ? (
-                    <Paper
-                      variant="outlined"
-                      sx={{
-                        p: 3,
-                        textAlign: 'center',
-                        bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
-                        borderColor: 'divider',
-                        borderRadius: 1.5,
-                      }}
-                    >
-                      <Iconify icon="solar:calendar-minimalistic-bold-duotone" width={40} color="text.disabled" sx={{ mb: 1 }} />
-                      <Typography variant="subtitle2" color="text.secondary">
-                        No affected lectures found for the selected teacher and time range.
-                      </Typography>
-                    </Paper>
-                  ) : (
-                    <Stack spacing={1.5}>
-                      {affectedLectures.map((lecture) => (
-                        <Paper
-                          key={lecture.id}
-                          elevation={0}
-                          sx={{
-                            p: 1.75,
-                            borderRadius: 1.5,
-                            border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
-                            bgcolor: 'background.paper',
-                            display: 'flex',
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            alignItems: { xs: 'flex-start', sm: 'center' },
-                            justifyContent: 'space-between',
-                            gap: 1.5,
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              borderColor: 'primary.light',
-                              boxShadow: (theme) => `0 2px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
-                            },
-                          }}
-                        >
-                          <Stack spacing={0.75}>
-                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                              <Label color="primary" variant="soft" sx={{ fontWeight: 700 }}>
-                                Period {lecture.period}
-                              </Label>
-                              <Label color="info" variant="outlined" sx={{ fontWeight: 600 }}>
-                                {lecture.time}
-                              </Label>
-                              <Chip
-                                label={`${lecture.className}-${lecture.divisionName}`}
-                                size="small"
-                                variant="outlined"
-                                sx={{ height: 22, fontSize: 11, fontWeight: 600 }}
-                              />
-                            </Stack>
-                            <Typography variant="subtitle2" fontWeight={700}>
-                              {lecture.subjectName}{' '}
-                              <Typography component="span" variant="caption" color="text.secondary">
-                                • Room: {lecture.roomName}
-                              </Typography>
-                            </Typography>
-                          </Stack>
-
-                          <Button
-                            size="small"
-                            variant={lecture.canCreateSubstitution === false ? 'outlined' : 'contained'}
-                            color={lecture.canCreateSubstitution === false ? 'inherit' : 'primary'}
-                            disabled={lecture.canCreateSubstitution === false}
-                            startIcon={
-                              <Iconify
-                                icon={
-                                  lecture.canCreateSubstitution === false
-                                    ? 'solar:check-read-bold'
-                                    : 'solar:add-circle-bold'
-                                }
-                              />
-                            }
-                            onClick={() => openSubstitutionFromAffectedLecture(lecture)}
-                            sx={{ flexShrink: 0 }}
-                          >
-                            {lecture.canCreateSubstitution === false
-                              ? 'Already Created'
-                              : 'Create Substitution'}
-                          </Button>
-                        </Paper>
-                      ))}
-                    </Stack>
+                label="Full day unavailable"
+              />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <TimePicker
+                  label="Start Time"
+                  disabled={availabilityForm.isFullDay}
+                  value={
+                    availabilityForm.startTime
+                      ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
+                      : null
+                  }
+                  onChange={(newValue: Dayjs | null) => {
+                    setAvailabilityForm((current) => ({
+                      ...current,
+                      startTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                    }));
+                  }}
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: availabilitySubmitted && !!availabilityFieldErrors.time,
+                    },
+                  }}
+                />
+                <TimePicker
+                  label="End Time"
+                  disabled={availabilityForm.isFullDay}
+                  value={
+                    availabilityForm.endTime
+                      ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
+                      : null
+                  }
+                  onChange={(newValue: Dayjs | null) => {
+                    setAvailabilityForm((current) => ({
+                      ...current,
+                      endTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                    }));
+                  }}
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: availabilitySubmitted && !!availabilityFieldErrors.time,
+                      helperText: availabilitySubmitted ? availabilityFieldErrors.time : '',
+                    },
+                  }}
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <CustomSelect
+                  label="Availability Status"
+                  options={availabilityStatusOptions}
+                  value={availabilityForm.availabilityStatus}
+                  onChange={(value) =>
+                    setAvailabilityForm((current) => ({
+                      ...current,
+                      availabilityStatus: value as string,
+                    }))
+                  }
+                />
+                <CustomSelect
+                  label="Source"
+                  options={sourceTypeOptions}
+                  value={availabilityForm.sourceType}
+                  onChange={(value) =>
+                    setAvailabilityForm((current) => ({ ...current, sourceType: value as string }))
+                  }
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={availabilityForm.autoCreateSubstitutions}
+                      onChange={(event) =>
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          autoCreateSubstitutions: event.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label="Auto-create substitutions"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={availabilityForm.notifyLeadership}
+                      onChange={(event) =>
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          notifyLeadership: event.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label="Notify admin/principal"
+                />
+              </Stack>
+              <TextField
+                size="small"
+                label="Reason"
+                value={availabilityForm.reason}
+                onChange={(event) =>
+                  setAvailabilityForm((current) => ({ ...current, reason: event.target.value }))
+                }
+                error={availabilitySubmitted && !!availabilityFieldErrors.reason}
+                helperText={availabilitySubmitted ? availabilityFieldErrors.reason : ''}
+                fullWidth
+              />
+              <TextField
+                size="small"
+                label="Attachment file name"
+                value={availabilityForm.attachmentName}
+                onChange={(event) =>
+                  setAvailabilityForm((current) => ({
+                    ...current,
+                    attachmentName: event.target.value,
+                  }))
+                }
+                fullWidth
+              />
+              <Card sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Affected Lecture Preview ({affectedLectures.length})
+                </Typography>
+                {availabilityForm.teacherName && availabilityForm.availabilityDate && (
+                  <Alert severity="info" sx={{ mb: 1 }}>
+                    {availabilityForm.teacherName} unavailable on{' '}
+                    {availabilityForm.availabilityDate.format('DD/MM/YYYY')} from{' '}
+                    {availabilityForm.isFullDay ? '09:00' : availabilityStartTimeStr} to{' '}
+                    {availabilityForm.isFullDay ? '14:15' : availabilityEndTimeStr}.
+                  </Alert>
+                )}
+                <Stack spacing={1}>
+                  {affectedLectures.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      No affected lectures found for the selected teacher and time.
+                    </Typography>
                   )}
-                </Grid>
-              </SectionCard>
-
-              {/* Section 4: Remarks */}
-              <SectionCard title="4. Remarks" icon="solar:document-text-bold">
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    size="small"
-                    label="Remarks"
-                    placeholder="Add any additional remarks or notes for leadership / administrative records..."
-                    value={availabilityForm.remarks}
-                    onChange={(event) =>
-                      setAvailabilityForm((current) => ({ ...current, remarks: event.target.value }))
-                    }
-                    fullWidth
-                    multiline
-                    minRows={2}
-                  />
-                </Grid>
-              </SectionCard>
+                  {affectedLectures.map((lecture) => (
+                    <Stack
+                      key={lecture.id}
+                      direction={{ xs: 'column', sm: 'row' }}
+                      justifyContent="space-between"
+                      spacing={1}
+                      sx={{ p: 1, borderRadius: 1, bgcolor: 'background.paper' }}
+                    >
+                      <Typography variant="body2">
+                        {lecture.period} | {lecture.time} | {lecture.className}-
+                        {lecture.divisionName} {lecture.subjectName} | {lecture.roomName}
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={lecture.canCreateSubstitution === false}
+                        onClick={() => openSubstitutionFromAffectedLecture(lecture)}
+                      >
+                        {lecture.canCreateSubstitution === false
+                          ? 'Already created'
+                          : 'Create substitution'}
+                      </Button>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Card>
+              <TextField
+                size="small"
+                label="Remarks"
+                value={availabilityForm.remarks}
+                onChange={(event) =>
+                  setAvailabilityForm((current) => ({ ...current, remarks: event.target.value }))
+                }
+                fullWidth
+                multiline
+                minRows={3}
+              />
             </Stack>
           </DialogScrollContent>
           <Divider />
-          <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2.5, bgcolor: 'background.paper' }}>
+          <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
             <Button
               size="small"
               variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              startIcon={<CloseIcon />}
               onClick={handleCloseAvailabilityDialog}
             >
               Cancel
             </Button>
-            <LoadingButton
+            <Button
               size="small"
               variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              loading={isCreatingAvailability}
+              startIcon={<Send />}
               onClick={handleMarkUnavailable}
             >
               Save and Notify
-            </LoadingButton>
+            </Button>
           </Stack>
         </CustomDialog>
 
@@ -5760,8 +5169,8 @@ const SubstitutionManagementScreen = () => {
             justifyContent="flex-end"
             sx={{ p: 2, bgcolor: 'background.paper' }}
           >
-            <Button variant="outlined" size="small" onClick={() => setAuditDialogOpen(false)} startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}>
-              Cancel
+            <Button variant="outlined" size="small" onClick={() => setAuditDialogOpen(false)}>
+              Close
             </Button>
           </Stack>
         </CustomDialog>
@@ -5828,7 +5237,7 @@ const SubstitutionManagementScreen = () => {
                 dutyConfirmPayload?.action !== 'accept' &&
                 dutyConfirmNote.trim().length < DUTY_ACTION_REASON_MIN_LENGTH
               }
-              loading={Boolean(dutyAction) || isAcknowledgingSubstitution || isRequestingChange || isRejectingDuty}
+              loading={Boolean(dutyAction)}
               onClick={handleDutyConfirmSubmit}
               startIcon={
                 <Iconify
@@ -5851,8 +5260,8 @@ const SubstitutionManagementScreen = () => {
             </LoadingButton>
           }
         />
-      </Scrollbar >
-    </Box >
+      </Scrollbar>
+    </Box>
   );
 };
 
