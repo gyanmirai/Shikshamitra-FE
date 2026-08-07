@@ -396,10 +396,10 @@ const SubjectScheduleRow = memo(
             label="Total Marks *"
             size="small"
             onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
-            onChange={(e) => {
-              onFieldChange('totalMarks', e.target.value);
-              onFieldBlur('totalMarks');
+            onChange={async (e) => {
+              await onFieldChange('totalMarks', e.target.value);
             }}
+            onBlur={() => onFieldBlur('totalMarks')}
             error={!!(touched.totalMarks && errors.totalMarks)}
             helperText={touched.totalMarks && errors.totalMarks ? errors.totalMarks : ' '}
             FormHelperTextProps={HELPER_TEXT_PROPS}
@@ -427,10 +427,10 @@ const SubjectScheduleRow = memo(
                 label="Passing Marks *"
                 size="small"
                 onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
-                onChange={(e) => {
-                  onFieldChange('passingMarks', e.target.value);
-                  onFieldBlur('passingMarks');
+                onChange={async (e) => {
+                  await onFieldChange('passingMarks', e.target.value);
                 }}
+                onBlur={() => onFieldBlur('passingMarks')}
                 error={hasError}
                 helperText={
                   exceedsTotal
@@ -449,17 +449,23 @@ const SubjectScheduleRow = memo(
 
       {/* Notes */}
       <TableCell sx={{ minWidth: 200, py: 1, px: 1.5, verticalAlign: 'top' }}>
-        <TextField
-          value={values.notes ?? ''}
-          multiline
-          rows={1}
-          label="Notes"
-          size="small"
-          onChange={(e) => onFieldChange('notes', e.target.value)}
-          helperText=" "
-          FormHelperTextProps={HELPER_TEXT_PROPS}
-          InputLabelProps={LABEL_PROPS}
-        />
+        <ShakingTextField error={Boolean(errors.notes || (touched.notes && errors.notes))}>
+          <TextField
+            value={values.notes ?? ''}
+            multiline
+            rows={1}
+            label="Notes"
+            size="small"
+            onChange={async (e) => {
+              await onFieldChange('notes', e.target.value);
+            }}
+            onBlur={() => onFieldBlur('notes')}
+            error={Boolean(errors.notes || (touched.notes && errors.notes))}
+            helperText={errors.notes || (touched.notes && errors.notes) || ' '}
+            FormHelperTextProps={HELPER_TEXT_PROPS}
+            InputLabelProps={LABEL_PROPS}
+          />
+        </ShakingTextField>
       </TableCell>
     </TableRow>
   )

@@ -1,5 +1,6 @@
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Chip, Stack, Button, Typography } from '@mui/material';
+import { Box, Chip, Stack, Button, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import { getReadinessSummary, buildExamPlanningIssues } from './scheduleExamPlanningUtils';
 
@@ -15,7 +16,10 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
   const readiness = getReadinessSummary(issues);
 
   return (
-    <Card
+    <Accordion
+      defaultExpanded
+      disableGutters
+      elevation={0}
       sx={{
         mb: 2,
         borderRadius: 2,
@@ -23,16 +27,33 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
         borderColor: readiness.isReady ? 'success.light' : 'warning.light',
         boxShadow: 'none',
         overflow: 'hidden',
+        '&:before': { display: 'none' },
       }}
     >
-      <Box
+      <AccordionSummary
+        expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
         sx={{
           p: 2,
-          bgcolor: readiness.isReady ? 'success.lighter' : 'warning.lighter',
-          color: readiness.isReady ? 'success.darker' : 'warning.darker',
+          bgcolor: (theme) =>
+            alpha(
+              readiness.isReady ? theme.palette.success.main : theme.palette.warning.main,
+              theme.palette.mode === 'dark' ? 0.14 : 0.08
+            ),
+          color: (theme) =>
+            theme.palette.mode === 'dark'
+              ? readiness.isReady
+                ? 'success.light'
+                : 'warning.light'
+              : readiness.isReady
+                ? 'success.darker'
+                : 'warning.darker',
+          '& .MuiAccordionSummary-content': {
+            my: 0,
+            alignItems: 'center',
+          },
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
           <Iconify
             icon={
               readiness.isReady
@@ -54,49 +75,62 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
             </Typography>
           </Box>
         </Stack>
-      </Box>
+      </AccordionSummary>
 
-      {issues.length > 0 && (
-        <Stack spacing={1} sx={{ p: 2 }}>
-          {issues.map((issue) => (
-            <Box
-              key={issue.id}
-              sx={{
-                p: 1.25,
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: 'divider',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-              }}
-            >
-              <Chip
-                size="small"
-                label={issue.severity === 'blocking' ? 'Blocker' : 'Warning'}
-                color={issue.severity === 'blocking' ? 'error' : 'warning'}
-                variant="soft"
-              />
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="body2" fontWeight={700}>
-                  {issue.title}
-                </Typography>
-                {issue.description && (
-                  <Typography variant="caption" color="text.secondary">
-                    {issue.description}
+      <AccordionDetails sx={{ p: issues.length > 0 ? 2 : 1.5 }}>
+        {issues.length > 0 ? (
+          <Stack spacing={1}>
+            {issues.map((issue) => (
+              <Box
+                key={issue.id}
+                sx={{
+                  p: 1.25,
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Chip
+                  size="small"
+                  label={issue.severity === 'blocking' ? 'Blocker' : 'Warning'}
+                  color={issue.severity === 'blocking' ? 'error' : 'warning'}
+                  variant="soft"
+                />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant="body2" fontWeight={700}>
+                    {issue.title}
                   </Typography>
+                  {issue.description && (
+                    <Typography variant="caption" color="text.secondary">
+                      {issue.description}
+                    </Typography>
+                  )}
+                </Box>
+                {onEditStep && (
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditStep(issue.step);
+                    }}
+                  >
+                    Fix
+                  </Button>
                 )}
               </Box>
-              {onEditStep && (
-                <Button size="small" variant="text" onClick={() => onEditStep(issue.step)}>
-                  Fix
-                </Button>
-              )}
-            </Box>
-          ))}
-        </Stack>
-      )}
-    </Card>
+            ))}
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            All exam details and requirements are validated. Ready for save.
+          </Typography>
+        )}
+      </AccordionDetails>
+    </Accordion>
   );
 };
 

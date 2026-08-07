@@ -9,7 +9,7 @@ import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Card, Grid, Chip, Button, Divider, Typography } from '@mui/material';
+import { Box, Grid, Chip, Button, Divider, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import {
   Class,
@@ -125,7 +125,10 @@ const ExamBasicReview = ({
   }, [values.status]);
 
   return (
-    <Card
+    <Accordion
+      defaultExpanded
+      disableGutters
+      elevation={0}
       sx={{
         borderRadius: 2,
         boxShadow: (theme) =>
@@ -134,17 +137,22 @@ const ExamBasicReview = ({
         border: (theme) => `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
         overflow: 'hidden',
         mb: 2,
+        '&:before': { display: 'none' },
       }}
     >
       {/* Header */}
-      <Box
+      <AccordionSummary
+        expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
         sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          px: 2,
+          py: 1,
           bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
           borderBottom: (theme) => `1px dashed ${varAlpha(theme.palette.grey['500Channel'], 0.2)}`,
+          '& .MuiAccordionSummary-content': {
+            my: 0.5,
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          },
         }}
       >
         <Box display="flex" alignItems="center" gap={1}>
@@ -182,7 +190,10 @@ const ExamBasicReview = ({
               size="small"
               variant="outlined"
               startIcon={<Iconify icon="eva:edit-2-fill" width={16} />}
-              onClick={onEdit}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
               sx={{ fontSize: '0.75rem' }}
             >
               Edit
@@ -198,10 +209,10 @@ const ExamBasicReview = ({
             </Label>
           )}
         </Box>
-      </Box>
+      </AccordionSummary>
 
       {/* Body */}
-      <Box sx={{ p: 2 }}>
+      <AccordionDetails sx={{ p: 2 }}>
         <Grid container spacing={1}>
           {/* Exam Name */}
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -296,8 +307,8 @@ const ExamBasicReview = ({
             </Grid>
           )}
         </Grid>
-      </Box>
-    </Card>
+      </AccordionDetails>
+    </Accordion>
   );
 };
 

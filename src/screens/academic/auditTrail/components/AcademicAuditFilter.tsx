@@ -3,17 +3,18 @@
 import type { ChangeEvent } from 'react';
 
 import dayjs from 'dayjs';
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
 import { Box, Grid, Button, TextField, InputAdornment } from '@mui/material';
 
+import { AUDIT_ALL_SENTINEL, ACADEMIC_AUDIT_SUBMODULE_OPTIONS } from '../academicAudit.constants';
 import {
-  ACADEMIC_AUDIT_ACTION_OPTIONS,
-  ACADEMIC_AUDIT_SUBMODULE_OPTIONS,
-} from '../academicAudit.constants';
+  getActionOptionsForSubModule,
+  isActionValidForSubModule,
+} from '../utils/academicAuditActionMapper';
 
 export type AcademicAuditFilters = {
   search: string;
@@ -41,6 +42,25 @@ const AcademicAuditFilter = ({
   const [localSearchValue, setLocalSearchValue] = useState(filters.search);
   const startDate = filters.fromDate ? dayjs(filters.fromDate) : null;
   const endDate = filters.toDate ? dayjs(filters.toDate) : null;
+
+  /**
+   * Memoization Justification:
+   * - Recomputes only when the selected sub-module changes.
+   * - Keeps the options array identity stable across unrelated filter renders,
+   *   preventing CustomSelect from re-rendering unnecessarily.
+   */
+  const actionOptions = useMemo(
+    () => getActionOptionsForSubModule(filters.subModuleCode),
+    [filters.subModuleCode]
+  );
+
+  // Auto-clear the action filter when switching sub-modules makes the
+  // current selection invalid (e.g. generic "deleted" ≠ calendar "Daydeleted").
+  useEffect(() => {
+    if (!isActionValidForSubModule(filters.action, filters.subModuleCode)) {
+      onChange('action', AUDIT_ALL_SENTINEL);
+    }
+  }, [filters.subModuleCode, filters.action, onChange]);
 
   useEffect(() => {
     setLocalSearchValue(filters.search);
@@ -120,7 +140,7 @@ const AcademicAuditFilter = ({
           <CustomSelect
             label="Action"
             value={filters.action}
-            options={ACADEMIC_AUDIT_ACTION_OPTIONS}
+            options={actionOptions}
             onChange={(value) => onChange('action', value as string)}
           />
         </Grid>

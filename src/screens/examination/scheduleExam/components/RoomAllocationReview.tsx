@@ -9,7 +9,7 @@ import { Iconify } from 'src/components/iconify';
 import { MeetingRoom, ClassOutlined } from '@mui/icons-material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
-import { Box, Card, Chip, Grid, Button, Divider, Typography } from '@mui/material';
+import { Box, Chip, Grid, Button, Divider, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import type { IRoomDetails, IExamFormValues } from '../type';
 
@@ -62,6 +62,26 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
 
 // ----------------------------------------------------------------------
 
+/**
+ * Resolve a display name for a roomDetails key (subjectId).
+ * Core subjects live at the top level of `subjects`, but elective subjects are
+ * keyed by their individual subjectId and are nested under their group — so we
+ * search both to avoid falling back to the raw GUID key.
+ */
+const resolveSubjectName = (subjects: any[], subjectId: string): string | undefined => {
+  // Core subjects live at the top level of `subjects`; elective subjects are keyed by
+  // their individual subjectId and are nested under their group — search both so we
+  // don't fall back to the raw GUID key.
+  const direct = subjects.find((s) => s?.subjectId === subjectId);
+  if (direct) return direct.subjectName || direct.name;
+
+  const group = subjects.find(
+    (s) => s?.electiveGroupId && s?.subjects?.some((n: any) => n.subjectId === subjectId)
+  );
+  const nested = group?.subjects?.find((n: any) => n.subjectId === subjectId);
+  return nested ? nested.subjectName || nested.name || group?.subjectName : undefined;
+};
+
 const RoomAllocationReview = ({
   formik,
   onEdit,
@@ -104,7 +124,10 @@ const RoomAllocationReview = ({
   if (!hasAnyRoomAssigned) return null;
 
   return (
-    <Card
+    <Accordion
+      defaultExpanded
+      disableGutters
+      elevation={0}
       sx={{
         borderRadius: 2,
         boxShadow: (theme) =>
@@ -112,43 +135,42 @@ const RoomAllocationReview = ({
           '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
         border: (theme) => `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
         overflow: 'hidden',
+        mb: 2,
+        '&:before': { display: 'none' },
       }}
     >
       {/* Header */}
-      <Box
+      <AccordionSummary
+        expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
         sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
+          px: 2,
+          py: 1,
           bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
           borderBottom: (theme) => `1px dashed ${varAlpha(theme.palette.grey['500Channel'], 0.2)}`,
-        }}
-      >
-        <Box
-          sx={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            bgcolor: 'common.white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: (theme) => `0 4px 8px ${varAlpha(theme.palette.primary.mainChannel, 0.16)}`,
-            border: (theme) => `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.1)}`,
-          }}
-        >
-          <Iconify icon="fluent:conference-room-24-filled" width={24} color="primary.main" />
-        </Box>
-
-        <Box
-          sx={{
-            display: 'flex',
+          '& .MuiAccordionSummary-content': {
+            my: 0.5,
             alignItems: 'center',
             justifyContent: 'space-between',
-            flex: 1,
-          }}
-        >
+          },
+        }}
+      >
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              bgcolor: 'common.white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: (theme) => `0 4px 8px ${varAlpha(theme.palette.primary.mainChannel, 0.16)}`,
+              border: (theme) => `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.1)}`,
+            }}
+          >
+            <Iconify icon="fluent:conference-room-24-filled" width={24} color="primary.main" />
+          </Box>
+
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
               Room Allocation
@@ -157,28 +179,32 @@ const RoomAllocationReview = ({
               Designated rooms for each subject and division
             </Typography>
           </Box>
-          {/* NON-BREAKING: Edit link navigates back to Room Details step */}
-          {onEdit && (
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="eva:edit-2-fill" width={16} />}
-              onClick={onEdit}
-              sx={{ fontSize: '0.75rem', flexShrink: 0 }}
-            >
-              Edit
-            </Button>
-          )}
         </Box>
-      </Box>
+
+        {/* NON-BREAKING: Edit link navigates back to Room Details step */}
+        {onEdit && (
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="eva:edit-2-fill" width={16} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            sx={{ fontSize: '0.75rem', flexShrink: 0 }}
+          >
+            Edit
+          </Button>
+        )}
+      </AccordionSummary>
 
       {/* Body */}
-      <Box sx={{ p: 3 }}>
+      <AccordionDetails sx={{ p: 3 }}>
         <Grid container spacing={1}>
           {Object.entries(roomDetails as IRoomDetails).map(
             ([subjectId, divisionMap], index, arr) => {
-              const subjectInfo = formik.values.subjects.find((s) => s.subjectId === subjectId);
-              const subjectName = subjectInfo?.subjectName ?? subjectId;
+              const subjectName =
+                resolveSubjectName(formik.values.subjects, subjectId) ?? subjectId;
 
               const subjectHasRooms = Object.values(divisionMap).some(
                 (div) => div.roomIds && div.roomIds.length > 0
@@ -240,8 +266,8 @@ const RoomAllocationReview = ({
             }
           )}
         </Grid>
-      </Box>
-    </Card>
+      </AccordionDetails>
+    </Accordion>
   );
 };
 

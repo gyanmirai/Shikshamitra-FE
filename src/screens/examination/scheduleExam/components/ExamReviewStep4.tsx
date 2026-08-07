@@ -18,9 +18,8 @@ const ExamReviewStep4 = (
   const { onEditStep } = props;
   return (
     <Box>
-      <ExamReadinessPanel values={formik.values} onEditStep={onEditStep} />
-      {/* NON-BREAKING: onEdit callbacks navigate back to each respective step */}
       <ExamBasicReview formik={formik} onEdit={onEditStep ? () => onEditStep(0) : undefined} />
+      <ExamReadinessPanel values={formik.values} onEditStep={onEditStep} />
       <ExamScheduleReview formik={formik} onEdit={onEditStep ? () => onEditStep(1) : undefined} />
       <RoomAllocationReview formik={formik} onEdit={onEditStep ? () => onEditStep(2) : undefined} />
     </Box>
