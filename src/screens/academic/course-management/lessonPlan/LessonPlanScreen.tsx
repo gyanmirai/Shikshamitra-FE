@@ -442,6 +442,7 @@ const LessonPlanScreen = () => {
       teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
       maxResultCount: 1000,
     },
+    options: { skip: !currentYear?.id },
   });
 
   const {

@@ -695,10 +695,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         (typeof formik.errors.divisions === 'string'
                           ? formik.errors.divisions
                           : formik.errors.divisions?.some(
-                                (divErr: any) =>
-                                  typeof divErr === 'object' &&
-                                  (divErr?.publishDate || divErr?.dueDate)
-                              )
+                            (divErr: any) =>
+                              typeof divErr === 'object' &&
+                              (divErr?.publishDate || divErr?.dueDate)
+                          )
                             ? 'Select schedule dates also'
                             : undefined)
                       }
@@ -1021,7 +1021,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       <Grid size={{ xs: 12 }} key={div.divisionId}>
                         <Box
                           sx={{
-                            p: 1,
+                            p: 2,
                             borderRadius: 1,
                             bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
                             border: (theme) => `1px dashed ${theme.palette.divider}`,
@@ -1048,7 +1048,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                   error={
                                     typeof formik.errors.divisions?.[idx] === 'object' &&
                                     !!(formik.errors.divisions?.[idx] as any)?.publishDate &&
-                                    !!formik.touched.divisions?.[idx]?.publishDate
+                                    (!!formik.touched.divisions?.[idx]?.publishDate ||
+                                      formik.submitCount > 0)
                                   }
                                 >
                                   <DateTimePicker
@@ -1076,6 +1077,14 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                       formik.validateField(`divisions[${idx}].publishDate`);
                                     }}
                                     ampm={false}
+                                    helperText={
+                                      typeof formik.errors.divisions?.[idx] === 'object' &&
+                                        (formik.errors.divisions?.[idx] as any)?.publishDate &&
+                                        (!!formik.touched.divisions?.[idx]?.publishDate ||
+                                          formik.submitCount > 0)
+                                        ? (formik.errors.divisions?.[idx] as any)?.publishDate
+                                        : 'When to show this homework to students'
+                                    }
                                     slotProps={{
                                       popper: { placement: 'top-start', sx: { zIndex: 1300 } },
                                       textField: {
@@ -1084,12 +1093,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                         error:
                                           typeof formik.errors.divisions?.[idx] === 'object' &&
                                           !!(formik.errors.divisions?.[idx] as any)?.publishDate &&
-                                          !!formik.touched.divisions?.[idx]?.publishDate,
-                                        helperText:
-                                          formik.touched.divisions?.[idx]?.publishDate &&
-                                          typeof formik.errors.divisions?.[idx] === 'object'
-                                            ? (formik.errors.divisions?.[idx] as any)?.publishDate
-                                            : '',
+                                          (!!formik.touched.divisions?.[idx]?.publishDate ||
+                                            formik.submitCount > 0),
                                       },
                                     }}
                                   />
@@ -1101,7 +1106,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                   error={
                                     typeof formik.errors.divisions?.[idx] === 'object' &&
                                     !!(formik.errors.divisions?.[idx] as any)?.dueDate &&
-                                    !!formik.touched.divisions?.[idx]?.dueDate
+                                    (!!formik.touched.divisions?.[idx]?.dueDate ||
+                                      formik.submitCount > 0)
                                   }
                                 >
                                   <DateTimePicker
@@ -1115,6 +1121,14 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                     }
                                     disabled={!div.publishDate}
                                     ampm={false}
+                                    helperText={
+                                      typeof formik.errors.divisions?.[idx] === 'object' &&
+                                        (formik.errors.divisions?.[idx] as any)?.dueDate &&
+                                        (!!formik.touched.divisions?.[idx]?.dueDate ||
+                                          formik.submitCount > 0)
+                                        ? (formik.errors.divisions?.[idx] as any)?.dueDate
+                                        : 'Must be after the publish date'
+                                    }
                                     slotProps={{
                                       popper: { placement: 'top-start', sx: { zIndex: 1300 } },
                                       textField: {
@@ -1123,12 +1137,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                         error:
                                           typeof formik.errors.divisions?.[idx] === 'object' &&
                                           !!(formik.errors.divisions?.[idx] as any)?.dueDate &&
-                                          !!formik.touched.divisions?.[idx]?.dueDate,
-                                        helperText:
-                                          formik.touched.divisions?.[idx]?.dueDate &&
-                                          typeof formik.errors.divisions?.[idx] === 'object'
-                                            ? (formik.errors.divisions?.[idx] as any)?.dueDate
-                                            : '',
+                                          (!!formik.touched.divisions?.[idx]?.dueDate ||
+                                            formik.submitCount > 0),
                                       },
                                     }}
                                   />

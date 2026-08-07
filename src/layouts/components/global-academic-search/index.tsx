@@ -223,13 +223,18 @@ const GlobalAcademicSearch = () => {
       return null;
     }
 
+    // Always return the full option (year + board + medium) so that board and
+    // medium are persisted in Redux even on year-only routes (Dashboard etc.).
+    // The year-only UI simply doesn't display them.
+    const defaultOption = options.find((option) => option.academicYear.id === academicYear.id);
+    if (defaultOption) return defaultOption;
+
+    // Fallback: year with no boards/mediums yet
     const defaultYearOption = yearOptions.find(
       (option) => option.academicYear.id === academicYear.id
     );
-    const defaultOption = options.find((option) => option.academicYear.id === academicYear.id);
-
-    return isShowOnlyYearModule ? (defaultYearOption ?? null) : (defaultOption ?? null);
-  }, [isShowOnlyYearModule, options, yearOptions, years?.items]);
+    return defaultYearOption ?? null;
+  }, [options, yearOptions, years?.items]);
 
   const applyAcademicOption = useCallback(
     (option: GlobalAcademicSearchOption | null) => {
@@ -348,9 +353,14 @@ const GlobalAcademicSearch = () => {
                       icon: 'warning',
                     });
                     if (confirmed) {
+                      // Find the first board+medium option for the selected year so that
+                      // board and medium are kept in Redux even on year-only routes.
+                      const firstOption = options.find(
+                        (opt) => opt.academicYear.id === newValue?.academicYear?.id
+                      );
                       dispatch(setCurrentYear(newValue?.academicYear));
-                      dispatch(setCurrentBoard({}));
-                      dispatch(setCurrentMedium({}));
+                      dispatch(setCurrentBoard(firstOption?.board ?? {}));
+                      dispatch(setCurrentMedium(firstOption?.medium ?? {}));
                     }
 
                     if (currentYear?.name || (confirmed && newValue?.academicYear?.name)) {

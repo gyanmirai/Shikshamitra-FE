@@ -362,7 +362,7 @@ const RoomAvailabilityScreen = () => {
             <Tab
               value="availability"
               label="Availability"
-              icon={<Iconify icon="mdi:meeting-room" width={20} />}
+              icon={<Iconify icon="mdi:google-classroom" width={20} />}
             />
             <Tab
               value="reservations"
@@ -441,11 +441,6 @@ const RoomAvailabilityScreen = () => {
           )}
         </Stack>
       </Paper>
-
-      {/* Screen Loading Progress Bar */}
-      {isScreenFetching && (
-        <LinearProgress sx={{ height: 2, borderRadius: 1, flexShrink: 0 }} color="primary" />
-      )}
 
       {/* ── Tab Content Container with Scrollbar ──────────────────── */}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
