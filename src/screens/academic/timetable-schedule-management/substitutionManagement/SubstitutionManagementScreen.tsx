@@ -5279,63 +5279,65 @@ const SubstitutionManagementScreen = () => {
                     label="Full day unavailable"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TimePicker
-                    label="Start Time"
-                    disabled={availabilityForm.isFullDay}
-                    value={
-                      availabilityForm.startTime
-                        ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
-                        : null
-                    }
-                    onChange={(newValue: Dayjs | null) => {
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        startTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
-                      }));
-                    }}
-                    viewRenderers={{
-                      hours: renderTimeViewClock,
-                      minutes: renderTimeViewClock,
-                    }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: availabilitySubmitted && !!availabilityFieldErrors.time,
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TimePicker
-                    label="End Time"
-                    disabled={availabilityForm.isFullDay}
-                    value={
-                      availabilityForm.endTime
-                        ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
-                        : null
-                    }
-                    onChange={(newValue: Dayjs | null) => {
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        endTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
-                      }));
-                    }}
-                    viewRenderers={{
-                      hours: renderTimeViewClock,
-                      minutes: renderTimeViewClock,
-                    }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: availabilitySubmitted && !!availabilityFieldErrors.time,
-                        helperText: availabilitySubmitted ? availabilityFieldErrors.time : '',
-                      },
-                    }}
-                  />
-                </Grid>
+                {!availabilityForm.isFullDay && (
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TimePicker
+                      label="Start Time"
+                      value={
+                        availabilityForm.startTime
+                          ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
+                          : null
+                      }
+                      onChange={(newValue: Dayjs | null) => {
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          startTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                        }));
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error: availabilitySubmitted && !!availabilityFieldErrors.time,
+                        },
+                      }}
+                    />
+                  </Grid>
+                )}
+                {!availabilityForm.isFullDay && (
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TimePicker
+                      label="End Time"
+                      value={
+                        availabilityForm.endTime
+                          ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
+                          : null
+                      }
+                      onChange={(newValue: Dayjs | null) => {
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          endTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                        }));
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error: availabilitySubmitted && !!availabilityFieldErrors.time,
+                          helperText: availabilitySubmitted ? availabilityFieldErrors.time : '',
+                        },
+                      }}
+                    />
+                  </Grid>
+                )}
               </SectionCard>
 
               {/* Section 2: Availability & Automation Settings */}
