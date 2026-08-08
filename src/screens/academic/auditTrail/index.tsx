@@ -18,7 +18,7 @@ import { Box, Chip, Stack, Alert, Tooltip, Typography, IconButton } from '@mui/m
 import { useGetAcademicAuditEventsQuery } from 'src/redux/academicAPI/AuditApi/academic-audit-api';
 
 import { isAllSentinel } from './utils/academicAuditActionMapper';
-import AcademicAuditDetailsDrawer from './components/AcademicAuditDetailsDrawer';
+import AcademicAuditDetailsDrawer, { formatActionLabel } from './components/AcademicAuditDetailsDrawer';
 import { AUDIT_ALL_SENTINEL, ACADEMIC_AUDIT_SOURCE_LABELS } from './academicAudit.constants';
 import AcademicAuditFilter, { type AcademicAuditFilters } from './components/AcademicAuditFilter';
 
@@ -143,7 +143,7 @@ const AcademicAuditTrail = () => {
           const item = row as AcademicAuditEvent;
           return (
             <Label color={actionColor(item.action)} variant="soft">
-              {item.actionLabel}
+              {formatActionLabel(item.actionLabel)}
             </Label>
           );
         },
