@@ -556,7 +556,9 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(applicantWorklist).toContain('serverSideSortMode="single"');
     expect(applicantWorklist).toContain('parseEnrollmentTableSorts');
     expect(applicantWorklist).toContain('state.pipelineColumn');
-    expect(applicantWorklist).toContain('updateState({ pipelineColumn: value, page: 1 })');
+    expect(applicantWorklist).toContain(
+      'updateState({ pipelineColumn: value, queue: undefined, page: 1 })'
+    );
     expect(applicantWorklist).not.toContain("searchParams.get('worklist')");
 
     const analytics = read(

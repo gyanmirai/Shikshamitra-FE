@@ -243,7 +243,7 @@ export function ApplicantWorklistWorkspace({
           value={selectedColumn}
           onChange={(_event, value: AdmissionCrmPipelineColumnKey | null) => {
             if (value == null) return;
-            updateState({ pipelineColumn: value, page: 1 });
+            updateState({ pipelineColumn: value, queue: undefined, page: 1 });
           }}
           aria-label={`${title} worklist`}
         >

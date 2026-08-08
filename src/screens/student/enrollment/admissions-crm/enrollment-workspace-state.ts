@@ -251,7 +251,7 @@ export const getPersonaWorkspaceDefaults = (
   }
 
   if (workspace === 'registrations') {
-    return { queue: AdmissionCrmOperationsQueueType.RegistrationInvitationPending };
+    return { pipelineColumn: AdmissionCrmPipelineColumnKey.RegistrationPending };
   }
   if (workspace === 'offers') {
     return { queue: AdmissionCrmOperationsQueueType.FinalApproval };

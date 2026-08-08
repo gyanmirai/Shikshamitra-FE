@@ -258,7 +258,7 @@ describe('Enrollment workspace URL state', () => {
       queue: AdmissionCrmOperationsQueueType.FinalApproval,
     });
     expect(getPersonaWorkspaceDefaults('registrations', 'counselor')).toEqual({
-      queue: AdmissionCrmOperationsQueueType.RegistrationInvitationPending,
+      pipelineColumn: AdmissionCrmPipelineColumnKey.RegistrationPending,
     });
     expect(getPersonaWorkspaceDefaults('operations', 'administrator')).toEqual({
       queue: AdmissionCrmOperationsQueueType.HouseholdResolution,
