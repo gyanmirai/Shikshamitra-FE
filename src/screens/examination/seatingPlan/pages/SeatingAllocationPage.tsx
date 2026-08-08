@@ -195,8 +195,9 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
   const isScopesDataLoading = (isScopesLoading || isScopesFetching) && !scopesData;
   const isDivisionsDataLoading = (isDivisionsLoading || isDivisionsFetching) && !divisionsData;
   const isRoomsDataLoading = (isRoomsLoading || isRoomsFetching) && !roomsData;
-  const isStudentsDataLoading = (isStudentsLoading || isStudentsFetching) && !studentsData;
-  const isSeatLayoutDataLoading = (isSeatLayoutLoading || isSeatLayoutFetching) && !seatLayoutData;
+  // Always show skeleton during any seat-layout or student-data fetch to prevent stale/blank-bench state
+  const isStudentsDataLoading = isStudentsLoading || isStudentsFetching;
+  const isSeatLayoutDataLoading = isSeatLayoutLoading || isSeatLayoutFetching;
   const isPlanDraftDataLoading = (isPlanDraftLoading || isPlanDraftFetching) && !planDraftData;
 
   const isFetchingAny =
@@ -206,6 +207,9 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
     isStudentsFetching ||
     isSeatLayoutFetching ||
     isPlanDraftFetching;
+
+  // True only on initial page load when core dropdown data is still missing
+  const isInitialLoading = isScopesDataLoading || isDivisionsDataLoading;
 
   // ── Mutations via useQueryAndMutation (skill § 4.2) ─────────────────────
   const [saveSeatingPlanScope, { isLoading: isSavingScope }] = useQueryAndMutation({
@@ -662,7 +666,6 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
           standardName={draft.standardName}
           isDirty={draft.isDirty}
           isSaving={isSaving}
-          isFetching={isFetchingAny}
           canAutoAllocate={!!activeRoom && canAutoAllocate && !selectedPlanIsLocked}
           canFinalize={counters.pendingCount === 0 && validation.blockers.length === 0}
           isReadOnly={selectedPlanIsLocked}
@@ -696,9 +699,61 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
           canRedo={canRedo && !selectedPlanIsLocked}
         />
 
-        {isPlanDraftDataLoading || isScopesDataLoading ? (
-          <Skeleton variant="rounded" height={60} sx={{ mx: 2, mt: 1, borderRadius: 1 }} />
+        {isInitialLoading ? (
+          <Stack spacing={1} sx={{ flex: 1, p: 2 }}>
+            {/* Progress summary skeleton */}
+            <Skeleton variant="rounded" height={60} sx={{ borderRadius: 1 }} />
+            {/* Filter bar skeleton */}
+            <Skeleton variant="rounded" height={52} sx={{ borderRadius: 1 }} />
+            {/* Three-panel workspace skeleton */}
+            <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
+              {/* Left panel: Student queue */}
+              <Grid size={2.75}>
+                <Stack spacing={1} sx={{ p: 1 }}>
+                  <Skeleton variant="rounded" height={36} sx={{ borderRadius: 1 }} />
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    // eslint-disable-next-line react/no-array-index-key
+                    <Stack key={i} direction="row" alignItems="center" spacing={1} sx={{ p: 1 }}>
+                      <Skeleton variant="circular" width={28} height={28} />
+                      <Stack spacing={0.5} sx={{ flex: 1 }}>
+                        <Skeleton variant="text" width="70%" sx={{ height: 14 }} />
+                        <Skeleton variant="text" width="40%" sx={{ height: 12 }} />
+                      </Stack>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Grid>
+              {/* Center panel: Seat layout grid */}
+              <Grid size={7}>
+                <Stack spacing={1.5} sx={{ p: 1 }}>
+                  <Skeleton variant="rounded" height={36} sx={{ borderRadius: 1 }} />
+                  <Grid container spacing={1.5}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                      // eslint-disable-next-line react/no-array-index-key
+                      <Grid key={i} size={{ xs: 6, sm: 4, md: 3 }}>
+                        <Skeleton variant="rounded" height={72} sx={{ borderRadius: 1 }} />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Stack>
+              </Grid>
+              {/* Right panel: Inspector */}
+              <Grid size={2.25}>
+                <Stack spacing={1} sx={{ p: 1.5 }}>
+                  <Skeleton variant="rounded" height={28} sx={{ borderRadius: 1 }} />
+                  {[1, 2, 3].map((i) => (
+                    // eslint-disable-next-line react/no-array-index-key
+                    <Skeleton key={i} variant="rounded" height={48} sx={{ borderRadius: 1 }} />
+                  ))}
+                </Stack>
+              </Grid>
+            </Grid>
+          </Stack>
         ) : (
+          <>
+            {isPlanDraftDataLoading || isScopesDataLoading ? (
+              <Skeleton variant="rounded" height={60} sx={{ mx: 2, mt: 1, borderRadius: 1 }} />
+            ) : (
           <AllocationProgressSummary
             totalStudents={counters.totalStudents}
             allocatedCount={counters.allocatedCount}
@@ -919,6 +974,8 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
             </Paper>
           </Grid>
         </Grid>
+          </>
+        )}
 
         <AllocationRuleDrawer
           open={rulesOpen}

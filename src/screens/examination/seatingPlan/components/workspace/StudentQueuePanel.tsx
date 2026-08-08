@@ -7,6 +7,8 @@ import {
   Button,
   Checkbox,
   MenuItem,
+  Skeleton,
+  Stack,
   TextField,
   Typography,
   InputAdornment,
@@ -277,35 +279,18 @@ export default function StudentQueuePanel({
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pr: 0.5 }}>
           {isLoading ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Stack spacing={1}>
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    p: 1,
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      bgcolor: 'action.hover',
-                    }}
-                  />
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ width: '70%', height: 12, bgcolor: 'action.hover', borderRadius: 0.5, mb: 0.5 }} />
-                    <Box sx={{ width: '40%', height: 10, bgcolor: 'action.hover', borderRadius: 0.5 }} />
-                  </Box>
-                </Box>
+                // eslint-disable-next-line react/no-array-index-key
+                <Stack key={i} direction="row" alignItems="center" spacing={1} sx={{ p: 1 }}>
+                  <Skeleton variant="circular" width={28} height={28} />
+                  <Stack spacing={0.5} sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="70%" sx={{ height: 14 }} />
+                    <Skeleton variant="text" width="40%" sx={{ height: 12 }} />
+                  </Stack>
+                </Stack>
               ))}
-            </Box>
+            </Stack>
           ) : sorted.length === 0 ? (
             <Typography variant="body2" color="text.disabled" textAlign="center" py={4}>
               No students in this view

@@ -260,10 +260,7 @@ const scheduleFieldsSchema = {
       if (!shouldRequireScheduleField(this)) return true;
       return !!value;
     }),
-  notes: yup
-    .string()
-    .nullable()
-    .max(100, 'Notes cannot exceed 100 characters'),
+  notes: yup.string().nullable().max(100, 'Notes cannot exceed 100 characters'),
 };
 
 export const validationSchema = [

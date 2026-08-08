@@ -1,4 +1,4 @@
-import { Box, Alert, Skeleton, Typography } from '@mui/material';
+import { Box, Alert, Skeleton, Stack, Typography } from '@mui/material';
 
 import type { SeatingValidationIssue } from '../../types';
 
@@ -13,10 +13,12 @@ export default function AllocationConflictPanel({
 }) {
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Skeleton variant="rounded" height={44} />
-        <Skeleton variant="rounded" height={44} />
-      </Box>
+      <Stack spacing={1}>
+        {[1, 2, 3].map((i) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <Skeleton key={i} variant="rounded" height={48} sx={{ borderRadius: 1 }} />
+        ))}
+      </Stack>
     );
   }
 

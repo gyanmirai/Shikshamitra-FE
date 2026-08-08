@@ -1,12 +1,14 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { TooltipProps } from '@mui/material';
 import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -14,10 +16,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Paper, Drawer, IconButton, Typography } from '@mui/material';
 import { useGetSeatAllocationTableDataQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
-import AllocationReviewDialog from '../components/review/AllocationReviewDialog';
 import { toSeatingPlanListRow } from '../utils/mappers';
 import SeatingAllocationPage from './SeatingAllocationPage';
 import SeatingPlanTable from '../components/list/SeatingPlanTable';
+import AllocationReviewDialog from '../components/review/AllocationReviewDialog';
 import SeatingPlanSummaryCards from '../components/list/SeatingPlanSummaryCards';
 import SeatingPlanPreviewDrawer from '../components/list/SeatingPlanPreviewDrawer';
 
@@ -64,7 +66,11 @@ export default function SeatingPlanListPage() {
     setClasses(allClasses[0]?.id || '');
   }, [currentMedium]);
 
-  const { data: seatAllocationData, isLoading, isFetching } = useQueryAndMutation({
+  const {
+    data: seatAllocationData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSeatAllocationTableDataQuery,
     params: { standardId: classes },
@@ -86,18 +92,110 @@ export default function SeatingPlanListPage() {
     setPreviewRow(null);
     setWorkspaceDrawer({
       row,
-      mode: row.status === 'ready' || row.status === 'completed' || row.status === 'published' ? 'review' : 'allocation',
+      mode:
+        row.status === 'ready' || row.status === 'completed' || row.status === 'published'
+          ? 'review'
+          : 'allocation',
     });
   };
 
   const closePlanWorkspace = () => setWorkspaceDrawer(null);
+
+  const workspaceActionsTooltip = (
+    <Box sx={{ p: 1.5, maxWidth: 360 }}>
+      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+        Seating Workspace — Action Guide
+      </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        Quick guide for workspace controls and action buttons:
+      </Typography>
+
+      <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.5 } }}>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Auto Allocate</strong> — Automatically places unassigned students into available
+          room seats following active seating rules.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Save Draft</strong> — Saves your current room seat allocations so you can safely
+          pause and resume editing later.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Review</strong> — Opens the allocation summary to check room utilization, capacity
+          shortages, and finalize/publish the plan.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Undo / Redo</strong> (<em>Ctrl+Z / Ctrl+Y</em>) — Revert or re-apply recent
+          seating layout changes.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Scope &amp; Room Selectors</strong> — Switch between class divisions and
+          examination rooms to manage seating per room.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Student Queue (Left Panel)</strong> — Filter and drag-and-drop students into
+          specific seats in the canvas layout.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Rules &amp; Conflicts (Right Panel)</strong> — Displays live validation errors
+          like seat overlaps or room capacity limits.
+        </Typography>
+      </Box>
+    </Box>
+  );
+
+  const seatingPlanTooltip = (
+    <Box sx={{ p: 1.5, maxWidth: 340 }}>
+      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+        Seating Plan — Workflow Guide
+      </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        Plan, validate, and finalize exam seating arrangements per class and subject.
+      </Typography>
+
+      <Typography
+        variant="caption"
+        fontWeight={700}
+        color="text.primary"
+        sx={{ display: 'block', mb: 0.5 }}
+      >
+        Key Features &amp; Actions:
+      </Typography>
+      <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.25 } }}>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Filter exams by <strong>Class</strong> dropdown or status summary cards (e.g., In
+          Progress, Ready for Review).
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Click <strong>Plan Seating</strong> to allocate rooms, layout arrangements, and student
+          seat assignments.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Click <strong>Review</strong> to inspect capacity shortages, room allocations, and roll
+          distributions.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Use <strong>Preview</strong> (eye icon) to quick-view seating allocations without entering
+          the workspace.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Finalize and <strong>Publish</strong> seating plans once room capacities are validated.
+        </Typography>
+      </Box>
+    </Box>
+  );
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         sx={{ mb: 1 }}
         heading="Seating Plan"
-        description="Plan, validate, and finalize exam seating"
+        description=" "
+        tooltipProps={
+          {
+            title: seatingPlanTooltip,
+            sx: { textAlign: 'left' },
+          } as TooltipProps
+        }
         links={[
           { name: 'Academic', href: '/academic/dashboard' },
           { name: 'Examination' },
@@ -166,9 +264,19 @@ export default function SeatingPlanListPage() {
               }}
             >
               <Box>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Create Seating Plan
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Create Seating Plan
+                  </Typography>
+                  <CustomTooltip arrow placement="right" title={workspaceActionsTooltip}>
+                    <Iconify
+                      icon="lucide:info"
+                      sx={{ cursor: 'pointer' }}
+                      fontSize={16}
+                      color="info.main"
+                    />
+                  </CustomTooltip>
+                </Box>
                 <Typography variant="body2" color="text.secondary">
                   {workspaceDrawer.row.examName} / {workspaceDrawer.row.standardName}
                 </Typography>
@@ -186,12 +294,12 @@ export default function SeatingPlanListPage() {
                   setWorkspaceDrawer((current) =>
                     current
                       ? {
-                        ...current,
-                        mode: 'review',
-                        divisionId: context.divisionId,
-                        roomIds: context.roomIds,
-                        seatingPlanId: context.seatingPlanId,
-                      }
+                          ...current,
+                          mode: 'review',
+                          divisionId: context.divisionId,
+                          roomIds: context.roomIds,
+                          seatingPlanId: context.seatingPlanId,
+                        }
                       : current
                   )
                 }

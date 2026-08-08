@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { parseWallClockTime } from 'src/utils/time-of-day';
 
 import type { IExamSubject, IRoomDetails, IExamFormValues } from '../type';
 
@@ -171,9 +172,7 @@ export function mapBackendToFormik(
     resolvedSubjectColor: string;
   }
 
-  const examSubjectIds = subjectsArr
-    .map((subject: any) => subject?.subjectId)
-    .filter(Boolean);
+  const examSubjectIds = subjectsArr.map((subject: any) => subject?.subjectId).filter(Boolean);
   const rawEntrySubjectIds: string[] =
     scheduleSubjectIds.size > 0
       ? Array.from(
@@ -231,8 +230,8 @@ export function mapBackendToFormik(
       ...s,
       subjectColor: s.color || s.subjectColor || fallbackColor,
       examDate: subSched.examDate ? dayjs(subSched.examDate) : null,
-      startTime: subSched.startTime ? dayjs(subSched.startTime) : null,
-      endTime: subSched.endTime ? dayjs(subSched.endTime) : null,
+      startTime: parseWallClockTime(subSched.startTime),
+      endTime: parseWallClockTime(subSched.endTime),
       totalMarks: subSched.totalMarks ?? '',
       passingMarks: subSched.passingMarks ?? '',
       notes: subSched.notes ?? '',
@@ -266,8 +265,8 @@ export function mapBackendToFormik(
           subjects: undefined,
           schedulingMode: undefined,
           examDate: sched.examDate ? dayjs(sched.examDate) : null,
-          startTime: sched.startTime ? dayjs(sched.startTime) : null,
-          endTime: sched.endTime ? dayjs(sched.endTime) : null,
+          startTime: parseWallClockTime(sched.startTime),
+          endTime: parseWallClockTime(sched.endTime),
           totalMarks: sched.totalMarks ?? '',
           passingMarks: sched.passingMarks ?? '',
           notes: sched.notes ?? '',
@@ -335,8 +334,8 @@ export function mapBackendToFormik(
         subjects: restoredSubjects,
         schedulingMode,
         examDate: groupSched.examDate ? dayjs(groupSched.examDate) : null,
-        startTime: groupSched.startTime ? dayjs(groupSched.startTime) : null,
-        endTime: groupSched.endTime ? dayjs(groupSched.endTime) : null,
+        startTime: parseWallClockTime(groupSched.startTime),
+        endTime: parseWallClockTime(groupSched.endTime),
         totalMarks: groupSched.totalMarks ?? '',
         passingMarks: groupSched.passingMarks ?? '',
         notes: groupSched.notes ?? '',

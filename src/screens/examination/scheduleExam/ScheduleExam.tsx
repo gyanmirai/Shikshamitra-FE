@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { TooltipProps } from '@mui/material';
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
@@ -108,6 +109,106 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       setSelectedExam(null);
     }
   };
+  const listTooltip = (
+    <Box sx={{ p: 1.5, maxWidth: 320 }}>
+      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+        Schedule Exam — Overview
+      </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        Manage all your institution&apos;s exams from a single place.
+      </Typography>
+
+      <Typography
+        variant="caption"
+        fontWeight={700}
+        color="text.primary"
+        sx={{ display: 'block', mb: 0.5 }}
+      >
+        How to use:
+      </Typography>
+      <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.25 } }}>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Use <strong>status tabs</strong> (Pending / Scheduled / Completed) to filter exams.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Click <strong>+ Create Exam</strong> to open the multi-step exam wizard.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Click any row&apos;s <strong>Edit</strong> icon to update exam details.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Click <strong>Timetable</strong> to preview the full subject-wise schedule.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Click <strong>Delete</strong> (trash icon) to remove a pending exam.
+        </Typography>
+      </Box>
+    </Box>
+  );
+
+  const createTooltip = (
+    <Box sx={{ p: 1.5, maxWidth: 340 }}>
+      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+        Creating a New Exam — 4 Steps
+      </Typography>
+
+      <Box component="ol" sx={{ m: 0, pl: 2.5, '& li': { mb: 0.5 } }}>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Basic Details</strong> — Enter exam name, type, class, medium, and exam dates.
+          Mark it for <em>Online</em> or <em>Offline</em> mode.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Subject Schedule</strong> — Assign each subject its exam date, start time, end
+          time, total marks, and passing marks. Set grade scaling and add notes if needed.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Room Allocation</strong> — Assign rooms and seating capacity per subject so
+          students are distributed correctly.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Review &amp; Submit</strong> — Verify all details, resolve any readiness issues,
+          and submit to finalise the schedule.
+        </Typography>
+      </Box>
+
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}
+      >
+        Tip: You can save progress and return to continue later before submitting.
+      </Typography>
+    </Box>
+  );
+
+  const updateTooltip = (
+    <Box sx={{ p: 1.5, maxWidth: 320 }}>
+      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+        Updating an Existing Exam
+      </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        Edit any section of the previously saved exam without losing your other data.
+      </Typography>
+
+      <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.25 } }}>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Navigate between steps freely using <strong>Back</strong> / <strong>Next</strong>.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Changes to <strong>Subject Schedule</strong> or <strong>Rooms</strong> are independent of
+          other steps.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          The <strong>Review</strong> step highlights any incomplete fields before final submission.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
+          Only <strong>Pending</strong> exams can be fully edited. Scheduled exams allow limited
+          updates.
+        </Typography>
+      </Box>
+    </Box>
+  );
+
   return (
     <Box height="100%" display="flex" flexDirection="column" overflow="hidden">
       {showBreadCumb &&
@@ -115,10 +216,12 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           <CustomBreadcrumbs
             sx={{ mb: 1 }}
             heading={selectedExam?.examName ? 'Update Exam' : 'Schedule Exam'}
-            description={
-              selectedExam?.examName
-                ? 'Update existing exam details including title, date, duration and assigned subjects. Make necessary adjustments to the exam schedule.'
-                : 'Create new exam by entering exam title, date, duration and assigning subjects. Set up the complete exam schedule.'
+            description=" "
+            tooltipProps={
+              {
+                title: selectedExam?.examName ? updateTooltip : createTooltip,
+                sx: { textAlign: 'left' },
+              } as TooltipProps
             }
             links={[
               { name: 'Academics', href: '/academic/dashboard' },
@@ -134,7 +237,13 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           <CustomBreadcrumbs
             sx={{ mb: 1 }}
             heading="Schedule Exam"
-            description="Manage all scheduled exams with complete details—subjects, timings. Add, edit, or delete exams as required."
+            description=" "
+            tooltipProps={
+              {
+                title: listTooltip,
+                sx: { textAlign: 'left' },
+              } as TooltipProps
+            }
             links={[
               { name: 'Academics', href: '/academic/dashboard' },
               { name: 'Examination' },
