@@ -2,13 +2,26 @@
 
 ## Current release recommendation
 
-**Hold QA sign-off until the frontend and backend fixes are deployed to stage and the original reproductions are re-tested.** Twenty-three findings are recorded, including four P0 data-integrity/security gates. The fixes are now reconciled onto isolated worktrees based on current `origin/main`, rather than the stale local checkouts used during the first audit. Three deployed UI defects remain directly reproducible: Registration worklist switching (`ENR-R21`), pipeline-chip contrast (`ENR-A10`), and My Work search/filter state loss (`ENR-W01`). `ENR-P11/X10` is no longer a product defect: the first test watched the obsolete `stage` parameter, while the application correctly scopes board requests by `pipelineColumn`.
+**Release-candidate sign-off is pending the final aligned frontend deployment and live browser smoke.** The backend fixes are deployed and their focused stage APIs now pass. The frontend candidate passes 65 Student Enrollment test files with 439 tests, the production build, and the staged settings/exam/public-form/paper-registration workflows. The remaining live re-test is intentionally limited to UI changes that are not yet present in the deployed frontend: terminal applicant presentation, My Work dirty-form navigation, the public-form default template, and issued-registration confirmation.
 
 Current-main integration worktrees:
 
 - Frontend: `.worktrees/student-enrollment-fe-current`, branch `codex/student-enrollment-qa-current` from `origin/main`.
 - Backend: `.worktrees/student-enrollment-be-current`, branch `codex/student-enrollment-qa-current` from `origin/main`.
 - The original dirty frontend and backend working copies were not rebased, reset, or overwritten.
+
+## Latest focused execution — 2026-08-08
+
+| Finding | Severity | Status | Evidence and prevention |
+| --- | --- | --- | --- |
+| `ENR-W02` My Work returned HTTP 500 for realistic assigned leads | P1 | Backend deployed; stage API pass | EF selected span-based `Contains` overloads for three `Guid[]` filters. All lead, standard, and owner ID collections are now `List<Guid>`. The HTTP regression creates a class-scoped assigned task and asserts both target class and owner display name. |
+| `ENR-P20` published public inquiries failed with `InvalidIntendedRouteDefinition` | P1 | Backend deployed; public E2E pass | Route-type-only intake persisted a route-name snapshot without a definition ID/version. The service now stores no definition snapshot unless a definition resolves; the public HTTP regression covers the invariant. |
+| `ENR-R22` default public inquiry form omitted mandatory guardian and target class fields | P1 | Frontend fixed; deployment pending | The default builder now includes required guardian name and a target-standard select populated from the published operational standards. A pure builder regression verifies both required fields and option labels. |
+| `ENR-W03` Activity & Audit bypassed the unsaved-change guard | P1 | Frontend fixed; deployment pending | The context rail now opens activity through the workspace transition guard. The contract test prevents direct state changes that would discard notes or registration edits. |
+| `ENR-P21` archived applicants displayed an active pipeline state | P2 | Frontend fixed; deployment pending | Closed applicants now show lifecycle status and explicit outcome and suppress the stale active pipeline chip/action. A workspace regression locks the terminal-state presentation. |
+| `ENR-R23` an issued form number disappeared when focus returned to the exam gate | P2 | Frontend fixed; deployment pending | The applicant summary now keeps `Registration <form number>` visible independently of the selected journey operation; the registration-before-exam flow still verifies persistence and timeline audit. |
+
+Stage cannot safely reveal OTP values to a remote browser runner. The E2E therefore keeps the full parent OTP/save/submit path for local or explicitly reverse-tunneled webhook environments. On remote stage it validates the real OTP challenge/delivery response, then completes the identical registration and document lifecycle through the authenticated staff UI. Backend HTTP tests continue to cover OTP verification, expiry, cooldown, lockout, tampering, and public save/submit without introducing an OTP bypass.
 
 The complete 74-case scope and release gates are in [STUDENT_ENROLLMENT_E2E_TEST_PLAN.md](./STUDENT_ENROLLMENT_E2E_TEST_PLAN.md). The evidence status of every case is in [STUDENT_ENROLLMENT_E2E_EXECUTION_MATRIX_2026-08-07.md](./STUDENT_ENROLLMENT_E2E_EXECUTION_MATRIX_2026-08-07.md).
 

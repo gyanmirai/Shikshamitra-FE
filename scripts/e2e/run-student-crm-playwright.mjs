@@ -179,6 +179,8 @@ if (!dryRun && missingCredentials.length && !useDefaultCredentials) {
 const childEnv = {
   ...process.env,
   E2E_STUDENT_CRM: preflightOnly ? process.env.E2E_STUDENT_CRM || '0' : '1',
+  E2E_STUDENT_CRM_ALLOW_MUTATION:
+    !preflightOnly && !readOnlyReleaseGates ? '1' : '',
   E2E_STUDENT_CRM_PREFLIGHT: preflightOnly ? '1' : process.env.E2E_STUDENT_CRM_PREFLIGHT,
   E2E_API_URL: apiUrl,
   NEXT_PUBLIC_API_URL: apiUrl,

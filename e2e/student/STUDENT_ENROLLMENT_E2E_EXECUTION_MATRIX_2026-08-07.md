@@ -10,6 +10,7 @@ This matrix records the evidence obtained against the 74 cases in `STUDENT_ENROL
 | Automated pass | Focused frontend, application, or domain coverage passed locally; deploy re-test may still be required. |
 | Partial | Some variants passed, but the full matrix was not safely executable or remains automated-only. |
 | Fixed locally | A defect was reproduced or found by source audit, fixed, and covered by regression tests; stage still has the old build. |
+| Backend stage pass | The backend repair is deployed and the affected stage API or browser workflow passed; an aligned frontend re-test may still remain. |
 | Open | A deployed defect remains and cannot be safely patched until stage/source versions align. |
 | Environment unavailable | The required second tenant or executable HTTP test host is unavailable. |
 
@@ -29,6 +30,8 @@ This matrix records the evidence obtained against the 74 cases in `STUDENT_ENROL
 | ENR-A10 | Open + fixed locally | Stage axe scan and 2026-08-08 re-test found the open 4.37:1 chip contrast defect. The dedicated keyboard skip-link re-test now passes; deterministic focus/scroll behavior and unique registration document names remain fixed with regressions locally. |
 
 Additional finding: `ENR-W01` is open on stage and fixed locally. The read-only gate proves My Work search stays out of the URL but clears after navigating away and back. My Work and Registration now use tenant/user/year/workspace-scoped session state for applicant-entered search and text filters while retaining structural URL state.
+
+Latest findings: `ENR-W02` (My Work class/owner lookup HTTP 500) and `ENR-P20` (public route-snapshot invariant) are backend stage passes. `ENR-W03` protects unsaved applicant work when opening Activity & Audit, and `ENR-P21` replaces stale active-pipeline presentation for archived applicants; both frontend re-tests follow deployment.
 
 ## B. Pipeline and inquiry capture
 
@@ -53,6 +56,8 @@ Additional finding: `ENR-W01` is open on stage and fixed locally. The read-only 
 | ENR-P17 | Automated pass | Terminal-state and downstream-eligibility rules are covered by governance/final-admission tests. |
 | ENR-P18 | Automated pass | Dirty-context regressions cover navigation protection and retaining the applicant draft/context. |
 | ENR-P19 | Fixed locally + HTTP pass | A published admission-year setup allowed a route type without a selected definition, but lead creation populated only the definition-name snapshot and the domain rejected the inconsistent triple. Route name is now stored only with a resolved definition; the workflow asserts null ID/version/name for route-type-only intake and Configuration Safety passes 12/12. |
+| ENR-P20 | Backend stage pass | Public form submission against a published route-type-only setup now succeeds after removing the inconsistent definition-name snapshot. The focused public browser workflow passes through lead creation, status path, and OTP challenge. |
+| ENR-P21 | Fixed locally | Closed applicants now show the archived lifecycle state and closed outcome instead of a stale active pipeline column; terminal actions remain suppressed. |
 
 ## C. Entrance exam lifecycle
 
@@ -97,6 +102,8 @@ Additional finding: `ENR-W01` is open on stage and fixed locally. The read-only 
 | ENR-R18 | Automated pass | One-approver readiness passed live; the distinct two-approver/same-user rejection and second-approver completion pass domain coverage. Deployed two-person confirmation remains in the stage re-test list. |
 | ENR-R19 | Live pass | Registration completeness alone did not unlock readiness while document/verification blockers remained. |
 | ENR-R20 | Live pass | Completed registration, waivers, approval, and readiness produced one stable Admission ready state with audit history. |
+| ENR-R22 | Fixed locally | The default public template now includes required guardian and target-standard fields populated from published operational standards; builder regressions pass. |
+| ENR-R23 | Fixed locally | The issued form number remains visible in the applicant summary when the required-exam gate becomes current. Persistence and timeline assertions remain in the staged registration flow. |
 
 ## E. Cross-cutting resilience, privacy, and UX
 

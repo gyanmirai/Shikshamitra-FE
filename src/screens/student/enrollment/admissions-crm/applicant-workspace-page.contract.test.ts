@@ -183,6 +183,12 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(model).toContain("step.state === 'blocked'");
     expect(page).toContain('isApplicantPrimaryActionPermitted');
     expect(page).toContain('You do not have permission to');
+    expect(page).toContain('AdmissionCrmClosedOutcome[closedOutcome]');
+    expect(page).toContain('AdmissionInquiryStage[lead.stage]');
+    expect(page).toContain('label={`Outcome ');
+    expect(page).toContain('closedOutcomeLabel');
+    expect(page).toContain('!isClosed && pipelineColumnLabel');
+    expect(page).toContain('onOpenActivity={() => requestTransition(');
   });
 
   it('keeps generated documents in their owning workflow', () => {
@@ -253,6 +259,13 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain('hasRegistration={hasRegistration}');
     expect(page).toContain('lead?.registrationFormIssuedAt || lead?.registrationFormNumber');
     expect(registration).toContain('{ skip: !hasRegistration }');
+  });
+
+  it('keeps an issued registration number visible when journey focus moves to another gate', () => {
+    const page = read('applicant-workspace-page.tsx');
+
+    expect(page).toContain('lead.registrationFormNumber ? (');
+    expect(page).toMatch(/label=\{`Registration \$\{lead\.registrationFormNumber\}`\}/);
   });
 
   it('shows the captured pathway and protects every substantive registration draft', () => {

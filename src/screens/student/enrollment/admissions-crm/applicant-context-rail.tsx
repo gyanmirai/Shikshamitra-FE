@@ -27,6 +27,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 import {
+  AdmissionCrmRouteType,
   AdmissionCrmLeadPriority,
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmTasksQuery,
@@ -36,6 +37,7 @@ import {
 
 import { getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import {
+  formatEnumLabel,
   formatEnrollmentDate,
   formatApplicantContact,
   joinEnrollmentMetadata,
@@ -94,6 +96,11 @@ export function ApplicantContextRail({
     lead.admissionIntent,
     lead.intendedRouteNameSnapshot
   );
+  const admissionPathway =
+    lead.intendedRouteNameSnapshot?.trim() ||
+    (lead.intendedRouteType != null
+      ? formatEnumLabel(AdmissionCrmRouteType[lead.intendedRouteType])
+      : 'Not captured');
 
   const tasksQuery = useGetAdmissionCrmTasksQuery({ leadId: lead.id, maxResultCount: 10 });
   const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
@@ -179,7 +186,7 @@ export function ApplicantContextRail({
                 Admission Pathway
               </Typography>
               <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
-                {lead.intendedRouteNameSnapshot?.trim() || 'Not captured'}
+                {admissionPathway}
               </Typography>
               {lead.intendedRouteDefinitionVersion ? (
                 <Typography variant="caption" color="text.secondary">

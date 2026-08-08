@@ -14,6 +14,7 @@ import {
   updateAdmissionCrmProviderPayloadMode,
   getAdmissionCrmProviderCallbackSecret,
   buildAdmissionCrmProviderSettingsInput,
+  buildDefaultPublicInquiryTemplateFields,
   getAdmissionCrmProviderKeyValueSettings,
   updateAdmissionCrmProviderCallbackSecret,
   updateAdmissionCrmProviderKeyValueSettings,
@@ -26,6 +27,30 @@ import {
 } from './admissions-crm-configuration-utils';
 
 describe('Admissions CRM configuration helpers', () => {
+  it('builds a usable public inquiry form for a published admission year', () => {
+    const fields = buildDefaultPublicInquiryTemplateFields([
+      {
+        standardId: 'standard-11',
+        standardName: 'Class 11',
+        mediumStageId: 'stage-1',
+        mediumStageName: 'Higher Secondary',
+        mediumId: 'medium-1',
+        mediumName: 'English',
+        boardId: 'board-1',
+        boardName: 'GSEB',
+      },
+    ]);
+
+    expect(fields.find((field) => field.systemField === 'ParentGuardianName')).toMatchObject({
+      required: true,
+    });
+    expect(fields.find((field) => field.systemField === 'TargetStandardId')).toMatchObject({
+      required: true,
+      options: ['standard-11'],
+      optionLabels: ['Class 11 · English · GSEB'],
+    });
+  });
+
   it('binds a reviewed impact fingerprint to the exact mutation payload', () => {
     expect(
       attachAdmissionCrmImpactFingerprint(

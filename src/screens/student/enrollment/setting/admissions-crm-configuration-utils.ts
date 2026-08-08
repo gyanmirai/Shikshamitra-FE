@@ -1,4 +1,72 @@
-import type { AdmissionCrmCommunicationProviderSettingsDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type {
+  AdmissionCrmFormFieldDto,
+  AdmissionCrmAdmissionYearStandardOptionDto,
+  AdmissionCrmCommunicationProviderSettingsDto,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+export const buildDefaultPublicInquiryTemplateFields = (
+  standardOptions: AdmissionCrmAdmissionYearStandardOptionDto[] = []
+): AdmissionCrmFormFieldDto[] => [
+  {
+    key: 'studentFirstName',
+    label: 'Student first name',
+    fieldType: AdmissionCrmFormFieldType.Text,
+    systemField: 'FirstName',
+    required: true,
+    displayOrder: 10,
+    options: [],
+  },
+  {
+    key: 'parentPhone',
+    label: 'Parent phone',
+    fieldType: AdmissionCrmFormFieldType.Phone,
+    systemField: 'PrimaryContactNo',
+    required: true,
+    displayOrder: 20,
+    options: [],
+  },
+  {
+    key: 'parentGuardianName',
+    label: 'Parent or guardian name',
+    fieldType: AdmissionCrmFormFieldType.Text,
+    systemField: 'ParentGuardianName',
+    required: true,
+    displayOrder: 30,
+    options: [],
+  },
+  {
+    key: 'admissionIntent',
+    label: 'Admission intent',
+    fieldType: AdmissionCrmFormFieldType.TextArea,
+    systemField: 'AdmissionIntent',
+    required: true,
+    displayOrder: 40,
+    options: [],
+  },
+  {
+    key: 'targetStandardId',
+    label: 'Target class',
+    fieldType: AdmissionCrmFormFieldType.Select,
+    systemField: 'TargetStandardId',
+    required: true,
+    displayOrder: 50,
+    options: standardOptions.map((option) => option.standardId),
+    optionLabels: standardOptions.map(
+      (option) => `${option.standardName} · ${option.mediumName} · ${option.boardName}`
+    ),
+  },
+  {
+    key: 'desiredClass',
+    label: 'Desired class',
+    fieldType: AdmissionCrmFormFieldType.Text,
+    systemField: 'DesiredClassName',
+    required: true,
+    displayOrder: 60,
+    options: [],
+  },
+];
 
 export const buildPublicAdmissionInquiryPath = (
   tenantId?: string | null,

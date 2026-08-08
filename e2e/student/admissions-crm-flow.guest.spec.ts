@@ -12,9 +12,12 @@ import {
 } from './fixtures/admission-crm-scale';
 
 const studentCrmE2EEnabled = process.env.E2E_STUDENT_CRM === '1';
+const studentCrmMutationEnabled = process.env.E2E_STUDENT_CRM_ALLOW_MUTATION === '1';
 const tenantCode = () => process.env.E2E_TENANT || 'DDVS';
 const password = () => process.env.E2E_PASSWORD || 'Temp@123';
 const principalEmail = () => process.env.E2E_PRINCIPAL_EMAIL || 'principal-gseb@ddvs.com';
+const enrollmentOperatorEmail = () =>
+  process.env.E2E_STUDENT_CRM_OPERATOR_EMAIL || 'admin-ddvs@ddvs.com';
 const restrictedCrmEmail = () => process.env.E2E_STUDENT_CRM_DENIED_EMAIL;
 const restrictedCrmPassword = () => process.env.E2E_STUDENT_CRM_DENIED_PASSWORD || password();
 const receptionistEmail = () =>
@@ -51,9 +54,27 @@ const enrollmentSettingsRoutes = [
   '/student/enrollment/settings/communications',
   '/student/enrollment/settings/automation',
 ] as const;
-let otpWebhookServer: Server;
+let otpWebhookServer: Server | undefined;
 let otpWebhookUrl = '';
 let capturedOtp = '';
+
+const canCaptureOtpForConfiguredApi = () => {
+  if (process.env.E2E_OTP_WEBHOOK_URL?.trim()) return true;
+  try {
+    const hostname = new URL(apiBaseUrl()).hostname.toLowerCase();
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  } catch {
+    return false;
+  }
+};
+let e2eInquirySourceId = '';
+let e2eInquiryTypeId = '';
+let e2eTargetStandardId = '';
+let e2eTargetStandard: {
+  boardName: string;
+  mediumName: string;
+  standardName: string;
+} | null = null;
 
 type JsonRequestInit = Omit<NonNullable<Parameters<Page['request']['fetch']>[1]>, 'data'> & {
   body?: unknown;
@@ -122,7 +143,7 @@ async function getAccessToken(page: Page) {
 
 async function login(
   page: Page,
-  email = principalEmail(),
+  email = enrollmentOperatorEmail(),
   passwordValue = password(),
   tenantValue = tenantCode()
 ) {
@@ -144,35 +165,268 @@ async function login(
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
 }
 
+const toIsoDate = (value: Date) => value.toISOString().slice(0, 10);
+
+async function ensureAdmissionYearPublished(page: Page, academicYearId: string) {
+  const versionsResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/setup/admission-years/${academicYearId}/versions`
+  );
+  await expectOk(versionsResponse, 'list admission year setup versions');
+  const versions = (await versionsResponse.json()) as Array<Record<string, unknown>>;
+  const published = versions.find((version) => Number(version.status) === 1);
+  if (published) {
+    e2eTargetStandardId = ((published.targetStandardIds as string[] | undefined) || [])[0] || '';
+    expect(
+      e2eTargetStandardId,
+      'Published admission year requires a target standard.'
+    ).toBeTruthy();
+    return;
+  }
+
+  let draft = versions.find((version) => Number(version.status) === 0);
+  if (!draft) {
+    const draftResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/setup/admission-years/${academicYearId}/draft`,
+      { method: 'POST' }
+    );
+    await expectOk(draftResponse, 'create admission year setup draft');
+    draft = (await draftResponse.json()) as Record<string, unknown>;
+  }
+
+  let targetStandardIds = (draft.targetStandardIds as string[] | undefined) || [];
+  if (targetStandardIds.length === 0) {
+    const standardsResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/setup/admission-years/${academicYearId}/standard-options`
+    );
+    await expectOk(standardsResponse, 'list admission year standard options');
+    const standards = (await standardsResponse.json()) as Array<{ standardId: string }>;
+    targetStandardIds = standards.slice(0, 3).map((standard) => standard.standardId);
+  }
+  expect(
+    targetStandardIds,
+    'Admission year requires at least one target standard.'
+  ).not.toHaveLength(0);
+
+  const today = new Date();
+  const addDays = (days: number) => {
+    const value = new Date(today);
+    value.setUTCDate(value.getUTCDate() + days);
+    return toIsoDate(value);
+  };
+  const updateResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/setup/admission-years/drafts/${draft.id}`,
+    {
+      method: 'PUT',
+      body: {
+        concurrencyStamp: draft.concurrencyStamp,
+        inquiryOpenDate: addDays(-1),
+        inquiryCloseDate: addDays(90),
+        registrationCloseDate: addDays(120),
+        activationTargetDate: addDays(150),
+        entranceExamRequired: Boolean(draft.entranceExamRequired),
+        financeVerificationRequired: Boolean(draft.financeVerificationRequired),
+        placementTiming: Number(draft.placementTiming || 0),
+        defaultOwnerUserId: draft.defaultOwnerUserId || null,
+        targetStandardIds,
+        routeTypes:
+          Array.isArray(draft.routeTypes) && draft.routeTypes.length > 0 ? draft.routeTypes : [0],
+        stepOwners: draft.stepOwners || {},
+      },
+    }
+  );
+  await expectOk(updateResponse, 'update admission year setup draft for E2E');
+  const updatedDraft = (await updateResponse.json()) as Record<string, unknown>;
+
+  const publishResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/setup/admission-years/${updatedDraft.id}/publish`,
+    {
+      method: 'POST',
+      body: { concurrencyStamp: updatedDraft.concurrencyStamp },
+    }
+  );
+  await expectOk(publishResponse, 'publish admission year setup for E2E');
+  const publishedSetup = (await publishResponse.json()) as Record<string, unknown>;
+  e2eTargetStandardId =
+    ((publishedSetup.targetStandardIds as string[] | undefined) || [])[0] || targetStandardIds[0];
+  expect(e2eTargetStandardId, 'Published admission year requires a target standard.').toBeTruthy();
+}
+
+async function ensureEnrollmentCatalogDefaults(page: Page, academicYearId: string) {
+  const sourceListResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/catalog/inquiry-sources?includeInactive=true`
+  );
+  await expectOk(sourceListResponse, 'list inquiry sources for E2E');
+  const sourceList = await sourceListResponse.json();
+  let source = sourceList?.items?.find((item: { code?: string }) => item.code === 'E2E-WEB');
+  if (!source) {
+    const createSourceResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/${academicYearId}/catalog/inquiry-sources`,
+      {
+        method: 'POST',
+        body: {
+          code: 'E2E-WEB',
+          displayName: 'E2E Web Inquiry',
+          description: 'Stable source used by the student enrollment Playwright suite.',
+          allowedChannels: [1],
+          displayOrder: 900,
+          isRoutingEligible: true,
+        },
+      }
+    );
+    await expectOk(createSourceResponse, 'create inquiry source for E2E');
+    source = await createSourceResponse.json();
+  } else if (!source.isActive) {
+    const activateSourceResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/catalog/inquiry-sources/${source.id}/status`,
+      { method: 'PATCH', body: { isActive: true, reason: 'Required by enrollment E2E.' } }
+    );
+    await expectOk(activateSourceResponse, 'activate inquiry source for E2E');
+    source = await activateSourceResponse.json();
+  }
+
+  if (!source.allowedChannels?.includes(3)) {
+    const updateSourceResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/catalog/inquiry-sources/${source.id}`,
+      {
+        method: 'PUT',
+        body: {
+          code: source.code,
+          displayName: source.displayName,
+          description: source.description || null,
+          allowedChannels: [...new Set([...(source.allowedChannels || []), 3])],
+          displayOrder: source.displayOrder,
+          isRoutingEligible: source.isRoutingEligible,
+        },
+      }
+    );
+    await expectOk(updateSourceResponse, 'enable the E2E inquiry source for public forms');
+    source = await updateSourceResponse.json();
+  }
+
+  const typeListResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/catalog/inquiry-types?includeInactive=true`
+  );
+  await expectOk(typeListResponse, 'list inquiry types for E2E');
+  const typeList = await typeListResponse.json();
+  let inquiryType = typeList?.items?.find(
+    (item: { code?: string }) => item.code === 'E2E-ADMISSION'
+  );
+  if (!inquiryType) {
+    const createTypeResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/${academicYearId}/catalog/inquiry-types`,
+      {
+        method: 'POST',
+        body: {
+          code: 'E2E-ADMISSION',
+          displayName: 'E2E Admission Inquiry',
+          description: 'Stable inquiry type used by the student enrollment Playwright suite.',
+          displayOrder: 900,
+        },
+      }
+    );
+    await expectOk(createTypeResponse, 'create inquiry type for E2E');
+    inquiryType = await createTypeResponse.json();
+  } else if (!inquiryType.isActive) {
+    const activateTypeResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/catalog/inquiry-types/${inquiryType.id}/status`,
+      { method: 'PATCH', body: { isActive: true, reason: 'Required by enrollment E2E.' } }
+    );
+    await expectOk(activateTypeResponse, 'activate inquiry type for E2E');
+    inquiryType = await activateTypeResponse.json();
+  }
+
+  e2eInquirySourceId = source.id;
+  e2eInquiryTypeId = inquiryType.id;
+  expect(e2eInquirySourceId, 'E2E inquiry source id is required.').toBeTruthy();
+  expect(e2eInquiryTypeId, 'E2E inquiry type id is required.').toBeTruthy();
+}
+
+async function resolveEnrollmentTargetStandard(page: Page, academicYearId: string) {
+  const response = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/operational-standard-options`
+  );
+  await expectOk(response, 'resolve the published admission target standard for E2E');
+  const options = (await response.json()) as Array<{
+    boardName?: string;
+    mediumName?: string;
+    standardId?: string;
+    standardName?: string;
+  }>;
+  const option = options.find((item) => item.standardId === e2eTargetStandardId);
+  expect(
+    option,
+    'The published target standard must be available to enrollment operations.'
+  ).toBeTruthy();
+  expect(option?.boardName).toBeTruthy();
+  expect(option?.mediumName).toBeTruthy();
+  expect(option?.standardName).toBeTruthy();
+  e2eTargetStandard = {
+    boardName: String(option?.boardName),
+    mediumName: String(option?.mediumName),
+    standardName: String(option?.standardName),
+  };
+}
+
 async function crmApiRequest(page: Page, path: string, init: JsonRequestInit = {}) {
   const token = await getAccessToken(page);
   const { body, ...requestInit } = init;
 
-  return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
-    ...requestInit,
-    ...(body === undefined ? {} : { data: body }),
-    headers: {
-      accept: 'application/json',
-      __tenant: tenantCode(),
-      Authorization: `Bearer ${token}`,
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-      ...(init.headers as Record<string, string> | undefined),
-    },
-  });
+  try {
+    return await page.request.fetch(`${apiBaseUrl()}/api${path}`, {
+      ...requestInit,
+      timeout: requestInit.timeout ?? 60_000,
+      ...(body === undefined ? {} : { data: body }),
+      headers: {
+        accept: 'application/json',
+        __tenant: tenantCode(),
+        Authorization: `Bearer ${token}`,
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(init.headers as Record<string, string> | undefined),
+      },
+    });
+  } catch (error) {
+    const summary =
+      error instanceof Error ? error.message.split('Call log:')[0].trim() : String(error);
+    throw new Error(
+      `CRM API ${String(requestInit.method || 'GET').toUpperCase()} ${path} failed: ${summary}`
+    );
+  }
 }
 
 async function publicApiRequest(page: Page, path: string, init: JsonRequestInit = {}) {
   const { body, ...requestInit } = init;
 
-  return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
-    ...requestInit,
-    ...(body === undefined ? {} : { data: body }),
-    headers: {
-      accept: 'application/json',
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-      ...(init.headers as Record<string, string> | undefined),
-    },
-  });
+  try {
+    return await page.request.fetch(`${apiBaseUrl()}/api${path}`, {
+      ...requestInit,
+      timeout: requestInit.timeout ?? 60_000,
+      ...(body === undefined ? {} : { data: body }),
+      headers: {
+        accept: 'application/json',
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(init.headers as Record<string, string> | undefined),
+      },
+    });
+  } catch (error) {
+    const summary =
+      error instanceof Error ? error.message.split('Call log:')[0].trim() : String(error);
+    throw new Error(
+      `Public CRM API ${String(requestInit.method || 'GET').toUpperCase()} ${path} failed: ${summary}`
+    );
+  }
 }
 
 async function browserSessionApiGet(page: Page, path: string, requestTenant = tenantCode()) {
@@ -260,18 +514,25 @@ const uniquePhone = () => `9${Date.now().toString().slice(-9)}`;
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function createCrmLead(page: Page, academicYearId: string, phone: string, suffix: string) {
+  expect(
+    e2eTargetStandard,
+    'The E2E target standard must be resolved before lead creation.'
+  ).toBeTruthy();
   const response = await crmApiRequest(
     page,
     `/student-enrollment/admissions-crm/${academicYearId}/leads`,
     {
       method: 'POST',
       body: {
+        inquirySourceId: e2eInquirySourceId,
+        inquiryTypeId: e2eInquiryTypeId,
+        targetStandardId: e2eTargetStandardId,
         channel: 1,
         firstName: uniqueToken(`Crm${suffix}`),
         parentGuardianName: 'Playwright Parent',
         primaryContactNo: phone,
-        admissionIntent: 'Admission inquiry for Grade 1',
-        desiredClassName: 'Grade 1',
+        admissionIntent: `Admission inquiry for ${e2eTargetStandard?.standardName}`,
+        desiredClassName: e2eTargetStandard?.standardName,
         campaignName: 'Playwright CRM Smoke',
         notes: 'Created by admissions CRM E2E.',
       },
@@ -405,6 +666,74 @@ async function updateCrmCycleRegistrationGate(
   return response.json();
 }
 
+async function ensurePublicInquiryChannelDefault(page: Page, academicYearId: string) {
+  const currentConfiguration = (await getCrmCycleConfiguration(page, academicYearId)) as Record<
+    string,
+    unknown
+  > & {
+    channelSettings?: Array<Record<string, unknown> & { channel?: number }>;
+  };
+  const channelSettings = currentConfiguration.channelSettings || [];
+  const publicChannel = channelSettings.find((setting) => setting.channel === 3);
+  if (
+    publicChannel?.isEnabled === true &&
+    publicChannel.defaultInquirySourceId === e2eInquirySourceId
+  ) {
+    return;
+  }
+
+  const nextPublicChannel = {
+    channel: 3,
+    isEnabled: true,
+    defaultInquirySourceId: e2eInquirySourceId,
+    defaultFormTemplateId: publicChannel?.defaultFormTemplateId || null,
+    defaultOwnerUserId: publicChannel?.defaultOwnerUserId || null,
+    defaultAcknowledgementTemplateId: publicChannel?.defaultAcknowledgementTemplateId || null,
+    displayOrder: publicChannel?.displayOrder || 30,
+  };
+  const proposedConfiguration: Record<string, unknown> & {
+    impactPreviewFingerprint?: unknown;
+  } = {
+    ...currentConfiguration,
+    channelSettings: publicChannel
+      ? channelSettings.map((setting) =>
+          setting.channel === 3 ? { ...setting, ...nextPublicChannel } : setting
+        )
+      : [...channelSettings, nextPublicChannel],
+  };
+  delete proposedConfiguration.impactPreviewFingerprint;
+
+  const previewResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/configuration-safety/impact-preview`,
+    {
+      method: 'POST',
+      body: { proposedCycleConfiguration: proposedConfiguration },
+    }
+  );
+  await expectOk(previewResponse, 'preview public inquiry channel configuration impact');
+  const preview = await previewResponse.json();
+  expect(
+    preview?.fingerprint,
+    'Public channel update requires an impact fingerprint.'
+  ).toBeTruthy();
+
+  await expectOk(
+    await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/${academicYearId}/configuration/cycle`,
+      {
+        method: 'PUT',
+        body: {
+          ...proposedConfiguration,
+          impactPreviewFingerprint: preview.fingerprint,
+        },
+      }
+    ),
+    'configure the public inquiry channel default source'
+  );
+}
+
 async function getCrmLead(page: Page, leadId: string) {
   const response = await crmApiRequest(page, `/student-enrollment/admissions-crm/leads/${leadId}`);
   await expectOk(response, 'get CRM lead');
@@ -436,11 +765,7 @@ async function getRegistrationOwnerUserId(page: Page, academicYearId: string) {
   return owner.id as string;
 }
 
-async function prepareLeadForRegistration(
-  page: Page,
-  academicYearId: string,
-  leadId: string
-) {
+async function prepareLeadForRegistration(page: Page, academicYearId: string, leadId: string) {
   const ownerUserId = await getRegistrationOwnerUserId(page, academicYearId);
   const ownerResponse = await crmApiRequest(
     page,
@@ -575,9 +900,7 @@ async function openExamRowInWorkspace(
     (candidate) => {
       if (candidate.request().method() !== 'GET') return false;
       const url = new URL(candidate.url());
-      return url.pathname.endsWith(
-        `/student-enrollment/admissions-crm/${academicYearId}/exams`
-      );
+      return url.pathname.endsWith(`/student-enrollment/admissions-crm/${academicYearId}/exams`);
     },
     { timeout: 60_000 }
   );
@@ -604,9 +927,8 @@ async function openExamRowInWorkspace(
         if (candidate.request().method() !== 'GET') return false;
         const url = new URL(candidate.url());
         return (
-          url.pathname.endsWith(
-            `/student-enrollment/admissions-crm/${academicYearId}/exams`
-          ) && url.searchParams.get('filterText') === applicantName
+          url.pathname.endsWith(`/student-enrollment/admissions-crm/${academicYearId}/exams`) &&
+          url.searchParams.get('filterText') === applicantName
         );
       },
       { timeout: 60_000 }
@@ -632,10 +954,7 @@ async function openLeadCardInWorkspace(
   stageGroup: 'active' | 'decision' | 'closed' = 'active'
 ): Promise<Locator> {
   const response = await page.goto(
-    workspaceUrl(
-      `/student/enrollment/pipeline?view=board&group=${stageGroup}`,
-      academicYearId
-    ),
+    workspaceUrl(`/student/enrollment/pipeline?view=board&group=${stageGroup}`, academicYearId),
     {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
@@ -653,6 +972,31 @@ async function openLeadCardInWorkspace(
 }
 
 async function createPublicInquiryTemplate(page: Page, academicYearId: string) {
+  const existingResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/configuration/form-templates?filterText=${encodeURIComponent(
+      'Playwright public inquiry'
+    )}&isActive=true&maxResultCount=100`
+  );
+  await expectOk(existingResponse, 'list prior public CRM E2E templates');
+  const existing = await existingResponse.json();
+  await Promise.all(
+    (existing?.items || [])
+      .filter((template: { templateName?: string }) =>
+        String(template.templateName || '').startsWith('Playwright public inquiry')
+      )
+      .map(async (template: { id: string }) =>
+        expectOk(
+          await crmApiRequest(
+            page,
+            `/student-enrollment/admissions-crm/configuration/form-templates/${template.id}/status`,
+            { method: 'PATCH', body: { isActive: false } }
+          ),
+          'deactivate a prior public CRM E2E template'
+        )
+      )
+  );
+
   const response = await crmApiRequest(
     page,
     `/student-enrollment/admissions-crm/${academicYearId}/configuration/form-templates`,
@@ -683,6 +1027,14 @@ async function createPublicInquiryTemplate(page: Page, academicYearId: string) {
             displayOrder: 20,
           },
           {
+            key: 'parentName',
+            label: 'Parent or guardian name',
+            fieldType: 0,
+            systemField: 'ParentGuardianName',
+            required: true,
+            displayOrder: 25,
+          },
+          {
             key: 'parentEmail',
             label: 'Parent email',
             fieldType: 4,
@@ -699,12 +1051,22 @@ async function createPublicInquiryTemplate(page: Page, academicYearId: string) {
             displayOrder: 40,
           },
           {
+            key: 'targetStandardId',
+            label: 'Target class',
+            fieldType: 6,
+            systemField: 'TargetStandardId',
+            required: true,
+            displayOrder: 50,
+            options: [e2eTargetStandardId],
+            optionLabels: [String(e2eTargetStandard?.standardName)],
+          },
+          {
             key: 'desiredClass',
             label: 'Desired class',
             fieldType: 0,
             systemField: 'DesiredClassName',
             required: true,
-            displayOrder: 50,
+            displayOrder: 60,
           },
         ],
       },
@@ -717,8 +1079,9 @@ async function createPublicInquiryTemplate(page: Page, academicYearId: string) {
 test.describe('Student admissions CRM E2E', () => {
   test.skip(!studentCrmE2EEnabled, 'Set E2E_STUDENT_CRM=1 against a seeded local backend.');
 
-  test.beforeAll(async () => {
-    otpWebhookServer = createServer((request, response) => {
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(300_000);
+    const server = createServer((request, response) => {
       let rawBody = '';
       request.on('data', (chunk) => {
         rawBody += chunk.toString();
@@ -735,16 +1098,35 @@ test.describe('Student admissions CRM E2E', () => {
         response.end(JSON.stringify({ messageId: uniqueToken('otp-') }));
       });
     });
+    otpWebhookServer = server;
     await new Promise<void>((resolve, reject) => {
-      otpWebhookServer.once('error', reject);
-      otpWebhookServer.listen(0, '127.0.0.1', () => resolve());
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', () => resolve());
     });
-    const address = otpWebhookServer.address() as AddressInfo;
-    otpWebhookUrl = `http://127.0.0.1:${address.port}/admissions-otp`;
+    const address = server.address() as AddressInfo;
+    otpWebhookUrl =
+      process.env.E2E_OTP_WEBHOOK_URL?.trim() || `http://127.0.0.1:${address.port}/admissions-otp`;
+
+    if (studentCrmMutationEnabled) {
+      const context = await browser.newContext({ baseURL: process.env.E2E_BASE_URL });
+      const page = await context.newPage();
+      try {
+        await login(page);
+        const academicYearId = await resolveAcademicYearId(page);
+        await ensureAdmissionYearPublished(page, academicYearId);
+        await resolveEnrollmentTargetStandard(page, academicYearId);
+        await ensureEnrollmentCatalogDefaults(page, academicYearId);
+        await ensurePublicInquiryChannelDefault(page, academicYearId);
+      } finally {
+        await context.close();
+      }
+    }
   });
 
   test.afterAll(async () => {
-    await new Promise<void>((resolve) => otpWebhookServer.close(() => resolve()));
+    if (!otpWebhookServer) return;
+    const server = otpWebhookServer;
+    await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
   test('anonymous users cannot access protected CRM lead APIs', async ({ page }) => {
@@ -816,7 +1198,7 @@ test.describe('Student admissions CRM E2E', () => {
     const expectedBoardName = principalScopeBoard();
     test.skip(!expectedBoardName, 'Set E2E_PRINCIPAL_SCOPE_BOARD for UserScope coverage.');
 
-    await login(page);
+    await login(page, principalEmail());
     const academicYearId = await resolveAcademicYearId(page);
     const sessionProfile = await page.evaluate(async () => {
       const response = await fetch('/api/auth/session');
@@ -945,7 +1327,7 @@ test.describe('Student admissions CRM E2E', () => {
     // eslint-disable-next-line no-restricted-syntax
     for (const route of [...enrollmentWorkspaceRoutes, ...enrollmentSettingsRoutes]) {
       const response = await page.goto(workspaceUrl(route, academicYearId), {
-        waitUntil: 'networkidle',
+        waitUntil: 'domcontentloaded',
         timeout: 60_000,
       });
       expect(response?.status(), route).toBeLessThan(400);
@@ -962,7 +1344,7 @@ test.describe('Student admissions CRM E2E', () => {
     await login(page);
     const academicYearId = await resolveAcademicYearId(page);
     await page.goto(workspaceUrl('/student/enrollment/pipeline', academicYearId), {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
 
@@ -994,7 +1376,7 @@ test.describe('Student admissions CRM E2E', () => {
       // eslint-disable-next-line no-restricted-syntax
       for (const route of enrollmentWorkspaceRoutes) {
         await page.goto(workspaceUrl(route, academicYearId), {
-          waitUntil: 'networkidle',
+          waitUntil: 'domcontentloaded',
           timeout: 60_000,
         });
         await expect(page.locator('#student-enrollment-content')).toBeVisible();
@@ -1026,7 +1408,8 @@ test.describe('Student admissions CRM E2E', () => {
         const maxResultCount = Number(url.searchParams.get('maxResultCount') || 50);
         const skipCount = Number(url.searchParams.get('skipCount') || 0);
         const pipelineColumnValue = url.searchParams.get('pipelineColumn');
-        const pipelineColumn = pipelineColumnValue == null ? undefined : Number(pipelineColumnValue);
+        const pipelineColumn =
+          pipelineColumnValue == null ? undefined : Number(pipelineColumnValue);
         leadRequests.push(url);
         await route.fulfill({
           status: 200,
@@ -1057,7 +1440,7 @@ test.describe('Student admissions CRM E2E', () => {
     );
 
     await page.goto(`/student/enrollment/pipeline?cycle=${academicYearId}&view=list`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await expect(page.getByText(new RegExp(`of ${admissionCrmScaleTotal}`, 'i'))).toBeVisible();
@@ -1094,7 +1477,9 @@ test.describe('Student admissions CRM E2E', () => {
           .map((column) => ({
             pipelineColumn: column.getAttribute('data-pipeline-column'),
             cards: Array.from(
-              column.querySelectorAll<HTMLElement>('[data-testid="student-enrollment-pipeline-card"]')
+              column.querySelectorAll<HTMLElement>(
+                '[data-testid="student-enrollment-pipeline-card"]'
+              )
             ).map((card) => ({
               id: card.dataset.leadId,
               pipelineColumn: card.dataset.leadPipelineColumn,
@@ -1138,7 +1523,7 @@ test.describe('Student admissions CRM E2E', () => {
     });
 
     await page.goto(`/student/enrollment/registration?cycle=${academicYearId}&queue=21`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     const eligible = page.getByRole('button', { name: 'Eligible', exact: true });
@@ -1165,7 +1550,7 @@ test.describe('Student admissions CRM E2E', () => {
 
     await page.goto(
       `/student/enrollment/pipeline?cycle=${academicYearId}&view=list&column=0&page=2`,
-      { waitUntil: 'networkidle', timeout: 60_000 }
+      { waitUntil: 'domcontentloaded', timeout: 60_000 }
     );
     await page.getByLabel('Search applicants').fill('Parent phone 9999999999');
     await expect(page).toHaveURL(new RegExp(`cycle=${academicYearId}`));
@@ -1174,23 +1559,23 @@ test.describe('Student admissions CRM E2E', () => {
     expect(page.url()).not.toContain('9999999999');
 
     await page.goto(`/student/enrollment/entrance-exams?cycle=${academicYearId}`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/entrance-exams/?\\?cycle=${academicYearId}`)
     );
 
-    await page.goto(
-      `/student/enrollment/pipeline?cycle=${academicYearId}&view=list&column=0`,
-      { waitUntil: 'networkidle', timeout: 60_000 }
-    );
+    await page.goto(`/student/enrollment/pipeline?cycle=${academicYearId}&view=list&column=0`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
     await expect(page).toHaveURL(/view=list/);
     await expect(page).toHaveURL(/column=0/);
     await expect(page).not.toHaveURL(/page=2/);
 
     await page.goto(`/student/enrollment/my-work?cycle=${academicYearId}&page=2`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await page.getByPlaceholder('Search...').fill('Private applicant 8888888888');
@@ -1206,18 +1591,20 @@ test.describe('Student admissions CRM E2E', () => {
     expect(decodeURIComponent(page.url())).not.toContain('Private column filter');
     expect(page.url()).not.toContain('6666666666');
     await page.goto(`/student/enrollment/pipeline?cycle=${academicYearId}&view=list`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await page.goto(`/student/enrollment/my-work?cycle=${academicYearId}`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await expect(page.getByPlaceholder('Search...')).toHaveValue('Private applicant 8888888888');
-    await expect(page.getByText('Private column filter 6666666666', { exact: false })).toBeVisible();
+    await expect(
+      page.getByText('Private column filter 6666666666', { exact: false })
+    ).toBeVisible();
 
     await page.goto(`/student/enrollment/registration?cycle=${academicYearId}&page=2`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await page.getByPlaceholder('Search...').fill('Private registration 7777777777');
@@ -1226,7 +1613,7 @@ test.describe('Student admissions CRM E2E', () => {
     expect(page.url()).not.toContain('7777777777');
 
     await page.goto(`/student/enrollment/settings?cycle=${academicYearId}`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await expect(page).toHaveURL(
@@ -1234,7 +1621,7 @@ test.describe('Student admissions CRM E2E', () => {
     );
 
     await page.goto('/student/enrollment/pipeline?column=999&page=-2', {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await expect(page).not.toHaveURL(/column=999/);
@@ -1246,84 +1633,67 @@ test.describe('Student admissions CRM E2E', () => {
     const academicYearId = await resolveAcademicYearId(page);
 
     await page.goto(`/student/enrollment/settings?cycle=${academicYearId}`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
     );
     await expect(page.getByRole('heading', { name: 'Enrollment Setup Center' })).toBeVisible();
-    await page.locator('a[href^="/student/enrollment/settings/journey"]').first().click();
+    const admissionYearLink = page
+      .locator('a[href^="/student/enrollment/settings/admission-year"]')
+      .first();
+    await expect(admissionYearLink).toHaveAttribute('href', new RegExp(`cycle=${academicYearId}`));
+    await admissionYearLink.click();
     await expect(page).toHaveURL(
-      new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
+      new RegExp(`/student/enrollment/settings/admission-year/?\\?cycle=${academicYearId}`)
     );
-    await expect(page.getByRole('heading', { name: 'Admission Journey' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Admission Year Setup' })).toBeVisible();
     await expect(page.getByText('Enrollment settings categories')).toHaveCount(0);
 
-    const cycleName = page.getByRole('textbox', { name: 'Cycle name' });
-    await expect(cycleName).not.toHaveValue('');
-    const originalCycleName = await cycleName.inputValue();
-    await cycleName.fill(`${originalCycleName} unsaved`);
-    await page.getByRole('tab', { name: /Applicant Stages/ }).click();
-    await expect(page.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
-    await page.getByRole('button', { name: 'Discard & Continue' }).click();
-    await expect(page).toHaveURL(/panel=pipeline/);
-    await page.getByRole('tab', { name: /Admission Cycle/ }).click();
-    await expect(page.getByRole('textbox', { name: 'Cycle name' })).toHaveValue(originalCycleName);
-
-    const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Forms & Sources' });
-    await expect(inquiryCaptureLink).toHaveAttribute('href', new RegExp(`cycle=${academicYearId}`));
-    await inquiryCaptureLink.click();
+    await page.goto(`/student/enrollment/settings/pipeline?cycle=${academicYearId}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
     await expect(page).toHaveURL(
-      new RegExp(`/student/enrollment/settings/inquiry-capture/?\\?cycle=${academicYearId}`)
+      new RegExp(`/student/enrollment/settings/pipeline/?\\?cycle=${academicYearId}`)
     );
+    await expect(page.getByRole('heading', { name: 'Pipeline Settings' })).toBeVisible();
+    const pipelineSettings = page.getByRole('navigation', { name: 'Pipeline settings' });
+    await pipelineSettings.getByRole('link', { name: /Inquiry Types/ }).click();
+    await expect(page).toHaveURL(/panel=types/);
+    await expect(page.getByRole('heading', { name: 'Inquiry Types', level: 2 })).toBeVisible();
+    await pipelineSettings.getByRole('link', { name: /Lead Scoring/ }).click();
+    await expect(page).toHaveURL(/panel=scoring/);
 
-    await page.getByRole('link', { name: /^Inquiry Forms Build and/ }).click();
-    await expect(page).toHaveURL(/panel=forms/);
-    await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
+    await page.goto(`/student/enrollment/settings/registration?cycle=${academicYearId}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+    await expect(page.getByRole('heading', { name: 'Registration Settings' })).toBeVisible();
+    const registrationSettings = page.getByRole('navigation', { name: 'Registration settings' });
+    await registrationSettings.getByRole('link', { name: /Form Numbering/ }).click();
+    await expect(page).toHaveURL(/panel=form-numbering/);
+    await expect(page.getByRole('heading', { name: 'Form Numbering', level: 2 })).toBeVisible();
+    await registrationSettings.getByRole('link', { name: /Required Documents/ }).click();
+    await expect(page).toHaveURL(/panel=documents/);
+    await expect(page.getByRole('heading', { name: 'Document Checklists' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Exam & Eligibility' }).last().click();
+    await page.goto(`/student/enrollment/settings/entrance-exam?cycle=${academicYearId}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
     await expect(page).toHaveURL(
-      new RegExp(`/student/enrollment/settings/entrance-exams/?\\?cycle=${academicYearId}`)
+      new RegExp(`/student/enrollment/settings/entrance-exam/?\\?cycle=${academicYearId}`)
     );
-    const examSettingsHeader = page.locator('header').filter({ hasText: 'Exam & Eligibility' });
+    const examSettingsHeader = page.locator('header').filter({ hasText: 'Entrance Exam Settings' });
     await expect(
-      examSettingsHeader.getByRole('heading', { name: 'Exam & Eligibility' })
+      examSettingsHeader.getByRole('heading', { name: 'Entrance Exam Settings' })
     ).toBeVisible();
     await expect(examSettingsHeader.getByRole('link', { name: 'Settings' })).toHaveAttribute(
       'href',
       new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
     );
-    await expect(page.getByRole('table', { name: 'customizable table' })).toBeVisible();
-    await expect(page.getByPlaceholder('Search...')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Columns' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Export' })).toBeVisible();
-
-    const admissionSetupsTable = page.getByTestId('student-enrollment-admissions-playbooks');
-    const tableBox = await admissionSetupsTable.boundingBox();
-    const viewport = page.viewportSize();
-    expect(tableBox).not.toBeNull();
-    expect(viewport).not.toBeNull();
-    expect(viewport!.height - (tableBox!.y + tableBox!.height)).toBeLessThanOrEqual(32);
-
-    await page.getByRole('button', { name: 'Quick setup' }).click();
-    const quickSetupDialog = page.getByRole('dialog', { name: 'Quick admission setup' });
-    await expect(quickSetupDialog).toBeVisible();
-    await expect(quickSetupDialog.getByLabel('Assessment process')).toHaveText(
-      'Written entrance exam'
-    );
-    await expect(
-      quickSetupDialog.getByRole('switch', { name: 'Generate hall tickets for this exam' })
-    ).not.toBeChecked();
-    await quickSetupDialog.getByRole('button', { name: 'Cancel' }).click();
-
-    await page.getByRole('button', { name: 'Advanced setup' }).click();
-    await expect(page.getByRole('dialog', { name: 'New Admissions Playbook' })).toBeVisible();
-    await expect(page.getByText('General', { exact: true })).toBeVisible();
-    await expect(page.getByText('Slots & Rules', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Next', exact: true }).click();
-    await expect(page.getByRole('textbox', { name: 'Playbook name' })).toBeVisible();
   });
 
   test('Enrollment settings panels request only their owned configuration data', async ({
@@ -1339,7 +1709,7 @@ test.describe('Student admissions CRM E2E', () => {
 
     await page.goto(
       `/student/enrollment/settings/inquiry-capture?cycle=${academicYearId}&panel=forms`,
-      { waitUntil: 'networkidle', timeout: 60_000 }
+      { waitUntil: 'domcontentloaded', timeout: 60_000 }
     );
     await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
 
@@ -1372,7 +1742,7 @@ test.describe('Student admissions CRM E2E', () => {
 
     await page.goto(
       `/student/enrollment/settings/inquiry-capture?cycle=${academicYearId}&panel=forms`,
-      { waitUntil: 'networkidle', timeout: 60_000 }
+      { waitUntil: 'domcontentloaded', timeout: 60_000 }
     );
     await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
 
@@ -1438,33 +1808,38 @@ test.describe('Student admissions CRM E2E', () => {
     const academicYearId = await resolveAcademicYearId(page);
 
     await page.goto(
-      `/student/enrollment/settings/registration-documents?cycle=${academicYearId}&panel=registration`,
-      { waitUntil: 'networkidle', timeout: 60_000 }
+      `/student/enrollment/settings/registration?cycle=${academicYearId}&panel=registration`,
+      { waitUntil: 'domcontentloaded', timeout: 60_000 }
     );
-    await expect(page.getByRole('heading', { name: 'Registration & Documents' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Registration Settings' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Registration Form Templates' })).toBeVisible();
     await page.getByRole('button', { name: 'Use Starter Template' }).click();
 
-    const builder = page.getByRole('dialog', { name: 'New Registration Template' });
+    const builder = page.getByRole('dialog').filter({
+      has: page.getByRole('heading', { name: 'New Registration Template' }),
+    });
     await expect(builder).toBeVisible();
     await expect(builder.getByText('Template Rules', { exact: true })).toBeVisible();
     await expect(builder.getByText('Sections & Fields', { exact: true })).toBeVisible();
     await expect(builder.getByText('Languages & Preview', { exact: true })).toBeVisible();
     await expect(builder.getByLabel('Template name')).toHaveValue('Standard School Registration');
 
-    await builder.getByRole('button', { name: 'Next' }).click();
+    await builder.getByRole('button', { name: 'Continue' }).click();
     await expect(builder.getByText('Sections and fields')).toBeVisible();
     await expect(builder.getByLabel('Section title').first()).not.toHaveValue('');
 
-    await builder.getByRole('button', { name: 'Next' }).click();
+    await builder.getByRole('button', { name: 'Continue' }).click();
     await expect(builder.getByText('Parent Language Content')).toBeVisible();
     await expect(builder.getByRole('tab', { name: 'Gujarati' })).toBeVisible();
     await expect(builder.getByRole('tab', { name: 'Hindi' })).toBeVisible();
 
     const localizedSectionTitle = uniqueToken('Gujarati section ');
     await builder.getByLabel('Gujarati Section Title').first().fill(localizedSectionTitle);
-    await builder.getByRole('button', { name: 'Preview' }).click();
+    await builder.getByRole('button', { name: 'Preview', exact: true }).click();
 
-    const preview = page.getByRole('dialog', { name: 'Registration form preview' });
+    const preview = page.getByRole('dialog').filter({
+      has: page.getByRole('heading', { name: 'Registration form preview' }),
+    });
     await expect(preview).toBeVisible();
     await preview.getByLabel('Parent Language').click();
     await page.getByRole('option', { name: 'Gujarati' }).click();
@@ -1478,10 +1853,10 @@ test.describe('Student admissions CRM E2E', () => {
     await preview.getByRole('tab', { name: 'Print Form' }).click();
     await expect(preview.getByRole('button', { name: 'Print' })).toBeVisible();
     await preview.getByRole('button', { name: 'Close' }).click();
-    await builder.getByRole('button', { name: 'Close' }).click();
+    await builder.getByRole('button', { name: 'Close', exact: true }).click();
   });
 
-  test('configuration safety previews references, impact, and academic-year copy without applying it', async ({
+  test('legacy settings routes redirect to the canonical setup center without losing context', async ({
     page,
   }) => {
     await login(page);
@@ -1489,80 +1864,14 @@ test.describe('Student admissions CRM E2E', () => {
 
     await page.goto(
       `/student/enrollment/settings/governance?cycle=${academicYearId}&panel=configuration-safety`,
-      { waitUntil: 'networkidle', timeout: 60_000 }
+      { waitUntil: 'domcontentloaded', timeout: 60_000 }
     );
-    await expect(
-      page.getByRole('heading', { name: 'View Configuration References' })
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Copy Academic Year Configuration' })
-    ).toBeVisible();
-
-    const unusedStageCode = uniqueToken('PW-NOT-IN-USE-').toUpperCase();
-    await page.getByLabel('Stage code').fill(unusedStageCode);
-
-    const referencesResponsePromise = page.waitForResponse((response) => {
-      const url = new URL(response.url());
-      return (
-        response.request().method() === 'GET' &&
-        url.pathname.endsWith(
-          `/student-enrollment/admissions-crm/${academicYearId}/configuration-safety/references`
-        ) &&
-        url.searchParams.get('code') === unusedStageCode
-      );
-    });
-    await page.getByRole('button', { name: 'View References' }).click();
-    await expectOk(await referencesResponsePromise, 'preview configuration references');
-    await expect(page.getByText('0 total references')).toBeVisible();
-    await expect(
-      page.getByRole('table', { name: 'Configuration reference families' })
-    ).toBeVisible();
-
-    const impactResponsePromise = page.waitForResponse((response) => {
-      const url = new URL(response.url());
-      return (
-        response.request().method() === 'POST' &&
-        url.pathname.endsWith(
-          `/student-enrollment/admissions-crm/${academicYearId}/configuration-safety/impact-preview`
-        )
-      );
-    });
-    await page.getByRole('button', { name: 'Preview Impact' }).click();
-    await expectOk(await impactResponsePromise, 'preview configuration impact');
-    await expect(page.getByText('Impact Preview')).toBeVisible();
-    await expect(page.getByText(/^\d+ applicants$/)).toBeVisible();
-
-    const sourceAcademicYear = page.getByRole('combobox', { name: 'Source academic year' });
-    const targetAcademicYear = page.getByRole('combobox', { name: 'Target academic year' });
-    await expect(sourceAcademicYear).toHaveText(/\S/);
-    const sourceAcademicYearName = (await sourceAcademicYear.textContent())?.trim() || '';
-    const targetAcademicYearName = (await targetAcademicYear.textContent())?.trim() || '';
-    const previewCopyButton = page.getByRole('button', { name: 'Preview Copy' });
-
-    if (!targetAcademicYearName || targetAcademicYearName === sourceAcademicYearName) {
-      await expect(previewCopyButton).toBeDisabled();
-    } else {
-      const clonePreviewResponsePromise = page.waitForResponse((response) => {
-        const url = new URL(response.url());
-        return (
-          response.request().method() === 'POST' &&
-          url.pathname.endsWith(
-            '/student-enrollment/admissions-crm/configuration-safety/clone/preview'
-          )
-        );
-      });
-      await previewCopyButton.click();
-      await expectOk(await clonePreviewResponsePromise, 'preview academic-year configuration copy');
-      const clonePreview = page.getByRole('dialog', {
-        name: 'Review Academic Year Configuration Copy',
-      });
-      await expect(clonePreview).toBeVisible();
-      await expect(clonePreview).toContainText('configuration families');
-      await expect(
-        clonePreview.getByRole('button', { name: 'Confirm Configuration Copy' })
-      ).toBeVisible();
-      await clonePreview.getByRole('button', { name: 'Cancel' }).click();
-    }
+    await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
+    );
+    await expect(page).toHaveURL(/panel=configuration-safety/);
+    await expect(page.getByRole('heading', { name: 'Enrollment Setup Center' })).toBeVisible();
+    await expect(page.getByText('View Configuration References')).toHaveCount(0);
   });
 
   test('principal can create quick inquiry, review duplicate warning, and open CRM workspace', async ({
@@ -1590,7 +1899,7 @@ test.describe('Student admissions CRM E2E', () => {
         body: {
           firstName: firstLead.firstName,
           primaryContactNo: phone,
-          admissionIntent: 'Admission inquiry for Grade 1',
+          admissionIntent: `Admission inquiry for ${e2eTargetStandard?.standardName}`,
         },
       }
     );
@@ -1607,12 +1916,15 @@ test.describe('Student admissions CRM E2E', () => {
       {
         method: 'POST',
         body: {
+          inquirySourceId: e2eInquirySourceId,
+          inquiryTypeId: e2eInquiryTypeId,
+          targetStandardId: e2eTargetStandardId,
           channel: 1,
           firstName: firstLead.firstName,
           parentGuardianName: 'Playwright Parent',
           primaryContactNo: phone,
-          admissionIntent: 'Admission inquiry for Grade 1',
-          desiredClassName: 'Grade 1',
+          admissionIntent: `Admission inquiry for ${e2eTargetStandard?.standardName}`,
+          desiredClassName: e2eTargetStandard?.standardName,
           duplicateContinueReason: 'Parent called again during Playwright smoke test.',
         },
       }
@@ -1641,8 +1953,9 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(quickInquiry.getByLabel('First name')).toBeVisible();
     await expect(quickInquiry.getByLabel('Middle name (optional)')).toBeVisible();
     await expect(quickInquiry.getByLabel('Last name (optional)')).toBeVisible();
-    await expect(quickInquiry.getByLabel('Academic stage')).toBeVisible();
-    await expect(quickInquiry.getByLabel('Target class')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Board')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Medium')).toBeVisible();
+    await expect(quickInquiry.getByLabel('Standard')).toBeVisible();
     await expect(quickInquiry.getByLabel('Admission pathway')).toBeVisible();
     await expect(quickInquiry.getByLabel('Inquiry channel')).toBeVisible();
     await expect(quickInquiry.getByText('@', { exact: true })).toBeVisible();
@@ -1664,10 +1977,12 @@ test.describe('Student admissions CRM E2E', () => {
     await quickInquiry.getByLabel('Contact number').fill(quickInquiryPhone);
     await quickInquiry.getByLabel('Email address').fill(quickInquiryEmail);
 
-    await quickInquiry.getByLabel('Academic stage').click();
-    await page.getByRole('option', { name: /^Primary\b/i }).click();
-    await quickInquiry.getByLabel('Target class').click();
-    await page.getByRole('option', { name: 'Class 4', exact: true }).click();
+    await quickInquiry.getByLabel('Board').click();
+    await page.getByRole('listbox').getByRole('option').first().click();
+    await quickInquiry.getByLabel('Medium').click();
+    await page.getByRole('listbox').getByRole('option').first().click();
+    await quickInquiry.getByLabel('Standard').click();
+    await page.getByRole('listbox').getByRole('option').first().click();
     await quickInquiry.getByLabel('Admission pathway').click();
     await page.getByRole('option', { name: 'Fresh admission', exact: true }).click();
     await quickInquiry.getByLabel('Inquiry channel').click();
@@ -1696,22 +2011,24 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(applicantWorkspace).toContainText(
       `${quickInquiryFirstName} ${quickInquiryMiddleName} ${quickInquiryLastName}`
     );
-    const pathwaySummary = applicantWorkspace
-      .getByText('Admission pathway', { exact: true })
-      .locator('..');
-    await expect(pathwaySummary).toContainText('Fresh admission');
-    await expect(pathwaySummary).toContainText('Version 1 captured at inquiry');
+    const applicantContext = applicantWorkspace.getByRole('complementary', {
+      name: 'Applicant context',
+    });
+    await expect(applicantContext).toContainText('Admission Pathway');
+    await expect(applicantContext).toContainText('Fresh admission');
+    await expect(applicantContext).toContainText('Version 1 captured at inquiry');
     await expect(
       applicantWorkspace.locator('[aria-label="Admission journey"]').getByText('Inquiry', {
         exact: true,
       })
     ).toBeVisible();
-    await applicantWorkspace.getByRole('tab', { name: 'Activity' }).click();
-    await expect(applicantWorkspace.getByText('Activity & Audit')).toBeVisible();
-    const activityActor = applicantWorkspace.getByText(/^Actor:/).first();
+    await applicantWorkspace.getByRole('button', { name: 'Activity & Audit' }).click();
+    await expect(page.locator('#applicant-activity-title')).toBeVisible();
+    const activityActor = page.getByText(/^Actor:/).first();
     await expect(activityActor).toBeVisible();
     await expect(activityActor).not.toContainText('Loading staff');
     await expect(activityActor).not.toContainText('Staff identity unavailable');
+    await page.getByRole('button', { name: 'Close activity and audit' }).click();
     await applicantWorkspace.getByRole('button', { name: 'Back' }).click();
     await expect(page).toHaveURL(/\/student\/enrollment\/pipeline/);
 
@@ -1727,11 +2044,14 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(applicantWorkspace).toBeVisible();
     const admissionJourney = applicantWorkspace.locator('[aria-label="Admission journey"]');
     await expect(admissionJourney.getByText('Inquiry', { exact: true })).toBeVisible();
+    await expect(admissionJourney.getByText('Entrance Exam', { exact: true })).toBeVisible();
     await expect(admissionJourney.getByText('Registration', { exact: true })).toBeVisible();
-    await expect(admissionJourney.getByText('Offer & Seat', { exact: true })).toBeVisible();
+    await expect(admissionJourney.getByText('Finance', { exact: true })).toBeVisible();
+    await expect(admissionJourney.getByText('Class Placement', { exact: true })).toBeVisible();
     await expect(admissionJourney.getByText('Activation', { exact: true })).toBeVisible();
-    await applicantWorkspace.getByRole('tab', { name: 'Activity' }).click();
-    await expect(applicantWorkspace.getByText('Activity & Audit')).toBeVisible();
+    await applicantWorkspace.getByRole('button', { name: 'Activity & Audit' }).click();
+    await expect(page.locator('#applicant-activity-title')).toBeVisible();
+    await page.getByRole('button', { name: 'Close activity and audit' }).click();
     await applicantWorkspace.getByRole('button', { name: 'Back' }).click();
     await expect(page).toHaveURL(/\/student\/enrollment\/pipeline/);
     expect(decodeURIComponent(page.url())).not.toContain(firstLead.firstName);
@@ -1768,10 +2088,23 @@ test.describe('Student admissions CRM E2E', () => {
     );
     await expectOk(taskResponse, 'create assigned My Work task');
 
-    await page.goto(workspaceUrl('/student/enrollment/overview', academicYearId), {
+    const directMyWorkResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/${academicYearId}/operations/my-work?skipCount=0&maxResultCount=25`
+    );
+    await expectOk(directMyWorkResponse, 'load My Work without medium filter');
+
+    const myWorkResponsePromise = page.waitForResponse((response) =>
+      new URL(response.url()).pathname.endsWith(
+        `/student-enrollment/admissions-crm/${academicYearId}/operations/my-work`
+      )
+    );
+    await page.goto(workspaceUrl('/student/enrollment/my-work', academicYearId), {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
+    const myWorkResponse = await myWorkResponsePromise;
+    await expectOk(myWorkResponse, `load My Work ${myWorkResponse.url()}`);
     await expect(page.getByText(taskTitle, { exact: true })).toBeVisible({ timeout: 30_000 });
     const workRow = page.locator('tr').filter({ hasText: taskTitle });
     await expect(workRow).toBeVisible();
@@ -1788,16 +2121,13 @@ test.describe('Student admissions CRM E2E', () => {
     await applicantWorkspace.getByRole('button', { name: 'Add note' }).click();
     const note = applicantWorkspace.getByLabel('Note');
     await note.fill('Unsaved My Work follow-up note');
-    await applicantWorkspace.getByRole('tab', { name: 'Activity' }).click();
+    await applicantWorkspace.getByRole('button', { name: 'Activity & Audit' }).click();
     const discardDialog = page.getByRole('dialog').filter({ hasText: 'Discard unsaved changes?' });
     await expect(discardDialog).toBeVisible();
     await discardDialog.getByRole('button', { name: 'Cancel' }).click();
-    await expect(applicantWorkspace.getByRole('tab', { name: 'Overview' })).toHaveAttribute(
-      'aria-selected',
-      'true'
-    );
+    await expect(page.locator('#applicant-activity-title')).toHaveCount(0);
     await expect(note).toHaveValue('Unsaved My Work follow-up note');
-    await applicantWorkspace.getByRole('button', { name: 'Cancel' }).click();
+    await applicantWorkspace.getByRole('button', { name: 'Cancel', exact: true }).click();
   });
 
   test('terminal inquiry stages do not unlock new downstream work', async ({ page }) => {
@@ -1817,18 +2147,45 @@ test.describe('Student admissions CRM E2E', () => {
       }
     );
     await expectOk(archiveResponse, 'archive CRM lead');
+    const archivedLead = await archiveResponse.json();
+    expect(archivedLead?.stage, 'Archive response should be terminal.').toBe(9);
+    const persistedArchivedLead = await getCrmLead(page, lead.id);
+    expect(persistedArchivedLead?.stage, 'Archived lead should persist as terminal.').toBe(9);
 
+    const browserLeadResponsePromise = page.waitForResponse(
+      (candidate) =>
+        candidate.request().method() === 'GET' &&
+        new URL(candidate.url()).pathname.endsWith(
+          `/student-enrollment/admissions-crm/leads/${lead.id}`
+        )
+    );
+    const browserProgressResponsePromise = page.waitForResponse(
+      (candidate) =>
+        candidate.request().method() === 'GET' &&
+        new URL(candidate.url()).pathname.endsWith(
+          `/student-enrollment/admissions-crm/workspace/applicants/${lead.id}/progress`
+        )
+    );
     await page.goto(
       `${workspaceUrl(`/student/enrollment/applicants/${lead.id}`, academicYearId)}&tab=overview`,
       { waitUntil: 'domcontentloaded', timeout: 60_000 }
     );
+    const browserLeadResponse = await browserLeadResponsePromise;
+    const browserProgressResponse = await browserProgressResponsePromise;
+    await expectOk(browserLeadResponse, 'load archived CRM lead in the browser');
+    await expectOk(browserProgressResponse, 'load archived applicant progress in the browser');
+    expect((await browserLeadResponse.json())?.stage).toBe(9);
+    expect((await browserProgressResponse.json())?.closedOutcome).toBe(1);
     const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
     await expect(applicantWorkspace).toContainText(lead.firstName);
     await expect(applicantWorkspace.getByText('Archived', { exact: true }).first()).toBeVisible();
-    await expect(applicantWorkspace.getByRole('tab', { name: 'Registration' })).toHaveCount(0);
-    await expect(applicantWorkspace.getByRole('tab', { name: 'Offer & Seat' })).toHaveCount(0);
-    await expect(applicantWorkspace.getByRole('tab', { name: 'Activation' })).toHaveCount(0);
-    await expect(applicantWorkspace.getByRole('tab', { name: 'Activity' })).toBeVisible();
+    await expect(applicantWorkspace.getByText('Outcome Withdrawn', { exact: true })).toBeVisible();
+    await expect(
+      applicantWorkspace.getByRole('button', { name: 'Schedule Entrance Exam' })
+    ).toHaveCount(0);
+    await expect(
+      applicantWorkspace.getByRole('button', { name: 'Activity & Audit' })
+    ).toBeVisible();
   });
 
   test('paper registration uses configured academic and pathway options end to end', async ({
@@ -1838,11 +2195,12 @@ test.describe('Student admissions CRM E2E', () => {
 
     await login(page);
     const academicYearId = await resolveAcademicYearId(page);
+    expect(e2eTargetStandard).toBeTruthy();
     const templateName = uniqueToken('Paper registration ');
     const template = await createPublishedRegistrationTemplate(
       page,
       academicYearId,
-      'Class 4',
+      String(e2eTargetStandard?.standardName),
       templateName
     );
 
@@ -1865,15 +2223,21 @@ test.describe('Student admissions CRM E2E', () => {
       const email = `paper.${Date.now()}@example.test`;
       await dialog.getByLabel('First name').fill(firstName);
       await dialog.getByLabel('Last name').fill('Registration');
-      await dialog.getByLabel('Parent or guardian').fill('Direct Registration Guardian');
-      await dialog.getByLabel('Contact number').fill(uniquePhone());
+      await dialog
+        .getByRole('textbox', { name: 'Parent or guardian', exact: true })
+        .fill('Direct Registration Guardian');
+      await dialog.getByRole('textbox', { name: 'Parent or guardian mobile' }).fill(uniquePhone());
       await dialog.getByLabel('Email address').fill(email);
       await dialog.getByRole('button', { name: 'Next' }).click();
 
-      await dialog.getByLabel('Academic stage').click();
-      await page.getByRole('option', { name: /^Primary\b/i }).click();
-      await dialog.getByLabel('Target class').click();
-      await page.getByRole('option', { name: 'Class 4', exact: true }).click();
+      await dialog.getByLabel('Board').click();
+      await page.getByRole('option', { name: e2eTargetStandard?.boardName, exact: true }).click();
+      await dialog.getByLabel('Medium').click();
+      await page.getByRole('option', { name: e2eTargetStandard?.mediumName, exact: true }).click();
+      await dialog.getByLabel('Standard').click();
+      await page
+        .getByRole('option', { name: e2eTargetStandard?.standardName, exact: true })
+        .click();
       await dialog.getByLabel('Admission pathway').click();
       await page.getByRole('option', { name: 'Fresh admission', exact: true }).click();
       await dialog.getByRole('button', { name: 'Next' }).click();
@@ -1902,12 +2266,12 @@ test.describe('Student admissions CRM E2E', () => {
       const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
       await expect(applicantWorkspace).toContainText(firstName);
       await expect(applicantWorkspace).toContainText(paperFormNumber);
-      await applicantWorkspace.getByRole('tab', { name: 'Overview' }).click();
-      const pathwaySummary = applicantWorkspace
-        .getByText('Admission pathway', { exact: true })
-        .locator('..');
-      await expect(pathwaySummary).toContainText('Fresh admission');
-      await expect(applicantWorkspace).toContainText('Class 4');
+      const applicantContext = applicantWorkspace.getByRole('complementary', {
+        name: 'Applicant context',
+      });
+      await expect(applicantContext).toContainText('Admission Pathway');
+      await expect(applicantContext).toContainText('Fresh admission');
+      await expect(applicantWorkspace).toContainText(String(e2eTargetStandard?.standardName));
     } finally {
       await crmApiRequest(
         page,
@@ -1927,78 +2291,97 @@ test.describe('Student admissions CRM E2E', () => {
 
     const academicYearId = await resolveAcademicYearId(page);
     const template = await createPublicInquiryTemplate(page, academicYearId);
-
-    const inquiryPage = await page.context().newPage();
     try {
-      await inquiryPage.setViewportSize({ width: 390, height: 844 });
-      await inquiryPage.goto(`/student/admissions/inquiry/${tenantId}/${template.id}`, {
-        waitUntil: 'networkidle',
-        timeout: 60_000,
-      });
-      await expect(inquiryPage.getByRole('heading', { name: template.templateName })).toBeVisible();
-      const accessibility = await new AxeBuilder({ page: inquiryPage })
-        .withTags(['wcag2a', 'wcag2aa'])
-        .analyze();
-      expect(
-        accessibility.violations.filter((violation) =>
-          ['serious', 'critical'].includes(violation.impact || '')
-        ),
-        'public inquiry accessibility'
-      ).toEqual([]);
-      const widths = await inquiryPage.evaluate(() => ({
-        viewport: window.innerWidth,
-        document: document.documentElement.scrollWidth,
-        body: document.body.scrollWidth,
-      }));
-      expect(Math.max(widths.document, widths.body)).toBeLessThanOrEqual(widths.viewport + 1);
-    } finally {
-      await inquiryPage.close();
-    }
+      expect(template?.isActive, 'Public inquiry template should be active.').toBe(true);
 
-    const formResponse = await publicApiRequest(
-      page,
-      `/public/student-enrollment/admissions-crm/${tenantId}/forms/${template.id}`
-    );
-    await expectOk(formResponse, 'read public CRM form');
-    const form = await formResponse.json();
-    expect(form?.consentVersion, 'Public form should expose a consent version.').toBeTruthy();
+      const formResponse = await publicApiRequest(
+        page,
+        `/public/student-enrollment/admissions-crm/${tenantId}/forms/${template.id}`
+      );
+      await expectOk(formResponse, 'read public CRM form');
+      const form = await formResponse.json();
+      expect(form?.consentVersion, 'Public form should expose a consent version.').toBeTruthy();
 
-    const submitResponse = await publicApiRequest(
-      page,
-      `/public/student-enrollment/admissions-crm/${tenantId}/forms/${template.id}/submit`,
-      {
-        method: 'POST',
-        body: {
-          consentVersion: form.consentVersion,
-          consentAccepted: true,
-          communicationPreferences: ['SMS'],
-          fieldValues: {
-            studentFirstName: uniqueToken('PublicCrm'),
-            parentPhone: uniquePhone(),
-            parentEmail: `${uniqueToken('parent').toLowerCase()}@example.com`,
-            admissionIntent: 'Admission inquiry for Grade 2',
-            desiredClass: 'Grade 2',
-          },
-        },
+      const inquiryPage = await page.context().newPage();
+      try {
+        await inquiryPage.setViewportSize({ width: 390, height: 844 });
+        await inquiryPage.goto(`/student/admissions/inquiry/${tenantId}/${template.id}`, {
+          waitUntil: 'domcontentloaded',
+          timeout: 60_000,
+        });
+        await expect(
+          inquiryPage.getByRole('heading', { name: template.templateName })
+        ).toBeVisible();
+        const accessibility = await new AxeBuilder({ page: inquiryPage })
+          .withTags(['wcag2a', 'wcag2aa'])
+          .analyze();
+        expect(
+          accessibility.violations.filter((violation) =>
+            ['serious', 'critical'].includes(violation.impact || '')
+          ),
+          'public inquiry accessibility'
+        ).toEqual([]);
+        const widths = await inquiryPage.evaluate(() => ({
+          viewport: window.innerWidth,
+          document: document.documentElement.scrollWidth,
+          body: document.body.scrollWidth,
+        }));
+        expect(Math.max(widths.document, widths.body)).toBeLessThanOrEqual(widths.viewport + 1);
+      } finally {
+        await inquiryPage.close();
       }
-    );
-    await expectOk(submitResponse, 'submit public CRM form');
-    const submit = await submitResponse.json();
-    expect(submit?.leadId, 'Public submission should create a CRM lead.').toBeTruthy();
-    expect(submit?.statusToken, 'Public submission should create a status token.').toBeTruthy();
-    expect(submit?.statusPath, 'Public submission should return a status path.').toContain(
-      submit.statusToken
-    );
 
-    const challengeResponse = await publicApiRequest(
-      page,
-      `/public/student-enrollment/admissions-crm/${tenantId}/status/${submit.statusToken}/otp`,
-      { method: 'POST' }
-    );
-    await expectOk(challengeResponse, 'issue public status OTP');
-    const challenge = await challengeResponse.json();
-    expect(challenge?.maskedDestination, 'OTP challenge should mask the destination.').toBeTruthy();
-    expect(challenge?.deliveryStatus, 'OTP challenge should return delivery status.').toBeTruthy();
+      const submitResponse = await publicApiRequest(
+        page,
+        `/public/student-enrollment/admissions-crm/${tenantId}/forms/${template.id}/submit`,
+        {
+          method: 'POST',
+          body: {
+            consentVersion: form.consentVersion,
+            consentAccepted: true,
+            communicationPreferences: ['SMS'],
+            fieldValues: {
+              studentFirstName: uniqueToken('PublicCrm'),
+              parentName: 'Public CRM Guardian',
+              parentPhone: uniquePhone(),
+              parentEmail: `${uniqueToken('parent').toLowerCase()}@example.com`,
+              admissionIntent: 'Admission inquiry for Grade 2',
+              targetStandardId: e2eTargetStandardId,
+              desiredClass: e2eTargetStandard?.standardName,
+            },
+          },
+        }
+      );
+      await expectOk(submitResponse, 'submit public CRM form');
+      const submit = await submitResponse.json();
+      expect(submit?.leadId, 'Public submission should create a CRM lead.').toBeTruthy();
+      expect(submit?.statusToken, 'Public submission should create a status token.').toBeTruthy();
+      expect(submit?.statusPath, 'Public submission should return a status path.').toContain(
+        submit.statusToken
+      );
+
+      const challengeResponse = await publicApiRequest(
+        page,
+        `/public/student-enrollment/admissions-crm/${tenantId}/status/${submit.statusToken}/otp`,
+        { method: 'POST' }
+      );
+      await expectOk(challengeResponse, 'issue public status OTP');
+      const challenge = await challengeResponse.json();
+      expect(
+        challenge?.maskedDestination,
+        'OTP challenge should mask the destination.'
+      ).toBeTruthy();
+      expect(
+        challenge?.deliveryStatus,
+        'OTP challenge should return delivery status.'
+      ).toBeTruthy();
+    } finally {
+      await crmApiRequest(
+        page,
+        `/student-enrollment/admissions-crm/configuration/form-templates/${template.id}/status`,
+        { method: 'PATCH', body: { isActive: false } }
+      );
+    }
   });
 
   test('principal can schedule exam, record result, and review eligibility handoff', async ({
@@ -2249,7 +2632,7 @@ test.describe('Student admissions CRM E2E', () => {
       registrationTemplate = await createPublishedRegistrationTemplate(
         page,
         academicYearId,
-        'Grade 1',
+        String(e2eTargetStandard?.standardName),
         registrationTemplateName
       );
       const slot = await getAvailableEntranceExamSlot(page, academicYearId);
@@ -2351,12 +2734,15 @@ test.describe('Student admissions CRM E2E', () => {
       {
         method: 'POST',
         body: {
+          inquirySourceId: e2eInquirySourceId,
+          inquiryTypeId: e2eInquiryTypeId,
+          targetStandardId: e2eTargetStandardId,
           channel: 1,
           firstName: `Journey${unique}`,
           parentGuardianName: 'Playwright Parent',
           primaryContactNo: phone,
-          admissionIntent: 'Admission inquiry for Grade 1',
-          desiredClassName: 'Grade 1',
+          admissionIntent: `Admission inquiry for ${e2eTargetStandard?.standardName}`,
+          desiredClassName: e2eTargetStandard?.standardName,
           campusBranchName: campus,
         },
       }
@@ -2497,6 +2883,7 @@ test.describe('Student admissions CRM E2E', () => {
     const originalSmsProvider = providers?.items?.find(
       (item: { channel?: number }) => item.channel === 1
     );
+    const canCaptureOtp = canCaptureOtpForConfiguredApi();
     await expectOk(
       await crmApiRequest(
         page,
@@ -2505,16 +2892,16 @@ test.describe('Student admissions CRM E2E', () => {
           method: 'PUT',
           body: {
             isEnabled: true,
-            providerName: 'Playwright OTP webhook',
+            providerName: canCaptureOtp ? 'Playwright OTP webhook' : 'Playwright manual OTP queue',
             senderId: 'e2e',
             settings: {
-              adapter: 'webhook',
+              adapter: canCaptureOtp ? 'webhook' : 'manual',
               payloadMode: 'default',
               headers: {},
               parameters: {},
               callbackMappings: {},
             },
-            webhookUrl: otpWebhookUrl,
+            webhookUrl: canCaptureOtp ? otpWebhookUrl : null,
           },
         }
       ),
@@ -2525,60 +2912,77 @@ test.describe('Student admissions CRM E2E', () => {
     try {
       capturedOtp = '';
       await parentPage.goto(registration.applicantStatusPath, { waitUntil: 'domcontentloaded' });
-      await parentPage.getByRole('button', { name: 'Send OTP' }).click();
-      await expect.poll(() => capturedOtp, { timeout: 30_000 }).toMatch(/^\d{6}$/);
-      await parentPage.getByLabel('OTP code').fill(capturedOtp);
-      const verifyResponsePromise = parentPage.waitForResponse(
+      const otpChallengePromise = parentPage.waitForResponse(
         (response) =>
           response.url().includes('/status/') &&
-          response.url().endsWith('/verify') &&
+          response.url().endsWith('/otp') &&
           response.request().method() === 'POST'
       );
-      await parentPage.getByRole('button', { name: 'Verify' }).click();
-      const verifiedStatusResponse = await verifyResponsePromise;
-      expect(verifiedStatusResponse.ok()).toBe(true);
-      const verifiedStatus = await verifiedStatusResponse.json();
-      const accessSessionToken = verifiedStatus.accessSessionToken as string;
-      expect(accessSessionToken).toBeTruthy();
+      await parentPage.getByRole('button', { name: 'Send OTP' }).click();
+      const otpChallengeResponse = await otpChallengePromise;
+      expect(otpChallengeResponse.ok()).toBe(true);
+      const otpChallenge = await otpChallengeResponse.json();
+      expect(otpChallenge.maskedDestination).toBeTruthy();
+      expect(otpChallenge.deliveryStatus).toBeTruthy();
+      await expect(parentPage.getByLabel('OTP code')).toBeVisible();
+      await expect(parentPage.getByText(String(otpChallenge.deliveryStatus))).toBeVisible();
 
-      await expect(parentPage.getByText('Registration Form')).toBeVisible();
-      await parentPage.setViewportSize({ width: 390, height: 844 });
-      const parentAccessibility = await new AxeBuilder({ page: parentPage })
-        .withTags(['wcag2a', 'wcag2aa'])
-        .analyze();
-      expect(
-        parentAccessibility.violations.filter((violation) =>
-          ['serious', 'critical'].includes(violation.impact || '')
-        ),
-        'public status accessibility'
-      ).toEqual([]);
-      const parentWidths = await parentPage.evaluate(() => ({
-        viewport: window.innerWidth,
-        document: document.documentElement.scrollWidth,
-        body: document.body.scrollWidth,
-      }));
-      expect(Math.max(parentWidths.document, parentWidths.body)).toBeLessThanOrEqual(
-        parentWidths.viewport + 1
-      );
-      await parentPage.getByLabel('Parent occupation').fill('Engineer');
-      await parentPage.getByRole('button', { name: 'Save Progress' }).click();
-      await expect(parentPage.getByText('Progress saved.')).toBeVisible({ timeout: 15_000 });
-      await parentPage.getByLabel('Declaration accepted').check();
-      await parentPage.getByRole('button', { name: 'Submit Registration' }).click();
-      await expect(
-        parentPage.getByText('Registration has been submitted and is under review.')
-      ).toBeVisible({ timeout: 20_000 });
+      let accessSessionToken = '';
+      if (canCaptureOtp) {
+        await expect.poll(() => capturedOtp, { timeout: 30_000 }).toMatch(/^\d{6}$/);
+        await parentPage.getByLabel('OTP code').fill(capturedOtp);
+        const verifyResponsePromise = parentPage.waitForResponse(
+          (response) =>
+            response.url().includes('/status/') &&
+            response.url().endsWith('/verify') &&
+            response.request().method() === 'POST'
+        );
+        await parentPage.getByRole('button', { name: 'Verify' }).click();
+        const verifiedStatusResponse = await verifyResponsePromise;
+        expect(verifiedStatusResponse.ok()).toBe(true);
+        const verifiedStatus = await verifiedStatusResponse.json();
+        accessSessionToken = verifiedStatus.accessSessionToken as string;
+        expect(accessSessionToken).toBeTruthy();
 
-      const fileInput = parentPage.locator('input[type="file"]').first();
-      await fileInput.setInputFiles({
-        name: 'birth.pdf',
-        mimeType: 'application/pdf',
-        buffer: Buffer.from('first unreadable version'),
-      });
-      await parentPage.getByRole('button', { name: 'Upload' }).click();
-      await expect(parentPage.getByText('Uploaded', { exact: true })).toBeVisible({
-        timeout: 20_000,
-      });
+        await expect(parentPage.getByText('Registration Form')).toBeVisible();
+        await parentPage.setViewportSize({ width: 390, height: 844 });
+        const parentAccessibility = await new AxeBuilder({ page: parentPage })
+          .withTags(['wcag2a', 'wcag2aa'])
+          .analyze();
+        expect(
+          parentAccessibility.violations.filter((violation) =>
+            ['serious', 'critical'].includes(violation.impact || '')
+          ),
+          'public status accessibility'
+        ).toEqual([]);
+        const parentWidths = await parentPage.evaluate(() => ({
+          viewport: window.innerWidth,
+          document: document.documentElement.scrollWidth,
+          body: document.body.scrollWidth,
+        }));
+        expect(Math.max(parentWidths.document, parentWidths.body)).toBeLessThanOrEqual(
+          parentWidths.viewport + 1
+        );
+        await parentPage.getByLabel('Parent occupation').fill('Engineer');
+        await parentPage.getByRole('button', { name: 'Save Progress' }).click();
+        await expect(parentPage.getByText('Progress saved.')).toBeVisible({ timeout: 15_000 });
+        await parentPage.getByLabel('Declaration accepted').check();
+        await parentPage.getByRole('button', { name: 'Submit Registration' }).click();
+        await expect(
+          parentPage.getByText('Registration has been submitted and is under review.')
+        ).toBeVisible({ timeout: 20_000 });
+
+        const fileInput = parentPage.locator('input[type="file"]').first();
+        await fileInput.setInputFiles({
+          name: 'birth.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('first unreadable version'),
+        });
+        await parentPage.getByRole('button', { name: 'Upload' }).click();
+        await expect(parentPage.getByText('Uploaded', { exact: true })).toBeVisible({
+          timeout: 20_000,
+        });
+      }
 
       const leadCard = await openLeadCardInWorkspace(
         page,
@@ -2589,8 +2993,31 @@ test.describe('Student admissions CRM E2E', () => {
       await leadCard.getByRole('button', { name: 'Manage' }).click();
       await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
       const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
-      await applicantWorkspace.getByRole('tab', { name: 'Registration', exact: true }).click();
+      await applicantWorkspace
+        .locator('[aria-label="Admission journey"]')
+        .getByRole('button', { name: /Registration/ })
+        .click();
       await expect(applicantWorkspace).toContainText(registration.formNumber);
+      if (!canCaptureOtp) {
+        await applicantWorkspace.getByLabel('Parent occupation').fill('Engineer');
+        await applicantWorkspace.getByLabel('Declaration accepted').check();
+        await applicantWorkspace.getByRole('button', { name: 'Submit registration' }).click();
+        await expect(applicantWorkspace.getByText('Submitted', { exact: true })).toBeVisible({
+          timeout: 20_000,
+        });
+        await applicantWorkspace
+          .getByLabel('Choose file for Birth certificate')
+          .last()
+          .setInputFiles({
+            name: 'birth.pdf',
+            mimeType: 'application/pdf',
+            buffer: Buffer.from('first unreadable version'),
+          });
+        await applicantWorkspace.getByRole('button', { name: 'Upload Birth certificate' }).click();
+        await expect(applicantWorkspace.getByText('Uploaded', { exact: true })).toBeVisible({
+          timeout: 20_000,
+        });
+      }
       await applicantWorkspace.getByRole('button', { name: 'Verify Registration' }).click();
       await expect(applicantWorkspace.getByText('Verified', { exact: true })).toBeVisible({
         timeout: 20_000,
@@ -2603,18 +3030,35 @@ test.describe('Student admissions CRM E2E', () => {
       });
 
       const replacementResponse = await parentPage.request.post(
-        `${apiBaseUrl()}/api/public/student-enrollment/admissions-crm/${tenantId}/status/${registration.applicantStatusPath.split('/').pop()}/registration/documents`,
-        {
-          multipart: {
-            AccessSessionToken: accessSessionToken,
-            RequirementKey: 'birth-certificate',
-            File: {
-              name: 'birth.pdf',
-              mimeType: 'application/pdf',
-              buffer: Buffer.from('clear replacement version'),
-            },
-          },
-        }
+        canCaptureOtp
+          ? `${apiBaseUrl()}/api/public/student-enrollment/admissions-crm/${tenantId}/status/${registration.applicantStatusPath.split('/').pop()}/registration/documents`
+          : `${apiBaseUrl()}/api/student-enrollment/admissions-crm/registrations/${registration.id}/documents`,
+        canCaptureOtp
+          ? {
+              multipart: {
+                AccessSessionToken: accessSessionToken,
+                RequirementKey: 'birth-certificate',
+                File: {
+                  name: 'birth.pdf',
+                  mimeType: 'application/pdf',
+                  buffer: Buffer.from('clear replacement version'),
+                },
+              },
+            }
+          : {
+              headers: {
+                Authorization: `Bearer ${await getAccessToken(page)}`,
+                __tenant: tenantCode(),
+              },
+              multipart: {
+                RequirementKey: 'birth-certificate',
+                File: {
+                  name: 'birth.pdf',
+                  mimeType: 'application/pdf',
+                  buffer: Buffer.from('clear replacement version'),
+                },
+              },
+            }
       );
       await expectOk(replacementResponse, 'upload replacement document');
 
@@ -2631,7 +3075,10 @@ test.describe('Student admissions CRM E2E', () => {
       await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
       await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
       const refreshedWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
-      await refreshedWorkspace.getByRole('tab', { name: 'Registration', exact: true }).click();
+      await refreshedWorkspace
+        .locator('[aria-label="Admission journey"]')
+        .getByRole('button', { name: /Registration/ })
+        .click();
       await refreshedWorkspace.getByRole('button', { name: 'Verify', exact: true }).click();
       await expect(refreshedWorkspace.getByRole('button', { name: 'Original Seen' })).toBeVisible({
         timeout: 20_000,

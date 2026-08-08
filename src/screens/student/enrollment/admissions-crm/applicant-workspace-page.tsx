@@ -30,7 +30,9 @@ import {
   AccordionSummary,
 } from '@mui/material';
 import {
+  AdmissionInquiryStage,
   AdmissionCrmLeadPriority,
+  AdmissionCrmClosedOutcome,
   useGetAdmissionCrmLeadQuery,
   AdmissionCrmPipelineColumnKey,
   AdmissionCrmGeneratedDocumentType,
@@ -47,10 +49,7 @@ import { ApplicantWorkspaceOverview } from './applicant-workspace-overview';
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
-import {
-  buildApplicantJourney,
-  getApplicantNextJourneyStep,
-} from './applicant-journey-model';
+import { buildApplicantJourney, getApplicantNextJourneyStep } from './applicant-journey-model';
 import {
   formatEnumLabel,
   formatApplicantContact,
@@ -248,8 +247,7 @@ function ApplicantWorkspaceContent({
   const selectedJourneyStep = journeySteps.find((step) => getJourneyTab(step) === selectedTab);
   const projectedPrimaryAction = getApplicantPrimaryAction(progressQuery.data?.nextActionCode);
   const lifecycleAllowsAction =
-    progressQuery.data?.closedOutcome == null &&
-    isApplicantJourneyActionable(currentJourneyStep);
+    progressQuery.data?.closedOutcome == null && isApplicantJourneyActionable(currentJourneyStep);
   const actionPermissionBlocked =
     lifecycleAllowsAction &&
     Boolean(projectedPrimaryAction) &&
@@ -378,6 +376,13 @@ function ApplicantWorkspaceContent({
   const currentStatusLabel = currentJourneyStep
     ? getJourneyStateLabel(currentJourneyStep)
     : 'Loading progress';
+  const closedOutcome = progressQuery.data?.closedOutcome;
+  const isClosed = closedOutcome != null;
+  const lifecycleStatusLabel = lead
+    ? formatEnumLabel(AdmissionInquiryStage[lead.stage])
+    : undefined;
+  const closedOutcomeLabel =
+    closedOutcome != null ? formatEnumLabel(AdmissionCrmClosedOutcome[closedOutcome]) : undefined;
   const pipelineColumnLabel = progressQuery.data
     ? formatEnumLabel(AdmissionCrmPipelineColumnKey[progressQuery.data.pipelineColumn])
     : undefined;
@@ -440,13 +445,31 @@ function ApplicantWorkspaceContent({
                   )}
                 </Typography>
                 <Stack direction="row" gap={0.75} flexWrap="wrap">
-                  <Chip
-                    size="small"
-                    color={currentJourneyStep?.state === 'needs-review' ? 'warning' : 'primary'}
-                    label={`${currentJourneyStep?.label || 'Journey'} · ${currentStatusLabel}`}
-                  />
-                  {pipelineColumnLabel ? (
+                  {isClosed ? (
+                    <>
+                      <Chip size="small" label={lifecycleStatusLabel || 'Closed'} />
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        label={`Outcome ${closedOutcomeLabel}`}
+                      />
+                    </>
+                  ) : (
+                    <Chip
+                      size="small"
+                      color={currentJourneyStep?.state === 'needs-review' ? 'warning' : 'primary'}
+                      label={`${currentJourneyStep?.label || 'Journey'} · ${currentStatusLabel}`}
+                    />
+                  )}
+                  {!isClosed && pipelineColumnLabel ? (
                     <Chip size="small" variant="outlined" label={pipelineColumnLabel} />
+                  ) : null}
+                  {lead.registrationFormNumber ? (
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      label={`Registration ${lead.registrationFormNumber}`}
+                    />
                   ) : null}
                   <Chip size="small" variant="outlined" label={`Score ${lead.leadScore}`} />
                   <Chip
@@ -728,7 +751,7 @@ function ApplicantWorkspaceContent({
                 hasRegistration={hasRegistration}
                 canViewGovernance={canViewGovernance}
                 onOpenInquiry={() => changeTab('inquiry')}
-                onOpenActivity={() => onActivityChange?.(true)}
+                onOpenActivity={() => requestTransition(() => onActivityChange?.(true))}
                 onOpenGovernance={() => changeTab('governance')}
                 refetchLead={() => leadQuery.refetch()}
               />

@@ -19,6 +19,7 @@ import type {
   AdmissionCrmApplicantChecklistItemDto,
   AdmissionCrmMessageTemplatePreviewDto,
   AdmissionCrmConfigurationImpactPreviewDto,
+  AdmissionCrmAdmissionYearStandardOptionDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useSelector } from 'react-redux';
@@ -93,6 +94,7 @@ import {
   useSetAdmissionCrmInquirySourceStatusMutation,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   useUpdateAdmissionCrmFormTemplateStatusMutation,
+  useGetAdmissionCrmOperationalStandardOptionsQuery,
   usePreviewAdmissionCrmConfigurationImpactMutation,
   useUpdateAdmissionCrmCommunicationProviderMutation,
   useUpdateAdmissionCrmMessageTemplateStatusMutation,
@@ -107,15 +109,15 @@ import { InquiryFormTemplatePreviewDialog } from './inquiry-form-template-previe
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { EnrollmentSettingsDecisionCards } from './enrollment-settings-decision-cards';
 import {
+  getAdmissionCrmStageLabel,
+  getAdmissionCrmChannelLabel,
+} from '../admissions-crm/admissions-crm-utils';
+import {
   leadScoringGroups,
   leadScoringPresets,
   getLeadScoringPreviews,
   matchesLeadScoringPreset,
 } from './pipeline-scoring-model';
-import {
-  getAdmissionCrmStageLabel,
-  getAdmissionCrmChannelLabel,
-} from '../admissions-crm/admissions-crm-utils';
 import {
   getCrmUserOptionLabel,
   buildCrmUserSelectOptions,
@@ -127,6 +129,7 @@ import {
   updateAdmissionCrmProviderPayloadMode,
   getAdmissionCrmProviderCallbackSecret,
   buildAdmissionCrmProviderSettingsInput,
+  buildDefaultPublicInquiryTemplateFields,
   getAdmissionCrmProviderKeyValueSettings,
   updateAdmissionCrmProviderCallbackSecret,
   updateAdmissionCrmProviderKeyValueSettings,
@@ -423,46 +426,9 @@ const normalizeTemplateFieldKey = (value: string, fallbackIndex: number) => {
   return normalized || `field-${fallbackIndex + 1}`;
 };
 
-const buildDefaultTemplateFields = (): AdmissionCrmFormFieldDto[] => [
-  {
-    key: 'studentFirstName',
-    label: 'Student first name',
-    fieldType: AdmissionCrmFormFieldType.Text,
-    systemField: 'FirstName',
-    required: true,
-    displayOrder: 10,
-    options: [],
-  },
-  {
-    key: 'parentPhone',
-    label: 'Parent phone',
-    fieldType: AdmissionCrmFormFieldType.Phone,
-    systemField: 'PrimaryContactNo',
-    required: true,
-    displayOrder: 20,
-    options: [],
-  },
-  {
-    key: 'admissionIntent',
-    label: 'Admission intent',
-    fieldType: AdmissionCrmFormFieldType.TextArea,
-    systemField: 'AdmissionIntent',
-    required: true,
-    displayOrder: 30,
-    options: [],
-  },
-  {
-    key: 'desiredClass',
-    label: 'Desired class',
-    fieldType: AdmissionCrmFormFieldType.Text,
-    systemField: 'DesiredClassName',
-    required: true,
-    displayOrder: 40,
-    options: [],
-  },
-];
-
-const createDefaultTemplateForm = (): TemplateForm => ({
+const createDefaultTemplateForm = (
+  standardOptions: AdmissionCrmAdmissionYearStandardOptionDto[] = []
+): TemplateForm => ({
   templateName: '',
   description: '',
   channel: AdmissionInquiryChannel.SchoolWebsiteForm,
@@ -470,7 +436,7 @@ const createDefaultTemplateForm = (): TemplateForm => ({
   isActive: true,
   consentText: 'I agree that the school may contact me about this admission inquiry.',
   privacyNoticeUrl: '',
-  fields: buildDefaultTemplateFields(),
+  fields: buildDefaultPublicInquiryTemplateFields(standardOptions),
   localizations: {
     gu: { templateName: '', description: '', consentText: '' },
     hi: { templateName: '', description: '', consentText: '' },
@@ -782,6 +748,11 @@ const AdmissionsCrmConfiguration = ({
     { academicYearId: academicYearId || '', maxResultCount: 100 },
     { skip: !academicYearId || focusSection !== 'capture' }
   );
+  const { data: operationalStandardOptions = [] } =
+    useGetAdmissionCrmOperationalStandardOptionsQuery(
+      { academicYearId: academicYearId || '' },
+      { skip: !academicYearId || focusSection !== 'capture' }
+    );
   const {
     data: messageTemplates,
     isError: isMessageTemplatesError,
@@ -954,7 +925,7 @@ const AdmissionsCrmConfiguration = ({
     : undefined;
   const templateFormBaseline = editingFormTemplate
     ? buildTemplateFormFromTemplate(editingFormTemplate)
-    : createDefaultTemplateForm();
+    : createDefaultTemplateForm(operationalStandardOptions);
   const isTemplateDirty =
     admissionsCrmConfigurationDialog.value &&
     JSON.stringify(templateForm) !== JSON.stringify(templateFormBaseline);
@@ -974,7 +945,7 @@ const AdmissionsCrmConfiguration = ({
       setCycleForm(cycleBaseline || defaultCycleForm);
       setStageForms(stageFormsBaseline);
       setProviderForms(providerFormsBaseline);
-      setTemplateForm(createDefaultTemplateForm());
+      setTemplateForm(createDefaultTemplateForm(operationalStandardOptions));
       setEditingTemplateId(null);
       admissionsCrmConfigurationDialog.onFalse();
       setMessageTemplateForm(defaultMessageTemplateForm);
@@ -1896,7 +1867,7 @@ const AdmissionsCrmConfiguration = ({
 
   const handleOpenCreateTemplate = () => {
     setEditingTemplateId(null);
-    setTemplateForm(createDefaultTemplateForm());
+    setTemplateForm(createDefaultTemplateForm(operationalStandardOptions));
     admissionsCrmConfigurationDialog.onTrue();
   };
 
