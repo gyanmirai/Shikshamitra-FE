@@ -124,6 +124,8 @@ export function PipelineStageColumn({
   return (
     <Paper
       ref={columnRef}
+      data-testid="student-enrollment-pipeline-column"
+      data-pipeline-column={column.key}
       variant="outlined"
       sx={{
         p: 1.25,
@@ -146,7 +148,7 @@ export function PipelineStageColumn({
             size="small"
             variant="outlined"
             label={column.label}
-            sx={{ borderColor: column.color, color: column.color }}
+            sx={{ borderColor: column.color, color: 'text.primary' }}
           />
           <Tooltip title={tooltipTitle} arrow>
             <IconButton size="small" aria-label={`${column.label} column details`}>

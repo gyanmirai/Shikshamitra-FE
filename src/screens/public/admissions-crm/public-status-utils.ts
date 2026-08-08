@@ -48,6 +48,8 @@ const recoveryCopy = {
     linkExpired: 'This status link has expired. Contact the school admissions office.',
     linkInvalid:
       'This status link is invalid. Check the link or contact the school admissions office.',
+    registrationChanged:
+      'This registration changed in another tab. Your entries remain on this page; reload the latest version and review them before saving again.',
   },
   gu: {
     wait: 'બીજો OTP માંગતા પહેલાં થોડી રાહ જુઓ.',
@@ -58,6 +60,8 @@ const recoveryCopy = {
     notIssued: 'પ્રવેશ સ્થિતિ તપાસતા પહેલાં OTP માંગો.',
     linkExpired: 'આ સ્થિતિ લિંકની મુદત પૂરી થઈ છે. શાળા પ્રવેશ કચેરીનો સંપર્ક કરો.',
     linkInvalid: 'આ સ્થિતિ લિંક અમાન્ય છે. લિંક તપાસો અથવા શાળા પ્રવેશ કચેરીનો સંપર્ક કરો.',
+    registrationChanged:
+      'આ નોંધણી બીજી ટૅબમાં બદલાઈ છે. તમારી વિગતો આ પેજ પર છે; નવીનતમ આવૃત્તિ ફરી લોડ કરીને સાચવતા પહેલાં તપાસો.',
   },
   hi: {
     wait: 'दूसरा OTP माँगने से पहले कुछ समय प्रतीक्षा करें।',
@@ -70,6 +74,8 @@ const recoveryCopy = {
       'इस स्थिति लिंक की समय-सीमा समाप्त हो गई है। विद्यालय प्रवेश कार्यालय से संपर्क करें।',
     linkInvalid:
       'यह स्थिति लिंक अमान्य है। लिंक जाँचें या विद्यालय प्रवेश कार्यालय से संपर्क करें।',
+    registrationChanged:
+      'यह पंजीकरण दूसरे टैब में बदल गया है। आपकी प्रविष्टियाँ इस पेज पर हैं; नवीनतम संस्करण फिर से लोड करके सहेजने से पहले जाँचें।',
   },
 } satisfies Record<
   PublicAdmissionsLanguage,
@@ -121,6 +127,11 @@ export const getPublicAdmissionStatusProblemMessage = (
       return {
         code,
         message: copy.linkInvalid,
+      };
+    case 'AdmissionCrm:RegistrationConcurrencyConflict':
+      return {
+        code,
+        message: copy.registrationChanged,
       };
     default:
       return {

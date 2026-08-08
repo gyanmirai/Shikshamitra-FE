@@ -46,6 +46,8 @@ export enum AdmissionCrmExamAttendanceStatus {
   NotMarked = 0,
   Present = 1,
   Absent = 2,
+  NoShow = 3,
+  Excused = 4,
 }
 
 export enum AdmissionCrmEligibilityDecision {
@@ -1542,11 +1544,13 @@ export type AdmissionCrmDirectRegistrationResultDto = {
 };
 
 export type SaveAdmissionCrmRegistrationResponsesDto = {
+  concurrencyStamp: string;
   responses: Record<string, unknown>;
 };
 
 export type AdmissionCrmRegistrationApplicationDto = {
   id: string;
+  concurrencyStamp: string;
   academicYearId: string;
   leadId: string;
   registrationTemplateId: string;
@@ -3234,7 +3238,11 @@ export const buildSavePublicAdmissionCrmRegistrationRequest = ({
 }: {
   tenantId: string;
   token: string;
-  body: { accessSessionToken: string; responses: Record<string, unknown> };
+  body: {
+    accessSessionToken: string;
+    concurrencyStamp: string;
+    responses: Record<string, unknown>;
+  };
 }): FetchArgs => ({
   url: `/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/registration`,
   method: 'PUT',
@@ -6717,7 +6725,7 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         leadId: string;
         body: {
           existingGuardianPersonId?: string;
-          guardian: AdmissionCrmPersonInputDto;
+          guardian?: AdmissionCrmPersonInputDto;
           relationshipType: AdmissionCrmGuardianRelationshipType;
           isPrimaryContact: boolean;
           isEmergencyContact: boolean;

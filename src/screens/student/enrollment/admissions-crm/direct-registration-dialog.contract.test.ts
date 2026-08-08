@@ -64,4 +64,10 @@ describe('Admissions CRM paper registration contract', () => {
     expect(source).toContain('OCR is not used in this workflow');
     expect(source).not.toContain('useCreateDirectAdmissionCrmRegistrationMutation');
   });
+
+  it('guards rapid creation and rechecks duplicates after an ambiguous request failure', () => {
+    expect(source).toContain('createRegistrationInFlightRef.current');
+    expect(source).toMatch(/catch \(error\) \{\s+setDuplicateReviewed\(false\)/);
+    expect(source).toContain('createRegistrationInFlightRef.current = false');
+  });
 });

@@ -36,7 +36,13 @@ import {
   useCreateAdmissionCrmHouseholdIdentityProfileMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { getEnrollmentApiErrorMessage } from './enrollment-api-errors';
 import { ApplicantSwitchRow, ApplicantInlineNotice } from './applicant-workspace-primitives';
+import {
+  quickInquiryFieldLimits,
+  isValidQuickInquiryEmail,
+  isValidQuickInquiryPhone,
+} from './quick-inquiry-options';
 
 type Props = { leadId: string };
 
@@ -61,13 +67,8 @@ const readinessLabels: Record<AdmissionCrmIdentityResolutionStatus, string> = {
   [AdmissionCrmIdentityResolutionStatus.Overridden]: 'Overridden',
 };
 
-const readError = (error: unknown) => {
-  if (typeof error === 'object' && error && 'data' in error) {
-    const { data } = error as { data?: { errorCode?: string; detail?: string } };
-    return data?.errorCode || data?.detail || 'Unable to update household identity.';
-  }
-  return 'Unable to update household identity.';
-};
+const readError = (error: unknown) =>
+  getEnrollmentApiErrorMessage(error, 'Unable to update household identity.');
 
 export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
   const profileQuery = useGetAdmissionCrmHouseholdIdentityProfileQuery({ leadId });
@@ -101,6 +102,10 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
   const [guardianLastName, setGuardianLastName] = useState('');
   const [guardianPhone, setGuardianPhone] = useState('');
   const [guardianEmail, setGuardianEmail] = useState('');
+  const guardianPhoneInvalid =
+    !existingGuardianId && !isValidQuickInquiryPhone(guardianPhone);
+  const guardianEmailInvalid =
+    !existingGuardianId && !isValidQuickInquiryEmail(guardianEmail);
   const [relationshipType, setRelationshipType] = useState(
     AdmissionCrmGuardianRelationshipType.Mother
   );
@@ -456,24 +461,39 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
                 size="small"
                 label="First name"
                 value={guardianFirstName}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                 onChange={(event) => setGuardianFirstName(event.target.value)}
               />
               <TextField
                 size="small"
                 label="Last name"
                 value={guardianLastName}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                 onChange={(event) => setGuardianLastName(event.target.value)}
               />
               <TextField
                 size="small"
                 label="Phone"
                 value={guardianPhone}
+                error={guardianPhoneInvalid}
+                helperText={
+                  guardianPhoneInvalid ? 'Enter a valid contact number containing 7 to 15 digits.' : undefined
+                }
+                slotProps={{
+                  htmlInput: {
+                    inputMode: 'tel',
+                    maxLength: quickInquiryFieldLimits.contact,
+                  },
+                }}
                 onChange={(event) => setGuardianPhone(event.target.value)}
               />
               <TextField
                 size="small"
                 label="Email"
                 value={guardianEmail}
+                error={guardianEmailInvalid}
+                helperText={guardianEmailInvalid ? 'Enter a valid email address.' : undefined}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.email } }}
                 onChange={(event) => setGuardianEmail(event.target.value)}
               />
             </>
@@ -534,7 +554,11 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
             variant="outlined"
             startIcon={<Add />}
             loading={addGuardianState.isLoading}
-            disabled={!existingGuardianId && !guardianFirstName.trim()}
+            disabled={
+              (!existingGuardianId && !guardianFirstName.trim()) ||
+              guardianPhoneInvalid ||
+              guardianEmailInvalid
+            }
             onClick={() =>
               run(
                 () =>
@@ -542,13 +566,15 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
                     leadId,
                     body: {
                       existingGuardianPersonId: existingGuardianId || undefined,
-                      guardian: {
-                        firstName: guardianFirstName || 'Existing',
-                        lastName: guardianLastName || undefined,
-                        phone: guardianPhone || undefined,
-                        email: guardianEmail || undefined,
-                        provenance: AdmissionCrmPersonProvenance.StaffSupplied,
-                      },
+                      ...(!existingGuardianId && {
+                        guardian: {
+                          firstName: guardianFirstName,
+                          lastName: guardianLastName || undefined,
+                          phone: guardianPhone || undefined,
+                          email: guardianEmail || undefined,
+                          provenance: AdmissionCrmPersonProvenance.StaffSupplied,
+                        },
+                      }),
                       relationshipType,
                       isPrimaryContact: isPrimary,
                       isEmergencyContact: isEmergency,

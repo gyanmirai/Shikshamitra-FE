@@ -49,7 +49,12 @@ export function ApplicantExamSummary({
   const exam = query.data;
   const examHref = `${studentPaths.enrollment.entranceExams}?cycle=${encodeURIComponent(academicYearId)}&applicant=${encodeURIComponent(leadId)}`;
   const unresolvedAbsence =
-    exam?.attendanceStatus === AdmissionCrmExamAttendanceStatus.Absent &&
+    exam != null &&
+    [
+      AdmissionCrmExamAttendanceStatus.Absent,
+      AdmissionCrmExamAttendanceStatus.NoShow,
+      AdmissionCrmExamAttendanceStatus.Excused,
+    ].includes(exam.attendanceStatus) &&
     exam.eligibilityDecision === AdmissionCrmEligibilityDecision.Pending;
 
   const rejectApplication = async () => {

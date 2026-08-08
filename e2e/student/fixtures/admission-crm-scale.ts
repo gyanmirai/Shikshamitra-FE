@@ -8,19 +8,21 @@ export const buildAdmissionCrmScaleLeadPage = ({
   skipCount,
   maxResultCount,
   stage = 0,
+  pipelineColumn,
 }: {
   academicYearId: string;
   skipCount: number;
   maxResultCount: number;
   stage?: number;
+  pipelineColumn?: number;
 }) => ({
   totalCount: admissionCrmScaleTotal,
   items: Array.from({ length: maxResultCount }, (_, offset) => {
     const index = skipCount + offset;
     return {
-      id: deterministicId('scale-lead', index),
+      id: deterministicId(`scale-lead-column-${pipelineColumn ?? 'list'}`, index),
       academicYearId,
-      firstName: `Applicant ${index + 1}`,
+      firstName: `Column ${pipelineColumn ?? 'list'} Applicant ${index + 1}`,
       middleName: null,
       lastName: 'Scale',
       parentGuardianName: `Guardian ${index + 1}`,
@@ -30,6 +32,7 @@ export const buildAdmissionCrmScaleLeadPage = ({
       desiredClassName: `Grade ${(index % 12) + 1}`,
       channel: index % 8,
       stage,
+      pipelineColumn: pipelineColumn ?? null,
       priority: index % 5,
       leadScore: 40 + (index % 61),
       ownerUserId: null,

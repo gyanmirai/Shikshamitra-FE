@@ -1,5 +1,5 @@
-import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { it, vi, expect, describe, afterEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import PublicRegistration, { type PublicRegistrationApplication } from './public-registration';
 
@@ -10,8 +10,13 @@ vi.mock('src/components/toast', () => ({
   },
 }));
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 const makeApplication = (): PublicRegistrationApplication => ({
   id: 'registration-1',
+  concurrencyStamp: 'version-1',
   formNumber: 'REG-001',
   status: 1,
   sections: [
@@ -91,5 +96,34 @@ describe('PublicRegistration', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(screen.getByLabelText(/Student name/)).toBeInTheDocument();
+  });
+
+  it('sends the loaded response version when saving', async () => {
+    const updated = { ...makeApplication(), concurrencyStamp: 'version-2' };
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(updated), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    render(
+      <PublicRegistration
+        tenantId="tenant-1"
+        token="token-1"
+        accessSessionToken="session-1"
+        application={makeApplication()}
+        onUpdated={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Progress' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const request = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      accessSessionToken: 'session-1',
+      concurrencyStamp: 'version-1',
+    });
   });
 });

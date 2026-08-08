@@ -51,6 +51,8 @@ describe('Enrollment offline registration and bulk-operation contracts', () => {
     expect(editor).toContain('Save draft');
     expect(editor).toContain('Submit registration');
     expect(editor).toContain('field.systemField && !field.parentEditable');
+    expect(editor).toContain('validateRegistrationResponses');
+    expect(editor).toContain('highlighted required field');
     expect(api).toContain('/staff-responses');
     expect(api).toContain('/staff-submit');
   });

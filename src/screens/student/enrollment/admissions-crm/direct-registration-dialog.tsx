@@ -2,8 +2,8 @@
 
 import type { CreateAdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import {
   Box,
@@ -39,7 +39,9 @@ import {
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import {
   mapQuickInquiryOptions,
+  quickInquiryFieldLimits,
   isValidQuickInquiryEmail,
+  isValidQuickInquiryPhone,
   getDefaultQuickInquiryOption,
 } from './quick-inquiry-options';
 
@@ -115,6 +117,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [duplicateReviewed, setDuplicateReviewed] = useState(false);
   const [duplicateCount, setDuplicateCount] = useState(0);
+  const createRegistrationInFlightRef = useRef(false);
   const [emailTouched, setEmailTouched] = useState(false);
 
   const quickInquiryOptionsQuery = useGetAdmissionCrmQuickInquiryOptionsQuery(
@@ -180,6 +183,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false ||
     !quickInquiryOptionsQuery.data;
   const emailInvalid = !isValidQuickInquiryEmail(form.email);
+  const phoneInvalid = !isValidQuickInquiryPhone(form.primaryContactNo);
 
   const duplicateFingerprint = [
     form.firstName.trim().toLowerCase(),
@@ -373,6 +377,12 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
       });
       return;
     }
+    if (phoneInvalid) {
+      shikshaMitraToast.error({
+        message: 'Enter a valid contact number containing 7 to 15 digits.',
+      });
+      return;
+    }
     if (optionConfigurationUnavailable) {
       shikshaMitraToast.error({
         message: 'Paper registration options are unavailable. Review Enrollment Settings.',
@@ -387,6 +397,8 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     }
 
     const applicant = buildApplicant();
+    if (createRegistrationInFlightRef.current) return;
+    createRegistrationInFlightRef.current = true;
     try {
       if (!duplicateReviewed) {
         const duplicates = await previewDuplicates({ academicYearId, body: applicant }).unwrap();
@@ -424,7 +436,10 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
       reset();
       onCreated(result.applicant.id);
     } catch (error) {
+      setDuplicateReviewed(false);
       shikshaMitraToast.error({ message: readError(error) });
+    } finally {
+      createRegistrationInFlightRef.current = false;
     }
   };
 
@@ -435,6 +450,9 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
       if (!form.primaryContactNo.trim()) return 'Parent or guardian mobile number is required.';
       if (emailInvalid) {
         return 'Enter a valid email address, for example parent@example.com.';
+      }
+      if (phoneInvalid) {
+        return 'Enter a valid contact number containing 7 to 15 digits.';
       }
     }
     if (step === 1) {
@@ -536,6 +554,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
                 required
                 label="First name"
                 value={form.firstName}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, firstName: event.target.value }))
                 }
@@ -543,6 +562,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
               <TextField
                 label="Middle name"
                 value={form.middleName}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, middleName: event.target.value }))
                 }
@@ -550,6 +570,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
               <TextField
                 label="Last name"
                 value={form.lastName}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, lastName: event.target.value }))
                 }
@@ -567,6 +588,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
                 required
                 label="Parent or guardian"
                 value={form.parentGuardianName}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, parentGuardianName: event.target.value }))
                 }
@@ -576,6 +598,18 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
                 type="tel"
                 label="Parent or guardian mobile"
                 value={form.primaryContactNo}
+                error={phoneInvalid}
+                helperText={
+                  phoneInvalid
+                    ? 'Enter a valid contact number containing 7 to 15 digits.'
+                    : 'Optional when an email address is provided.'
+                }
+                slotProps={{
+                  htmlInput: {
+                    inputMode: 'tel',
+                    maxLength: quickInquiryFieldLimits.contact,
+                  },
+                }}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, primaryContactNo: event.target.value }))
                 }
@@ -596,6 +630,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
                 InputProps={{
                   startAdornment: <InputAdornment position="start">@</InputAdornment>,
                 }}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.email } }}
                 onBlur={() => setEmailTouched(true)}
                 onChange={(event) => {
                   setForm((current) => ({ ...current, email: event.target.value }));
@@ -878,6 +913,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
               <TextField
                 label="Staff notes"
                 value={form.notes}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.notes } }}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, notes: event.target.value }))
                 }
@@ -898,6 +934,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
                   required
                   label="Reason to continue"
                   value={form.duplicateContinueReason}
+                  slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.notes } }}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,

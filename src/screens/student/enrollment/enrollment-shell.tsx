@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { ReactNode, MouseEvent } from 'react';
 
 import { Box } from '@mui/material';
 import { Suspense, useEffect } from 'react';
@@ -16,6 +16,14 @@ type Props = {
 const EnrollmentShell = ({ children }: Props) => {
   const pathname = usePathname();
 
+  const skipToWorkspace = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    const workspace = document.getElementById('student-enrollment-content');
+    if (!workspace) return;
+    workspace.focus({ preventScroll: true });
+    workspace.scrollIntoView({ block: 'start' });
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     document.querySelectorAll<HTMLElement>('main').forEach((element) => {
@@ -30,6 +38,7 @@ const EnrollmentShell = ({ children }: Props) => {
       <Box
         component="a"
         href="#student-enrollment-content"
+        onClick={skipToWorkspace}
         sx={{
           position: 'fixed',
           top: 8,

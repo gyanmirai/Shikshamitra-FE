@@ -9,7 +9,6 @@ import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import TodayRounded from '@mui/icons-material/TodayRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { LoadingButton } from 'src/components/loading-button';
 import TaskAltRounded from '@mui/icons-material/TaskAltRounded';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -45,8 +44,8 @@ import {
 import { formatEnrollmentDate } from './enrollment-display';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
-import { parseEnrollmentTablePagination } from './workspace-table-pagination';
 import { createApplicantRowNavigationProps } from './applicant-row-navigation';
+import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
   enrollmentTableWrapperSx,
@@ -148,21 +147,38 @@ const enumValue = (value: unknown) => {
   return Number(value);
 };
 
-const numericEnumValues = (source: Record<string, string | number>) =>
-  new Set(Object.values(source).filter((value): value is number => typeof value === 'number'));
-
-const priorityValues = numericEnumValues(AdmissionCrmLeadPriority);
-const urgencyValues = numericEnumValues(AdmissionCrmWorkUrgency);
+const getLatestStringFilter = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  return filter?.value ? String(filter.value) : undefined;
+};
 
 export function EnrollmentOverviewWorkspace() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { academicYearId, academicMediumId, currentUserId, openApplicant } =
-    useEnrollmentWorkspace();
-  const { page, pageSize } = parseEnrollmentTablePagination(searchParams);
-  const search = searchParams.get('search') || '';
-  const sorting = searchParams.get('sorting') || undefined;
+  const {
+    academicYearId,
+    academicMediumId,
+    currentUserId,
+    sessionIdentity,
+    state,
+    updateState,
+    openApplicant,
+  } = useEnrollmentWorkspace();
+  const {
+    page: statePage,
+    pageSize: statePageSize,
+    sorting,
+    priority: selectedPriority,
+    urgency: selectedUrgency,
+  } = state;
+  const page = Math.max(0, statePage - 1);
+  const requestedPageSize = statePageSize ?? 25;
+  const pageSize = [10, 25, 50, 100].includes(requestedPageSize) ? requestedPageSize : 25;
+  const {
+    search,
+    setSearch,
+    filters: privateColumnFilters,
+    setFilters: setPrivateColumnFilters,
+  } = useWorkspaceTableSessionState(`my-work:${academicYearId || 'none'}:${sessionIdentity}`);
   const [selectedWorkKeys, setSelectedWorkKeys] = useState<string[]>([]);
   const [bulkTaskOpen, setBulkTaskOpen] = useState(false);
   const [bulkTaskTitle, setBulkTaskTitle] = useState('');
@@ -171,38 +187,12 @@ export function EnrollmentOverviewWorkspace() {
   );
   const [bulkCreateTasks, bulkCreateTasksState] = useBulkCreateAdmissionCrmTasksMutation();
 
-  const selectionScope = [
-    academicYearId,
-    academicMediumId,
-    page,
-    pageSize,
-    search,
-    sorting,
-    searchParams.get('applicantSearch'),
-    searchParams.get('targetClassSearch'),
-    searchParams.get('priority'),
-    searchParams.get('urgency'),
-  ].join('|');
-
   useEffect(() => {
     setSelectedWorkKeys([]);
-  }, [selectionScope]);
+  }, [academicMediumId, academicYearId, page, pageSize, privateColumnFilters, search, sorting]);
 
-  const enumParam = useCallback(
-    (key: string, allowedValues: ReadonlySet<number>) => {
-      const value = searchParams.get(key);
-      if (value == null || value === '') return undefined;
-      const parsed = Number(value);
-      return Number.isInteger(parsed) && allowedValues.has(parsed) ? parsed : undefined;
-    },
-    [searchParams]
-  );
-  const applicantSearch = searchParams.get('applicantSearch') || undefined;
-  const targetClassSearch = searchParams.get('targetClassSearch') || undefined;
-  const selectedPriority = enumParam('priority', priorityValues) as
-    AdmissionCrmLeadPriority | undefined;
-  const selectedUrgency = enumParam('urgency', urgencyValues) as
-    AdmissionCrmWorkUrgency | undefined;
+  const applicantSearch = getLatestStringFilter(privateColumnFilters, 'applicantName');
+  const targetClassSearch = getLatestStringFilter(privateColumnFilters, 'targetClassName');
 
   const query = useGetAdmissionCrmMyWorkQuery(
     {
@@ -272,21 +262,6 @@ export function EnrollmentOverviewWorkspace() {
           ]),
     ],
     [applicantSearch, selectedPriority, selectedUrgency, targetClassSearch]
-  );
-
-  const updateUrl = useCallback(
-    (
-      changes: Record<string, string | number | undefined | null>,
-      mode: 'push' | 'replace' = 'replace'
-    ) => {
-      const params = new URLSearchParams(searchParams.toString());
-      Object.entries(changes).forEach(([key, value]) => {
-        if (value == null || value === '') params.delete(key);
-        else params.set(key, String(value));
-      });
-      router[mode](`?${params.toString()}`, { scroll: false });
-    },
-    [router, searchParams]
   );
 
   const openItem = useCallback(
@@ -580,19 +555,18 @@ export function EnrollmentOverviewWorkspace() {
   const handleFilters = useCallback(
     (filters: IParams['filters']) => {
       const byColumn = new Map(filters.map((filter) => [filter.column, filter.value]));
-      updateUrl({
-        applicantSearch: byColumn.get('applicantName')
-          ? String(byColumn.get('applicantName'))
-          : undefined,
-        targetClassSearch: byColumn.get('targetClassName')
-          ? String(byColumn.get('targetClassName'))
-          : undefined,
+      setPrivateColumnFilters(
+        filters.filter((filter) =>
+          ['applicantName', 'targetClassName'].includes(filter.column)
+        )
+      );
+      updateState({
         urgency: enumValue(byColumn.get('urgency')),
         priority: enumValue(byColumn.get('priority')),
         page: 1,
       });
     },
-    [updateUrl]
+    [setPrivateColumnFilters, updateState]
   );
 
   if (!academicYearId)
@@ -652,14 +626,14 @@ export function EnrollmentOverviewWorkspace() {
             {metrics.map((metric) => {
               const selected =
                 metric.urgency != null
-                  ? enumParam('urgency', urgencyValues) === metric.urgency
-                  : enumParam('urgency', urgencyValues) == null;
+                  ? selectedUrgency === metric.urgency
+                  : selectedUrgency == null;
               return (
                 <Button
                   key={metric.key}
                   color="inherit"
                   aria-pressed={selected}
-                  onClick={() => updateUrl({ urgency: metric.urgency, page: 1 })}
+                  onClick={() => updateState({ urgency: metric.urgency, page: 1 })}
                   sx={{
                     justifyContent: 'flex-start',
                     px: 1.5,
@@ -721,15 +695,15 @@ export function EnrollmentOverviewWorkspace() {
             defaultRowsPerPage={25}
             rowsPerPageOptions={[10, 25, 50, 100]}
             onServerPagination={(nextPage, nextPageSize) =>
-              updateUrl({ page: nextPage, pageSize: nextPageSize })
+              updateState({ page: nextPage, pageSize: nextPageSize }, 'push')
             }
-            onServerSearch={(value) => updateUrl({ search: value || null, page: 1 })}
+            onServerSearch={(value) => {
+              setSearch(value);
+              updateState({ page: 1 }, 'replace');
+            }}
             onServerSort={(_column, sorts) => {
               const nextSorting = serializeEnrollmentTableSort(sorts);
-              updateUrl({
-                sorting: nextSorting || null,
-                page: 1,
-              });
+              updateState({ sorting: nextSorting || undefined, page: 1 }, 'push');
             }}
             onServerFilter={handleFilters}
             rowProps={(row) => {

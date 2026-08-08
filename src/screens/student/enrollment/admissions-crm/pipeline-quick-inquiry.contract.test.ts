@@ -25,6 +25,7 @@ describe('Admissions Pipeline Quick Inquiry contract', () => {
     expect(pipelineSource).toContain('Enter a valid email address');
     expect(pipelineSource).toContain('middleName: quickForm.middleName.trim() || undefined');
     expect(pipelineSource).toContain('lastName: quickForm.lastName.trim() || undefined');
+    expect(pipelineSource.match(/maxLength: quickInquiryFieldLimits\.name/g)).toHaveLength(4);
   });
 
   it('uses Admission Year Setup options and sends one consistent academic target', () => {
@@ -85,5 +86,11 @@ describe('Admissions Pipeline Quick Inquiry contract', () => {
     expect(pipelineSource).toContain('intendedRouteNameSnapshot');
     expect(pipelineSource).toContain('intendedRouteDefinitionVersion');
     expect(pipelineSource).toContain('Version {lead.intendedRouteDefinitionVersion}');
+  });
+
+  it('guards rapid creation and rechecks duplicates after an ambiguous request failure', () => {
+    expect(pipelineSource).toContain('createInquiryInFlightRef.current');
+    expect(pipelineSource).toMatch(/catch \(error\) \{\s+setDuplicateReviewed\(false\)/);
+    expect(pipelineSource).toContain('createInquiryInFlightRef.current = false');
   });
 });

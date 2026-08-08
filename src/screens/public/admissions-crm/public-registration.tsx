@@ -58,6 +58,7 @@ type Field = {
 
 export type PublicRegistrationApplication = {
   id: string;
+  concurrencyStamp: string;
   formNumber: string;
   status: number;
   sections: Array<{
@@ -136,7 +137,11 @@ export default function PublicRegistration({
       const response = await fetch(path, {
         method: submit ? 'POST' : 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessSessionToken, responses }),
+        body: JSON.stringify({
+          accessSessionToken,
+          concurrencyStamp: application.concurrencyStamp,
+          responses,
+        }),
       });
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(

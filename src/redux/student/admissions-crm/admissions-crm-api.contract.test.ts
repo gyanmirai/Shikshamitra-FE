@@ -467,12 +467,20 @@ describe('admissions CRM API contracts', () => {
       buildSavePublicAdmissionCrmRegistrationRequest({
         tenantId: 'tenant-1',
         token: 'status-token',
-        body: { accessSessionToken: 'session-token', responses: { firstName: 'Aarav' } },
+        body: {
+          accessSessionToken: 'session-token',
+          concurrencyStamp: 'version-1',
+          responses: { firstName: 'Aarav' },
+        },
       })
     ).toEqual({
       url: '/public/student-enrollment/admissions-crm/tenant-1/status/status-token/registration',
       method: 'PUT',
-      body: { accessSessionToken: 'session-token', responses: { firstName: 'Aarav' } },
+      body: {
+        accessSessionToken: 'session-token',
+        concurrencyStamp: 'version-1',
+        responses: { firstName: 'Aarav' },
+      },
     });
   });
 

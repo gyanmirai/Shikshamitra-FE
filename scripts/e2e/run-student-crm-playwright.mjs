@@ -15,10 +15,21 @@ const getArgValue = (name, fallback) => {
 const dryRun = flagSet.has('--dry-run');
 const preflightOnly = flagSet.has('--preflight-only');
 const allowRemoteMutation = flagSet.has('--allow-stage-mutation');
+const readOnlyReleaseGates = flagSet.has('--read-only-release-gates');
 const useDefaultCredentials = flagSet.has('--use-default-credentials');
 const headed = flagSet.has('--headed');
 const project = getArgValue('--project', 'chromium-guest');
 const reporter = getArgValue('--reporter', 'list');
+const readOnlyReleaseGatePattern =
+  'Enrollment remains bounded|Registration worklist selection|workspace URLs preserve operational state';
+const readOnlyReleaseGatePatterns = new Set([
+  readOnlyReleaseGatePattern,
+  'Enrollment remains bounded',
+  'Registration worklist selection',
+  'workspace URLs preserve operational state',
+]);
+const requestedGrep = getArgValue('--grep', '');
+const grep = readOnlyReleaseGates ? requestedGrep || readOnlyReleaseGatePattern : requestedGrep;
 const specPath = [
   'e2e',
   'student',
@@ -125,6 +136,7 @@ const missingCredentials = Object.entries(resolvedCredentials)
 const describeCredentialState = () =>
   Object.entries(resolvedCredentials)
     .map(([key, value]) => {
+      if (key === 'E2E_PASSWORD' && (value || useDefaultCredentials)) return `${key}=configured`;
       if (value) return `${key}=configured`;
       if (useDefaultCredentials) return `${key}=${defaults[key]}`;
       return `${key}=missing`;
@@ -140,7 +152,19 @@ if (browserExecutablePath && !existsSync(browserExecutablePath)) {
   fail(`Browser executable was not found at ${browserExecutablePath}.`);
 }
 
-if (!preflightOnly && !dryRun && remoteGyanmiraiHost && !allowRemoteMutation) {
+if (readOnlyReleaseGates && !readOnlyReleaseGatePatterns.has(grep)) {
+  fail(
+    `--read-only-release-gates accepts only the bounded-board, registration-worklist, and URL-privacy gates.`
+  );
+}
+
+if (
+  !preflightOnly &&
+  !dryRun &&
+  remoteGyanmiraiHost &&
+  !allowRemoteMutation &&
+  !readOnlyReleaseGates
+) {
   fail(
     `Refusing to run against ${apiHost} because this CRM spec creates inquiry leads, registration forms, exam schedules, results, and eligibility records. Pass --allow-stage-mutation only for an approved disposable seeded tenant.`
   );
@@ -183,12 +207,21 @@ const playwrightArgs = [
   specPath,
   `--project=${project}`,
   `--reporter=${reporter}`,
+  ...(grep ? ['--grep', grep] : []),
   ...(headed ? ['--headed'] : []),
 ];
 
 const printSummary = () => {
   console.log('Student CRM Playwright runner');
-  console.log(`Mode: ${preflightOnly ? 'read-only preflight' : 'full mutating CRM smoke'}`);
+  console.log(
+    `Mode: ${
+      preflightOnly
+        ? 'read-only preflight'
+        : readOnlyReleaseGates
+          ? 'read-only release gates'
+          : 'full mutating CRM smoke'
+    }`
+  );
   console.log(`Browser mode: ${headed ? 'headed' : 'headless'}`);
   console.log(`API URL: ${apiUrl}`);
   console.log(`Frontend URL: ${baseUrl}`);
@@ -199,8 +232,8 @@ const printSummary = () => {
   console.log(`Local HTTPS self-signed TLS allowed: ${isLocalHttpsApi ? 'yes' : 'no'}`);
   console.log(
     `Remote Gyanmirai mutation allowed: ${
-      preflightOnly
-        ? 'not required for read-only preflight'
+      preflightOnly || readOnlyReleaseGates
+        ? 'not required for read-only checks'
         : remoteGyanmiraiHost && allowRemoteMutation
           ? 'yes'
           : 'no'
@@ -244,7 +277,7 @@ const main = async () => {
   printSummary();
 
   if (dryRun) {
-    if (!preflightOnly && remoteGyanmiraiHost && !allowRemoteMutation) {
+    if (!preflightOnly && !readOnlyReleaseGates && remoteGyanmiraiHost && !allowRemoteMutation) {
       console.log(
         'Dry run note: a real run would require --allow-stage-mutation for this API host.'
       );

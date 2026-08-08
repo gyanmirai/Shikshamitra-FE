@@ -8,7 +8,6 @@ import type {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useMemo, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   AdmissionCrmApplicantStepKey,
@@ -28,8 +27,8 @@ import {
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
-import { parseEnrollmentTablePagination } from './workspace-table-pagination';
 import { createApplicantRowNavigationProps } from './applicant-row-navigation';
+import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
   getRouteTypeLabel,
@@ -82,28 +81,18 @@ export function ApplicantWorklistWorkspace({
   applicantTab,
   headerActions,
 }: ApplicantWorklistWorkspaceProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { academicYearId, academicMediumId, openApplicant } = useEnrollmentWorkspace();
-  const { page, pageSize } = parseEnrollmentTablePagination(searchParams);
-  const search = searchParams.get('search') || '';
-  const sorting = searchParams.get('sorting') || 'lastActivityTime desc';
-  const requestedColumn = Number(searchParams.get('worklist'));
-  const selectedColumn = worklistColumns.some((item) => item.key === requestedColumn)
-    ? (requestedColumn as AdmissionCrmPipelineColumnKey)
-    : defaultColumn;
-
-  const updateUrl = useCallback(
-    (changes: Record<string, string | number | null | undefined>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      Object.entries(changes).forEach(([key, value]) => {
-        if (value == null || value === '') params.delete(key);
-        else params.set(key, String(value));
-      });
-      router.replace(`?${params.toString()}`, { scroll: false });
-    },
-    [router, searchParams]
+  const { academicYearId, academicMediumId, sessionIdentity, state, updateState, openApplicant } =
+    useEnrollmentWorkspace();
+  const page = Math.max(0, state.page - 1);
+  const requestedPageSize = state.pageSize ?? 25;
+  const pageSize = [10, 25, 50, 100].includes(requestedPageSize) ? requestedPageSize : 25;
+  const { search, setSearch } = useWorkspaceTableSessionState(
+    `applicant-worklist:${tableId}:${academicYearId || 'none'}:${sessionIdentity}`
   );
+  const sorting = state.sorting || 'lastActivityTime desc';
+  const selectedColumn = worklistColumns.some((item) => item.key === state.pipelineColumn)
+    ? (state.pipelineColumn as AdmissionCrmPipelineColumnKey)
+    : defaultColumn;
 
   const query = useGetAdmissionCrmLeadsQuery(
     {
@@ -254,7 +243,7 @@ export function ApplicantWorklistWorkspace({
           value={selectedColumn}
           onChange={(_event, value: AdmissionCrmPipelineColumnKey | null) => {
             if (value == null) return;
-            updateUrl({ worklist: value, page: 1 });
+            updateState({ pipelineColumn: value, page: 1 });
           }}
           aria-label={`${title} worklist`}
         >
@@ -294,15 +283,15 @@ export function ApplicantWorklistWorkspace({
             defaultRowsPerPage={25}
             rowsPerPageOptions={[10, 25, 50, 100]}
             onServerPagination={(nextPage, nextPageSize) =>
-              updateUrl({ page: nextPage, pageSize: nextPageSize })
+              updateState({ page: nextPage, pageSize: nextPageSize }, 'push')
             }
-            onServerSearch={(value) => updateUrl({ search: value || null, page: 1 })}
+            onServerSearch={(value) => {
+              setSearch(value);
+              updateState({ page: 1 }, 'replace');
+            }}
             onServerSort={(_column, sorts) => {
               const nextSorting = serializeEnrollmentTableSort(sorts);
-              updateUrl({
-                sorting: nextSorting || null,
-                page: 1,
-              });
+              updateState({ sorting: nextSorting || undefined, page: 1 }, 'push');
             }}
             rowProps={(row) => {
               const lead = row as AdmissionCrmLeadDto;

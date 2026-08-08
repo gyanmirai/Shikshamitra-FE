@@ -134,8 +134,8 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     const exams = read('exams-workspace.tsx');
 
     expect(exams).toContain('type BulkExamResultForm');
-    expect(exams).toContain('parseBulkExamNumber');
-    expect(exams).toContain('isValidBulkExamResultForm');
+    expect(exams).toContain('validateExamResultValues');
+    expect(exams).toContain('isValidExamResultValues');
     expect(exams).toContain('bulkMarksByExamId');
     expect(exams).toContain('selectedExams.length === selectedExamIds.length');
     expect(exams).toContain('items: selectedExams.map((exam)');
@@ -201,6 +201,7 @@ describe('Student Enrollment applicant workspace page contracts', () => {
   it('allows staff to upload registration checklist documents', () => {
     const registration = read('applicant-registration-operations.tsx');
     const actionPermissions = read('admission-action-permissions.ts');
+    const requirementNameExpression = `${String.fromCharCode(36, 123)}document.requirementName}`;
 
     expect(registration).toContain('useUploadAdmissionCrmRegistrationDocumentMutation');
     expect(registration).toContain('type="file"');
@@ -211,6 +212,12 @@ describe('Student Enrollment applicant workspace page contracts', () => {
       /reviewDocuments: `\$\{admissionCrmPermissionRoot\}\.ReviewDocuments`/
     );
     expect(registration).toContain('canUploadDocuments ?');
+    expect(registration).toContain(`Choose file for ${requirementNameExpression}`);
+    expect(registration).toContain(`Decision or waiver reason for ${requirementNameExpression}`);
+    expect(registration).toContain(`Upload ${requirementNameExpression}`);
+    expect(registration).toContain(`Verify ${requirementNameExpression}`);
+    expect(registration).toContain(`Reject ${requirementNameExpression}`);
+    expect(registration).toContain(`Waive ${requirementNameExpression}`);
   });
 
   it('uses switches and chips for operational booleans while retaining explicit consent', () => {
@@ -228,6 +235,14 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(registration).toContain('Enable readiness override');
     expect(household).toContain('Pickup authorization');
     expect(household).not.toContain('<Checkbox');
+  });
+
+  it('omits unused new-person details when reusing an existing guardian', () => {
+    const household = read('applicant-household-identity-operations.tsx');
+
+    expect(household).toContain('...(!existingGuardianId && {');
+    expect(household).toContain('existingGuardianPersonId: existingGuardianId || undefined');
+    expect(household).not.toContain("guardianFirstName || 'Existing'");
   });
 
   it('does not request a current registration for a known empty lead', () => {

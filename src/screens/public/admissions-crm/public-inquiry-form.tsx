@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import {
   AdmissionCrmFormFieldType,
@@ -178,7 +178,33 @@ export default function PublicAdmissionInquiryFormScreen({
   const [reloadKey, setReloadKey] = useState(0);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [language, setLanguage] = useState<ApplicantLanguage>('en');
+  const submissionKeyRef = useRef('');
+  const submissionInFlightRef = useRef(false);
+  const submissionStorageKey = `enrollment-inquiry-submission:${tenantId}:${templateId}`;
   const text = uiText[language];
+
+  const getSubmissionKey = () => {
+    if (submissionKeyRef.current) return submissionKeyRef.current;
+
+    try {
+      const existing = window.sessionStorage.getItem(submissionStorageKey);
+      if (existing) {
+        submissionKeyRef.current = existing;
+        return existing;
+      }
+    } catch {
+      // Session storage may be disabled; the in-memory key still protects this page instance.
+    }
+
+    const generated = window.crypto.randomUUID();
+    submissionKeyRef.current = generated;
+    try {
+      window.sessionStorage.setItem(submissionStorageKey, generated);
+    } catch {
+      // Preserve the in-memory key when session storage is unavailable.
+    }
+    return generated;
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -280,7 +306,9 @@ export default function PublicAdmissionInquiryFormScreen({
 
   const handleSubmit = async () => {
     if (!form || !validate()) return;
+    if (submissionInFlightRef.current) return;
 
+    submissionInFlightRef.current = true;
     setIsSubmitting(true);
     try {
       const response = await fetch(
@@ -289,6 +317,7 @@ export default function PublicAdmissionInquiryFormScreen({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            submissionKey: getSubmissionKey(),
             consentVersion: form.consentVersion,
             consentAccepted,
             communicationPreferences,
@@ -308,12 +337,19 @@ export default function PublicAdmissionInquiryFormScreen({
       }
 
       const payload = (await response.json()) as SubmitResult;
+      submissionKeyRef.current = '';
+      try {
+        window.sessionStorage.removeItem(submissionStorageKey);
+      } catch {
+        // The confirmed result is already rendered; storage cleanup is best-effort only.
+      }
       setResult(payload);
     } catch (error) {
       shikshaMitraToast.error({
         message: error instanceof Error ? error.message : text.submitFailed,
       });
     } finally {
+      submissionInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };

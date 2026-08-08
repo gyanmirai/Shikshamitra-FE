@@ -7,6 +7,7 @@ import {
 import {
   mapQuickInquiryOptions,
   isValidQuickInquiryEmail,
+  isValidQuickInquiryPhone,
   getDefaultQuickInquiryOption,
 } from './quick-inquiry-options';
 
@@ -143,5 +144,21 @@ describe('Quick Inquiry options', () => {
     ['parent @example.com', false],
   ])('validates inquiry email %j', (email, expected) => {
     expect(isValidQuickInquiryEmail(email)).toBe(expected);
+  });
+
+  it.each([
+    ['', true],
+    ['9999900807', true],
+    [' +91 99999 00807 ', true],
+    ['+1 (604) 555-0123', true],
+    ['020-7946-0958', true],
+    ['abc1', false],
+    ['123456', false],
+    ['1234567890123456', false],
+    ['+91 99999 CALLME', false],
+    ['+1 (604 555-0123', false],
+    ['++91 9999900807', false],
+  ])('validates inquiry phone %j', (phone, expected) => {
+    expect(isValidQuickInquiryPhone(phone)).toBe(expected);
   });
 });

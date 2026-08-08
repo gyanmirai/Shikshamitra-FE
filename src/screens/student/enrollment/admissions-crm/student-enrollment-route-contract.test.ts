@@ -394,7 +394,7 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(exams).toContain('icon="solar:door-2-bold-duotone"');
   });
 
-  it('keeps My Work search and filters shareable in URL state', () => {
+  it('keeps applicant-entered table searches private while structural filters remain shareable', () => {
     const state = read(
       'src',
       'screens',
@@ -403,11 +403,33 @@ describe('Student Enrollment workspace route contracts', () => {
       'admissions-crm',
       'enrollment-workspace-state.ts'
     );
+    const myWork = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'overview-workspace.tsx'
+    );
+    const applicantWorklist = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'applicant-worklist-workspace.tsx'
+    );
     expect(state).toContain("set('search'");
     expect(state).toContain("set('workType'");
     expect(state).toContain("set('urgency'");
     expect(state).not.toContain("set('phone'");
     expect(state).not.toContain("set('email'");
+    [myWork, applicantWorklist].forEach((source) => {
+      expect(source).toContain('useWorkspaceTableSessionState');
+      expect(source).not.toContain("searchParams.get('search')");
+    });
+    expect(myWork).not.toContain("searchParams.get('applicantSearch')");
+    expect(myWork).not.toContain("searchParams.get('targetClassSearch')");
   });
 
   it('renders legacy or unknown admission pathway values without crashing Pipeline', () => {
@@ -533,6 +555,9 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(applicantWorklist).toContain('serverSideSort');
     expect(applicantWorklist).toContain('serverSideSortMode="single"');
     expect(applicantWorklist).toContain('parseEnrollmentTableSorts');
+    expect(applicantWorklist).toContain('state.pipelineColumn');
+    expect(applicantWorklist).toContain('updateState({ pipelineColumn: value, page: 1 })');
+    expect(applicantWorklist).not.toContain("searchParams.get('worklist')");
 
     const analytics = read(
       'src',
@@ -564,8 +589,20 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(fixture).toContain('length: maxResultCount');
     expect(fixture).not.toContain('length: admissionCrmScaleTotal');
     expect(browserFlow).toContain('toHaveCount(50)');
-    expect(browserFlow).toContain("has('stage') ? 25 : 50");
+    expect(browserFlow).toContain("has('pipelineColumn') ? 25 : 50");
     expect(browserFlow).toContain('toBeLessThanOrEqual(25)');
+
+    const boardColumn = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-stage-column.tsx'
+    );
+    expect(boardColumn).toContain('pipelineColumn: column.key');
+    expect(boardColumn).toContain('data-pipeline-column={column.key}');
+    expect(boardColumn).toContain("color: 'text.primary'");
   });
 
   it('does not expose raw staff identifiers or editable provider JSON in ordinary UI', () => {

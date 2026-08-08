@@ -6,7 +6,10 @@ const tenantCode = () => process.env.E2E_TENANT || 'DDVS';
 const password = () => process.env.E2E_PASSWORD || 'Temp@123';
 const principalEmail = () => process.env.E2E_PRINCIPAL_EMAIL || 'principal-gseb@ddvs.com';
 
-type JsonRequestInit = Omit<RequestInit, 'body'> & {
+type JsonRequestInit = Omit<
+  NonNullable<Parameters<Page['request']['fetch']>[1]>,
+  'data'
+> & {
   body?: unknown;
 };
 

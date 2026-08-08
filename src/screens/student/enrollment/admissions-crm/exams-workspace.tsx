@@ -54,13 +54,19 @@ import {
   useBulkMarkAdmissionCrmExamAttendanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { getExamBulkFailures } from './bulk-operation-errors';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
+import { getEnrollmentApiErrorMessage } from './enrollment-api-errors';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { resolveAdmissionCrmExamActionPermissions } from './admission-action-permissions';
 import { readExamResultImportFile, downloadExamResultTemplate } from './exam-result-import';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
+import {
+  isValidExamResultValues,
+  validateExamResultValues,
+} from './exam-result-validation';
 import {
   createEnrollmentQueryScopeKey,
   getEnrollmentFilterQueryScope,
@@ -83,7 +89,9 @@ import {
   EnrollmentWorkspaceErrorState,
 } from './workspace-table-patterns';
 
+import type { ExamResultValues } from './exam-result-validation';
 import type { ExamResultImportPreview } from './exam-result-import';
+import type { EnrollmentBulkFailure } from './bulk-operation-errors';
 import type { ApplicantWorkspaceTab } from './applicant-workspace-page';
 
 const pageSize = 50;
@@ -91,7 +99,15 @@ const attendanceLabels: Record<AdmissionCrmExamAttendanceStatus, string> = {
   [AdmissionCrmExamAttendanceStatus.NotMarked]: 'Not Marked',
   [AdmissionCrmExamAttendanceStatus.Present]: 'Present',
   [AdmissionCrmExamAttendanceStatus.Absent]: 'Absent',
+  [AdmissionCrmExamAttendanceStatus.NoShow]: 'No-show',
+  [AdmissionCrmExamAttendanceStatus.Excused]: 'Excused',
 };
+const editableAttendanceStatuses = [
+  AdmissionCrmExamAttendanceStatus.Present,
+  AdmissionCrmExamAttendanceStatus.Absent,
+  AdmissionCrmExamAttendanceStatus.NoShow,
+  AdmissionCrmExamAttendanceStatus.Excused,
+];
 const resultLabels: Record<EntranceExamStatusEnum, string> = {
   [EntranceExamStatusEnum.Pending]: 'Pending',
   [EntranceExamStatusEnum.Pass]: 'Pass',
@@ -102,6 +118,8 @@ const attendanceColors: Record<AdmissionCrmExamAttendanceStatus, LabelColor> = {
   [AdmissionCrmExamAttendanceStatus.NotMarked]: 'default',
   [AdmissionCrmExamAttendanceStatus.Present]: 'success',
   [AdmissionCrmExamAttendanceStatus.Absent]: 'error',
+  [AdmissionCrmExamAttendanceStatus.NoShow]: 'warning',
+  [AdmissionCrmExamAttendanceStatus.Excused]: 'info',
 };
 const resultColors: Record<EntranceExamStatusEnum, LabelColor> = {
   [EntranceExamStatusEnum.Pending]: 'default',
@@ -115,6 +133,30 @@ const eligibilityColors: Record<AdmissionCrmEligibilityDecision, LabelColor> = {
   [AdmissionCrmEligibilityDecision.Waitlisted]: 'warning',
   [AdmissionCrmEligibilityDecision.Rejected]: 'error',
 };
+
+function BulkFailureAlert({
+  failures,
+  onClose,
+}: {
+  failures: EnrollmentBulkFailure[];
+  onClose: () => void;
+}) {
+  if (!failures.length) return null;
+
+  return (
+    <Alert severity="error" onClose={onClose}>
+      <Typography variant="subtitle2">Some exam records were not updated.</Typography>
+      <Box component="ul" sx={{ my: 0.5, pl: 2.5 }}>
+        {failures.map((failure) => (
+          <li key={failure.entityId}>
+            <strong>{failure.applicantName}:</strong> {failure.reason}
+          </li>
+        ))}
+      </Box>
+      Correct the listed records and retry; successful rows were already saved.
+    </Alert>
+  );
+}
 const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
   day: '2-digit',
   month: 'short',
@@ -136,38 +178,7 @@ const focusedExamSectionSx = {
     outlineOffset: 4,
   },
 } as const;
-type BulkExamResultForm = {
-  totalMarks: string;
-  passingMarks: string;
-  obtainedMarks: string;
-  meritRank: string;
-};
-
-const parseBulkExamNumber = (value: string) => {
-  if (!value.trim()) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
-const isValidBulkExamResultForm = (form: BulkExamResultForm | undefined) => {
-  if (!form) return false;
-  const totalMarks = parseBulkExamNumber(form.totalMarks);
-  const passingMarks = parseBulkExamNumber(form.passingMarks);
-  const obtainedMarks = parseBulkExamNumber(form.obtainedMarks);
-  const meritRank = form.meritRank.trim() ? parseBulkExamNumber(form.meritRank) : null;
-
-  return (
-    totalMarks != null &&
-    totalMarks > 0 &&
-    passingMarks != null &&
-    passingMarks >= 0 &&
-    passingMarks <= totalMarks &&
-    obtainedMarks != null &&
-    obtainedMarks >= 0 &&
-    obtainedMarks <= totalMarks &&
-    (!form.meritRank.trim() || (meritRank != null && Number.isInteger(meritRank) && meritRank > 0))
-  );
-};
+type BulkExamResultForm = ExamResultValues;
 
 const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   const filter = [...filters].reverse().find((item) => item.column === column);
@@ -434,6 +445,7 @@ function ExamsWorkspaceContent() {
   );
 
   useApplicantWorkspaceDirtyState('entrance-exam-review', selectedExamDirty);
+  const [bulkFailures, setBulkFailures] = useState<EnrollmentBulkFailure[]>([]);
 
   const examsQuery = useGetAdmissionCrmEntranceExamsQuery(
     {
@@ -492,6 +504,16 @@ function ExamsWorkspaceContent() {
     setOverrideReason('');
     setInitializedExamId(selectedExam.id);
   }, [selectedExam]);
+
+  const examResultValues = useMemo<ExamResultValues>(
+    () => ({ totalMarks, passingMarks, obtainedMarks, meritRank }),
+    [meritRank, obtainedMarks, passingMarks, totalMarks]
+  );
+  const examResultErrors = useMemo(
+    () => validateExamResultValues(examResultValues),
+    [examResultValues]
+  );
+  const examResultReady = Object.keys(examResultErrors).length === 0;
 
   useEffect(() => {
     const targetKey = `${state.applicant || ''}:${state.examAction || ''}`;
@@ -562,9 +584,12 @@ function ExamsWorkspaceContent() {
       const updated = (await action()) as AdmissionCrmEntranceExamDto;
       setSelectedExam(updated);
       shikshaMitraToast.success({ message });
-    } catch {
+    } catch (error) {
       shikshaMitraToast.error({
-        message: 'The exam record could not be updated. Review the fields and retry.',
+        message: getEnrollmentApiErrorMessage(
+          error,
+          'The exam record could not be updated. Review the fields and retry.'
+        ),
       });
     }
   };
@@ -621,6 +646,7 @@ function ExamsWorkspaceContent() {
 
   const openBulkMarksDialog = () => {
     setBulkCorrectionReason('');
+    setBulkFailures([]);
     setBulkMarksByExamId(
       selectedExams.reduce<Record<string, BulkExamResultForm>>((acc, exam) => {
         acc[exam.id] = {
@@ -664,6 +690,7 @@ function ExamsWorkspaceContent() {
   };
 
   const updateBulkExamResult = (examId: string, field: keyof BulkExamResultForm, value: string) => {
+    setBulkFailures((current) => current.filter((failure) => failure.entityId !== examId));
     setBulkMarksByExamId((current) => {
       const form: BulkExamResultForm = current[examId]
         ? { ...current[examId] }
@@ -684,12 +711,13 @@ function ExamsWorkspaceContent() {
   const bulkMarksReady =
     selectedExams.length > 0 &&
     selectedExams.length === selectedExamIds.length &&
-    selectedExams.every((exam) => isValidBulkExamResultForm(bulkMarksByExamId[exam.id])) &&
+    selectedExams.every((exam) => isValidExamResultValues(bulkMarksByExamId[exam.id])) &&
     (!selectedHasExistingResults ||
       (canOverrideExamResult && Boolean(bulkCorrectionReason.trim())));
 
   const markSelectedAttendance = async (value: AdmissionCrmExamAttendanceStatus) => {
     if (!academicYearId || selectedExamIds.length === 0) return;
+    setBulkFailures([]);
     try {
       const result = await bulkMarkAttendance({
         academicYearId,
@@ -697,6 +725,7 @@ function ExamsWorkspaceContent() {
         attendanceStatus: value,
       }).unwrap();
       if (result.failedCount > 0) {
+        setBulkFailures(getExamBulkFailures(result, selectedExams));
         setSelectedExamIds(
           result.items.filter((item) => !item.success).map((item) => item.entityId)
         );
@@ -709,8 +738,13 @@ function ExamsWorkspaceContent() {
       shikshaMitraToast.success({
         message: `${result.succeededCount} exam attendance record${result.succeededCount === 1 ? '' : 's'} updated.`,
       });
-    } catch {
-      shikshaMitraToast.error({ message: 'The selected exam attendance could not be updated.' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getEnrollmentApiErrorMessage(
+          error,
+          'The selected exam attendance could not be updated.'
+        ),
+      });
     }
   };
 
@@ -739,6 +773,7 @@ function ExamsWorkspaceContent() {
         }),
       }).unwrap();
       if (result.failedCount > 0) {
+        setBulkFailures(getExamBulkFailures(result, selectedExams));
         setSelectedExamIds(
           result.items.filter((item) => !item.success).map((item) => item.entityId)
         );
@@ -749,12 +784,18 @@ function ExamsWorkspaceContent() {
       }
       setBulkMarksOpen(false);
       setBulkMarksByExamId({});
+      setBulkFailures([]);
       setSelectedExamIds([]);
       shikshaMitraToast.success({
         message: `${result.succeededCount} exam result${result.succeededCount === 1 ? '' : 's'} recorded.`,
       });
-    } catch {
-      shikshaMitraToast.error({ message: 'The selected exam results could not be recorded.' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getEnrollmentApiErrorMessage(
+          error,
+          'The selected exam results could not be recorded.'
+        ),
+      });
     }
   };
 
@@ -1097,6 +1138,25 @@ function ExamsWorkspaceContent() {
                 >
                   Mark absent
                 </LoadingButton>
+                <LoadingButton
+                  size="small"
+                  color="warning"
+                  loading={bulkAttendanceState.isLoading}
+                  onClick={() =>
+                    markSelectedAttendance(AdmissionCrmExamAttendanceStatus.NoShow)
+                  }
+                >
+                  Mark no-show
+                </LoadingButton>
+                <LoadingButton
+                  size="small"
+                  loading={bulkAttendanceState.isLoading}
+                  onClick={() =>
+                    markSelectedAttendance(AdmissionCrmExamAttendanceStatus.Excused)
+                  }
+                >
+                  Mark excused
+                </LoadingButton>
               </>
             ) : null}
             {canBulkChangeExamResult ? (
@@ -1117,6 +1177,10 @@ function ExamsWorkspaceContent() {
             </Button>
           </Stack>
         </Paper>
+      ) : null}
+
+      {!bulkMarksOpen ? (
+        <BulkFailureAlert failures={bulkFailures} onClose={() => setBulkFailures([])} />
       ) : null}
 
       {entranceExamRequired && examsQuery.isError ? (
@@ -1220,6 +1284,7 @@ function ExamsWorkspaceContent() {
                 minRows={2}
               />
             ) : null}
+            <BulkFailureAlert failures={bulkFailures} onClose={() => setBulkFailures([])} />
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 fullWidth
@@ -1266,6 +1331,7 @@ function ExamsWorkspaceContent() {
                   obtainedMarks: '',
                   meritRank: '',
                 };
+                const errors = validateExamResultValues(form);
 
                 return (
                   <Paper key={exam.id} variant="outlined" sx={{ p: 1, borderRadius: 1 }}>
@@ -1294,6 +1360,9 @@ function ExamsWorkspaceContent() {
                           label="Total marks"
                           type="number"
                           value={form.totalMarks}
+                          error={Boolean(errors.totalMarks)}
+                          helperText={errors.totalMarks}
+                          slotProps={{ htmlInput: { min: 0 } }}
                           onChange={(event) =>
                             updateBulkExamResult(exam.id, 'totalMarks', event.target.value)
                           }
@@ -1302,6 +1371,9 @@ function ExamsWorkspaceContent() {
                           label="Passing marks"
                           type="number"
                           value={form.passingMarks}
+                          error={Boolean(errors.passingMarks)}
+                          helperText={errors.passingMarks}
+                          slotProps={{ htmlInput: { min: 0, max: form.totalMarks || undefined } }}
                           onChange={(event) =>
                             updateBulkExamResult(exam.id, 'passingMarks', event.target.value)
                           }
@@ -1310,6 +1382,9 @@ function ExamsWorkspaceContent() {
                           label="Obtained marks"
                           type="number"
                           value={form.obtainedMarks}
+                          error={Boolean(form.obtainedMarks && errors.obtainedMarks)}
+                          helperText={form.obtainedMarks ? errors.obtainedMarks : undefined}
+                          slotProps={{ htmlInput: { min: 0, max: form.totalMarks || undefined } }}
                           onChange={(event) =>
                             updateBulkExamResult(exam.id, 'obtainedMarks', event.target.value)
                           }
@@ -1318,6 +1393,9 @@ function ExamsWorkspaceContent() {
                           label="Merit rank"
                           type="number"
                           value={form.meritRank}
+                          error={Boolean(errors.meritRank)}
+                          helperText={errors.meritRank}
+                          slotProps={{ htmlInput: { min: 1, step: 1 } }}
                           onChange={(event) =>
                             updateBulkExamResult(exam.id, 'meritRank', event.target.value)
                           }
@@ -1478,15 +1556,11 @@ function ExamsWorkspaceContent() {
                       Not marked
                     </MenuItem>
                   ) : null}
-                  {Object.entries(attendanceLabels)
-                    .filter(
-                      ([value]) => Number(value) !== AdmissionCrmExamAttendanceStatus.NotMarked
-                    )
-                    .map(([value, label]) => (
-                      <MenuItem key={value} value={Number(value)}>
-                        {label}
-                      </MenuItem>
-                    ))}
+                  {editableAttendanceStatuses.map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {attendanceLabels[value]}
+                    </MenuItem>
+                  ))}
                 </TextField>
                 <LoadingButton
                   variant="outlined"
@@ -1525,6 +1599,9 @@ function ExamsWorkspaceContent() {
                     !canChangeExamResult ||
                     (selectedExam?.obtainedMarks != null && !canOverrideExamResult)
                   }
+                  error={Boolean(examResultErrors.totalMarks)}
+                  helperText={examResultErrors.totalMarks}
+                  slotProps={{ htmlInput: { min: 0 } }}
                   onChange={(event) => setTotalMarks(event.target.value)}
                 />
                 <TextField
@@ -1535,6 +1612,9 @@ function ExamsWorkspaceContent() {
                     !canChangeExamResult ||
                     (selectedExam?.obtainedMarks != null && !canOverrideExamResult)
                   }
+                  error={Boolean(examResultErrors.passingMarks)}
+                  helperText={examResultErrors.passingMarks}
+                  slotProps={{ htmlInput: { min: 0, max: totalMarks || undefined } }}
                   onChange={(event) => setPassingMarks(event.target.value)}
                 />
                 <TextField
@@ -1545,6 +1625,9 @@ function ExamsWorkspaceContent() {
                     !canChangeExamResult ||
                     (selectedExam?.obtainedMarks != null && !canOverrideExamResult)
                   }
+                  error={Boolean(obtainedMarks && examResultErrors.obtainedMarks)}
+                  helperText={obtainedMarks ? examResultErrors.obtainedMarks : undefined}
+                  slotProps={{ htmlInput: { min: 0, max: totalMarks || undefined } }}
                   onChange={(event) => setObtainedMarks(event.target.value)}
                 />
                 <TextField
@@ -1555,6 +1638,9 @@ function ExamsWorkspaceContent() {
                     !canChangeExamResult ||
                     (selectedExam?.obtainedMarks != null && !canOverrideExamResult)
                   }
+                  error={Boolean(examResultErrors.meritRank)}
+                  helperText={examResultErrors.meritRank}
+                  slotProps={{ htmlInput: { min: 1, step: 1 } }}
                   onChange={(event) => setMeritRank(event.target.value)}
                 />
               </Stack>
@@ -1581,9 +1667,7 @@ function ExamsWorkspaceContent() {
                   variant="outlined"
                   loading={uploadResultState.isLoading}
                   disabled={
-                    !totalMarks ||
-                    !passingMarks ||
-                    !obtainedMarks ||
+                    !examResultReady ||
                     (selectedExam?.obtainedMarks != null && !resultCorrectionReason.trim())
                   }
                   onClick={() =>

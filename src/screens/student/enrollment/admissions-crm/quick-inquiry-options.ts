@@ -41,8 +41,44 @@ export type QuickInquiryOptions = {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export const quickInquiryFieldLimits = {
+  name: 100,
+  contact: 32,
+  email: 256,
+  intent: 250,
+  campaign: 120,
+  notes: 2000,
+} as const;
+
 export const isValidQuickInquiryEmail = (value: string) =>
   !value.trim() || emailPattern.test(value.trim());
+
+export const isValidQuickInquiryPhone = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  if (trimmed.length > quickInquiryFieldLimits.contact) return false;
+
+  const phoneSyntax = [...trimmed].reduce(
+    (state, character, index) => {
+      if (!state.valid) return state;
+      if (/\d/.test(character) || character === ' ' || character === '-' || character === '.') {
+        return state;
+      }
+      if (character === '+' && index === 0) return state;
+      if (character === '(' && state.parenthesisDepth === 0) {
+        return { valid: true, parenthesisDepth: 1 };
+      }
+      if (character === ')' && state.parenthesisDepth === 1) {
+        return { valid: true, parenthesisDepth: 0 };
+      }
+      return { ...state, valid: false };
+    },
+    { valid: true, parenthesisDepth: 0 }
+  );
+
+  const digitCount = [...trimmed].filter((character) => /\d/.test(character)).length;
+  return phoneSyntax.valid && phoneSyntax.parenthesisDepth === 0 && digitCount >= 7 && digitCount <= 15;
+};
 
 export const mapQuickInquiryOptions = (
   response: AdmissionCrmQuickInquiryOptionsDto | undefined

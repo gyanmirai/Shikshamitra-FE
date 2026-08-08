@@ -7,6 +7,13 @@ const studentE2EEnabled = process.env.E2E_STUDENT_MODULE === '1';
 const tenant = () => process.env.E2E_TENANT || 'DDVS';
 const password = () => process.env.E2E_PASSWORD || 'Temp@123';
 
+type StudentRequestInit = Omit<
+  NonNullable<Parameters<Page['request']['fetch']>[1]>,
+  'data'
+> & {
+  body?: unknown;
+};
+
 const roleUsers = [
   { label: 'Admin', email: process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com' },
   { label: 'Principal', email: process.env.E2E_PRINCIPAL_EMAIL || 'principal-gseb@ddvs.com' },
@@ -124,7 +131,7 @@ async function login(page: Page, email: string) {
 async function studentApiRequest(
   page: Page,
   path: string,
-  init: RequestInit = {}
+  init: StudentRequestInit = {}
 ): Promise<APIResponse> {
   const token = await getAccessToken(page);
   const { body, ...requestInit } = init;

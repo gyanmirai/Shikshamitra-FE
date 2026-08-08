@@ -23,6 +23,7 @@ import {
   MenuItem,
   TextField,
   Typography,
+  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -33,6 +34,12 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
+import {
+  isRegistrationFieldVisible,
+  getEffectiveRegistrationValue,
+  validateRegistrationResponses,
+  calculateRegistrationCompletion,
+} from './registration-response-validation';
 
 type Props = {
   registration: AdmissionCrmRegistrationApplicationDto;
@@ -69,6 +76,8 @@ export function RegistrationResponseEditor({ registration }: Props) {
   const [savedResponses, setSavedResponses] = useState<Record<string, unknown>>(
     registration.responses || {}
   );
+  const [concurrencyStamp, setConcurrencyStamp] = useState(registration.concurrencyStamp);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saveResponses, saveState] = useSaveAdmissionCrmStaffRegistrationResponsesMutation();
   const [submitResponses, submitState] = useSubmitAdmissionCrmStaffRegistrationResponsesMutation();
   const dirty = !sameResponses(responses, savedResponses);
@@ -82,7 +91,14 @@ export function RegistrationResponseEditor({ registration }: Props) {
     const next = registration.responses || {};
     setResponses(next);
     setSavedResponses(next);
-  }, [registration.id, registration.lastSavedAt, registration.responses]);
+    setConcurrencyStamp(registration.concurrencyStamp);
+    setFieldErrors({});
+  }, [
+    registration.concurrencyStamp,
+    registration.id,
+    registration.lastSavedAt,
+    registration.responses,
+  ]);
 
   useApplicantWorkspaceDirtyState(`registration-responses-${registration.id}`, dirty);
 
@@ -94,29 +110,40 @@ export function RegistrationResponseEditor({ registration }: Props) {
     [registration.sections]
   );
 
-  const getEffectiveValue = (field: AdmissionCrmRegistrationFieldDto) => {
-    if (Object.prototype.hasOwnProperty.call(responses, field.key)) return responses[field.key];
-    if (
-      field.systemField &&
-      Object.prototype.hasOwnProperty.call(registration.prefill, field.systemField)
-    ) {
-      return registration.prefill[field.systemField];
-    }
-    return '';
-  };
+  const allVisibleSectionFields = useMemo(
+    () => visibleSections.flatMap((section) => section.fields),
+    [visibleSections]
+  );
 
-  const isVisible = (field: AdmissionCrmRegistrationFieldDto) => {
-    if (!field.visibleWhenFieldKey) return true;
-    const controllingField = visibleSections
-      .flatMap((section) => section.fields)
-      .find((candidate) => candidate.key === field.visibleWhenFieldKey);
-    if (!controllingField) return false;
-    const value = getEffectiveValue(controllingField);
-    return String(value).toLowerCase() === String(field.visibleWhenValue ?? 'true').toLowerCase();
-  };
+  const completionPercentage = useMemo(
+    () =>
+      calculateRegistrationCompletion(
+        registration.sections,
+        responses,
+        registration.prefill
+      ),
+    [registration.prefill, registration.sections, responses]
+  );
+
+  const getEffectiveValue = (field: AdmissionCrmRegistrationFieldDto) =>
+    getEffectiveRegistrationValue(field, responses, registration.prefill);
+
+  const isVisible = (field: AdmissionCrmRegistrationFieldDto) =>
+    isRegistrationFieldVisible(
+      field,
+      allVisibleSectionFields,
+      responses,
+      registration.prefill
+    );
 
   const updateResponse = (field: AdmissionCrmRegistrationFieldDto, value: unknown) => {
     setResponses((current) => ({ ...current, [field.key]: value }));
+    setFieldErrors((current) => {
+      if (!current[field.key]) return current;
+      const next = { ...current };
+      delete next[field.key];
+      return next;
+    });
   };
 
   const run = async (
@@ -127,17 +154,42 @@ export function RegistrationResponseEditor({ registration }: Props) {
       const updated = await action();
       setResponses(updated.responses || {});
       setSavedResponses(updated.responses || {});
+      setConcurrencyStamp(updated.concurrencyStamp);
+      setFieldErrors({});
       shikshaMitraToast.success({ message: success });
     } catch (error) {
+      const message = readError(error, 'Registration details could not be saved.');
       shikshaMitraToast.error({
-        message: readError(error, 'Registration details could not be saved.'),
+        message: message.includes('AdmissionCrm:RegistrationConcurrencyConflict')
+          ? 'This registration changed in another tab. Your entries are preserved here; refresh the applicant and review the latest version before saving again.'
+          : message,
       });
     }
+  };
+
+  const submitRegistration = () => {
+    const errors = validateRegistrationResponses(
+      registration.sections,
+      responses,
+      registration.prefill
+    );
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    run(
+      () =>
+        submitResponses({
+          applicationId: registration.id,
+          body: { concurrencyStamp, responses },
+        }).unwrap(),
+      'Registration submitted for verification.'
+    );
   };
 
   const renderField = (field: AdmissionCrmRegistrationFieldDto) => {
     if (!isVisible(field)) return null;
     const value = getEffectiveValue(field);
+    const error = fieldErrors[field.key];
     const systemManaged = Boolean(field.systemField && !field.parentEditable);
     const disabled = !canEdit || systemManaged || saveState.isLoading || submitState.isLoading;
     const helperText = systemManaged
@@ -146,17 +198,19 @@ export function RegistrationResponseEditor({ registration }: Props) {
 
     if (field.fieldType === AdmissionCrmFormFieldType.Checkbox) {
       return (
-        <FormControlLabel
-          key={field.key}
-          control={
-            <Checkbox
-              checked={Boolean(value)}
-              disabled={disabled}
-              onChange={(event) => updateResponse(field, event.target.checked)}
-            />
-          }
-          label={`${field.label}${field.required ? ' *' : ''}`}
-        />
+        <Box key={field.key}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={Boolean(value)}
+                disabled={disabled}
+                onChange={(event) => updateResponse(field, event.target.checked)}
+              />
+            }
+            label={`${field.label}${field.required ? ' *' : ''}`}
+          />
+          {error ? <FormHelperText error>{error}</FormHelperText> : null}
+        </Box>
       );
     }
 
@@ -170,6 +224,7 @@ export function RegistrationResponseEditor({ registration }: Props) {
         label={field.label}
         required={field.required}
         disabled={disabled}
+        error={Boolean(error)}
         value={isMultiSelect ? (Array.isArray(value) ? value : []) : textValue(value)}
         onChange={(event) => updateResponse(field, event.target.value)}
         type={
@@ -186,7 +241,7 @@ export function RegistrationResponseEditor({ registration }: Props) {
         select={isSelect}
         multiline={field.fieldType === AdmissionCrmFormFieldType.TextArea}
         minRows={field.fieldType === AdmissionCrmFormFieldType.TextArea ? 3 : undefined}
-        helperText={helperText}
+        helperText={error || helperText}
         slotProps={{
           inputLabel:
             field.fieldType === AdmissionCrmFormFieldType.Date ? { shrink: true } : undefined,
@@ -221,7 +276,7 @@ export function RegistrationResponseEditor({ registration }: Props) {
               form.
             </Typography>
           </Box>
-          <Chip size="small" label={`${registration.completionPercentage.toFixed(0)}% complete`} />
+          <Chip size="small" label={`${completionPercentage.toFixed(0)}% complete`} />
         </Stack>
 
         {!canEnterResponses ? (
@@ -232,6 +287,13 @@ export function RegistrationResponseEditor({ registration }: Props) {
           <Alert severity="info">
             This registration is {AdmissionCrmRegistrationStatus[registration.status]}. Reopen or
             return it for correction before changing responses.
+          </Alert>
+        ) : null}
+
+        {Object.keys(fieldErrors).length > 0 ? (
+          <Alert severity="error" role="alert">
+            Review the {Object.keys(fieldErrors).length} highlighted required field
+            {Object.keys(fieldErrors).length === 1 ? '' : 's'} before submitting.
           </Alert>
         ) : null}
 
@@ -271,7 +333,7 @@ export function RegistrationResponseEditor({ registration }: Props) {
                 () =>
                   saveResponses({
                     applicationId: registration.id,
-                    body: { responses },
+                    body: { concurrencyStamp, responses },
                   }).unwrap(),
                 'Registration draft saved.'
               )
@@ -284,16 +346,7 @@ export function RegistrationResponseEditor({ registration }: Props) {
             startIcon={<TaskAltOutlined />}
             loading={submitState.isLoading}
             disabled={!canEdit}
-            onClick={() =>
-              run(
-                () =>
-                  submitResponses({
-                    applicationId: registration.id,
-                    body: { responses },
-                  }).unwrap(),
-                'Registration submitted for verification.'
-              )
-            }
+            onClick={submitRegistration}
           >
             Submit registration
           </LoadingButton>

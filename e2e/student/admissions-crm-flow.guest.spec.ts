@@ -23,6 +23,13 @@ const counselorEmail = () =>
   process.env.E2E_STUDENT_CRM_COUNSELOR_EMAIL || 'admissions-counselor@ddvs.com';
 const approverEmail = () =>
   process.env.E2E_STUDENT_CRM_APPROVER_EMAIL || 'admissions-approver@ddvs.com';
+const secondTenantCode = () => process.env.E2E_STUDENT_CRM_SECOND_TENANT;
+const secondTenantAdminEmail = () => process.env.E2E_STUDENT_CRM_SECOND_TENANT_ADMIN_EMAIL;
+const secondTenantPassword = () => process.env.E2E_STUDENT_CRM_SECOND_TENANT_PASSWORD || password();
+const principalScopeBoard = () =>
+  process.env.E2E_PRINCIPAL_SCOPE_BOARD ||
+  (principalEmail().toLowerCase().includes('gseb') ? 'GSEB' : undefined);
+const principalDeniedScopeBoard = () => process.env.E2E_PRINCIPAL_DENIED_SCOPE_BOARD || 'CBSE';
 const enrollmentWorkspaceRoutes = [
   '/student/enrollment/pipeline',
   '/student/enrollment/exams',
@@ -48,7 +55,7 @@ let otpWebhookServer: Server;
 let otpWebhookUrl = '';
 let capturedOtp = '';
 
-type JsonRequestInit = Omit<RequestInit, 'body'> & {
+type JsonRequestInit = Omit<NonNullable<Parameters<Page['request']['fetch']>[1]>, 'data'> & {
   body?: unknown;
 };
 
@@ -61,7 +68,7 @@ const apiBaseUrl = () => {
   return url.replace(/\/$/, '');
 };
 
-async function waitForBackend(page: Page) {
+async function waitForBackend(page: Page, tenantValue = tenantCode()) {
   const healthUrl = `${apiBaseUrl()}/api/abp/application-configuration`;
   const started = Date.now();
   let lastError = '';
@@ -69,7 +76,7 @@ async function waitForBackend(page: Page) {
   while (Date.now() - started < 60_000) {
     try {
       const response = await page.request.get(healthUrl, {
-        headers: { __tenant: tenantCode() },
+        headers: { __tenant: tenantValue },
         timeout: 5_000,
       });
       if (response.ok()) {
@@ -113,14 +120,19 @@ async function getAccessToken(page: Page) {
   return token as string;
 }
 
-async function login(page: Page, email = principalEmail(), passwordValue = password()) {
+async function login(
+  page: Page,
+  email = principalEmail(),
+  passwordValue = password(),
+  tenantValue = tenantCode()
+) {
   await page.addInitScript(() => {
     localStorage.setItem('onboarding_completed', 'true');
   });
-  await waitForBackend(page);
+  await waitForBackend(page, tenantValue);
   await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 90_000 });
   await expect(page.getByLabel('School Code')).toBeVisible({ timeout: 60_000 });
-  await page.getByLabel('School Code').fill(tenantCode());
+  await page.getByLabel('School Code').fill(tenantValue);
   await page.getByLabel('Email / Username').fill(email);
   await page.getByLabel('Password').fill(passwordValue);
 
@@ -161,6 +173,34 @@ async function publicApiRequest(page: Page, path: string, init: JsonRequestInit 
       ...(init.headers as Record<string, string> | undefined),
     },
   });
+}
+
+async function browserSessionApiGet(page: Page, path: string, requestTenant = tenantCode()) {
+  const requestUrl = path.startsWith('http') ? path : `${apiBaseUrl()}/api${path}`;
+  return page.evaluate(
+    async ({ url, tenant }) => {
+      const sessionResponse = await fetch('/api/auth/session');
+      const session = await sessionResponse.json();
+      if (!session?.accessToken) throw new Error('Authenticated session token is unavailable.');
+
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 60_000);
+      try {
+        const response = await fetch(url, {
+          headers: {
+            accept: 'application/json',
+            __tenant: tenant,
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          signal: controller.signal,
+        });
+        return { status: response.status, body: await response.text() };
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    },
+    { url: requestUrl, tenant: requestTenant }
+  );
 }
 
 type PlaywrightResponse = {
@@ -721,6 +761,121 @@ test.describe('Student admissions CRM E2E', () => {
     }
   });
 
+  test('a conflicting tenant header cannot change the authenticated tenant context', async ({
+    page,
+  }) => {
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const requestPath = `/student-enrollment/admissions-crm/${academicYearId}/leads?maxResultCount=1`;
+    const baseline = await browserSessionApiGet(page, requestPath);
+    expect(baseline.status, `Baseline tenant request failed: ${baseline.body}`).toBe(200);
+    const forged = await browserSessionApiGet(page, requestPath, 'SSVM');
+
+    if ([400, 401, 403, 404].includes(forged.status)) return;
+
+    expect(
+      forged.status,
+      `Forged tenant header unexpectedly changed the authenticated context: ${forged.body}`
+    ).toBe(200);
+    expect(JSON.parse(forged.body)).toEqual(JSON.parse(baseline.body));
+  });
+
+  test('a second-tenant token cannot read a real DDVS enrollment lead', async ({ page }) => {
+    test.skip(
+      !secondTenantCode() || !secondTenantAdminEmail(),
+      'Set E2E_STUDENT_CRM_SECOND_TENANT and E2E_STUDENT_CRM_SECOND_TENANT_ADMIN_EMAIL for a true two-tenant isolation check.'
+    );
+
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const leadListResponse = await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/${academicYearId}/leads?maxResultCount=1`
+    );
+    await expectOk(leadListResponse, 'GET DDVS lead for tenant isolation test');
+    const leadList = await leadListResponse.json();
+    const ddvsLeadId = leadList?.items?.[0]?.id as string | undefined;
+    expect(ddvsLeadId, 'A DDVS lead is required for tenant isolation coverage.').toBeTruthy();
+
+    await page.context().clearCookies();
+    await login(page, secondTenantAdminEmail()!, secondTenantPassword(), secondTenantCode()!);
+    const crossTenantResult = await browserSessionApiGet(
+      page,
+      `/student-enrollment/admissions-crm/leads/${ddvsLeadId!}`,
+      'DDVS'
+    );
+
+    expect(
+      [400, 401, 403, 404],
+      `Second-tenant token exposed a DDVS lead: ${crossTenantResult.status} ${crossTenantResult.body}`
+    ).toContain(crossTenantResult.status);
+    expect(crossTenantResult.body).not.toContain(ddvsLeadId!);
+  });
+
+  test('a board-scoped principal cannot read another board enrollment data', async ({ page }) => {
+    const expectedBoardName = principalScopeBoard();
+    test.skip(!expectedBoardName, 'Set E2E_PRINCIPAL_SCOPE_BOARD for UserScope coverage.');
+
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const sessionProfile = await page.evaluate(async () => {
+      const response = await fetch('/api/auth/session');
+      const session = await response.json();
+      return session?.profile;
+    });
+    const userId = sessionProfile?.sub as string | undefined;
+    expect(userId, 'Authenticated principal user id is required.').toBeTruthy();
+
+    const scopeResult = await browserSessionApiGet(
+      page,
+      `/app/user-scope/user-scope-hierarchy?userId=${userId}&academicYearId=${academicYearId}`
+    );
+    expect(scopeResult.status, `UserScope hierarchy failed: ${scopeResult.body}`).toBe(200);
+    const scope = JSON.parse(scopeResult.body);
+    const yearScope = scope?.accessibleHierarchy?.find(
+      (year: { academicYearId?: string }) => year.academicYearId === academicYearId
+    );
+    expect(yearScope, 'Current academic year must be present in the principal scope.').toBeTruthy();
+    expect(yearScope.hasFullBoardAccess, 'Principal unexpectedly has full board access.').toBe(
+      false
+    );
+
+    const boards = (yearScope.boards || []) as Array<{
+      boardName: string;
+      hasAccess: boolean;
+      mediums?: Array<{ mediumId: string; hasAccess: boolean }>;
+    }>;
+    const expectedBoard = boards.find((board) =>
+      board.boardName.toLowerCase().includes(expectedBoardName!.toLowerCase())
+    );
+    const deniedBoard = boards.find((board) =>
+      board.boardName.toLowerCase().includes(principalDeniedScopeBoard().toLowerCase())
+    );
+    expect(expectedBoard, `Expected ${expectedBoardName} board was not returned.`).toBeTruthy();
+    expect(expectedBoard?.hasAccess, `${expectedBoardName} should be accessible.`).toBe(true);
+    expect(
+      deniedBoard,
+      `Denied ${principalDeniedScopeBoard()} board was not returned.`
+    ).toBeTruthy();
+    expect(deniedBoard?.hasAccess, `${principalDeniedScopeBoard()} should not be accessible.`).toBe(
+      false
+    );
+
+    const deniedMediumId = deniedBoard?.mediums?.[0]?.mediumId;
+    expect(
+      deniedMediumId,
+      'A denied-board medium is required for the API scope check.'
+    ).toBeTruthy();
+    const leadsResult = await browserSessionApiGet(
+      page,
+      `/student-enrollment/admissions-crm/${academicYearId}/leads?academicMediumId=${deniedMediumId}&maxResultCount=1`
+    );
+    expect(
+      [400, 401, 403, 404],
+      `Board-scoped principal read denied enrollment data: ${leadsResult.status} ${leadsResult.body}`
+    ).toContain(leadsResult.status);
+  });
+
   test('restricted users cannot operate the protected CRM workspace', async ({ page }) => {
     test.skip(
       !restrictedCrmEmail(),
@@ -803,6 +958,25 @@ test.describe('Student admissions CRM E2E', () => {
     }
   });
 
+  test('Enrollment skip navigation moves keyboard focus into the workspace', async ({ page }) => {
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    await page.goto(workspaceUrl('/student/enrollment/pipeline', academicYearId), {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+
+    const skipLink = page.getByRole('link', { name: 'Skip to Enrollment workspace' });
+    await skipLink.focus();
+    await expect(skipLink).toBeFocused();
+    await skipLink.press('Enter');
+    await expect(page.locator('#student-enrollment-content')).toBeFocused();
+
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await skipLink.evaluate((element) => (element as HTMLAnchorElement).click());
+    await expect(page.locator('#student-enrollment-content')).toBeFocused();
+  });
+
   test('Enrollment workspaces remain usable at release viewports', async ({ page }) => {
     test.setTimeout(600_000);
     await login(page);
@@ -851,7 +1025,8 @@ test.describe('Student admissions CRM E2E', () => {
         const url = new URL(route.request().url());
         const maxResultCount = Number(url.searchParams.get('maxResultCount') || 50);
         const skipCount = Number(url.searchParams.get('skipCount') || 0);
-        const stage = Number(url.searchParams.get('stage') || 0);
+        const pipelineColumnValue = url.searchParams.get('pipelineColumn');
+        const pipelineColumn = pipelineColumnValue == null ? undefined : Number(pipelineColumnValue);
         leadRequests.push(url);
         await route.fulfill({
           status: 200,
@@ -861,7 +1036,7 @@ test.describe('Student admissions CRM E2E', () => {
               academicYearId,
               skipCount,
               maxResultCount,
-              stage,
+              pipelineColumn,
             })
           ),
         });
@@ -889,17 +1064,96 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page.getByTestId('student-enrollment-pipeline-row')).toHaveCount(50);
 
     await page.getByRole('button', { name: 'Board view' }).click();
-    await expect.poll(() => leadRequests.some((url) => url.searchParams.has('stage'))).toBe(true);
+    await expect
+      .poll(() => leadRequests.some((url) => url.searchParams.has('pipelineColumn')))
+      .toBe(true);
+    await expect
+      .poll(
+        () =>
+          new Set(
+            leadRequests
+              .filter((url) => url.searchParams.has('pipelineColumn'))
+              .map((url) => url.searchParams.get('pipelineColumn'))
+          ).size
+      )
+      .toBeGreaterThan(1);
 
-    expect(leadRequests.length).toBeGreaterThan(1);
     leadRequests.forEach((url) => {
       const maximum = Number(url.searchParams.get('maxResultCount'));
-      expect(maximum).toBeLessThanOrEqual(url.searchParams.has('stage') ? 25 : 50);
+      expect(maximum).toBeLessThanOrEqual(url.searchParams.has('pipelineColumn') ? 25 : 50);
     });
+
+    const boardColumns = page.getByTestId('student-enrollment-pipeline-column');
+    if ((await boardColumns.count()) > 1) {
+      await expect
+        .poll(() => page.getByTestId('student-enrollment-pipeline-card').count())
+        .toBeGreaterThan(1);
+
+      const loadedBoardColumns = await boardColumns.evaluateAll((columns) =>
+        columns
+          .map((column) => ({
+            pipelineColumn: column.getAttribute('data-pipeline-column'),
+            cards: Array.from(
+              column.querySelectorAll<HTMLElement>('[data-testid="student-enrollment-pipeline-card"]')
+            ).map((card) => ({
+              id: card.dataset.leadId,
+              pipelineColumn: card.dataset.leadPipelineColumn,
+            })),
+          }))
+          .filter((column) => column.cards.length > 0)
+      );
+      expect(loadedBoardColumns.length).toBeGreaterThan(1);
+      loadedBoardColumns.forEach((column) => {
+        expect(
+          column.cards.every((card) => card.pipelineColumn === column.pipelineColumn),
+          column.pipelineColumn ?? 'unknown pipeline column'
+        ).toBe(true);
+      });
+      const boardLeadIds = loadedBoardColumns.flatMap((column) =>
+        column.cards.map((card) => card.id)
+      );
+      expect(new Set(boardLeadIds).size).toBe(boardLeadIds.length);
+    } else {
+      await expect(page.getByText('Column 0 Applicant 1 Scale', { exact: true })).toHaveCount(1);
+      await expect(page.getByText('Column 1 Applicant 1 Scale', { exact: true })).toHaveCount(1);
+      await expect(page.getByText('Column 2 Applicant 1 Scale', { exact: true })).toHaveCount(1);
+    }
+
+    expect(leadRequests.length).toBeGreaterThan(1);
     expect(staffRequests.length).toBeGreaterThan(0);
     staffRequests.forEach((url) => {
       expect(Number(url.searchParams.get('maxResultCount'))).toBeLessThanOrEqual(25);
     });
+  });
+
+  test('Registration worklist selection updates the canonical URL and dataset', async ({
+    page,
+  }) => {
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const worklistRequests: URL[] = [];
+    page.on('request', (request) => {
+      const url = new URL(request.url());
+      if (/\/admissions-crm\/[^/]+\/leads$/.test(url.pathname)) worklistRequests.push(url);
+    });
+
+    await page.goto(`/student/enrollment/registration?cycle=${academicYearId}&queue=21`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    const eligible = page.getByRole('button', { name: 'Eligible', exact: true });
+    await expect(eligible).toBeVisible();
+    await eligible.click();
+    await expect(page).toHaveURL(/(?:\?|&)column=4(?:&|$)/);
+    await expect
+      .poll(() => worklistRequests.some((url) => url.searchParams.get('pipelineColumn') === '4'))
+      .toBe(true);
+
+    await page.getByRole('button', { name: 'Registration done', exact: true }).click();
+    await expect(page).toHaveURL(/(?:\?|&)column=6(?:&|$)/);
+    await expect
+      .poll(() => worklistRequests.some((url) => url.searchParams.get('pipelineColumn') === '6'))
+      .toBe(true);
   });
 
   test('workspace URLs preserve operational state without exposing applicant search text', async ({
@@ -909,7 +1163,7 @@ test.describe('Student admissions CRM E2E', () => {
     const academicYearId = await resolveAcademicYearId(page);
 
     await page.goto(
-      `/student/enrollment/pipeline?cycle=${academicYearId}&view=list&stage=0&page=2`,
+      `/student/enrollment/pipeline?cycle=${academicYearId}&view=list&column=0&page=2`,
       { waitUntil: 'networkidle', timeout: 60_000 }
     );
     await page.getByLabel('Search applicants').fill('Parent phone 9999999999');
@@ -918,16 +1172,57 @@ test.describe('Student admissions CRM E2E', () => {
     expect(page.url()).not.toContain('Parent');
     expect(page.url()).not.toContain('9999999999');
 
-    await page.locator('a[href^="/student/enrollment/exams"]').click();
-    await page.waitForLoadState('networkidle');
+    await page.goto(`/student/enrollment/entrance-exams?cycle=${academicYearId}`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
     await expect(page).toHaveURL(
-      new RegExp(`/student/enrollment/exams/?\\?cycle=${academicYearId}`)
+      new RegExp(`/student/enrollment/entrance-exams/?\\?cycle=${academicYearId}`)
     );
 
-    await page.goBack({ waitUntil: 'networkidle' });
+    await page.goto(
+      `/student/enrollment/pipeline?cycle=${academicYearId}&view=list&column=0`,
+      { waitUntil: 'networkidle', timeout: 60_000 }
+    );
     await expect(page).toHaveURL(/view=list/);
-    await expect(page).toHaveURL(/stage=0/);
+    await expect(page).toHaveURL(/column=0/);
     await expect(page).not.toHaveURL(/page=2/);
+
+    await page.goto(`/student/enrollment/my-work?cycle=${academicYearId}&page=2`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await page.getByPlaceholder('Search...').fill('Private applicant 8888888888');
+    await expect(page).not.toHaveURL(/page=2/);
+    expect(decodeURIComponent(page.url())).not.toContain('Private applicant');
+    expect(page.url()).not.toContain('8888888888');
+    await page.getByRole('button', { name: 'Filter Applicant' }).click();
+    const applicantFilterMenu = page.getByRole('menu');
+    await applicantFilterMenu.getByRole('combobox').click();
+    await page.getByRole('option', { name: 'Contains', exact: true }).click();
+    await applicantFilterMenu.getByRole('textbox').fill('Private column filter 6666666666');
+    await applicantFilterMenu.getByRole('button', { name: 'Apply', exact: true }).click();
+    expect(decodeURIComponent(page.url())).not.toContain('Private column filter');
+    expect(page.url()).not.toContain('6666666666');
+    await page.goto(`/student/enrollment/pipeline?cycle=${academicYearId}&view=list`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await page.goto(`/student/enrollment/my-work?cycle=${academicYearId}`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await expect(page.getByPlaceholder('Search...')).toHaveValue('Private applicant 8888888888');
+    await expect(page.getByText('Private column filter 6666666666', { exact: false })).toBeVisible();
+
+    await page.goto(`/student/enrollment/registration?cycle=${academicYearId}&page=2`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await page.getByPlaceholder('Search...').fill('Private registration 7777777777');
+    await expect(page).not.toHaveURL(/page=2/);
+    expect(decodeURIComponent(page.url())).not.toContain('Private registration');
+    expect(page.url()).not.toContain('7777777777');
 
     await page.goto(`/student/enrollment/settings?cycle=${academicYearId}`, {
       waitUntil: 'networkidle',
@@ -937,11 +1232,11 @@ test.describe('Student admissions CRM E2E', () => {
       new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
     );
 
-    await page.goto('/student/enrollment/pipeline?stage=999&page=-2', {
+    await page.goto('/student/enrollment/pipeline?column=999&page=-2', {
       waitUntil: 'networkidle',
       timeout: 60_000,
     });
-    await expect(page).not.toHaveURL(/stage=999/);
+    await expect(page).not.toHaveURL(/column=999/);
     await expect(page).not.toHaveURL(/page=-2/);
   });
 

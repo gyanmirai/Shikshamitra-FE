@@ -74,6 +74,7 @@ import {
 import { formatEnrollmentDate } from './enrollment-display';
 import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
+import { getEnrollmentApiErrorMessage } from './enrollment-api-errors';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
@@ -90,7 +91,9 @@ import {
 } from './applicant-row-navigation';
 import {
   mapQuickInquiryOptions,
+  quickInquiryFieldLimits,
   isValidQuickInquiryEmail,
+  isValidQuickInquiryPhone,
   getDefaultQuickInquiryOption,
 } from './quick-inquiry-options';
 import {
@@ -345,7 +348,14 @@ function PipelineLeadCard({
   onOpenRegistration,
 }: LeadCardProps) {
   return (
-    <Card variant="outlined" sx={{ p: 1.25, borderRadius: 1, minWidth: 0, flexShrink: 0 }}>
+    <Card
+      variant="outlined"
+      data-testid="student-enrollment-pipeline-card"
+      data-lead-id={lead.id}
+      data-lead-stage={lead.stage}
+      data-lead-pipeline-column={lead.pipelineColumn}
+      sx={{ p: 1.25, borderRadius: 1, minWidth: 0, flexShrink: 0 }}
+    >
       <Stack spacing={1}>
         <Stack direction="row" gap={1} justifyContent="space-between" alignItems="flex-start">
           <Box sx={{ minWidth: 0 }}>
@@ -478,6 +488,7 @@ function PipelineWorkspaceContent() {
   const routeInputRef = useRef<HTMLInputElement>(null);
   const channelInputRef = useRef<HTMLInputElement>(null);
   const duplicateReasonInputRef = useRef<HTMLInputElement>(null);
+  const createInquiryInFlightRef = useRef(false);
   const [scheduleLead, setScheduleLead] = useState<AdmissionCrmLeadDto | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
@@ -1220,6 +1231,7 @@ function PipelineWorkspaceContent() {
 
     const contactMissing = !quickForm.primaryContactNo.trim();
     const emailInvalid = !isValidQuickInquiryEmail(quickForm.email);
+    const phoneInvalid = !isValidQuickInquiryPhone(quickForm.primaryContactNo);
     const optionConfigurationUnavailable =
       quickInquiryOptionsLoading ||
       quickInquiryOptionsQuery.isError ||
@@ -1233,6 +1245,7 @@ function PipelineWorkspaceContent() {
       !quickForm.firstName.trim() ? firstNameInputRef : null,
       !quickForm.parentGuardianName.trim() ? guardianInputRef : null,
       emailInvalid ? emailInputRef : null,
+      phoneInvalid ? contactInputRef : null,
       contactMissing ? contactInputRef : null,
       !quickForm.academicBoardId ? boardInputRef : null,
       !quickForm.academicMediumId ? mediumInputRef : null,
@@ -1276,6 +1289,8 @@ function PipelineWorkspaceContent() {
       notes: quickForm.notes.trim() || undefined,
       duplicateContinueReason: quickForm.duplicateContinueReason.trim() || undefined,
     };
+    if (createInquiryInFlightRef.current) return;
+    createInquiryInFlightRef.current = true;
     try {
       if (!duplicateReviewed) {
         const duplicates = await previewDuplicates({ academicYearId, body }).unwrap();
@@ -1291,10 +1306,16 @@ function PipelineWorkspaceContent() {
       closeQuickInquiry();
       openApplicant(created.id);
       shikshaMitraToast.success({ message: 'Inquiry created.' });
-    } catch {
+    } catch (error) {
+      setDuplicateReviewed(false);
       shikshaMitraToast.error({
-        message: 'The inquiry could not be created. Review the fields and retry.',
+        message: getEnrollmentApiErrorMessage(
+          error,
+          'The inquiry could not be created. Review the fields and retry.'
+        ),
       });
+    } finally {
+      createInquiryInFlightRef.current = false;
     }
   };
 
@@ -1357,7 +1378,10 @@ function PipelineWorkspaceContent() {
       }
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'The bulk action could not be completed.',
+        message:
+          error instanceof Error
+            ? error.message
+            : getEnrollmentApiErrorMessage(error, 'The bulk action could not be completed.'),
       });
     }
   };
@@ -1404,6 +1428,7 @@ function PipelineWorkspaceContent() {
 
   const quickInquiryContactMissing = !quickForm.primaryContactNo.trim();
   const quickInquiryEmailInvalid = !isValidQuickInquiryEmail(quickForm.email);
+  const quickInquiryPhoneInvalid = !isValidQuickInquiryPhone(quickForm.primaryContactNo);
   const showQuickInquiryContactError = quickFormSubmitted && quickInquiryContactMissing;
   const showQuickInquiryEmailError =
     quickInquiryEmailInvalid && (quickEmailTouched || quickFormSubmitted);
@@ -1791,6 +1816,7 @@ function PipelineWorkspaceContent() {
                       ? 'Enter the student’s first name.'
                       : undefined
                   }
+                  slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                   onChange={(event) => {
                     setQuickForm((current) => ({ ...current, firstName: event.target.value }));
                     setDuplicateReviewed(false);
@@ -1802,6 +1828,7 @@ function PipelineWorkspaceContent() {
                   autoComplete="additional-name"
                   label="Middle name (optional)"
                   value={quickForm.middleName}
+                  slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                   onChange={(event) => {
                     setQuickForm((current) => ({ ...current, middleName: event.target.value }));
                     setDuplicateReviewed(false);
@@ -1813,6 +1840,7 @@ function PipelineWorkspaceContent() {
                   autoComplete="family-name"
                   label="Last name (optional)"
                   value={quickForm.lastName}
+                  slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                   onChange={(event) => {
                     setQuickForm((current) => ({ ...current, lastName: event.target.value }));
                     setDuplicateReviewed(false);
@@ -1844,6 +1872,7 @@ function PipelineWorkspaceContent() {
                       ? 'Enter the parent or guardian name.'
                       : undefined
                   }
+                  slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.name } }}
                   onChange={(event) => {
                     setQuickForm((current) => ({
                       ...current,
@@ -1861,13 +1890,20 @@ function PipelineWorkspaceContent() {
                   type="tel"
                   autoComplete="tel"
                   value={quickForm.primaryContactNo}
-                  error={showQuickInquiryContactError}
+                  error={showQuickInquiryContactError || quickInquiryPhoneInvalid}
                   helperText={
-                    showQuickInquiryContactError
-                      ? 'Add the parent or guardian mobile number.'
-                      : 'Used for admission follow-up and status messages.'
+                    quickInquiryPhoneInvalid
+                      ? 'Enter a valid contact number containing 7 to 15 digits.'
+                      : showQuickInquiryContactError
+                        ? 'Add the parent or guardian mobile number.'
+                        : 'Used for admission follow-up and status messages.'
                   }
-                  slotProps={{ htmlInput: { inputMode: 'tel' } }}
+                  slotProps={{
+                    htmlInput: {
+                      inputMode: 'tel',
+                      maxLength: quickInquiryFieldLimits.contact,
+                    },
+                  }}
                   onChange={(event) => {
                     setQuickForm((current) => ({
                       ...current,
@@ -1894,6 +1930,7 @@ function PipelineWorkspaceContent() {
                   InputProps={{
                     startAdornment: <InputAdornment position="start">@</InputAdornment>,
                   }}
+                  slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.email } }}
                   onBlur={() => setQuickEmailTouched(true)}
                   onChange={(event) => {
                     setQuickForm((current) => ({ ...current, email: event.target.value }));
@@ -2159,6 +2196,7 @@ function PipelineWorkspaceContent() {
                     name="admissionIntent"
                     label="Intent notes"
                     value={quickForm.admissionIntent}
+                    slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.intent } }}
                     onChange={(event) => {
                       setQuickForm((current) => ({
                         ...current,
@@ -2172,6 +2210,7 @@ function PipelineWorkspaceContent() {
                     name="campaignName"
                     label="Campaign"
                     value={quickForm.campaignName}
+                    slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.campaign } }}
                     onChange={(event) =>
                       setQuickForm((current) => ({
                         ...current,
@@ -2183,6 +2222,7 @@ function PipelineWorkspaceContent() {
                     name="notes"
                     label="Internal notes"
                     value={quickForm.notes}
+                    slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.notes } }}
                     onChange={(event) =>
                       setQuickForm((current) => ({ ...current, notes: event.target.value }))
                     }
@@ -2208,6 +2248,7 @@ function PipelineWorkspaceContent() {
                 name="duplicateContinueReason"
                 label="Reason to continue"
                 value={quickForm.duplicateContinueReason}
+                slotProps={{ htmlInput: { maxLength: quickInquiryFieldLimits.notes } }}
                 error={quickFormSubmitted && !quickForm.duplicateContinueReason.trim()}
                 helperText={
                   quickFormSubmitted && !quickForm.duplicateContinueReason.trim()

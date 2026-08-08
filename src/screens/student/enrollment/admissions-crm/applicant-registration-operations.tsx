@@ -837,11 +837,13 @@ export function ApplicantRegistrationOperations({
                         size="small"
                         variant="outlined"
                         startIcon={<UploadFile />}
+                        aria-label={`Choose file for ${document.requirementName}`}
                       >
                         Choose File
                         <input
                           hidden
                           type="file"
+                          aria-label={`Choose file for ${document.requirementName}`}
                           accept={document.acceptedExtensions
                             .map((extension) => `.${extension}`)
                             .join(',')}
@@ -889,7 +891,12 @@ export function ApplicantRegistrationOperations({
                             [document.requirementKey]: event.target.value,
                           }))
                         }
-                        slotProps={{ inputLabel: { shrink: true } }}
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                          htmlInput: {
+                            'aria-label': `Valid until for ${document.requirementName}`,
+                          },
+                        }}
                       />
                     ) : null}
                     {canUploadDocuments && documentFileByKey[document.requirementKey] ? (
@@ -905,6 +912,7 @@ export function ApplicantRegistrationOperations({
                         <LoadingButton
                           size="small"
                           variant="contained"
+                          aria-label={`Upload ${document.requirementName}`}
                           loading={uploadState.isLoading}
                           disabled={
                             document.validityDateRequired &&
@@ -954,6 +962,11 @@ export function ApplicantRegistrationOperations({
                           [document.requirementKey]: event.target.value,
                         }))
                       }
+                      slotProps={{
+                        htmlInput: {
+                          'aria-label': `Decision or waiver reason for ${document.requirementName}`,
+                        },
+                      }}
                       sx={{ flex: 1 }}
                     />
                     {document.id &&
@@ -966,6 +979,7 @@ export function ApplicantRegistrationOperations({
                         <LoadingButton
                           size="small"
                           variant="outlined"
+                          aria-label={`Verify ${document.requirementName}`}
                           loading={reviewState.isLoading}
                           onClick={() =>
                             perform(
@@ -984,6 +998,7 @@ export function ApplicantRegistrationOperations({
                           size="small"
                           color="error"
                           variant="outlined"
+                          aria-label={`Reject ${document.requirementName}`}
                           loading={reviewState.isLoading}
                           disabled={!documentReasonByKey[document.requirementKey]?.trim()}
                           onClick={() =>
@@ -1012,6 +1027,7 @@ export function ApplicantRegistrationOperations({
                       <LoadingButton
                         size="small"
                         variant="outlined"
+                        aria-label={`Confirm original seen for ${document.requirementName}`}
                         loading={originalState.isLoading}
                         onClick={() =>
                           perform(
@@ -1029,6 +1045,7 @@ export function ApplicantRegistrationOperations({
                       <LoadingButton
                         size="small"
                         variant="text"
+                        aria-label={`Waive ${document.requirementName}`}
                         loading={waiveDocumentState.isLoading}
                         disabled={!documentReasonByKey[document.requirementKey]?.trim()}
                         onClick={() =>
