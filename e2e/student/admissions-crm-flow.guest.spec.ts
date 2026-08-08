@@ -511,6 +511,9 @@ const uniqueToken = (prefix: string) =>
 
 const uniquePhone = () => `9${Date.now().toString().slice(-9)}`;
 
+const pdfFixture = (body: string) =>
+  Buffer.from(`%PDF-1.4\n% Student Enrollment E2E\n1 0 obj <<>> endobj\n${body}\n%%EOF`);
+
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function createCrmLead(page: Page, academicYearId: string, phone: string, suffix: string) {
@@ -2976,7 +2979,7 @@ test.describe('Student admissions CRM E2E', () => {
         await fileInput.setInputFiles({
           name: 'birth.pdf',
           mimeType: 'application/pdf',
-          buffer: Buffer.from('first unreadable version'),
+          buffer: pdfFixture('first unreadable version'),
         });
         await parentPage.getByRole('button', { name: 'Upload' }).click();
         await expect(parentPage.getByText('Uploaded', { exact: true })).toBeVisible({
@@ -2984,13 +2987,10 @@ test.describe('Student admissions CRM E2E', () => {
         });
       }
 
-      const leadCard = await openLeadCardInWorkspace(
-        page,
-        lead.firstName,
-        academicYearId,
-        'decision'
+      await page.goto(
+        workspaceUrl(`/student/enrollment/applicants/${lead.id}?tab=registration`, academicYearId),
+        { waitUntil: 'domcontentloaded', timeout: 60_000 }
       );
-      await leadCard.getByRole('button', { name: 'Manage' }).click();
       await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
       const applicantWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
       await applicantWorkspace
@@ -3011,14 +3011,17 @@ test.describe('Student admissions CRM E2E', () => {
           .setInputFiles({
             name: 'birth.pdf',
             mimeType: 'application/pdf',
-            buffer: Buffer.from('first unreadable version'),
+            buffer: pdfFixture('first unreadable version'),
           });
         await applicantWorkspace.getByRole('button', { name: 'Upload Birth certificate' }).click();
         await expect(applicantWorkspace.getByText('Uploaded', { exact: true })).toBeVisible({
           timeout: 20_000,
         });
       }
-      await applicantWorkspace.getByRole('button', { name: 'Verify Registration' }).click();
+      await applicantWorkspace
+        .locator('#registration-lifecycle-operation')
+        .getByRole('button', { name: 'Verify Registration' })
+        .click();
       await expect(applicantWorkspace.getByText('Verified', { exact: true })).toBeVisible({
         timeout: 20_000,
       });
@@ -3041,7 +3044,7 @@ test.describe('Student admissions CRM E2E', () => {
                 File: {
                   name: 'birth.pdf',
                   mimeType: 'application/pdf',
-                  buffer: Buffer.from('clear replacement version'),
+                  buffer: pdfFixture('clear replacement version'),
                 },
               },
             }
@@ -3055,31 +3058,37 @@ test.describe('Student admissions CRM E2E', () => {
                 File: {
                   name: 'birth.pdf',
                   mimeType: 'application/pdf',
-                  buffer: Buffer.from('clear replacement version'),
+                  buffer: pdfFixture('clear replacement version'),
                 },
               },
             }
       );
       await expectOk(replacementResponse, 'upload replacement document');
-
-      await page.goto(workspaceUrl('/student/enrollment/pipeline?view=board', academicYearId), {
-        waitUntil: 'domcontentloaded',
-        timeout: 60_000,
-      });
-      const refreshedLeadCard = await openLeadCardInWorkspace(
-        page,
-        lead.firstName,
-        academicYearId,
-        'decision'
+      const replacementChecklist = await replacementResponse.json();
+      const replacementDocument = replacementChecklist?.documents?.find(
+        (document: { requirementKey?: string }) => document.requirementKey === 'birth-certificate'
       );
-      await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
+      expect(replacementDocument?.id).toBeTruthy();
+      expect(replacementDocument?.status).toBe(0);
+      await expectOk(
+        await crmApiRequest(
+          page,
+          `/student-enrollment/admissions-crm/documents/${replacementDocument.id}/review`,
+          { method: 'POST', body: { approve: true } }
+        ),
+        'verify replacement document'
+      );
+
+      await page.goto(
+        workspaceUrl(`/student/enrollment/applicants/${lead.id}?tab=registration`, academicYearId),
+        { waitUntil: 'domcontentloaded', timeout: 60_000 }
+      );
       await expect(page).toHaveURL(new RegExp(`/student/enrollment/applicants/${lead.id}`));
       const refreshedWorkspace = page.getByRole('article', { name: 'Applicant workspace' });
       await refreshedWorkspace
         .locator('[aria-label="Admission journey"]')
         .getByRole('button', { name: /Registration/ })
         .click();
-      await refreshedWorkspace.getByRole('button', { name: 'Verify', exact: true }).click();
       await expect(refreshedWorkspace.getByRole('button', { name: 'Original Seen' })).toBeVisible({
         timeout: 20_000,
       });

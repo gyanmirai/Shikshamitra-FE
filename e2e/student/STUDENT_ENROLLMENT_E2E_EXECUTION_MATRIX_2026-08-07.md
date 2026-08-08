@@ -31,7 +31,7 @@ This matrix records the evidence obtained against the 74 cases in `STUDENT_ENROL
 
 Additional finding: `ENR-W01` is open on stage and fixed locally. The read-only gate proves My Work search stays out of the URL but clears after navigating away and back. My Work and Registration now use tenant/user/year/workspace-scoped session state for applicant-entered search and text filters while retaining structural URL state.
 
-Latest findings: `ENR-W02` (My Work class/owner lookup HTTP 500) and `ENR-P20` (public route-snapshot invariant) are backend stage passes. `ENR-W03` protects unsaved applicant work when opening Activity & Audit, and `ENR-P21` replaces stale active-pipeline presentation for archived applicants; both frontend re-tests follow deployment.
+Latest findings: `ENR-W02` (My Work class/owner lookup HTTP 500) and `ENR-P20` (public route-snapshot invariant) are backend stage passes. `ENR-W03` protects unsaved applicant work when opening Activity & Audit, and `ENR-P21` replaces stale active-pipeline presentation for archived applicants; both frontend stage workflows now pass.
 
 ## B. Pipeline and inquiry capture
 
@@ -57,7 +57,7 @@ Latest findings: `ENR-W02` (My Work class/owner lookup HTTP 500) and `ENR-P20` (
 | ENR-P18 | Automated pass | Dirty-context regressions cover navigation protection and retaining the applicant draft/context. |
 | ENR-P19 | Fixed locally + HTTP pass | A published admission-year setup allowed a route type without a selected definition, but lead creation populated only the definition-name snapshot and the domain rejected the inconsistent triple. Route name is now stored only with a resolved definition; the workflow asserts null ID/version/name for route-type-only intake and Configuration Safety passes 12/12. |
 | ENR-P20 | Backend stage pass | Public form submission against a published route-type-only setup now succeeds after removing the inconsistent definition-name snapshot. The focused public browser workflow passes through lead creation, status path, and OTP challenge. |
-| ENR-P21 | Fixed locally | Closed applicants now show the archived lifecycle state and closed outcome instead of a stale active pipeline column; terminal actions remain suppressed. |
+| ENR-P21 | Live pass | Closed applicants show the archived lifecycle state and closed outcome instead of a stale active pipeline column; terminal actions remain suppressed. |
 
 ## C. Entrance exam lifecycle
 
@@ -102,8 +102,8 @@ Latest findings: `ENR-W02` (My Work class/owner lookup HTTP 500) and `ENR-P20` (
 | ENR-R18 | Automated pass | One-approver readiness passed live; the distinct two-approver/same-user rejection and second-approver completion pass domain coverage. Deployed two-person confirmation remains in the stage re-test list. |
 | ENR-R19 | Live pass | Registration completeness alone did not unlock readiness while document/verification blockers remained. |
 | ENR-R20 | Live pass | Completed registration, waivers, approval, and readiness produced one stable Admission ready state with audit history. |
-| ENR-R22 | Fixed locally | The default public template now includes required guardian and target-standard fields populated from published operational standards; builder regressions pass. |
-| ENR-R23 | Fixed locally | The issued form number remains visible in the applicant summary when the required-exam gate becomes current. Persistence and timeline assertions remain in the staged registration flow. |
+| ENR-R22 | Deployed + automated pass | The default public template includes required guardian and target-standard fields populated from published operational standards; builder regressions pass. |
+| ENR-R23 | Live pass | The issued form number remains visible in the applicant summary when the required-exam gate becomes current. The stage flow verifies persistence, timeline audit, and subsequent exam scheduling. |
 
 ## E. Cross-cutting resilience, privacy, and UX
 
@@ -125,6 +125,9 @@ Latest findings: `ENR-W02` (My Work class/owner lookup HTTP 500) and `ENR-P20` (
 | ENR-X14 | Fixed locally + HTTP pass | Direct `DateTimeOffset` cutoff comparisons made stale/archive and SLA reminder queries untranslatable in the supported SQLite HTTP harness, returning 500 from manual and background paths. Scoped ID/timestamp projection now evaluates only the cutoff client-side and loads full matching entities; the combined automation batch passes 10/10. |
 
 ## Release interpretation
+
+- Final aligned stage result: 27/27 executable Playwright cases passed in 13.8 minutes; the one skipped case requires a second configured tenant that stage does not provide.
+- Final Codex in-app browser smoke passed Pipeline, Entrance Exams, Registration canonical worklist switching, and My Work.
 
 - No P0 found in this pass is left unfixed in the checked-out source. The slot and registration concurrency fixes now pass real HTTP/EF workflows, but all four P0 fixes still require deployed verification.
 - Three deployed UI defects remain open: `ENR-A10` contrast, `ENR-R21` worklist tabs, and `ENR-W01` private table-state persistence. `ENR-P11/X10` was a stale-test false positive and now passes the corrected stage gate.
