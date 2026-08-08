@@ -5,6 +5,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
 import {
   Box,
@@ -125,7 +126,7 @@ export default function QuestionLibraryRightPanel({
           py: 1.25,
           borderBottom: '1px solid',
           borderColor: 'divider',
-          bgcolor: alpha(theme.palette.grey[500], 0.02),
+          bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>

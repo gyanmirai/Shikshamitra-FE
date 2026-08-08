@@ -10,6 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useReactToPrint } from 'react-to-print';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { varAlpha } from 'src/theme/styles';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
@@ -168,9 +169,9 @@ const SectionPaper = ({
     sx={{
       p: { xs: 1.5, md: 2 },
       borderRadius: 1.5,
-      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
-      borderColor: (theme) => alpha(theme.palette.divider, 0.9),
-      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.4)}`,
+      bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.06),
+      borderColor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.16),
+      boxShadow: 'none',
     }}
   >
     <Stack spacing={1.5}>
@@ -967,7 +968,7 @@ export default function QuestionPaperScreen() {
         hasForm={false}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
-          <Box sx={{ flex: 1, minHeight: 0, p: 2, bgcolor: (t) => alpha(t.palette.background.default, 0.98), display: 'flex', flexDirection: 'column', gap: 1.25, overflow: 'hidden' }}>
+          <Box sx={{ flex: 1, minHeight: 0, p: 2, bgcolor: 'background.default', display: 'flex', flexDirection: 'column', gap: 1.25, overflow: 'hidden' }}>
             {selectedPaper && (
               <>
                 {/* Header */}

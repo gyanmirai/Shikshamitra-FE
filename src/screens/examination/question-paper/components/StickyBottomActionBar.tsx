@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Box, Paper, Stack, Typography, Button, Divider } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
-import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
+import { Box, Paper, Stack, Typography, Button, Divider } from '@mui/material';
 
 interface StickyBottomActionBarProps {
   currentMarks: number;
@@ -43,7 +44,7 @@ export default function StickyBottomActionBar({
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
-        bgcolor: alpha(theme.palette.background.paper, 0.96),
+        bgcolor: (t) => varAlpha(t.vars.palette.background.paperChannel, 0.96),
         backdropFilter: 'blur(8px)',
         position: 'sticky',
         bottom: 0,
@@ -51,7 +52,12 @@ export default function StickyBottomActionBar({
         boxShadow: (t) => `0 -8px 24px -4px ${alpha(t.palette.common.black, 0.08)}`,
       }}
     >
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" gap={1.5}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems="center"
+        gap={1.5}
+      >
         {/* Status Indicators */}
         <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
           <Label
@@ -64,10 +70,18 @@ export default function StickyBottomActionBar({
               width={14}
               sx={{ mr: 0.5 }}
             />
-            {remainingMarks === 0 ? 'Marks Balanced (0 left)' : remainingMarks > 0 ? `${remainingMarks} Marks Remaining` : 'Marks Exceeded'}
+            {remainingMarks === 0
+              ? 'Marks Balanced (0 left)'
+              : remainingMarks > 0
+                ? `${remainingMarks} Marks Remaining`
+                : 'Marks Exceeded'}
           </Label>
 
-          <Label variant="soft" color="info" sx={{ fontWeight: 600, height: 26, fontSize: '0.78rem' }}>
+          <Label
+            variant="soft"
+            color="info"
+            sx={{ fontWeight: 600, height: 26, fontSize: '0.78rem' }}
+          >
             {questionCount} Questions Added
           </Label>
 
@@ -82,7 +96,13 @@ export default function StickyBottomActionBar({
 
         {/* Actions */}
         <Stack direction="row" spacing={1.25} alignItems="center">
-          <Button size="small" variant="outlined" color="inherit" onClick={onOpenPreview} startIcon={<Iconify icon="mingcute:eye-line" />}>
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            onClick={onOpenPreview}
+            startIcon={<Iconify icon="mingcute:eye-line" />}
+          >
             Preview Paper
           </Button>
 

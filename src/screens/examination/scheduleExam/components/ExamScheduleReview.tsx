@@ -5,7 +5,16 @@ import dayjs from 'dayjs';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Chip, Grid, Button, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Grid,
+  Button,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import type { IExamFormValues } from '../type';
 
@@ -138,7 +147,9 @@ const ExamScheduleReview = ({
                 align: 'left',
                 render: (_value: any, row: any) => (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Box sx={{ width: 4, height: 18, borderRadius: 1, bgcolor: row.subjectColor }} />
+                    <Box
+                      sx={{ width: 4, height: 18, borderRadius: 1, bgcolor: row.subjectColor }}
+                    />
                     <Box>
                       <Typography variant="caption" display="block">
                         {row.subjectName}

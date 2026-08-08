@@ -1,18 +1,16 @@
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import React, { useMemo } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetExamScheduleQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+import { formatWallClockTime, parseWallClockTime } from 'src/utils/time-of-day';
 
 import type { IExamFormValues } from '../type';
 
 interface ViewTimetableCompProps {
   examData: IExamFormValues | null;
 }
-
-dayjs.extend(utc);
 
 const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
   const { data: scheduleDetails, isLoading: scheduleLoading } = useQueryAndMutation({
@@ -53,7 +51,8 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
         const getVal = (s: any) => {
           if (!s.startTime) return 0;
           const d = dayjs(s.examDate || '2000-01-01');
-          const t = dayjs(s.startTime);
+          const t = parseWallClockTime(s.startTime);
+          if (!t) return 0;
           return d.hour(t.hour()).minute(t.minute()).second(0).millisecond(0).valueOf();
         };
         const timeA = getVal(a);
@@ -120,7 +119,6 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           isSort: true,
           render: (value) => {
             const d = dayjs(value);
-            console.log(value);
             return (
               <Typography variant="caption" gutterBottom>
                 {d.isValid() ? d.format('DD-MM-YYYY') : '-'}
@@ -134,14 +132,11 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           align: 'left',
           isFilter: true,
           isSort: true,
-          render: (value) => {
-            const d = dayjs(value);
-            return (
-              <Typography variant="caption" gutterBottom>
-                {d.isValid() ? d.format('hh:mm A') : '-'}
-              </Typography>
-            );
-          },
+          render: (value) => (
+            <Typography variant="caption" gutterBottom>
+              {formatWallClockTime(value)}
+            </Typography>
+          ),
         },
         {
           id: 'endTime',
@@ -149,14 +144,11 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           align: 'left',
           isFilter: true,
           isSort: true,
-          render: (value) => {
-            const d = dayjs(value);
-            return (
-              <Typography variant="caption" gutterBottom>
-                {d.isValid() ? d.format('hh:mm A') : '-'}
-              </Typography>
-            );
-          },
+          render: (value) => (
+            <Typography variant="caption" gutterBottom>
+              {formatWallClockTime(value)}
+            </Typography>
+          ),
         },
         {
           id: 'totalMarks',

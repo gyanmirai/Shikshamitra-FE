@@ -1,6 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Card,
@@ -16,18 +22,15 @@ import {
   Divider,
   Checkbox,
 } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
-import { Label } from 'src/components/label';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { Scrollbar } from 'src/components/scrollbar';
+
 import type { PaperSection, QuestionItem } from '../types';
 
-const DIFFICULTY_LABELS: Record<number, { label: string; color: 'success' | 'warning' | 'error' }> = {
-  1: { label: 'Easy', color: 'success' },
-  2: { label: 'Medium', color: 'warning' },
-  3: { label: 'Hard', color: 'error' },
-};
+const DIFFICULTY_LABELS: Record<number, { label: string; color: 'success' | 'warning' | 'error' }> =
+  {
+    1: { label: 'Easy', color: 'success' },
+    2: { label: 'Medium', color: 'warning' },
+    3: { label: 'Hard', color: 'error' },
+  };
 
 const BLOOM_LABELS: Record<number, string> = {
   1: 'Remembering',
@@ -85,7 +88,9 @@ export default function PaperBuilderCenterPanel({
   const totalCanvasMarks = allQuestions.reduce((sum, q) => sum + (q.marks || 0), 0);
 
   const toggleSelectQuestion = (id: string) => {
-    setSelectedQuestionIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+    setSelectedQuestionIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -191,14 +196,29 @@ export default function PaperBuilderCenterPanel({
           >
             {/* Paper Document Header (Preview Style) */}
             <Box sx={{ textAlign: 'center', pb: 2, borderBottom: '2px solid #1a1a1a' }}>
-              <Typography variant="h5" fontWeight={800} sx={{ letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <Typography
+                variant="h5"
+                fontWeight={800}
+                sx={{ letterSpacing: '0.04em', textTransform: 'uppercase' }}
+              >
                 {paperTitle}
               </Typography>
               <Typography variant="subtitle2" fontWeight={600} color="text.secondary" mt={0.5}>
                 {standardName} &nbsp;•&nbsp; {subjectName}
               </Typography>
 
-              <Grid container spacing={1} justifyContent="space-between" mt={2} sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.grey[500], 0.06), borderRadius: 1.5 }}>
+              <Grid
+                container
+                spacing={1}
+                justifyContent="space-between"
+                mt={2}
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.06),
+                  borderRadius: 1.5,
+                }}
+              >
                 <Grid size={{ xs: 6 }} textAlign="left">
                   <Typography variant="caption" fontWeight={700} color="text.secondary">
                     TIME: {durationMinutes} MINUTES
@@ -217,17 +237,29 @@ export default function PaperBuilderCenterPanel({
               sx={{
                 p: 2,
                 borderRadius: 1.5,
-                bgcolor: alpha(theme.palette.grey[500], 0.04),
+                bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
                 border: '1px solid',
                 borderColor: 'divider',
               }}
             >
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.75}>
-                <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Typography
+                  variant="caption"
+                  fontWeight={700}
+                  color="text.primary"
+                  sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                >
                   General Instructions:
                 </Typography>
-                <IconButton size="small" onClick={() => setEditingInstructions(!editingInstructions)}>
-                  <Iconify icon={editingInstructions ? 'mingcute:check-line' : 'solar:pen-bold'} width={14} color="text.secondary" />
+                <IconButton
+                  size="small"
+                  onClick={() => setEditingInstructions(!editingInstructions)}
+                >
+                  <Iconify
+                    icon={editingInstructions ? 'mingcute:check-line' : 'solar:pen-bold'}
+                    width={14}
+                    color="text.secondary"
+                  />
                 </IconButton>
               </Stack>
 
@@ -241,7 +273,12 @@ export default function PaperBuilderCenterPanel({
                   onChange={(e) => setLocalInstructions(e.target.value)}
                 />
               ) : (
-                <Typography variant="caption" color="text.secondary" component="div" sx={{ whiteSpace: 'pre-line', lineHeight: 1.6, fontSize: '0.78rem' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  component="div"
+                  sx={{ whiteSpace: 'pre-line', lineHeight: 1.6, fontSize: '0.78rem' }}
+                >
                   {localInstructions}
                 </Typography>
               )}
@@ -251,7 +288,10 @@ export default function PaperBuilderCenterPanel({
             <Stack spacing={1.75}>
               {allQuestions.map((question, index) => {
                 const qNum = index + 1;
-                const diffInfo = DIFFICULTY_LABELS[question.difficultyLevel] || { label: 'Medium', color: 'warning' };
+                const diffInfo = DIFFICULTY_LABELS[question.difficultyLevel] || {
+                  label: 'Medium',
+                  color: 'warning',
+                };
                 const bloomText = BLOOM_LABELS[question.bloomLevel] || 'Understanding';
                 const isSelected = selectedQuestionIds.includes(question.id);
 
@@ -264,11 +304,14 @@ export default function PaperBuilderCenterPanel({
                       borderRadius: 1.5,
                       border: '1px solid',
                       borderColor: isSelected ? 'primary.main' : 'divider',
-                      bgcolor: question.isLocked ? alpha(theme.palette.warning.main, 0.03) : '#fafafa',
+                      bgcolor: (t) =>
+                        question.isLocked
+                          ? alpha(t.palette.warning.main, 0.03)
+                          : varAlpha(t.vars.palette.grey['500Channel'], 0.04),
                       transition: 'all 0.2s ease',
                       '&:hover': {
                         borderColor: 'primary.main',
-                        bgcolor: '#ffffff',
+                        bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.08),
                         boxShadow: `0 4px 18px 0 ${alpha(theme.palette.grey[500], 0.15)}`,
                         transform: 'translateY(-1px)',
                       },
@@ -276,9 +319,17 @@ export default function PaperBuilderCenterPanel({
                   >
                     <Stack spacing={1}>
                       {/* Question Top Bar */}
-                      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1.5}>
+                      <Stack
+                        direction="row"
+                        alignItems="flex-start"
+                        justifyContent="space-between"
+                        gap={1.5}
+                      >
                         <Stack direction="row" spacing={1.25} alignItems="flex-start" flex={1}>
-                          <IconButton size="small" sx={{ cursor: 'grab', color: 'text.disabled', mt: -0.5 }}>
+                          <IconButton
+                            size="small"
+                            sx={{ cursor: 'grab', color: 'text.disabled', mt: -0.5 }}
+                          >
                             <Iconify icon="mingcute:drag-line" width={16} />
                           </IconButton>
                           <Checkbox
@@ -287,10 +338,19 @@ export default function PaperBuilderCenterPanel({
                             onChange={() => toggleSelectQuestion(question.id)}
                             sx={{ mt: -0.5, p: 0.25 }}
                           />
-                          <Typography variant="subtitle2" fontWeight={800} color="text.primary" sx={{ fontSize: '0.92rem', minWidth: 24 }}>
+                          <Typography
+                            variant="subtitle2"
+                            fontWeight={800}
+                            color="text.primary"
+                            sx={{ fontSize: '0.92rem', minWidth: 24 }}
+                          >
                             Q{qNum}.
                           </Typography>
-                          <Typography variant="body2" color="text.primary" sx={{ fontSize: '0.9rem', lineHeight: 1.6, flex: 1 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{ fontSize: '0.9rem', lineHeight: 1.6, flex: 1 }}
+                          >
                             {question.questionText}
                           </Typography>
                         </Stack>
@@ -306,7 +366,13 @@ export default function PaperBuilderCenterPanel({
                       </Stack>
 
                       {/* Question Metadata & Actions */}
-                      <Stack direction="row" alignItems="center" justifyContent="space-between" pt={0.5} pl={6}>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        pt={0.5}
+                        pl={6}
+                      >
                         <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                           <Chip
                             size="small"
@@ -341,13 +407,21 @@ export default function PaperBuilderCenterPanel({
                               color={question.isLocked ? 'warning' : 'default'}
                               onClick={() => onToggleLockQuestion(question.id)}
                             >
-                              <Iconify icon={question.isLocked ? 'mingcute:lock-line' : 'mingcute:unlock-line'} width={15} />
+                              <Iconify
+                                icon={
+                                  question.isLocked ? 'mingcute:lock-line' : 'mingcute:unlock-line'
+                                }
+                                width={15}
+                              />
                             </IconButton>
                           </Tooltip>
 
                           <Tooltip title="Move Up">
                             <span>
-                              <IconButton size="small" onClick={() => onMoveQuestion(question.id, 'up')}>
+                              <IconButton
+                                size="small"
+                                onClick={() => onMoveQuestion(question.id, 'up')}
+                              >
                                 <Iconify icon="mingcute:up-line" width={15} />
                               </IconButton>
                             </span>
@@ -355,7 +429,10 @@ export default function PaperBuilderCenterPanel({
 
                           <Tooltip title="Move Down">
                             <span>
-                              <IconButton size="small" onClick={() => onMoveQuestion(question.id, 'down')}>
+                              <IconButton
+                                size="small"
+                                onClick={() => onMoveQuestion(question.id, 'down')}
+                              >
                                 <Iconify icon="mingcute:down-line" width={15} />
                               </IconButton>
                             </span>

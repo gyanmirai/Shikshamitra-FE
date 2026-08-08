@@ -3,6 +3,7 @@
 import React from 'react';
 import { Box, Paper, Stack, Typography, Chip, IconButton, Button, Tooltip, Divider } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { Label } from 'src/components/label';
@@ -78,7 +79,7 @@ export default function QuestionPaperHeader({
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
-        bgcolor: alpha(theme.palette.background.paper, 0.96),
+        bgcolor: (t) => varAlpha(t.vars.palette.background.paperChannel, 0.96),
         backdropFilter: 'blur(8px)',
         position: 'sticky',
         top: 0,

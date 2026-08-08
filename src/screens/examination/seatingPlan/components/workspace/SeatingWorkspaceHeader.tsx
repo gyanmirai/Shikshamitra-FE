@@ -1,5 +1,6 @@
 import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
   Box,
@@ -11,7 +12,6 @@ import {
   MenuItem,
   Typography,
   IconButton,
-  LinearProgress,
 } from '@mui/material';
 
 interface Props {
@@ -20,7 +20,6 @@ interface Props {
   standardName?: string;
   isDirty?: boolean;
   isSaving?: boolean;
-  isFetching?: boolean;
   isReadOnly?: boolean;
   canAutoAllocate: boolean;
   canFinalize: boolean;
@@ -40,7 +39,6 @@ export default function SeatingWorkspaceHeader({
   standardName,
   isDirty,
   isSaving,
-  isFetching,
   isReadOnly,
   canAutoAllocate,
   canFinalize,
@@ -73,12 +71,6 @@ export default function SeatingWorkspaceHeader({
         gap: 1,
       }}
     >
-      {(isFetching || isSaving) && (
-        <LinearProgress
-          color="primary"
-          sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 12 }}
-        />
-      )}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <IconButton size="small" onClick={onBack}>
           <Iconify icon="mdi:arrow-left" width={18} />

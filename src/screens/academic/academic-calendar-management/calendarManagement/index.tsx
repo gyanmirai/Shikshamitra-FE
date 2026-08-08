@@ -3,23 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { alpha, useTheme } from '@mui/material/styles';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Paper, Stack, Avatar, Typography } from '@mui/material';
+import { Box, Tab, Paper, Stack, Avatar, Skeleton, Typography } from '@mui/material';
 import { DayType, CalendarStatus, CalendarDayStatus } from 'src/enums/academic-calendar';
 import {
   useGetCalendarsQuery,
@@ -33,7 +34,6 @@ import {
 import CalendarYearView from './components/CalendarYearView';
 import CalendarMonthView from './components/CalendarMonthView';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
-import { Label } from 'src/components/label';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -183,7 +183,6 @@ const CalendarManagement = () => {
     permissions,
     `${academicPermissions.academicCalendar.management}.Edit`
   );
-  console.log("canPublish----", canPublish);
   // Dialog states
   const addDayDialog = useBoolean(false);
   const createCalendarDialog = useBoolean(false);
@@ -199,20 +198,30 @@ const CalendarManagement = () => {
   const autoCreatingRef = React.useRef(false);
 
   // Queries
-  const { data: calendarsData, isLoading: calendarsLoading } = useQueryAndMutation({
+  const {
+    data: calendarsData,
+    isLoading: calendarsLoading,
+    isFetching: calendarsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarsQuery,
     params: { academicYearId: currentYear?.id },
     popupConfig: { error: true },
   });
 
-  const { data: calendarDaysData, isLoading: daysLoading } = useQueryAndMutation({
+  const {
+    data: calendarDaysData,
+    isLoading: daysLoading,
+    isFetching: daysFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarDaysQuery,
     params: selectedCalendarId ? { calendarId: selectedCalendarId } : null,
     options: { skip: !selectedCalendarId },
     popupConfig: { error: false },
   });
+
+  const isCalendarLoading = calendarsLoading || daysLoading || calendarsFetching || daysFetching;
 
   // Mutations
   const [createCalendar, { isLoading: creatingCal }] = useCreateCalendarMutation();
@@ -427,8 +436,24 @@ const CalendarManagement = () => {
             gap={1}
             flexWrap="wrap"
           >
-            {/* Static Selected Calendar Indicator */}
-            {selectedCalendar ? (
+            {/* Selected Calendar Indicator / Skeleton Loader */}
+            {isCalendarLoading ? (
+              <Stack direction="row" alignItems="center" gap={1.5}>
+                <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: 2 }} />
+                <Stack spacing={0.75}>
+                  <Skeleton variant="text" width={100} height={14} />
+                  <Stack direction="row" alignItems="center" gap={1}>
+                    <Skeleton variant="text" width={160} height={22} />
+                    <Skeleton variant="rounded" width={115} height={24} sx={{ borderRadius: 2 }} />
+                    <Skeleton variant="rounded" width={90} height={24} sx={{ borderRadius: 2 }} />
+                  </Stack>
+                  <Stack direction="row" alignItems="center" gap={1}>
+                    <Skeleton variant="text" width={170} height={14} />
+                    <Skeleton variant="rounded" width={65} height={20} sx={{ borderRadius: 1 }} />
+                  </Stack>
+                </Stack>
+              </Stack>
+            ) : selectedCalendar ? (
               <Stack direction="row" alignItems="center" gap={1}>
                 <Avatar
                   sx={{
@@ -503,9 +528,7 @@ const CalendarManagement = () => {
                       {CalendarStatus[selectedCalendar?.status]}
                     </Label>
                   </Stack>
-
                 </Stack>
-
               </Stack>
             ) : (
               <Stack direction="row" alignItems="center" gap={1}>

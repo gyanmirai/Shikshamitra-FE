@@ -11,19 +11,9 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
+import { Box, Chip, Stack, Button, Typography, Grid, Drawer, IconButton } from '@mui/material';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
-import {
-  Box,
-  Chip,
-  Stack,
-  Button,
-  Divider,
-  Typography,
-  Grid,
-  Drawer,
-  IconButton,
-} from '@mui/material';
 import {
   useGetExamScheduleQuery,
   useGetExamSubjectsQuery,
@@ -115,15 +105,14 @@ const ScheduleExamPreviewDrawer = ({
   const isDetailsLoading = basicLoading || scheduleLoading || roomLoading || subjectsLoading;
   const hydratedExam = basicDetails
     ? mapBackendToFormik(
-      basicDetails,
-      scheduleDetails ?? null,
-      roomAssignmentData ?? null,
-      examSubjectsData ?? null,
-      examTypeData?.items ?? []
-    )
+        basicDetails,
+        scheduleDetails ?? null,
+        roomAssignmentData ?? null,
+        examSubjectsData ?? null,
+        examTypeData?.items ?? []
+      )
     : null;
   const subjectRows = getSubjectRows(hydratedExam?.subjects ?? []);
-  console.log("subjectRows----", subjectRows);
 
   const readiness = hydratedExam
     ? getReadinessSummary(buildExamPlanningIssues(hydratedExam))
@@ -132,20 +121,28 @@ const ScheduleExamPreviewDrawer = ({
   const warningCount = readiness ? readiness.warnings.length : (exam?.warningCount ?? 0);
   const previewExam = hydratedExam
     ? {
-      ...exam,
-      ...hydratedExam,
-      examId,
-      examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
-      standardName: exam?.standardName,
-      divisions: exam?.divisions,
-      subjectCount: subjectRows.length,
-      issueCount,
-      warningCount,
-    }
+        ...exam,
+        ...hydratedExam,
+        examId,
+        examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
+        standardName: exam?.standardName,
+        divisions: exam?.divisions,
+        subjectCount: subjectRows.length,
+        issueCount,
+        warningCount,
+      }
     : exam;
-  const startDateStr = previewExam?.startDate ? dayjs(previewExam.startDate).format('DD-MM-YYYY') : '';
-  const endDateStr = previewExam?.endDate ? dayjs(previewExam.endDate).format('DD-MM-YYYY') : startDateStr;
-  const dateRange = startDateStr ? (startDateStr === endDateStr ? startDateStr : `${startDateStr} - ${endDateStr}`) : '';
+  const startDateStr = previewExam?.startDate
+    ? dayjs(previewExam.startDate).format('DD-MM-YYYY')
+    : '';
+  const endDateStr = previewExam?.endDate
+    ? dayjs(previewExam.endDate).format('DD-MM-YYYY')
+    : startDateStr;
+  const dateRange = startDateStr
+    ? startDateStr === endDateStr
+      ? startDateStr
+      : `${startDateStr} - ${endDateStr}`
+    : '';
 
   const gradingScaleId = previewExam?.gradingScaleId || exam?.gradingScaleId;
   const gradeScalingsList = gradeScalingsData?.data ?? [];

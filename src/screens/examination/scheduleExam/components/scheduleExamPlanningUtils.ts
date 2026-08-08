@@ -65,7 +65,11 @@ export const buildExamPlanningIssues = (values: any): ExamPlanningIssue[] => {
       });
     }
 
-    if (subject.startTime && subject.endTime && !dayjs(subject.endTime).isAfter(dayjs(subject.startTime))) {
+    if (
+      subject.startTime &&
+      subject.endTime &&
+      !dayjs(subject.endTime).isAfter(dayjs(subject.startTime))
+    ) {
       issues.push({
         id: `schedule-time-${subject.subjectId || index}`,
         step: 1,
