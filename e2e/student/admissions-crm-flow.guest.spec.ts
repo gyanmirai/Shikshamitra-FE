@@ -1145,6 +1145,7 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(eligible).toBeVisible();
     await eligible.click();
     await expect(page).toHaveURL(/(?:\?|&)column=4(?:&|$)/);
+    await expect(page).not.toHaveURL(/(?:\?|&)queue=/);
     await expect
       .poll(() => worklistRequests.some((url) => url.searchParams.get('pipelineColumn') === '4'))
       .toBe(true);
