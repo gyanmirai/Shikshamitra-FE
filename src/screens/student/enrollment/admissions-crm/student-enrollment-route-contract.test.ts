@@ -294,6 +294,34 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(legacyRoute).toContain('studentPaths.enrollment.classPlacement');
   });
 
+  it('uses the shared compact icon stage filter across enrollment worklists', () => {
+    const worklists = [
+      ['registrations-workspace.tsx', 'Registration Stage'],
+      ['offers-workspace.tsx', 'Placement Stage'],
+      ['activation-workspace.tsx', 'Activation Stage'],
+      ['operations-workspace.tsx', 'Follow-up Focus'],
+    ] as const;
+
+    worklists.forEach(([file, label]) => {
+      const source = read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file);
+      expect(source, file).toContain(`label: '${label}'`);
+      expect(source, file).toContain("icon: 'mdi:");
+      expect(source, file).toContain('tableConfiguration=');
+    });
+
+    const stageFilter = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'applicant-worklist-stage-filter.tsx'
+    );
+    expect(stageFilter).toContain('minHeight: 44');
+    expect(stageFilter).toContain("width: '100%'");
+    expect(stageFilter).toContain('aria-hidden="true"');
+  });
+
   it('wires the versioned Admission Year Setup through dedicated RTK Query endpoints', () => {
     const api = read('src', 'redux', 'student', 'admissions-crm', 'admissions-crm-api.ts');
     const workspace = read(

@@ -4,6 +4,38 @@ import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/
 
 import { ApplicantWorklistWorkspace } from './applicant-worklist-workspace';
 
+import type { ApplicantWorklistTableConfiguration } from './applicant-worklist-workspace';
+
+const followUpTableConfiguration: ApplicantWorklistTableConfiguration = {
+  stageFilter: {
+    label: 'Follow-up Focus',
+    description: 'Focus the worklist on one communication need.',
+  },
+};
+
+const followUpStages = [
+  {
+    key: AdmissionCrmPipelineColumnKey.NewInquiry,
+    label: 'New Inquiries',
+    icon: 'mdi:account-plus-outline',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.FollowUp,
+    label: 'Follow-up Due',
+    icon: 'mdi:phone-clock-outline',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.ExamPending,
+    label: 'Exam Reminder',
+    icon: 'mdi:school-outline',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.RegistrationPending,
+    label: 'Registration Reminder',
+    icon: 'mdi:file-clock-outline',
+  },
+] as const;
+
 export function AdmissionsOperationsWorkspaceContent() {
   return (
     <ApplicantWorklistWorkspace
@@ -11,13 +43,9 @@ export function AdmissionsOperationsWorkspaceContent() {
       description="Review applicants who need contact, complete assigned follow-ups, and open message history."
       tableId="student-enrollment-follow-ups-messages"
       defaultColumn={AdmissionCrmPipelineColumnKey.FollowUp}
-      columns={[
-        { key: AdmissionCrmPipelineColumnKey.NewInquiry, label: 'New inquiries' },
-        { key: AdmissionCrmPipelineColumnKey.FollowUp, label: 'Follow-up due' },
-        { key: AdmissionCrmPipelineColumnKey.ExamPending, label: 'Exam reminder' },
-        { key: AdmissionCrmPipelineColumnKey.RegistrationPending, label: 'Registration reminder' },
-      ]}
+      columns={followUpStages}
       applicantTab="next"
+      tableConfiguration={followUpTableConfiguration}
     />
   );
 }

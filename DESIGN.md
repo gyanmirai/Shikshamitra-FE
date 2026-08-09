@@ -17,15 +17,17 @@ Apply these priorities in order.
 
 ## Reference implementations
 
-| Concern                                      | Current reference                                                              |
-| -------------------------------------------- | ------------------------------------------------------------------------------ |
-| Full-height table workspace                  | `src/screens/classManagement/assignElectiveSubject/index.tsx`                  |
-| Persistent tab workspace                     | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                                |
-| Shared table                                 | `src/components/customizabaleTable/index.tsx`                                  |
-| Enrollment page header                       | `src/screens/student/enrollment/admissions-crm/workspace-header.tsx`           |
-| Enrollment filters, empty states, and errors | `src/screens/student/enrollment/admissions-crm/workspace-table-patterns.tsx`   |
-| Enrollment settings task navigation          | `src/screens/student/enrollment/setting/enrollment-settings-page.tsx`          |
-| Guided settings editor drawer                | `src/screens/student/enrollment/setting/enrollment-settings-editor-drawer.tsx` |
+| Concern                                      | Current reference                                                                   |
+| -------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Full-height table workspace                  | `src/screens/classManagement/assignElectiveSubject/index.tsx`                       |
+| Persistent tab workspace                     | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                                     |
+| Compact icon tab workspace                   | `src/screens/academic/course-management/lessonPlan/LessonPlanScreen.tsx`            |
+| Compact domain-filter navigator              | `src/screens/student/enrollment/admissions-crm/applicant-worklist-stage-filter.tsx` |
+| Shared table                                 | `src/components/customizabaleTable/index.tsx`                                       |
+| Enrollment page header                       | `src/screens/student/enrollment/admissions-crm/workspace-header.tsx`                |
+| Enrollment filters, empty states, and errors | `src/screens/student/enrollment/admissions-crm/workspace-table-patterns.tsx`        |
+| Enrollment settings task navigation          | `src/screens/student/enrollment/setting/enrollment-settings-page.tsx`               |
+| Guided settings editor drawer                | `src/screens/student/enrollment/setting/enrollment-settings-editor-drawer.tsx`      |
 
 These files are reference implementations, not exemptions from this contract.
 When a reference conflicts with this document, follow this document and improve the shared primitive.
@@ -103,6 +105,9 @@ An interactive row must expose a real link or button and an equivalent keyboard 
 
 Tabs represent peer content areas within one stable context.
 Use a pure shared tab primitive and preserve the page header and tab row while the active panel changes.
+Use the compact icon-tab treatment for primary workspace tabs: place the tab list in one full-width contained surface, use a short leading icon that reinforces each label, and make the selected state immediately distinguishable through color and contrast.
+Keep the control visually compact while preserving a minimum 44 px touch target, visible keyboard focus, readable labels, and contained horizontal scrolling on narrow screens.
+Do not use icons without text for primary workspace navigation, and do not choose decorative or ambiguous icons.
 Tabs that change meaningful page content must use normal link semantics and URL-backed state.
 Report views, board or list modes, paging, sorting, meaningful filters, the selected admission year, and other shareable state must survive reload and browser navigation.
 Local or session storage is appropriate only for personal display preferences such as density or column visibility.
@@ -113,6 +118,9 @@ The active tab must have a corresponding tab panel relationship.
 Back and forward navigation must restore the visible state without a second competing state store.
 Dirty-state protection must be implemented once at the owning workspace boundary.
 The shared tab primitive must not own global confirmation behavior.
+
+An exclusive domain filter may reuse the compact icon-tab visual treatment, but it must retain button or radio semantics rather than claiming `tab` semantics.
+Give the group a visible domain label such as Registration Stage or Activation Stage, expose one unmistakable selected state, and keep the selection in the same URL-backed filter contract as the rest of the workspace.
 
 ## Settings navigation and decisions
 

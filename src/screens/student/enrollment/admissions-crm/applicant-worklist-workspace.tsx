@@ -48,11 +48,9 @@ import {
 } from './workspace-table-patterns';
 
 import type { ApplicantWorkspaceTab } from './applicant-workspace-page';
+import type { ApplicantWorklistStageOption } from './applicant-worklist-stage-filter';
 
-export type ApplicantWorklistColumn = {
-  key: AdmissionCrmPipelineColumnKey;
-  label: string;
-};
+export type ApplicantWorklistColumn = ApplicantWorklistStageOption;
 
 export type ApplicantWorklistTableConfiguration = {
   stageFilter?: {
