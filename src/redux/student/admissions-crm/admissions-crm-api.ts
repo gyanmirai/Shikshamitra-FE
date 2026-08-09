@@ -595,6 +595,7 @@ export type AdmissionCrmAdmissionReportParams = {
 
 export type AdmissionCrmLeadDto = {
   id: string;
+  applicantNumber: number;
   academicYearId: string;
   admissionYearSetupId?: string | null;
   admissionYearSetupVersion?: number | null;
@@ -1767,6 +1768,7 @@ export type AdmissionCrmEntranceExamDto = {
   id: string;
   academicYearId: string;
   leadId: string;
+  applicantNumber: number;
   applicantName: string;
   entranceExamSlotId: string;
   slotNameSnapshot?: string | null;
@@ -1796,6 +1798,7 @@ export type AdmissionCrmEligibilityHandoffDto = {
   academicYearId: string;
   leadId: string;
   examRecordId: string;
+  applicantNumber: number;
   canStartAdmission: boolean;
   requiresManualReview: boolean;
   missingAdmissionFields: string[];
@@ -2561,6 +2564,7 @@ export type AdmissionCrmOperationsQueueSummaryDto = {
 export type AdmissionCrmOperationsQueueItemDto = {
   key: string;
   leadId: string;
+  applicantNumber: number;
   examRecordId?: string | null;
   registrationApplicationId?: string | null;
   documentId?: string | null;
@@ -2702,6 +2706,7 @@ export type AdmissionCrmMyWorkItemDto = {
   taskId?: string | null;
   queueType?: AdmissionCrmOperationsQueueType | null;
   leadId: string;
+  applicantNumber: number;
   examRecordId?: string | null;
   applicantName: string;
   contact?: string | null;

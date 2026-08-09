@@ -72,13 +72,13 @@ import {
   useGetAdmissionCrmOperationalStandardOptionsQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { formatEnrollmentDate } from './enrollment-display';
 import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { getEnrollmentApiErrorMessage } from './enrollment-api-errors';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantTitleTransition } from './enrollment-route-transition';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import { formatEnrollmentDate, formatApplicantNumber } from './enrollment-display';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
 import { ApplicantWorkspaceDirtyProvider } from './applicant-workspace-dirty-context';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
@@ -361,6 +361,7 @@ function PipelineLeadCard({
               </Link>
             </ApplicantTitleTransition>
             <Typography variant="caption" color="text.secondary" noWrap display="block">
+              {formatApplicantNumber(lead.applicantNumber)} ·{' '}
               {lead.desiredClassName || 'Class not captured'} · {ownerName}
             </Typography>
           </Box>
@@ -966,14 +967,28 @@ function PipelineWorkspaceContent() {
         },
       },
       {
+        id: 'applicantNumber',
+        originalId: 'ApplicantNumber',
+        label: 'Applicant ID',
+        width: 120,
+        minWidth: 120,
+        maxWidth: 120,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isFilter: false,
+        render: (value) => (
+          <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+            {formatApplicantNumber(value as number)}
+          </Typography>
+        ),
+      },
+      {
         id: 'applicant',
         originalId: 'ApplicantName',
         label: 'Applicant',
         width: 250,
         minWidth: 220,
-        sticky: true,
-        stickyPosition: 'left',
-        stickyOnMobile: false,
         filterType: 'string',
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;

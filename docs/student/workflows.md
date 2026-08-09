@@ -51,6 +51,9 @@ Completed and current stages are navigable, while blocked, optional, and future 
 Desktop renders one six-column journey without horizontal scrolling.
 Tablet and mobile render current-step progress plus a `View Journey` disclosure with a vertical status list.
 The applicant header owns identity, lifecycle status, labeled inquiry facts, SLA, and the next best action.
+Every applicant receives one immutable, short Applicant ID at inquiry creation. The same padded ID
+is displayed as the pinned left identity column in Pipeline, My Work, Entrance Exams, Registration,
+Offers, Activation, and Operations, and remains visible in the applicant header throughout Enrollment.
 The main column owns the active operation, while the sticky desktop context rail owns pathway, ownership, priority, lead score, follow-ups, Activity and Audit, and Additional Checks.
 Activity and Audit opens as a URL-backed drawer rather than a competing applicant tab.
 Parent-facing status uses the same step order but hides internal notes, scoring details, duplicate evidence, and staff permissions.
@@ -96,8 +99,8 @@ Actions open or update the same applicant record used by Pipeline and My Work.
 
 | Worklist              | Required row context                                                              |
 | --------------------- | --------------------------------------------------------------------------------- |
-| My Work               | Applicant, current step, issue, due time, owner, priority, and recommended action |
-| Entrance Exams        | Schedule, attendance, result, eligibility, absence, retest, and review state      |
+| My Work               | Applicant ID, applicant, current step, issue, due time, owner, priority, and recommended action |
+| Entrance Exams        | Applicant ID, schedule, attendance, result, eligibility, absence, retest, and review state      |
 | Registration          | Completion, missing fields, missing documents, correction state, and verification |
 | Class Placement       | Board, medium, standard, division, capacity state, and override authority         |
 | Activation            | Registration, Exam, Finance, Placement, approval, account setup, and repair gates |
