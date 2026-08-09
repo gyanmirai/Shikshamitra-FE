@@ -4,10 +4,26 @@ import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/
 
 import { ApplicantWorklistStageFilter } from './applicant-worklist-stage-filter';
 
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} aria-hidden="true" />,
+}));
+
 const stages = [
-  { key: AdmissionCrmPipelineColumnKey.Eligible, label: 'Eligible' },
-  { key: AdmissionCrmPipelineColumnKey.RegistrationPending, label: 'Registration Pending' },
-  { key: AdmissionCrmPipelineColumnKey.RegistrationDone, label: 'Registration Done' },
+  {
+    key: AdmissionCrmPipelineColumnKey.Eligible,
+    label: 'Eligible',
+    icon: 'mdi:account-check-outline',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.RegistrationPending,
+    label: 'Registration Pending',
+    icon: 'mdi:file-document-edit-outline',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.RegistrationDone,
+    label: 'Registration Done',
+    icon: 'mdi:clipboard-check-outline',
+  },
 ];
 
 describe('Applicant worklist stage filter', () => {

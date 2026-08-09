@@ -29,9 +29,21 @@ const registrationTableConfiguration: ApplicantWorklistTableConfiguration = {
   searchPlaceholder: 'Search registration applicants…',
 };
 const registrationStages = [
-  { key: AdmissionCrmPipelineColumnKey.Eligible, label: 'Eligible' },
-  { key: AdmissionCrmPipelineColumnKey.RegistrationPending, label: 'Registration Pending' },
-  { key: AdmissionCrmPipelineColumnKey.RegistrationDone, label: 'Registration Done' },
+  {
+    key: AdmissionCrmPipelineColumnKey.Eligible,
+    label: 'Eligible',
+    icon: 'mdi:account-check-outline',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.RegistrationPending,
+    label: 'Registration Pending',
+    icon: 'mdi:file-document-edit-outline',
+  },
+  {
+    key: AdmissionCrmPipelineColumnKey.RegistrationDone,
+    label: 'Registration Done',
+    icon: 'mdi:clipboard-check-outline',
+  },
 ] as const;
 
 export function RegistrationsWorkspace() {
