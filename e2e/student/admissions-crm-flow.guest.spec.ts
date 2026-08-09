@@ -1529,6 +1529,9 @@ test.describe('Student admissions CRM E2E', () => {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
+    await expect(page.getByRole('region', { name: 'Registration Stage filter' })).toContainText(
+      'Choose the stage of registration work you want to review.'
+    );
     const eligible = page.getByRole('button', { name: 'Eligible', exact: true });
     await expect(eligible).toBeVisible();
     await eligible.click();
@@ -1538,7 +1541,10 @@ test.describe('Student admissions CRM E2E', () => {
       .poll(() => worklistRequests.some((url) => url.searchParams.get('pipelineColumn') === '4'))
       .toBe(true);
 
-    await page.getByRole('button', { name: 'Registration done', exact: true }).click();
+    await page.getByRole('button', { name: 'Registration Done', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Registration Done', exact: true })
+    ).toHaveAttribute('aria-pressed', 'true');
     await expect(page).toHaveURL(/(?:\?|&)column=6(?:&|$)/);
     await expect
       .poll(() => worklistRequests.some((url) => url.searchParams.get('pipelineColumn') === '6'))

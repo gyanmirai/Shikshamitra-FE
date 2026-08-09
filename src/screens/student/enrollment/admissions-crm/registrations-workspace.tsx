@@ -13,9 +13,26 @@ import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorklistWorkspace } from './applicant-worklist-workspace';
 
+import type { ApplicantWorklistTableConfiguration } from './applicant-worklist-workspace';
+
 const DirectRegistrationDialog = dynamic(() =>
   import('./direct-registration-dialog').then((module) => module.DirectRegistrationDialog)
 );
+
+const registrationTableConfiguration: ApplicantWorklistTableConfiguration = {
+  stageFilter: {
+    label: 'Registration Stage',
+    description: 'Choose the stage of registration work you want to review.',
+  },
+  contextColumns: ['registrationForm', 'priority'],
+  serverFilters: true,
+  searchPlaceholder: 'Search registration applicants…',
+};
+const registrationStages = [
+  { key: AdmissionCrmPipelineColumnKey.Eligible, label: 'Eligible' },
+  { key: AdmissionCrmPipelineColumnKey.RegistrationPending, label: 'Registration Pending' },
+  { key: AdmissionCrmPipelineColumnKey.RegistrationDone, label: 'Registration Done' },
+] as const;
 
 export function RegistrationsWorkspace() {
   const [directRegistrationOpen, setDirectRegistrationOpen] = useState(false);
@@ -32,12 +49,9 @@ export function RegistrationsWorkspace() {
         description="Invite eligible applicants, enter paper forms, verify documents, and confirm readiness."
         tableId="student-enrollment-registration"
         defaultColumn={AdmissionCrmPipelineColumnKey.RegistrationPending}
-        columns={[
-          { key: AdmissionCrmPipelineColumnKey.Eligible, label: 'Eligible' },
-          { key: AdmissionCrmPipelineColumnKey.RegistrationPending, label: 'Registration pending' },
-          { key: AdmissionCrmPipelineColumnKey.RegistrationDone, label: 'Registration done' },
-        ]}
+        columns={registrationStages}
         applicantTab="registration"
+        tableConfiguration={registrationTableConfiguration}
         headerActions={
           canCreateDirectRegistration ? (
             <Button

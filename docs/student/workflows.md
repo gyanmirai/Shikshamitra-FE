@@ -103,6 +103,17 @@ Actions open or update the same applicant record used by Pipeline and My Work.
 | Activation            | Registration, Exam, Finance, Placement, approval, account setup, and repair gates |
 | Follow-ups & Messages | Due state, assignee, channel, template, provider state, and last attempt          |
 
+The Registration worklist presents Eligible, Registration Pending, and Registration Done as a
+labeled, mutually exclusive Registration Stage filter. The selected stage, target class, admission
+pathway, priority, sorting, and pagination remain shareable URL state. Applicant/contact search,
+registration form-number filters, and activity-date filters remain scoped to the signed-in tenant
+and user session so personally identifying search terms are not exposed in the URL.
+
+Registration uses the same full-height `CustomizableTable` contract as Pipeline. Applicant,
+registration form, target class, admission pathway, priority, and last activity support
+backend-owned filtering and sorting where the lead-list contract supports them. Clearing table
+filters preserves the selected Registration Stage.
+
 ## Enrollment interface contract
 
 Enrollment follows the global [frontend interface design contract](../../DESIGN.md).

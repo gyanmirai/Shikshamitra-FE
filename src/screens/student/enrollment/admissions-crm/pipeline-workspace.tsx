@@ -53,9 +53,9 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 import {
-  StudentAdmissionsCrmApi,
   AdmissionInquiryStage,
   AdmissionCrmRouteType,
+  StudentAdmissionsCrmApi,
   AdmissionInquiryChannel,
   AdmissionCrmLeadPriority,
   useGetAdmissionCrmStaffQuery,
@@ -77,16 +77,21 @@ import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { getEnrollmentApiErrorMessage } from './enrollment-api-errors';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
+import { ApplicantTitleTransition } from './enrollment-route-transition';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
 import { ApplicantWorkspaceDirtyProvider } from './applicant-workspace-dirty-context';
-import { ApplicantTitleTransition } from './enrollment-route-transition';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
   createEnrollmentQueryScopeKey,
   getEnrollmentFilterQueryScope,
 } from './enrollment-query-scope';
+import {
+  getDateFilterBounds,
+  getLatestEnumFilter,
+  getLatestStringFilter,
+} from './workspace-table-filters';
 import {
   createApplicantRowNavigationProps,
   createApplicantLinkNavigationProps,
@@ -135,34 +140,6 @@ const routeTypeLabel = (value: AdmissionCrmRouteType | string | null | undefined
   const enumLabel =
     typeof numericValue === 'number' ? AdmissionCrmRouteType[numericValue] : numericValue;
   return enumLabel?.replace(/([a-z])([A-Z])/g, '$1 $2') || 'Unknown pathway';
-};
-
-const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
-  const filter = [...filters].reverse().find((item) => item.column === column);
-  return filter ? Number(filter.value) : undefined;
-};
-
-const getLatestStringFilter = (filters: IParams['filters'], column: string) => {
-  const filter = [...filters].reverse().find((item) => item.column === column);
-  return filter?.value ? String(filter.value) : undefined;
-};
-
-const getDateFilterBounds = (filters: IParams['filters'], column: string) => {
-  const filter = [...filters].reverse().find((item) => item.column === column);
-  if (!filter || typeof filter.value !== 'string') return {};
-  const [day, month, year] = filter.value.split('-').map(Number);
-  if (!day || !month || !year) return {};
-  const value = new Date(Date.UTC(year, month - 1, day));
-  if (filter.type === 'after') {
-    value.setUTCDate(value.getUTCDate() + 1);
-    return { from: value.toISOString() };
-  }
-  if (filter.type === 'before') {
-    value.setUTCDate(value.getUTCDate() - 1);
-    return { until: value.toISOString() };
-  }
-  const iso = value.toISOString();
-  return { from: iso, until: iso };
 };
 
 const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
