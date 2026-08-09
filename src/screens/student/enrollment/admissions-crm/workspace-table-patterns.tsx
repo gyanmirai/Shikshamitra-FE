@@ -47,6 +47,7 @@ type FilterPanelProps = {
 type EmptyStateProps = {
   title: string;
   description: string;
+  action?: ReactNode;
 };
 
 type ErrorStateProps = {
@@ -133,7 +134,7 @@ export function EnrollmentWorkspaceFilterPanel({
   );
 }
 
-export function EnrollmentTableEmptyState({ title, description }: EmptyStateProps) {
+export function EnrollmentTableEmptyState({ title, description, action }: EmptyStateProps) {
   return (
     <Stack spacing={0.5} alignItems="center" sx={{ py: 1 }}>
       <Typography variant="subtitle2" color="text.primary">
@@ -142,6 +143,7 @@ export function EnrollmentTableEmptyState({ title, description }: EmptyStateProp
       <Typography variant="body2" color="text.secondary" textAlign="center">
         {description}
       </Typography>
+      {action ? <Box sx={{ pt: 0.5 }}>{action}</Box> : null}
     </Stack>
   );
 }

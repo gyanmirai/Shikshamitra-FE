@@ -1,34 +1,28 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmLeadDto,
   AdmissionCrmPipelineColumnKey,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import NextLink from 'next/link';
 import { useMemo, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Chip, Link, Stack, Alert, Button, Typography, LinearProgress } from '@mui/material';
 import {
+  AdmissionCrmRouteType,
+  StudentAdmissionsCrmApi,
+  AdmissionCrmLeadPriority,
   AdmissionCrmApplicantStepKey,
   useGetAdmissionCrmLeadsQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
-import {
-  Box,
-  Chip,
-  Stack,
-  Alert,
-  Button,
-  Typography,
-  ToggleButton,
-  LinearProgress,
-  ToggleButtonGroup,
-} from '@mui/material';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
-import { createApplicantRowNavigationProps } from './applicant-row-navigation';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import { ApplicantWorklistStageFilter } from './applicant-worklist-stage-filter';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
   getRouteTypeLabel,
@@ -36,6 +30,16 @@ import {
   formatApplicantContact,
 } from './enrollment-display';
 import {
+  getDateFilterBounds,
+  getLatestEnumFilter,
+  getLatestStringFilter,
+} from './workspace-table-filters';
+import {
+  createApplicantRowNavigationProps,
+  createApplicantLinkNavigationProps,
+} from './applicant-row-navigation';
+import {
+  enrollmentActionsColumn,
   enrollmentTableWrapperSx,
   EnrollmentTableEmptyState,
   enrollmentWorkspaceRootSx,
@@ -50,6 +54,16 @@ export type ApplicantWorklistColumn = {
   label: string;
 };
 
+export type ApplicantWorklistTableConfiguration = {
+  stageFilter?: {
+    label: string;
+    description: string;
+  };
+  contextColumns?: readonly ('registrationForm' | 'priority')[];
+  serverFilters?: boolean;
+  searchPlaceholder?: string;
+};
+
 type ApplicantWorklistWorkspaceProps = {
   title: string;
   description: string;
@@ -58,6 +72,7 @@ type ApplicantWorklistWorkspaceProps = {
   defaultColumn: AdmissionCrmPipelineColumnKey;
   applicantTab: ApplicantWorkspaceTab;
   headerActions?: ReactNode;
+  tableConfiguration?: ApplicantWorklistTableConfiguration;
 };
 
 const stepLabels: Record<AdmissionCrmApplicantStepKey, string> = {
@@ -72,6 +87,22 @@ const stepLabels: Record<AdmissionCrmApplicantStepKey, string> = {
 const applicantName = (lead: AdmissionCrmLeadDto) =>
   [lead.firstName, lead.middleName, lead.lastName].filter(Boolean).join(' ') || 'Unnamed applicant';
 
+const priorities = Object.values(AdmissionCrmLeadPriority).filter(
+  (value): value is AdmissionCrmLeadPriority => typeof value === 'number'
+);
+const routeTypes = Object.values(AdmissionCrmRouteType).filter(
+  (value): value is AdmissionCrmRouteType => typeof value === 'number'
+);
+const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
+  [AdmissionCrmLeadPriority.None]: 'Not set',
+  [AdmissionCrmLeadPriority.Hot]: 'Hot',
+  [AdmissionCrmLeadPriority.Warm]: 'Warm',
+  [AdmissionCrmLeadPriority.Cold]: 'Cold',
+  [AdmissionCrmLeadPriority.Low]: 'Low',
+};
+const privateFilterColumns = new Set(['applicant', 'registrationFormNumber', 'lastActivityTime']);
+const structuralFilterColumns = new Set(['desiredClassName', 'intendedRouteType', 'priority']);
+
 export function ApplicantWorklistWorkspace({
   title,
   description,
@@ -80,19 +111,101 @@ export function ApplicantWorklistWorkspace({
   defaultColumn,
   applicantTab,
   headerActions,
+  tableConfiguration,
 }: ApplicantWorklistWorkspaceProps) {
-  const { academicYearId, academicMediumId, sessionIdentity, state, updateState, openApplicant } =
-    useEnrollmentWorkspace();
+  const {
+    academicYearId,
+    academicMediumId,
+    sessionIdentity,
+    state,
+    updateState,
+    getApplicantHref,
+    openApplicant,
+  } = useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
   const requestedPageSize = state.pageSize ?? 25;
   const pageSize = [10, 25, 50, 100].includes(requestedPageSize) ? requestedPageSize : 25;
-  const { search, setSearch } = useWorkspaceTableSessionState(
+  const {
+    search,
+    setSearch,
+    filters: columnFilters,
+    setFilters: setColumnFilters,
+  } = useWorkspaceTableSessionState(
     `applicant-worklist:${tableId}:${academicYearId || 'none'}:${sessionIdentity}`
   );
+  const prefetchLead = StudentAdmissionsCrmApi.usePrefetch('getAdmissionCrmLead');
+  const prefetchProgress = StudentAdmissionsCrmApi.usePrefetch('getAdmissionCrmApplicantProgress');
+  const prefetchApplicant = useCallback(
+    (leadId: string) => {
+      prefetchLead({ leadId }, { ifOlderThan: 30 });
+      prefetchProgress({ leadId }, { ifOlderThan: 30 });
+    },
+    [prefetchLead, prefetchProgress]
+  );
+  const serverFilters = tableConfiguration?.serverFilters === true;
+  const showRegistrationForm =
+    tableConfiguration?.contextColumns?.includes('registrationForm') === true;
+  const showPriority = tableConfiguration?.contextColumns?.includes('priority') === true;
   const sorting = state.sorting || 'lastActivityTime desc';
   const selectedColumn = worklistColumns.some((item) => item.key === state.pipelineColumn)
     ? (state.pipelineColumn as AdmissionCrmPipelineColumnKey)
     : defaultColumn;
+  const structuralFilters = useMemo<IParams['filters']>(
+    () =>
+      serverFilters
+        ? [
+            ...(state.className
+              ? [
+                  {
+                    column: 'desiredClassName',
+                    type: 'contains',
+                    value: state.className,
+                    valueType: 'string',
+                    label: 'Target Class',
+                    displayValue: state.className,
+                  },
+                ]
+              : []),
+            ...(state.routeType == null
+              ? []
+              : [
+                  {
+                    column: 'intendedRouteType',
+                    type: 'equals',
+                    value: state.routeType,
+                    valueType: 'enum',
+                    label: 'Admission Pathway',
+                    displayValue: getRouteTypeLabel(state.routeType),
+                  },
+                ]),
+            ...(state.priority == null
+              ? []
+              : [
+                  {
+                    column: 'priority',
+                    type: 'equals',
+                    value: state.priority,
+                    valueType: 'enum',
+                    label: 'Priority',
+                    displayValue: priorityLabels[state.priority],
+                  },
+                ]),
+          ]
+        : [],
+    [serverFilters, state.className, state.priority, state.routeType]
+  );
+  const privateFilters = useMemo(
+    () =>
+      serverFilters
+        ? columnFilters.filter((filter) => privateFilterColumns.has(filter.column))
+        : [],
+    [columnFilters, serverFilters]
+  );
+  const tableFilters = useMemo(
+    () => [...structuralFilters, ...privateFilters],
+    [privateFilters, structuralFilters]
+  );
+  const dateBounds = getDateFilterBounds(privateFilters, 'lastActivityTime');
 
   const query = useGetAdmissionCrmLeadsQuery(
     {
@@ -100,6 +213,17 @@ export function ApplicantWorklistWorkspace({
       pipelineColumn: selectedColumn,
       academicMediumId,
       filterText: search || undefined,
+      ...(serverFilters
+        ? {
+            applicantSearch: getLatestStringFilter(privateFilters, 'applicant'),
+            registrationFormNumber: getLatestStringFilter(privateFilters, 'registrationFormNumber'),
+            lastActivityFrom: dateBounds.from,
+            lastActivityUntil: dateBounds.until,
+            desiredClassName: state.className,
+            intendedRouteType: state.routeType,
+            priority: state.priority,
+          }
+        : {}),
       sorting,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
@@ -112,22 +236,74 @@ export function ApplicantWorklistWorkspace({
     [applicantTab, openApplicant]
   );
 
-  const columns = useMemo<IColumn[]>(
-    () => [
+  const clearAdditionalFilters = useCallback(() => {
+    setSearch('');
+    setColumnFilters([]);
+    updateState(
       {
-        id: 'applicantName',
+        className: undefined,
+        routeType: undefined,
+        priority: undefined,
+        page: 1,
+      },
+      'push'
+    );
+  }, [setColumnFilters, setSearch, updateState]);
+
+  const handleServerFilter = useCallback(
+    (filters: IParams['filters']) => {
+      setColumnFilters(filters.filter((filter) => !structuralFilterColumns.has(filter.column)));
+      updateState(
+        {
+          className: getLatestStringFilter(filters, 'desiredClassName'),
+          routeType: getLatestEnumFilter(filters, 'intendedRouteType'),
+          priority: getLatestEnumFilter(filters, 'priority'),
+          page: 1,
+        },
+        'push'
+      );
+    },
+    [setColumnFilters, updateState]
+  );
+
+  const hasAdditionalFilters = search.trim().length > 0 || tableFilters.length > 0;
+
+  const columns = useMemo<IColumn[]>(() => {
+    const tableColumns: IColumn[] = [
+      {
+        id: serverFilters ? 'applicant' : 'applicantName',
+        originalId: serverFilters ? 'ApplicantName' : undefined,
         label: 'Applicant',
         width: 230,
         minWidth: 210,
         sticky: true,
         stickyPosition: 'left',
-        isSort: false,
-        isFilter: false,
+        isSort: serverFilters,
+        isFilter: serverFilters,
+        filterType: serverFilters ? 'string' : undefined,
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           return (
-            <Stack spacing={0.15}>
-              <Typography variant="subtitle2">{applicantName(lead)}</Typography>
+            <Stack spacing={0.15} sx={{ minWidth: 0 }}>
+              {serverFilters ? (
+                <Link
+                  component={NextLink}
+                  {...createApplicantLinkNavigationProps({
+                    href: getApplicantHref(lead.id, applicantTab),
+                    onOpen: () => openLead(lead),
+                    onPrefetch: () => prefetchApplicant(lead.id),
+                  })}
+                  variant="subtitle2"
+                  color="inherit"
+                  underline="hover"
+                  noWrap
+                  title={applicantName(lead)}
+                >
+                  {applicantName(lead)}
+                </Link>
+              ) : (
+                <Typography variant="subtitle2">{applicantName(lead)}</Typography>
+              )}
               <Typography variant="caption" color="text.secondary" noWrap>
                 {formatApplicantContact(lead.primaryContactNo, lead.email)}
               </Typography>
@@ -135,13 +311,34 @@ export function ApplicantWorklistWorkspace({
           );
         },
       },
+    ];
+
+    if (showRegistrationForm) {
+      tableColumns.push({
+        id: 'registrationFormNumber',
+        label: 'Registration Form',
+        width: 190,
+        minWidth: 170,
+        filterType: 'string',
+        render: (value) => (
+          <Chip
+            size="small"
+            variant="outlined"
+            label={value ? `Issued · ${value}` : 'Not issued'}
+          />
+        ),
+      });
+    }
+
+    tableColumns.push(
       {
         id: 'desiredClassName',
-        label: 'Standard',
-        width: 140,
-        minWidth: 125,
-        isSort: false,
-        isFilter: false,
+        label: serverFilters ? 'Target Class' : 'Standard',
+        width: serverFilters ? 180 : 140,
+        minWidth: serverFilters ? 160 : 125,
+        isSort: serverFilters,
+        isFilter: serverFilters,
+        filterType: serverFilters ? 'string' : undefined,
         render: (value) => value || 'Not captured',
       },
       {
@@ -172,34 +369,64 @@ export function ApplicantWorklistWorkspace({
         render: (value) => value || 'Open the applicant to review the next step',
       },
       {
-        id: 'intendedRouteNameSnapshot',
+        id: serverFilters ? 'intendedRouteType' : 'intendedRouteNameSnapshot',
         label: 'Admission pathway',
         width: 180,
         minWidth: 160,
-        isSort: false,
-        isFilter: false,
+        isSort: serverFilters,
+        isFilter: serverFilters,
+        filterType: serverFilters ? 'enum' : undefined,
+        enumOptions: serverFilters
+          ? routeTypes.map((routeType) => ({
+              value: routeType,
+              label: getRouteTypeLabel(routeType),
+            }))
+          : undefined,
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           return lead.intendedRouteNameSnapshot || getRouteTypeLabel(lead.intendedRouteType);
         },
-      },
+      }
+    );
+
+    if (showPriority) {
+      tableColumns.push({
+        id: 'priority',
+        label: 'Priority',
+        width: 125,
+        minWidth: 115,
+        filterType: 'enum',
+        enumOptions: priorities.map((priority) => ({
+          value: priority,
+          label: priorityLabels[priority],
+        })),
+        render: (value) => priorityLabels[value as AdmissionCrmLeadPriority],
+      });
+    }
+
+    tableColumns.push(
       {
         id: 'lastActivityTime',
         label: 'Last activity',
         width: 165,
         minWidth: 150,
         isSort: true,
-        isFilter: false,
+        isFilter: serverFilters,
+        filterType: serverFilters ? 'date' : undefined,
         render: (value) => formatEnrollmentDate(value as string, true),
       },
       {
         id: 'actions',
-        label: '',
-        width: 100,
-        minWidth: 100,
-        sticky: true,
-        stickyPosition: 'right',
-        stickyOnMobile: false,
+        label: serverFilters ? 'Actions' : '',
+        ...(serverFilters
+          ? enrollmentActionsColumn
+          : {
+              width: 100,
+              minWidth: 100,
+              sticky: true,
+              stickyPosition: 'right' as const,
+              stickyOnMobile: false,
+            }),
         isSort: false,
         isFilter: false,
         excludeFromExport: true,
@@ -207,6 +434,7 @@ export function ApplicantWorklistWorkspace({
           <Button
             size="small"
             variant="outlined"
+            aria-label={`Open ${applicantName(row as AdmissionCrmLeadDto)} ${title}`}
             onClick={(event) => {
               event.stopPropagation();
               openLead(row as AdmissionCrmLeadDto);
@@ -215,10 +443,20 @@ export function ApplicantWorklistWorkspace({
             Open
           </Button>
         ),
-      },
-    ],
-    [openLead]
-  );
+      }
+    );
+
+    return tableColumns;
+  }, [
+    applicantTab,
+    getApplicantHref,
+    openLead,
+    prefetchApplicant,
+    serverFilters,
+    showPriority,
+    showRegistrationForm,
+    title,
+  ]);
 
   if (!academicYearId) {
     return (
@@ -236,24 +474,14 @@ export function ApplicantWorklistWorkspace({
   return (
     <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader title={title} description={description} actions={headerActions} />
-      <Box sx={{ overflowX: 'auto' }}>
-        <ToggleButtonGroup
-          exclusive
-          size="small"
-          value={selectedColumn}
-          onChange={(_event, value: AdmissionCrmPipelineColumnKey | null) => {
-            if (value == null) return;
-            updateState({ pipelineColumn: value, queue: undefined, page: 1 });
-          }}
-          aria-label={`${title} worklist`}
-        >
-          {worklistColumns.map((item) => (
-            <ToggleButton key={item.key} value={item.key}>
-              {item.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-      </Box>
+      <ApplicantWorklistStageFilter
+        title={title}
+        label={tableConfiguration?.stageFilter?.label}
+        description={tableConfiguration?.stageFilter?.description}
+        columns={worklistColumns}
+        selectedColumn={selectedColumn}
+        onChange={(value) => updateState({ pipelineColumn: value, queue: undefined, page: 1 })}
+      />
       {query.isError ? (
         <EnrollmentWorkspaceErrorState
           message={`${title} could not be loaded.`}
@@ -275,10 +503,19 @@ export function ApplicantWorklistWorkspace({
             serverSideSearch
             serverSideSort
             serverSideSortMode="single"
+            serverSideFilter={serverFilters}
             totalCount={query.data?.totalCount || 0}
             page={page}
             rowsPerPage={pageSize}
             searchTerm={search}
+            defaultSearchTerm={search}
+            searchFieldProps={{
+              placeholder: tableConfiguration?.searchPlaceholder || 'Search…',
+              autoComplete: 'off',
+              name: `${tableId}-search`,
+              inputProps: { 'aria-label': `Search ${title.toLocaleLowerCase()}` },
+            }}
+            filters={serverFilters ? tableFilters : undefined}
             sorts={parseEnrollmentTableSorts(sorting, columns)}
             defaultRowsPerPage={25}
             rowsPerPageOptions={[10, 25, 50, 100]}
@@ -293,6 +530,7 @@ export function ApplicantWorklistWorkspace({
               const nextSorting = serializeEnrollmentTableSort(sorts);
               updateState({ sorting: nextSorting || undefined, page: 1 }, 'push');
             }}
+            onServerFilter={serverFilters ? handleServerFilter : undefined}
             rowProps={(row) => {
               const lead = row as AdmissionCrmLeadDto;
               return createApplicantRowNavigationProps({
@@ -302,8 +540,23 @@ export function ApplicantWorklistWorkspace({
             }}
             noDataText={
               <EnrollmentTableEmptyState
-                title={`No ${title.toLocaleLowerCase()} work`}
-                description="No applicants currently need action in this worklist."
+                title={
+                  hasAdditionalFilters
+                    ? 'No applicants match these filters'
+                    : `No ${title.toLocaleLowerCase()} work`
+                }
+                description={
+                  hasAdditionalFilters
+                    ? 'Clear the search and table filters to show this registration stage again.'
+                    : 'No applicants currently need action in this worklist.'
+                }
+                action={
+                  hasAdditionalFilters ? (
+                    <Button size="small" onClick={clearAdditionalFilters}>
+                      Clear Filters
+                    </Button>
+                  ) : undefined
+                }
               />
             }
             wrapperProps={{ sx: enrollmentTableWrapperSx }}
