@@ -37,6 +37,7 @@ const nextConfig = {
 
   experimental: {
     workerThreads: false,
+    viewTransition: true,
   },
 };
 

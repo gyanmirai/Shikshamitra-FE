@@ -69,11 +69,14 @@ describe('Admissions Pipeline Quick Inquiry contract', () => {
   it('opens the dedicated applicant page from the pointer row and semantic applicant control', () => {
     expect(pipelineSource).toContain('createApplicantRowNavigationProps');
     expect(pipelineSource).toContain(
-      "onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'next')"
+      "onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'inquiry')"
     );
     expect(pipelineSource).toContain('createApplicantLinkNavigationProps');
-    expect(pipelineSource).toContain("href: getApplicantHref(lead.id, 'next')");
-    expect(pipelineSource).toContain("onOpen: () => openApplicant(lead.id, 'next')");
+    expect(pipelineSource).toContain("href: getApplicantHref(lead.id, 'inquiry')");
+    expect(pipelineSource).toContain("onOpen: () => openApplicant(lead.id, 'inquiry')");
+    expect(pipelineSource).toContain("openApplicant(created.id, 'inquiry')");
+    expect(pipelineSource).toContain("openApplicant(lead.id, 'registration')");
+    expect(pipelineSource).toContain("StudentAdmissionsCrmApi.usePrefetch('getAdmissionCrmLead')");
     expect(pipelineSource).not.toContain('component="button"');
     expect(pipelineSource).toMatch(
       /`pipeline:\$\{academicYearId \|\| 'none'\}:\$\{sessionIdentity\}`/

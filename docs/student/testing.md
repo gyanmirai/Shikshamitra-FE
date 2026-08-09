@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-07-31
+updated_on: 2026-08-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -66,6 +66,8 @@ Simulate a background refetch to prove that safe rows remain visible with one co
 Verify loading, blocking error, empty result, and content as mutually exclusive states.
 Verify URL round trips for tabs, report views, paging, sorting, meaningful filters, and the selected admission year.
 Verify visible focus, keyboard applicant navigation, specific icon-button names, sort direction, expansion state, and tab relationships.
+For Pipeline-to-applicant navigation, verify `tab=inquiry`, native modified-click behavior, data prefetch on hover and focus, directional and reduced-motion transitions, and restoration of Pipeline URL state, scroll, and focus after data readiness.
+Verify that an expired, malformed, external, or applicant-detail return location falls back safely.
 
 ## Add coverage when needed
 

@@ -26,6 +26,14 @@ import {
   migrateLegacyWorkspaceFilters,
   serializeEnrollmentWorkspaceState,
 } from './enrollment-workspace-state';
+import { runEnrollmentNavigation } from './enrollment-route-transition';
+import {
+  isSafeApplicantReturnPath,
+  createApplicantReturnContext,
+  parseApplicantReturnContext,
+  applicantReturnStoragePrefix,
+  applicantRestoreStoragePrefix,
+} from './applicant-return-context';
 
 import type {
   EnrollmentPersona,
@@ -58,6 +66,7 @@ type EnrollmentWorkspaceContextValue = {
   state: EnrollmentWorkspaceState;
   updateState: (patch: EnrollmentWorkspaceStatePatch, mode?: 'push' | 'replace') => void;
   applicantWorkItem?: ApplicantWorkContextItem;
+  applicantReturnHref: string;
   getApplicantHref: (leadId: string, tab?: EnrollmentApplicantTab) => string;
   openApplicant: (
     leadId: string,
@@ -69,7 +78,6 @@ type EnrollmentWorkspaceContextValue = {
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
-const applicantReturnStoragePrefix = 'student-enrollment:applicant-return:';
 const legacyApplicantWorkStoragePrefix = 'student-enrollment:applicant-work:';
 const applicantWorkStoragePrefix = 'student-enrollment:applicant-work:v2:';
 const applicantWorkExpiryMs = 4 * 60 * 60 * 1_000;
@@ -100,25 +108,56 @@ const createSessionToken = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-const storeApplicantReturnPath = (returnTo: string) => {
+const getEnrollmentScrollRoot = () => {
+  const roots = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-enrollment-scroll-root="true"]')
+  );
+  const candidates = roots.flatMap((root) => [
+    ...Array.from(root.querySelectorAll<HTMLElement>('.simplebar-content-wrapper')),
+    root,
+  ]);
+  return candidates.find(
+    (root) =>
+      root.getClientRects().length > 0 &&
+      (root.scrollHeight > root.clientHeight || root.scrollWidth > root.clientWidth)
+  );
+};
+
+const storeApplicantReturnContext = (returnTo: string, focusLeadId: string) => {
   try {
     const key = createSessionToken();
-    window.sessionStorage.setItem(`${applicantReturnStoragePrefix}${key}`, returnTo);
+    const scrollRoot = getEnrollmentScrollRoot();
+    const context = createApplicantReturnContext({
+      expiresAt: Date.now() + applicantWorkExpiryMs,
+      returnTo,
+      scrollTop: scrollRoot?.scrollTop ?? window.scrollY,
+      scrollLeft: scrollRoot?.scrollLeft ?? window.scrollX,
+      focusLeadId,
+    });
+    window.sessionStorage.setItem(`${applicantReturnStoragePrefix}${key}`, JSON.stringify(context));
     return key;
   } catch {
     return undefined;
   }
 };
 
-const consumeApplicantReturnPath = (keyOrPath?: string) => {
+const readApplicantReturnContext = (keyOrPath?: string, consume = false) => {
   if (!keyOrPath) return undefined;
-  if (keyOrPath.startsWith('/student/enrollment/')) return keyOrPath;
+  if (isSafeApplicantReturnPath(keyOrPath)) {
+    return createApplicantReturnContext({
+      expiresAt: Date.now() + applicantWorkExpiryMs,
+      returnTo: keyOrPath,
+      scrollTop: 0,
+      scrollLeft: 0,
+      focusLeadId: '',
+    });
+  }
 
   try {
     const storageKey = `${applicantReturnStoragePrefix}${keyOrPath}`;
-    const returnTo = window.sessionStorage.getItem(storageKey) || undefined;
-    window.sessionStorage.removeItem(storageKey);
-    return returnTo;
+    const context = parseApplicantReturnContext(window.sessionStorage.getItem(storageKey));
+    if (consume) window.sessionStorage.removeItem(storageKey);
+    return context;
   } catch {
     return undefined;
   }
@@ -244,6 +283,16 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     () => readApplicantWorkItem(state.workItem, sessionIdentity),
     [sessionIdentity, state.workItem]
   );
+  const fallbackApplicantReturnHref = useMemo(() => {
+    const fallbackParams = new URLSearchParams();
+    if (state.cycle) fallbackParams.set('cycle', state.cycle);
+    if (state.board) fallbackParams.set('board', state.board);
+    if (state.medium) fallbackParams.set('medium', state.medium);
+    const query = fallbackParams.toString();
+    return `${studentPaths.enrollment.pipeline}${query ? `?${query}` : ''}`;
+  }, [state.board, state.cycle, state.medium]);
+  const applicantReturnHref =
+    readApplicantReturnContext(state.returnTo)?.returnTo || fallbackApplicantReturnHref;
 
   useEffect(() => {
     try {
@@ -266,6 +315,74 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       pendingNavigationPathRef.current = null;
     }
   }, [pathname]);
+
+  useEffect(() => {
+    if (workspace === 'applicant') return undefined;
+    const restoreKey = `${applicantRestoreStoragePrefix}${sessionIdentity}`;
+    const context = parseApplicantReturnContext(sessionStorage.getItem(restoreKey));
+    if (!context) {
+      sessionStorage.removeItem(restoreKey);
+      return undefined;
+    }
+    const expectedPath = new URL(context.returnTo, window.location.origin).pathname;
+    if (expectedPath !== pathname) {
+      sessionStorage.removeItem(restoreKey);
+      return undefined;
+    }
+
+    let observer: MutationObserver | undefined;
+    let fallbackTimer = 0;
+    const restore = (allowFallback = false) => {
+      const readinessMarker = document.querySelector<HTMLElement>(
+        '[data-enrollment-restore-ready]'
+      );
+      const focusTarget = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-applicant-link-id]')
+      ).find((element) => element.dataset.applicantLinkId === context.focusLeadId);
+      if (
+        !allowFallback &&
+        ((readinessMarker && readinessMarker.dataset.enrollmentRestoreReady !== 'true') ||
+          (!readinessMarker && !focusTarget))
+      ) {
+        return false;
+      }
+
+      const scrollRoot = getEnrollmentScrollRoot();
+      if (scrollRoot) {
+        scrollRoot.scrollTo({
+          top: context.scrollTop,
+          left: context.scrollLeft,
+          behavior: 'auto',
+        });
+      } else {
+        window.scrollTo({ top: context.scrollTop, left: context.scrollLeft, behavior: 'auto' });
+      }
+      (focusTarget || document.getElementById('student-enrollment-content'))?.focus({
+        preventScroll: true,
+      });
+      sessionStorage.removeItem(restoreKey);
+      observer?.disconnect();
+      window.clearTimeout(fallbackTimer);
+      return true;
+    };
+
+    const firstFrame = window.requestAnimationFrame(() => {
+      if (restore()) return;
+      observer = new MutationObserver(() => restore());
+      observer.observe(document.body, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ['data-enrollment-restore-ready'],
+      });
+      fallbackTimer = window.setTimeout(() => restore(true), 5_000);
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      observer?.disconnect();
+      window.clearTimeout(fallbackTimer);
+    };
+  }, [pathname, sessionIdentity, workspace]);
 
   const navigate = useCallback(
     (nextState: EnrollmentWorkspaceState, mode: 'push' | 'replace' = 'replace') => {
@@ -355,7 +472,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
   ]);
 
   const getApplicantHref = useCallback(
-    (leadId: string, tab: EnrollmentApplicantTab = 'next') => {
+    (leadId: string, tab: EnrollmentApplicantTab = 'inquiry') => {
       const applicantParams = new URLSearchParams();
       const cycle = state.cycle || (currentYear?.id as string | undefined);
       const board = state.board || (currentBoard?.id as string | undefined);
@@ -372,7 +489,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
   const openApplicant = useCallback(
     (
       leadId: string,
-      tab: EnrollmentApplicantTab = 'next',
+      tab: EnrollmentApplicantTab = 'inquiry',
       workItem?: AdmissionCrmMyWorkItemDto
     ) => {
       const sourceParams = new URLSearchParams(searchParams.toString());
@@ -385,7 +502,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       sourceParams.delete('workItem');
       const sourceQuery = sourceParams.toString();
       const returnTo = sourceQuery ? `${pathname}?${sourceQuery}` : pathname;
-      const returnKey = storeApplicantReturnPath(returnTo);
+      const returnKey = storeApplicantReturnContext(returnTo, leadId);
       const workItemKey = workItem ? storeApplicantWorkItem(workItem, sessionIdentity) : undefined;
       const applicantParams = new URLSearchParams();
       const cycle = state.cycle || (currentYear?.id as string | undefined);
@@ -399,9 +516,11 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       if (workItemKey) applicantParams.set('workItem', workItemKey);
       const applicantPath = studentPaths.enrollment.applicant(leadId);
       pendingNavigationPathRef.current = applicantPath;
-      router.push(`${applicantPath}?${applicantParams.toString()}`, {
-        scroll: false,
-      });
+      runEnrollmentNavigation('nav-forward', () =>
+        router.push(`${applicantPath}?${applicantParams.toString()}`, {
+          scroll: false,
+        })
+      );
     },
     [
       currentBoard?.id,
@@ -419,13 +538,20 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
 
   const closeApplicant = useCallback(() => {
     removeApplicantWorkItem(state.workItem, sessionIdentity);
-    const returnTo = consumeApplicantReturnPath(state.returnTo);
+    const returnContext = readApplicantReturnContext(state.returnTo, true);
+    const returnTo = returnContext?.returnTo;
     if (
       returnTo?.startsWith('/student/enrollment/') &&
       !returnTo.startsWith('/student/enrollment/applicants/')
     ) {
+      if (returnContext) {
+        sessionStorage.setItem(
+          `${applicantRestoreStoragePrefix}${sessionIdentity}`,
+          JSON.stringify(returnContext)
+        );
+      }
       pendingNavigationPathRef.current = new URL(returnTo, window.location.origin).pathname;
-      router.replace(returnTo, { scroll: false });
+      runEnrollmentNavigation('nav-back', () => router.replace(returnTo, { scroll: false }));
       return;
     }
 
@@ -436,9 +562,11 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     const query = fallbackParams.toString();
     const pipelinePath = studentPaths.enrollment.pipeline;
     pendingNavigationPathRef.current = pipelinePath;
-    router.replace(`${pipelinePath}${query ? `?${query}` : ''}`, {
-      scroll: false,
-    });
+    runEnrollmentNavigation('nav-back', () =>
+      router.replace(`${pipelinePath}${query ? `?${query}` : ''}`, {
+        scroll: false,
+      })
+    );
   }, [
     router,
     sessionIdentity,
@@ -464,6 +592,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       state,
       updateState,
       applicantWorkItem,
+      applicantReturnHref,
       getApplicantHref,
       openApplicant,
       closeApplicant,
@@ -477,6 +606,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       currentYear?.id,
       currentYear?.name,
       currentUserId,
+      applicantReturnHref,
       applicantWorkItem,
       getApplicantHref,
       openApplicant,

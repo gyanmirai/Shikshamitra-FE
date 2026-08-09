@@ -157,3 +157,81 @@ html {
 .MuiStepLabel-label.Mui-disabled {
   cursor: default !important;
 }
+
+/** **************************************
+* Student enrollment view transitions
+*************************************** */
+:root {
+  --enrollment-duration-exit: 150ms;
+  --enrollment-duration-enter: 210ms;
+  --enrollment-duration-move: 400ms;
+}
+
+@keyframes enrollment-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes enrollment-slide {
+  from {
+    transform: translateX(var(--enrollment-slide-offset));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+::view-transition-old(.enrollment-nav-forward) {
+  --enrollment-slide-offset: -60px;
+  animation:
+    var(--enrollment-duration-exit) ease-in both enrollment-fade reverse,
+    var(--enrollment-duration-move) ease-in-out both enrollment-slide reverse;
+}
+
+::view-transition-new(.enrollment-nav-forward) {
+  --enrollment-slide-offset: 60px;
+  animation:
+    var(--enrollment-duration-enter) ease-out var(--enrollment-duration-exit) both enrollment-fade,
+    var(--enrollment-duration-move) ease-in-out both enrollment-slide;
+}
+
+::view-transition-old(.enrollment-nav-back) {
+  --enrollment-slide-offset: 60px;
+  animation:
+    var(--enrollment-duration-exit) ease-in both enrollment-fade reverse,
+    var(--enrollment-duration-move) ease-in-out both enrollment-slide reverse;
+}
+
+::view-transition-new(.enrollment-nav-back) {
+  --enrollment-slide-offset: -60px;
+  animation:
+    var(--enrollment-duration-enter) ease-out var(--enrollment-duration-exit) both enrollment-fade,
+    var(--enrollment-duration-move) ease-in-out both enrollment-slide;
+}
+
+::view-transition-group(.enrollment-text-morph) {
+  animation-duration: var(--enrollment-duration-move);
+}
+
+::view-transition-old(.enrollment-text-morph) {
+  display: none;
+}
+
+::view-transition-new(.enrollment-text-morph) {
+  animation: none;
+  object-fit: none;
+  object-position: left top;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

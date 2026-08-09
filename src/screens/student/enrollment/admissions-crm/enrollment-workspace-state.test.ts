@@ -241,7 +241,7 @@ describe('Enrollment workspace URL state', () => {
 
   it('provides role-focused defaults without changing persisted business state', () => {
     expect(getPersonaWorkspaceDefaults('applicant', 'counselor')).toEqual({
-      applicantTab: 'next',
+      applicantTab: 'inquiry',
     });
     expect(getPersonaWorkspaceDefaults('pipeline', 'receptionist')).toEqual({
       view: 'list',

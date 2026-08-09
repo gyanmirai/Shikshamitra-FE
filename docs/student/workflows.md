@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-08-03
+updated_on: 2026-08-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -50,7 +50,8 @@ Blocked steps identify the missing field, document, Finance state, capacity issu
 Completed and current stages are navigable, while blocked, optional, and future stages remain readable without starting invalid work.
 Desktop renders one six-column journey without horizontal scrolling.
 Tablet and mobile render current-step progress plus a `View Journey` disclosure with a vertical status list.
-The main column owns the active operation, while the context rail owns applicant facts, pathway, ownership, priority, SLA, follow-ups, Activity and Audit, and Additional Checks.
+The applicant header owns identity, lifecycle status, labeled inquiry facts, SLA, and the next best action.
+The main column owns the active operation, while the sticky desktop context rail owns pathway, ownership, priority, lead score, follow-ups, Activity and Audit, and Additional Checks.
 Activity and Audit opens as a URL-backed drawer rather than a competing applicant tab.
 Parent-facing status uses the same step order but hides internal notes, scoring details, duplicate evidence, and staff permissions.
 
@@ -190,14 +191,19 @@ The UI must not claim a message was delivered without provider evidence.
 ## Navigation state
 
 The selected academic year travels through the `cycle` query key for compatibility with the existing global academic-year context.
-Pipeline and newly created inquiries open applicants with `tab=next`.
-Direct applicant URLs without an explicit stage resolve to the backend current stage.
+Pipeline rows, applicant names, generic Open Inquiry actions, and newly created inquiries open with `tab=inquiry`.
+Stage-specific worklist actions continue to use their explicit stage tab.
+Direct applicant URLs without an explicit tab open Inquiry; `tab=next` remains the backend-projected current-work destination.
 Focused worklists may use `tab=exam`, `tab=registration`, `tab=finance`, `tab=offer`, `tab=activation`, or `tab=governance`.
 Legacy `tab=overview` canonicalizes to `tab=next`.
 Legacy `tab=activity` canonicalizes to `tab=next&activity=1`.
 The Activity and Audit drawer uses `activity=1`.
 Targeted exam work uses `/student/enrollment/entrance-exams?cycle={academicYearId}&applicant={leadId}&examAction={action}`.
-A session-backed return token restores the applicant stage and the originating Pipeline filters and page.
+A versioned session-backed return token expires after four hours and preserves the source URL, Pipeline scroll position, originating applicant, and focus target.
+Explicit Back to Pipeline navigation restores the URL-backed filters, page, view mode, scroll position, and originating applicant focus after Pipeline data is ready.
+If the originating applicant no longer exists, focus returns safely to the Enrollment workspace heading.
+Pipeline-to-inquiry and explicit return navigation use directional view transitions with a shared applicant-name transition; reduced-motion preferences disable animation.
+Browser Back remains available and keeps the unsaved-change guard, but browser history navigation does not animate.
 All other worklist filters use shareable URL state where the workspace supports them.
 Compatibility redirects preserve query state and then land on the canonical route.
 

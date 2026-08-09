@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-08-03
+updated_on: 2026-08-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -65,13 +65,14 @@ Applicant, Quick Inquiry, Finance status, parent inquiry, and parent status are 
 
 The applicant workspace owns the six-stage command journey and one active stage operation.
 Pipeline, My Work, and focused worklists open the same applicant record rather than creating area-specific copies.
-Pipeline uses `tab=next`, which resolves to the backend-projected current stage and advances after successful mutations.
+Pipeline rows, applicant names, generic applicant actions, and newly created inquiries use `tab=inquiry`.
 Focused worklists use explicit `exam`, `registration`, `finance`, `offer`, `activation`, or `governance` stage values.
 Explicit stage links remain on that historical or focused stage while the header continues to show current work.
 Legacy `tab=overview` becomes `tab=next`, and legacy `tab=activity` becomes `tab=next&activity=1`.
 The Activity and Audit drawer uses `activity=1`.
 Targeted exam handoffs use `/student/enrollment/entrance-exams?cycle={academicYearId}&applicant={leadId}&examAction={record-result|review-eligibility|review-absence}`.
 The `applicantReturn` value carries the session-backed Pipeline return token through an exam handoff.
+The internal return token is versioned and restores the originating URL, scroll position, applicant focus target, and Pipeline view after data readiness.
 The `cycle` query key carries the selected Institute Setup academic year between Enrollment pages.
 
 ## Compatibility redirects
