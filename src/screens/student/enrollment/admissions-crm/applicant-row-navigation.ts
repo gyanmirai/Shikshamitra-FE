@@ -27,14 +27,18 @@ export function createApplicantRowNavigationProps({ onOpen }: Options) {
 type ApplicantLinkOptions = {
   href: string;
   onOpen: () => void;
+  onPrefetch?: () => void;
 };
 
 export function createApplicantLinkNavigationProps({
   href,
   onOpen,
+  onPrefetch,
 }: ApplicantLinkOptions) {
   return {
     href,
+    onMouseEnter: onPrefetch,
+    onFocus: onPrefetch,
     onClick: (event: MouseEvent<HTMLAnchorElement>) => {
       if (
         event.defaultPrevented ||

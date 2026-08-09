@@ -242,7 +242,7 @@ export const getPersonaWorkspaceDefaults = (
   workspace: EnrollmentWorkspace,
   persona: EnrollmentPersona
 ): Partial<EnrollmentWorkspaceState> => {
-  if (workspace === 'applicant') return { applicantTab: 'next' };
+  if (workspace === 'applicant') return { applicantTab: 'inquiry' };
   if (workspace === 'pipeline') {
     if (persona === 'receptionist')
       return { view: 'list', pipelineColumn: AdmissionCrmPipelineColumnKey.NewInquiry };

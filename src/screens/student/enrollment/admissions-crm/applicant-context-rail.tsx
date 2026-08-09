@@ -14,7 +14,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import {
   Box,
-  Chip,
   Alert,
   Stack,
   Paper,
@@ -35,11 +34,9 @@ import {
   useChangeAdmissionCrmLeadPriorityMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import {
   formatEnumLabel,
   formatEnrollmentDate,
-  formatApplicantContact,
   joinEnrollmentMetadata,
   getApplicantUpdateError,
   getDistinctAdmissionIntent,
@@ -63,7 +60,6 @@ const getStaffLabel = (staff: AdmissionCrmStaffLookupDto) =>
 type Props = {
   lead: AdmissionCrmLeadDto;
   academicYearId?: string;
-  slaDueAt: dayjs.Dayjs | null;
   hasRegistration: boolean;
   canViewGovernance: boolean;
   onOpenInquiry: () => void;
@@ -75,7 +71,6 @@ type Props = {
 export function ApplicantContextRail({
   lead,
   academicYearId,
-  slaDueAt,
   hasRegistration,
   canViewGovernance,
   onOpenInquiry,
@@ -115,6 +110,13 @@ export function ApplicantContextRail({
   );
   const [assignOwner, assignOwnerState] = useAssignAdmissionCrmLeadOwnerMutation();
   const [changePriority, changePriorityState] = useChangeAdmissionCrmLeadPriorityMutation();
+  const ownerLabel = owner
+    ? getStaffLabel(owner)
+    : ownerStaffQuery.isFetching
+      ? 'Loading owner…'
+      : lead.ownerUserId
+        ? 'Assigned staff member'
+        : 'Unassigned';
 
   useEffect(() => setPriority(lead.priority), [lead.id, lead.priority]);
   useEffect(() => {
@@ -169,7 +171,17 @@ export function ApplicantContextRail({
   };
 
   return (
-    <Stack component="aside" aria-label="Applicant context" spacing={1.25} sx={{ minWidth: 0 }}>
+    <Stack
+      component="aside"
+      aria-label="Applicant context"
+      spacing={1.25}
+      sx={{
+        minWidth: 0,
+        alignSelf: 'start',
+        position: { lg: 'sticky' },
+        top: { lg: 16 },
+      }}
+    >
       <Box
         aria-live="polite"
         sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}
@@ -179,7 +191,7 @@ export function ApplicantContextRail({
 
       <Paper variant="outlined" sx={{ p: 1.5 }}>
         <Stack spacing={1.25}>
-          <Typography variant="subtitle1">Applicant Details</Typography>
+          <Typography variant="subtitle1">Admission Profile</Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 1 }}>
             <Box>
               <Typography variant="caption" color="text.secondary">
@@ -204,117 +216,110 @@ export function ApplicantContextRail({
                 </Typography>
               </Box>
             ) : null}
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Guardian & Contact
-              </Typography>
-              <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
-                {formatApplicantContact(lead.primaryContactNo, lead.email)}
-              </Typography>
-              {lead.parentGuardianName ? (
-                <Typography variant="caption" color="text.secondary">
-                  {lead.parentGuardianName}
-                </Typography>
-              ) : null}
-            </Box>
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Inquiry Source
-              </Typography>
-              <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                {lead.inquirySourceSnapshot || getAdmissionCrmChannelLabel(lead.channel)}
-              </Typography>
-            </Box>
           </Box>
-          <Stack direction="row" gap={0.5} flexWrap="wrap">
-            <Chip size="small" variant="outlined" label={`Score ${lead.leadScore}`} />
-            <Chip
-              size="small"
-              variant="outlined"
-              color={slaDueAt?.isBefore(dayjs()) ? 'warning' : 'default'}
-              label={
-                slaDueAt
-                  ? `${slaDueAt.isBefore(dayjs()) ? 'SLA overdue' : 'SLA due'} ${formatEnrollmentDate(
-                      slaDueAt.toDate(),
-                      true
-                    )}`
-                  : 'No SLA configured'
-              }
-            />
-          </Stack>
         </Stack>
       </Paper>
 
-      {canAssignOwner || canSetPriority ? (
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Stack spacing={1.25}>
-            <Box>
-              <Typography variant="subtitle1">Ownership</Typography>
+      <Paper variant="outlined" sx={{ p: 1.5 }}>
+        <Stack spacing={1.25}>
+          <Box>
+            <Typography variant="subtitle1">Operational Context</Typography>
+            {canAssignOwner || canSetPriority ? (
               <Typography variant="caption" color="text.secondary">
                 Changes save when you select a value.
               </Typography>
+            ) : null}
+          </Box>
+          {canAssignOwner ? (
+            <Autocomplete
+              fullWidth
+              open={ownerEditorOpen}
+              onOpen={() => setOwnerEditorOpen(true)}
+              onClose={() => setOwnerEditorOpen(false)}
+              options={ownerStaffQuery.data || []}
+              value={owner}
+              loading={ownerStaffQuery.isFetching || assignOwnerState.isLoading}
+              onInputChange={(_, value, reason) => {
+                if (reason === 'input' || reason === 'clear') setOwnerSearch(value);
+              }}
+              onChange={(_, value) => saveOwner(value)}
+              getOptionLabel={getStaffLabel}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  size="small"
+                  name="leadOwner"
+                  autoComplete="off"
+                  label="Lead Owner"
+                  placeholder={lead.ownerUserId ? 'Assigned owner' : 'Search staff…'}
+                />
+              )}
+            />
+          ) : (
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Lead Owner
+              </Typography>
+              <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+                {ownerLabel}
+              </Typography>
             </Box>
-            {canAssignOwner ? (
-              <Autocomplete
-                fullWidth
-                open={ownerEditorOpen}
-                onOpen={() => setOwnerEditorOpen(true)}
-                onClose={() => setOwnerEditorOpen(false)}
-                options={ownerStaffQuery.data || []}
-                value={owner}
-                loading={ownerStaffQuery.isFetching || assignOwnerState.isLoading}
-                onInputChange={(_, value, reason) => {
-                  if (reason === 'input' || reason === 'clear') setOwnerSearch(value);
-                }}
-                onChange={(_, value) => saveOwner(value)}
-                getOptionLabel={getStaffLabel}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    name="leadOwner"
-                    autoComplete="off"
-                    label="Lead Owner"
-                    placeholder={lead.ownerUserId ? 'Assigned owner' : 'Search staff…'}
-                  />
-                )}
-              />
-            ) : null}
-            {canAssignOwner && ownerEditorOpen && ownerStaffQuery.isError ? (
-              <Alert
-                severity="error"
-                action={
-                  <Button color="inherit" size="small" onClick={() => ownerStaffQuery.refetch()}>
-                    Retry
-                  </Button>
-                }
-              >
-                Staff options could not be loaded.
-              </Alert>
-            ) : null}
-            {canSetPriority ? (
-              <TextField
-                select
-                size="small"
-                fullWidth
-                name="leadPriority"
-                autoComplete="off"
-                label="Priority"
-                value={priority}
-                disabled={changePriorityState.isLoading}
-                onChange={(event) => savePriority(Number(event.target.value))}
-              >
-                {Object.entries(priorityLabels).map(([value, label]) => (
-                  <MenuItem key={value} value={Number(value)}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            ) : null}
-          </Stack>
-        </Paper>
-      ) : null}
+          )}
+          {canAssignOwner && ownerEditorOpen && ownerStaffQuery.isError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={() => ownerStaffQuery.refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              Staff options could not be loaded.
+            </Alert>
+          ) : null}
+          {canSetPriority ? (
+            <TextField
+              select
+              size="small"
+              fullWidth
+              name="leadPriority"
+              autoComplete="off"
+              label="Priority"
+              value={priority}
+              disabled={changePriorityState.isLoading}
+              onChange={(event) => savePriority(Number(event.target.value))}
+            >
+              {Object.entries(priorityLabels).map(([value, label]) => (
+                <MenuItem key={value} value={Number(value)}>
+                  {label}
+                </MenuItem>
+              ))}
+            </TextField>
+          ) : (
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Priority
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {priorityLabels[priority]}
+              </Typography>
+            </Box>
+          )}
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              Lead Score
+            </Typography>
+            <Typography
+              variant="body2"
+              fontWeight={600}
+              sx={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {lead.leadScore}
+            </Typography>
+          </Box>
+        </Stack>
+      </Paper>
 
       <Paper variant="outlined" sx={{ p: 1.5 }}>
         <Stack spacing={1}>

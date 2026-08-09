@@ -53,6 +53,7 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 import {
+  StudentAdmissionsCrmApi,
   AdmissionInquiryStage,
   AdmissionCrmRouteType,
   AdmissionInquiryChannel,
@@ -79,6 +80,7 @@ import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
 import { ApplicantWorkspaceDirtyProvider } from './applicant-workspace-dirty-context';
+import { ApplicantTitleTransition } from './enrollment-route-transition';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
@@ -324,6 +326,7 @@ const protectedBulkStages = new Set([
 
 type LeadCardProps = {
   lead: AdmissionCrmLeadDto;
+  applicantHref: string;
   ownerName: string;
   selected?: boolean;
   showSelection?: boolean;
@@ -331,12 +334,14 @@ type LeadCardProps = {
   canManageRegistration: boolean;
   onSelect?: () => void;
   onOpen: () => void;
+  onPrefetch: () => void;
   onSchedule: () => void;
   onOpenRegistration: () => void;
 };
 
 function PipelineLeadCard({
   lead,
+  applicantHref,
   ownerName,
   selected,
   showSelection,
@@ -344,6 +349,7 @@ function PipelineLeadCard({
   canManageRegistration,
   onSelect,
   onOpen,
+  onPrefetch,
   onSchedule,
   onOpenRegistration,
 }: LeadCardProps) {
@@ -359,9 +365,24 @@ function PipelineLeadCard({
       <Stack spacing={1}>
         <Stack direction="row" gap={1} justifyContent="space-between" alignItems="flex-start">
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" noWrap title={getAdmissionCrmLeadName(lead)}>
-              {getAdmissionCrmLeadName(lead)}
-            </Typography>
+            <ApplicantTitleTransition leadId={lead.id}>
+              <Link
+                {...createApplicantLinkNavigationProps({
+                  href: applicantHref,
+                  onOpen,
+                  onPrefetch,
+                })}
+                data-applicant-link-id={lead.id}
+                variant="subtitle2"
+                color="inherit"
+                underline="hover"
+                noWrap
+                title={getAdmissionCrmLeadName(lead)}
+                sx={{ display: 'block' }}
+              >
+                {getAdmissionCrmLeadName(lead)}
+              </Link>
+            </ApplicantTitleTransition>
             <Typography variant="caption" color="text.secondary" noWrap display="block">
               {lead.desiredClassName || 'Class not captured'} · {ownerName}
             </Typography>
@@ -458,6 +479,15 @@ function PipelineWorkspaceContent() {
     openApplicant,
   } = useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
+  const prefetchLead = StudentAdmissionsCrmApi.usePrefetch('getAdmissionCrmLead');
+  const prefetchProgress = StudentAdmissionsCrmApi.usePrefetch('getAdmissionCrmApplicantProgress');
+  const prefetchApplicant = useCallback(
+    (leadId: string) => {
+      prefetchLead({ leadId }, { ifOlderThan: 30 });
+      prefetchProgress({ leadId }, { ifOlderThan: 30 });
+    },
+    [prefetchLead, prefetchProgress]
+  );
   const {
     search,
     setSearch,
@@ -972,19 +1002,23 @@ function PipelineWorkspaceContent() {
           const lead = row as AdmissionCrmLeadDto;
           return (
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-              <Link
-                {...createApplicantLinkNavigationProps({
-                  href: getApplicantHref(lead.id, 'next'),
-                  onOpen: () => openApplicant(lead.id, 'next'),
-                })}
-                variant="subtitle2"
-                color="inherit"
-                underline="hover"
-                noWrap
-                sx={{ textAlign: 'left' }}
-              >
-                {getAdmissionCrmLeadName(lead)}
-              </Link>
+              <ApplicantTitleTransition leadId={lead.id}>
+                <Link
+                  {...createApplicantLinkNavigationProps({
+                    href: getApplicantHref(lead.id, 'inquiry'),
+                    onOpen: () => openApplicant(lead.id, 'inquiry'),
+                    onPrefetch: () => prefetchApplicant(lead.id),
+                  })}
+                  data-applicant-link-id={lead.id}
+                  variant="subtitle2"
+                  color="inherit"
+                  underline="hover"
+                  noWrap
+                  sx={{ display: 'block', textAlign: 'left' }}
+                >
+                  {getAdmissionCrmLeadName(lead)}
+                </Link>
+              </ApplicantTitleTransition>
               <Typography variant="caption" color="text.secondary" noWrap>
                 {lead.primaryContactNo || lead.email || 'No contact'}
               </Typography>
@@ -1162,8 +1196,8 @@ function PipelineWorkspaceContent() {
             <ThreeDotsActions
               placement="right-top"
               showViewIcon
-              viewLabel="Open Applicant"
-              handleViewClick={() => openApplicant(lead.id, 'next')}
+              viewLabel="Open Inquiry"
+              handleViewClick={() => openApplicant(lead.id, 'inquiry')}
               showThreeDots={canSchedule || canManageRegistration}
               actions={({ popover }) => (
                 <MenuList>
@@ -1200,6 +1234,7 @@ function PipelineWorkspaceContent() {
       leads,
       getApplicantHref,
       openApplicant,
+      prefetchApplicant,
       ownerFilterOptions,
       ownerName,
       permissions,
@@ -1304,7 +1339,7 @@ function PipelineWorkspaceContent() {
       }
       const created = await createLead({ academicYearId, body }).unwrap();
       closeQuickInquiry();
-      openApplicant(created.id);
+      openApplicant(created.id, 'inquiry');
       shikshaMitraToast.success({ message: 'Inquiry created.' });
     } catch (error) {
       setDuplicateReviewed(false);
@@ -1402,6 +1437,7 @@ function PipelineWorkspaceContent() {
     <PipelineLeadCard
       key={lead.id}
       lead={lead}
+      applicantHref={getApplicantHref(lead.id, 'inquiry')}
       ownerName={ownerName(lead)}
       selected={selectedLeadSet.has(lead.id)}
       showSelection={state.view === 'list'}
@@ -1420,7 +1456,8 @@ function PipelineWorkspaceContent() {
           current.includes(lead.id) ? current.filter((id) => id !== lead.id) : [...current, lead.id]
         )
       }
-      onOpen={() => openApplicant(lead.id)}
+      onOpen={() => openApplicant(lead.id, 'inquiry')}
+      onPrefetch={() => prefetchApplicant(lead.id)}
       onSchedule={() => setScheduleLead(lead)}
       onOpenRegistration={() => openApplicant(lead.id, 'registration')}
     />
@@ -1443,7 +1480,12 @@ function PipelineWorkspaceContent() {
     !admissionYearStandardOptions.length;
 
   return (
-    <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
+    <Stack
+      spacing={1.5}
+      data-enrollment-scroll-root="true"
+      data-enrollment-restore-ready={String(!leadsQuery.isLoading && !leadsQuery.isFetching)}
+      sx={enrollmentWorkspaceRootSx}
+    >
       <EnrollmentWorkspaceHeader
         title="Admissions Pipeline"
         description="Capture and progress every applicant from inquiry through activation."
@@ -1594,6 +1636,7 @@ function PipelineWorkspaceContent() {
 
       {state.view === 'board' && (
         <Stack
+          data-enrollment-scroll-root="true"
           direction={{ xs: 'column', lg: 'row' }}
           spacing={1.25}
           alignItems="stretch"
@@ -1712,13 +1755,16 @@ function PipelineWorkspaceContent() {
               rowProps={(row) => ({
                 ...createApplicantRowNavigationProps({
                   applicantName: getAdmissionCrmLeadName(row as AdmissionCrmLeadDto),
-                  onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'next'),
+                  onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'inquiry'),
                 }),
                 'data-testid': 'student-enrollment-pipeline-row',
                 'data-lead-id': row.id,
               })}
               wrapperProps={{ sx: enrollmentTableWrapperSx }}
-              tableContainerProps={{ sx: enrollmentTableContainerSx }}
+              tableContainerProps={{
+                'data-enrollment-scroll-root': 'true',
+                sx: enrollmentTableContainerSx,
+              }}
             />
             {showEmptyPipeline ? (
               <Alert severity="info">

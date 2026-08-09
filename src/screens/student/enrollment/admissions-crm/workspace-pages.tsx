@@ -5,8 +5,11 @@ import { studentPermissions } from 'src/constants/student-menu';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 import { EnrollmentWorkspaceLoadingState } from './workspace-table-patterns';
+import { EnrollmentRouteTransition } from './enrollment-route-transition';
+import { ApplicantInquiryLoadingState } from './applicant-inquiry-header';
 
 const loading = () => <EnrollmentWorkspaceLoadingState />;
+const applicantLoading = () => <ApplicantInquiryLoadingState />;
 const PipelineWorkspace = dynamic(
   () => import('./pipeline-workspace').then((module) => module.PipelineWorkspace),
   { loading }
@@ -25,7 +28,7 @@ const AnalyticsWorkspace = dynamic(
 );
 const ApplicantWorkspace = dynamic(
   () => import('./applicant-workspace-page').then((module) => module.ApplicantWorkspacePage),
-  { loading }
+  { loading: applicantLoading }
 );
 const RegistrationsWorkspace = dynamic(
   () => import('./registrations-workspace').then((module) => module.RegistrationsWorkspace),
@@ -52,13 +55,17 @@ export const AdmissionsOverviewWorkspace = () => (
 
 export const AdmissionsPipelineWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.pipeline}>
-    <PipelineWorkspace />
+    <EnrollmentRouteTransition>
+      <PipelineWorkspace />
+    </EnrollmentRouteTransition>
   </StudentPermissionGuard>
 );
 
 export const AdmissionsApplicantWorkspace = ({ leadId }: { leadId: string }) => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.pipeline}>
-    <ApplicantWorkspace leadId={leadId} />
+    <EnrollmentRouteTransition>
+      <ApplicantWorkspace leadId={leadId} />
+    </EnrollmentRouteTransition>
   </StudentPermissionGuard>
 );
 

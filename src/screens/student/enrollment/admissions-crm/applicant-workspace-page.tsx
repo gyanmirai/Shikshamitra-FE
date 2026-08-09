@@ -11,27 +11,24 @@ import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import {
   Box,
-  Chip,
   Stack,
   Alert,
   Paper,
   Button,
   Drawer,
   Divider,
+  Skeleton,
   Accordion,
   IconButton,
   Typography,
-  LinearProgress,
   AccordionDetails,
   AccordionSummary,
 } from '@mui/material';
 import {
   AdmissionInquiryStage,
-  AdmissionCrmLeadPriority,
   AdmissionCrmClosedOutcome,
   useGetAdmissionCrmLeadQuery,
   AdmissionCrmPipelineColumnKey,
@@ -43,18 +40,14 @@ import {
 
 import { ApplicantWorkContext } from './applicant-work-context';
 import { ApplicantContextRail } from './applicant-context-rail';
+import { ApplicantInquiryHeader } from './applicant-inquiry-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantJourneyNavigator } from './applicant-journey-navigator';
 import { ApplicantWorkspaceOverview } from './applicant-workspace-overview';
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
-import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import { buildApplicantJourney, getApplicantNextJourneyStep } from './applicant-journey-model';
-import {
-  formatEnumLabel,
-  formatApplicantContact,
-  joinEnrollmentMetadata,
-} from './enrollment-display';
+import { formatEnumLabel } from './enrollment-display';
 import {
   ApplicantWorkspaceDirtyProvider,
   useApplicantWorkspaceTransition,
@@ -117,6 +110,7 @@ type Props = {
   initialTab?: ApplicantWorkspaceTab;
   activityOpen?: boolean;
   returnTo?: string;
+  returnHref?: string;
   workItem?: ApplicantWorkContextItem;
   onTabChange?: (tab: ApplicantWorkspaceTab) => void;
   onActivityChange?: (open: boolean) => void;
@@ -164,12 +158,35 @@ function ApplicantDocumentDisclosure({
   );
 }
 
+function ApplicantWorkspaceContentSkeleton() {
+  return (
+    <Box
+      aria-label="Loading inquiry workspace"
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1fr) 320px' },
+        gap: 1.5,
+      }}
+    >
+      <Stack spacing={1.5}>
+        <Skeleton variant="rounded" height={118} />
+        <Skeleton variant="rounded" height={320} />
+      </Stack>
+      <Stack spacing={1.25}>
+        <Skeleton variant="rounded" height={136} />
+        <Skeleton variant="rounded" height={190} />
+      </Stack>
+    </Box>
+  );
+}
+
 function ApplicantWorkspaceContent({
   leadId,
   academicYearId,
-  initialTab = 'next',
+  initialTab = 'inquiry',
   activityOpen = false,
   returnTo,
+  returnHref = studentPaths.enrollment.pipeline,
   workItem,
   onTabChange,
   onActivityChange,
@@ -304,6 +321,20 @@ function ApplicantWorkspaceContent({
   };
 
   const handleClose = () => requestTransition(onClose);
+  const handleBackToPipeline = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+    event.preventDefault();
+    handleClose();
+  };
   const navigateThroughGuard = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
     if (
       event.defaultPrevented ||
@@ -318,10 +349,6 @@ function ApplicantWorkspaceContent({
     event.preventDefault();
     requestTransition(() => router.push(href));
   };
-  const cycleQuery = applicantAcademicYearId
-    ? `?cycle=${encodeURIComponent(applicantAcademicYearId)}`
-    : '';
-  const enrollmentMyWorkHref = `${studentPaths.enrollment.myWork}${cycleQuery}`;
   const examHandoffHref = (() => {
     if (!leadId || !applicantAcademicYearId || !primaryAction?.examAction) return undefined;
     const params = new URLSearchParams({
@@ -393,28 +420,6 @@ function ApplicantWorkspaceContent({
       aria-label="Applicant workspace"
       sx={{ height: '100%', minHeight: 0, overflow: 'hidden' }}
     >
-      <CustomBreadcrumbs
-        heading={lead ? getAdmissionCrmLeadName(lead) : 'Applicant Workspace'}
-        description="Review the applicant’s current admission work, blockers, and verified journey history."
-        isBack
-        onBack={handleClose}
-        links={[
-          {
-            name: 'Student',
-            href: studentPaths.dashboard,
-            onClick: navigateThroughGuard(studentPaths.dashboard),
-          },
-          {
-            name: 'Student Enrollment',
-            href: enrollmentMyWorkHref,
-            onClick: navigateThroughGuard(enrollmentMyWorkHref),
-          },
-          { name: 'Applicant' },
-        ]}
-        action={primaryActionControl}
-        sx={{ px: { xs: 1.5, sm: 2 }, flexShrink: 0 }}
-      />
-
       <Box
         component="section"
         aria-label="Applicant command workspace"
@@ -430,73 +435,22 @@ function ApplicantWorkspaceContent({
             pb: 2,
           }}
         >
-          <Paper component="header" variant="outlined" sx={{ p: 1.5 }}>
-            {lead ? (
-              <Stack spacing={1}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ overflowWrap: 'anywhere' }}
-                >
-                  {joinEnrollmentMetadata(
-                    lead.desiredClassName || 'Class not captured',
-                    formatApplicantContact(lead.primaryContactNo, lead.email),
-                    getAdmissionCrmChannelLabel(lead.channel)
-                  )}
-                </Typography>
-                <Stack direction="row" gap={0.75} flexWrap="wrap">
-                  {isClosed ? (
-                    <>
-                      <Chip size="small" label={lifecycleStatusLabel || 'Closed'} />
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`Outcome ${closedOutcomeLabel}`}
-                      />
-                    </>
-                  ) : (
-                    <Chip
-                      size="small"
-                      color={currentJourneyStep?.state === 'needs-review' ? 'warning' : 'primary'}
-                      label={`${currentJourneyStep?.label || 'Journey'} · ${currentStatusLabel}`}
-                    />
-                  )}
-                  {!isClosed && pipelineColumnLabel ? (
-                    <Chip size="small" variant="outlined" label={pipelineColumnLabel} />
-                  ) : null}
-                  {lead.registrationFormNumber ? (
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      label={`Registration ${lead.registrationFormNumber}`}
-                    />
-                  ) : null}
-                  <Chip size="small" variant="outlined" label={`Score ${lead.leadScore}`} />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`Priority ${formatEnumLabel(AdmissionCrmLeadPriority[lead.priority])}`}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    color={lead.ownerUserId ? 'default' : 'warning'}
-                    label={lead.ownerUserId ? 'Owner assigned' : 'Owner required'}
-                  />
-                  {slaDueAt ? (
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      color={slaDueAt.isBefore(dayjs()) ? 'warning' : 'default'}
-                      label={slaDueAt.isBefore(dayjs()) ? 'SLA overdue' : 'SLA active'}
-                    />
-                  ) : null}
-                </Stack>
-              </Stack>
-            ) : (
-              <LinearProgress aria-label="Loading applicant summary" />
-            )}
-          </Paper>
+          <ApplicantInquiryHeader
+            lead={lead}
+            returnHref={returnHref}
+            lifecycleStatusLabel={
+              isClosed
+                ? `Closed · ${closedOutcomeLabel || 'Outcome recorded'}`
+                : lifecycleStatusLabel
+            }
+            pipelineColumnLabel={pipelineColumnLabel}
+            journeyStatusLabel={`${currentJourneyStep?.label || 'Inquiry review'} · ${currentStatusLabel}`}
+            nextAction={progressQuery.data?.nextAction || currentJourneyStep?.reason}
+            primaryAction={primaryActionControl}
+            slaDueAt={slaDueAt}
+            isClosed={isClosed}
+            onBack={handleBackToPipeline}
+          />
 
           {currentWorkItem ? <ApplicantWorkContext workItem={currentWorkItem} /> : null}
 
@@ -543,6 +497,8 @@ function ApplicantWorkspaceContent({
             </Alert>
           ) : null}
 
+          {!lead && !leadQuery.isError ? <ApplicantWorkspaceContentSkeleton /> : null}
+
           {lead ? (
             <Box
               sx={{
@@ -554,46 +510,16 @@ function ApplicantWorkspaceContent({
               }}
             >
               <Stack id="applicant-stage-panel" spacing={1.5} sx={{ minWidth: 0 }}>
-                <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    alignItems={{ sm: 'center' }}
-                    justifyContent="space-between"
-                    gap={1}
-                  >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="overline" color="primary.main">
-                        What Needs Attention Now
-                      </Typography>
-                      <Typography variant="h6" sx={{ textWrap: 'balance' }}>
-                        {currentJourneyStep?.label || 'Applicant review'}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ overflowWrap: 'anywhere' }}
-                      >
-                        {progressQuery.data?.nextAction ||
-                          currentJourneyStep?.reason ||
-                          'Review the applicant’s recorded admission history.'}
-                      </Typography>
-                    </Box>
-                    {!isViewingCurrent && currentJourneyStep ? (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => changeTab('next')}
-                        sx={{ flexShrink: 0 }}
-                      >
+                {!isViewingCurrent && selectedJourneyStep ? (
+                  <Alert
+                    severity="info"
+                    action={
+                      <Button color="inherit" size="small" onClick={() => changeTab('next')}>
                         Return to Current Work
                       </Button>
-                    ) : null}
-                  </Stack>
-                </Paper>
-
-                {!isViewingCurrent && selectedJourneyStep ? (
-                  <Alert severity="info">
-                    You are reviewing {selectedJourneyStep.label} history. The current work remains{' '}
+                    }
+                  >
+                    Reviewing {selectedJourneyStep.label} history. Current work remains{' '}
                     {currentJourneyStep?.label || 'the next admission step'}.
                   </Alert>
                 ) : null}
@@ -747,7 +673,6 @@ function ApplicantWorkspaceContent({
               <ApplicantContextRail
                 lead={lead}
                 academicYearId={applicantAcademicYearId}
-                slaDueAt={slaDueAt}
                 hasRegistration={hasRegistration}
                 canViewGovernance={canViewGovernance}
                 onOpenInquiry={() => changeTab('inquiry')}
@@ -830,8 +755,14 @@ export function ApplicantWorkspace(props: Props) {
 }
 
 export function ApplicantWorkspacePage({ leadId }: { leadId: string }) {
-  const { academicYearId, state, updateState, closeApplicant, applicantWorkItem } =
-    useEnrollmentWorkspace();
+  const {
+    academicYearId,
+    state,
+    updateState,
+    closeApplicant,
+    applicantWorkItem,
+    applicantReturnHref,
+  } = useEnrollmentWorkspace();
   const handleTabChange = useCallback(
     (applicantTab: ApplicantWorkspaceTab) => updateState({ applicantTab }),
     [updateState]
@@ -850,9 +781,10 @@ export function ApplicantWorkspacePage({ leadId }: { leadId: string }) {
     <ApplicantWorkspace
       leadId={leadId}
       academicYearId={academicYearId}
-      initialTab={state.applicantTab || 'next'}
+      initialTab={state.applicantTab || 'inquiry'}
       activityOpen={Boolean(state.applicantActivity)}
       returnTo={state.returnTo}
+      returnHref={applicantReturnHref}
       workItem={applicantWorkItem}
       onTabChange={handleTabChange}
       onActivityChange={handleActivityChange}

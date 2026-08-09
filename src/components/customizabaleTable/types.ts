@@ -50,8 +50,12 @@ export type CustomizableTableRowProps = TableRowProps & {
   [key: `data-${string}`]: string | number | boolean | undefined;
 };
 
+export type CustomizableTableContainerProps = TableContainerProps & {
+  [key: `data-${string}`]: string | number | boolean | undefined;
+};
+
 export interface ICustomizableTableProps {
-  tableContainerProps?: TableContainerProps;
+  tableContainerProps?: CustomizableTableContainerProps;
   columns: IColumn[];
   data: IData[];
   tableTitle?: ReactNode;

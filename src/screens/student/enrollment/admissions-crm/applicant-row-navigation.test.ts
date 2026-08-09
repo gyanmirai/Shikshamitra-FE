@@ -119,4 +119,18 @@ describe('applicant row navigation', () => {
     expect(preventDefault).not.toHaveBeenCalled();
     expect(onOpen).not.toHaveBeenCalled();
   });
+
+  it('prefetches applicant data on pointer hover and keyboard focus', () => {
+    const onPrefetch = vi.fn();
+    const props = createApplicantLinkNavigationProps({
+      href: '/student/enrollment/applicants/lead-1?tab=inquiry',
+      onOpen: vi.fn(),
+      onPrefetch,
+    });
+
+    props.onMouseEnter?.();
+    props.onFocus?.();
+
+    expect(onPrefetch).toHaveBeenCalledTimes(2);
+  });
 });
