@@ -1,16 +1,19 @@
 import type { ReactNode, MouseEvent } from 'react';
 import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import Link from 'next/link';
 import dayjs from 'dayjs';
+import Link from 'next/link';
 import { alpha } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import { Box, Chip, Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
 
-import { Iconify } from 'src/components/iconify';
-
-import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import { ApplicantTitleTransition } from './enrollment-route-transition';
-import { formatApplicantContact, formatEnrollmentDate } from './enrollment-display';
+import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
+import {
+  formatEnrollmentDate,
+  formatApplicantNumber,
+  formatApplicantContact,
+} from './enrollment-display';
 
 type Props = {
   lead?: AdmissionCrmLeadDto;
@@ -162,7 +165,7 @@ export function ApplicantInquiryHeader({
                 color="primary.main"
                 sx={{ fontWeight: 700, letterSpacing: 0.8 }}
               >
-                Inquiry {lead.id.slice(0, 8).toUpperCase()}
+                Applicant ID {formatApplicantNumber(lead.applicantNumber)}
               </Typography>
               <ApplicantTitleTransition leadId={lead.id}>
                 <Typography

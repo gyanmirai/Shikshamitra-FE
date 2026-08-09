@@ -41,11 +41,11 @@ import {
   useBulkCreateAdmissionCrmTasksMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { formatEnrollmentDate } from './enrollment-display';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { createApplicantRowNavigationProps } from './applicant-row-navigation';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
+import { formatEnrollmentDate, formatApplicantNumber } from './enrollment-display';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
   enrollmentTableWrapperSx,
@@ -358,12 +358,26 @@ export function EnrollmentOverviewWorkspace() {
         },
       },
       {
+        id: 'applicantNumber',
+        originalId: 'ApplicantNumber',
+        label: 'Applicant ID',
+        width: 120,
+        minWidth: 120,
+        maxWidth: 120,
+        sticky: true,
+        stickyPosition: 'left',
+        isFilter: false,
+        render: (value) => (
+          <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+            {formatApplicantNumber(value as number)}
+          </Typography>
+        ),
+      },
+      {
         id: 'applicantName',
         label: 'Applicant',
         width: 230,
         minWidth: 210,
-        sticky: true,
-        stickyPosition: 'left',
         isSort: true,
         filterType: 'string',
         render: (_value, row) => {

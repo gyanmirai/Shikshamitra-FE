@@ -80,6 +80,11 @@ export const joinEnrollmentMetadata = (...values: Array<string | null | undefine
 export const formatApplicantContact = (phone?: string | null, email?: string | null) =>
   phone || email || 'Contact not captured';
 
+export const formatApplicantNumber = (applicantNumber?: number | null) =>
+  applicantNumber && applicantNumber > 0
+    ? `#${String(applicantNumber).padStart(4, '0')}`
+    : 'Not assigned';
+
 const normalizeComparableText = (value: string) =>
   value
     .trim()

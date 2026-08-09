@@ -25,11 +25,6 @@ import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { ApplicantWorklistStageFilter } from './applicant-worklist-stage-filter';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
-  getRouteTypeLabel,
-  formatEnrollmentDate,
-  formatApplicantContact,
-} from './enrollment-display';
-import {
   getDateFilterBounds,
   getLatestEnumFilter,
   getLatestStringFilter,
@@ -38,6 +33,12 @@ import {
   createApplicantRowNavigationProps,
   createApplicantLinkNavigationProps,
 } from './applicant-row-navigation';
+import {
+  getRouteTypeLabel,
+  formatEnrollmentDate,
+  formatApplicantNumber,
+  formatApplicantContact,
+} from './enrollment-display';
 import {
   enrollmentActionsColumn,
   enrollmentTableWrapperSx,
@@ -269,13 +270,29 @@ export function ApplicantWorklistWorkspace({
   const columns = useMemo<IColumn[]>(() => {
     const tableColumns: IColumn[] = [
       {
+        id: 'applicantNumber',
+        originalId: serverFilters ? 'ApplicantNumber' : undefined,
+        label: 'Applicant ID',
+        width: 120,
+        minWidth: 120,
+        maxWidth: 120,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isSort: serverFilters,
+        isFilter: false,
+        render: (value) => (
+          <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+            {formatApplicantNumber(value as number)}
+          </Typography>
+        ),
+      },
+      {
         id: serverFilters ? 'applicant' : 'applicantName',
         originalId: serverFilters ? 'ApplicantName' : undefined,
         label: 'Applicant',
         width: 230,
         minWidth: 210,
-        sticky: true,
-        stickyPosition: 'left',
         isSort: serverFilters,
         isFilter: serverFilters,
         filterType: serverFilters ? 'string' : undefined,

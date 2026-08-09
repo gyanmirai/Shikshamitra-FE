@@ -21,6 +21,7 @@ import {
   getOfferStatusLabel,
   formatEnrollmentDate,
   getFinanceStateLabel,
+  formatApplicantNumber,
   getHandoffStatusLabel,
   getDecisionStatusLabel,
   getActivationStatusLabel,
@@ -88,6 +89,24 @@ const selectionColumn = (options: Options): IColumn => ({
   },
 });
 
+const applicantNumberColumn: IColumn = {
+  id: 'applicantNumber',
+  originalId: 'ApplicantNumber',
+  label: 'Applicant ID',
+  width: 120,
+  minWidth: 120,
+  maxWidth: 120,
+  sticky: true,
+  stickyPosition: 'left',
+  stickyOnMobile: false,
+  isFilter: false,
+  render: (value) => (
+    <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+      {formatApplicantNumber(value as number)}
+    </Typography>
+  ),
+};
+
 const applicantColumn = ({
   applicantTab,
   getApplicantHref,
@@ -98,9 +117,6 @@ const applicantColumn = ({
   label: 'Applicant',
   width: 220,
   minWidth: 200,
-  sticky: true,
-  stickyPosition: 'left',
-  stickyOnMobile: false,
   filterType: 'string',
   render: (value, row) => {
     const item = row as AdmissionCrmOperationsQueueItemDto;
@@ -199,6 +215,7 @@ const getDataEntryStateLabel = (value?: AdmissionCrmRegistrationDataEntryState |
 
 const registrationColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
+  applicantNumberColumn,
   applicantColumn(options),
   {
     id: 'registration',
@@ -303,6 +320,7 @@ const registrationColumns = (options: Options): IColumn[] => [
 
 const offerColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
+  applicantNumberColumn,
   applicantColumn(options),
   {
     id: 'route',
@@ -390,6 +408,7 @@ const offerColumns = (options: Options): IColumn[] => [
 
 const activationColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
+  applicantNumberColumn,
   applicantColumn(options),
   {
     id: 'activationStatus',
@@ -469,6 +488,7 @@ const activationColumns = (options: Options): IColumn[] => [
 
 const operationsColumns = (options: Options): IColumn[] => [
   selectionColumn(options),
+  applicantNumberColumn,
   applicantColumn(options),
   nextActionColumn,
   {

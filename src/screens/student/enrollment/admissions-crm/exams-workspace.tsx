@@ -54,6 +54,7 @@ import {
   useBulkMarkAdmissionCrmExamAttendanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { formatApplicantNumber } from './enrollment-display';
 import { getExamBulkFailures } from './bulk-operation-errors';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
@@ -890,14 +891,28 @@ function ExamsWorkspaceContent() {
         },
       },
       {
+        id: 'applicantNumber',
+        originalId: 'ApplicantNumber',
+        label: 'Applicant ID',
+        width: 120,
+        minWidth: 120,
+        maxWidth: 120,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isFilter: false,
+        render: (value) => (
+          <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+            {formatApplicantNumber(value as number)}
+          </Typography>
+        ),
+      },
+      {
         id: 'applicantName',
         originalId: 'ApplicantName',
         label: 'Applicant',
         width: 190,
         minWidth: 180,
-        sticky: true,
-        stickyPosition: 'left',
-        stickyOnMobile: false,
         filterType: 'string',
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;

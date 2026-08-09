@@ -26,6 +26,7 @@ import {
 
 const makeLead = (id: string, stage: AdmissionInquiryStage): AdmissionCrmLeadDto => ({
   id,
+  applicantNumber: 1,
   academicYearId: 'year-1',
   channel: AdmissionInquiryChannel.QuickCallEntry,
   firstName: id,
@@ -60,6 +61,7 @@ const makeExam = (
   id,
   academicYearId: 'year-1',
   leadId: `lead-${id}`,
+  applicantNumber: 1,
   applicantName: `Applicant ${id}`,
   entranceExamSlotId: 'slot-1',
   examStartTime: '2026-07-12T10:00:00Z',
