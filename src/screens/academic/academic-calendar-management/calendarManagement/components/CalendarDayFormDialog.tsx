@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { RootState } from 'src/redux/store';
@@ -31,12 +31,19 @@ import {
   useCreateCalendarDayMutation,
   useUpdateCalendarDayMutation,
 } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
+import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
+import {
+  useGetExamScheduleQuery,
+  useGetExamsQuery,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import {
   Box,
   Grid,
   Stack,
   Switch,
   Button,
+  Autocomplete,
   Select,
   MenuItem,
   TextField,
@@ -100,6 +107,8 @@ const CalendarDayFormDialog = ({
 
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const mediumId = currentMedium?.id;
 
   const handleCloseDialog = (_event?: {}, _reason?: 'backdropClick' | 'escapeKeyDown') => {
     onClose();
@@ -113,6 +122,12 @@ const CalendarDayFormDialog = ({
     enableReinitialize: true,
     validationSchema: calendarDayValidationSchema(isPublished),
     onSubmit: async (values) => {
+      const dayType = Number(values.dayType);
+      const isEvent = dayType === DayType.Event;
+      const isHalfDayType = dayType === DayType.HalfDay;
+      const isExam = dayType === DayType.Exam;
+      const isPtm = dayType === DayType.PTM;
+      const hasLinkedExam = isExam && Boolean(values.linkedExamId);
       const isSingleClass = !values.appliesToAll && values.standardIds.length === 1;
       const payload: any = {
         ...values,
@@ -122,10 +137,18 @@ const CalendarDayFormDialog = ({
         standardIds: values.appliesToAll ? null : values.standardIds,
         standardId: isSingleClass ? values.standardIds[0] : null,
         divisionId: isSingleClass ? values.divisionId || null : null,
-        startTime: values.startTime || null,
-        endTime: values.endTime || null,
+        startTime: isEvent || isHalfDayType || isPtm ? values.startTime || null : null,
+        endTime: isEvent || isHalfDayType || isPtm ? values.endTime || null : null,
+        venue: isEvent ? values.venue || null : null,
+        examTypeId: isExam ? values.examTypeId || null : null,
+        linkedExamId: isExam && values.linkedExamId ? values.linkedExamId : null,
+        examStartTime: hasLinkedExam ? values.examStartTime || null : null,
+        examEndTime: hasLinkedExam ? values.examEndTime || null : null,
+        ptmMode: isPtm ? values.ptmMode || null : null,
+        roomId: isPtm && values.roomId ? values.roomId : null,
+        meetingLink: isPtm ? values.meetingLink || null : null,
         endDate:
-          Number(values.dayType) === DayType.Vacation && values.endDate
+          dayType === DayType.Vacation && values.endDate
             ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ssZ')
             : null,
       };
@@ -150,6 +173,108 @@ const CalendarDayFormDialog = ({
   const isHoliday = dayTypeNum === DayType.Holiday;
   const isVacation = dayTypeNum === DayType.Vacation;
   const isHalfDay = dayTypeNum === DayType.HalfDay;
+  const isEvent = dayTypeNum === DayType.Event;
+  const isExam = dayTypeNum === DayType.Exam;
+  const isPtm = dayTypeNum === DayType.PTM;
+  const ptmMode = formik.values.ptmMode;
+  const showRoom = isPtm && ['inPerson', 'hybrid'].includes(ptmMode);
+  const showMeetingLink = isPtm && ['online', 'hybrid'].includes(ptmMode);
+
+  const { data: examTypesResponse } = useGetExaminationTypesQuery(
+    { academicMediumId: mediumId, includeArchived: false },
+    { skip: !mediumId || Number(formik.values.dayType) !== DayType.Exam }
+  );
+  const { data: examsResponse } = useGetExamsQuery(
+    { academicMediumId: mediumId, skipCount: 0, maxResultCount: 1000 },
+    { skip: !mediumId || Number(formik.values.dayType) !== DayType.Exam }
+  );
+  const { data: examScheduleResponse, isFetching: isExamScheduleFetching } =
+    useGetExamScheduleQuery(
+      { examId: formik.values.linkedExamId },
+      { skip: !isExam || !formik.values.linkedExamId }
+    );
+  const {
+    data: roomsResponse,
+    isLoading: roomsLoading,
+    isFetching: roomsFetching,
+  } = useGetRoomsQuery(
+    { skipCount: 0, maxResultCount: 1000 },
+    { skip: Number(formik.values.dayType) !== DayType.PTM }
+  );
+
+  const examTypes = examTypesResponse?.items ?? examTypesResponse ?? [];
+  const exams = examsResponse?.items ?? examsResponse ?? [];
+  const selectedExam = exams.find(
+    (exam: any) => (exam.examId || exam.id) === formik.values.linkedExamId
+  );
+  const rooms = roomsResponse?.items ?? roomsResponse ?? [];
+  const roomOptions = rooms.map((room: any) => {
+    const labelParts = [room.buildingName, room.floorName, room.roomName || room.name].filter(
+      Boolean
+    );
+    const groupParts = [room.buildingName, room.floorName].filter(Boolean);
+    return {
+      ...room,
+      label: labelParts.join(' › ') || room.roomName || room.name || room.id,
+      group: groupParts.join(' › ') || 'Rooms',
+    };
+  });
+
+  useEffect(() => {
+    if (!isExam || !formik.values.linkedExamId) return;
+
+    if (!selectedExam?.standardId) return;
+
+    formik.setFieldValue('appliesToAll', false);
+    formik.setFieldValue('standardIds', [selectedExam.standardId]);
+    formik.setFieldValue('divisionId', '');
+  }, [selectedExam, formik.values.linkedExamId, isExam]);
+
+  useEffect(() => {
+    if (!isExam || !formik.values.linkedExamId) return;
+
+    const subjects = examScheduleResponse?.subjects ?? examScheduleResponse?.Subjects ?? [];
+    const scheduledSubject = [...subjects]
+      .filter(
+        (subject: any) =>
+          (subject.examDate || subject.ExamDate) &&
+          (subject.startTime || subject.StartTime) &&
+          (subject.endTime || subject.EndTime)
+      )
+      .sort(
+        (left: any, right: any) =>
+          dayjs(left.examDate ?? left.ExamDate).valueOf() -
+          dayjs(right.examDate ?? right.ExamDate).valueOf()
+      )[0];
+
+    if (!scheduledSubject) return;
+
+    const examDate = scheduledSubject.examDate ?? scheduledSubject.ExamDate;
+    const startTime = scheduledSubject.startTime ?? scheduledSubject.StartTime;
+    const endTime = scheduledSubject.endTime ?? scheduledSubject.EndTime;
+    formik.setFieldValue('date', dayjs(examDate));
+    formik.setFieldValue('examStartTime', startTime ? dayjs(startTime).format('HH:mm:ss') : '');
+    formik.setFieldValue('examEndTime', endTime ? dayjs(endTime).format('HH:mm:ss') : '');
+  }, [examScheduleResponse, formik.values.linkedExamId, isExam]);
+
+  const handleDayTypeChange = (value: DayType | '') => {
+    formik.setFieldValue('dayType', value);
+    const resetValues = {
+      venue: '',
+      startTime: '',
+      endTime: '',
+      examTypeId: '',
+      linkedExamId: '',
+      examStartTime: '',
+      examEndTime: '',
+      ptmMode: '',
+      roomId: '',
+      meetingLink: '',
+    };
+    Object.entries(resetValues).forEach(([field, fieldValue]) =>
+      formik.setFieldValue(field, fieldValue)
+    );
+  };
 
   const rawTitle = editData
     ? `Edit Marker for ${dayjs(editData.date).format('DD-MM-YYYY')}`
@@ -215,7 +340,7 @@ const CalendarDayFormDialog = ({
                     label="Day Type *"
                     name="dayType"
                     value={formik.values.dayType}
-                    onChange={formik.handleChange}
+                    onChange={(event) => handleDayTypeChange(event.target.value as DayType)}
                     onBlur={formik.handleBlur}
                     renderValue={(selected) => {
                       const opt = DAY_TYPE_OPTIONS.find((o) => o.value === selected);
@@ -377,6 +502,256 @@ const CalendarDayFormDialog = ({
                 </>
               )}
 
+              {/* Event details */}
+              {isEvent && (
+                <>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TimePicker
+                      label="Start Time"
+                      value={
+                        formik.values.startTime
+                          ? dayjs(`2000-01-01T${formik.values.startTime}`)
+                          : null
+                      }
+                      onChange={(val) =>
+                        formik.setFieldValue('startTime', val ? val.format('HH:mm:ss') : '')
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: Boolean(formik.touched.startTime && formik.errors.startTime),
+                          helperText:
+                            formik.touched.startTime && (formik.errors.startTime as string),
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TimePicker
+                      label="End Time"
+                      value={
+                        formik.values.endTime ? dayjs(`2000-01-01T${formik.values.endTime}`) : null
+                      }
+                      onChange={(val) =>
+                        formik.setFieldValue('endTime', val ? val.format('HH:mm:ss') : '')
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: Boolean(formik.touched.endTime && formik.errors.endTime),
+                          helperText: formik.touched.endTime && (formik.errors.endTime as string),
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Venue"
+                      name="venue"
+                      value={formik.values.venue}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={formik.touched.venue && Boolean(formik.errors.venue)}
+                      helperText={formik.touched.venue && (formik.errors.venue as string)}
+                      placeholder="Optional venue"
+                    />
+                  </Grid>
+                </>
+              )}
+
+              {/* Exam details */}
+              {isExam && (
+                <>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <FormControl
+                      fullWidth
+                      size="small"
+                      error={formik.touched.examTypeId && Boolean(formik.errors.examTypeId)}
+                    >
+                      <InputLabel>Exam Type *</InputLabel>
+                      <Select
+                        label="Exam Type *"
+                        name="examTypeId"
+                        value={formik.values.examTypeId}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      >
+                        {examTypes.map((examType: any) => (
+                          <MenuItem key={examType.id} value={examType.id}>
+                            {examType.examType || examType.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {formik.touched.examTypeId && formik.errors.examTypeId && (
+                        <FormHelperText>{formik.errors.examTypeId as string}</FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Linked Exam</InputLabel>
+                      <Select
+                        label="Linked Exam"
+                        name="linkedExamId"
+                        value={formik.values.linkedExamId}
+                        onChange={(event) => {
+                          const linkedExamId = event.target.value;
+                          formik.setFieldValue('linkedExamId', linkedExamId);
+                          formik.setFieldValue('examStartTime', '');
+                          formik.setFieldValue('examEndTime', '');
+                          if (!linkedExamId) {
+                            formik.setFieldValue('appliesToAll', true);
+                            formik.setFieldValue('standardIds', []);
+                            formik.setFieldValue('divisionId', '');
+                          }
+                        }}
+                      >
+                        <MenuItem value="">None</MenuItem>
+                        {exams.map((exam: any) => (
+                          <MenuItem key={exam.examId || exam.id} value={exam.examId || exam.id}>
+                            {exam.examName || exam.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  {formik.values.linkedExamId && (
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {isExamScheduleFetching
+                          ? 'Loading date and time from the linked exam…'
+                          : `Class: ${selectedExam?.standardName || 'Taken automatically from the linked exam'}. Date and time are also taken from its schedule.`}
+                      </Typography>
+                    </Grid>
+                  )}
+                </>
+              )}
+
+              {/* PTM details */}
+              {isPtm && (
+                <>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <FormControl
+                      fullWidth
+                      size="small"
+                      error={formik.touched.ptmMode && Boolean(formik.errors.ptmMode)}
+                    >
+                      <InputLabel>PTM Mode *</InputLabel>
+                      <Select
+                        label="PTM Mode *"
+                        name="ptmMode"
+                        value={formik.values.ptmMode}
+                        onChange={(event) => {
+                          formik.setFieldValue('ptmMode', event.target.value);
+                          if (event.target.value === 'online') formik.setFieldValue('roomId', '');
+                          if (event.target.value === 'inPerson')
+                            formik.setFieldValue('meetingLink', '');
+                        }}
+                        onBlur={formik.handleBlur}
+                      >
+                        <MenuItem value="inPerson">In-Person</MenuItem>
+                        <MenuItem value="online">Online</MenuItem>
+                        <MenuItem value="hybrid">Hybrid</MenuItem>
+                      </Select>
+                      {formik.touched.ptmMode && formik.errors.ptmMode && (
+                        <FormHelperText>{formik.errors.ptmMode as string}</FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TimePicker
+                      label="PTM Start Time *"
+                      value={
+                        formik.values.startTime
+                          ? dayjs(`2000-01-01T${formik.values.startTime}`)
+                          : null
+                      }
+                      onChange={(val) =>
+                        formik.setFieldValue('startTime', val ? val.format('HH:mm:ss') : '')
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: Boolean(formik.touched.startTime && formik.errors.startTime),
+                          helperText:
+                            formik.touched.startTime && (formik.errors.startTime as string),
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TimePicker
+                      label="PTM End Time *"
+                      value={
+                        formik.values.endTime ? dayjs(`2000-01-01T${formik.values.endTime}`) : null
+                      }
+                      onChange={(val) =>
+                        formik.setFieldValue('endTime', val ? val.format('HH:mm:ss') : '')
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: Boolean(formik.touched.endTime && formik.errors.endTime),
+                          helperText: formik.touched.endTime && (formik.errors.endTime as string),
+                        },
+                      }}
+                    />
+                  </Grid>
+                  {showRoom && (
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Autocomplete
+                        fullWidth
+                        size="small"
+                        loading={roomsLoading || roomsFetching}
+                        options={roomOptions}
+                        groupBy={(option) => option.group}
+                        getOptionLabel={(option) => option.label}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                        value={
+                          roomOptions.find((room: any) => room.id === formik.values.roomId) || null
+                        }
+                        onChange={(_event, value) =>
+                          formik.setFieldValue('roomId', value?.id || '')
+                        }
+                        onBlur={() => formik.setFieldTouched('roomId', true)}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Room *"
+                            error={formik.touched.roomId && Boolean(formik.errors.roomId)}
+                            helperText={formik.touched.roomId && (formik.errors.roomId as string)}
+                          />
+                        )}
+                      />
+                    </Grid>
+                  )}
+                  {showMeetingLink && (
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Meeting Link *"
+                        name="meetingLink"
+                        value={formik.values.meetingLink}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.meetingLink && Boolean(formik.errors.meetingLink)}
+                        helperText={
+                          formik.touched.meetingLink && (formik.errors.meetingLink as string)
+                        }
+                        placeholder="https://..."
+                      />
+                    </Grid>
+                  )}
+                </>
+              )}
+
               {/* Title */}
               <Grid size={{ xs: 12 }}>
                 <TextField
@@ -415,161 +790,167 @@ const CalendarDayFormDialog = ({
               </Grid>
 
               {/* Scope & Visibility Section */}
-              <Grid size={{ xs: 12 }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: { xs: 1.5, md: 2 },
-                    borderRadius: 1.5,
-                    bgcolor: (t) => alpha(t.palette.background.paper, 0.92),
-                    borderColor: (t) => alpha(t.palette.divider, 0.9),
-                    boxShadow: (t) => `0 10px 30px -24px ${alpha(t.palette.grey[500], 0.4)}`,
-                  }}
-                >
-                  <Stack spacing={1.5}>
-                    <Stack direction="row" spacing={1.25} alignItems="center">
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'primary.main',
-                          bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
-                        }}
-                      >
-                        <Iconify icon="solar:eye-bold" width={18} height={18} />
-                      </Box>
-                      <Stack spacing={0.2}>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Scope & Visibility
-                        </Typography>
-                      </Stack>
-                    </Stack>
-
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          size="small"
-                          checked={formik.values.appliesToAll}
-                          onChange={(e) => {
-                            formik.setFieldValue('appliesToAll', e.target.checked);
-                            if (e.target.checked) {
-                              formik.setFieldValue('standardIds', []);
-                              formik.setFieldValue('divisionId', '');
-                            }
+              {!(isExam && formik.values.linkedExamId) && (
+                <Grid size={{ xs: 12 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: { xs: 1.5, md: 2 },
+                      borderRadius: 1.5,
+                      bgcolor: (t) => alpha(t.palette.background.paper, 0.92),
+                      borderColor: (t) => alpha(t.palette.divider, 0.9),
+                      boxShadow: (t) => `0 10px 30px -24px ${alpha(t.palette.grey[500], 0.4)}`,
+                    }}
+                  >
+                    <Stack spacing={1.5}>
+                      <Stack direction="row" spacing={1.25} alignItems="center">
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'primary.main',
+                            bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
                           }}
-                        />
-                      }
-                      label={
-                        <Box>
-                          <Typography variant="body2" fontWeight={600}>
-                            Applies to all classes & divisions
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Toggle off to restrict this marker to specific classes or a section
-                          </Typography>
+                        >
+                          <Iconify icon="solar:eye-bold" width={18} height={18} />
                         </Box>
-                      }
-                    />
+                        <Stack spacing={0.2}>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Scope & Visibility
+                          </Typography>
+                        </Stack>
+                      </Stack>
 
-                    {!formik.values.appliesToAll && (
-                      <Grid container spacing={2} sx={{ pt: 1 }}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <FormControl
-                            fullWidth
+                      <FormControlLabel
+                        control={
+                          <Switch
                             size="small"
-                            error={formik.touched.standardIds && Boolean(formik.errors.standardIds)}
-                          >
-                            <InputLabel>Class *</InputLabel>
-                            <Select
-                              multiple
-                              label="Class *"
-                              name="standardIds"
-                              value={formik.values.standardIds}
-                              onChange={(e) => {
-                                const { value } = e.target;
-                                const selected =
-                                  typeof value === 'string' ? value.split(',') : value;
-                                formik.setFieldValue('standardIds', selected);
-                                if (selected.length !== 1) {
-                                  formik.setFieldValue('divisionId', '');
-                                }
-                              }}
-                              renderValue={(selected) =>
-                                (selected as string[])
-                                  .map((id) => standards.find((s) => s.id === id)?.name ?? id)
-                                  .join(', ')
+                            checked={formik.values.appliesToAll}
+                            onChange={(e) => {
+                              formik.setFieldValue('appliesToAll', e.target.checked);
+                              if (e.target.checked) {
+                                formik.setFieldValue('standardIds', []);
+                                formik.setFieldValue('divisionId', '');
+                              }
+                            }}
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography variant="body2" fontWeight={600}>
+                              Applies to all classes & divisions
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Toggle off to restrict this marker to specific classes or a section
+                            </Typography>
+                          </Box>
+                        }
+                      />
+
+                      {!formik.values.appliesToAll && (
+                        <Grid container spacing={2} sx={{ pt: 1 }}>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <FormControl
+                              fullWidth
+                              size="small"
+                              error={
+                                formik.touched.standardIds && Boolean(formik.errors.standardIds)
                               }
                             >
-                              {standards.map((s) => (
-                                <MenuItem key={s.id} value={s.id}>
-                                  <Checkbox
-                                    size="small"
-                                    checked={formik.values.standardIds.includes(s.id)}
-                                  />
-                                  {s.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                            {formik.touched.standardIds && formik.errors.standardIds && (
-                              <FormHelperText>{formik.errors.standardIds as string}</FormHelperText>
-                            )}
-                          </FormControl>
-                        </Grid>
-                        {formik.values.standardIds.length === 1 && (
-                          <Grid size={{ xs: 12, sm: 6 }}>
-                            {/* Bug #5411: notched + shrink prevents label/placeholder collision */}
-                            <FormControl fullWidth size="small">
-                              <InputLabel
-                                id="division-select-label"
-                                shrink
-                                htmlFor="division-select"
-                              >
-                                Division
-                              </InputLabel>
+                              <InputLabel>Class *</InputLabel>
                               <Select
-                                labelId="division-select-label"
-                                inputProps={{ id: 'division-select' }}
-                                label="Division"
-                                name="divisionId"
-                                value={formik.values.divisionId}
-                                onChange={formik.handleChange}
-                                displayEmpty
-                                notched
-                                renderValue={(selected) => {
-                                  if (!selected)
-                                    return (
-                                      <em style={{ opacity: 0.6, fontStyle: 'normal' }}>
-                                        All Divisions (optional)
-                                      </em>
-                                    );
-                                  const selectedDivision = standards
-                                    .find((s) => s.id === formik.values.standardIds[0])
-                                    ?.divisions?.find((d: any) => d.id === selected);
-                                  return selectedDivision?.name ?? String(selected);
+                                multiple
+                                label="Class *"
+                                name="standardIds"
+                                value={formik.values.standardIds}
+                                onChange={(e) => {
+                                  const { value } = e.target;
+                                  const selected =
+                                    typeof value === 'string' ? value.split(',') : value;
+                                  formik.setFieldValue('standardIds', selected);
+                                  if (selected.length !== 1) {
+                                    formik.setFieldValue('divisionId', '');
+                                  }
                                 }}
+                                renderValue={(selected) =>
+                                  (selected as string[])
+                                    .map((id) => standards.find((s) => s.id === id)?.name ?? id)
+                                    .join(', ')
+                                }
                               >
-                                <MenuItem value="">All Divisions</MenuItem>
-                                {(
-                                  standards.find((s) => s.id === formik.values.standardIds[0])
-                                    ?.divisions || []
-                                ).map((d: any) => (
-                                  <MenuItem key={d.id} value={d.id}>
-                                    {d.name}
+                                {standards.map((s) => (
+                                  <MenuItem key={s.id} value={s.id}>
+                                    <Checkbox
+                                      size="small"
+                                      checked={formik.values.standardIds.includes(s.id)}
+                                    />
+                                    {s.name}
                                   </MenuItem>
                                 ))}
                               </Select>
+                              {formik.touched.standardIds && formik.errors.standardIds && (
+                                <FormHelperText>
+                                  {formik.errors.standardIds as string}
+                                </FormHelperText>
+                              )}
                             </FormControl>
                           </Grid>
-                        )}
-                      </Grid>
-                    )}
-                  </Stack>
-                </Paper>
-              </Grid>
+                          {formik.values.standardIds.length === 1 && (
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                              {/* Bug #5411: notched + shrink prevents label/placeholder collision */}
+                              <FormControl fullWidth size="small">
+                                <InputLabel
+                                  id="division-select-label"
+                                  shrink
+                                  htmlFor="division-select"
+                                >
+                                  Division
+                                </InputLabel>
+                                <Select
+                                  labelId="division-select-label"
+                                  inputProps={{ id: 'division-select' }}
+                                  label="Division"
+                                  name="divisionId"
+                                  value={formik.values.divisionId}
+                                  onChange={formik.handleChange}
+                                  displayEmpty
+                                  notched
+                                  renderValue={(selected) => {
+                                    if (!selected)
+                                      return (
+                                        <em style={{ opacity: 0.6, fontStyle: 'normal' }}>
+                                          All Divisions (optional)
+                                        </em>
+                                      );
+                                    const selectedDivision = standards
+                                      .find((s) => s.id === formik.values.standardIds[0])
+                                      ?.divisions?.find((d: any) => d.id === selected);
+                                    return selectedDivision?.name ?? String(selected);
+                                  }}
+                                >
+                                  <MenuItem value="">All Divisions</MenuItem>
+                                  {(
+                                    standards.find((s) => s.id === formik.values.standardIds[0])
+                                      ?.divisions || []
+                                  ).map((d: any) => (
+                                    <MenuItem key={d.id} value={d.id}>
+                                      {d.name}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                          )}
+                        </Grid>
+                      )}
+                    </Stack>
+                  </Paper>
+                </Grid>
+              )}
 
               {/* Change Reason — required if published */}
               {isPublished && (
@@ -624,8 +1005,8 @@ const CalendarDayFormDialog = ({
             <CancelButton onClick={() => handleCloseDialog()} />
             <SubmitButton
               type="button"
-              loading={creating || updating}
-              disabled={deleting}
+              loading={creating || updating || isExamScheduleFetching}
+              disabled={deleting || isExamScheduleFetching}
               onClick={() => formik.handleSubmit()}
               buttonText={editData ? 'Update Day' : 'Add Day'}
               startIcon={

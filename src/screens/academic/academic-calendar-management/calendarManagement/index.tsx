@@ -205,7 +205,8 @@ const CalendarManagement = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarsQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicMediumId: medium?.id },
+    options: { skip: !medium?.id },
     popupConfig: { error: true },
   });
 
@@ -266,12 +267,12 @@ const CalendarManagement = () => {
     calendarEndDate
   );
 
-  // Auto-create calendar if none exists for the selected academic year
+  // Auto-create calendar if none exists for the selected academic medium.
   React.useEffect(() => {
     if (
       !calendarsLoading &&
       calendars.length === 0 &&
-      currentYear?.id &&
+      medium?.id &&
       currentYear?.name &&
       !autoCreatingRef.current
     ) {
@@ -290,11 +291,12 @@ const CalendarManagement = () => {
       const endDate = currentYear.endDate || currentBoard?.endDate || `${endYear}-03-31T00:00:00Z`;
 
       createCalendar({
+        academicMediumId: medium.id,
         academicYearId: currentYear.id,
-        name: `Academic Calendar ${currentYear.name}`,
+        name: `${medium.name} Academic Calendar`,
         startDate,
         endDate,
-        description: `Automatically generated default calendar for ${currentYear.name}`,
+        description: `Automatically generated default calendar for ${medium.name}`,
         isDefault: true,
       })
         .unwrap()
@@ -308,7 +310,7 @@ const CalendarManagement = () => {
           autoCreatingRef.current = false;
         });
     }
-  }, [calendars, calendarsLoading, currentYear, createCalendar, currentBoard]);
+  }, [calendars, calendarsLoading, currentYear, medium, createCalendar, currentBoard]);
 
   // Auto-select published calendar
   React.useEffect(() => {
@@ -544,7 +546,7 @@ const CalendarManagement = () => {
                   <Iconify icon="mdi:calendar-remove-outline" width={18} sx={{ color: '#fff' }} />
                 </Avatar>
                 <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
-                  No active calendar for this academic year
+                  No active calendar for this academic medium
                 </Typography>
               </Stack>
             )}

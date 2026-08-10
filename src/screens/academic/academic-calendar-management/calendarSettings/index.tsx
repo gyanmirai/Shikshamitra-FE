@@ -42,7 +42,7 @@ const CalendarSettingsScreen = () => {
   const { setParam } = searchParamsHook;
   const searchParams = searchParamsHook.getAllParams();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const canEdit = hasGrantedPermission(
     permissions,
@@ -55,7 +55,8 @@ const CalendarSettingsScreen = () => {
   const { data: calendarsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarsQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicMediumId: medium?.id },
+    options: { skip: !medium?.id },
     popupConfig: { error: false },
   });
 
@@ -63,7 +64,8 @@ const CalendarSettingsScreen = () => {
   const { data: settingsData, isLoading: settingsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarSettingsQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicMediumId: medium?.id },
+    options: { skip: !medium?.id },
     popupConfig: { error: false },
   });
 
@@ -85,7 +87,7 @@ const CalendarSettingsScreen = () => {
       if (settings?.id) {
         await updateSettings({ id: settings.id, body: values }).unwrap();
       } else {
-        await createSettings({ ...values, academicYearId: currentYear?.id }).unwrap();
+        await createSettings({ ...values, academicMediumId: medium?.id, academicYearId: currentYear?.id }).unwrap();
       }
       shikshaMitraToast.success({ message: 'Calendar settings saved successfully' });
     } catch (err: any) {

@@ -46,7 +46,7 @@ test.describe(
       const response = await anonymousApiRequest('/academic/calendars', {
         method: 'POST',
         body: JSON.stringify({
-          academicYearId: '00000000-0000-0000-0000-000000000000',
+          academicMediumId: '00000000-0000-0000-0000-000000000000',
           name: 'e2e-anonymous-calendar',
           startDate: '2026-04-01T00:00:00+05:30',
           endDate: '2027-03-31T00:00:00+05:30',

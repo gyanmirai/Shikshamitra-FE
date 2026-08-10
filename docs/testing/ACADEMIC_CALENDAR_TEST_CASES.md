@@ -15,7 +15,7 @@ npx playwright test e2e/academic/academic-calendar-api.spec.ts e2e/academic/acad
 - Frontend is running at `http://localhost:3000`.
 - Backend API is running at `https://localhost:44332`.
 - `E2E_TENANT` is set or defaults to `DDVS`.
-- Seeded academic year exists.
+- Seeded academic year and academic medium exist.
 - Seeded `admin-ddvs` user can authenticate and has Academic Calendar permissions.
 - Playwright auth setup can create storage states for HR manager, academic admin, and teacher.
 
@@ -23,11 +23,11 @@ npx playwright test e2e/academic/academic-calendar-api.spec.ts e2e/academic/acad
 
 | ID | Area | Scenario | Role | Steps | Expected Result | Automated |
 | --- | --- | --- | --- | --- | --- | --- |
-| AC-CAL-001 | Calendar list | Load calendars by academic year | Academic Admin | Resolve current academic year, call `GET /api/academic/calendars?academicYearId={id}` | Response is `200`; body uses ABP paged shape with `items` array | Yes |
-| AC-CAL-002 | Dashboard | Load calendar dashboard | Academic Admin | Call `GET /api/academic/calendar/dashboard?academicYearId={id}` | Response is `200`; includes `academicYearId`, numeric `totalWorkingDays`, numeric `pendingImpactLogsCount`, and `upcomingDays` array | Yes |
-| AC-CAL-003 | Emergency closure list | Load emergency closures | Academic Admin | Call `GET /api/academic/calendar-emergency-closures?academicYearId={id}&skipCount=0&maxResultCount=5` | Response is `200`; body uses paged `items` array | Yes |
+| AC-CAL-001 | Calendar list | Load calendars by academic medium | Academic Admin | Resolve current academic medium, call `GET /api/academic/calendars?academicMediumId={id}` | Response is `200`; body uses ABP paged shape with `items` array | Yes |
+| AC-CAL-002 | Dashboard | Load calendar dashboard | Academic Admin | Call `GET /api/academic/calendar/dashboard?academicMediumId={id}` | Response is `200`; includes `academicMediumId`, numeric `totalWorkingDays`, numeric `pendingImpactLogsCount`, and `upcomingDays` array | Yes |
+| AC-CAL-003 | Emergency closure list | Load emergency closures | Academic Admin | Call `GET /api/academic/calendar-emergency-closures?academicMediumId={id}&skipCount=0&maxResultCount=5` | Response is `200`; body uses paged `items` array | Yes |
 | AC-CAL-004 | Audit summary | Load audit summary | Academic Admin | Call `GET /api/academic/calendar-audit-logs/summary` | Response is `200`; includes numeric `totalAuditEvents` and `criticalChanges` | Yes |
-| AC-CAL-005 | Calendar create | Create a draft calendar | Academic Admin | POST a unique calendar name, academic year, start date, end date, description, and `isDefault=false` | Response is `200`; created calendar returns an `id`, expected name, and draft status | Yes |
+| AC-CAL-005 | Calendar create | Create a draft calendar | Academic Admin | POST a unique calendar name, academic medium, start date, end date, description, and `isDefault=false` | Response is `200`; created calendar returns an `id`, expected medium, expected name, and draft status | Yes |
 | AC-CAL-006 | Calendar edit | Update calendar details | Academic Admin | PUT updated name, description, and default flag to `/api/academic/calendars/{id}` | Response is `200`; updated response contains the new name | Yes |
 | AC-CAL-007 | Day marker | Add event day to calendar | Academic Admin | POST event day payload to `/api/academic/calendars/{id}/days` | Response is `200`; returned day has expected title | Yes |
 | AC-CAL-008 | Publish | Publish draft calendar | Academic Admin | POST `/api/academic/calendars/{id}/publish` | Response is `200`; status changes to published | Yes |
@@ -44,7 +44,7 @@ npx playwright test e2e/academic/academic-calendar-api.spec.ts e2e/academic/acad
 | --- | --- | --- | --- | --- | --- | --- |
 | AC-CAL-015 | Date validation | Reject malformed date | Academic Admin | Call `/api/academic/calendar/check-date?date=not-a-date&validationType=ExamSchedule` | Returns controlled `4xx`; no `5xx` | Yes |
 | AC-CAL-016 | Missing id | Request empty GUID calendar | Academic Admin | Call `GET /api/academic/calendars/00000000-0000-0000-0000-000000000000` | Returns controlled `400` or `404` | Yes |
-| AC-CAL-017 | Duplicate calendar | Reject duplicate calendar name | Academic Admin | Create a calendar, then create another with same academic year/name | Returns controlled `4xx`; no `5xx` | Yes |
+| AC-CAL-017 | Duplicate calendar | Reject duplicate calendar name | Academic Admin | Create a calendar, then create another with same academic medium/name | Returns controlled `4xx`; no `5xx` | Yes |
 | AC-CAL-018 | Duplicate day marker | Reject duplicate day marker | Academic Admin | Add an event day, then add another event for same date/calendar | Returns controlled `4xx`; no `5xx` | Yes |
 | AC-CAL-019 | Invalid vacation range | Reject vacation where end date is before start date | Academic Admin | POST vacation day with `endDate < date` | Returns controlled `4xx`; no `5xx` | Yes |
 

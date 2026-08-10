@@ -33,6 +33,7 @@ export type AcademicDatePickerProps = Omit<
   'shouldDisableDate' | 'slots' | 'slotProps'
 > & {
   academicYearId?: string;
+  academicMediumId?: string;
   calendarId?: string;
   standardId?: string | null;
   divisionId?: string | null;
@@ -51,6 +52,7 @@ export type AcademicDateTimePickerProps = Omit<
   'shouldDisableDate' | 'slots' | 'slotProps'
 > & {
   academicYearId?: string;
+  academicMediumId?: string;
   calendarId?: string;
   standardId?: string | null;
   divisionId?: string | null;

@@ -117,6 +117,7 @@ test.describe(
           await academicApiRequest(page, '/academic/calendars', {
             method: 'POST',
             body: JSON.stringify({
+              academicMediumId: context.currentMedium.id,
               academicYearId: context.academicYear.id,
               name: `${runId}-calendar`,
               description: `${runId} Academic Calendar workflow`,
@@ -246,6 +247,7 @@ test.describe(
           await academicApiRequest(page, '/academic/calendars', {
             method: 'POST',
             body: JSON.stringify({
+              academicMediumId: context.currentMedium.id,
               academicYearId: context.academicYear.id,
               name: `${runId}-calendar`,
               description: `${runId} negative Academic Calendar workflow`,
@@ -261,6 +263,7 @@ test.describe(
           await academicApiRequest(page, '/academic/calendars', {
             method: 'POST',
             body: JSON.stringify({
+              academicMediumId: context.currentMedium.id,
               academicYearId: context.academicYear.id,
               name: `${runId}-calendar`,
               description: 'duplicate name must be rejected',

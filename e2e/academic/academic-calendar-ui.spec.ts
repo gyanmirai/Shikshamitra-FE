@@ -66,6 +66,7 @@ async function mockCalendarManagementApis(
   const markerDate = nextWeekday(start, 7);
   const calendar = {
     id: 'ui-calendar-1',
+    academicMediumId: context.currentMedium.id,
     academicYearId: context.academicYear.id,
     name: 'UI Test Academic Calendar',
     description: 'Mocked calendar for Playwright UI form coverage',

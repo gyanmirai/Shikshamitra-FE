@@ -12,7 +12,8 @@ export default function AcademicDateTimePicker({
   calendarId,
   standardId,
   divisionId,
-  academicYearId,
+  academicYearId: _academicYearId,
+  academicMediumId,
   validationType: _validationType,
   blockedDayTypes,
   helperText,
@@ -29,7 +30,7 @@ export default function AcademicDateTimePicker({
     calendarId,
     standardId,
     divisionId,
-    academicYearId,
+    academicMediumId,
     blockedDayTypes,
     anchorDate: dateTimePickerProps.value || null,
   });

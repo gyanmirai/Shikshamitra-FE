@@ -33,7 +33,7 @@ interface Props {
 }
 
 const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const [createCalendar, { isLoading: creating }] = useCreateCalendarMutation();
   const [updateCalendar, { isLoading: updating }] = useUpdateCalendarMutation();
@@ -41,7 +41,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
   const isLoading = creating || updating;
 
   const formik = useFormik({
-    initialValues: calendarInitialValues(editData ?? { academicYearId: currentYear?.id }),
+    initialValues: calendarInitialValues(editData ?? { academicMediumId: currentMedium?.id }),
     enableReinitialize: true,
     validationSchema: calendarValidationSchema,
     onSubmit: async (values) => {
@@ -82,7 +82,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
             onBlur={formik.handleBlur}
             error={formik.touched.name && Boolean(formik.errors.name)}
             helperText={formik.touched.name && formik.errors.name}
-            placeholder="e.g. Academic Year 2025-26 Calendar"
+            placeholder="e.g. English Medium Academic Calendar"
           />
         </Grid>
 
@@ -155,7 +155,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
                     Set as Default Calendar
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Only one calendar can be default per academic year
+                    Only one calendar can be default per academic medium
                   </Typography>
                 </Box>
               }

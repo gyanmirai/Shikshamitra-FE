@@ -30,6 +30,7 @@ import {
 import { SubjectType, SubjectAssignmentStatus } from '../enum/subjectType';
 
 import type { ISubjectTableProps, ISubjectFormValues } from './type';
+import { getPrimaryTeacherNames } from '../utils/primaryTeacherNames';
 
 // ── Health score helpers ─────────────────────────────────────────────────────
 function healthColor(score: number) {
@@ -141,7 +142,7 @@ const SubjectTable = ({
         ),
         subjectCodeValue: item?.subjects?.map((sub: any) => sub.subjectCode).join(', ') || '—',
         statusValue: SubjectAssignmentStatus[item.status] || 'Draft',
-        primaryTeacherDisplay: item?.primaryTeacherName || '—',
+        primaryTeacherDisplay: getPrimaryTeacherNames(item),
         chaptersDisplay: item.chaptersCount ?? 0,
         weeklyPeriodsDisplay: item.weeklyPeriods ? `${item.weeklyPeriods}` : '—',
         lastUpdatedDisplay: item.lastUpdatedAt ? formatDateOnly(item.lastUpdatedAt) : '—',
@@ -261,11 +262,13 @@ const SubjectTable = ({
         id: 'primaryTeacherDisplay',
         label: 'Primary Teacher',
         align: 'left',
-        minWidth: 130,
+        minWidth: 180,
         isSort: false,
         isFilter: false,
-        render: (value) =>
-          value === '—' ? (
+        render: (_value, row) => {
+          const teacherNames = getPrimaryTeacherNames(row as ISubjectFormValues);
+
+          return teacherNames.length === 0 ? (
             <Chip
               size="small"
               label="Not Assigned"
@@ -274,8 +277,20 @@ const SubjectTable = ({
               sx={{ height: 20, fontSize: 11 }}
             />
           ) : (
-            <Typography variant="body2">{value}</Typography>
-          ),
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {teacherNames.map((teacherName) => (
+                <Chip
+                  key={teacherName}
+                  size="small"
+                  label={teacherName}
+                  variant="soft"
+                  color="info"
+                  sx={{ height: 22, fontSize: 11 }}
+                />
+              ))}
+            </Box>
+          );
+        },
       },
       {
         id: 'chaptersDisplay',

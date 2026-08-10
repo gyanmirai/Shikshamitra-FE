@@ -29,6 +29,30 @@ interface Props {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+/**
+ * Class-specific records for one calendar event can have different IDs, but
+ * they should still render as one event when their visible event details match.
+ */
+const getCalendarEventIdentity = (event: any) =>
+  [
+    dayjs(event.date).format('YYYY-MM-DD'),
+    event.dayType,
+    event.title?.trim().toLowerCase() ?? '',
+    event.holidayCategory ?? '',
+    event.description?.trim().toLowerCase() ?? '',
+  ].join('|');
+
+const uniqueCalendarEvents = (events: any[]) => {
+  const seen = new Set<string>();
+
+  return events.filter((event) => {
+    const identity = getCalendarEventIdentity(event);
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
+};
+
 // ─── Day Cell ─────────────────────────────────────────────────────────────────
 
 const DayCell = ({
@@ -227,8 +251,9 @@ const CalendarMonthView = ({
 
   const days = calendarDays;
 
+  const uniqueDays = uniqueCalendarEvents(days);
   const dayMap: Record<string, any[]> = {};
-  days.forEach((d) => {
+  uniqueDays.forEach((d) => {
     const key = dayjs(d.date).format('YYYY-MM-DD');
     if (!dayMap[key]) dayMap[key] = [];
     dayMap[key].push(d);
@@ -245,7 +270,7 @@ const CalendarMonthView = ({
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const monthEvents = days
+  const monthEvents = uniqueDays
     .filter((d) => dayjs(d.date).format('YYYY-MM') === currentMonth.format('YYYY-MM'))
     .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
 
