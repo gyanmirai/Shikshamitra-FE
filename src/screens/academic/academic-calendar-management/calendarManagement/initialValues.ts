@@ -1,7 +1,7 @@
 import type { CalendarFormValues, CalendarDayFormValues } from './types';
 
 export const calendarInitialValues = (data?: any): CalendarFormValues => ({
-  academicYearId: data?.academicYearId ?? '',
+  academicMediumId: data?.academicMediumId ?? '',
   name: data?.name ?? '',
   description: data?.description ?? '',
   startDate: data?.startDate ?? null,
@@ -12,7 +12,8 @@ export const calendarInitialValues = (data?: any): CalendarFormValues => ({
 const sanitizeDescription = (desc?: string, id?: string): string => {
   if (!desc) return '';
   const trimmed = String(desc).trim();
-  const isGuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(trimmed);
+  const isGuid =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(trimmed);
   if (isGuid || trimmed === id || (id && trimmed.includes(id))) return '';
   return desc;
 };
@@ -29,5 +30,13 @@ export const calendarDayInitialValues = (data?: any): CalendarDayFormValues => (
   divisionId: data?.divisionId ?? '',
   startTime: data?.startTime ?? '',
   endTime: data?.endTime ?? '',
+  venue: data?.venue ?? '',
+  examTypeId: data?.examTypeId ?? '',
+  linkedExamId: data?.linkedExamId ?? '',
+  examStartTime: data?.examStartTime ?? '',
+  examEndTime: data?.examEndTime ?? '',
+  ptmMode: data?.ptmMode ?? '',
+  roomId: data?.roomId ?? '',
+  meetingLink: data?.meetingLink ?? '',
   changeReason: data?.changeReason ?? '',
 });

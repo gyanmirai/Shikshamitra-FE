@@ -64,6 +64,14 @@ export interface AcademicCalendarDay {
   divisionId?: string;
   startTime?: string;
   endTime?: string;
+  venue?: string;
+  examTypeId?: string;
+  linkedExamId?: string;
+  examStartTime?: string;
+  examEndTime?: string;
+  ptmMode?: string;
+  roomId?: string;
+  meetingLink?: string;
   status: CalendarDayStatus;
   changeReason?: string;
   creationTime?: string;
@@ -82,6 +90,14 @@ export interface CreateCalendarDayPayload {
   divisionId?: string | null;
   startTime?: string;
   endTime?: string;
+  venue?: string | null;
+  examTypeId?: string | null;
+  linkedExamId?: string | null;
+  examStartTime?: string | null;
+  examEndTime?: string | null;
+  ptmMode?: string | null;
+  roomId?: string | null;
+  meetingLink?: string | null;
   changeReason?: string;
 }
 
@@ -189,6 +205,7 @@ export interface AcademicCalendarAuditLog {
 
 export interface CheckDateParams {
   date: string;
+  academicMediumId?: string;
   standardId?: string;
   divisionId?: string;
   validationType:

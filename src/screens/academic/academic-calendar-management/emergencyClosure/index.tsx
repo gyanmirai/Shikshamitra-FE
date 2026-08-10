@@ -126,7 +126,7 @@ const EmergencyClosureScreen = () => {
   const viewDialog = useBoolean();
   const confirmDiscardDialog = useBoolean();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const { currentYear, currentMedium: medium } = useSelector(
+  const { currentMedium: medium } = useSelector(
     (state: RootState) => state.globalState
   );
   const [selectedClosure, setSelectedClosure] = useState<any>(null);
@@ -155,11 +155,11 @@ const EmergencyClosureScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetEmergencyClosuresQuery,
     params: {
-      academicYearId: currentYear?.id,
+      academicMediumId: medium?.id,
       skipCount: 0,
       maxResultCount: 200,
     },
-    options: { skip: !currentYear?.id },
+    options: { skip: !medium?.id },
   });
 
   const [createEmergencyClosure, { isLoading: creating }] = useQueryAndMutation({
@@ -205,6 +205,7 @@ const EmergencyClosureScreen = () => {
         : formattedStartDate;
       const payload = {
         ...values,
+        academicMediumId: medium?.id,
         date: formattedStartDate,
         startDate: formattedStartDate,
         endDate: formattedEndDate,

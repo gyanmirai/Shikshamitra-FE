@@ -21,7 +21,7 @@ import {
 } from './academic-date-picker-utils';
 
 type Params = {
-  academicYearId?: string;
+  academicMediumId?: string;
   calendarId?: string;
   standardId?: string | null;
   divisionId?: string | null;
@@ -33,13 +33,13 @@ export function useAcademicDatePickerRules({
   calendarId,
   standardId,
   divisionId,
-  academicYearId,
+  academicMediumId,
   anchorDate,
   blockedDayTypes = DEFAULT_BLOCKED_DAY_TYPES,
 }: Params) {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [visibleMonth, setVisibleMonth] = useState<Dayjs>(anchorDate || dayjs());
-  const resolvedAcademicYearId = academicYearId || currentYear?.id;
+  const resolvedAcademicMediumId = academicMediumId || medium?.id;
 
   useEffect(() => {
     if (anchorDate?.isValid() && !anchorDate.isSame(visibleMonth, 'month')) {
@@ -50,8 +50,8 @@ export function useAcademicDatePickerRules({
   const { data: calendarsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarsQuery,
-    params: { academicYearId: resolvedAcademicYearId },
-    options: { skip: Boolean(calendarId) || !resolvedAcademicYearId },
+    params: { academicMediumId: resolvedAcademicMediumId },
+    options: { skip: Boolean(calendarId) || !resolvedAcademicMediumId },
     popupConfig: { error: false },
   });
 

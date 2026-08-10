@@ -30,6 +30,30 @@ const LEGEND_ITEMS = [
   { type: DayType.EmergencyClosure, label: 'Emergency' },
 ];
 
+/**
+ * Class-specific records for one calendar event can have different IDs, but
+ * they should still render as one event when their visible event details match.
+ */
+const getCalendarEventIdentity = (event: any) =>
+  [
+    dayjs(event.date).format('YYYY-MM-DD'),
+    event.dayType,
+    event.title?.trim().toLowerCase() ?? '',
+    event.holidayCategory ?? '',
+    event.description?.trim().toLowerCase() ?? '',
+  ].join('|');
+
+const uniqueCalendarEvents = (events: any[]) => {
+  const seen = new Set<string>();
+
+  return events.filter((event) => {
+    const identity = getCalendarEventIdentity(event);
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
+};
+
 // ─── Single Month Mini-Calendar ───────────────────────────────────────────────
 
 const MonthInner = ({
@@ -319,9 +343,10 @@ const CalendarYearView = ({
   const endDate = calendarEndDate;
   const today = dayjs().format('YYYY-MM-DD');
 
-  // Build date map — accumulate all events per date (supports multiple events on same day)
+  // Build date map after collapsing class-specific duplicates per date.
+  const uniqueDays = uniqueCalendarEvents(days);
   const dayMap: Record<string, any[]> = {};
-  days.forEach((d) => {
+  uniqueDays.forEach((d) => {
     const key = dayjs(d.date).format('YYYY-MM-DD');
     if (!dayMap[key]) dayMap[key] = [];
     dayMap[key].push(d);
@@ -384,7 +409,7 @@ const CalendarYearView = ({
           <Stack direction="row" flexWrap="wrap" gap={0.75} alignItems="center" flex={1}>
             {LEGEND_ITEMS.map(({ type, label }) => {
               const isActive = activeDayType === type;
-              const count = days.filter((d) => d.dayType === type).length;
+              const count = uniqueDays.filter((d) => d.dayType === type).length;
 
               return (
                 <Stack

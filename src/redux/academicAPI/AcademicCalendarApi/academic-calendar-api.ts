@@ -7,7 +7,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
     // ─── Calendar Setup ─────────────────────────────────────────────────────
 
     getCalendars: builder.query({
-      query: (params?: { academicYearId?: string; status?: number }) => ({
+      query: (params?: { academicMediumId?: string; status?: number }) => ({
         url: '/academic/calendars',
         method: 'GET',
         params,
@@ -176,6 +176,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
     checkDate: builder.query({
       query: (params: {
         date: string;
+        academicMediumId?: string;
         standardId?: string;
         divisionId?: string;
         validationType: string;
@@ -191,7 +192,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
 
     getEmergencyClosures: builder.query({
       query: (params?: {
-        academicYearId?: string;
+        academicMediumId?: string;
         status?: number | '';
         skipCount?: number;
         maxResultCount?: number;
@@ -341,7 +342,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
     // ─── Settings ───────────────────────────────────────────────────────────
 
     getCalendarSettings: builder.query({
-      query: (params?: { academicYearId?: string }) => ({
+      query: (params?: { academicMediumId?: string }) => ({
         url: '/academic/calendar/settings',
         method: 'GET',
         params,
@@ -370,7 +371,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
     // ─── Dashboard ──────────────────────────────────────────────────────────
 
     getCalendarDashboard: builder.query({
-      query: (params?: { academicYearId?: string }) => ({
+      query: (params?: { academicMediumId?: string }) => ({
         url: '/academic/calendar/dashboard',
         method: 'GET',
         params,

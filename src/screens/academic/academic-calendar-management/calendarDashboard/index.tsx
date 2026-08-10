@@ -265,7 +265,7 @@ const AcademicCalendarDashboard = () => {
   const router = useRouter();
   const theme = useTheme();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const canManage = hasGrantedPermission(
     permissions,
@@ -283,7 +283,8 @@ const AcademicCalendarDashboard = () => {
   const { data: calendarsRaw, isLoading: calendarsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarsQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicMediumId: medium?.id },
+    options: { skip: !medium?.id },
     popupConfig: { error: false },
   });
 
@@ -387,7 +388,7 @@ const AcademicCalendarDashboard = () => {
       <CustomBreadcrumbs
         sx={{ mb: 1 }}
         heading="Academic Calendar"
-        description="Manage your school's academic year — holidays, vacations, events, and scheduling rules."
+        description="Manage the selected academic medium's calendar — holidays, vacations, events, and scheduling rules."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Academic Calendar' },

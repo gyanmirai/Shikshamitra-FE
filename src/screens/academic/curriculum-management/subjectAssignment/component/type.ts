@@ -65,6 +65,7 @@ export interface ISubjectFormValues {
   isAiSuggested?: boolean;
   isCopiedFromPreviousYear?: boolean;
   primaryTeacherName?: string;
+  primaryTeacherNames?: string[];
   chaptersCount?: number;
   weeklyPeriods?: number;
   lastUpdatedAt?: string;

@@ -1,7 +1,7 @@
 import type { DayType, HolidayCategory } from 'src/enums/academic-calendar';
 
 export interface CalendarFormValues {
-  academicYearId: string;
+  academicMediumId: string;
   name: string;
   description: string;
   startDate: string | null;
@@ -21,5 +21,13 @@ export interface CalendarDayFormValues {
   divisionId: string;
   startTime: string;
   endTime: string;
+  venue: string;
+  examTypeId: string;
+  linkedExamId: string;
+  examStartTime: string;
+  examEndTime: string;
+  ptmMode: string;
+  roomId: string;
+  meetingLink: string;
   changeReason: string;
 }
