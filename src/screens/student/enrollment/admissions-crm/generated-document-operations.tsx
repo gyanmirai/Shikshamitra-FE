@@ -5,13 +5,14 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Download, Visibility, Description } from '@mui/icons-material';
 import { Chip, Alert, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
+import { AdmissionCrmGeneratedDocumentType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
 import {
-  AdmissionCrmGeneratedDocumentType,
   useIssueAdmissionCrmGeneratedDocumentMutation,
   useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   usePreviewAdmissionCrmGeneratedDocumentMutation,
   useGetAdmissionCrmGeneratedDocumentAvailabilityQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { ApplicantSection } from './applicant-workspace-primitives';
 

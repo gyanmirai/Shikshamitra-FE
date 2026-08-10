@@ -6,8 +6,9 @@ import { LoadingButton } from 'src/components/loading-button';
 import {
   AdmissionCrmRouteType,
   AdmissionCrmActivationStatus,
-  AdmissionCrmRouteEligibilityStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { AdmissionCrmRouteEligibilityStatus } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 import {
   Box,
   Chip,

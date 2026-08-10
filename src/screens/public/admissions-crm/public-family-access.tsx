@@ -237,11 +237,7 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
                 autoComplete="username"
                 fullWidth
               />
-              <LoadingButton
-                type="submit"
-                variant="contained"
-                loading={isLoading}
-              >
+              <LoadingButton type="submit" variant="contained" loading={isLoading}>
                 {pageCopy.continue}
               </LoadingButton>
             </Box>
@@ -271,11 +267,7 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
                 fullWidth
               />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <LoadingButton
-                  type="submit"
-                  variant="contained"
-                  loading={isLoading}
-                >
+                <LoadingButton type="submit" variant="contained" loading={isLoading}>
                   {copy.verify}
                 </LoadingButton>
                 <LoadingButton

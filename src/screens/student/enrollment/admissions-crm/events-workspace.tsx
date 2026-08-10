@@ -4,11 +4,15 @@ import type { RootState } from 'src/redux/store';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmLeadDto,
+  AdmissionCrmStaffLookupDto,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import type {
   AdmissionCrmEventDto,
   AdmissionCrmEventUpsertDto,
-  AdmissionCrmStaffLookupDto,
-  AdmissionCrmEventRegistrationDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import type { AdmissionCrmEventRegistrationDto } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useCallback } from 'react';
@@ -45,21 +49,31 @@ import {
 import {
   AdmissionCrmEventType,
   AdmissionCrmEventStatus,
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import {
   useGetAdmissionCrmLeadsQuery,
   useGetAdmissionCrmStaffQuery,
+} from 'src/redux/student/admissions-crm/core-leads-api';
+
+import {
   useGetAdmissionCrmEventQuery,
   useGetAdmissionCrmEventsQuery,
   useCreateAdmissionCrmEventMutation,
   useUpdateAdmissionCrmEventMutation,
   useCancelAdmissionCrmEventMutation,
-  AdmissionCrmEventRegistrationStatus,
   usePublishAdmissionCrmEventMutation,
   useReserveAdmissionCrmEventMutation,
   useCompleteAdmissionCrmEventMutation,
+} from 'src/redux/student/admissions-crm/communication-exams-events-api';
+
+import { AdmissionCrmEventRegistrationStatus } from 'src/redux/student/admissions-crm/registration-documents-contracts';
+
+import {
   useCancelAdmissionCrmEventRegistrationMutation,
   useCheckInAdmissionCrmEventRegistrationMutation,
   useMarkNoShowAdmissionCrmEventRegistrationMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { getEnrollmentApiErrorMessage } from './enrollment-api-errors';
@@ -173,9 +187,7 @@ function EventEditorDialog({
   const endsAt = new Date(values.endsAt);
   const minimumCapacity = Math.max(1, event?.reservedCount || 1);
   const hasValidSchedule =
-    Number.isFinite(startsAt.getTime()) &&
-    Number.isFinite(endsAt.getTime()) &&
-    endsAt > startsAt;
+    Number.isFinite(startsAt.getTime()) && Number.isFinite(endsAt.getTime()) && endsAt > startsAt;
   const hasValidCapacity =
     Number.isFinite(values.capacity) &&
     values.capacity >= minimumCapacity &&
@@ -234,129 +246,131 @@ function EventEditorDialog({
               }
               onChange={(e) => setValues((current) => ({ ...current, title: e.target.value }))}
             />
-          <TextField
-            select
-            label="Event type"
-            value={values.eventType}
-            onChange={(e) =>
-              setValues((current) => ({ ...current, eventType: Number(e.target.value) }))
-            }
-          >
-            {eventTypeOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Starts"
-              name="startsAt"
-              type="datetime-local"
-              required
-              value={values.startsAt}
-              error={submitted && !Number.isFinite(startsAt.getTime())}
-              helperText={
-                submitted && !Number.isFinite(startsAt.getTime())
-                  ? 'Choose when the event starts.'
-                  : undefined
+              select
+              label="Event type"
+              value={values.eventType}
+              onChange={(e) =>
+                setValues((current) => ({ ...current, eventType: Number(e.target.value) }))
               }
-              onChange={(e) => setValues((current) => ({ ...current, startsAt: e.target.value }))}
-              slotProps={{ inputLabel: { shrink: true } }}
-              fullWidth
-            />
-            <TextField
-              label="Ends"
-              name="endsAt"
-              type="datetime-local"
-              required
-              value={values.endsAt}
-              error={submitted && !hasValidSchedule}
-              helperText={
-                submitted && !hasValidSchedule
-                  ? 'Choose an end time after the start time.'
-                  : undefined
-              }
-              onChange={(e) => setValues((current) => ({ ...current, endsAt: e.target.value }))}
-              slotProps={{ inputLabel: { shrink: true } }}
-              fullWidth
-            />
-          </Stack>
-          <TextField
-            label="Location or meeting point"
-            name="eventLocation"
-            required
-            value={values.location}
-            error={submitted && !values.location.trim()}
-            helperText={
-              submitted && !values.location.trim()
-                ? 'Enter the campus location or online meeting point.'
-                : undefined
-            }
-            onChange={(e) => setValues((current) => ({ ...current, location: e.target.value }))}
-          />
-          <TextField
-            label="Capacity"
-            name="capacity"
-            type="number"
-            required
-            value={values.capacity}
-            error={submitted && !hasValidCapacity}
-            slotProps={{ htmlInput: { min: minimumCapacity, max: 5000 } }}
-            helperText={
-              submitted && !hasValidCapacity
-                ? `Enter a capacity from ${minimumCapacity.toLocaleString('en-IN')} to 5,000.`
-                : event?.reservedCount
-                ? `${event.reservedCount} places are already reserved.`
-                : undefined
-            }
-            onChange={(e) =>
-              setValues((current) => ({ ...current, capacity: Number(e.target.value) }))
-            }
-          />
-          <Autocomplete<AdmissionCrmStaffLookupDto>
-            options={staffOptions}
-            value={selectedOwner}
-            loading={staffQuery.isFetching}
-            onChange={(_event, value) =>
-              setValues((current) => ({ ...current, ownerUserId: value?.id }))
-            }
-            getOptionLabel={(option) => option.displayName}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            renderInput={(params) => (
+            >
+              {eventTypeOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                {...params}
-                label="Event owner"
-                helperText="Optional staff owner for event coordination."
-              />
-            )}
-          />
-          <TextField
-            label="Instructions for families"
-            name="familyInstructions"
-            multiline
-            minRows={3}
-            value={values.instructions}
-            onChange={(e) => setValues((current) => ({ ...current, instructions: e.target.value }))}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={Boolean(values.allowFamilySelfScheduling)}
-                onChange={(eventChange) =>
-                  setValues((current) => ({
-                    ...current,
-                    allowFamilySelfScheduling: eventChange.target.checked,
-                  }))
+                label="Starts"
+                name="startsAt"
+                type="datetime-local"
+                required
+                value={values.startsAt}
+                error={submitted && !Number.isFinite(startsAt.getTime())}
+                helperText={
+                  submitted && !Number.isFinite(startsAt.getTime())
+                    ? 'Choose when the event starts.'
+                    : undefined
                 }
+                onChange={(e) => setValues((current) => ({ ...current, startsAt: e.target.value }))}
+                slotProps={{ inputLabel: { shrink: true } }}
+                fullWidth
               />
-            }
-            label="Allow verified families to reserve this event"
-          />
-          <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
-            Families see this event only after it is published and they verify their admission
-            access. Capacity limits still apply.
-          </Typography>
+              <TextField
+                label="Ends"
+                name="endsAt"
+                type="datetime-local"
+                required
+                value={values.endsAt}
+                error={submitted && !hasValidSchedule}
+                helperText={
+                  submitted && !hasValidSchedule
+                    ? 'Choose an end time after the start time.'
+                    : undefined
+                }
+                onChange={(e) => setValues((current) => ({ ...current, endsAt: e.target.value }))}
+                slotProps={{ inputLabel: { shrink: true } }}
+                fullWidth
+              />
+            </Stack>
+            <TextField
+              label="Location or meeting point"
+              name="eventLocation"
+              required
+              value={values.location}
+              error={submitted && !values.location.trim()}
+              helperText={
+                submitted && !values.location.trim()
+                  ? 'Enter the campus location or online meeting point.'
+                  : undefined
+              }
+              onChange={(e) => setValues((current) => ({ ...current, location: e.target.value }))}
+            />
+            <TextField
+              label="Capacity"
+              name="capacity"
+              type="number"
+              required
+              value={values.capacity}
+              error={submitted && !hasValidCapacity}
+              slotProps={{ htmlInput: { min: minimumCapacity, max: 5000 } }}
+              helperText={
+                submitted && !hasValidCapacity
+                  ? `Enter a capacity from ${minimumCapacity.toLocaleString('en-IN')} to 5,000.`
+                  : event?.reservedCount
+                    ? `${event.reservedCount} places are already reserved.`
+                    : undefined
+              }
+              onChange={(e) =>
+                setValues((current) => ({ ...current, capacity: Number(e.target.value) }))
+              }
+            />
+            <Autocomplete<AdmissionCrmStaffLookupDto>
+              options={staffOptions}
+              value={selectedOwner}
+              loading={staffQuery.isFetching}
+              onChange={(_event, value) =>
+                setValues((current) => ({ ...current, ownerUserId: value?.id }))
+              }
+              getOptionLabel={(option) => option.displayName}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Event owner"
+                  helperText="Optional staff owner for event coordination."
+                />
+              )}
+            />
+            <TextField
+              label="Instructions for families"
+              name="familyInstructions"
+              multiline
+              minRows={3}
+              value={values.instructions}
+              onChange={(e) =>
+                setValues((current) => ({ ...current, instructions: e.target.value }))
+              }
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(values.allowFamilySelfScheduling)}
+                  onChange={(eventChange) =>
+                    setValues((current) => ({
+                      ...current,
+                      allowFamilySelfScheduling: eventChange.target.checked,
+                    }))
+                  }
+                />
+              }
+              label="Allow verified families to reserve this event"
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+              Families see this event only after it is published and they verify their admission
+              access. Capacity limits still apply.
+            </Typography>
           </Stack>
         </DialogContent>
         <DialogActions>

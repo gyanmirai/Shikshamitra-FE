@@ -4,18 +4,13 @@ import type { RootState } from 'src/redux/store';
 import type {
   AdmissionCrmConfigurationClonePreviewDto,
   AdmissionCrmConfigurationReferenceFamilyDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import {
-  Search,
-  ContentCopy,
-  FactCheckOutlined,
-  AccountTreeOutlined,
-} from '@mui/icons-material';
+import { Search, ContentCopy, FactCheckOutlined, AccountTreeOutlined } from '@mui/icons-material';
 import {
   Chip,
   Alert,
@@ -37,13 +32,14 @@ import {
   DialogContent,
   TableContainer,
 } from '@mui/material';
+import { AdmissionCrmConfigurationReferenceKind } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
+
 import {
-  AdmissionCrmConfigurationReferenceKind,
   useConfirmAdmissionCrmConfigurationCloneMutation,
   usePreviewAdmissionCrmConfigurationCloneMutation,
   usePreviewAdmissionCrmConfigurationImpactMutation,
   useLazyGetAdmissionCrmConfigurationReferencesQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-api';
 
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 
@@ -126,14 +122,13 @@ export default function AdmissionsConfigurationSafety() {
   const academicYears = useSelector(
     (state: RootState) => state.globalState.academicYears || []
   ) as AcademicYearOption[];
-  const [referenceKind, setReferenceKind] = useState(
-    AdmissionCrmConfigurationReferenceKind.Stage
-  );
+  const [referenceKind, setReferenceKind] = useState(AdmissionCrmConfigurationReferenceKind.Stage);
   const [referenceCode, setReferenceCode] = useState('');
   const [sourceAcademicYearId, setSourceAcademicYearId] = useState('');
   const [targetAcademicYearId, setTargetAcademicYearId] = useState('');
-  const [clonePreview, setClonePreview] =
-    useState<AdmissionCrmConfigurationClonePreviewDto | null>(null);
+  const [clonePreview, setClonePreview] = useState<AdmissionCrmConfigurationClonePreviewDto | null>(
+    null
+  );
   const [cloneResultMessage, setCloneResultMessage] = useState('');
   const [getReferences, referencesQuery] = useLazyGetAdmissionCrmConfigurationReferencesQuery();
   const [previewImpact, impactState] = usePreviewAdmissionCrmConfigurationImpactMutation();
@@ -149,10 +144,7 @@ export default function AdmissionsConfigurationSafety() {
     if (!academicYearId) return;
     setSourceAcademicYearId((current) => current || academicYearId);
     setTargetAcademicYearId(
-      (current) =>
-        current ||
-        academicYears.find((year) => year.id !== academicYearId)?.id ||
-        ''
+      (current) => current || academicYears.find((year) => year.id !== academicYearId)?.id || ''
     );
   }, [academicYearId, academicYears]);
 
@@ -377,9 +369,7 @@ export default function AdmissionsConfigurationSafety() {
                 setTargetAcademicYearId(event.target.value);
                 setClonePreview(null);
               }}
-              error={
-                Boolean(targetAcademicYearId) && targetAcademicYearId === sourceAcademicYearId
-              }
+              error={Boolean(targetAcademicYearId) && targetAcademicYearId === sourceAcademicYearId}
               helperText={
                 targetAcademicYearId === sourceAcademicYearId
                   ? 'Source and target academic years must be different.'

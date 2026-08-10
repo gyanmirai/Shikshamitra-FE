@@ -1,5 +1,5 @@
 import { it, expect, describe } from 'vitest';
-import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
 import {
   formatEvidenceCode,
@@ -14,9 +14,9 @@ describe('applicant route requirements', () => {
     expect(
       getApplicantRouteFields(AdmissionCrmRouteType.SiblingPriority).map((field) => field.key)
     ).toEqual(['relatedStudentId']);
-    expect(getApplicantRouteFields(AdmissionCrmRouteType.Lateral).map((field) => field.key)).toEqual(
-      ['previousSchool', 'previousBoard', 'lastClass']
-    );
+    expect(
+      getApplicantRouteFields(AdmissionCrmRouteType.Lateral).map((field) => field.key)
+    ).toEqual(['previousSchool', 'previousBoard', 'lastClass']);
     expect(getApplicantRouteFields(AdmissionCrmRouteType.Fresh)).toEqual([]);
   });
 

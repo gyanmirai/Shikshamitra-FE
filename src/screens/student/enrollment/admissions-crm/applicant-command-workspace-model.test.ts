@@ -1,5 +1,5 @@
 import { it, expect, describe } from 'vitest';
-import { AdmissionCrmApplicantStepKey } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmApplicantStepKey } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import {
   canOpenJourneyStep,

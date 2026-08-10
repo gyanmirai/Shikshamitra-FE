@@ -1,7 +1,7 @@
 'use client';
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { AdmissionCrmMessageTemplateDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmMessageTemplateDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -26,11 +26,14 @@ import {
 import {
   AdmissionCrmMessageChannel,
   AdmissionCrmMessageTemplateStatus,
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import {
   useGetAdmissionCrmMessageTemplatesQuery,
   useCreateAdmissionCrmMessageTemplateMutation,
   useUpdateAdmissionCrmMessageTemplateMutation,
   useUpdateAdmissionCrmMessageTemplateStatusMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-api';
 
 import { getAdmissionCrmMessageChannelLabel } from '../admissions-crm/admissions-crm-utils';
 import {

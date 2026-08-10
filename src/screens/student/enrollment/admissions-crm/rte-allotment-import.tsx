@@ -13,12 +13,15 @@ import { FactCheck, CheckCircle, CloudUpload } from '@mui/icons-material';
 import { Chip, Alert, Paper, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmRouteDefinitionStatus,
-  useGetAdmissionCrmRouteDefinitionsQuery,
   type AdmissionCrmRteAllotmentImportRowDto,
+  type AdmissionCrmRteAllotmentImportResultDto,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
+  useGetAdmissionCrmRouteDefinitionsQuery,
   useImportAdmissionCrmRteAllotmentsMutation,
   usePreviewAdmissionCrmRteAllotmentsMutation,
-  type AdmissionCrmRteAllotmentImportResultDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 

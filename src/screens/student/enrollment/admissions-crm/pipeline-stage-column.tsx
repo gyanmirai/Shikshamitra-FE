@@ -4,11 +4,11 @@ import type {
   AdmissionCrmLeadDto,
   AdmissionCrmLeadListParams,
   AdmissionCrmPipelineColumnKey,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { useRef, useState, useEffect } from 'react';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import { useGetAdmissionCrmLeadsQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { useGetAdmissionCrmLeadsQuery } from 'src/redux/student/admissions-crm/core-leads-api';
 import {
   Chip,
   Alert,

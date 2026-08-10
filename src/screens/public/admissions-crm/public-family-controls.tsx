@@ -74,7 +74,8 @@ const copy = {
     saved: 'સંદેશાવ્યવહારની પસંદગીઓ સાચવાઈ.',
     saveError: 'પસંદગીઓ સાચવી શકાઈ નથી. કૃપા કરીને ફરી પ્રયાસ કરો.',
     withdrawTitle: 'આ અરજી પાછી ખેંચો',
-    withdrawDescription: 'તમારો પરિવાર હવે આ અરજી પર વિચાર ન કરાવવા માગતો હોય ત્યારે જ આ વિકલ્પ વાપરો.',
+    withdrawDescription:
+      'તમારો પરિવાર હવે આ અરજી પર વિચાર ન કરાવવા માગતો હોય ત્યારે જ આ વિકલ્પ વાપરો.',
     startWithdraw: 'અરજી પાછી ખેંચવાનું શરૂ કરો',
     cancel: 'અરજી ચાલુ રાખો',
     reason: 'અરજી પાછી ખેંચવાનું કારણ',
@@ -155,7 +156,11 @@ export default function PublicFamilyControls({
         }
       );
       if (!response.ok) {
-        const problem = await readPublicAdmissionStatusProblem(response, labels.saveError, language);
+        const problem = await readPublicAdmissionStatusProblem(
+          response,
+          labels.saveError,
+          language
+        );
         throw createPublicAdmissionSafeError(problem.message);
       }
       const updated = (await response.json()) as UpdatedApplicantStatus;
@@ -227,7 +232,9 @@ export default function PublicFamilyControls({
             <Switch
               checked={draft.whatsApp}
               disabled={!draft.hasPhoneContact || isSaving}
-              onChange={(event) => setDraft((current) => ({ ...current, whatsApp: event.target.checked }))}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, whatsApp: event.target.checked }))
+              }
             />
           }
           label={labels.whatsApp}
@@ -237,7 +244,9 @@ export default function PublicFamilyControls({
             <Switch
               checked={draft.sms}
               disabled={!draft.hasPhoneContact || isSaving}
-              onChange={(event) => setDraft((current) => ({ ...current, sms: event.target.checked }))}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, sms: event.target.checked }))
+              }
             />
           }
           label={labels.sms}
@@ -247,7 +256,9 @@ export default function PublicFamilyControls({
             <Switch
               checked={draft.email}
               disabled={!draft.hasEmailContact || isSaving}
-              onChange={(event) => setDraft((current) => ({ ...current, email: event.target.checked }))}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, email: event.target.checked }))
+              }
             />
           }
           label={labels.email}
@@ -277,7 +288,12 @@ export default function PublicFamilyControls({
             </Typography>
           </Box>
           {!withdrawOpen ? (
-            <Button color="error" variant="text" onClick={() => setWithdrawOpen(true)} sx={{ alignSelf: 'flex-start' }}>
+            <Button
+              color="error"
+              variant="text"
+              onClick={() => setWithdrawOpen(true)}
+              sx={{ alignSelf: 'flex-start' }}
+            >
               {labels.startWithdraw}
             </Button>
           ) : (
@@ -299,7 +315,12 @@ export default function PublicFamilyControls({
                 fullWidth
               />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <LoadingButton color="error" variant="contained" loading={isWithdrawing} onClick={withdraw}>
+                <LoadingButton
+                  color="error"
+                  variant="contained"
+                  loading={isWithdrawing}
+                  onClick={withdraw}
+                >
                   {labels.confirm}
                 </LoadingButton>
                 <Button

@@ -1,4 +1,4 @@
-import type { AdmissionCrmLeadScoringRulesDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmLeadScoringRulesDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 export type LeadScoringPreset = {
   id: 'balanced' | 'family-readiness' | 'digital-intent';

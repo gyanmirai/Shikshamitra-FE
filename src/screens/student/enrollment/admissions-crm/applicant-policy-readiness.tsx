@@ -8,13 +8,16 @@ import { Chip, Alert, Stack, MenuItem, TextField, Typography } from '@mui/materi
 import {
   AdmissionCrmPolicyExceptionStatus,
   AdmissionCrmPolicyEvaluationStatus,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
   useGetAdmissionCrmPolicyPacksQuery,
   useGetAdmissionCrmPolicyAdoptionsQuery,
   useGetAdmissionCrmPolicyReadinessQuery,
   useEvaluateAdmissionCrmPolicyRuleMutation,
   useDecideAdmissionCrmPolicyExceptionMutation,
   useRequestAdmissionCrmPolicyExceptionMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 type Props = { leadId: string; academicYearId: string };
 

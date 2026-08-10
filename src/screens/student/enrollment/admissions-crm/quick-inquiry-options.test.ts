@@ -1,8 +1,7 @@
 import { it, expect, describe } from 'vitest';
-import {
-  AdmissionCrmRouteType,
-  AdmissionInquiryChannel,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { AdmissionInquiryChannel } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import {
   mapQuickInquiryOptions,

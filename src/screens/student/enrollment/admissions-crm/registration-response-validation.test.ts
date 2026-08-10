@@ -1,8 +1,7 @@
 import { it, expect, describe } from 'vitest';
-import {
-  AdmissionCrmFormFieldType,
-  type AdmissionCrmRegistrationSectionDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import type { AdmissionCrmRegistrationSectionDto } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import {
   getEffectiveRegistrationValue,

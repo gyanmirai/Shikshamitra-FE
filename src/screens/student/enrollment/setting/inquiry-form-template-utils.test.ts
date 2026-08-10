@@ -2,8 +2,9 @@ import { it, expect, describe } from 'vitest';
 import {
   AdmissionInquiryChannel,
   AdmissionCrmFormFieldType,
-  type AdmissionCrmFormTemplateDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import type { AdmissionCrmFormTemplateDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import {
   isInquiryFormPreviewFieldVisible,

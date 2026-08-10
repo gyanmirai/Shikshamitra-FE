@@ -1,18 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { it, expect, describe } from 'vitest';
+import { readEnrollmentSource } from '../enrollment-source-contract';
 
-const source = fs.readFileSync(
-  path.join(
-    process.cwd(),
-    'src',
-    'screens',
-    'student',
-    'enrollment',
-    'admissions-crm',
-    'pipeline-workspace.tsx'
-  ),
-  'utf8'
+const source = readEnrollmentSource(
+  'src',
+  'screens',
+  'student',
+  'enrollment',
+  'admissions-crm',
+  'pipeline-workspace.tsx'
 );
 
 describe('Pipeline Board data revision', () => {

@@ -1,4 +1,4 @@
-import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -19,15 +19,20 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('src/redux/student/admissions-crm/admissions-crm-api', async (importOriginal) => {
-  const original =
-    await importOriginal<typeof import('src/redux/student/admissions-crm/admissions-crm-api')>();
-  return {
-    ...original,
-    useGetAdmissionCrmExamSlotsQuery: () => ({ ...mocks.slots, refetch: mocks.refetch }),
-    useScheduleAdmissionCrmEntranceExamMutation: () => [mocks.schedule, { isLoading: false }],
-  };
-});
+vi.mock(
+  'src/redux/student/admissions-crm/communication-exams-events-api',
+  async (importOriginal) => {
+    const original =
+      await importOriginal<
+        typeof import('src/redux/student/admissions-crm/communication-exams-events-api')
+      >();
+    return {
+      ...original,
+      useGetAdmissionCrmExamSlotsQuery: () => ({ ...mocks.slots, refetch: mocks.refetch }),
+      useScheduleAdmissionCrmEntranceExamMutation: () => [mocks.schedule, { isLoading: false }],
+    };
+  }
+);
 
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {

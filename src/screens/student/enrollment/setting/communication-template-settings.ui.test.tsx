@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
-import type { AdmissionCrmMessageTemplateDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmMessageTemplateDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import {
   AdmissionCrmMessageChannel,
   AdmissionCrmMessageTemplateStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { CommunicationTemplateSettings } from './communication-template-settings';
 
@@ -17,19 +17,24 @@ const apiMocks = vi.hoisted(() => ({
   statusMutation: vi.fn(),
 }));
 
-vi.mock('src/redux/student/admissions-crm/admissions-crm-api', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('src/redux/student/admissions-crm/admissions-crm-api')>();
+vi.mock(
+  'src/redux/student/admissions-crm/communication-exams-events-api',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('src/redux/student/admissions-crm/communication-exams-events-api')
+      >();
 
-  return {
-    ...actual,
-    useGetAdmissionCrmMessageTemplatesQuery: (...args: unknown[]) =>
-      apiMocks.templatesQuery(...args),
-    useCreateAdmissionCrmMessageTemplateMutation: () => apiMocks.createMutation(),
-    useUpdateAdmissionCrmMessageTemplateMutation: () => apiMocks.updateMutation(),
-    useUpdateAdmissionCrmMessageTemplateStatusMutation: () => apiMocks.statusMutation(),
-  };
-});
+    return {
+      ...actual,
+      useGetAdmissionCrmMessageTemplatesQuery: (...args: unknown[]) =>
+        apiMocks.templatesQuery(...args),
+      useCreateAdmissionCrmMessageTemplateMutation: () => apiMocks.createMutation(),
+      useUpdateAdmissionCrmMessageTemplateMutation: () => apiMocks.updateMutation(),
+      useUpdateAdmissionCrmMessageTemplateStatusMutation: () => apiMocks.statusMutation(),
+    };
+  }
+);
 
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: vi.fn(), error: vi.fn() },

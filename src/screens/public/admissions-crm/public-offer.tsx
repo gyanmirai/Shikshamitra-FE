@@ -7,7 +7,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import {
   AdmissionCrmSeatOfferType,
   AdmissionCrmSeatOfferStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
 import {
   Box,
   Chip,

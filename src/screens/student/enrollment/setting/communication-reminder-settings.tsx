@@ -3,9 +3,10 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmJourneyRuleDto,
-  AdmissionCrmMessageTemplateDto,
   AdmissionCrmConfigurationImpactPreviewDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
+
+import type { AdmissionCrmMessageTemplateDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -30,14 +31,17 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import { AdmissionCrmJourneyTrigger } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import { AdmissionCrmMessageTemplateStatus } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import { useGetAdmissionCrmMessageTemplatesQuery } from 'src/redux/student/admissions-crm/communication-exams-events-api';
+
 import {
-  AdmissionCrmJourneyTrigger,
-  AdmissionCrmMessageTemplateStatus,
-  useGetAdmissionCrmMessageTemplatesQuery,
   useGetAdmissionCrmCycleConfigurationQuery,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   usePreviewAdmissionCrmConfigurationImpactMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-api';
 
 import { buildAdmissionCrmCycleUpdate } from './admission-crm-cycle-update';
 import { attachAdmissionCrmImpactFingerprint } from './admissions-crm-configuration-utils';

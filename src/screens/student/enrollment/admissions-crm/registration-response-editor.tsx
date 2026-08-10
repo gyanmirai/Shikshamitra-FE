@@ -4,7 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type {
   AdmissionCrmRegistrationFieldDto,
   AdmissionCrmRegistrationApplicationDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
@@ -26,12 +26,14 @@ import {
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import { AdmissionCrmRegistrationStatus } from 'src/redux/student/admissions-crm/registration-documents-contracts';
+
 import {
-  AdmissionCrmFormFieldType,
-  AdmissionCrmRegistrationStatus,
   useSaveAdmissionCrmStaffRegistrationResponsesMutation,
   useSubmitAdmissionCrmStaffRegistrationResponsesMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-api';
 
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
 import {
@@ -116,12 +118,7 @@ export function RegistrationResponseEditor({ registration }: Props) {
   );
 
   const completionPercentage = useMemo(
-    () =>
-      calculateRegistrationCompletion(
-        registration.sections,
-        responses,
-        registration.prefill
-      ),
+    () => calculateRegistrationCompletion(registration.sections, responses, registration.prefill),
     [registration.prefill, registration.sections, responses]
   );
 
@@ -129,12 +126,7 @@ export function RegistrationResponseEditor({ registration }: Props) {
     getEffectiveRegistrationValue(field, responses, registration.prefill);
 
   const isVisible = (field: AdmissionCrmRegistrationFieldDto) =>
-    isRegistrationFieldVisible(
-      field,
-      allVisibleSectionFields,
-      responses,
-      registration.prefill
-    );
+    isRegistrationFieldVisible(field, allVisibleSectionFields, responses, registration.prefill);
 
   const updateResponse = (field: AdmissionCrmRegistrationFieldDto, value: unknown) => {
     setResponses((current) => ({ ...current, [field.key]: value }));

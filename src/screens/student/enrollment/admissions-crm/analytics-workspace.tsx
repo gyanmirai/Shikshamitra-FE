@@ -27,7 +27,7 @@ import {
   useGetAdmissionCrmAdmissionReportQuery,
   useGetAdmissionCrmAnalyticsSummaryQuery,
   useGetAdmissionCrmAdvisoryForecastQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/operations-governance-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
@@ -194,8 +194,8 @@ export function AnalyticsWorkspace() {
   const academicYearsQuery = useGetYearQuery(undefined);
   const [downloadExport, downloadExportState] = useDownloadAdmissionCrmExportMutation();
   const academicYears =
-    ((academicYearsQuery.data as { items?: Array<{ id: string; name: string }> } | undefined)
-      ?.items ?? []);
+    (academicYearsQuery.data as { items?: Array<{ id: string; name: string }> } | undefined)
+      ?.items ?? [];
   const comparisonYearName = academicYears.find((year) => year.id === compareCycle)?.name;
   const report = reportQuery.data;
   const isInitialReportLoading = reportQuery.isLoading && !report;

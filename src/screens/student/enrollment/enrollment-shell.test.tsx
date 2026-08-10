@@ -31,9 +31,7 @@ describe('EnrollmentShell', () => {
 
     fireEvent.click(screen.getByRole('link', { name: 'Skip to Enrollment workspace' }));
 
-    expect(document.activeElement).toBe(
-      document.getElementById('student-enrollment-content')
-    );
+    expect(document.activeElement).toBe(document.getElementById('student-enrollment-content'));
     expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
   });
 });

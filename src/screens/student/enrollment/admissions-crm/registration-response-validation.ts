@@ -1,9 +1,9 @@
 import type {
   AdmissionCrmRegistrationFieldDto,
   AdmissionCrmRegistrationSectionDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
-import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 export type RegistrationFieldErrors = Record<string, string>;
 
@@ -24,9 +24,7 @@ export const getEffectiveRegistrationValue = (
   prefill: Record<string, unknown>
 ) => {
   if (Object.prototype.hasOwnProperty.call(responses, field.key)) return responses[field.key];
-  return field.systemField
-    ? getCaseInsensitiveRecordValue(prefill, field.systemField) ?? ''
-    : '';
+  return field.systemField ? (getCaseInsensitiveRecordValue(prefill, field.systemField) ?? '') : '';
 };
 
 const valueText = (value: unknown) => {
@@ -65,13 +63,7 @@ export const isRegistrationFieldVisible = (
   prefill: Record<string, unknown>
 ) =>
   !field.visibleWhenFieldKey ||
-  matchesCondition(
-    field.visibleWhenFieldKey,
-    field.visibleWhenValue,
-    fields,
-    responses,
-    prefill
-  );
+  matchesCondition(field.visibleWhenFieldKey, field.visibleWhenValue, fields, responses, prefill);
 
 const getFieldError = (field: AdmissionCrmRegistrationFieldDto, value: unknown) => {
   const text = valueText(value);
@@ -84,7 +76,8 @@ const getFieldError = (field: AdmissionCrmRegistrationFieldDto, value: unknown) 
   }
   if (field.validationPattern) {
     try {
-      if (!new RegExp(field.validationPattern).test(text)) return `${field.label} has an invalid format.`;
+      if (!new RegExp(field.validationPattern).test(text))
+        return `${field.label} has an invalid format.`;
     } catch {
       // A malformed server-configured expression remains protected by backend validation.
     }
@@ -124,9 +117,7 @@ const getFieldError = (field: AdmissionCrmRegistrationFieldDto, value: unknown) 
     (!Array.isArray(value) ||
       value.some(
         (selection) =>
-          !field.options.some(
-            (option) => option.toLowerCase() === String(selection).toLowerCase()
-          )
+          !field.options.some((option) => option.toLowerCase() === String(selection).toLowerCase())
       ))
   ) {
     return `Select valid ${field.label.toLowerCase()} options.`;
@@ -140,10 +131,10 @@ const getVisibleFields = (
   responses: Record<string, unknown>,
   prefill: Record<string, unknown>
 ) => {
-  const fields = sections.filter((section) => section.parentVisible).flatMap((section) => section.fields);
-  return fields.filter((field) =>
-    isRegistrationFieldVisible(field, fields, responses, prefill)
-  );
+  const fields = sections
+    .filter((section) => section.parentVisible)
+    .flatMap((section) => section.fields);
+  return fields.filter((field) => isRegistrationFieldVisible(field, fields, responses, prefill));
 };
 
 export const validateRegistrationResponses = (
@@ -151,7 +142,9 @@ export const validateRegistrationResponses = (
   responses: Record<string, unknown>,
   prefill: Record<string, unknown>
 ) => {
-  const allFields = sections.filter((section) => section.parentVisible).flatMap((section) => section.fields);
+  const allFields = sections
+    .filter((section) => section.parentVisible)
+    .flatMap((section) => section.fields);
 
   return getVisibleFields(sections, responses, prefill).reduce<RegistrationFieldErrors>(
     (errors, field) => {

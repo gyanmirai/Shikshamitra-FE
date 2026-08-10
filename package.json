@@ -17,6 +17,7 @@
     "fm:fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "docs:check": "node scripts/docs/validate-docs.mjs --all-modules",
     "docs:hr:check": "node scripts/docs/validate-hr-docs.mjs",
+    "enrollment:modularity:check": "node scripts/enrollment/check-enrollment-modularity.mjs",
     "rm:all": "rm -rf node_modules .next out dist build",
     "re:start": "yarn rm:all && yarn install && yarn dev",
     "re:build": "yarn rm:all && yarn install && yarn build",

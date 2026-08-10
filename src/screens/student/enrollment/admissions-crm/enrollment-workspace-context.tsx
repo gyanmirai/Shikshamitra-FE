@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
-import type { AdmissionCrmMyWorkItemDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmMyWorkItemDto } from 'src/redux/student/admissions-crm/operations-governance-contracts';
 
 import { useSelector } from 'react-redux';
 import { studentPaths } from 'src/constants/student-menu';

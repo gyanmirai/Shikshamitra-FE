@@ -1,12 +1,12 @@
 import type {
   AdmissionCrmAdmissionYearSetupDto,
   UpdateAdmissionCrmAdmissionYearSetupDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import {
   AdmissionCrmRouteType,
   AdmissionCrmPlacementTiming,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
 
 export type AdmissionYearSetupStep = 0 | 1 | 2 | 3;
 export type AdmissionYearSetupForm = UpdateAdmissionCrmAdmissionYearSetupDto;

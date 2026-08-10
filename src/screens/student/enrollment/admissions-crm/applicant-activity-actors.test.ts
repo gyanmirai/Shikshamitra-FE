@@ -1,9 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import {
-  getActivityActorLabel,
-  buildActivityActorLookupIds,
-} from './applicant-activity-actors';
+import { getActivityActorLabel, buildActivityActorLookupIds } from './applicant-activity-actors';
 
 describe('Applicant activity actors', () => {
   it('builds one stable lookup for distinct staff actors', () => {
@@ -24,8 +21,6 @@ describe('Applicant activity actors', () => {
     expect(getActivityActorLabel(null, staffById, false)).toBe('System');
     expect(getActivityActorLabel('staff-a', staffById, false)).toBe('Aarav Shah | EMP-102');
     expect(getActivityActorLabel('staff-b', staffById, true)).toBe('Loading staff…');
-    expect(getActivityActorLabel('staff-b', staffById, false)).toBe(
-      'Staff identity unavailable'
-    );
+    expect(getActivityActorLabel('staff-b', staffById, false)).toBe('Staff identity unavailable');
   });
 });

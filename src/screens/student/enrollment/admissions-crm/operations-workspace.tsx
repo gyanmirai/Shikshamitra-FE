@@ -1,6 +1,6 @@
 'use client';
 
-import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { ApplicantWorklistWorkspace } from './applicant-worklist-workspace';
 

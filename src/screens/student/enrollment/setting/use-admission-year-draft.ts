@@ -1,14 +1,15 @@
 import type {
   AdmissionCrmAdmissionYearSetupDto,
   UpdateAdmissionCrmAdmissionYearSetupDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
+
+import { AdmissionCrmAdmissionYearSetupStatus } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import {
-  AdmissionCrmAdmissionYearSetupStatus,
   useGetAdmissionCrmAdmissionYearVersionsQuery,
   useUpdateAdmissionCrmAdmissionYearDraftMutation,
   useCreateAdmissionCrmAdmissionYearDraftMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-api';
 
 const toUpdateBody = (
   setup: AdmissionCrmAdmissionYearSetupDto,

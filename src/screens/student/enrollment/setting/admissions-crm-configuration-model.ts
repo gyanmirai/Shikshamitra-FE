@@ -2,15 +2,21 @@ import type {
   AdmissionInquiryStage,
   AdmissionInquiryChannel,
   AdmissionCrmFormFieldDto,
+  AdmissionCrmApplicantChecklistItemDto,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import type {
   AdmissionCrmJourneyRuleDto,
-  AdmissionCrmMessageChannel,
   AdmissionCrmMeritRankingMode,
   AdmissionCrmChannelSettingDto,
-  AdmissionCrmExamReadinessField,
   AdmissionCrmLeadScoringRulesDto,
   AdmissionCrmLeadRoutingSettingsDto,
-  AdmissionCrmApplicantChecklistItemDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
+
+import type {
+  AdmissionCrmMessageChannel,
+  AdmissionCrmExamReadinessField,
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 export type AdmissionCrmTemplateForm = {
   templateName: string;

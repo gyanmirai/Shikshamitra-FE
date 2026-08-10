@@ -15,16 +15,21 @@ import {
   Typography,
   LinearProgress,
 } from '@mui/material';
+import { AdmissionCrmIdentifierType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { AdmissionCrmNumberSeriesStatus } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
 import {
-  AdmissionCrmIdentifierType,
-  AdmissionCrmNumberSeriesStatus,
   useGetAdmissionCrmNumberSeriesQuery,
-  useGetAdmissionCrmPlacementOptionsQuery,
   useCreateAdmissionCrmNumberSeriesMutation,
   useSubmitAdmissionCrmNumberSeriesMutation,
   usePublishAdmissionCrmNumberSeriesMutation,
+} from 'src/redux/student/admissions-crm/core-leads-api';
+
+import {
+  useGetAdmissionCrmPlacementOptionsQuery,
   useGetAdmissionCrmIdentifierGovernanceQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { EnrollmentSettingsEditorDrawer } from './enrollment-settings-editor-drawer';

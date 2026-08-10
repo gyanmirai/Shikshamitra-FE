@@ -1,8 +1,7 @@
 import { it, expect, describe } from 'vitest';
-import {
-  AdmissionCrmRouteType,
-  AdmissionCrmRouteEligibilityStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { AdmissionCrmRouteEligibilityStatus } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import {
   formatPublicNumber,

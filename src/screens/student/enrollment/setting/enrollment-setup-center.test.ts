@@ -1,4 +1,4 @@
-import type { AdmissionCrmSetupStatusDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmSetupStatusDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import { createElement } from 'react';
 import { render, screen } from '@testing-library/react';
@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   enrollmentWorkspace: vi.fn(),
 }));
 
-vi.mock('src/redux/student/admissions-crm/admissions-crm-api', () => ({
+vi.mock('src/redux/student/admissions-crm/setup-playbooks-api', () => ({
   useGetAdmissionCrmSetupStatusQuery: (...args: unknown[]) => mocks.setupStatusQuery(...args),
 }));
 

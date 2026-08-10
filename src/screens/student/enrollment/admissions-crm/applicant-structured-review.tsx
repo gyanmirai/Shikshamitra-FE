@@ -21,16 +21,23 @@ import {
 } from '@mui/material';
 import {
   useGetAdmissionCrmStaffQuery,
-  AdmissionCrmReviewRecommendation,
+  useAssignAdmissionCrmReviewerMutation,
+  useDeclareAdmissionCrmReviewConflictMutation,
+} from 'src/redux/student/admissions-crm/core-leads-api';
+
+import { AdmissionCrmReviewRecommendation } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import {
   AdmissionCrmStructuredReviewStatus,
   AdmissionCrmReviewAssignmentStatus,
-  useAssignAdmissionCrmReviewerMutation,
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import {
   useGetAdmissionCrmReviewConfigurationQuery,
   useStartAdmissionCrmStructuredReviewMutation,
-  useDeclareAdmissionCrmReviewConflictMutation,
   useSubmitAdmissionCrmStructuredReviewMutation,
   useGetAdmissionCrmStructuredReviewByLeadQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-api';
 
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 
@@ -63,7 +70,11 @@ const tomorrow = () => {
 
 const readError = (error: unknown) => {
   const response = error as { data?: { error?: { message?: string }; detail?: string } };
-  return response.data?.error?.message || response.data?.detail || 'The review action could not be completed.';
+  return (
+    response.data?.error?.message ||
+    response.data?.detail ||
+    'The review action could not be completed.'
+  );
 };
 
 export function ApplicantStructuredReview({
@@ -78,7 +89,10 @@ export function ApplicantStructuredReview({
     permissions,
     admissionCrmActionPermissions.viewStructuredReviews
   );
-  const canAssign = hasGrantedPermission(permissions, admissionCrmActionPermissions.assignReviewers);
+  const canAssign = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.assignReviewers
+  );
   const canSubmit = hasGrantedPermission(permissions, admissionCrmActionPermissions.submitReviews);
   const configurationQuery = useGetAdmissionCrmReviewConfigurationQuery(
     { academicYearId },
@@ -223,7 +237,8 @@ export function ApplicantStructuredReview({
                 ) : null}
               </Alert>
             ) : null}
-            {assignment.status === AdmissionCrmReviewAssignmentStatus.Recused && assignment.conflictReason ? (
+            {assignment.status === AdmissionCrmReviewAssignmentStatus.Recused &&
+            assignment.conflictReason ? (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 Conflict recorded: {assignment.conflictReason}
               </Typography>
@@ -283,7 +298,9 @@ export function ApplicantStructuredReview({
           </Box>
         ) : null}
 
-        {currentAssignment && review.requireConflictDeclaration && currentAssignment.hasDeclaredConflict == null ? (
+        {currentAssignment &&
+        review.requireConflictDeclaration &&
+        currentAssignment.hasDeclaredConflict == null ? (
           <Stack spacing={1}>
             <Typography variant="subtitle2">Conflict-of-interest declaration</Typography>
             <TextField
@@ -354,7 +371,8 @@ export function ApplicantStructuredReview({
                   onChange={(event) =>
                     setScores({
                       ...scores,
-                      [criterion.key]: event.target.value === '' ? null : Number(event.target.value),
+                      [criterion.key]:
+                        event.target.value === '' ? null : Number(event.target.value),
                     })
                   }
                 />

@@ -1,12 +1,12 @@
 import type {
   AdmissionCrmApplicantStepDto,
   AdmissionCrmApplicantProgressDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import {
   AdmissionCrmApplicantStepKey,
   AdmissionCrmApplicantStepStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 export type ApplicantJourneyStepId =
   'inquiry' | 'exam' | 'registration' | 'finance' | 'placement' | 'activation';

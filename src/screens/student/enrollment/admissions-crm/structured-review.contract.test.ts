@@ -1,9 +1,7 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { it, expect, describe } from 'vitest';
+import { readEnrollmentSource } from '../enrollment-source-contract';
 
-const read = (relativePath: string) =>
-  fs.readFileSync(path.resolve(process.cwd(), relativePath), 'utf8');
+const read = (relativePath: string) => readEnrollmentSource(...relativePath.split('/'));
 
 describe('structured admissions review contract', () => {
   it('keeps configuration optional and exposes rubric and conflict controls', () => {
@@ -17,7 +15,7 @@ describe('structured admissions review contract', () => {
   });
 
   it('uses the canonical review API routes and confidentiality language', () => {
-    const api = read('src/redux/student/admissions-crm/admissions-crm-api.ts');
+    const api = read('src/redux/student/admissions-crm/communication-exams-events-api.ts');
     const applicant = read(
       'src/screens/student/enrollment/admissions-crm/applicant-structured-review.tsx'
     );
@@ -42,9 +40,7 @@ describe('structured admissions review contract', () => {
   });
 
   it('makes reviewer assignments discoverable from My Work', () => {
-    const overview = read(
-      'src/screens/student/enrollment/admissions-crm/overview-workspace.tsx'
-    );
+    const overview = read('src/screens/student/enrollment/admissions-crm/overview-workspace.tsx');
 
     expect(overview).toContain('Confidential reviews assigned to you');
     expect(overview).toContain('useGetMyAdmissionCrmReviewAssignmentsQuery');

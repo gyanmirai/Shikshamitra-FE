@@ -38,16 +38,32 @@ vi.mock('../admissions-crm/enrollment-workspace-context', () => ({
   useEnrollmentWorkspace: () => ({ state: {} }),
 }));
 
-vi.mock('src/redux/student/admissions-crm/admissions-crm-api', async (importOriginal) => {
+vi.mock('src/redux/student/admissions-crm/final-admission-api', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('src/redux/student/admissions-crm/admissions-crm-api')>();
+    await importOriginal<typeof import('src/redux/student/admissions-crm/final-admission-api')>();
   return {
     ...actual,
     useGetAdmissionCrmPlacementOptionsQuery: () => mocks.placementOptionsQuery,
+  };
+});
+
+vi.mock('src/redux/student/admissions-crm/setup-playbooks-api', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('src/redux/student/admissions-crm/setup-playbooks-api')>();
+  return {
+    ...actual,
     useGetAdmissionCrmCycleConfigurationQuery: () => mocks.configurationQuery,
-    useGetAdmissionCrmIntegrationCapabilitiesQuery: () => mocks.integrationsQuery,
     useUpdateAdmissionCrmCycleConfigurationMutation: () => [vi.fn(), { isLoading: false }],
     usePreviewAdmissionCrmConfigurationImpactMutation: () => [vi.fn(), { isLoading: false }],
+  };
+});
+
+vi.mock('src/redux/student/admissions-crm/core-leads-api', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('src/redux/student/admissions-crm/core-leads-api')>();
+  return {
+    ...actual,
+    useGetAdmissionCrmIntegrationCapabilitiesQuery: () => mocks.integrationsQuery,
   };
 });
 

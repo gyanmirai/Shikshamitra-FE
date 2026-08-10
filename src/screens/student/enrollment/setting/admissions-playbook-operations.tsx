@@ -1,11 +1,13 @@
 'use client';
 
+import type { AdmissionCrmPlaybookDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
+
+import type { AdmissionCrmExamResultPreviewDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
 import type {
-  AdmissionCrmPlaybookDto,
-  AdmissionCrmExamResultPreviewDto,
   AdmissionCrmSlotRecommendationDto,
   AdmissionCrmSlotGenerationResultDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -27,11 +29,12 @@ import {
   DialogActions,
   DialogContent,
 } from '@mui/material';
+import { usePreviewAdmissionCrmExamResultMutation } from 'src/redux/student/admissions-crm/communication-exams-events-api';
+
 import {
-  usePreviewAdmissionCrmExamResultMutation,
   useGenerateAdmissionCrmPlaybookSlotsMutation,
   useRecommendAdmissionCrmPlaybookSlotMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-api';
 
 type Props = {
   playbook: AdmissionCrmPlaybookDto;

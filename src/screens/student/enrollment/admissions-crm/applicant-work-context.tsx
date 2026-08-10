@@ -1,9 +1,10 @@
 import { Chip, Paper, Stack, Typography } from '@mui/material';
 import {
   AdmissionCrmWorkUrgency,
-  AdmissionCrmLeadPriority,
   AdmissionCrmRecommendedAction,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/operations-governance-contracts';
+
+import { AdmissionCrmLeadPriority } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { formatEnrollmentDate } from './enrollment-display';
 

@@ -1,5 +1,5 @@
 import type { ReactNode, MouseEvent } from 'react';
-import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import dayjs from 'dayjs';
 import Link from 'next/link';

@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { it, expect, describe } from 'vitest';
+import { readEnrollmentSource } from '../enrollment-source-contract';
 
-const read = (...segments: string[]) =>
-  fs.readFileSync(path.join(process.cwd(), ...segments), 'utf8');
+const read = readEnrollmentSource;
 
 describe('Enrollment settings route contracts', () => {
   const sections = [

@@ -1,10 +1,10 @@
-import type {
-  AdmissionCrmFormFieldDto,
-  AdmissionCrmAdmissionYearStandardOptionDto,
-  AdmissionCrmCommunicationProviderSettingsDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmFormFieldDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
-import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmAdmissionYearStandardOptionDto } from 'src/redux/student/admissions-crm/operations-governance-contracts';
+
+import type { AdmissionCrmCommunicationProviderSettingsDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 export const buildDefaultPublicInquiryTemplateFields = (
   standardOptions: AdmissionCrmAdmissionYearStandardOptionDto[] = []

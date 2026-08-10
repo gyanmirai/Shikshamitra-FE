@@ -5,19 +5,23 @@ import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmLeadDto,
   AdmissionCrmPipelineColumnKey,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import NextLink from 'next/link';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Chip, Link, Stack, Alert, Button, Typography, LinearProgress } from '@mui/material';
+import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
 import {
-  AdmissionCrmRouteType,
-  StudentAdmissionsCrmApi,
   AdmissionCrmLeadPriority,
   AdmissionCrmApplicantStepKey,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import {
   useGetAdmissionCrmLeadsQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+  AdmissionCrmCoreLeadsApi,
+} from 'src/redux/student/admissions-crm/core-leads-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
@@ -132,8 +136,9 @@ export function ApplicantWorklistWorkspace({
   } = useWorkspaceTableSessionState(
     `applicant-worklist:${tableId}:${academicYearId || 'none'}:${sessionIdentity}`
   );
-  const prefetchLead = StudentAdmissionsCrmApi.usePrefetch('getAdmissionCrmLead');
-  const prefetchProgress = StudentAdmissionsCrmApi.usePrefetch('getAdmissionCrmApplicantProgress');
+  const [debouncedSearch, setDebouncedSearch] = useState(() => search.trim());
+  const prefetchLead = AdmissionCrmCoreLeadsApi.usePrefetch('getAdmissionCrmLead');
+  const prefetchProgress = AdmissionCrmCoreLeadsApi.usePrefetch('getAdmissionCrmApplicantProgress');
   const prefetchApplicant = useCallback(
     (leadId: string) => {
       prefetchLead({ leadId }, { ifOlderThan: 30 });
@@ -149,6 +154,11 @@ export function ApplicantWorklistWorkspace({
   const selectedColumn = worklistColumns.some((item) => item.key === state.pipelineColumn)
     ? (state.pipelineColumn as AdmissionCrmPipelineColumnKey)
     : defaultColumn;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 500);
+    return () => window.clearTimeout(timer);
+  }, [search]);
   const structuralFilters = useMemo<IParams['filters']>(
     () =>
       serverFilters
@@ -211,7 +221,7 @@ export function ApplicantWorklistWorkspace({
       academicYearId: academicYearId || '',
       pipelineColumn: selectedColumn,
       academicMediumId,
-      filterText: search || undefined,
+      filterText: debouncedSearch || undefined,
       ...(serverFilters
         ? {
             applicantSearch: getLatestStringFilter(privateFilters, 'applicant'),
@@ -534,6 +544,7 @@ export function ApplicantWorklistWorkspace({
             sorts={parseEnrollmentTableSorts(sorting, columns)}
             defaultRowsPerPage={25}
             rowsPerPageOptions={[10, 25, 50, 100]}
+            onSearchInputChange={setSearch}
             onServerPagination={(nextPage, nextPageSize) =>
               updateState({ page: nextPage, pageSize: nextPageSize }, 'push')
             }

@@ -1,5 +1,5 @@
 import { it, expect, describe } from 'vitest';
-import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import {
   createRegistrationTemplate,
@@ -139,9 +139,6 @@ describe('admissions registration configuration', () => {
     const normalized = normalizeRegistrationTemplate(template);
     expect(normalized.sections[0].localizedTitles?.gu).toBe('વિદ્યાર્થીની વિગતો');
     expect(normalized.sections[0].fields[0].localizedLabels?.gu).toBe('પ્રથમ નામ');
-    expect(normalized.sections[0].fields[0].localizedOptions?.gu).toEqual([
-      'નવું',
-      'પાછું ફરતું',
-    ]);
+    expect(normalized.sections[0].fields[0].localizedOptions?.gu).toEqual(['નવું', 'પાછું ફરતું']);
   });
 });

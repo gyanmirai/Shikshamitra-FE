@@ -1,5 +1,5 @@
 import { it, expect, describe } from 'vitest';
-import { AdmissionCrmDocumentRequirementLevel } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmDocumentRequirementLevel } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import {
   createDocumentChecklistTemplate,
@@ -49,9 +49,7 @@ describe('admissions document checklist configuration', () => {
     const normalized = normalizeDocumentChecklistTemplate(value);
     expect(normalized.name).toBe('Primary');
     expect(normalized.requirements[0].acceptedExtensions).toEqual(['pdf', 'jpg']);
-    expect(normalized.requirements[0].uploadInstructions).toBe(
-      'Upload both sides in one PDF.'
-    );
+    expect(normalized.requirements[0].uploadInstructions).toBe('Upload both sides in one PDF.');
     expect(normalized.requirements[0].rejectionReasons).toEqual([
       'Document is unreadable',
       'Details do not match the form',

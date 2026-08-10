@@ -1,5 +1,5 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { AdmissionCrmOperationsQueueItemDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmOperationsQueueItemDto } from 'src/redux/student/admissions-crm/operations-governance-contracts';
 
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Chip, Link, Stack, Checkbox, Typography, LinearProgress } from '@mui/material';
@@ -7,12 +7,16 @@ import {
   AdmissionCrmRouteType,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
   AdmissionCrmRegistrationStatus,
-  AdmissionCrmServiceHandoffStatus,
   AdmissionCrmRegistrationProvenance,
   AdmissionCrmApplicantDocumentStatus,
   AdmissionCrmRegistrationDataEntryState,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
+
+import { AdmissionCrmServiceHandoffStatus } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { enrollmentActionsColumn } from './workspace-table-patterns';
 import { createApplicantLinkNavigationProps } from './applicant-row-navigation';
@@ -197,9 +201,7 @@ const actionsColumn = ({ applicantTab, openApplicant }: Omit<Options, 'variant'>
   },
 });
 
-const getRegistrationProvenanceLabel = (
-  value?: AdmissionCrmRegistrationProvenance | null
-) => {
+const getRegistrationProvenanceLabel = (value?: AdmissionCrmRegistrationProvenance | null) => {
   if (value === AdmissionCrmRegistrationProvenance.StaffEnteredFromPaper) return 'Paper form';
   if (value === AdmissionCrmRegistrationProvenance.StaffAssistedCounter) return 'Staff assisted';
   if (value === AdmissionCrmRegistrationProvenance.Imported) return 'Imported';

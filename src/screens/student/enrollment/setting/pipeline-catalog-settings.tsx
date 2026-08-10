@@ -6,7 +6,7 @@ import type {
   AdmissionCrmInquirySourceDto,
   AdmissionCrmInquiryTypeUpsertDto,
   AdmissionCrmInquirySourceUpsertDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -34,8 +34,9 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import { AdmissionInquiryChannel } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
 import {
-  AdmissionInquiryChannel,
   useGetAdmissionCrmInquiryTypesQuery,
   useGetAdmissionCrmInquirySourcesQuery,
   useCreateAdmissionCrmInquiryTypeMutation,
@@ -44,7 +45,7 @@ import {
   useUpdateAdmissionCrmInquirySourceMutation,
   useSetAdmissionCrmInquiryTypeStatusMutation,
   useSetAdmissionCrmInquirySourceStatusMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-api';
 
 import { getAdmissionCrmChannelLabel } from '../admissions-crm/admissions-crm-utils';
 import {

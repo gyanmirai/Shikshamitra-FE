@@ -48,7 +48,10 @@ export function PublicAdmissionsShell({
           direction="row"
           spacing={1.5}
           alignItems="flex-start"
-          sx={{ borderTop: portal?.primaryColor ? `4px solid ${portal.primaryColor}` : undefined, pt: portal?.primaryColor ? 1.5 : 0 }}
+          sx={{
+            borderTop: portal?.primaryColor ? `4px solid ${portal.primaryColor}` : undefined,
+            pt: portal?.primaryColor ? 1.5 : 0,
+          }}
         >
           {portal?.logoDataUrl ? (
             <Box
@@ -72,7 +75,11 @@ export function PublicAdmissionsShell({
               {title}
             </Typography>
             {description && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, textWrap: 'pretty' }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.5, textWrap: 'pretty' }}
+              >
                 {description}
               </Typography>
             )}

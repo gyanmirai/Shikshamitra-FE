@@ -3,13 +3,18 @@ import {
   AdmissionCrmFinanceState,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
-  AdmissionCrmRegistrationStatus,
-  AdmissionCrmServiceHandoffStatus,
-  AdmissionCrmRegistrationFeeStatus,
-  AdmissionCrmRouteEligibilityStatus,
-  AdmissionCrmApplicantDocumentStatus,
   AdmissionCrmAdmissionDecisionStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
+  AdmissionCrmRegistrationStatus,
+  AdmissionCrmRegistrationFeeStatus,
+  AdmissionCrmApplicantDocumentStatus,
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
+
+import { AdmissionCrmServiceHandoffStatus } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import { AdmissionCrmRouteEligibilityStatus } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 export const formatEnumLabel = (value: string) =>
   value
@@ -86,10 +91,7 @@ export const formatApplicantNumber = (applicantNumber?: number | null) =>
     : 'Not assigned';
 
 const normalizeComparableText = (value: string) =>
-  value
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toLocaleLowerCase();
+  value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
 
 export const getDistinctAdmissionIntent = (
   admissionIntent?: string | null,

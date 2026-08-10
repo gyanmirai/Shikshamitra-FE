@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdmissionCrmConfigurationImpactPreviewDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmConfigurationImpactPreviewDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import { useState, useEffect } from 'react';
 import { RouterLink } from 'src/routes/components';
@@ -11,7 +11,7 @@ import {
   useGetAdmissionCrmCycleConfigurationQuery,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   usePreviewAdmissionCrmConfigurationImpactMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-api';
 import {
   Box,
   Chip,

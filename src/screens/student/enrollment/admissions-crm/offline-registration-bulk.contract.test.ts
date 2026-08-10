@@ -1,9 +1,7 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { it, expect, describe } from 'vitest';
+import { readEnrollmentSource } from '../enrollment-source-contract';
 
-const read = (...segments: string[]) =>
-  fs.readFileSync(path.join(process.cwd(), ...segments), 'utf8');
+const read = readEnrollmentSource;
 
 describe('Enrollment offline registration and bulk-operation contracts', () => {
   it('offers permission-checked paper registration from the registration workspace', () => {
@@ -44,7 +42,7 @@ describe('Enrollment offline registration and bulk-operation contracts', () => {
       'admissions-crm',
       'registration-response-editor.tsx'
     );
-    const api = read('src', 'redux', 'student', 'admissions-crm', 'admissions-crm-api.ts');
+    const api = read('src', 'redux', 'student', 'admissions-crm', 'registration-documents-api.ts');
 
     expect(editor).toContain('useSaveAdmissionCrmStaffRegistrationResponsesMutation');
     expect(editor).toContain('useSubmitAdmissionCrmStaffRegistrationResponsesMutation');

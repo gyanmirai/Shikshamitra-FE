@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';

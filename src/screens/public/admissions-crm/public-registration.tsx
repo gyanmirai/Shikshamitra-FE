@@ -28,10 +28,7 @@ import {
 import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
 import { formatPublicNumber, formatPublicDateTime } from './public-admissions-format';
-import {
-  resolveRegistrationText,
-  resolveRegistrationOptions,
-} from './registration-localization';
+import { resolveRegistrationText, resolveRegistrationOptions } from './registration-localization';
 import {
   getPublicRegistrationValue,
   isPublicRegistrationFieldVisible,
@@ -225,7 +222,11 @@ export default function PublicRegistration({
         <Stack key={activeSection.key} spacing={1.25} sx={{ pt: 1 }}>
           <Box>
             <Typography variant="subtitle2">
-              {resolveRegistrationText(activeSection.title, activeSection.localizedTitles, language)}
+              {resolveRegistrationText(
+                activeSection.title,
+                activeSection.localizedTitles,
+                language
+              )}
             </Typography>
             {resolveRegistrationText(
               activeSection.description,
@@ -256,11 +257,7 @@ export default function PublicRegistration({
                 const value = getPublicRegistrationValue(field, responses, application.prefill);
                 const editable = canEdit && field.parentEditable;
                 const error = application.correctionFieldKeys.includes(field.key);
-                const label = resolveRegistrationText(
-                  field.label,
-                  field.localizedLabels,
-                  language
-                );
+                const label = resolveRegistrationText(field.label, field.localizedLabels, language);
                 const helpText = resolveRegistrationText(
                   field.helpText,
                   field.localizedHelpTexts,

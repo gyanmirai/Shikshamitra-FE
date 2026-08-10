@@ -1,12 +1,8 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { it, expect, describe } from 'vitest';
+import { readEnrollmentSource } from '../enrollment-source-contract';
 
 const read = (file: string) =>
-  fs.readFileSync(
-    path.join(process.cwd(), 'src', 'screens', 'student', 'enrollment', 'admissions-crm', file),
-    'utf8'
-  );
+  readEnrollmentSource('src', 'screens', 'student', 'enrollment', 'admissions-crm', file);
 
 describe('Student Enrollment applicant workspace page contracts', () => {
   it('uses a dedicated responsive inquiry workspace with one journey and an audit drawer', () => {

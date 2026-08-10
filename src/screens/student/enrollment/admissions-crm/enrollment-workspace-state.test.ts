@@ -1,18 +1,28 @@
 import { it, expect, describe } from 'vitest';
 import {
   AdmissionInquiryStage,
-  AdmissionCrmRouteType,
-  AdmissionCrmEventType,
   AdmissionInquiryChannel,
-  AdmissionCrmEventStatus,
+  AdmissionCrmPipelineColumnKey,
+  AdmissionCrmServiceHandoffStatus,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import {
+  AdmissionCrmRouteType,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
-  AdmissionCrmPipelineColumnKey,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
+  AdmissionCrmEventType,
+  AdmissionCrmEventStatus,
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import {
   AdmissionCrmRegistrationStatus,
-  AdmissionCrmOperationsQueueType,
-  AdmissionCrmServiceHandoffStatus,
   AdmissionCrmApplicantDocumentStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
+
+import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/operations-governance-contracts';
 
 import {
   getWorkspaceFromPathname,

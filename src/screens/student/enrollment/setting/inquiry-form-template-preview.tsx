@@ -5,8 +5,9 @@ import { Close, PhoneIphone, SchoolOutlined, DesktopWindows } from '@mui/icons-m
 import {
   AdmissionCrmFormFieldType,
   type AdmissionCrmFormFieldDto,
-  type AdmissionCrmFormTemplateDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import type { AdmissionCrmFormTemplateDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 import {
   Box,
   Link,

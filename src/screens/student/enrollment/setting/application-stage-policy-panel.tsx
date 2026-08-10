@@ -17,15 +17,18 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import type {
+  AdmissionCrmApplicationStagePolicyDto,
+  AdmissionCrmApplicationStagePolicyItemDto,
+  AdmissionCrmApplicationStagePolicyImpactDto,
+  UpdateAdmissionCrmApplicationStagePolicyDto,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
 import {
-  type AdmissionCrmApplicationStagePolicyDto,
   useGetAdmissionCrmApplicationStagePolicyQuery,
-  type AdmissionCrmApplicationStagePolicyItemDto,
-  type AdmissionCrmApplicationStagePolicyImpactDto,
-  type UpdateAdmissionCrmApplicationStagePolicyDto,
   useUpdateAdmissionCrmApplicationStagePolicyMutation,
   usePreviewAdmissionCrmApplicationStagePolicyMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 const toUpdate = (
   stages: AdmissionCrmApplicationStagePolicyItemDto[],
@@ -132,14 +135,17 @@ export function ApplicationStagePolicyPanel({ academicYearId }: { academicYearId
             </Typography>
             <Typography variant="h6">Application Stages</Typography>
             <Typography variant="body2" color="text.secondary">
-              Configure the readable admission journey for this admission year using fixed safe stage keys.
+              Configure the readable admission journey for this admission year using fixed safe
+              stage keys.
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Chip
               size="small"
               color={query.data.entranceExamRequired ? 'info' : 'default'}
-              label={query.data.entranceExamRequired ? 'Entrance exam required' : 'No entrance exam'}
+              label={
+                query.data.entranceExamRequired ? 'Entrance exam required' : 'No entrance exam'
+              }
             />
             <Chip
               size="small"
@@ -237,7 +243,12 @@ export function ApplicationStagePolicyPanel({ academicYearId }: { academicYearId
           </Button>
           <Button
             variant="contained"
-            disabled={!hasChanges || updateState.isLoading || previewState.isLoading || query.data.journeyLocked}
+            disabled={
+              !hasChanges ||
+              updateState.isLoading ||
+              previewState.isLoading ||
+              query.data.journeyLocked
+            }
             onClick={handleSave}
             startIcon={<Iconify icon="mdi:content-save-outline" />}
           >

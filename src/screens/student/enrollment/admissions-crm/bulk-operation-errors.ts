@@ -1,7 +1,6 @@
-import type {
-  AdmissionCrmEntranceExamDto,
-  AdmissionCrmBulkOperationResultDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import type { AdmissionCrmBulkOperationResultDto } from 'src/redux/student/admissions-crm/operations-governance-contracts';
 
 export type EnrollmentBulkFailure = {
   entityId: string;

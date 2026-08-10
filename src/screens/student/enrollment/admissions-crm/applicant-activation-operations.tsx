@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { AdmissionCrmActivationPreviewDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmActivationPreviewDto } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
@@ -22,24 +22,31 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import { AdmissionCrmActivationStatus } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
 import {
-  AdmissionCrmActivationStatus,
   AdmissionCrmNumberSeriesStatus,
   AdmissionCrmServiceHandoffType,
   AdmissionCrmServiceHandoffStatus,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import {
   useGetAdmissionCrmActivationQuery,
-  useGetAdmissionCrmNumberSeriesQuery,
   useGetAdmissionCrmPlacementOptionsQuery,
   useApproveAdmissionCrmActivationMutation,
   useExecuteAdmissionCrmActivationMutation,
   usePreviewAdmissionCrmActivationMutation,
   useRequestAdmissionCrmActivationMutation,
-  useUpdateAdmissionCrmServiceHandoffMutation,
   useAssignManualAdmissionCrmIdentifierMutation,
   useApproveAdmissionCrmActivationCancellationMutation,
   useGetAdmissionCrmActivationCancellationPreviewQuery,
   useRequestAdmissionCrmActivationCancellationMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
+
+import {
+  useGetAdmissionCrmNumberSeriesQuery,
+  useUpdateAdmissionCrmServiceHandoffMutation,
+} from 'src/redux/student/admissions-crm/core-leads-api';
 
 import { formatEnumLabel } from './enrollment-display';
 import { admissionCrmActionPermissions } from './admission-action-permissions';

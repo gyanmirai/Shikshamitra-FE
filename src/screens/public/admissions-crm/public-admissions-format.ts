@@ -1,7 +1,6 @@
-import {
-  AdmissionCrmRouteType,
-  AdmissionCrmRouteEligibilityStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { AdmissionCrmRouteEligibilityStatus } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 

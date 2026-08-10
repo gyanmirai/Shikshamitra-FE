@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { it, expect, describe } from 'vitest';
+import { readEnrollmentSource } from '../enrollment-source-contract';
 
-const read = (...segments: string[]) =>
-  fs.readFileSync(path.join(process.cwd(), ...segments), 'utf8');
+const read = readEnrollmentSource;
 
 describe('Student Enrollment workspace route contracts', () => {
   it.each([
@@ -324,7 +324,10 @@ describe('Student Enrollment workspace route contracts', () => {
   });
 
   it('wires the versioned Admission Year Setup through dedicated RTK Query endpoints', () => {
-    const api = read('src', 'redux', 'student', 'admissions-crm', 'admissions-crm-api.ts');
+    const api = [
+      read('src', 'redux', 'student', 'admissions-crm', 'setup-playbooks-api.ts'),
+      read('src', 'redux', 'student', 'admissions-crm', 'operations-governance-api.ts'),
+    ].join('\n');
     const workspace = read(
       'src',
       'screens',

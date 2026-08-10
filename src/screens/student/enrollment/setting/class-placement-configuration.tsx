@@ -1,7 +1,7 @@
 'use client';
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { AdmissionCrmPlacementOptionDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmPlacementOptionDto } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
 import { useState, useEffect } from 'react';
 import { RouterLink } from 'src/routes/components';
@@ -18,10 +18,9 @@ import {
   Typography,
   LinearProgress,
 } from '@mui/material';
-import {
-  AdmissionCrmPlacementTiming,
-  useGetAdmissionCrmPlacementOptionsQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmPlacementTiming } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { useGetAdmissionCrmPlacementOptionsQuery } from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { useAdmissionYearDraft } from './use-admission-year-draft';
 import { StructuredReviewConfiguration } from './structured-review-configuration';

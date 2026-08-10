@@ -3,8 +3,9 @@ import { render, screen, within, fireEvent } from '@testing-library/react';
 import {
   AdmissionInquiryChannel,
   AdmissionCrmFormFieldType,
-  type AdmissionCrmFormTemplateDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import type { AdmissionCrmFormTemplateDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import { InquiryFormTemplatePreviewDialog } from './inquiry-form-template-preview';
 

@@ -2,7 +2,7 @@ import type {
   AdmissionCrmForecastDto,
   AdmissionCrmAdmissionReportDto,
   AdmissionCrmAnalyticsSummaryDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/operations-governance-contracts';
 
 import {
   Box,
@@ -46,9 +46,7 @@ const comparisonRows = [
   ['Activated', 'activatedApplicantCount'],
   ['Rejected or ineligible', 'rejectedApplicantCount'],
   ['Withdrawn', 'withdrawnApplicantCount'],
-] as const satisfies ReadonlyArray<
-  readonly [string, keyof AdmissionCrmAdmissionReportDto]
->;
+] as const satisfies ReadonlyArray<readonly [string, keyof AdmissionCrmAdmissionReportDto]>;
 
 export function AdmissionIntelligencePanel({
   summary,
@@ -70,7 +68,8 @@ export function AdmissionIntelligencePanel({
       <Box>
         <Typography variant="h6">Enrollment intelligence</Typography>
         <Typography variant="body2" color="text.secondary">
-          Advisory demand, capacity, funnel health, and service-risk signals for operational planning.
+          Advisory demand, capacity, funnel health, and service-risk signals for operational
+          planning.
         </Typography>
       </Box>
 
@@ -133,11 +132,13 @@ export function AdmissionIntelligencePanel({
             />
           </Box>
           <Alert severity="info">
-            This forecast is advisory. It uses current-cycle operational data and cannot make or change an admission decision.
+            This forecast is advisory. It uses current-cycle operational data and cannot make or
+            change an admission decision.
           </Alert>
           {!forecast.capacityIsScopeComplete ? (
             <Alert severity="warning">
-              Capacity totals are hidden because your current data scope does not cover the full academic year.
+              Capacity totals are hidden because your current data scope does not cover the full
+              academic year.
             </Alert>
           ) : null}
         </>
@@ -147,7 +148,10 @@ export function AdmissionIntelligencePanel({
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' },
+            gridTemplateColumns: {
+              xs: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(4, minmax(0, 1fr))',
+            },
             gap: 1,
           }}
         >
@@ -176,7 +180,8 @@ export function AdmissionIntelligencePanel({
           <Box sx={{ px: 1.5, pt: 1.5 }}>
             <Typography variant="subtitle2">Cross-cycle comparison</Typography>
             <Typography variant="caption" color="text.secondary">
-              Current cycle compared with {comparisonName || 'the selected cycle'} for the same date filter.
+              Current cycle compared with {comparisonName || 'the selected cycle'} for the same date
+              filter.
             </Typography>
           </Box>
           <TableContainer>

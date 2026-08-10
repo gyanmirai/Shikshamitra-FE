@@ -1,4 +1,4 @@
-import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 export type ExamResultImportItem = {
   examRecordId: string;
@@ -16,7 +16,11 @@ export type ExamResultImportPreview = {
 export const maximumExamResultImportRows = 100;
 export const maximumExamResultImportFileBytes = 5 * 1024 * 1024;
 
-const normalizeHeader = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+const normalizeHeader = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
 
 const readCell = (row: Record<string, unknown>, names: string[]) => {
   const entries = Object.entries(row);
@@ -90,10 +94,7 @@ export const parseExamResultRows = (
   return { items, errors };
 };
 
-export const readExamResultImportFile = async (
-  file: File,
-  allowedExamIds: ReadonlySet<string>
-) => {
+export const readExamResultImportFile = async (file: File, allowedExamIds: ReadonlySet<string>) => {
   const extension = file.name.split('.').pop()?.toLowerCase();
   if (!extension || !['csv', 'xls', 'xlsx'].includes(extension)) {
     return {
@@ -114,10 +115,9 @@ export const readExamResultImportFile = async (
   if (!firstSheetName) {
     return { items: [], errors: ['The result file has no worksheet.'] };
   }
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-    workbook.Sheets[firstSheetName],
-    { defval: '' }
-  );
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[firstSheetName], {
+    defval: '',
+  });
   if (rows.length === 0) {
     return { items: [], errors: ['The result file has no data rows.'] };
   }

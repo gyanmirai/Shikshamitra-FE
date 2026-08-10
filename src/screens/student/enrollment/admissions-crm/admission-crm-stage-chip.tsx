@@ -1,6 +1,6 @@
 import Chip from '@mui/material/Chip';
 import { alpha } from '@mui/material/styles';
-import { AdmissionInquiryStage } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionInquiryStage } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { admissionCrmStageColors, getAdmissionCrmStageLabel } from './admissions-crm-utils';
 

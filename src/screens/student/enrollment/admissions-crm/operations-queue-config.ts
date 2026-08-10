@@ -1,4 +1,4 @@
-import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/operations-governance-contracts';
 
 export const registrationQueues = [
   AdmissionCrmOperationsQueueType.RegistrationInvitationPending,

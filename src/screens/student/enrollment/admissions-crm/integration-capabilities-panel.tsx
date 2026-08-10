@@ -1,10 +1,9 @@
 'use client';
 
 import { Chip, Alert, Stack, Paper, Button, Typography } from '@mui/material';
-import {
-  AdmissionCrmIntegrationCapabilityState,
-  useGetAdmissionCrmIntegrationCapabilitiesQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmIntegrationCapabilityState } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import { useGetAdmissionCrmIntegrationCapabilitiesQuery } from 'src/redux/student/admissions-crm/core-leads-api';
 
 const labels: Record<AdmissionCrmIntegrationCapabilityState, string> = {
   [AdmissionCrmIntegrationCapabilityState.NotConfigured]: 'Not Configured',

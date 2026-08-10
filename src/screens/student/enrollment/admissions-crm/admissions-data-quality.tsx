@@ -9,11 +9,14 @@ import {
   AdmissionCrmDataQualityIssueType,
   AdmissionCrmDataQualityIssueStatus,
   AdmissionCrmDataQualityIssueSeverity,
+} from 'src/redux/student/admissions-crm/operations-governance-contracts';
+
+import {
   useGetAdmissionCrmDataQualityIssuesQuery,
   useRunAdmissionCrmReconciliationMutation,
   useResolveAdmissionCrmDataQualityIssueMutation,
   useAcknowledgeAdmissionCrmDataQualityIssueMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/operations-governance-api';
 
 const severityColor = (severity: AdmissionCrmDataQualityIssueSeverity) =>
   severity === AdmissionCrmDataQualityIssueSeverity.Critical

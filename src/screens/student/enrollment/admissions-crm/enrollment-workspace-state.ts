@@ -1,23 +1,35 @@
 import {
   AdmissionInquiryStage,
-  AdmissionCrmRouteType,
-  AdmissionCrmEventType,
-  EntranceExamStatusEnum,
-  AdmissionCrmMyWorkType,
   AdmissionInquiryChannel,
-  AdmissionCrmWorkUrgency,
-  AdmissionCrmEventStatus,
   AdmissionCrmLeadPriority,
+  AdmissionCrmPipelineColumnKey,
+  AdmissionCrmServiceHandoffStatus,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import {
+  AdmissionCrmRouteType,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
-  AdmissionCrmPipelineColumnKey,
-  AdmissionCrmRegistrationStatus,
-  AdmissionCrmOperationsQueueType,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
+  AdmissionCrmEventType,
+  EntranceExamStatusEnum,
+  AdmissionCrmEventStatus,
   AdmissionCrmEligibilityDecision,
-  AdmissionCrmServiceHandoffStatus,
   AdmissionCrmExamAttendanceStatus,
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import {
+  AdmissionCrmMyWorkType,
+  AdmissionCrmWorkUrgency,
+  AdmissionCrmOperationsQueueType,
+} from 'src/redux/student/admissions-crm/operations-governance-contracts';
+
+import {
+  AdmissionCrmRegistrationStatus,
   AdmissionCrmApplicantDocumentStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import { isValidAdmissionReportDate } from './admission-report-date-range';
 

@@ -1,6 +1,6 @@
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { AdmissionCrmApplicantStepKey } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmApplicantStepKey } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { ApplicantJourneyNavigator } from './applicant-journey-navigator';
 

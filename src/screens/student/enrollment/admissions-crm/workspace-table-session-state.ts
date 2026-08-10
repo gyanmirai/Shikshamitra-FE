@@ -16,10 +16,7 @@ type StoredWorkspaceTableSessionState = WorkspaceTableSessionState & {
   version: 1;
 };
 
-type SessionStorageLike = Pick<
-  Storage,
-  'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'
->;
+type SessionStorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'>;
 
 const legacyStoragePrefix = 'student-enrollment:table-state:v1:';
 const storagePrefix = 'student-enrollment:table-state:v2:';
@@ -145,7 +142,7 @@ export const writeWorkspaceTableSessionState = (
   }
 };
 
-const resolveStateAction = <T,>(action: SetStateAction<T>, current: T) =>
+const resolveStateAction = <T>(action: SetStateAction<T>, current: T) =>
   typeof action === 'function' ? (action as (value: T) => T)(current) : action;
 
 export function useWorkspaceTableSessionState(scope: string) {
@@ -154,8 +151,7 @@ export function useWorkspaceTableSessionState(scope: string) {
     state: readWorkspaceTableSessionState(scope),
   }));
   const currentState = useMemo(
-    () =>
-      snapshot.scope === scope ? snapshot.state : readWorkspaceTableSessionState(scope),
+    () => (snapshot.scope === scope ? snapshot.state : readWorkspaceTableSessionState(scope)),
     [scope, snapshot]
   );
 
@@ -174,9 +170,11 @@ export function useWorkspaceTableSessionState(scope: string) {
       setSnapshot((current) => {
         const state =
           current.scope === scope ? current.state : readWorkspaceTableSessionState(scope);
+        const nextState = { ...state, search: resolveStateAction(action, state.search) };
+        writeWorkspaceTableSessionState(scope, nextState);
         return {
           scope,
-          state: { ...state, search: resolveStateAction(action, state.search) },
+          state: nextState,
         };
       }),
     [scope]
@@ -187,9 +185,11 @@ export function useWorkspaceTableSessionState(scope: string) {
       setSnapshot((current) => {
         const state =
           current.scope === scope ? current.state : readWorkspaceTableSessionState(scope);
+        const nextState = { ...state, filters: resolveStateAction(action, state.filters) };
+        writeWorkspaceTableSessionState(scope, nextState);
         return {
           scope,
-          state: { ...state, filters: resolveStateAction(action, state.filters) },
+          state: nextState,
         };
       }),
     [scope]

@@ -1,4 +1,4 @@
-import type { AdmissionCrmTimelineEventDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmTimelineEventDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 export const buildActivityActorLookupIds = (
   events: ReadonlyArray<Pick<AdmissionCrmTimelineEventDto, 'actorUserId'>>
@@ -20,5 +20,7 @@ export const getActivityActorLabel = (
 ) => {
   if (!actorUserId) return 'System';
 
-  return staffById.get(actorUserId) || (isLoading ? 'Loading staff…' : 'Staff identity unavailable');
+  return (
+    staffById.get(actorUserId) || (isLoading ? 'Loading staff…' : 'Staff identity unavailable')
+  );
 };
