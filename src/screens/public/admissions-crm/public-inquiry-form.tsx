@@ -8,7 +8,7 @@ import {
   type AdmissionCrmFormFieldDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
-  Box,
+  Link,
   Alert,
   Stack,
   Paper,
@@ -26,6 +26,16 @@ import {
 } from '@mui/material';
 
 import { PublicAdmissionsShell } from './public-admissions-shell';
+import { usePublicAdmissionsPortal } from './use-public-admissions-portal';
+import {
+  createPublicAdmissionSafeError,
+  getPublicAdmissionRequestErrorMessage,
+} from './public-status-utils';
+import {
+  getPublicAdmissionsCoreLanguage,
+  getPublicAdmissionsLanguageLabel,
+  getPublicAdmissionsLanguageOptions,
+} from './public-admissions-portal';
 
 type PublicAdmissionInquiryForm = {
   tenantId: string;
@@ -64,6 +74,8 @@ const uiText: Record<ApplicantLanguage, Record<string, string>> = {
     preferenceRequired: 'Select at least one communication preference.',
     submitFailed: 'Unable to submit inquiry.',
     required: 'is required.',
+    reviewErrors: 'Review the highlighted fields before submitting.',
+    privacyLink: "Read the school's privacy notice",
   },
   gu: {
     startTitle: 'પ્રવેશ પૂછપરછ શરૂ કરો',
@@ -82,6 +94,8 @@ const uiText: Record<ApplicantLanguage, Record<string, string>> = {
     preferenceRequired: 'ઓછામાં ઓછી એક સંદેશાવ્યવહાર પસંદગી પસંદ કરો.',
     submitFailed: 'પૂછપરછ મોકલી શકાઈ નથી.',
     required: 'જરૂરી છે.',
+    reviewErrors: 'મોકલતા પહેલાં દર્શાવેલ વિગતો તપાસો.',
+    privacyLink: 'શાળાની ગોપનીયતા સૂચના વાંચો',
   },
   hi: {
     startTitle: 'प्रवेश पूछताछ शुरू करें',
@@ -100,6 +114,8 @@ const uiText: Record<ApplicantLanguage, Record<string, string>> = {
     preferenceRequired: 'कम से कम एक संचार प्राथमिकता चुनें।',
     submitFailed: 'पूछताछ भेजी नहीं जा सकी।',
     required: 'आवश्यक है।',
+    reviewErrors: 'भेजने से पहले दिखाए गए विवरण जाँचें।',
+    privacyLink: 'विद्यालय की गोपनीयता सूचना पढ़ें',
   },
 };
 
@@ -137,6 +153,15 @@ const getFieldStringValue = (value: FieldValue | undefined) => {
   if (Array.isArray(value)) return value.join(',');
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   return String(value || '').trim();
+};
+
+const getSafePrivacyNoticeHref = (value: string) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const isFieldVisible = (
@@ -177,11 +202,22 @@ export default function PublicAdmissionInquiryFormScreen({
   const [loadError, setLoadError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
   const [result, setResult] = useState<SubmitResult | null>(null);
-  const [language, setLanguage] = useState<ApplicantLanguage>('en');
+  const [language, setLanguage] = useState('en');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [consentError, setConsentError] = useState('');
+  const [preferenceError, setPreferenceError] = useState('');
+  const formRef = useRef<HTMLFormElement | null>(null);
   const submissionKeyRef = useRef('');
   const submissionInFlightRef = useRef(false);
   const submissionStorageKey = `enrollment-inquiry-submission:${tenantId}:${templateId}`;
-  const text = uiText[language];
+  const portal = usePublicAdmissionsPortal(tenantId);
+  const copyLanguage = getPublicAdmissionsCoreLanguage(language);
+  const text = uiText[copyLanguage];
+  const languageOptions = getPublicAdmissionsLanguageOptions(portal?.supportedLanguages);
+
+  useEffect(() => {
+    if (portal?.defaultLanguage && language === 'en') setLanguage(portal.defaultLanguage);
+  }, [language, portal?.defaultLanguage]);
 
   const getSubmissionKey = () => {
     if (submissionKeyRef.current) return submissionKeyRef.current;
@@ -217,7 +253,7 @@ export default function PublicAdmissionInquiryFormScreen({
           `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/forms/${templateId}?language=${language}`
         );
         if (!response.ok) {
-          throw new Error(text.unavailable);
+          throw createPublicAdmissionSafeError(text.unavailable);
         }
 
         const payload = (await response.json()) as PublicAdmissionInquiryForm;
@@ -231,7 +267,9 @@ export default function PublicAdmissionInquiryFormScreen({
         );
       } catch (error) {
         if (isMounted) {
-          setLoadError(error instanceof Error ? error.message : text.unavailable);
+          setLoadError(
+            getPublicAdmissionRequestErrorMessage(error, text.unavailable, copyLanguage)
+          );
         }
       } finally {
         if (isMounted) {
@@ -244,7 +282,7 @@ export default function PublicAdmissionInquiryFormScreen({
     return () => {
       isMounted = false;
     };
-  }, [language, reloadKey, templateId, tenantId, text.unavailable]);
+  }, [copyLanguage, language, reloadKey, templateId, tenantId, text.unavailable]);
 
   const orderedFields = useMemo(
     () => [...(form?.fields || [])].sort((a, b) => a.displayOrder - b.displayOrder),
@@ -272,32 +310,44 @@ export default function PublicAdmissionInquiryFormScreen({
 
   const setFieldValue = (key: string, value: FieldValue) => {
     setFieldValues((prev) => ({ ...prev, [key]: value }));
+    setFieldErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
   };
 
   const togglePreference = (preference: string, checked: boolean) => {
     setCommunicationPreferences((prev) =>
       checked ? [...new Set([...prev, preference])] : prev.filter((item) => item !== preference)
     );
+    setPreferenceError('');
   };
 
   const validate = () => {
     if (!form) return false;
 
-    const missing = visibleFields.find(
-      (field) => field.required && isEmptyValue(fieldValues[field.key])
+    const nextFieldErrors = Object.fromEntries(
+      visibleFields
+        .filter((field) => field.required && isEmptyValue(fieldValues[field.key]))
+        .map((field) => [field.key, `${field.label} ${text.required}`])
     );
-    if (missing) {
-      shikshaMitraToast.error({ message: `${missing.label} ${text.required}` });
-      return false;
-    }
+    const nextConsentError = consentAccepted ? '' : text.consentRequired;
+    const nextPreferenceError = communicationPreferences.length ? '' : text.preferenceRequired;
+    setFieldErrors(nextFieldErrors);
+    setConsentError(nextConsentError);
+    setPreferenceError(nextPreferenceError);
 
-    if (!consentAccepted) {
-      shikshaMitraToast.error({ message: text.consentRequired });
-      return false;
-    }
-
-    if (communicationPreferences.length === 0) {
-      shikshaMitraToast.error({ message: text.preferenceRequired });
+    const firstInvalidName =
+      Object.keys(nextFieldErrors)[0] ||
+      (nextPreferenceError ? 'communication-whatsapp' : '') ||
+      (nextConsentError ? 'admission-consent' : '');
+    if (firstInvalidName) {
+      window.requestAnimationFrame(() => {
+        const control = formRef.current?.elements.namedItem(firstInvalidName);
+        if (control instanceof HTMLElement) control.focus();
+      });
       return false;
     }
 
@@ -333,7 +383,7 @@ export default function PublicAdmissionInquiryFormScreen({
       );
 
       if (!response.ok) {
-        throw new Error(text.submitFailed);
+        throw createPublicAdmissionSafeError(text.submitFailed);
       }
 
       const payload = (await response.json()) as SubmitResult;
@@ -346,7 +396,7 @@ export default function PublicAdmissionInquiryFormScreen({
       setResult(payload);
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : text.submitFailed,
+        message: getPublicAdmissionRequestErrorMessage(error, text.submitFailed, copyLanguage),
       });
     } finally {
       submissionInFlightRef.current = false;
@@ -356,10 +406,11 @@ export default function PublicAdmissionInquiryFormScreen({
 
   const renderField = (field: AdmissionCrmFormFieldDto) => {
     const value = fieldValues[field.key];
+    const error = fieldErrors[field.key];
 
     if (field.fieldType === AdmissionCrmFormFieldType.Select) {
       return (
-        <FormControl key={field.key} fullWidth>
+        <FormControl key={field.key} fullWidth error={Boolean(error)}>
           <InputLabel id={`${field.key}-label`}>{renderFieldLabel(field)}</InputLabel>
           <Select
             labelId={`${field.key}-label`}
@@ -374,14 +425,14 @@ export default function PublicAdmissionInquiryFormScreen({
               </MenuItem>
             ))}
           </Select>
-          {field.helperText && <FormHelperText>{field.helperText}</FormHelperText>}
+          {(error || field.helperText) && <FormHelperText>{error || field.helperText}</FormHelperText>}
         </FormControl>
       );
     }
 
     if (field.fieldType === AdmissionCrmFormFieldType.MultiSelect) {
       return (
-        <FormControl key={field.key} fullWidth>
+        <FormControl key={field.key} fullWidth error={Boolean(error)}>
           <InputLabel id={`${field.key}-label`}>{renderFieldLabel(field)}</InputLabel>
           <Select
             multiple
@@ -404,14 +455,14 @@ export default function PublicAdmissionInquiryFormScreen({
               </MenuItem>
             ))}
           </Select>
-          {field.helperText && <FormHelperText>{field.helperText}</FormHelperText>}
+          {(error || field.helperText) && <FormHelperText>{error || field.helperText}</FormHelperText>}
         </FormControl>
       );
     }
 
     if (field.fieldType === AdmissionCrmFormFieldType.Checkbox) {
       return (
-        <Box key={field.key}>
+        <FormControl key={field.key} error={Boolean(error)}>
           <FormControlLabel
             control={
               <Checkbox
@@ -422,12 +473,8 @@ export default function PublicAdmissionInquiryFormScreen({
             }
             label={renderFieldLabel(field)}
           />
-          {field.helperText && (
-            <Typography variant="caption" color="text.secondary" display="block">
-              {field.helperText}
-            </Typography>
-          )}
-        </Box>
+          {(error || field.helperText) && <FormHelperText>{error || field.helperText}</FormHelperText>}
+        </FormControl>
       );
     }
 
@@ -439,7 +486,8 @@ export default function PublicAdmissionInquiryFormScreen({
         name={field.key}
         label={field.label}
         placeholder={field.placeholder || undefined}
-        helperText={field.helperText || undefined}
+        error={Boolean(error)}
+        helperText={error || field.helperText || undefined}
         value={typeof value === 'string' ? value : ''}
         type={
           field.fieldType === AdmissionCrmFormFieldType.Email
@@ -477,7 +525,7 @@ export default function PublicAdmissionInquiryFormScreen({
 
   if (isLoading) {
     return (
-      <PublicAdmissionsShell title={text.startTitle} language={language}>
+      <PublicAdmissionsShell title={text.startTitle} language={copyLanguage} portal={portal}>
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Stack spacing={2}>
             <Typography variant="h6">{text.loading}</Typography>
@@ -490,7 +538,7 @@ export default function PublicAdmissionInquiryFormScreen({
 
   if (loadError || !form) {
     return (
-      <PublicAdmissionsShell title={text.unavailableTitle} language={language}>
+      <PublicAdmissionsShell title={text.unavailableTitle} language={copyLanguage} portal={portal}>
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Alert
             severity="error"
@@ -510,7 +558,7 @@ export default function PublicAdmissionInquiryFormScreen({
 
   if (result) {
     return (
-      <PublicAdmissionsShell title={text.receivedTitle} language={language}>
+      <PublicAdmissionsShell title={text.receivedTitle} language={copyLanguage} portal={portal}>
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Stack spacing={2}>
             <Alert severity="success" role="status">
@@ -529,9 +577,11 @@ export default function PublicAdmissionInquiryFormScreen({
     <PublicAdmissionsShell
       title={form.templateName}
       description={form.description || text.description}
-      language={language}
+      language={copyLanguage}
+      portal={portal}
     >
       <Paper
+        ref={formRef}
         component="form"
         onSubmit={(event) => {
           event.preventDefault();
@@ -541,17 +591,24 @@ export default function PublicAdmissionInquiryFormScreen({
         sx={{ p: { xs: 2, md: 3 }, width: '100%', maxWidth: 760, borderRadius: 1 }}
       >
         <Stack spacing={2}>
+          {(Object.keys(fieldErrors).length > 0 || consentError || preferenceError) && (
+            <Alert severity="error" role="alert">
+              {text.reviewErrors}
+            </Alert>
+          )}
           <FormControl size="small" sx={{ alignSelf: 'flex-end', minWidth: 140 }}>
             <InputLabel id="admission-form-language">{text.language}</InputLabel>
             <Select
               labelId="admission-form-language"
               label={text.language}
               value={language}
-              onChange={(event) => setLanguage(event.target.value as ApplicantLanguage)}
+              onChange={(event) => setLanguage(event.target.value)}
             >
-              <MenuItem value="en">English</MenuItem>
-              <MenuItem value="gu">ગુજરાતી</MenuItem>
-              <MenuItem value="hi">हिन्दी</MenuItem>
+              {languageOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {getPublicAdmissionsLanguageLabel(option, copyLanguage)}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
           <Stack spacing={1.5}>
@@ -562,7 +619,10 @@ export default function PublicAdmissionInquiryFormScreen({
               </Stack>
             ))}
           </Stack>
-          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+          <Paper
+            variant="outlined"
+            sx={{ p: 1.5, borderRadius: 1, borderColor: preferenceError ? 'error.main' : undefined }}
+          >
             <Stack spacing={1}>
               <Typography variant="subtitle2">{text.communication}</Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
@@ -580,21 +640,39 @@ export default function PublicAdmissionInquiryFormScreen({
                   />
                 ))}
               </Stack>
+              {preferenceError && <FormHelperText error>{preferenceError}</FormHelperText>}
             </Stack>
           </Paper>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="admission-consent"
-                checked={consentAccepted}
-                onChange={(event) => setConsentAccepted(event.target.checked)}
-              />
-            }
-            label={form.consentText}
-          />
-          <Typography variant="caption" color="text.secondary">
-            {text.privacy}: {form.privacyNoticeUrl}
-          </Typography>
+          <FormControl error={Boolean(consentError)}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="admission-consent"
+                  checked={consentAccepted}
+                  onChange={(event) => {
+                    setConsentAccepted(event.target.checked);
+                    setConsentError('');
+                  }}
+                />
+              }
+              label={form.consentText}
+            />
+            {consentError && <FormHelperText>{consentError}</FormHelperText>}
+          </FormControl>
+          {getSafePrivacyNoticeHref(form.privacyNoticeUrl) ? (
+            <Link
+              href={getSafePrivacyNoticeHref(form.privacyNoticeUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="caption"
+            >
+              {text.privacyLink}
+            </Link>
+          ) : (
+            <Typography variant="caption" color="text.secondary">
+              {text.privacy}
+            </Typography>
+          )}
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
             {text.submit}
           </LoadingButton>

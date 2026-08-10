@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-08-09
+updated_on: 2026-08-10
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -50,6 +50,9 @@ Use these expectations when reviewing client behavior.
 | Activation mutation                | Refresh activation workspace, applicant state, records handoff visibility, and My Work                                                  |
 | Communication mutation             | Refresh Follow-ups & Messages, delivery logs, applicant timeline, opt-out state, reminder state, and message action state               |
 | Admission Reports query            | Send applicant-creation dates and optional target standard, then render the server-grouped lifecycle, source, standard, or outcome view |
+| Admission intelligence queries     | Keep the active forecast and optional comparison cycle separate; render only server-scoped capacity, response-risk, funnel, and SLA values |
+| Public portal and family mutations | Load safe tenant portal metadata, preserve the verified session header, refresh status after communication-preference or withdrawal changes, and never display raw transport errors |
+| Scheduled report mutation          | Select only active Enrollment staff recipients and persist internal destinations as `user:{userId}`                                             |
 | Provider settings mutation         | Strip read-only stored-value flags and send blank existing credential values to preserve secrets without returning them to the browser  |
 | Records mutation                   | Refresh student lists, profile data, and assignment projections                                                                         |
 | Attendance mutation                | Refresh attendance day, dashboard, leave, and report assumptions                                                                        |

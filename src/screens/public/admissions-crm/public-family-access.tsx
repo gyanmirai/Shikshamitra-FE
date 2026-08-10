@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import {
@@ -18,8 +18,18 @@ import {
 
 import { PublicAdmissionsShell } from './public-admissions-shell';
 import { getFamilyStatusStorageKey } from './public-family-session';
-import { readPublicAdmissionStatusProblem } from './public-status-utils';
+import { usePublicAdmissionsPortal } from './use-public-admissions-portal';
 import { publicAdmissionsCopy, publicAdmissionsStatusCopy } from './public-admissions-copy';
+import {
+  createPublicAdmissionSafeError,
+  readPublicAdmissionStatusProblem,
+  getPublicAdmissionRequestErrorMessage,
+} from './public-status-utils';
+import {
+  getPublicAdmissionsCoreLanguage,
+  getPublicAdmissionsLanguageLabel,
+  getPublicAdmissionsLanguageOptions,
+} from './public-admissions-portal';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
@@ -68,20 +78,32 @@ const familyCopy = {
 } satisfies Record<PublicAdmissionsLanguage, Record<string, string>>;
 
 export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: string }) {
-  const [language, setLanguage] = useState<PublicAdmissionsLanguage>('en');
+  const [language, setLanguage] = useState('en');
   const [contact, setContact] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [challenge, setChallenge] = useState<FamilyChallenge | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [otpSubmitted, setOtpSubmitted] = useState(false);
-  const copy = publicAdmissionsCopy[language];
-  const statusCopy = publicAdmissionsStatusCopy[language];
-  const pageCopy = familyCopy[language];
+  const contactInputRef = useRef<HTMLInputElement | null>(null);
+  const otpInputRef = useRef<HTMLInputElement | null>(null);
+  const portal = usePublicAdmissionsPortal(tenantId);
+  const copyLanguage = getPublicAdmissionsCoreLanguage(language);
+  const copy = publicAdmissionsCopy[copyLanguage];
+  const statusCopy = publicAdmissionsStatusCopy[copyLanguage];
+  const pageCopy = familyCopy[copyLanguage];
+  const languageOptions = getPublicAdmissionsLanguageOptions(portal?.supportedLanguages);
+
+  useEffect(() => {
+    if (portal?.defaultLanguage && language === 'en') setLanguage(portal.defaultLanguage);
+  }, [language, portal?.defaultLanguage]);
 
   const startAccess = async () => {
     setContactSubmitted(true);
-    if (!contact.trim()) return;
+    if (!contact.trim()) {
+      contactInputRef.current?.focus();
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -96,16 +118,20 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
         const problem = await readPublicAdmissionStatusProblem(
           response,
           statusCopy.unableIssueOtp,
-          language
+          copyLanguage
         );
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
       setChallenge((await response.json()) as FamilyChallenge);
       setOtpCode('');
       setOtpSubmitted(false);
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : statusCopy.unableIssueOtp,
+        message: getPublicAdmissionRequestErrorMessage(
+          error,
+          statusCopy.unableIssueOtp,
+          copyLanguage
+        ),
       });
     } finally {
       setIsLoading(false);
@@ -114,7 +140,10 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
 
   const verifyAccess = async () => {
     setOtpSubmitted(true);
-    if (!challenge || !otpCode.trim()) return;
+    if (!challenge || !otpCode.trim()) {
+      otpInputRef.current?.focus();
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -129,16 +158,18 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
         const problem = await readPublicAdmissionStatusProblem(
           response,
           statusCopy.unableVerifyOtp,
-          language
+          copyLanguage
         );
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
 
       const status = (await response.json()) as VerifiedFamilyStatus;
       const currentApplication = status.familyApplications?.find(
         (application) => application.leadId === status.leadId
       );
-      if (!currentApplication) throw new Error(statusCopy.unableVerifyOtp);
+      if (!currentApplication) {
+        throw createPublicAdmissionSafeError(statusCopy.unableVerifyOtp);
+      }
       window.sessionStorage.setItem(
         getFamilyStatusStorageKey(tenantId, currentApplication.statusToken),
         JSON.stringify(status)
@@ -148,7 +179,11 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
       );
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : statusCopy.unableVerifyOtp,
+        message: getPublicAdmissionRequestErrorMessage(
+          error,
+          statusCopy.unableVerifyOtp,
+          copyLanguage
+        ),
       });
     } finally {
       setIsLoading(false);
@@ -159,7 +194,8 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
     <PublicAdmissionsShell
       title={pageCopy.title}
       description={pageCopy.description}
-      language={language}
+      language={copyLanguage}
+      portal={portal}
     >
       <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, width: '100%', maxWidth: 560 }}>
         <Stack spacing={2}>
@@ -169,11 +205,13 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
               labelId="family-access-language"
               label={copy.language}
               value={language}
-              onChange={(event) => setLanguage(event.target.value as PublicAdmissionsLanguage)}
+              onChange={(event) => setLanguage(event.target.value)}
             >
-              <MenuItem value="en">English</MenuItem>
-              <MenuItem value="gu">ગુજરાતી</MenuItem>
-              <MenuItem value="hi">हिन्दी</MenuItem>
+              {languageOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {getPublicAdmissionsLanguageLabel(option, copyLanguage)}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
 
@@ -189,6 +227,7 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
               <TextField
                 label={pageCopy.contact}
                 name="familyContact"
+                inputRef={contactInputRef}
                 value={contact}
                 onChange={(event) => setContact(event.target.value)}
                 error={contactSubmitted && !contact.trim()}
@@ -222,6 +261,7 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
               <TextField
                 label={copy.otpCode}
                 name="oneTimeCode"
+                inputRef={otpInputRef}
                 value={otpCode}
                 onChange={(event) => setOtpCode(event.target.value)}
                 error={otpSubmitted && !otpCode.trim()}

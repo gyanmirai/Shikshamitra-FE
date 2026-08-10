@@ -312,7 +312,6 @@ export function ApplicantWorkspaceOverview({
             <Stack spacing={1}>
               <Typography variant="subtitle2">Add a timeline note</Typography>
               <TextField
-                autoFocus
                 label="Note"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
@@ -364,7 +363,6 @@ export function ApplicantWorkspaceOverview({
                 }}
               >
                 <TextField
-                  autoFocus
                   size="small"
                   label="Task title"
                   value={taskTitle}
@@ -508,7 +506,6 @@ export function ApplicantWorkspaceOverview({
               ))}
             </TextField>
             <TextField
-              autoFocus
               required
               label="Reason"
               value={stageReason}
@@ -615,7 +612,6 @@ export function ApplicantWorkspaceOverview({
                 : 'Archived inquiries leave active queues but retain their full history.'}
             </ApplicantInlineNotice>
             <TextField
-              autoFocus
               required
               label={lead.archivedAt ? 'Reopen reason' : 'Archive reason'}
               value={archiveReason}
@@ -668,7 +664,6 @@ export function ApplicantWorkspaceOverview({
           <Stack spacing={1.5} pt={0.5}>
             <Typography variant="body2">{completionTask?.title}</Typography>
             <TextField
-              autoFocus
               label="Completion note (optional)"
               value={completionNotes}
               onChange={(event) => setCompletionNotes(event.target.value)}

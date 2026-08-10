@@ -109,6 +109,8 @@ export type EnrollmentWorkspaceState = {
   eventStatus?: AdmissionCrmEventStatus;
   from?: string;
   to?: string;
+  compareCycle?: string;
+  exportId?: string;
   reportView?: EnrollmentReportView;
   settingsPanel?: EnrollmentSettingsPanel;
 };
@@ -357,6 +359,8 @@ export const parseEnrollmentWorkspaceState = (
     eventStatus: parseEnum(searchParams.get('eventStatus'), eventStatuses) ?? defaults.eventStatus,
     from: fromValue && isValidAdmissionReportDate(fromValue) ? fromValue : defaults.from,
     to: toValue && isValidAdmissionReportDate(toValue) ? toValue : defaults.to,
+    compareCycle: parseToken(searchParams.get('compare')) ?? defaults.compareCycle,
+    exportId: parseToken(searchParams.get('export')) ?? defaults.exportId,
     reportView:
       reportViewValue && reportViews.has(reportViewValue) ? reportViewValue : defaults.reportView,
     settingsPanel:
@@ -414,6 +418,8 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('eventStatus', state.eventStatus);
   set('from', state.from);
   set('to', state.to);
+  set('compare', state.compareCycle);
+  set('export', state.exportId);
   set('report', state.reportView);
   set('panel', state.settingsPanel);
   return params;

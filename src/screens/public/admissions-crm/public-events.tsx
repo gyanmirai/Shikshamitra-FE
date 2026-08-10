@@ -6,8 +6,12 @@ import { LoadingButton } from 'src/components/loading-button';
 import EventAvailableRounded from '@mui/icons-material/EventAvailableRounded';
 import { Box, Chip, Alert, Paper, Stack, Button, Divider, Typography } from '@mui/material';
 
-import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { formatPublicNumber, formatPublicDateTime } from './public-admissions-format';
+import {
+  createPublicAdmissionSafeError,
+  readPublicAdmissionStatusProblem,
+  getPublicAdmissionRequestErrorMessage,
+} from './public-status-utils';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
@@ -126,7 +130,7 @@ export default function PublicEvents({
       );
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(response, labels.failed, language);
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
       const updated = (await response.json()) as PublicEvent;
       setEvents((current) => current.map((item) => (item.id === updated.id ? updated : item)));
@@ -134,7 +138,7 @@ export default function PublicEvents({
       shikshaMitraToast.success({ message: cancel ? labels.cancelled : labels.booked });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : labels.failed,
+        message: getPublicAdmissionRequestErrorMessage(error, labels.failed, language),
       });
     } finally {
       setLoadingEventId(null);

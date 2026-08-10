@@ -156,16 +156,25 @@ describe('Enrollment workspace URL state', () => {
     expect(serialized.get('return')).toBe('applicant-return-token');
   });
 
-  it('round trips the selected report view independently of the Pipeline view', () => {
+  it('round trips the report view and comparison cycle independently of the Pipeline view', () => {
     const state = parseEnrollmentWorkspaceState(
-      new URLSearchParams({ report: 'standards', view: 'list' })
+      new URLSearchParams({
+        report: 'standards',
+        compare: 'cycle-previous',
+        export: 'export-request-1',
+        view: 'list',
+      })
     );
 
     expect(state.reportView).toBe('standards');
+    expect(state.compareCycle).toBe('cycle-previous');
+    expect(state.exportId).toBe('export-request-1');
     expect(state.view).toBe('list');
 
     const serialized = serializeEnrollmentWorkspaceState(state);
     expect(serialized.get('report')).toBe('standards');
+    expect(serialized.get('compare')).toBe('cycle-previous');
+    expect(serialized.get('export')).toBe('export-request-1');
     expect(serialized.get('view')).toBe('list');
   });
 

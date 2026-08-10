@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 
 import { useEffect } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Link, Stack, Typography } from '@mui/material';
 
 import { publicAdmissionsCopy } from './public-admissions-copy';
 
+import type { PublicAdmissionPortal } from './public-admissions-portal';
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
   description?: string;
   children: ReactNode;
   language?: PublicAdmissionsLanguage;
+  portal?: PublicAdmissionPortal | null;
 };
 
 export function PublicAdmissionsShell({
@@ -21,12 +23,13 @@ export function PublicAdmissionsShell({
   description,
   children,
   language = 'en',
+  portal,
 }: Props) {
   const copy = publicAdmissionsCopy[language];
 
   useEffect(() => {
-    document.title = `${title} | GyanMirai`;
-  }, [title]);
+    document.title = `${title} | ${portal?.schoolName || 'GyanMirai'}`;
+  }, [portal?.schoolName, title]);
 
   return (
     <Box
@@ -40,25 +43,74 @@ export function PublicAdmissionsShell({
       }}
     >
       <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 780, mx: 'auto' }}>
-        <Box component="header">
-          <Typography variant="overline" color="primary.darker">
-            {eyebrow || copy.eyebrow}
-          </Typography>
-          <Typography variant="h4" component="h1" sx={{ textWrap: 'balance' }}>
-            {title}
-          </Typography>
-          {description && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, textWrap: 'pretty' }}>
-              {description}
+        <Stack
+          component="header"
+          direction="row"
+          spacing={1.5}
+          alignItems="flex-start"
+          sx={{ borderTop: portal?.primaryColor ? `4px solid ${portal.primaryColor}` : undefined, pt: portal?.primaryColor ? 1.5 : 0 }}
+        >
+          {portal?.logoDataUrl ? (
+            <Box
+              component="img"
+              src={portal.logoDataUrl}
+              alt={`${portal.schoolName} logo`}
+              width={56}
+              height={56}
+              sx={{ objectFit: 'contain', borderRadius: 1, flexShrink: 0 }}
+            />
+          ) : null}
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              variant="overline"
+              color={portal?.primaryColor ? undefined : 'primary.darker'}
+              sx={{ color: portal?.primaryColor, overflowWrap: 'anywhere' }}
+            >
+              {eyebrow || portal?.schoolName || copy.eyebrow}
             </Typography>
-          )}
-        </Box>
+            <Typography variant="h4" component="h1" sx={{ textWrap: 'balance' }}>
+              {title}
+            </Typography>
+            {description && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, textWrap: 'pretty' }}>
+                {description}
+              </Typography>
+            )}
+          </Box>
+        </Stack>
         <Box component="main" sx={{ minWidth: 0 }}>
           {children}
         </Box>
-        <Typography component="footer" variant="caption" color="text.secondary" textAlign="center">
-          {copy.privacy}
-        </Typography>
+        <Stack component="footer" spacing={0.75} alignItems="center" textAlign="center">
+          {(portal?.helpText || portal?.admissionsPhone || portal?.admissionsEmail) && (
+            <Box>
+              <Typography variant="subtitle2">{copy.needHelp}</Typography>
+              <Typography variant="caption" color="text.secondary" display="block">
+                {portal.helpText || copy.admissionsOffice}
+              </Typography>
+              <Stack direction="row" spacing={1.5} justifyContent="center" flexWrap="wrap">
+                {portal.admissionsPhone && (
+                  <Link variant="caption" href={`tel:${portal.admissionsPhone}`}>
+                    {portal.admissionsPhone}
+                  </Link>
+                )}
+                {portal.admissionsEmail && (
+                  <Link variant="caption" href={`mailto:${portal.admissionsEmail}`}>
+                    {portal.admissionsEmail}
+                  </Link>
+                )}
+              </Stack>
+              {portal.officeHours && (
+                <Typography variant="caption" color="text.secondary" display="block">
+                  {copy.officeHours}: {portal.officeHours}
+                </Typography>
+              )}
+            </Box>
+          )}
+          <Typography variant="caption" color="text.secondary">
+            {copy.privacy}
+          </Typography>
+        </Stack>
       </Stack>
     </Box>
   );

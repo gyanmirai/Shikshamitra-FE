@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-08-09
+updated_on: 2026-08-10
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -65,6 +65,9 @@ authority on each family action. The browser never uses this relationship to bro
 and expired or revoked applicant links are excluded.
 Guardians can also return through the tenant's family sign-in route using the verified phone or email.
 The challenge response is deliberately generic to avoid revealing whether an application exists.
+The public shell uses tenant-safe school branding, admissions help contacts, office hours, and configured language options.
+After verification, guardians can update email, SMS, and WhatsApp preferences or withdraw an eligible application through an explicit confirmation flow.
+Public failures use localized, actionable copy and do not render raw server or network details.
 
 ## Pipeline
 
@@ -219,11 +222,14 @@ Stored credential values are represented only by protected-value indicators, and
 
 Admission Reports presents four focused views: lifecycle, inquiry source, target standard, and closed outcome.
 Only one `CustomizableTable` is shown at a time.
+Staff can select another academic year for a side-by-side cross-cycle comparison without changing the active workspace cycle.
 Date filters apply to applicant creation dates and include the selected calendar dates.
 The date span cannot exceed 366 days.
 The optional target-standard filter is applied by the backend after effective UserScope enforcement.
 The UI shows when results are scope-restricted and does not attempt to reconstruct hidden school-wide totals.
 All groupings come from the server and reuse the same fixed lifecycle projection as Pipeline.
+The intelligence panel summarizes approved and remaining capacity, projected seat surplus or shortfall, response risk, abandonment, completion, overdue work, and SLA misses.
+Governance settings can route a scheduled report to an active Enrollment coordinator; delivery contains an authenticated report link rather than applicant data in an email attachment.
 
 ## Integration ownership
 

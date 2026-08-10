@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import {
@@ -28,12 +28,25 @@ import PublicEvents from './public-events';
 import { PublicAdmissionsShell } from './public-admissions-shell';
 import { getFamilyStatusStorageKey } from './public-family-session';
 import PublicOffer, { type PublicAdmissionOffer } from './public-offer';
-import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
+import { usePublicAdmissionsPortal } from './use-public-admissions-portal';
 import PublicDocuments, { type PublicDocumentChecklist } from './public-documents';
 import PublicExamScheduling, { type PublicExamSnapshot } from './public-exam-scheduling';
 import { publicAdmissionsCopy, publicAdmissionsStatusCopy } from './public-admissions-copy';
 import PublicRegistration, { type PublicRegistrationApplication } from './public-registration';
+import PublicFamilyControls, {
+  type PublicAdmissionCommunicationPreferences,
+} from './public-family-controls';
+import {
+  createPublicAdmissionSafeError,
+  readPublicAdmissionStatusProblem,
+  getPublicAdmissionRequestErrorMessage,
+} from './public-status-utils';
+import {
+  getPublicAdmissionsCoreLanguage,
+  getPublicAdmissionsLanguageLabel,
+  getPublicAdmissionsLanguageOptions,
+} from './public-admissions-portal';
 import {
   formatPublicNumber,
   getPublicRouteLabel,
@@ -43,8 +56,6 @@ import {
   getPublicRouteEligibilityLabel,
 } from './public-admissions-format';
 
-import type { PublicAdmissionsLanguage } from './public-admissions-copy';
-
 type OtpChallenge = {
   maskedDestination: string;
   otpExpiresAt: string;
@@ -53,7 +64,7 @@ type OtpChallenge = {
 };
 
 type ApplicantStatus = {
-  language: 'en' | 'gu' | 'hi';
+  language: string;
   supportedLanguages: string[];
   displayName: string;
   stageName: string;
@@ -127,6 +138,8 @@ type ApplicantStatus = {
     stageName: string;
     lastActivityTime: string;
   }>;
+  communicationPreferences?: PublicAdmissionCommunicationPreferences;
+  canWithdrawApplication?: boolean;
 };
 
 type OtpFeedback = {
@@ -153,6 +166,7 @@ export default function PublicAdmissionStatusScreen({
   tenantId: string;
   token: string;
 }) {
+  const portal = usePublicAdmissionsPortal(tenantId);
   const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
   const [otpCode, setOtpCode] = useState('');
   const [status, setStatus] = useState<ApplicantStatus | null>(() => {
@@ -178,12 +192,32 @@ export default function PublicAdmissionStatusScreen({
   const [isIssuing, setIsIssuing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [otpFeedback, setOtpFeedback] = useState<OtpFeedback | null>(null);
-  const [language, setLanguage] = useState<PublicAdmissionsLanguage>('en');
+  const [language, setLanguage] = useState('en');
   const [currentToken, setCurrentToken] = useState(token);
   const [isSwitchingApplication, setIsSwitchingApplication] = useState(false);
-  const copy = publicAdmissionsCopy[language];
-  const statusCopy = publicAdmissionsStatusCopy[language];
+  const copyLanguage = getPublicAdmissionsCoreLanguage(language);
+  const copy = publicAdmissionsCopy[copyLanguage];
+  const statusCopy = publicAdmissionsStatusCopy[copyLanguage];
+  const languageOptions = getPublicAdmissionsLanguageOptions(
+    status?.supportedLanguages ?? portal?.supportedLanguages
+  );
   const isOtpLocked = otpFeedback?.code === 'AdmissionCrm:StatusOtpLocked';
+
+  useEffect(() => {
+    if (portal?.defaultLanguage && language === 'en') setLanguage(portal.defaultLanguage);
+  }, [language, portal?.defaultLanguage]);
+
+  useEffect(() => {
+    if (!status?.accessSessionToken || !status.accessSessionExpiresAt) return;
+    try {
+      window.sessionStorage.setItem(
+        getFamilyStatusStorageKey(tenantId, currentToken),
+        JSON.stringify(status)
+      );
+    } catch {
+      // The verified journey remains usable when browser session storage is unavailable.
+    }
+  }, [currentToken, status, tenantId]);
 
   const issueOtp = async () => {
     setIsIssuing(true);
@@ -197,14 +231,14 @@ export default function PublicAdmissionStatusScreen({
         const problem = await readPublicAdmissionStatusProblem(
           response,
           statusCopy.unableIssueOtp,
-          language
+          copyLanguage
         );
         setOtpFeedback({
           code: problem.code,
           message: problem.message,
           severity: problem.code === 'AdmissionCrm:StatusOtpResendTooSoon' ? 'warning' : 'error',
         });
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
 
       setChallenge((await response.json()) as OtpChallenge);
@@ -212,7 +246,11 @@ export default function PublicAdmissionStatusScreen({
       setOtpFeedback(null);
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : statusCopy.unableIssueOtp,
+        message: getPublicAdmissionRequestErrorMessage(
+          error,
+          statusCopy.unableIssueOtp,
+          copyLanguage
+        ),
       });
     } finally {
       setIsIssuing(false);
@@ -240,7 +278,7 @@ export default function PublicAdmissionStatusScreen({
         const problem = await readPublicAdmissionStatusProblem(
           response,
           statusCopy.unableVerifyOtp,
-          language
+          copyLanguage
         );
         setOtpFeedback({
           code: problem.code,
@@ -251,14 +289,18 @@ export default function PublicAdmissionStatusScreen({
               ? 'warning'
               : 'error',
         });
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
 
       setStatus((await response.json()) as ApplicantStatus);
       setOtpFeedback(null);
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : statusCopy.unableVerifyOtp,
+        message: getPublicAdmissionRequestErrorMessage(
+          error,
+          statusCopy.unableVerifyOtp,
+          copyLanguage
+        ),
       });
     } finally {
       setIsVerifying(false);
@@ -278,16 +320,20 @@ export default function PublicAdmissionStatusScreen({
         const problem = await readPublicAdmissionStatusProblem(
           response,
           statusCopy.unableSwitchApplication,
-          language
+          copyLanguage
         );
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
 
       setStatus((await response.json()) as ApplicantStatus);
       setCurrentToken(nextToken);
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : statusCopy.unableSwitchApplication,
+        message: getPublicAdmissionRequestErrorMessage(
+          error,
+          statusCopy.unableSwitchApplication,
+          copyLanguage
+        ),
       });
     } finally {
       setIsSwitchingApplication(false);
@@ -298,7 +344,8 @@ export default function PublicAdmissionStatusScreen({
     <PublicAdmissionsShell
       title={copy.statusTitle}
       description={copy.statusDescription}
-      language={language}
+      language={copyLanguage}
+      portal={portal}
     >
       <Paper
         variant="outlined"
@@ -311,11 +358,13 @@ export default function PublicAdmissionStatusScreen({
               labelId="admission-status-language"
               label={copy.language}
               value={language}
-              onChange={(event) => setLanguage(event.target.value as PublicAdmissionsLanguage)}
+              onChange={(event) => setLanguage(event.target.value)}
             >
-              <MenuItem value="en">English</MenuItem>
-              <MenuItem value="gu">ગુજરાતી</MenuItem>
-              <MenuItem value="hi">हिन्दी</MenuItem>
+              {languageOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {getPublicAdmissionsLanguageLabel(option, copyLanguage)}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
           {isIssuing && <LinearProgress />}
@@ -400,7 +449,8 @@ export default function PublicAdmissionStatusScreen({
                 <Chip {...getAccessibleStatusChipProps('primary')} label={status.stageName} />
               </Stack>
               <Typography variant="body2" color="text.secondary">
-                {statusCopy.lastActivity}: {formatPublicDateTime(status.lastActivityTime, language)}
+                {statusCopy.lastActivity}:{' '}
+                {formatPublicDateTime(status.lastActivityTime, copyLanguage)}
               </Typography>
               <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
                 <Stack spacing={1}>
@@ -452,7 +502,7 @@ export default function PublicAdmissionStatusScreen({
                     </Box>
                     <Chip
                       size="small"
-                      label={getPublicStatusLabel(item.status, language)}
+                      label={getPublicStatusLabel(item.status, copyLanguage)}
                       {...getAccessibleStatusChipProps(
                         item.status === 'Completed' ? 'success' : 'default'
                       )}
@@ -483,7 +533,7 @@ export default function PublicAdmissionStatusScreen({
                         </Box>
                         <Chip
                           size="small"
-                          label={getPublicStatusLabel(item.status, language)}
+                          label={getPublicStatusLabel(item.status, copyLanguage)}
                           {...getAccessibleStatusChipProps(getApplicantChecklistColor(item))}
                         />
                       </Stack>
@@ -513,7 +563,7 @@ export default function PublicAdmissionStatusScreen({
                           )}
                         </Box>
                         <Typography variant="caption" color="text.secondary">
-                          {formatPublicDateTime(item.occurredAt, language)}
+                          {formatPublicDateTime(item.occurredAt, copyLanguage)}
                         </Typography>
                       </Stack>
                     ))}
@@ -531,7 +581,7 @@ export default function PublicAdmissionStatusScreen({
                     </Typography>
                     {status.exam.examStartTime && (
                       <Typography variant="body2" color="text.secondary">
-                        {formatPublicDateTime(status.exam.examStartTime, language)}
+                        {formatPublicDateTime(status.exam.examStartTime, copyLanguage)}
                       </Typography>
                     )}
                     {status.exam.obtainedMarks !== null &&
@@ -540,17 +590,17 @@ export default function PublicAdmissionStatusScreen({
                       status.exam.totalMarks !== undefined && (
                         <Typography variant="body2" color="text.secondary">
                           {statusCopy.marks}:{' '}
-                          {formatPublicNumber(status.exam.obtainedMarks, language)}/
-                          {formatPublicNumber(status.exam.totalMarks, language)}
+                          {formatPublicNumber(status.exam.obtainedMarks, copyLanguage)}/
+                          {formatPublicNumber(status.exam.totalMarks, copyLanguage)}
                           {status.exam.percentage !== null && status.exam.percentage !== undefined
-                            ? ` (${formatPublicNumber(status.exam.percentage, language, { maximumFractionDigits: 2 })}%)`
+                            ? ` (${formatPublicNumber(status.exam.percentage, copyLanguage, { maximumFractionDigits: 2 })}%)`
                             : ''}
                         </Typography>
                       )}
                     {status.exam.meritRank && (
                       <Typography variant="body2" color="text.secondary">
                         {statusCopy.meritRank}:{' '}
-                        {formatPublicNumber(status.exam.meritRank, language)}
+                        {formatPublicNumber(status.exam.meritRank, copyLanguage)}
                       </Typography>
                     )}
                     {status.exam.eligibilityDecisionReason && (
@@ -565,7 +615,7 @@ export default function PublicAdmissionStatusScreen({
                   token={currentToken}
                   accessSessionToken={status.accessSessionToken}
                   application={status.registration}
-                  language={language}
+                  language={copyLanguage}
                   onUpdated={(registration) =>
                     setStatus((current) => (current ? { ...current, registration } : current))
                   }
@@ -585,7 +635,7 @@ export default function PublicAdmissionStatusScreen({
                         <Typography variant="subtitle2">{statusCopy.admissionQuotation}</Typography>
                         <Typography variant="caption" color="text.secondary">
                           {status.financialStatus.quotationNumber} - {statusCopy.validUntil}{' '}
-                          {formatPublicDateTime(status.financialStatus.validUntil, language)}
+                          {formatPublicDateTime(status.financialStatus.validUntil, copyLanguage)}
                         </Typography>
                       </Box>
                       <Chip
@@ -621,7 +671,7 @@ export default function PublicAdmissionStatusScreen({
                           {formatPublicCurrency(
                             component.amount,
                             status.financialStatus!.currency,
-                            language
+                            copyLanguage
                           )}
                         </Typography>
                       </Stack>
@@ -629,28 +679,28 @@ export default function PublicAdmissionStatusScreen({
                     <Stack direction="row" gap={1} flexWrap="wrap">
                       <Chip
                         size="small"
-                        label={`${statusCopy.total}: ${formatPublicCurrency(status.financialStatus.grossAmount, status.financialStatus.currency, language)}`}
+                        label={`${statusCopy.total}: ${formatPublicCurrency(status.financialStatus.grossAmount, status.financialStatus.currency, copyLanguage)}`}
                       />
                       <Chip
                         size="small"
-                        label={`${statusCopy.concession}: ${formatPublicCurrency(status.financialStatus.concessionAmount, status.financialStatus.currency, language)}`}
+                        label={`${statusCopy.concession}: ${formatPublicCurrency(status.financialStatus.concessionAmount, status.financialStatus.currency, copyLanguage)}`}
                       />
                       <Chip
                         size="small"
                         {...getAccessibleStatusChipProps('primary')}
-                        label={`${statusCopy.payable}: ${formatPublicCurrency(status.financialStatus.netAmount, status.financialStatus.currency, language)}`}
+                        label={`${statusCopy.payable}: ${formatPublicCurrency(status.financialStatus.netAmount, status.financialStatus.currency, copyLanguage)}`}
                       />
                       <Chip
                         size="small"
                         {...getAccessibleStatusChipProps('success')}
-                        label={`${statusCopy.confirmed}: ${formatPublicCurrency(status.financialStatus.confirmedAmount, status.financialStatus.currency, language)}`}
+                        label={`${statusCopy.confirmed}: ${formatPublicCurrency(status.financialStatus.confirmedAmount, status.financialStatus.currency, copyLanguage)}`}
                       />
                       <Chip
                         size="small"
                         {...getAccessibleStatusChipProps(
                           status.financialStatus.outstandingAmount ? 'warning' : 'default'
                         )}
-                        label={`${statusCopy.outstanding}: ${formatPublicCurrency(status.financialStatus.outstandingAmount, status.financialStatus.currency, language)}`}
+                        label={`${statusCopy.outstanding}: ${formatPublicCurrency(status.financialStatus.outstandingAmount, status.financialStatus.currency, copyLanguage)}`}
                       />
                     </Stack>
                     {status.financialStatus.financeReference ? (
@@ -667,7 +717,7 @@ export default function PublicAdmissionStatusScreen({
                   token={currentToken}
                   accessSessionToken={status.accessSessionToken}
                   offer={status.offer}
-                  language={language}
+                  language={copyLanguage}
                   onUpdated={(offer) =>
                     setStatus((current) => (current ? { ...current, offer } : current))
                   }
@@ -681,7 +731,7 @@ export default function PublicAdmissionStatusScreen({
                     <Stack direction="row" gap={0.75} flexWrap="wrap">
                       <Chip
                         size="small"
-                        label={getPublicRouteLabel(status.admissionRoute.routeType, language)}
+                        label={getPublicRouteLabel(status.admissionRoute.routeType, copyLanguage)}
                       />
                       <Chip
                         size="small"
@@ -698,7 +748,7 @@ export default function PublicAdmissionStatusScreen({
                         )}
                         label={getPublicRouteEligibilityLabel(
                           status.admissionRoute.eligibilityStatus,
-                          language
+                          copyLanguage
                         )}
                       />
                     </Stack>
@@ -723,7 +773,7 @@ export default function PublicAdmissionStatusScreen({
                     <Typography variant="body2">
                       {statusCopy.reference} {status.activation.activationReference}
                       {status.activation.firstDayReadyAt
-                        ? ` - ${statusCopy.completedOn} ${formatPublicDateTime(status.activation.firstDayReadyAt, language)}`
+                        ? ` - ${statusCopy.completedOn} ${formatPublicDateTime(status.activation.firstDayReadyAt, copyLanguage)}`
                         : ''}
                     </Typography>
                   </Alert>
@@ -735,7 +785,7 @@ export default function PublicAdmissionStatusScreen({
                   token={currentToken}
                   accessSessionToken={status.accessSessionToken}
                   currentExam={status.exam}
-                  language={language}
+                  language={copyLanguage}
                   onScheduled={(exam) =>
                     setStatus((current) => (current ? { ...current, exam } : current))
                   }
@@ -746,7 +796,7 @@ export default function PublicAdmissionStatusScreen({
                   tenantId={tenantId}
                   token={currentToken}
                   accessSessionToken={status.accessSessionToken}
-                  language={language}
+                  language={copyLanguage}
                 />
               ) : null}
               {status.documents && status.accessSessionToken ? (
@@ -755,10 +805,21 @@ export default function PublicAdmissionStatusScreen({
                   token={currentToken}
                   accessSessionToken={status.accessSessionToken}
                   checklist={status.documents}
-                  language={language}
+                  language={copyLanguage}
                   onUpdated={(documents) =>
                     setStatus((current) => (current ? { ...current, documents } : current))
                   }
+                />
+              ) : null}
+              {status.communicationPreferences && status.accessSessionToken ? (
+                <PublicFamilyControls
+                  tenantId={tenantId}
+                  token={currentToken}
+                  accessSessionToken={status.accessSessionToken}
+                  language={copyLanguage}
+                  preferences={status.communicationPreferences}
+                  canWithdrawApplication={status.canWithdrawApplication ?? false}
+                  onUpdated={(updated) => setStatus(updated as unknown as ApplicantStatus)}
                 />
               ) : null}
             </Stack>

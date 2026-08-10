@@ -4533,6 +4533,12 @@ export type AdmissionCrmForecastDto = {
   observedActivationRate: number;
   projectedAdditionalAcceptedOffers: number;
   projectedAdditionalActivations: number;
+  approvedSeatCapacity: number;
+  remainingSeatCapacity: number;
+  projectedSeatSurplus: number;
+  capacityIsScopeComplete: boolean;
+  firstResponseAtRiskCount: number;
+  firstResponseAlreadyBreachedCount: number;
   confidence: string;
   inputs: string[];
   limitations: string[];

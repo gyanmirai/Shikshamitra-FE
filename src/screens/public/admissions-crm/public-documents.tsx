@@ -17,9 +17,13 @@ import {
 } from '@mui/material';
 
 import { publicAdmissionsActionCopy } from './public-admissions-copy';
-import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
 import { formatPublicNumber, getPublicStatusLabel } from './public-admissions-format';
+import {
+  createPublicAdmissionSafeError,
+  readPublicAdmissionStatusProblem,
+  getPublicAdmissionRequestErrorMessage,
+} from './public-status-utils';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
@@ -122,14 +126,14 @@ export default function PublicDocuments({
           copy.uploadFailed,
           language
         );
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
       onUpdated((await response.json()) as PublicDocumentChecklist);
       setSelectedFiles((current) => ({ ...current, [document.requirementKey]: undefined }));
       shikshaMitraToast.success({ message: copy.uploadSuccess });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : copy.uploadFailed,
+        message: getPublicAdmissionRequestErrorMessage(error, copy.uploadFailed, language),
       });
     } finally {
       setUploadingKey(null);
