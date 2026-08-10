@@ -116,7 +116,7 @@ export function ApplicantExamSchedulingDialog({
       maxWidth="sm"
       slotProps={{ paper: { sx: { overscrollBehavior: 'contain' } } }}
     >
-      <DialogTitle>Schedule Entrance Exam</DialogTitle>
+      <DialogTitle>Schedule Assessment</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ pt: 1 }}>
           {lead ? (
@@ -191,7 +191,7 @@ export function ApplicantExamSchedulingDialog({
             />
           ) : null}
           <Typography variant="caption" color="text.secondary">
-            Scheduling updates this applicant’s journey and Entrance Exams worklist.
+            Scheduling updates this applicant’s journey and Assessments worklist.
           </Typography>
         </Stack>
       </DialogContent>
@@ -210,7 +210,7 @@ export function ApplicantExamSchedulingDialog({
           }
           onClick={handleSchedule}
         >
-          Schedule Entrance Exam
+          Schedule Assessment
         </LoadingButton>
       </DialogActions>
     </Dialog>

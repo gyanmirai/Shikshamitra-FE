@@ -70,14 +70,15 @@ export default function OnboardingProvider({ children }: { children: React.React
     });
 
     // Start driver with a slight delay to ensure layout is stable
-    setTimeout(() => {
-      driverObj.current.drive();
+    const startTimer = setTimeout(() => {
+      driverObj.current?.drive();
       // Dispatch resize event to force driver.js to recalculate positions
       window.dispatchEvent(new Event('resize'));
     }, 500);
 
     // eslint-disable-next-line consistent-return
     return () => {
+      clearTimeout(startTimer);
       if (driverObj.current) {
         driverObj.current.destroy();
         driverObj.current = null;

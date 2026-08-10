@@ -82,10 +82,10 @@ export function ApplicantExamSummary({
     return (
       <ApplicantEmptyState
         title="Entrance exam is not scheduled"
-        description="Schedule an exam from the Entrance Exams workspace when the applicant is ready."
+        description="Schedule the required test, interview, or interaction from the Assessments workspace."
         action={
           <Button component={Link} href={examHref} color="inherit" size="small">
-            Open Entrance Exams
+            Open Assessments
           </Button>
         }
       />
@@ -108,7 +108,7 @@ export function ApplicantExamSummary({
           variant="outlined"
           endIcon={<OpenInNewRounded />}
         >
-          Open Entrance Exams
+          Open Assessments
         </Button>
       </Stack>
       <Stack direction="row" gap={0.75} flexWrap="wrap">

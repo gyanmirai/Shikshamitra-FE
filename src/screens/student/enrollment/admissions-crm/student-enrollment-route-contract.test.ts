@@ -10,6 +10,7 @@ describe('Student Enrollment workspace route contracts', () => {
     ['my-work', 'AdmissionsOverviewWorkspace'],
     ['pipeline', 'AdmissionsPipelineWorkspace'],
     ['entrance-exams', 'AdmissionsExamsWorkspace'],
+    ['visits-events', 'AdmissionsEventsWorkspace'],
     ['registration', 'AdmissionsRegistrationsWorkspace'],
     ['class-placement', 'AdmissionsOffersWorkspace'],
     ['activation', 'AdmissionsActivationWorkspace'],
@@ -471,7 +472,7 @@ describe('Student Enrollment workspace route contracts', () => {
     );
 
     expect(pipeline).toContain("typeof value === 'string' && /^\\d+$/.test(value)");
-    expect(pipeline).toContain("|| 'Unknown pathway'");
+    expect(pipeline).toContain("|| 'Unknown admission pathway'");
   });
 
   it('uses the global vertical menu without rendering duplicate workspace navigation', () => {

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { useEffect } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 
 import { publicAdmissionsCopy } from './public-admissions-copy';
@@ -22,6 +23,10 @@ export function PublicAdmissionsShell({
   language = 'en',
 }: Props) {
   const copy = publicAdmissionsCopy[language];
+
+  useEffect(() => {
+    document.title = `${title} | GyanMirai`;
+  }, [title]);
 
   return (
     <Box

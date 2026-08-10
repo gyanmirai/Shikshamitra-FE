@@ -107,11 +107,11 @@ describe('Enrollment settings route contracts', () => {
     expect(shell).not.toContain('<Drawer');
     expect(menu).toContain("title: 'Admission Year Setup'");
     expect(menu).toContain("title: 'Pipeline Settings'");
-    expect(menu).toContain("title: 'Entrance Exam Settings'");
+    expect(menu).toContain("title: 'Assessment Settings'");
     expect(menu).toContain("title: 'Communication Settings'");
     expect(menu).not.toContain("title: 'Journey rules'");
     expect(menu).not.toContain('studentPaths.enrollment.settingsSections.automation');
-    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(16);
+    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(17);
   });
 
   it('uses URL-backed panels to progressively disclose dense settings', () => {
@@ -229,6 +229,8 @@ describe('Enrollment settings route contracts', () => {
     expect(workspaceHeader).toContain('section?: {');
     expect(workspaceHeader).toContain('section.href');
     expect(workspaceHeader).toContain('cycleQuery');
+    expect(workspaceHeader).toContain('headingComponent="h1"');
+    expect(workspaceHeader).toContain('descriptionDisplay="visible"');
     expect(workspaceHeader).toContain('px: 2,');
     expect(workspaceHeader).toContain("flexDirection: { xs: 'column', md: 'row' }");
     expect(workspaceHeader).toContain("breadcrumbs: { display: { xs: 'none', sm: 'block' } }");
@@ -329,7 +331,7 @@ describe('Enrollment settings route contracts', () => {
     expect(registrations).toContain("label: 'Issue Method'");
   });
 
-  it('offers a concise school-first exam setup while retaining advanced rules', () => {
+  it('offers a concise school-first assessment setup while retaining advanced rules', () => {
     const playbooks = read(
       'src',
       'screens',
@@ -354,10 +356,12 @@ describe('Enrollment settings route contracts', () => {
     expect(playbooks).toContain('Generate hall tickets for this exam');
     expect(playbooks).toContain('Advanced setup');
     expect(playbooks).toContain('hallTicketEnabled: false');
-    expect(route).toContain('exam applicability, schedules, result rules, retests');
+    expect(route).toContain(
+      'written tests, interviews, interactions, schedules, decisions, and parent messages'
+    );
   });
 
-  it('explains operational handoffs and progressively discloses applicant stage editing', () => {
+  it('uses projection-safe exam and registration guidance without a competing journey model', () => {
     const guidance = read(
       'src',
       'screens',
@@ -391,17 +395,21 @@ describe('Enrollment settings route contracts', () => {
       'application-stage-policy-panel.tsx'
     );
 
-    expect(guidance).toContain('Applicant journey');
-    expect(guidance).toContain('gridTemplateColumns');
-    expect(guidance).toContain('Automatic stage');
+    expect(guidance).toContain('After an exam decision');
+    expect(guidance).toContain('After registration');
     expect(guidance).toContain('Ready to Invite');
+    expect(guidance).toContain('next required step');
+    expect(guidance).not.toContain('AdmissionJourneyOverview');
+    expect(guidance).not.toContain('Offers final-approval queue');
+    expect(guidance).not.toContain('handoff');
     expect(configuration).toContain('Applicant Stages');
     expect(configuration).toContain('<Accordion');
     expect(configuration).toContain('Staff can move applicants to');
     expect(configuration).not.toContain('Pipeline Stages');
-    expect(coreRoute).toContain("title: 'Journey rules'");
+    expect(coreRoute).not.toContain("title: 'Journey rules'");
     expect(coreRoute).not.toContain('AdmissionJourneyOverview');
-    expect(coreRoute).toContain('ApplicationStagePolicyPanel');
+    expect(coreRoute).not.toContain('ApplicationStagePolicyPanel');
+    expect(coreRoute).not.toContain('Follow-up Automation');
     expect(stagePolicy).toContain('Cycle-owned journey policy');
     expect(stagePolicy).toContain('Preview Impact');
     expect(stagePolicy).toContain('Policy-only');

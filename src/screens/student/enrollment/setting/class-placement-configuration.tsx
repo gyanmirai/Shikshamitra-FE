@@ -9,10 +9,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { instituteSetupPaths } from 'src/constants/institute-setup';
 import {
-  AdmissionCrmPlacementTiming,
-  useGetAdmissionCrmPlacementOptionsQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
-import {
   Box,
   Chip,
   Stack,
@@ -22,10 +18,15 @@ import {
   Typography,
   LinearProgress,
 } from '@mui/material';
+import {
+  AdmissionCrmPlacementTiming,
+  useGetAdmissionCrmPlacementOptionsQuery,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useAdmissionYearDraft } from './use-admission-year-draft';
-import { EnrollmentSettingsDecisionCards } from './enrollment-settings-decision-cards';
+import { StructuredReviewConfiguration } from './structured-review-configuration';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { EnrollmentSettingsDecisionCards } from './enrollment-settings-decision-cards';
 import {
   enrollmentTableWrapperSx,
   EnrollmentTableEmptyState,
@@ -238,6 +239,10 @@ export function ClassPlacementConfiguration({ academicYearId }: { academicYearId
           applicants.
         </Alert>
       ) : null}
+
+      <Divider />
+
+      <StructuredReviewConfiguration academicYearId={academicYearId} />
 
       <Divider />
 

@@ -17,6 +17,7 @@ export const getCaseInsensitiveRecordValue = (
   );
   return matchingKey ? record[matchingKey] : undefined;
 };
+
 export const getEffectiveRegistrationValue = (
   field: AdmissionCrmRegistrationFieldDto,
   responses: Record<string, unknown>,

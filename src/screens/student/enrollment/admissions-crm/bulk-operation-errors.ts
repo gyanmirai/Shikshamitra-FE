@@ -8,6 +8,7 @@ export type EnrollmentBulkFailure = {
   applicantName: string;
   reason: string;
 };
+
 export const getExamBulkFailures = (
   result: AdmissionCrmBulkOperationResultDto,
   exams: AdmissionCrmEntranceExamDto[]

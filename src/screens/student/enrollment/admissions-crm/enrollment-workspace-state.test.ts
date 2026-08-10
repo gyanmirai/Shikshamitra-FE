@@ -2,7 +2,9 @@ import { it, expect, describe } from 'vitest';
 import {
   AdmissionInquiryStage,
   AdmissionCrmRouteType,
+  AdmissionCrmEventType,
   AdmissionInquiryChannel,
+  AdmissionCrmEventStatus,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
   AdmissionCrmPipelineColumnKey,
@@ -70,6 +72,21 @@ describe('Enrollment workspace URL state', () => {
       String(AdmissionCrmPipelineColumnKey.ExamPending)
     );
     expect(serializeEnrollmentWorkspaceState(state).get('seatPool')).toBe('pool-1');
+  });
+
+  it('recognizes Visits & Events and round trips its structural filters', () => {
+    expect(getWorkspaceFromPathname('/student/enrollment/visits-events')).toBe('events');
+    const state = parseEnrollmentWorkspaceState(
+      new URLSearchParams({
+        eventType: String(AdmissionCrmEventType.OpenHouse),
+        eventStatus: String(AdmissionCrmEventStatus.Published),
+      })
+    );
+    expect(state.eventType).toBe(AdmissionCrmEventType.OpenHouse);
+    expect(state.eventStatus).toBe(AdmissionCrmEventStatus.Published);
+    const serialized = serializeEnrollmentWorkspaceState(state);
+    expect(serialized.get('eventType')).toBe(String(AdmissionCrmEventType.OpenHouse));
+    expect(serialized.get('eventStatus')).toBe(String(AdmissionCrmEventStatus.Published));
   });
 
   it('canonicalizes the legacy Activity tab to next with a URL-backed drawer', () => {

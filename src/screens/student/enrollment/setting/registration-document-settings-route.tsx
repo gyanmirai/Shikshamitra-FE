@@ -2,7 +2,7 @@
 
 import { Alert, Stack } from '@mui/material';
 
-import { RegistrationOfferHandoffGuidance } from './admission-journey-guidance';
+import { RegistrationReadinessGuidance } from './admission-journey-guidance';
 import AdmissionsDocumentConfiguration from './admissions-document-configuration';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import AdmissionsRegistrationConfiguration from './admissions-registration-configuration';
@@ -21,7 +21,7 @@ export function RegistrationDocumentSettingsRoute() {
       description="Configure form sections, required information, documents, corrections, and verification."
       layout={panel === 'registration' ? 'table' : 'document'}
     >
-      <RegistrationOfferHandoffGuidance />
+      <RegistrationReadinessGuidance />
       <EnrollmentSettingsTaskNav
         label="Registration settings"
         value={panel}

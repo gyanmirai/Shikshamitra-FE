@@ -21,7 +21,7 @@ export type ApplicantPrimaryAction = {
 
 const actionMap: Record<string, ApplicantPrimaryAction> = {
   ScheduleExam: {
-    label: 'Schedule Entrance Exam',
+    label: 'Schedule Assessment',
     tab: 'exam',
     kind: 'schedule-exam',
     requiredPermission: admissionCrmActionPermissions.scheduleExam,
@@ -153,26 +153,22 @@ export function resolveApplicantCommandTab(
 }
 
 export function canOpenJourneyStep(step: ApplicantJourneyStep) {
-  if (
-    step.state === 'complete' ||
-    step.state === 'in-progress' ||
-    step.state === 'needs-review'
-  ) {
+  if (step.state === 'complete' || step.state === 'in-progress' || step.state === 'needs-review') {
     return true;
   }
 
   return Boolean(
     (step.state === 'not-started' || step.state === 'blocked') &&
-      getApplicantPrimaryAction(step.actionCode)
+    getApplicantPrimaryAction(step.actionCode)
   );
 }
 
 export function isApplicantJourneyActionable(step: ApplicantJourneyStep | undefined) {
   return Boolean(
     step &&
-      step.state !== 'complete' &&
-      step.state !== 'skipped' &&
-      getApplicantPrimaryAction(step.actionCode)
+    step.state !== 'complete' &&
+    step.state !== 'skipped' &&
+    getApplicantPrimaryAction(step.actionCode)
   );
 }
 

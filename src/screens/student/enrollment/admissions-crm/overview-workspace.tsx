@@ -38,11 +38,14 @@ import {
   AdmissionCrmWorkspaceSection,
   AdmissionCrmRecommendedAction,
   useGetAdmissionCrmMyWorkQuery,
+  AdmissionCrmReviewAssignmentStatus,
   useBulkCreateAdmissionCrmTasksMutation,
+  useGetMyAdmissionCrmReviewAssignmentsQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
+import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { createApplicantRowNavigationProps } from './applicant-row-navigation';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { formatEnrollmentDate, formatApplicantNumber } from './enrollment-display';
@@ -208,6 +211,17 @@ export function EnrollmentOverviewWorkspace() {
       maxResultCount: pageSize,
     },
     { skip: !academicYearId }
+  );
+  const canSubmitReviews = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.submitReviews
+  );
+  const reviewAssignmentsQuery = useGetMyAdmissionCrmReviewAssignmentsQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId || !canSubmitReviews }
+  );
+  const openReviewAssignments = (reviewAssignmentsQuery.data || []).filter(
+    (assignment) => assignment.status === AdmissionCrmReviewAssignmentStatus.Assigned
   );
 
   const tableFilters = useMemo<IParams['filters']>(
@@ -598,8 +612,49 @@ export function EnrollmentOverviewWorkspace() {
     <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="My Work"
-        description="Assigned tasks, due dates, the applicant's current step, and the next required action."
+        description="Assigned tasks and confidential admissions reviews, ordered by due date and urgency."
       />
+      {canSubmitReviews && reviewAssignmentsQuery.isError ? (
+        <Alert
+          severity="error"
+          action={<Button onClick={() => reviewAssignmentsQuery.refetch()}>Retry</Button>}
+        >
+          Your assigned admissions reviews could not be loaded.
+        </Alert>
+      ) : null}
+      {openReviewAssignments.length ? (
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Stack spacing={1}>
+            <Typography variant="subtitle2">Confidential reviews assigned to you</Typography>
+            {openReviewAssignments.map((assignment) => {
+              const overdue = new Date(assignment.dueAt).getTime() < Date.now();
+              return (
+                <Button
+                  key={assignment.id}
+                  color="inherit"
+                  onClick={() => openApplicant(assignment.leadId, 'offer')}
+                  sx={{ justifyContent: 'space-between', textAlign: 'left', gap: 1 }}
+                >
+                  <Box>
+                    <Typography variant="body2" fontWeight={600}>
+                      {assignment.reviewTitle}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Due {formatEnrollmentDate(assignment.dueAt, true)} · Open the applicant to
+                      complete the confidential rubric.
+                    </Typography>
+                  </Box>
+                  <Chip
+                    size="small"
+                    color={overdue ? 'error' : 'warning'}
+                    label={overdue ? 'Overdue' : 'Assigned'}
+                  />
+                </Button>
+              );
+            })}
+          </Stack>
+        </Paper>
+      ) : null}
       {selectedWorkKeys.length > 0 ? (
         <Paper variant="outlined" role="region" aria-label="Bulk work actions" sx={{ p: 1 }}>
           <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">

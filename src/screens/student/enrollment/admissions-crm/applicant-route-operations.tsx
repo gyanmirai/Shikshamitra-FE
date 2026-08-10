@@ -77,7 +77,7 @@ export function ApplicantRouteOperations({
     !current &&
     Boolean(
       capturedRouteDefinitionId &&
-        definitions.data?.some((definition) => definition.id === capturedRouteDefinitionId)
+      definitions.data?.some((definition) => definition.id === capturedRouteDefinitionId)
     );
   const selectedDefinitionId =
     definitionId || (capturedDefinitionAvailable ? capturedRouteDefinitionId : '') || '';
@@ -149,10 +149,7 @@ export function ApplicantRouteOperations({
               ? routeValues.authority || null
               : null,
         },
-        evidenceReferences: buildRouteEvidenceReferences(
-          requiredEvidenceCodes,
-          evidenceValues
-        ),
+        evidenceReferences: buildRouteEvidenceReferences(requiredEvidenceCodes, evidenceValues),
         reason,
       }
     : null;
@@ -298,7 +295,7 @@ export function ApplicantRouteOperations({
             ) : (
               routeFields.length === 0 && (
                 <ApplicantInlineNotice>
-                  This pathway does not require additional route-specific information.
+                  This admission pathway does not require additional information.
                 </ApplicantInlineNotice>
               )
             )}
@@ -461,9 +458,7 @@ export function ApplicantRouteOperations({
                           assignmentId: current.id,
                           requestedStatus: appealStatus,
                           reason: appealReason.trim(),
-                          evidenceReferences: appealEvidence.trim()
-                            ? [appealEvidence.trim()]
-                            : [],
+                          evidenceReferences: appealEvidence.trim() ? [appealEvidence.trim()] : [],
                         }).unwrap(),
                       'Route appeal submitted.'
                     )

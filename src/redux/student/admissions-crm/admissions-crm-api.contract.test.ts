@@ -3,8 +3,10 @@ import { it, expect, describe } from 'vitest';
 
 import {
   AdmissionInquiryStage,
+  AdmissionCrmEventType,
   AdmissionInquiryChannel,
   StudentAdmissionsCrmApi,
+  AdmissionCrmEventStatus,
   AdmissionCrmLeadPriority,
   AdmissionCrmFormFieldType,
   AdmissionCrmMessageChannel,
@@ -26,15 +28,18 @@ import {
   buildAdmissionCrmLeadListRequest,
   buildAdmissionCrmTimelineRequest,
   buildAdmissionCrmOfferListRequest,
+  buildAdmissionCrmEventListRequest,
   AdmissionCrmDataQualityIssueStatus,
   buildCreateAdmissionCrmLeadRequest,
   buildPublicAdmissionCrmFormRequest,
   buildAddAdmissionCrmLeadNoteRequest,
   buildCreateAdmissionCrmOfferRequest,
+  buildCreateAdmissionCrmEventRequest,
   AdmissionCrmDataQualityIssueSeverity,
   buildScheduleAdmissionCrmExamRequest,
   buildAdmissionCrmPlaybookListRequest,
   buildAdmissionCrmSeatPoolListRequest,
+  buildReserveAdmissionCrmEventRequest,
   buildAdmissionCrmSlaReminderRunRequest,
   buildCreateAdmissionCrmPlaybookRequest,
   buildCreateAdmissionCrmSeatPoolRequest,
@@ -97,6 +102,41 @@ import type {
 } from './admissions-crm-api';
 
 describe('admissions CRM API contracts', () => {
+  it('builds admissions event lifecycle and roster requests', () => {
+    expect(
+      buildAdmissionCrmEventListRequest({
+        academicYearId: 'year-1',
+        status: AdmissionCrmEventStatus.Published,
+        eventType: AdmissionCrmEventType.OpenHouse,
+        maxResultCount: 25,
+      })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/events',
+      params: {
+        status: AdmissionCrmEventStatus.Published,
+        eventType: AdmissionCrmEventType.OpenHouse,
+        maxResultCount: 25,
+      },
+    });
+    const body = {
+      title: 'Primary school open house',
+      eventType: AdmissionCrmEventType.OpenHouse,
+      startsAt: '2026-08-15T04:30:00.000Z',
+      endsAt: '2026-08-15T06:30:00.000Z',
+      location: 'Main campus',
+      capacity: 100,
+    };
+    expect(buildCreateAdmissionCrmEventRequest({ academicYearId: 'year-1', body })).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/events',
+      method: 'POST',
+      body,
+    });
+    expect(buildReserveAdmissionCrmEventRequest({ eventId: 'event-1', leadId: 'lead-1' })).toEqual({
+      url: '/student-enrollment/admissions-crm/events/event-1/registrations',
+      method: 'POST',
+      body: { leadId: 'lead-1', notes: undefined },
+    });
+  });
   it('builds policy, activation, and governed-route requests', () => {
     expect(
       buildAdmissionCrmPolicyPackListRequest({

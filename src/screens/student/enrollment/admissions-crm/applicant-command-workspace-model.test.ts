@@ -12,10 +12,7 @@ import {
 
 import type { ApplicantJourneyStep } from './applicant-journey-model';
 
-const step = (
-  state: ApplicantJourneyStep['state'],
-  actionCode?: string
-): ApplicantJourneyStep => ({
+const step = (state: ApplicantJourneyStep['state'], actionCode?: string): ApplicantJourneyStep => ({
   stepKey: AdmissionCrmApplicantStepKey.Exam,
   id: 'exam',
   label: 'Entrance Exam',
@@ -26,7 +23,7 @@ const step = (
 
 describe('Applicant command workspace model', () => {
   it.each([
-    ['ScheduleExam', 'Schedule Entrance Exam', 'schedule-exam', 'exam'],
+    ['ScheduleExam', 'Schedule Assessment', 'schedule-exam', 'exam'],
     ['RecordExamResult', 'Record Exam Result', 'open-exams', 'exam'],
     ['ReviewEligibility', 'Review Eligibility', 'open-exams', 'exam'],
     ['ReviewExamAbsence', 'Review Exam Absence', 'open-exams', 'exam'],
@@ -68,7 +65,7 @@ describe('Applicant command workspace model', () => {
         },
       ])
     ).toBe(true);
-    expect(action?.label).toBe('Schedule Entrance Exam');
+    expect(action?.label).toBe('Schedule Assessment');
   });
 
   it('resolves next to the backend current step while keeping explicit history', () => {

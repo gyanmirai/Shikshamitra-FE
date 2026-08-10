@@ -33,6 +33,9 @@ export type PublicAdmissionsStatusCopy = {
   progress: string;
   currentStep: string;
   nextStep: string;
+  familyApplications: string;
+  desiredClass: string;
+  unableSwitchApplication: string;
 };
 
 type PublicAdmissionsShellCopy = {
@@ -127,6 +130,9 @@ export const publicAdmissionsStatusCopy: Record<
     progress: 'Admission progress',
     currentStep: 'Current',
     nextStep: 'Next',
+    familyApplications: 'Family applications',
+    desiredClass: 'Applying for',
+    unableSwitchApplication: 'Unable to open this application. Please try again.',
   },
   gu: {
     lastActivity: 'છેલ્લી પ્રવૃત્તિ',
@@ -161,6 +167,9 @@ export const publicAdmissionsStatusCopy: Record<
     progress: 'પ્રવેશ પ્રગતિ',
     currentStep: 'હાલનું પગલું',
     nextStep: 'આગળનું પગલું',
+    familyApplications: 'પરિવારની અરજીઓ',
+    desiredClass: 'પ્રવેશ માટેનું ધોરણ',
+    unableSwitchApplication: 'આ અરજી ખોલી શકાઈ નથી. ફરી પ્રયાસ કરો.',
   },
   hi: {
     lastActivity: 'अंतिम गतिविधि',
@@ -195,6 +204,9 @@ export const publicAdmissionsStatusCopy: Record<
     progress: 'प्रवेश प्रगति',
     currentStep: 'वर्तमान चरण',
     nextStep: 'अगला चरण',
+    familyApplications: 'परिवार के आवेदन',
+    desiredClass: 'जिस कक्षा के लिए आवेदन',
+    unableSwitchApplication: 'यह आवेदन नहीं खोला जा सका। कृपया फिर प्रयास करें।',
   },
 };
 

@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import AddRounded from '@mui/icons-material/AddRounded';
 import { shikshaMitraToast } from 'src/components/toast';
+import { studentPaths } from 'src/constants/student-menu';
 import EventRounded from '@mui/icons-material/EventRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
@@ -124,6 +125,7 @@ const actionPermissions = {
   scheduleExam: `${permissionRoot}.ScheduleExam`,
   issueRegistrationForm: `${permissionRoot}.IssueRegistrationForm`,
   overrideExamCapacity: `${permissionRoot}.OverrideExamCapacity`,
+  manageConfiguration: `${permissionRoot}.ManageConfiguration`,
 };
 
 const channels = Object.values(AdmissionInquiryChannel).filter(
@@ -139,7 +141,7 @@ const routeTypeLabel = (value: AdmissionCrmRouteType | string | null | undefined
   const numericValue = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
   const enumLabel =
     typeof numericValue === 'number' ? AdmissionCrmRouteType[numericValue] : numericValue;
-  return enumLabel?.replace(/([a-z])([A-Z])/g, '$1 $2') || 'Unknown pathway';
+  return enumLabel?.replace(/([a-z])([A-Z])/g, '$1 $2') || 'Unknown admission pathway';
 };
 
 const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
@@ -774,8 +776,9 @@ function PipelineWorkspaceContent() {
     [stagesQuery.data]
   );
   const leads = useMemo(() => leadsQuery.data?.items || [], [leadsQuery.data?.items]);
-  const showEmptyPipeline =
-    !leadsQuery.isLoading && !leadsQuery.isFetching && (leadsQuery.data?.totalCount ?? 0) === 0;
+  const encodedAcademicYearId = encodeURIComponent(academicYearId || '');
+  const admissionYearSettingsHref = `${studentPaths.enrollment.settingsSections.admissionYear}?cycle=${encodedAcademicYearId}`;
+  const pipelineSettingsHref = `${studentPaths.enrollment.settingsSections.pipeline}?cycle=${encodedAcademicYearId}`;
   const rowOwnerIds = useMemo(
     () =>
       Array.from(
@@ -886,7 +889,7 @@ function PipelineWorkspaceContent() {
               type: 'equals',
               value: state.routeType,
               valueType: 'enum',
-              label: 'Admission Pathway',
+              label: 'Admission pathway',
               displayValue: routeTypeLabel(state.routeType),
             },
           ]),
@@ -1100,7 +1103,7 @@ function PipelineWorkspaceContent() {
       },
       {
         id: 'intendedRouteType',
-        label: 'Admission Pathway',
+        label: 'Admission pathway',
         width: 190,
         minWidth: 170,
         defaultHidden: true,
@@ -1509,7 +1512,7 @@ function PipelineWorkspaceContent() {
                 startIcon={<AddRounded />}
                 onClick={() => setQuickDialogOpen(true)}
               >
-                Quick Inquiry
+                Add Inquiry
               </Button>
             ) : null}
           </Stack>
@@ -1666,109 +1669,101 @@ function PipelineWorkspaceContent() {
             onRetry={() => leadsQuery.refetch()}
           />
         ) : (
-          <>
-            <CustomizableTable
-              tableId="student-enrollment-pipeline"
-              tableTitle="Admissions Pipeline"
-              columns={columns}
-              data={leads}
-              isLoading={leadsQuery.isLoading}
-              serverSide
-              serverSidePagination
-              serverSideSearch
-              serverSideSort
-              serverSideSortMode="single"
-              serverSideFilter
-              searchTerm={search}
-              defaultSearchTerm={search}
-              searchFieldProps={{
-                placeholder: 'Search applicants',
-                inputProps: { 'aria-label': 'Search applicants' },
-              }}
-              filters={[...tableFilters, ...columnFilters]}
-              sorts={parseEnrollmentTableSorts(state.sorting || 'LastActivityTime DESC', columns)}
-              totalCount={leadsQuery.data?.totalCount || 0}
-              page={page}
-              rowsPerPage={pageSize}
-              defaultRowsPerPage={pageSize}
-              rowsPerPageOptions={[pageSize]}
-              onSearchInputChange={(value) => {
-                setSearch(value);
-                setSelectedLeadIds([]);
-                if (state.page !== 1) {
-                  updateState({ page: 1 }, 'replace');
-                }
-              }}
-              onServerSearch={(value) => {
-                setDebouncedSearch(value.trim());
-                setSelectedLeadIds([]);
-              }}
-              onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
-              onServerSort={(_column, sorts) => {
-                const nextSorting = serializeEnrollmentTableSort(sorts);
-                updateState(
-                  {
-                    sorting: nextSorting || undefined,
-                    page: 1,
-                  },
-                  'push'
-                );
-              }}
-              onServerFilter={(filters) => {
-                const stateColumns = new Set([
-                  'pipelineColumn',
-                  'channel',
-                  'priority',
-                  'intendedRouteType',
-                  'desiredClassName',
-                  'ownerUserId',
-                ]);
-                setSelectedLeadIds([]);
-                setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
-                updateState(
-                  {
-                    pipelineColumn: getLatestEnumFilter(filters, 'pipelineColumn'),
-                    channel: getLatestEnumFilter(filters, 'channel'),
-                    priority: getLatestEnumFilter(filters, 'priority'),
-                    routeType: getLatestEnumFilter(filters, 'intendedRouteType'),
-                    className: getLatestStringFilter(filters, 'desiredClassName'),
-                    owner: getLatestStringFilter(filters, 'ownerUserId'),
-                    page: 1,
-                  },
-                  'push'
-                );
-              }}
-              noDataText={
-                <EnrollmentTableEmptyState
-                  title="No applicants in this admission year view"
-                  description="Create a real inquiry for this admission year or clear filters to show existing applicants."
-                />
+          <CustomizableTable
+            tableId="student-enrollment-pipeline"
+            tableTitle="Admissions Pipeline"
+            columns={columns}
+            data={leads}
+            isLoading={leadsQuery.isLoading}
+            serverSide
+            serverSidePagination
+            serverSideSearch
+            serverSideSort
+            serverSideSortMode="single"
+            serverSideFilter
+            searchTerm={search}
+            defaultSearchTerm={search}
+            searchFieldProps={{
+              placeholder: 'Search applicants',
+              inputProps: { 'aria-label': 'Search applicants' },
+            }}
+            filters={[...tableFilters, ...columnFilters]}
+            sorts={parseEnrollmentTableSorts(state.sorting || 'LastActivityTime DESC', columns)}
+            totalCount={leadsQuery.data?.totalCount || 0}
+            page={page}
+            rowsPerPage={pageSize}
+            defaultRowsPerPage={pageSize}
+            rowsPerPageOptions={[pageSize]}
+            onSearchInputChange={(value) => {
+              setSearch(value);
+              setSelectedLeadIds([]);
+              if (state.page !== 1) {
+                updateState({ page: 1 }, 'replace');
               }
-              rowProps={(row) => ({
-                ...createApplicantRowNavigationProps({
-                  applicantName: getAdmissionCrmLeadName(row as AdmissionCrmLeadDto),
-                  onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'inquiry'),
-                }),
-                'data-testid': 'student-enrollment-pipeline-row',
-                'data-lead-id': row.id,
-              })}
-              wrapperProps={{ sx: enrollmentTableWrapperSx }}
-              tableContainerProps={{
-                'data-enrollment-scroll-root': 'true',
-                sx: enrollmentTableContainerSx,
-              }}
-            />
-            {showEmptyPipeline ? (
-              <Alert severity="info">
-                No applicants in this admission year. Create a real inquiry for this admission year
-                or clear filters to show existing applicants.
-              </Alert>
-            ) : null}
-          </>
+            }}
+            onServerSearch={(value) => {
+              setDebouncedSearch(value.trim());
+              setSelectedLeadIds([]);
+            }}
+            onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
+            onServerSort={(_column, sorts) => {
+              const nextSorting = serializeEnrollmentTableSort(sorts);
+              updateState(
+                {
+                  sorting: nextSorting || undefined,
+                  page: 1,
+                },
+                'push'
+              );
+            }}
+            onServerFilter={(filters) => {
+              const stateColumns = new Set([
+                'pipelineColumn',
+                'channel',
+                'priority',
+                'intendedRouteType',
+                'desiredClassName',
+                'ownerUserId',
+              ]);
+              setSelectedLeadIds([]);
+              setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
+              updateState(
+                {
+                  pipelineColumn: getLatestEnumFilter(filters, 'pipelineColumn'),
+                  channel: getLatestEnumFilter(filters, 'channel'),
+                  priority: getLatestEnumFilter(filters, 'priority'),
+                  routeType: getLatestEnumFilter(filters, 'intendedRouteType'),
+                  className: getLatestStringFilter(filters, 'desiredClassName'),
+                  owner: getLatestStringFilter(filters, 'ownerUserId'),
+                  page: 1,
+                },
+                'push'
+              );
+            }}
+            noDataText={
+              <EnrollmentTableEmptyState
+                title="No applicants match this view"
+                description="Add an inquiry for this admission year or clear filters to show existing applicants."
+              />
+            }
+            rowProps={(row) => ({
+              ...createApplicantRowNavigationProps({
+                applicantName: getAdmissionCrmLeadName(row as AdmissionCrmLeadDto),
+                onOpen: () => openApplicant((row as AdmissionCrmLeadDto).id, 'inquiry'),
+              }),
+              'data-testid': 'student-enrollment-pipeline-row',
+              'data-lead-id': row.id,
+            })}
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{
+              'data-enrollment-scroll-root': 'true',
+              sx: enrollmentTableContainerSx,
+            }}
+          />
         ))}
 
       <Dialog open={quickDialogOpen} onClose={closeQuickInquiry} fullWidth maxWidth="md">
-        <DialogTitle>Quick Inquiry</DialogTitle>
+        <DialogTitle>Add Inquiry</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Alert severity="info">
@@ -1798,17 +1793,35 @@ function PipelineWorkspaceContent() {
                   </Button>
                 }
               >
-                Inquiry sources, types, channels, and pathways could not be loaded.
+                Inquiry sources, types, channels, and admission pathways could not be loaded.
               </Alert>
             )}
             {quickInquiryOptionsMissing && (
-              <Alert severity="warning">
-                Quick Inquiry needs an active channel, source, inquiry type, and admission pathway.
+              <Alert
+                severity="warning"
+                action={
+                  can(actionPermissions.manageConfiguration) ? (
+                    <Button color="inherit" size="small" href={pipelineSettingsHref}>
+                      Open Pipeline Settings
+                    </Button>
+                  ) : undefined
+                }
+              >
+                Add Inquiry needs an active channel, source, inquiry type, and admission pathway.
               </Alert>
             )}
             {quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false && (
-              <Alert severity="warning">
-                Quick inquiry is unavailable because the admission year is not active.
+              <Alert
+                severity="warning"
+                action={
+                  can(actionPermissions.manageConfiguration) ? (
+                    <Button color="inherit" size="small" href={admissionYearSettingsHref}>
+                      Open Admission Year Setup
+                    </Button>
+                  ) : undefined
+                }
+              >
+                Add Inquiry is unavailable because the admission year is not active.
               </Alert>
             )}
             {admissionYearStandardOptionsQuery.isError && (
@@ -1830,7 +1843,16 @@ function PipelineWorkspaceContent() {
             {!admissionYearStandardsLoading &&
               admissionYearStandardOptionsQuery.data &&
               !admissionYearStandardOptions.length && (
-                <Alert severity="warning">
+                <Alert
+                  severity="warning"
+                  action={
+                    can(actionPermissions.manageConfiguration) ? (
+                      <Button color="inherit" size="small" href={admissionYearSettingsHref}>
+                        Open Admission Year Setup
+                      </Button>
+                    ) : undefined
+                  }
+                >
                   No standards are available in the published Admission Year Setup.
                 </Alert>
               )}
@@ -2198,7 +2220,7 @@ function PipelineWorkspaceContent() {
                       quickFormSubmitted && !selectedQuickInquiryRoute
                         ? 'Select an admission pathway.'
                         : selectedQuickInquiryRoute?.version
-                          ? `Published pathway version ${selectedQuickInquiryRoute.version}.`
+                          ? `Published admission-type version ${selectedQuickInquiryRoute.version}.`
                           : 'Allowed by the published Admission Year Setup.'
                     }
                     onChange={(event) => {

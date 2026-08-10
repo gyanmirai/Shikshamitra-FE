@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { useEffect } from 'react';
 import { Stack } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -20,16 +21,20 @@ export function EnrollmentWorkspaceHeader({ title, description, actions, section
   const { state } = useEnrollmentWorkspace();
   const cycleQuery = state.cycle ? `?cycle=${encodeURIComponent(state.cycle)}` : '';
 
+  useEffect(() => {
+    document.title = `${title} | GyanMirai`;
+  }, [title]);
+
   return (
     <CustomBreadcrumbs
       heading={title}
+      headingComponent="h1"
       description={description}
+      descriptionDisplay="visible"
       links={[
         { name: 'Student', href: studentPaths.dashboard },
         { name: 'Student Enrollment', href: `${studentPaths.enrollment.myWork}${cycleQuery}` },
-        ...(section
-          ? [{ name: section.name, href: `${section.href}${cycleQuery}` }]
-          : []),
+        ...(section ? [{ name: section.name, href: `${section.href}${cycleQuery}` }] : []),
         { name: title },
       ]}
       action={
