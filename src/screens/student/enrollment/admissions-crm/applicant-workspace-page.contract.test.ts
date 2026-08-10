@@ -199,7 +199,7 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain('AdmissionCrmClosedOutcome[closedOutcome]');
     expect(page).toContain('AdmissionInquiryStage[lead.stage]');
     expect(page).toContain('closedOutcomeLabel');
-    expect(page).toContain("? `Closed · ${closedOutcomeLabel || 'Outcome recorded'}`");
+    expect(page).toMatch(/\? `Closed · \$\{closedOutcomeLabel \|\| 'Outcome recorded'\}`/);
     expect(page).toContain('pipelineColumnLabel={pipelineColumnLabel}');
     expect(page).toContain('onOpenActivity={() => requestTransition(');
   });
@@ -285,7 +285,7 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     const contextRail = read('applicant-context-rail.tsx');
     const registration = read('applicant-registration-operations.tsx');
 
-    expect(contextRail).toContain('Admission Pathway');
+    expect(contextRail).toContain('Admission pathway');
     expect(contextRail).toContain('lead.intendedRouteNameSnapshot');
     expect(contextRail).toContain('lead.intendedRouteDefinitionVersion');
     expect(contextRail).toContain('captured at inquiry');

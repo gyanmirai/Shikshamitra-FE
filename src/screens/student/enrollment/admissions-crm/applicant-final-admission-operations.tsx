@@ -38,6 +38,7 @@ import {
   useGetAdmissionCrmWaitlistQuery,
   useGetAdmissionCrmSeatPoolsQuery,
   useGetAdmissionCrmSeatOffersQuery,
+  AdmissionCrmStructuredReviewStatus,
   AdmissionCrmAdmissionDecisionStatus,
   type CreateAdmissionCrmSeatOfferDto,
   useIssueAdmissionCrmSeatOfferMutation,
@@ -50,14 +51,17 @@ import {
   useRespondAdmissionCrmSeatOfferMutation,
   useAddAdmissionCrmLeadToWaitlistMutation,
   useSupersedeAdmissionCrmSeatOfferMutation,
+  useGetAdmissionCrmReviewConfigurationQuery,
   useRunAdmissionCrmWaitlistPromotionMutation,
   useWithdrawAdmissionCrmWaitlistEntryMutation,
+  useGetAdmissionCrmStructuredReviewByLeadQuery,
   useRecordAdmissionCrmAdmissionDecisionMutation,
   useGetAdmissionCrmAdmissionDecisionHistoryQuery,
   usePrepareAdmissionCrmWaitlistPromotionMutation,
   useUpdateAdmissionCrmWaitlistGovernanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { ApplicantStructuredReview } from './applicant-structured-review';
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
 import {
@@ -154,6 +158,14 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
     permissions,
     admissionCrmActionPermissions.cancelAdmission
   );
+  const canOverrideEligibility = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.overrideEligibility
+  );
+  const canViewStructuredReviews = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.viewStructuredReviews
+  );
   const [seatPoolId, setSeatPoolId] = useState('');
   const [offerFormOpen, setOfferFormOpen] = useState(false);
   const [offerType, setOfferType] = useState(AdmissionCrmSeatOfferType.Final);
@@ -189,6 +201,15 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
   });
   const waitlistQuery = useGetAdmissionCrmWaitlistQuery({ seatPoolId }, { skip: !seatPoolId });
   const decisionsQuery = useGetAdmissionCrmAdmissionDecisionHistoryQuery({ leadId });
+  const reviewConfigurationQuery = useGetAdmissionCrmReviewConfigurationQuery(
+    { academicYearId },
+    { skip: !canViewStructuredReviews }
+  );
+  const structuredReviewEnabled = reviewConfigurationQuery.data?.isEnabled === true;
+  const structuredReviewQuery = useGetAdmissionCrmStructuredReviewByLeadQuery(
+    { leadId },
+    { skip: !canViewStructuredReviews || !structuredReviewEnabled }
+  );
 
   const [createOffer, createOfferState] = useCreateAdmissionCrmSeatOfferMutation();
   const [submitOffer, submitState] = useSubmitAdmissionCrmSeatOfferMutation();
@@ -213,6 +234,22 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
     (offer) => offer.status === AdmissionCrmSeatOfferStatus.Accepted
   );
   const leadWaitlistEntries = (waitlistQuery.data || []).filter((entry) => entry.leadId === leadId);
+  const reviewRequiredForDecision = [
+    AdmissionCrmAdmissionDecisionStatus.Approved,
+    AdmissionCrmAdmissionDecisionStatus.Rejected,
+    AdmissionCrmAdmissionDecisionStatus.Waitlisted,
+  ].includes(decisionStatus);
+  const structuredReviewReady =
+    structuredReviewQuery.data?.status === AdmissionCrmStructuredReviewStatus.ReadyForDecision ||
+    structuredReviewQuery.data?.status === AdmissionCrmStructuredReviewStatus.Closed;
+  const structuredReviewUnavailable =
+    canViewStructuredReviews &&
+    (reviewConfigurationQuery.isError ||
+      (structuredReviewEnabled && structuredReviewQuery.isError));
+  const structuredReviewBlocksDecision =
+    !decisionOverride &&
+    reviewRequiredForDecision &&
+    (structuredReviewUnavailable || (structuredReviewEnabled && !structuredReviewReady));
 
   useEffect(() => {
     if (!seatPoolId && pools.length) setSeatPoolId(pools[0].id);
@@ -308,6 +345,8 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
             Waitlist details could not be loaded. Retry before taking a waitlist action.
           </Alert>
         ) : null}
+
+        <ApplicantStructuredReview leadId={leadId} academicYearId={academicYearId} />
 
         {canManageOffers && !finalAdmissionQueriesFailed && !offerFormOpen ? (
           <Button
@@ -876,6 +915,13 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
 
         <Divider />
         <Typography variant="subtitle2">Final Decision</Typography>
+        {structuredReviewBlocksDecision ? (
+          <Alert severity={structuredReviewUnavailable ? 'error' : 'warning'}>
+            {structuredReviewUnavailable
+              ? 'Review readiness could not be verified. Retry the structured review before recording a decision.'
+              : 'Complete the required structured review before approving, rejecting, or waitlisting this applicant.'}
+          </Alert>
+        ) : null}
         {canMakeAdmissionDecision && !finalAdmissionQueriesFailed ? (
           <>
             <Box
@@ -928,20 +974,24 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
               onChange={(event) => setDecisionReason(event.target.value)}
             />
             <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-              <ApplicantSwitchRow
-                label="Enable governed override"
-                description="Record an exception to the configured admission decision rules."
-                checked={decisionOverride}
-                onChange={setDecisionOverride}
-              />
-              <TextField
-                size="small"
-                fullWidth
-                label="Override reason"
-                value={decisionOverrideReason}
-                disabled={!decisionOverride}
-                onChange={(event) => setDecisionOverrideReason(event.target.value)}
-              />
+              {canOverrideEligibility ? (
+                <ApplicantSwitchRow
+                  label="Enable governed override"
+                  description="Record an exception to the configured admission decision rules."
+                  checked={decisionOverride}
+                  onChange={setDecisionOverride}
+                />
+              ) : null}
+              {canOverrideEligibility ? (
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Override reason"
+                  value={decisionOverrideReason}
+                  disabled={!decisionOverride}
+                  onChange={(event) => setDecisionOverrideReason(event.target.value)}
+                />
+              ) : null}
               <LoadingButton
                 variant="contained"
                 startIcon={
@@ -955,6 +1005,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                 disabled={
                   !decisionReason.trim() ||
                   (decisionOverride && !decisionOverrideReason.trim()) ||
+                  structuredReviewBlocksDecision ||
                   (decisionStatus === AdmissionCrmAdmissionDecisionStatus.Cancelled &&
                     (!decisionOfferId || !canCancelAdmission))
                 }

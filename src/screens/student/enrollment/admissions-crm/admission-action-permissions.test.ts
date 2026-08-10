@@ -47,6 +47,11 @@ describe('admission CRM action permissions', () => {
       repairActivation: 'Students.Enrollment.AdmissionsCrm.RepairActivation',
       assignManualIdentifier: 'Students.Enrollment.AdmissionsCrm.AssignManualIdentifier',
       manageServiceHandoffs: 'Students.Enrollment.AdmissionsCrm.ManageServiceHandoffs',
+      viewStructuredReviews: 'Students.Enrollment.AdmissionsCrm.ViewStructuredReviews',
+      manageReviewConfiguration: 'Students.Enrollment.AdmissionsCrm.ManageReviewConfiguration',
+      assignReviewers: 'Students.Enrollment.AdmissionsCrm.AssignReviewers',
+      submitReviews: 'Students.Enrollment.AdmissionsCrm.SubmitReviews',
+      viewConfidentialReviews: 'Students.Enrollment.AdmissionsCrm.ViewConfidentialReviews',
     });
   });
 

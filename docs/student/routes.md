@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-08-08
+updated_on: 2026-08-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,7 +16,7 @@ Student Enrollment uses school-facing canonical routes, while superseded URLs ex
 ## Student Enrollment navigation
 
 The Student Enrollment menu is divided into daily work, process worklists, review, and settings.
-Applicant, Quick Inquiry, Finance status, parent inquiry, and parent status are contextual surfaces rather than menu items.
+Applicant, Add Inquiry, Finance status, parent inquiry, and parent status are contextual surfaces rather than menu items.
 
 ### Daily work
 
@@ -29,7 +29,8 @@ Applicant, Quick Inquiry, Finance status, parent inquiry, and parent status are 
 
 | Menu label            | Canonical route                           | Frontend permission                                |
 | --------------------- | ----------------------------------------- | -------------------------------------------------- |
-| Entrance Exams        | `/student/enrollment/entrance-exams`      | `Students.Enrollment.AdmissionsCrm.View`           |
+| Assessments           | `/student/enrollment/entrance-exams`      | `Students.Enrollment.AdmissionsCrm.View`           |
+| Visits & Events       | `/student/enrollment/visits-events`        | `Students.Enrollment.AdmissionsCrm.ViewEvents`     |
 | Registration          | `/student/enrollment/registration`        | `Students.Enrollment.AdmissionsCrm.View`           |
 | Class Placement       | `/student/enrollment/class-placement`     | `Students.Enrollment.AdmissionsCrm.ViewSeatPlans`  |
 | Activation            | `/student/enrollment/activation`          | `Students.Enrollment.AdmissionsCrm.ViewActivation` |
@@ -48,7 +49,7 @@ Applicant, Quick Inquiry, Finance status, parent inquiry, and parent status are 
 | Settings                 | `/student/enrollment/settings`                 | `Students.Enrollment.AdmissionsCrm.ManageConfiguration` |
 | Admission Year Setup     | `/student/enrollment/settings/admission-year`  | `Students.Enrollment.AdmissionsCrm.ManageConfiguration` |
 | Pipeline Settings        | `/student/enrollment/settings/pipeline`        | `Students.Enrollment.AdmissionsCrm.ManageConfiguration` |
-| Entrance Exam Settings   | `/student/enrollment/settings/entrance-exam`   | `Students.Enrollment.AdmissionsCrm.ManageConfiguration` |
+| Assessment Settings      | `/student/enrollment/settings/entrance-exam`   | `Students.Enrollment.AdmissionsCrm.ManageConfiguration` |
 | Registration Settings    | `/student/enrollment/settings/registration`    | `Students.Enrollment.AdmissionsCrm.ManageConfiguration` |
 | Finance Handoff Settings | `/student/enrollment/settings/finance-handoff` | `Students.Enrollment.AdmissionsCrm.ManageConfiguration` |
 | Class Placement Settings | `/student/enrollment/settings/class-placement` | `Students.Enrollment.AdmissionsCrm.ManageConfiguration` |
@@ -57,11 +58,23 @@ Applicant, Quick Inquiry, Finance status, parent inquiry, and parent status are 
 
 ## Contextual routes
 
-| Surface                    | Route                                                 |
-| -------------------------- | ----------------------------------------------------- |
-| Applicant workspace        | `/student/enrollment/applicants/{leadId}`             |
-| Public inquiry form        | `/student/admissions/inquiry/{tenantId}/{templateId}` |
-| Parent or applicant status | `/student/admissions/status/{tenantId}/{token}`       |
+| Surface                  | Route                                                 |
+| ------------------------ | ----------------------------------------------------- |
+| Applicant workspace      | `/student/enrollment/applicants/{leadId}`             |
+| Public inquiry form      | `/student/admissions/inquiry/{tenantId}/{templateId}` |
+| Family enrollment center | `/student/admissions/status/{tenantId}/{token}`       |
+| Family return sign-in    | `/student/admissions/family/{tenantId}`               |
+
+The family enrollment center starts from an applicant-specific, unguessable link and verifies the
+guardian contact by OTP. After verification, the same short-lived session may switch among active,
+unexpired applications in that tenant that use the same verified primary contact, or applications
+explicitly assigned to the same active, authority-verified guardian with portal access.
+Single-application links remain valid and render without a switcher.
+The family return route accepts the guardian's phone or email and always returns a generic challenge
+message. A successful OTP verification establishes the same short-lived family session and redirects
+without placing that session credential in the URL.
+The same verified status route shows future published visits and events only when staff enabled family
+self-scheduling for that event; reserve and cancel actions remain applicant-, tenant-, and session-scoped.
 
 The applicant workspace owns the six-stage command journey and one active stage operation.
 Pipeline, My Work, and focused worklists open the same applicant record rather than creating area-specific copies.

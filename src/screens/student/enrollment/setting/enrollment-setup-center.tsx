@@ -48,8 +48,8 @@ const setupItems: SetupItem[] = [
   {
     key: 'entrance-exam',
     statusKeys: ['entrance-exam'],
-    title: 'Entrance Exam Settings',
-    description: 'Configure exam applicability, schedules, result rules, and retests.',
+    title: 'Assessment Settings',
+    description: 'Configure written tests, interviews, interactions, schedules, and result rules.',
     path: studentPaths.enrollment.settingsSections.entranceExam,
     icon: 'mdi:clipboard-text-clock-outline',
     group: 'Evaluation',

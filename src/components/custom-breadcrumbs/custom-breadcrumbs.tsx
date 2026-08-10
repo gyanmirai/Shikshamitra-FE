@@ -18,11 +18,13 @@ export function CustomBreadcrumbs({
   links,
   action,
   heading,
+  headingComponent = 'h6',
   moreLink,
   activeLast,
   slotProps = { action: {}, heading: {}, moreLink: {}, breadcrumbs: {} },
   sx,
   description,
+  descriptionDisplay = 'tooltip',
   tooltipProps,
   isBack = false,
   onBack = () => {},
@@ -30,33 +32,6 @@ export function CustomBreadcrumbs({
   ...other
 }: CustomBreadcrumbsProps & { showDivider?: boolean }) {
   const lastLink = links[links.length - 1]?.name;
-
-  const renderHeading = (
-    <Stack direction="row" alignItems="center" spacing={1}>
-      {isBack && (
-        <IconButton aria-label="Back" data-testid="breadcrumb-back" size="small" onClick={onBack}>
-          <Iconify icon="ic:outline-arrow-back-ios-new" fontSize={18} />
-        </IconButton>
-      )}
-
-      <Typography
-        variant="h4"
-        sx={{ display: 'flex', alignItems: 'center', gap: 0.75, ...slotProps?.heading }}
-      >
-        {heading}
-        {description && (
-          <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
-            <Iconify
-              icon="lucide:info"
-              sx={{ cursor: 'pointer' }}
-              fontSize={16}
-              color="info.main"
-            />
-          </CustomTooltip>
-        )}
-      </Typography>
-    </Stack>
-  );
 
   const renderLinks = (
     <Breadcrumbs
@@ -117,7 +92,7 @@ export function CustomBreadcrumbs({
                 color: 'text.primary',
                 transform: 'translateY(-1px)',
               },
-              transition: 'all 0.2s ease',
+              transition: 'transform 0.2s ease, background-color 0.2s ease, color 0.2s ease',
             }}
           >
             <Iconify icon="eva:arrow-back-fill" width={18} />
@@ -128,12 +103,13 @@ export function CustomBreadcrumbs({
           <Stack spacing={0.25}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <Typography
+                component={headingComponent}
                 variant="h6"
                 sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}
               >
                 {heading}
               </Typography>
-              {description && (
+              {description && descriptionDisplay === 'tooltip' && (
                 <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
                   <Iconify
                     icon="lucide:info"
@@ -146,12 +122,11 @@ export function CustomBreadcrumbs({
                 </CustomTooltip>
               )}
             </Stack>
-
-            {/* Optional: We could show breadcrumbs *under* the title if we wanted a different layout, 
-                 but matching the prompt's request for single line modernization first. 
-                 However, usually enterprise breadcrumbs are above title or inline. 
-                 The current design attempts inline. Let's keep inline but clean.
-             */}
+            {description && descriptionDisplay === 'visible' ? (
+              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560 }}>
+                {description}
+              </Typography>
+            ) : null}
           </Stack>
         )}
       </Stack>

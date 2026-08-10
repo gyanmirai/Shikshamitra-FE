@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { Box, Tooltip, IconButton } from '@mui/material';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Box, Drawer, Tooltip, IconButton, Typography } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
@@ -30,11 +30,13 @@ const SubLayout = ({ children }: any) => {
 
   const [isPinned, setIsPinned] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const leaveTimeout = useRef<any>(null);
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     contentScrollRef.current?.scrollTo({ top: 0, left: 0 });
+    setMobileNavOpen(false);
   }, [pathname]);
 
   const handleMouseEnter = useCallback(() => {
@@ -70,6 +72,39 @@ const SubLayout = ({ children }: any) => {
       height="100%"
       sx={{ backgroundColor: (theme) => theme.vars.palette.background.neutral }}
     >
+      <Drawer
+        open={compactNav && mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+        slotProps={{
+          paper: {
+            sx: { width: 280, bgcolor: 'background.paper' },
+          },
+        }}
+      >
+        <Box
+          sx={{
+            px: 2,
+            py: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}`,
+          }}
+        >
+          <Typography variant="subtitle1">Student navigation</Typography>
+          <IconButton
+            aria-label="Close Student navigation"
+            onClick={() => setMobileNavOpen(false)}
+            size="small"
+          >
+            <Iconify icon="mingcute:close-line" />
+          </IconButton>
+        </Box>
+        <Scrollbar fillContent>
+          <NavSectionVertical data={currentData} sx={{ p: 1, flex: '1 1 auto' }} />
+        </Scrollbar>
+      </Drawer>
+
       {currentData?.length > 0 && (
         <motion.div
           onMouseEnter={handleMouseEnter}
@@ -94,6 +129,25 @@ const SubLayout = ({ children }: any) => {
             overflow: 'hidden',
           }}
         >
+          <Box
+            sx={{
+              p: 1,
+              display: { xs: 'flex', md: 'none' },
+              justifyContent: 'center',
+              borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}`,
+            }}
+          >
+            <Tooltip title="Open Student navigation" placement="right">
+              <IconButton
+                aria-label="Open Student navigation"
+                onClick={() => setMobileNavOpen(true)}
+                size="small"
+              >
+                <Iconify icon="solar:hamburger-menu-outline" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
           {/* -- Pin Button -- */}
           <Box
             sx={{

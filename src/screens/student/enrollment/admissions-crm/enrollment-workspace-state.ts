@@ -1,10 +1,12 @@
 import {
   AdmissionInquiryStage,
   AdmissionCrmRouteType,
+  AdmissionCrmEventType,
   EntranceExamStatusEnum,
   AdmissionCrmMyWorkType,
   AdmissionInquiryChannel,
   AdmissionCrmWorkUrgency,
+  AdmissionCrmEventStatus,
   AdmissionCrmLeadPriority,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
@@ -24,6 +26,7 @@ export type EnrollmentWorkspace =
   | 'pipeline'
   | 'applicant'
   | 'exams'
+  | 'events'
   | 'registrations'
   | 'offers'
   | 'activation'
@@ -102,6 +105,8 @@ export type EnrollmentWorkspaceState = {
   attendance?: AdmissionCrmExamAttendanceStatus;
   examStatus?: EntranceExamStatusEnum;
   eligibility?: AdmissionCrmEligibilityDecision;
+  eventType?: AdmissionCrmEventType;
+  eventStatus?: AdmissionCrmEventStatus;
   from?: string;
   to?: string;
   reportView?: EnrollmentReportView;
@@ -156,6 +161,8 @@ const examStatuses = enumValues<EntranceExamStatusEnum>(EntranceExamStatusEnum);
 const eligibilityDecisions = enumValues<AdmissionCrmEligibilityDecision>(
   AdmissionCrmEligibilityDecision
 );
+const eventTypes = enumValues<AdmissionCrmEventType>(AdmissionCrmEventType);
+const eventStatuses = enumValues<AdmissionCrmEventStatus>(AdmissionCrmEventStatus);
 const scoreBands = new Set<ScoreBandFilter>(['all', 'hot', 'warm', 'needsAttention']);
 const applicantTabs = new Set<EnrollmentApplicantTab>([
   'next',
@@ -226,6 +233,7 @@ export const getWorkspaceFromPathname = (pathname: string): EnrollmentWorkspace 
   if (pathname.includes('/settings')) return 'settings';
   if (pathname.includes('/entrance-exams')) return 'exams';
   if (pathname.includes('/exams')) return 'exams';
+  if (pathname.includes('/visits-events')) return 'events';
   if (pathname.includes('/registration')) return 'registrations';
   if (pathname.includes('/registrations')) return 'registrations';
   if (pathname.includes('/class-placement')) return 'offers';
@@ -345,6 +353,8 @@ export const parseEnrollmentWorkspaceState = (
     examStatus: parseEnum(searchParams.get('result'), examStatuses) ?? defaults.examStatus,
     eligibility:
       parseEnum(searchParams.get('eligibility'), eligibilityDecisions) ?? defaults.eligibility,
+    eventType: parseEnum(searchParams.get('eventType'), eventTypes) ?? defaults.eventType,
+    eventStatus: parseEnum(searchParams.get('eventStatus'), eventStatuses) ?? defaults.eventStatus,
     from: fromValue && isValidAdmissionReportDate(fromValue) ? fromValue : defaults.from,
     to: toValue && isValidAdmissionReportDate(toValue) ? toValue : defaults.to,
     reportView:
@@ -400,6 +410,8 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('attendance', state.attendance);
   set('result', state.examStatus);
   set('eligibility', state.eligibility);
+  set('eventType', state.eventType);
+  set('eventStatus', state.eventStatus);
   set('from', state.from);
   set('to', state.to);
   set('report', state.reportView);

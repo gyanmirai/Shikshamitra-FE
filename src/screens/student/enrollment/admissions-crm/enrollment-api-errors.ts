@@ -9,6 +9,7 @@ type ApiErrorPayload = {
     validationErrors?: Array<{ message?: unknown }>;
   };
 };
+
 const knownErrorMessages: Record<string, string> = {
   'AdmissionCrm:ExamSlotCapacityFull':
     'That exam slot has just filled. Choose another slot or refresh capacity.',

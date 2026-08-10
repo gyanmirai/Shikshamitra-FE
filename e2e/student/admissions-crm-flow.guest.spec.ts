@@ -913,13 +913,13 @@ async function openExamRowInWorkspace(
   });
   expect(response?.status(), 'GET /student/enrollment/exams').toBeLessThan(400);
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 15_000 });
-  await expect(page.getByRole('heading', { name: 'Entrance Exams' })).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Assessments' })).toBeVisible({
     timeout: 30_000,
   });
   const initialResponse = await initialExamsResponse;
   await expectOk(initialResponse, 'load CRM entrance exams');
 
-  const search = page.getByRole('textbox', { name: 'Search entrance exams' });
+  const search = page.getByRole('textbox', { name: 'Search assessments' });
   await expect(search).toBeEditable();
   const initialFilter = new URL(initialResponse.url()).searchParams.get('filterText');
   if (initialFilter === applicantName) {
@@ -1281,7 +1281,7 @@ test.describe('Student admissions CRM E2E', () => {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
-    await expect(page.getByRole('button', { name: /Quick Inquiry/i })).not.toBeVisible({
+    await expect(page.getByRole('button', { name: /Add Inquiry/i })).not.toBeVisible({
       timeout: 10_000,
     });
   });
@@ -1695,9 +1695,9 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/entrance-exam/?\\?cycle=${academicYearId}`)
     );
-    const examSettingsHeader = page.locator('header').filter({ hasText: 'Entrance Exam Settings' });
+    const examSettingsHeader = page.locator('header').filter({ hasText: 'Assessment Settings' });
     await expect(
-      examSettingsHeader.getByRole('heading', { name: 'Entrance Exam Settings' })
+      examSettingsHeader.getByRole('heading', { name: 'Assessment Settings' })
     ).toBeVisible();
     await expect(examSettingsHeader.getByRole('link', { name: 'Settings' })).toHaveAttribute(
       'href',
@@ -1956,8 +1956,8 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page.getByRole('heading', { name: /Admissions (CRM|Pipeline)/i })).toBeVisible({
       timeout: 30_000,
     });
-    await page.getByRole('button', { name: /Quick Inquiry/i }).click();
-    const quickInquiry = page.getByRole('dialog', { name: 'Quick Inquiry' });
+    await page.getByRole('button', { name: /Add Inquiry/i }).click();
+    const quickInquiry = page.getByRole('dialog', { name: 'Add Inquiry' });
     await expect(quickInquiry).toBeVisible();
     await expect(quickInquiry.getByLabel('First name')).toBeVisible();
     await expect(quickInquiry.getByLabel('Middle name (optional)')).toBeVisible();
@@ -2190,7 +2190,7 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(applicantWorkspace.getByText('Archived', { exact: true }).first()).toBeVisible();
     await expect(applicantWorkspace.getByText('Outcome Withdrawn', { exact: true })).toBeVisible();
     await expect(
-      applicantWorkspace.getByRole('button', { name: 'Schedule Entrance Exam' })
+      applicantWorkspace.getByRole('button', { name: 'Schedule Assessment' })
     ).toHaveCount(0);
     await expect(
       applicantWorkspace.getByRole('button', { name: 'Activity & Audit' })
@@ -2420,7 +2420,7 @@ test.describe('Student admissions CRM E2E', () => {
     const slotName = scheduled.slotNameSnapshot || slot.slotName;
     const examRow = await openExamRowInWorkspace(page, lead.firstName, slotName, academicYearId);
     await examRow.getByRole('button', { name: /Manage/i }).click();
-    const examDialog = page.getByRole('dialog', { name: /Manage Entrance Exam/i });
+    const examDialog = page.getByRole('dialog', { name: /Manage Assessment/i });
     await expect(examDialog).toBeVisible({ timeout: 15_000 });
 
     await examDialog.getByLabel('Attendance').click();

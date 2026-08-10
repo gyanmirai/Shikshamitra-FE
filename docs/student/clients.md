@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-08-03
+updated_on: 2026-08-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -20,7 +20,7 @@ Use this table to find the first integration file.
 | Surface                                                                                                                            | Client source                                                                                                          |
 | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Shared student records, dashboard, lookup, photo, and attendance history                                                           | `src/redux/student/index.ts`                                                                                           |
-| Admissions Pipeline, Admission Year Setup, applicant command journey, exam, registration, communication, placement, and activation | `src/redux/student/admissions-crm/admissions-crm-api.ts`                                                               |
+| Admissions Pipeline, Admission Year Setup, applicant command journey, assessments, visits and events, registration, communication, placement, and activation | `src/redux/student/admissions-crm/admissions-crm-api.ts`                                                               |
 | Student group and pending assignment                                                                                               | `src/redux/student/student-group/student-group.ts`, `src/redux/student/pending-assignment/pending-assignment-api.ts`   |
 | Student records reports                                                                                                            | `src/redux/student/student-report/student-report-api.ts`                                                               |
 | Bulk student upload                                                                                                                | `src/redux/student/buik-student/bulk-student-api.ts`                                                                   |
@@ -41,7 +41,9 @@ Use these expectations when reviewing client behavior.
 | Applicant progress projection      | Refresh the current applicant command, journey, My Work, Pipeline row state, and parent status where applicable                         |
 | Pipeline lead mutation             | Refresh Pipeline, My Work, applicant workspace, tasks, timeline, Admission Reports, and owner state                                     |
 | Owner or follow-up mutation        | Refresh My Work and applicant timeline                                                                                                  |
-| Exam scheduling or result mutation | Refresh Pipeline, Entrance Exams, applicant workspace, registration eligibility, and Admission Reports                                  |
+| Assessment scheduling or result mutation | Refresh Pipeline, Assessments, applicant workspace, registration eligibility, and Admission Reports                              |
+| Admissions event mutation          | Refresh Visits & Events and the affected applicant timeline; event capacity and roster remain server-authoritative                       |
+| Structured review mutation         | Refresh review configuration, applicant review readiness, My Work assignments, and the applicant timeline without exposing confidential rubric content |
 | Registration mutation              | Refresh Registration, applicant workspace, document checklist, activation preview, and My Work                                          |
 | Finance handoff status             | Refresh applicant workspace, activation preview, and operational counts                                                                 |
 | Placement mutation                 | Refresh placement options, capacity signals, activation preview, and Class Placement views                                              |

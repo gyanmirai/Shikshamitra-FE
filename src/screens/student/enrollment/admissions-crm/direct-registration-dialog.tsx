@@ -363,7 +363,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
     ) {
       shikshaMitraToast.error({
         message:
-          'Student name, guardian, mobile, admission source and type, board, medium, standard, pathway, and template are required.',
+          'Student name, guardian, mobile, inquiry source and type, board, medium, standard, admission pathway, and template are required.',
       });
       return;
     }
@@ -524,8 +524,8 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
           ) : null}
           {optionConfigurationMissing ? (
             <Alert severity="warning">
-              Paper registration needs the Manual entry channel, an admission pathway, and at least
-              one standard in Admission Year Setup.
+              Paper registration needs the Manual entry channel, an admission pathway, and at least one
+              standard in Admission Year Setup.
             </Alert>
           ) : null}
           {quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false ? (
@@ -798,7 +798,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
                   disabled={optionConfigurationUnavailable}
                   helperText={
                     selectedRoute?.version
-                      ? `Published pathway version ${selectedRoute.version}.`
+                      ? `Published admission-type version ${selectedRoute.version}.`
                       : 'Allowed by the published Admission Year Setup.'
                   }
                   onChange={(event) => {

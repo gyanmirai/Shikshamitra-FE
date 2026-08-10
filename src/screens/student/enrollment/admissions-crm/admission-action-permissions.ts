@@ -42,6 +42,11 @@ export const admissionCrmActionPermissions = {
   repairActivation: `${admissionCrmPermissionRoot}.RepairActivation`,
   assignManualIdentifier: `${admissionCrmPermissionRoot}.AssignManualIdentifier`,
   manageServiceHandoffs: `${admissionCrmPermissionRoot}.ManageServiceHandoffs`,
+  viewStructuredReviews: `${admissionCrmPermissionRoot}.ViewStructuredReviews`,
+  manageReviewConfiguration: `${admissionCrmPermissionRoot}.ManageReviewConfiguration`,
+  assignReviewers: `${admissionCrmPermissionRoot}.AssignReviewers`,
+  submitReviews: `${admissionCrmPermissionRoot}.SubmitReviews`,
+  viewConfidentialReviews: `${admissionCrmPermissionRoot}.ViewConfidentialReviews`,
 } as const;
 
 export const resolveAdmissionCrmRegistrationSettingsPermissions = (

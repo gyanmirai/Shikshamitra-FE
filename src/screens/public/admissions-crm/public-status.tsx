@@ -24,7 +24,9 @@ import {
   LinearProgress,
 } from '@mui/material';
 
+import PublicEvents from './public-events';
 import { PublicAdmissionsShell } from './public-admissions-shell';
+import { getFamilyStatusStorageKey } from './public-family-session';
 import PublicOffer, { type PublicAdmissionOffer } from './public-offer';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
@@ -116,6 +118,15 @@ type ApplicantStatus = {
     occurredAt: string;
   }>;
   exam?: PublicExamSnapshot | null;
+  familyApplications?: Array<{
+    leadId: string;
+    academicYearId: string;
+    statusToken: string;
+    displayName: string;
+    desiredClassName?: string | null;
+    stageName: string;
+    lastActivityTime: string;
+  }>;
 };
 
 type OtpFeedback = {
@@ -144,11 +155,32 @@ export default function PublicAdmissionStatusScreen({
 }) {
   const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
   const [otpCode, setOtpCode] = useState('');
-  const [status, setStatus] = useState<ApplicantStatus | null>(null);
+  const [status, setStatus] = useState<ApplicantStatus | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const storageKey = getFamilyStatusStorageKey(tenantId, token);
+    const stored = window.sessionStorage.getItem(storageKey);
+    if (!stored) return null;
+    try {
+      const parsed = JSON.parse(stored) as ApplicantStatus;
+      if (
+        !parsed.accessSessionExpiresAt ||
+        new Date(parsed.accessSessionExpiresAt).getTime() <= Date.now()
+      ) {
+        window.sessionStorage.removeItem(storageKey);
+        return null;
+      }
+      return parsed;
+    } catch {
+      window.sessionStorage.removeItem(storageKey);
+      return null;
+    }
+  });
   const [isIssuing, setIsIssuing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [otpFeedback, setOtpFeedback] = useState<OtpFeedback | null>(null);
   const [language, setLanguage] = useState<PublicAdmissionsLanguage>('en');
+  const [currentToken, setCurrentToken] = useState(token);
+  const [isSwitchingApplication, setIsSwitchingApplication] = useState(false);
   const copy = publicAdmissionsCopy[language];
   const statusCopy = publicAdmissionsStatusCopy[language];
   const isOtpLocked = otpFeedback?.code === 'AdmissionCrm:StatusOtpLocked';
@@ -158,7 +190,7 @@ export default function PublicAdmissionStatusScreen({
     setOtpFeedback(null);
     try {
       const response = await fetch(
-        `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/otp`,
+        `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${currentToken}/otp`,
         { method: 'POST' }
       );
       if (!response.ok) {
@@ -197,7 +229,7 @@ export default function PublicAdmissionStatusScreen({
     setOtpFeedback(null);
     try {
       const response = await fetch(
-        `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/verify`,
+        `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${currentToken}/verify`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -230,6 +262,35 @@ export default function PublicAdmissionStatusScreen({
       });
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const switchApplication = async (nextToken: string) => {
+    if (!status?.accessSessionToken || nextToken === currentToken) return;
+
+    setIsSwitchingApplication(true);
+    try {
+      const response = await fetch(
+        `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${nextToken}?language=${language}`,
+        { headers: { 'X-Admission-Access-Session': status.accessSessionToken } }
+      );
+      if (!response.ok) {
+        const problem = await readPublicAdmissionStatusProblem(
+          response,
+          statusCopy.unableSwitchApplication,
+          language
+        );
+        throw new Error(problem.message);
+      }
+
+      setStatus((await response.json()) as ApplicantStatus);
+      setCurrentToken(nextToken);
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: error instanceof Error ? error.message : statusCopy.unableSwitchApplication,
+      });
+    } finally {
+      setIsSwitchingApplication(false);
     }
   };
 
@@ -302,6 +363,38 @@ export default function PublicAdmissionStatusScreen({
 
           {status && (
             <Stack spacing={1.5}>
+              {(status.familyApplications?.length ?? 0) > 1 ? (
+                <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+                  <Stack spacing={1}>
+                    <Typography variant="subtitle2">{statusCopy.familyApplications}</Typography>
+                    <FormControl size="small" fullWidth>
+                      <InputLabel id="family-application-select-label">
+                        {statusCopy.familyApplications}
+                      </InputLabel>
+                      <Select
+                        labelId="family-application-select-label"
+                        label={statusCopy.familyApplications}
+                        value={currentToken}
+                        disabled={isSwitchingApplication}
+                        onChange={(event) => switchApplication(event.target.value)}
+                      >
+                        {status.familyApplications?.map((application) => (
+                          <MenuItem key={application.leadId} value={application.statusToken}>
+                            {application.displayName}
+                            {application.desiredClassName
+                              ? ` · ${statusCopy.desiredClass}: ${application.desiredClassName}`
+                              : ''}
+                            {` · ${application.stageName}`}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    {isSwitchingApplication ? (
+                      <LinearProgress aria-label={statusCopy.familyApplications} />
+                    ) : null}
+                  </Stack>
+                </Paper>
+              ) : null}
               <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
                 <Typography variant="subtitle1">{status.displayName}</Typography>
                 <Chip {...getAccessibleStatusChipProps('primary')} label={status.stageName} />
@@ -469,7 +562,7 @@ export default function PublicAdmissionStatusScreen({
               {status.registration && status.accessSessionToken ? (
                 <PublicRegistration
                   tenantId={tenantId}
-                  token={token}
+                  token={currentToken}
                   accessSessionToken={status.accessSessionToken}
                   application={status.registration}
                   language={language}
@@ -571,7 +664,7 @@ export default function PublicAdmissionStatusScreen({
               {status.offer && status.accessSessionToken ? (
                 <PublicOffer
                   tenantId={tenantId}
-                  token={token}
+                  token={currentToken}
                   accessSessionToken={status.accessSessionToken}
                   offer={status.offer}
                   language={language}
@@ -639,7 +732,7 @@ export default function PublicAdmissionStatusScreen({
               {status.accessSessionToken && (status.exam?.examStatus ?? 0) === 0 ? (
                 <PublicExamScheduling
                   tenantId={tenantId}
-                  token={token}
+                  token={currentToken}
                   accessSessionToken={status.accessSessionToken}
                   currentExam={status.exam}
                   language={language}
@@ -648,10 +741,18 @@ export default function PublicAdmissionStatusScreen({
                   }
                 />
               ) : null}
+              {status.accessSessionToken ? (
+                <PublicEvents
+                  tenantId={tenantId}
+                  token={currentToken}
+                  accessSessionToken={status.accessSessionToken}
+                  language={language}
+                />
+              ) : null}
               {status.documents && status.accessSessionToken ? (
                 <PublicDocuments
                   tenantId={tenantId}
-                  token={token}
+                  token={currentToken}
                   accessSessionToken={status.accessSessionToken}
                   checklist={status.documents}
                   language={language}

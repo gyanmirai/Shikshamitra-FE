@@ -41,7 +41,7 @@ describe('Admissions CRM paper registration contract', () => {
     );
   });
 
-  it('validates email before advancing and shows the same at-sign affordance as Quick Inquiry', () => {
+  it('validates email before advancing and shows the same at-sign affordance as Add Inquiry', () => {
     expect(source).toContain('isValidQuickInquiryEmail(form.email)');
     expect(source).toContain('if (emailInvalid)');
     expect(source).toContain('Enter a valid email address, for example parent@example.com.');

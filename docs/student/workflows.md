@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-08-08
+updated_on: 2026-08-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -15,17 +15,18 @@ Every worklist opens the same applicant workspace and uses the backend progress 
 
 ## Enrollment submodules
 
-| Area                  | Route                                     | Primary interaction                                                        |
-| --------------------- | ----------------------------------------- | -------------------------------------------------------------------------- |
-| My Work               | `/student/enrollment/my-work`             | Assigned tasks, due work, blockers, and one recommended action             |
-| Pipeline              | `/student/enrollment/pipeline`            | Board and list views over every pre-admission applicant                    |
-| Entrance Exams        | `/student/enrollment/entrance-exams`      | Scheduling, attendance, result, eligibility, absence, and retest work      |
-| Registration          | `/student/enrollment/registration`        | Form progress, missing items, corrections, documents, and verification     |
-| Class Placement       | `/student/enrollment/class-placement`     | Capacity review and division assignment                                    |
-| Activation            | `/student/enrollment/activation`          | Gate review, approval, repair state, and Student Records handoff           |
-| Follow-ups & Messages | `/student/enrollment/follow-ups-messages` | Due reminders, manual follow-ups, message history, and delivery failures   |
-| Admission Reports     | `/student/enrollment/reports`             | Auditable funnel, source, standard, stage, and outcome analysis            |
-| Applicant workspace   | `/student/enrollment/applicants/{leadId}` | Current command, six-stage journey, focused operations, context, and audit |
+| Area                  | Route                                     | Primary interaction                                                                                  |
+| --------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| My Work               | `/student/enrollment/my-work`             | Assigned tasks, due work, blockers, and one recommended action                                       |
+| Pipeline              | `/student/enrollment/pipeline`            | Board and list views over every pre-admission applicant                                              |
+| Assessments           | `/student/enrollment/entrance-exams`      | Written tests, interviews, interactions, scheduling, attendance, decisions, absence, and retest work |
+| Visits & Events       | `/student/enrollment/visits-events`        | Campus visits, open houses, counselling, orientations, capacity, reservations, and attendance         |
+| Registration          | `/student/enrollment/registration`        | Form progress, missing items, corrections, documents, and verification                               |
+| Class Placement       | `/student/enrollment/class-placement`     | Capacity review and division assignment                                                              |
+| Activation            | `/student/enrollment/activation`          | Gate review, approval, repair state, and Student Records handoff                                     |
+| Follow-ups & Messages | `/student/enrollment/follow-ups-messages` | Due reminders, manual follow-ups, message history, and delivery failures                             |
+| Admission Reports     | `/student/enrollment/reports`             | Auditable funnel, source, standard, stage, and outcome analysis                                      |
+| Applicant workspace   | `/student/enrollment/applicants/{leadId}` | Current command, six-stage journey, focused operations, context, and audit                           |
 
 ## Applicant command workspace
 
@@ -37,7 +38,7 @@ The workspace does not derive competing instructions from the lead stage.
 | Order | Step            | Completion meaning                                                                                             |
 | ----- | --------------- | -------------------------------------------------------------------------------------------------------------- |
 | 1     | Inquiry         | Minimum applicant, guardian, academic preference, source, type, and owner data are captured                    |
-| 2     | Entrance Exam   | The exam is completed and an eligibility decision exists, or the published Admission Year Setup permits a skip |
+| 2     | Assessment      | The required assessment is completed and an eligibility decision exists, or the published Admission Year Setup permits a skip |
 | 3     | Registration    | Required responses, documents, corrections, and verification are complete                                      |
 | 4     | Finance         | Finance confirms the configured admission requirement, or the published setup marks Finance as optional        |
 | 5     | Class Placement | Board, medium, standard, and required division placement are confirmed                                         |
@@ -52,11 +53,18 @@ Desktop renders one six-column journey without horizontal scrolling.
 Tablet and mobile render current-step progress plus a `View Journey` disclosure with a vertical status list.
 The applicant header owns identity, lifecycle status, labeled inquiry facts, SLA, and the next best action.
 Every applicant receives one immutable, short Applicant ID at inquiry creation. The same padded ID
-is displayed as the pinned left identity column in Pipeline, My Work, Entrance Exams, Registration,
+is displayed as the pinned left identity column in Pipeline, My Work, Assessments, Registration,
 Offers, Activation, and Operations, and remains visible in the applicant header throughout Enrollment.
 The main column owns the active operation, while the sticky desktop context rail owns pathway, ownership, priority, lead score, follow-ups, Activity and Audit, and Additional Checks.
 Activity and Audit opens as a URL-backed drawer rather than a competing applicant tab.
 Parent-facing status uses the same step order but hides internal notes, scoring details, duplicate evidence, and staff permissions.
+One verified guardian session can show related active applications for the same tenant and primary
+contact, or applications explicitly granted to the same authority-verified portal guardian, so a
+family can move between siblings without repeating OTP verification. The backend rechecks guardian
+authority on each family action. The browser never uses this relationship to broaden staff access,
+and expired or revoked applicant links are excluded.
+Guardians can also return through the tenant's family sign-in route using the verified phone or email.
+The challenge response is deliberately generic to avoid revealing whether an application exists.
 
 ## Pipeline
 
@@ -85,7 +93,7 @@ Missing checklist items must not create extra board columns.
 
 ## Applicant capture
 
-Quick Inquiry minimizes front-desk entry while preserving enough data to route the applicant safely.
+Add Inquiry minimizes front-desk entry while preserving enough data to route the applicant safely.
 Required capture includes applicant name, guardian contact, academic year, board, medium, standard, inquiry source, inquiry type, and owner.
 Division is normally assigned during Class Placement rather than inquiry.
 Duplicate detection runs before lead creation and requires an authorized merge reason before records can be merged.
@@ -97,14 +105,15 @@ Each focused submodule uses one `CustomizableTable`.
 Filtering, sorting, and pagination are server-owned for bounded performance.
 Actions open or update the same applicant record used by Pipeline and My Work.
 
-| Worklist              | Required row context                                                              |
-| --------------------- | --------------------------------------------------------------------------------- |
-| My Work               | Applicant ID, applicant, current step, issue, due time, owner, priority, and recommended action |
-| Entrance Exams        | Applicant ID, schedule, attendance, result, eligibility, absence, retest, and review state      |
-| Registration          | Completion, missing fields, missing documents, correction state, and verification |
-| Class Placement       | Board, medium, standard, division, capacity state, and override authority         |
-| Activation            | Registration, Exam, Finance, Placement, approval, account setup, and repair gates |
-| Follow-ups & Messages | Due state, assignee, channel, template, provider state, and last attempt          |
+| Worklist              | Required row context                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| My Work               | Applicant ID, applicant, current step, issue, due time, owner, priority, and recommended action                                           |
+| Assessments           | Applicant ID, written test, interview, or interaction schedule; attendance, result, decision, absence, retest, and review state           |
+| Visits & Events       | Event type, date, location, capacity, reservation count, lifecycle status, and attendance roster                                           |
+| Registration          | Applicant ID, completion, missing fields, missing documents, correction state, and verification                                           |
+| Class Placement       | Applicant ID, board, medium, standard, division, capacity state, and override authority                                                    |
+| Activation            | Applicant ID, registration, assessment, Finance, placement, approval, account setup, and repair gates                                     |
+| Follow-ups & Messages | Applicant ID, due state, assignee, channel, template, provider state, and last attempt                                                     |
 
 The Registration worklist presents Eligible, Registration Pending, and Registration Done as a
 labeled, mutually exclusive Registration Stage filter. The selected stage, target class, admission
@@ -126,15 +135,44 @@ The page header, admission-year context, filters, and tabs remain mounted during
 Durable tabs, views, paging, sorting, and meaningful filters use shareable URL state.
 `SplashScreen` is reserved for authentication, permission, or application bootstrap rather than normal Enrollment route or tab changes.
 
-| Page type          | Enrollment surfaces                                                                                                                                            |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Table workspace    | My Work, Pipeline list, Entrance Exams, Registration, Class Placement, Activation, Follow-ups and Messages, Admission Reports, and table-first Settings panels |
-| Document workspace | Setup Centre, Finance Handoff forms, provider forms, and other pages whose primary task is guidance or data entry                                              |
-| Sequential setup   | Admission Year Setup and the genuinely ordered Registration and Documents setup flow                                                                           |
-| Mixed workspace    | Applicant, Admission Year history, Activation Settings, and other routes that must explicitly separate a primary table panel from document-style panels        |
+| Page type          | Enrollment surfaces                                                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Table workspace    | My Work, Pipeline list, Assessments, Visits and Events, Registration, Class Placement, Activation, Follow-ups and Messages, Admission Reports, and table-first Settings panels |
+| Document workspace | Setup Centre, Finance Handoff forms, provider forms, and other pages whose primary task is guidance or data entry                                           |
+| Sequential setup   | Admission Year Setup and the genuinely ordered Registration and Documents setup flow                                                                        |
+| Mixed workspace    | Applicant, Admission Year history, Activation Settings, and other routes that must explicitly separate a primary table panel from document-style panels     |
 
 A bounded table is permitted only for an embedded preview, import result, comparison, or history.
 The component and its tests must name that exception explicitly.
+
+## Visits and events
+
+Visits and Events is separate from Assessments and Follow-ups. A campus visit, open house,
+counselling session, or orientation has one shared schedule, capacity, lifecycle, and applicant
+roster. A follow-up task remains work assigned to one staff member, while an assessment remains an
+applicant evaluation that can affect eligibility.
+
+Staff with event-management permission create a draft, then publish it before reserving applicants.
+Published events enforce capacity and prevent duplicate active reservations. Authorized reception or
+admissions staff record check-in or no-show from the roster. Cancelling an event requires a reason and
+cancels its still-active reservations; completing an event is available only after its end time.
+Applicant search and roster details respect backend UserScope. Capacity counts remain event-wide for
+safe booking decisions, but restricted staff never receive the identities or contact details of
+applicants outside their permitted scope.
+
+Each event independently controls family self-scheduling and defaults it off. When enabled and the
+event is published, OTP-verified families can view availability, reserve one applicant place, and use
+an explicit two-step cancellation action in English, Gujarati, or Hindi. Capacity and duplicate
+protection remain server-authoritative, and both actions appear in the applicant timeline.
+
+## Optional structured admissions review
+
+Class Placement Settings contains an optional, disabled-by-default structured review decision.
+When enabled, authorized coordinators start a review from the applicant's Final Admission section,
+assign eligible reviewers, and monitor the required completion count. Reviewers see open
+assignments in My Work, declare any conflict of interest, complete the snapshotted rubric, and
+submit a confidential recommendation. Ordinary final decisions remain unavailable until the review
+is ready; authorized governed overrides require a reason and remain visible in decision history.
 
 ## Admission Year Setup
 
@@ -158,16 +196,16 @@ Closing requires an auditable reason.
 Settings are grouped by the school task they control.
 A generic configuration page must not replace these submodule boundaries.
 
-| Settings page            | Responsibility                                                                                                            |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| Admission Year Setup     | Academic year, dates, target standards, routes, required gates, placement timing, ownership, and publication              |
-| Pipeline Settings        | Inquiry sources, inquiry types, owner pool, default owner, quick-capture fields, follow-up reasons, and allowed shortcuts |
-| Entrance Exam Settings   | Applicability, schedules, pass rules, retest policy, parent scheduling, and exam messages                                 |
-| Registration Settings    | Sections, required fields, documents, languages, verification, and correction reasons                                     |
-| Finance Handoff Settings | Finance requirement, handoff trigger, and visible Finance reference fields                                                |
-| Class Placement Settings | Placement timing, live capacity status, and override permissions                                                          |
-| Activation Settings      | Required gates, approver, cancellation window, account handoff, and confirmation message                                  |
-| Communication Settings   | Channels, templates, variables, consent, provider mode, delivery logs, and simple reminders                               |
+| Settings page            | Responsibility                                                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| Admission Year Setup     | Academic year, dates, target standards, routes, required gates, placement timing, ownership, and publication                      |
+| Pipeline Settings        | Inquiry sources, inquiry types, owner pool, default owner, quick-capture fields, follow-up reasons, and allowed shortcuts         |
+| Assessment Settings      | Written tests, interviews, interactions, applicability, schedules, decision rules, retest policy, parent scheduling, and messages |
+| Registration Settings    | Sections, required fields, documents, languages, verification, and correction reasons                                             |
+| Finance Handoff Settings | Finance requirement, handoff trigger, and visible Finance reference fields                                                        |
+| Class Placement Settings | Placement timing, live capacity status, and override permissions                                                                  |
+| Activation Settings      | Required gates, approver, cancellation window, account handoff, and confirmation message                                          |
+| Communication Settings   | Channels, templates, variables, consent, provider mode, delivery logs, and simple reminders                                       |
 
 Simple reminders belong to Communication Settings.
 There is no separate Automation, Policy and Compliance, Journey Rules, or generic Governance page in canonical navigation.

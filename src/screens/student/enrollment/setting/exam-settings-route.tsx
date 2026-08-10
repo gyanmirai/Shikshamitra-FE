@@ -3,7 +3,7 @@
 import { Alert } from '@mui/material';
 
 import { EnrollmentSettingsPage } from './enrollment-settings-page';
-import { ExamRegistrationHandoffGuidance } from './admission-journey-guidance';
+import { ExamRegistrationGuidance } from './admission-journey-guidance';
 import AdmissionsPlaybookConfiguration from './admissions-playbook-configuration';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 
@@ -11,15 +11,15 @@ export function ExamSettingsRoute() {
   const { academicYearId } = useEnrollmentWorkspace();
   return (
     <EnrollmentSettingsPage
-      title="Entrance Exam Settings"
-      description="Configure exam applicability, schedules, result rules, retests, and parent messages."
+      title="Assessment Settings"
+      description="Configure written tests, interviews, interactions, schedules, decisions, and parent messages."
       layout="table"
     >
-      <ExamRegistrationHandoffGuidance />
+      <ExamRegistrationGuidance />
       {academicYearId ? (
         <AdmissionsPlaybookConfiguration academicYearId={academicYearId} mode="entrance-exam" />
       ) : (
-        <Alert severity="info">Select an academic year to configure entrance exams.</Alert>
+        <Alert severity="info">Select an academic year to configure admission assessments.</Alert>
       )}
     </EnrollmentSettingsPage>
   );

@@ -82,7 +82,7 @@ describe('Applicant exam scheduling dialog', () => {
 
     await user.click(screen.getByLabelText('Exam Slot'));
     await user.click(screen.getByRole('option', { name: /Morning Slot/ }));
-    await user.click(screen.getByRole('button', { name: 'Schedule Entrance Exam' }));
+    await user.click(screen.getByRole('button', { name: 'Schedule Assessment' }));
 
     await waitFor(() =>
       expect(mocks.schedule).toHaveBeenCalledWith({
@@ -104,13 +104,7 @@ describe('Applicant exam scheduling dialog', () => {
     const onClose = vi.fn();
     const confirm = vi.fn(() => false);
     vi.stubGlobal('confirm', confirm);
-    render(
-      <ApplicantExamSchedulingDialog
-        lead={lead}
-        academicYearId="year-1"
-        onClose={onClose}
-      />
-    );
+    render(<ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={onClose} />);
 
     await user.click(screen.getByLabelText('Exam Slot'));
     await user.click(screen.getByRole('option', { name: /Morning Slot/ }));
@@ -133,8 +127,10 @@ describe('Applicant exam scheduling dialog', () => {
       'true'
     );
     await user.keyboard('{Escape}');
-    expect(screen.getByRole('button', { name: 'Schedule Entrance Exam' })).toBeDisabled();
-    expect(screen.queryByRole('switch', { name: 'Override slot capacity' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Schedule Assessment' })).toBeDisabled();
+    expect(
+      screen.queryByRole('switch', { name: 'Override slot capacity' })
+    ).not.toBeInTheDocument();
     expect(mocks.schedule).not.toHaveBeenCalled();
   });
 
@@ -157,7 +153,7 @@ describe('Applicant exam scheduling dialog', () => {
       screen.getByRole('textbox', { name: /Capacity Override Reason/ }),
       'Approved overflow seat'
     );
-    await user.click(screen.getByRole('button', { name: 'Schedule Entrance Exam' }));
+    await user.click(screen.getByRole('button', { name: 'Schedule Assessment' }));
 
     await waitFor(() =>
       expect(mocks.schedule).toHaveBeenCalledWith({
@@ -179,11 +175,11 @@ describe('Applicant exam scheduling dialog', () => {
 
     await user.click(screen.getByLabelText('Exam Slot'));
     await user.click(screen.getByRole('option', { name: /Morning Slot/ }));
-    await user.click(screen.getByRole('button', { name: 'Schedule Entrance Exam' }));
+    await user.click(screen.getByRole('button', { name: 'Schedule Assessment' }));
 
     await waitFor(() => expect(mocks.error).toHaveBeenCalledOnce());
     expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog', { name: 'Schedule Entrance Exam' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Schedule Assessment' })).toBeVisible();
   });
 
   it('shows load and retry states without exposing a usable submit action', () => {
@@ -192,7 +188,7 @@ describe('Applicant exam scheduling dialog', () => {
       <ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={vi.fn()} />
     );
     expect(screen.getByLabelText('Loading entrance exam slots')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Schedule Entrance Exam' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Schedule Assessment' })).toBeDisabled();
 
     mocks.slots.isFetching = false;
     mocks.slots.isError = true;

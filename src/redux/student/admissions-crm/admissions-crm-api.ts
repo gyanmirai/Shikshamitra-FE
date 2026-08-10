@@ -73,6 +73,49 @@ export enum EntranceExamStatusEnum {
   Absent = 3,
 }
 
+export enum AdmissionCrmEventType {
+  CampusVisit = 0,
+  OpenHouse = 1,
+  Counselling = 2,
+  Orientation = 3,
+  Other = 4,
+}
+
+export enum AdmissionCrmEventStatus {
+  Draft = 0,
+  Published = 1,
+  Cancelled = 2,
+  Completed = 3,
+}
+
+export enum AdmissionCrmEventRegistrationStatus {
+  Reserved = 0,
+  CheckedIn = 1,
+  Cancelled = 2,
+  NoShow = 3,
+}
+
+export enum AdmissionCrmStructuredReviewStatus {
+  InReview = 0,
+  ReadyForDecision = 1,
+  Closed = 2,
+  Cancelled = 3,
+}
+
+export enum AdmissionCrmReviewAssignmentStatus {
+  Assigned = 0,
+  Submitted = 1,
+  Recused = 2,
+  Cancelled = 3,
+}
+
+export enum AdmissionCrmReviewRecommendation {
+  Admit = 0,
+  Waitlist = 1,
+  Reject = 2,
+  MoreInformation = 3,
+}
+
 export enum AdmissionCrmFormFieldType {
   Text = 0,
   TextArea = 1,
@@ -1793,6 +1836,164 @@ export type AdmissionCrmEntranceExamDto = {
   eligibilityOverrideReason?: string | null;
   eligibilityDecidedAt?: string | null;
 };
+
+export type AdmissionCrmEventRegistrationDto = {
+  id: string;
+  leadId: string;
+  applicantName: string;
+  parentGuardianName?: string | null;
+  primaryContactNo?: string | null;
+  status: AdmissionCrmEventRegistrationStatus;
+  reservedAt: string;
+  checkedInAt?: string | null;
+  cancelledAt?: string | null;
+  noShowRecordedAt?: string | null;
+  notes?: string | null;
+  cancellationReason?: string | null;
+};
+
+export type AdmissionCrmEventDto = {
+  id: string;
+  academicYearId: string;
+  title: string;
+  eventType: AdmissionCrmEventType;
+  startsAt: string;
+  endsAt: string;
+  location: string;
+  capacity: number;
+  reservedCount: number;
+  availableCount: number;
+  ownerUserId?: string | null;
+  instructions?: string | null;
+  allowFamilySelfScheduling: boolean;
+  status: AdmissionCrmEventStatus;
+  publishedAt?: string | null;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
+  registrations: AdmissionCrmEventRegistrationDto[];
+};
+
+export type AdmissionCrmEventUpsertDto = {
+  title: string;
+  eventType: AdmissionCrmEventType;
+  startsAt: string;
+  endsAt: string;
+  location: string;
+  capacity: number;
+  ownerUserId?: string;
+  instructions?: string;
+  allowFamilySelfScheduling?: boolean;
+};
+
+export type AdmissionCrmReviewCriterionDto = {
+  id?: string;
+  key: string;
+  label: string;
+  maximumScore: number;
+  isRequired: boolean;
+  displayOrder: number;
+};
+
+export type AdmissionCrmReviewConfigurationDto = {
+  id?: string;
+  academicYearId: string;
+  isEnabled: boolean;
+  title: string;
+  requiredCompletedReviews: number;
+  requireConflictDeclaration: boolean;
+  version: number;
+  criteria: AdmissionCrmReviewCriterionDto[];
+};
+
+export type UpdateAdmissionCrmReviewConfigurationDto = Omit<
+  AdmissionCrmReviewConfigurationDto,
+  'id' | 'academicYearId' | 'version' | 'criteria'
+> & {
+  criteria: Array<Omit<AdmissionCrmReviewCriterionDto, 'id' | 'displayOrder'>>;
+};
+
+export type AdmissionCrmReviewAssignmentDto = {
+  id: string;
+  reviewId: string;
+  leadId: string;
+  reviewTitle: string;
+  reviewStatus: AdmissionCrmStructuredReviewStatus;
+  reviewerUserId: string;
+  isCurrentReviewer: boolean;
+  dueAt: string;
+  status: AdmissionCrmReviewAssignmentStatus;
+  assignedAt: string;
+  hasDeclaredConflict?: boolean | null;
+  conflictReason?: string | null;
+  conflictDeclaredAt?: string | null;
+  recommendation?: AdmissionCrmReviewRecommendation | null;
+  confidentialRecommendation?: string | null;
+  scores?: Record<string, number | null> | null;
+  submittedAt?: string | null;
+  criteria: AdmissionCrmReviewCriterionDto[];
+};
+
+export type AdmissionCrmStructuredReviewDto = {
+  id: string;
+  academicYearId: string;
+  leadId: string;
+  configurationVersion: number;
+  title: string;
+  requiredCompletedReviews: number;
+  submittedReviewCount: number;
+  requireConflictDeclaration: boolean;
+  status: AdmissionCrmStructuredReviewStatus;
+  startedAt: string;
+  readyAt?: string | null;
+  closedAt?: string | null;
+  closureReason?: string | null;
+  criteria: AdmissionCrmReviewCriterionDto[];
+  assignments: AdmissionCrmReviewAssignmentDto[];
+};
+
+export const buildAdmissionCrmEventListRequest = ({
+  academicYearId,
+  ...params
+}: {
+  academicYearId: string;
+  skipCount?: number;
+  maxResultCount?: number;
+  sorting?: string;
+  filterText?: string;
+  eventType?: AdmissionCrmEventType;
+  status?: AdmissionCrmEventStatus;
+  startsFrom?: string;
+  startsUntil?: string;
+}) => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/events`,
+  params,
+});
+
+export const buildCreateAdmissionCrmEventRequest = ({
+  academicYearId,
+  body,
+}: {
+  academicYearId: string;
+  body: AdmissionCrmEventUpsertDto;
+}) => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/events`,
+  method: 'POST',
+  body,
+});
+
+export const buildReserveAdmissionCrmEventRequest = ({
+  eventId,
+  leadId,
+  notes,
+}: {
+  eventId: string;
+  leadId: string;
+  notes?: string;
+}) => ({
+  url: `/student-enrollment/admissions-crm/events/${eventId}/registrations`,
+  method: 'POST',
+  body: { leadId, notes },
+});
 
 export type AdmissionCrmEligibilityHandoffDto = {
   academicYearId: string;
@@ -4662,6 +4863,7 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         maxResultCount?: number;
         academicYearId?: string;
         ownerOnly?: boolean;
+        reviewerOnly?: boolean;
       } | void
     >({
       query: (params) => ({
@@ -6007,6 +6209,202 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
     >({
       query: buildAdmissionCrmExamListRequest,
       providesTags: [studentAdmissionsCrmType.exam],
+    }),
+    getAdmissionCrmEvents: builder.query<
+      PagedResult<AdmissionCrmEventDto>,
+      {
+        academicYearId: string;
+        skipCount?: number;
+        maxResultCount?: number;
+        sorting?: string;
+        filterText?: string;
+        eventType?: AdmissionCrmEventType;
+        status?: AdmissionCrmEventStatus;
+        startsFrom?: string;
+        startsUntil?: string;
+      }
+    >({
+      query: buildAdmissionCrmEventListRequest,
+      providesTags: [studentAdmissionsCrmType.event],
+    }),
+    getAdmissionCrmEvent: builder.query<AdmissionCrmEventDto, { eventId: string }>({
+      query: ({ eventId }) => `/student-enrollment/admissions-crm/events/${eventId}`,
+      providesTags: [studentAdmissionsCrmType.event],
+    }),
+    createAdmissionCrmEvent: builder.mutation<
+      AdmissionCrmEventDto,
+      { academicYearId: string; body: AdmissionCrmEventUpsertDto }
+    >({
+      query: buildCreateAdmissionCrmEventRequest,
+      invalidatesTags: [studentAdmissionsCrmType.event],
+    }),
+    updateAdmissionCrmEvent: builder.mutation<
+      AdmissionCrmEventDto,
+      { eventId: string; body: AdmissionCrmEventUpsertDto }
+    >({
+      query: ({ eventId, body }) => ({
+        url: `/student-enrollment/admissions-crm/events/${eventId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.event],
+    }),
+    publishAdmissionCrmEvent: builder.mutation<AdmissionCrmEventDto, { eventId: string }>({
+      query: ({ eventId }) => ({
+        url: `/student-enrollment/admissions-crm/events/${eventId}/publish`,
+        method: 'POST',
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.event],
+    }),
+    cancelAdmissionCrmEvent: builder.mutation<
+      AdmissionCrmEventDto,
+      { eventId: string; reason: string }
+    >({
+      query: ({ eventId, reason }) => ({
+        url: `/student-enrollment/admissions-crm/events/${eventId}/cancel`,
+        method: 'POST',
+        body: { reason },
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.event],
+    }),
+    completeAdmissionCrmEvent: builder.mutation<AdmissionCrmEventDto, { eventId: string }>({
+      query: ({ eventId }) => ({
+        url: `/student-enrollment/admissions-crm/events/${eventId}/complete`,
+        method: 'POST',
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.event],
+    }),
+    reserveAdmissionCrmEvent: builder.mutation<
+      AdmissionCrmEventDto,
+      { eventId: string; leadId: string; notes?: string }
+    >({
+      query: buildReserveAdmissionCrmEventRequest,
+      invalidatesTags: [studentAdmissionsCrmType.event, studentAdmissionsCrmType.timeline],
+    }),
+    cancelAdmissionCrmEventRegistration: builder.mutation<
+      AdmissionCrmEventDto,
+      { eventId: string; registrationId: string; reason?: string }
+    >({
+      query: ({ eventId, registrationId, reason }) => ({
+        url: `/student-enrollment/admissions-crm/events/${eventId}/registrations/${registrationId}/cancel`,
+        method: 'POST',
+        body: { reason },
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.event, studentAdmissionsCrmType.timeline],
+    }),
+    checkInAdmissionCrmEventRegistration: builder.mutation<
+      AdmissionCrmEventDto,
+      { eventId: string; registrationId: string }
+    >({
+      query: ({ eventId, registrationId }) => ({
+        url: `/student-enrollment/admissions-crm/events/${eventId}/registrations/${registrationId}/check-in`,
+        method: 'POST',
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.event, studentAdmissionsCrmType.timeline],
+    }),
+    markNoShowAdmissionCrmEventRegistration: builder.mutation<
+      AdmissionCrmEventDto,
+      { eventId: string; registrationId: string }
+    >({
+      query: ({ eventId, registrationId }) => ({
+        url: `/student-enrollment/admissions-crm/events/${eventId}/registrations/${registrationId}/no-show`,
+        method: 'POST',
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.event, studentAdmissionsCrmType.timeline],
+    }),
+    getAdmissionCrmReviewConfiguration: builder.query<
+      AdmissionCrmReviewConfigurationDto,
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) =>
+        `/student-enrollment/admissions-crm/${academicYearId}/structured-review/configuration`,
+      providesTags: [studentAdmissionsCrmType.structuredReview],
+    }),
+    updateAdmissionCrmReviewConfiguration: builder.mutation<
+      AdmissionCrmReviewConfigurationDto,
+      { academicYearId: string; body: UpdateAdmissionCrmReviewConfigurationDto }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/structured-review/configuration`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.structuredReview],
+    }),
+    getAdmissionCrmStructuredReviewByLead: builder.query<
+      AdmissionCrmStructuredReviewDto | null,
+      { leadId: string }
+    >({
+      query: ({ leadId }) =>
+        `/student-enrollment/admissions-crm/leads/${leadId}/structured-review`,
+      providesTags: [studentAdmissionsCrmType.structuredReview],
+    }),
+    getMyAdmissionCrmReviewAssignments: builder.query<
+      AdmissionCrmReviewAssignmentDto[],
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) =>
+        `/student-enrollment/admissions-crm/${academicYearId}/structured-review/my-assignments`,
+      providesTags: [studentAdmissionsCrmType.structuredReview],
+    }),
+    startAdmissionCrmStructuredReview: builder.mutation<
+      AdmissionCrmStructuredReviewDto,
+      { leadId: string }
+    >({
+      query: ({ leadId }) => ({
+        url: `/student-enrollment/admissions-crm/leads/${leadId}/structured-review/start`,
+        method: 'POST',
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.structuredReview, studentAdmissionsCrmType.timeline],
+    }),
+    assignAdmissionCrmReviewer: builder.mutation<
+      AdmissionCrmStructuredReviewDto,
+      { reviewId: string; reviewerUserId: string; dueAt: string }
+    >({
+      query: ({ reviewId, ...body }) => ({
+        url: `/student-enrollment/admissions-crm/structured-reviews/${reviewId}/assignments`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.structuredReview, studentAdmissionsCrmType.timeline],
+    }),
+    declareAdmissionCrmReviewConflict: builder.mutation<
+      AdmissionCrmReviewAssignmentDto,
+      { assignmentId: string; hasConflict: boolean; reason?: string }
+    >({
+      query: ({ assignmentId, ...body }) => ({
+        url: `/student-enrollment/admissions-crm/structured-review-assignments/${assignmentId}/conflict`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.structuredReview, studentAdmissionsCrmType.timeline],
+    }),
+    submitAdmissionCrmStructuredReview: builder.mutation<
+      AdmissionCrmReviewAssignmentDto,
+      {
+        assignmentId: string;
+        recommendation: AdmissionCrmReviewRecommendation;
+        confidentialRecommendation: string;
+        scores: Record<string, number | null>;
+      }
+    >({
+      query: ({ assignmentId, ...body }) => ({
+        url: `/student-enrollment/admissions-crm/structured-review-assignments/${assignmentId}/submit`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.structuredReview, studentAdmissionsCrmType.timeline],
+    }),
+    closeAdmissionCrmStructuredReview: builder.mutation<
+      AdmissionCrmStructuredReviewDto,
+      { reviewId: string; reason: string }
+    >({
+      query: ({ reviewId, reason }) => ({
+        url: `/student-enrollment/admissions-crm/structured-reviews/${reviewId}/close`,
+        method: 'POST',
+        body: { reason },
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.structuredReview, studentAdmissionsCrmType.timeline],
     }),
     getAdmissionCrmAnalyticsSummary: builder.query<
       AdmissionCrmAnalyticsSummaryDto,
@@ -7902,6 +8300,26 @@ export const {
   useRetryAdmissionCrmMessageDeliveryMutation,
   useApplyPublicAdmissionCrmDeliveryCallbackMutation,
   useGetAdmissionCrmEntranceExamsQuery,
+  useGetAdmissionCrmEventsQuery,
+  useGetAdmissionCrmEventQuery,
+  useCreateAdmissionCrmEventMutation,
+  useUpdateAdmissionCrmEventMutation,
+  usePublishAdmissionCrmEventMutation,
+  useCancelAdmissionCrmEventMutation,
+  useCompleteAdmissionCrmEventMutation,
+  useReserveAdmissionCrmEventMutation,
+  useCancelAdmissionCrmEventRegistrationMutation,
+  useCheckInAdmissionCrmEventRegistrationMutation,
+  useMarkNoShowAdmissionCrmEventRegistrationMutation,
+  useGetAdmissionCrmReviewConfigurationQuery,
+  useUpdateAdmissionCrmReviewConfigurationMutation,
+  useGetAdmissionCrmStructuredReviewByLeadQuery,
+  useGetMyAdmissionCrmReviewAssignmentsQuery,
+  useStartAdmissionCrmStructuredReviewMutation,
+  useAssignAdmissionCrmReviewerMutation,
+  useDeclareAdmissionCrmReviewConflictMutation,
+  useSubmitAdmissionCrmStructuredReviewMutation,
+  useCloseAdmissionCrmStructuredReviewMutation,
   useGetAdmissionCrmAnalyticsSummaryQuery,
   useGetAdmissionCrmAdmissionReportQuery,
   useGetAdmissionCrmOperationsQueueSummaryQuery,

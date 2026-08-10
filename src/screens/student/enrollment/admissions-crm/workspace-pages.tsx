@@ -4,9 +4,9 @@ import dynamic from 'next/dynamic';
 import { studentPermissions } from 'src/constants/student-menu';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
-import { EnrollmentWorkspaceLoadingState } from './workspace-table-patterns';
 import { EnrollmentRouteTransition } from './enrollment-route-transition';
 import { ApplicantInquiryLoadingState } from './applicant-inquiry-header';
+import { EnrollmentWorkspaceLoadingState } from './workspace-table-patterns';
 
 const loading = () => <EnrollmentWorkspaceLoadingState />;
 const applicantLoading = () => <ApplicantInquiryLoadingState />;
@@ -20,6 +20,10 @@ const OverviewWorkspace = dynamic(
 );
 const ExamsWorkspace = dynamic(
   () => import('./exams-workspace').then((module) => module.ExamsWorkspace),
+  { loading }
+);
+const EventsWorkspace = dynamic(
+  () => import('./events-workspace').then((module) => module.EventsWorkspace),
   { loading }
 );
 const AnalyticsWorkspace = dynamic(
@@ -72,6 +76,12 @@ export const AdmissionsApplicantWorkspace = ({ leadId }: { leadId: string }) => 
 export const AdmissionsExamsWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.exams}>
     <ExamsWorkspace />
+  </StudentPermissionGuard>
+);
+
+export const AdmissionsEventsWorkspace = () => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.events}>
+    <EventsWorkspace />
   </StudentPermissionGuard>
 );
 

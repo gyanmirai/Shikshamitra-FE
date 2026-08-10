@@ -64,10 +64,7 @@ import { useWorkspaceTableSessionState } from './workspace-table-session-state';
 import { resolveAdmissionCrmExamActionPermissions } from './admission-action-permissions';
 import { readExamResultImportFile, downloadExamResultTemplate } from './exam-result-import';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
-import {
-  isValidExamResultValues,
-  validateExamResultValues,
-} from './exam-result-validation';
+import { isValidExamResultValues, validateExamResultValues } from './exam-result-validation';
 import {
   createEnrollmentQueryScopeKey,
   getEnrollmentFilterQueryScope,
@@ -432,17 +429,17 @@ function ExamsWorkspaceContent() {
   const { requestTransition } = useApplicantWorkspaceTransition();
   const selectedExamDirty = Boolean(
     selectedExam &&
-      initializedExamId === selectedExam.id &&
-      (attendance !== selectedExam.attendanceStatus ||
-        totalMarks !== (selectedExam.totalMarks?.toString() || '100') ||
-        passingMarks !== (selectedExam.passingMarks?.toString() || '40') ||
-        obtainedMarks !== (selectedExam.obtainedMarks?.toString() || '') ||
-        meritRank !== (selectedExam.meritRank?.toString() || '') ||
-        resultCorrectionReason !== '' ||
-        eligibility !== selectedExam.eligibilityDecision ||
-        decisionReason !== (selectedExam.eligibilityDecisionReason || '') ||
-        overrideDecision ||
-        overrideReason !== '')
+    initializedExamId === selectedExam.id &&
+    (attendance !== selectedExam.attendanceStatus ||
+      totalMarks !== (selectedExam.totalMarks?.toString() || '100') ||
+      passingMarks !== (selectedExam.passingMarks?.toString() || '40') ||
+      obtainedMarks !== (selectedExam.obtainedMarks?.toString() || '') ||
+      meritRank !== (selectedExam.meritRank?.toString() || '') ||
+      resultCorrectionReason !== '' ||
+      eligibility !== selectedExam.eligibilityDecision ||
+      decisionReason !== (selectedExam.eligibilityDecisionReason || '') ||
+      overrideDecision ||
+      overrideReason !== '')
   );
 
   useApplicantWorkspaceDirtyState('entrance-exam-review', selectedExamDirty);
@@ -868,7 +865,7 @@ function ExamsWorkspaceContent() {
             onChange={(_event, checked) =>
               setSelectedExamIds(checked ? exams.map((exam) => exam.id) : [])
             }
-            inputProps={{ 'aria-label': 'Select visible entrance exams' }}
+            inputProps={{ 'aria-label': 'Select visible assessments' }}
           />
         ),
         render: (_value, row) => {
@@ -1073,10 +1070,10 @@ function ExamsWorkspaceContent() {
     return (
       <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
         <EnrollmentWorkspaceHeader
-          title="Entrance Exams"
+          title="Assessments"
           description="Process attendance, results, merit, and eligibility decisions from one queue."
         />
-        <Alert severity="info">Select an academic year to open Entrance Exams.</Alert>
+        <Alert severity="info">Select an academic year to open Assessments.</Alert>
       </Stack>
     );
   }
@@ -1084,7 +1081,7 @@ function ExamsWorkspaceContent() {
   return (
     <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
-        title="Entrance Exams"
+        title="Assessments"
         description="Process attendance, results, merit, and eligibility decisions from one queue."
       />
 
@@ -1157,18 +1154,14 @@ function ExamsWorkspaceContent() {
                   size="small"
                   color="warning"
                   loading={bulkAttendanceState.isLoading}
-                  onClick={() =>
-                    markSelectedAttendance(AdmissionCrmExamAttendanceStatus.NoShow)
-                  }
+                  onClick={() => markSelectedAttendance(AdmissionCrmExamAttendanceStatus.NoShow)}
                 >
                   Mark no-show
                 </LoadingButton>
                 <LoadingButton
                   size="small"
                   loading={bulkAttendanceState.isLoading}
-                  onClick={() =>
-                    markSelectedAttendance(AdmissionCrmExamAttendanceStatus.Excused)
-                  }
+                  onClick={() => markSelectedAttendance(AdmissionCrmExamAttendanceStatus.Excused)}
                 >
                   Mark excused
                 </LoadingButton>
@@ -1206,7 +1199,7 @@ function ExamsWorkspaceContent() {
       ) : entranceExamRequired ? (
         <CustomizableTable
           tableId="student-enrollment-entrance-exams"
-          tableTitle="Entrance Exams"
+          tableTitle="Assessments"
           columns={columns}
           data={exams}
           isLoading={examsQuery.isLoading}
@@ -1219,7 +1212,7 @@ function ExamsWorkspaceContent() {
           defaultSearchTerm={search}
           searchFieldProps={{
             placeholder: 'Search applicant or exam slot',
-            inputProps: { 'aria-label': 'Search entrance exams' },
+            inputProps: { 'aria-label': 'Search assessments' },
           }}
           filters={[...tableFilters, ...columnFilters]}
           sorts={parseEnrollmentTableSorts(state.sorting || 'ExamStartTime ASC', columns)}
@@ -1538,13 +1531,8 @@ function ExamsWorkspaceContent() {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={Boolean(selectedExam)}
-        onClose={closeSelectedExam}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>Manage Entrance Exam</DialogTitle>
+      <Dialog open={Boolean(selectedExam)} onClose={closeSelectedExam} fullWidth maxWidth="md">
+        <DialogTitle>Manage Assessment</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             {selectedExam && (

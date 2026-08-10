@@ -1,3 +1,5 @@
+import type { ElementType } from 'react';
+
 import type { TooltipProps } from '@mui/material';
 import type { Theme, SxProps } from '@mui/material/styles';
 import type { BreadcrumbsProps } from '@mui/material/Breadcrumbs';
@@ -13,7 +15,9 @@ export type BreadcrumbsLinkProps = {
 
 export type CustomBreadcrumbsProps = BreadcrumbsProps & {
   heading?: string | React.ReactNode;
+  headingComponent?: ElementType;
   description?: React.ReactNode;
+  descriptionDisplay?: 'tooltip' | 'visible';
   moreLink?: string[];
   activeLast?: boolean;
   action?: React.ReactNode;

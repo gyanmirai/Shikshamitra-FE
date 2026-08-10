@@ -195,7 +195,7 @@ export function ApplicantContextRail({
           <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 1 }}>
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Admission Pathway
+                Admission pathway
               </Typography>
               <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
                 {admissionPathway}

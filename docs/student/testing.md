@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-08-08
+updated_on: 2026-08-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -80,7 +80,7 @@ Add or update tests when a change affects these areas.
 | Admission Year Setup                                                                                 | Academic-year attachment, publish readiness, version display, settings, and client contract tests |
 | Applicant Stepper state, blocker, skip, and next action display                                      | Applicant workspace, Pipeline row, My Work, and public status tests                               |
 | Pipeline capture, duplicate detection, continue reason, owner, inquiry type, source, or quick action | Admissions CRM workspace and client contract tests                                                |
-| Entrance exam applicability, scheduling, result, or retest                                           | Exam workspace, client contract, and browser flow tests                                           |
+| Assessment applicability, scheduling, result, or retest                                              | Assessment workspace, client contract, and browser flow tests                                     |
 | Registration section, document, verification, or correction behavior                                 | Registration settings and applicant registration tests                                            |
 | Finance handoff status                                                                               | Applicant workspace, activation preview, and client contract tests                                |
 | Placement timing or capacity display                                                                 | Class Placement, activation preview, and capacity-state tests                                     |
@@ -92,10 +92,9 @@ Add or update tests when a change affects these areas.
 | Public parent status                                                                                 | Public admissions status tests                                                                    |
 | Role visibility                                                                                      | Playwright role access test                                                                       |
 
-## Current validation note
+## Pull request release gate
 
-The 2026-07-31 integrated Enrollment suite passed 351 tests across 57 files.
-The full TypeScript check, focused zero-warning lint, and Student documentation validation also passed.
-Focused backend permission, UserScope, and message-template reference-safety API tests passed with a zero-error backend build.
-The Codex browser reached the local application without console errors but redirected the Enrollment route to sign-in because the in-app session was not authenticated.
-Authenticated visual checks at the three standard viewports remain required when a seeded Enrollment-authorized browser session is available.
+Keep release evidence in the pull request instead of committing dated QA reports or generated execution matrices.
+The pull request must record the exact frontend and backend test counts, build and documentation results,
+migration evidence when the schema changes, and any repository-wide baseline failures unrelated to Enrollment.
+For visible changes, include authenticated desktop and mobile browser evidence from an Enrollment-authorized tenant.

@@ -15,7 +15,7 @@ const pipelineSource = fs.readFileSync(
   'utf8'
 );
 
-describe('Admissions Pipeline Quick Inquiry contract', () => {
+describe('Admissions Pipeline Add Inquiry contract', () => {
   it('captures reusable structured names and validates email inline', () => {
     expect(pipelineSource).toContain('label="First name"');
     expect(pipelineSource).toContain('label="Middle name (optional)"');
@@ -64,6 +64,11 @@ describe('Admissions Pipeline Quick Inquiry contract', () => {
     expect(pipelineSource).toContain('name="primaryContactNo"');
     expect(pipelineSource).toContain('<Collapse in={showOptionalQuickInquiryFields}>');
     expect(pipelineSource).toContain('Add optional details');
+    expect(pipelineSource).toContain('Add Inquiry');
+    expect(pipelineSource).not.toContain('Create a real inquiry');
+    expect(pipelineSource).toContain('Open Pipeline Settings');
+    expect(pipelineSource).toContain('Open Admission Year Setup');
+    expect(pipelineSource).toContain('can(actionPermissions.manageConfiguration)');
   });
 
   it('opens the dedicated applicant page from the pointer row and semantic applicant control', () => {

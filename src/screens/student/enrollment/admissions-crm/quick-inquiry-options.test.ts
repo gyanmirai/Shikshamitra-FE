@@ -11,7 +11,7 @@ import {
   getDefaultQuickInquiryOption,
 } from './quick-inquiry-options';
 
-describe('Quick Inquiry options', () => {
+describe('Add Inquiry options', () => {
   it('maps operational channel and route definitions without falling back to static enums', () => {
     const options = mapQuickInquiryOptions({
       academicYearId: 'year-1',
