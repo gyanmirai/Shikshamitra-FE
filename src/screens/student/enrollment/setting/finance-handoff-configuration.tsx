@@ -14,10 +14,9 @@ import {
   Typography,
   LinearProgress,
 } from '@mui/material';
-import {
-  AdmissionCrmIntegrationCapabilityState,
-  useGetAdmissionCrmIntegrationCapabilitiesQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmIntegrationCapabilityState } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import { useGetAdmissionCrmIntegrationCapabilitiesQuery } from 'src/redux/student/admissions-crm/core-leads-api';
 
 import { useAdmissionYearDraft } from './use-admission-year-draft';
 import {

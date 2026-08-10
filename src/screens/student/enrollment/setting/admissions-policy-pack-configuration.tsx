@@ -3,7 +3,7 @@
 import type {
   AdmissionCrmPolicyRuleDto,
   AdmissionCrmPolicySourceDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
 
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -28,6 +28,9 @@ import {
   AdmissionCrmPolicyRuleType,
   AdmissionCrmPolicyPackStatus,
   AdmissionCrmPolicyRuleSeverity,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
   useGetAdmissionCrmPolicyPacksQuery,
   useAdoptAdmissionCrmPolicyPackMutation,
   useGetAdmissionCrmPolicyAdoptionsQuery,
@@ -36,7 +39,7 @@ import {
   useApproveAdmissionCrmPolicyPackMutation,
   usePublishAdmissionCrmPolicyPackMutation,
   useInstallAdmissionCrmOfficialPolicyBaselinesMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';

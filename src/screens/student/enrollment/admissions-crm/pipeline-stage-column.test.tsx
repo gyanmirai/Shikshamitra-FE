@@ -1,4 +1,4 @@
-import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
@@ -9,7 +9,7 @@ const { getLeadsQueryMock } = vi.hoisted(() => ({
   getLeadsQueryMock: vi.fn(),
 }));
 
-vi.mock('src/redux/student/admissions-crm/admissions-crm-api', () => ({
+vi.mock('src/redux/student/admissions-crm/core-leads-api', () => ({
   useGetAdmissionCrmLeadsQuery: (...args: unknown[]) => getLeadsQueryMock(...args),
 }));
 

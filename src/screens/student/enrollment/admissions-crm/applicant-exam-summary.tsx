@@ -23,9 +23,12 @@ import {
   EntranceExamStatusEnum,
   AdmissionCrmEligibilityDecision,
   AdmissionCrmExamAttendanceStatus,
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import {
   useDecideAdmissionCrmEligibilityMutation,
   useGetAdmissionCrmEntranceExamByLeadQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-api';
 
 import { ApplicantEmptyState } from './applicant-workspace-primitives';
 import { formatEnumLabel, formatEnrollmentDate } from './enrollment-display';

@@ -1,4 +1,4 @@
-import type { AdmissionCrmCycleConfigurationDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmCycleConfigurationDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 export type AdmissionCrmCycleUpdate = Partial<AdmissionCrmCycleConfigurationDto>;
 

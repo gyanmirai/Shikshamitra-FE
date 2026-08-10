@@ -1,9 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import {
-  getEnrollmentApiErrorCode,
-  getEnrollmentApiErrorMessage,
-} from './enrollment-api-errors';
+import { getEnrollmentApiErrorCode, getEnrollmentApiErrorMessage } from './enrollment-api-errors';
 
 describe('enrollment API errors', () => {
   it('maps ABP business codes to actionable enrollment recovery', () => {
@@ -35,7 +32,10 @@ describe('enrollment API errors', () => {
   it('uses the first validation message without exposing server details on a 500', () => {
     expect(
       getEnrollmentApiErrorMessage(
-        { status: 400, data: { error: { validationErrors: [{ message: 'Contact is invalid.' }] } } },
+        {
+          status: 400,
+          data: { error: { validationErrors: [{ message: 'Contact is invalid.' }] } },
+        },
         'Fallback'
       )
     ).toBe('Contact is invalid.');

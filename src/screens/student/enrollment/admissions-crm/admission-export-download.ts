@@ -1,4 +1,4 @@
-import type { AdmissionCrmExportDownloadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmExportDownloadDto } from 'src/redux/student/admissions-crm/operations-governance-contracts';
 
 export const downloadAdmissionExportFile = (result: AdmissionCrmExportDownloadDto) => {
   const bytes = Uint8Array.from(atob(result.base64Content), (value) => value.charCodeAt(0));

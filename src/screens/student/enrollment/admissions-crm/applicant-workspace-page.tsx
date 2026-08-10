@@ -30,13 +30,19 @@ import {
 import {
   AdmissionInquiryStage,
   AdmissionCrmClosedOutcome,
-  useGetAdmissionCrmLeadQuery,
   AdmissionCrmPipelineColumnKey,
-  AdmissionCrmGeneratedDocumentType,
-  useGetAdmissionCrmPipelineStagesQuery,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import {
+  useGetAdmissionCrmLeadQuery,
   useGetAdmissionCrmApplicantProgressQuery,
-  useGetCurrentAdmissionCrmRegistrationByLeadQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-api';
+
+import { AdmissionCrmGeneratedDocumentType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { useGetAdmissionCrmPipelineStagesQuery } from 'src/redux/student/admissions-crm/setup-playbooks-api';
+
+import { useGetCurrentAdmissionCrmRegistrationByLeadQuery } from 'src/redux/student/admissions-crm/registration-documents-api';
 
 import { ApplicantWorkContext } from './applicant-work-context';
 import { ApplicantContextRail } from './applicant-context-rail';

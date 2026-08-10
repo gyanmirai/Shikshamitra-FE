@@ -1,12 +1,12 @@
 'use client';
 
 import type { PublicAdmissionsLanguage } from 'src/screens/public/admissions-crm/public-admissions-copy';
-import type { AdmissionCrmRegistrationTemplateUpsertDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmRegistrationTemplateUpsertDto } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import PrintRounded from '@mui/icons-material/PrintRounded';
-import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/core-leads-contracts';
 import {
   resolveRegistrationText,
   resolveRegistrationOptions,
@@ -96,9 +96,7 @@ export function RegistrationTemplatePreview({ open, template, onClose }: Props) 
               size="small"
               label="Parent Language"
               value={language}
-              onChange={(event) =>
-                setLanguage(event.target.value as PublicAdmissionsLanguage)
-              }
+              onChange={(event) => setLanguage(event.target.value as PublicAdmissionsLanguage)}
               sx={{ minWidth: 150 }}
             >
               <MenuItem value="en">English</MenuItem>

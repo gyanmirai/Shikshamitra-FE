@@ -1,8 +1,9 @@
+import type { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
 import type {
-  AdmissionCrmRouteType,
   AdmissionInquiryChannel,
   AdmissionCrmQuickInquiryOptionsDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 export type QuickInquiryChannelOption = {
   value: AdmissionInquiryChannel;
@@ -77,7 +78,9 @@ export const isValidQuickInquiryPhone = (value: string) => {
   );
 
   const digitCount = [...trimmed].filter((character) => /\d/.test(character)).length;
-  return phoneSyntax.valid && phoneSyntax.parenthesisDepth === 0 && digitCount >= 7 && digitCount <= 15;
+  return (
+    phoneSyntax.valid && phoneSyntax.parenthesisDepth === 0 && digitCount >= 7 && digitCount <= 15
+  );
 };
 
 export const mapQuickInquiryOptions = (

@@ -1,9 +1,9 @@
 import type {
   AdmissionCrmDocumentRequirementDto,
   AdmissionCrmDocumentChecklistTemplateUpsertDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
-import { AdmissionCrmDocumentRequirementLevel } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmDocumentRequirementLevel } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 export const createDocumentRequirement = (): AdmissionCrmDocumentRequirementDto => ({
   key: '',
@@ -54,7 +54,9 @@ export const validateDocumentChecklistTemplate = (
       errors.push(`${requirement.name || requirement.key} must allow between 0.1 and 25 MB.`);
     }
     if ((requirement.uploadInstructions?.trim().length || 0) > 500) {
-      errors.push(`${requirement.name || requirement.key} upload instructions exceed 500 characters.`);
+      errors.push(
+        `${requirement.name || requirement.key} upload instructions exceed 500 characters.`
+      );
     }
     if (
       requirement.expiryReminderDaysBefore != null &&
@@ -67,7 +69,10 @@ export const validateDocumentChecklistTemplate = (
       );
     }
     const rejectionReasons = requirement.rejectionReasons || [];
-    if (rejectionReasons.length > 8 || rejectionReasons.some((reason) => reason.trim().length > 160)) {
+    if (
+      rejectionReasons.length > 8 ||
+      rejectionReasons.some((reason) => reason.trim().length > 160)
+    ) {
       errors.push(
         `${requirement.name || requirement.key} supports up to 8 rejection reasons of 160 characters each.`
       );

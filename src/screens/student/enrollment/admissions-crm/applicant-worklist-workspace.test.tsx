@@ -1,6 +1,6 @@
 import { it, vi, expect, describe } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { ApplicantWorklistStageFilter } from './applicant-worklist-stage-filter';
 

@@ -107,7 +107,8 @@ function JourneyStepContent({
             <Chip size="small" color="primary" label="Current" sx={{ height: 20 }} />
           ) : null}
         </Stack>
-        {(compact || current || step.state === 'blocked' || step.state === 'skipped') && step.reason ? (
+        {(compact || current || step.state === 'blocked' || step.state === 'skipped') &&
+        step.reason ? (
           <Typography
             variant="caption"
             color="text.secondary"

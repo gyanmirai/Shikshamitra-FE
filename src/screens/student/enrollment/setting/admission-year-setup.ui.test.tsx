@@ -15,21 +15,39 @@ const apiMocks = vi.hoisted(() => ({
   closeMutation: vi.fn(),
 }));
 
-vi.mock('src/redux/student/admissions-crm/admissions-crm-api', async (importOriginal) => {
+vi.mock('src/redux/student/admissions-crm/setup-playbooks-api', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('src/redux/student/admissions-crm/admissions-crm-api')>();
+    await importOriginal<typeof import('src/redux/student/admissions-crm/setup-playbooks-api')>();
 
   return {
     ...actual,
     useGetAdmissionCrmAdmissionYearVersionsQuery: (...args: unknown[]) =>
       apiMocks.versionsQuery(...args),
-    useGetAdmissionCrmAdmissionYearStandardOptionsQuery: (...args: unknown[]) =>
-      apiMocks.standardsQuery(...args),
-    useGetAdmissionCrmStaffQuery: (...args: unknown[]) => apiMocks.staffQuery(...args),
     useCreateAdmissionCrmAdmissionYearDraftMutation: () => apiMocks.createDraftMutation(),
     useUpdateAdmissionCrmAdmissionYearDraftMutation: () => apiMocks.updateDraftMutation(),
     usePublishAdmissionCrmAdmissionYearMutation: () => apiMocks.publishMutation(),
     useCloseAdmissionCrmAdmissionYearMutation: () => apiMocks.closeMutation(),
+  };
+});
+
+vi.mock('src/redux/student/admissions-crm/operations-governance-api', async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import('src/redux/student/admissions-crm/operations-governance-api')
+    >();
+  return {
+    ...actual,
+    useGetAdmissionCrmAdmissionYearStandardOptionsQuery: (...args: unknown[]) =>
+      apiMocks.standardsQuery(...args),
+  };
+});
+
+vi.mock('src/redux/student/admissions-crm/core-leads-api', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('src/redux/student/admissions-crm/core-leads-api')>();
+  return {
+    ...actual,
+    useGetAdmissionCrmStaffQuery: (...args: unknown[]) => apiMocks.staffQuery(...args),
   };
 });
 

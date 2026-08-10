@@ -2,10 +2,11 @@ import { it, expect, describe } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import {
   AdmissionCrmWorkUrgency,
-  AdmissionCrmLeadPriority,
   AdmissionCrmWorkspaceSection,
   AdmissionCrmRecommendedAction,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/operations-governance-contracts';
+
+import { AdmissionCrmLeadPriority } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { ApplicantWorkContext } from './applicant-work-context';
 

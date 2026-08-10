@@ -1,14 +1,14 @@
 import type {
   AdmissionCrmApplicantStepDto,
   AdmissionCrmApplicantProgressDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { it, expect, describe } from 'vitest';
 import {
   AdmissionCrmApplicantStepKey,
   AdmissionCrmPipelineColumnKey,
   AdmissionCrmApplicantStepStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import {
   buildApplicantJourney,

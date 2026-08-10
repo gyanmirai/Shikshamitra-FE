@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdmissionCrmRegistrationTemplateUpsertDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmRegistrationTemplateUpsertDto } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import { useState } from 'react';
 import { Box, Tab, Tabs, Stack, Paper, TextField, Typography } from '@mui/material';

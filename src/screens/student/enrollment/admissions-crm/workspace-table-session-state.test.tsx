@@ -64,16 +64,12 @@ describe('Student Enrollment table session state', () => {
       filters: [],
     });
 
+    expect(readWorkspaceTableSessionState('pipeline:year-1:tenant-a:user-a').search).toBe(
+      '9988776655'
+    );
+    expect(readWorkspaceTableSessionState('pipeline:year-1:tenant-a:user-b').search).toBe('');
     expect(
-      readWorkspaceTableSessionState('pipeline:year-1:tenant-a:user-a').search
-    ).toBe('9988776655');
-    expect(
-      readWorkspaceTableSessionState('pipeline:year-1:tenant-a:user-b').search
-    ).toBe('');
-    expect(
-      window.sessionStorage.getItem(
-        'student-enrollment:table-state:v1:pipeline:year-1'
-      )
+      window.sessionStorage.getItem('student-enrollment:table-state:v1:pipeline:year-1')
     ).toBeNull();
   });
 
@@ -86,6 +82,10 @@ describe('Student Enrollment table session state', () => {
     act(() => {
       result.current.setSearch('Riya');
       result.current.setFilters([applicantFilter]);
+    });
+    expect(readWorkspaceTableSessionState('pipeline')).toEqual({
+      search: 'Riya',
+      filters: [applicantFilter],
     });
     await waitFor(() =>
       expect(readWorkspaceTableSessionState('pipeline')).toEqual({

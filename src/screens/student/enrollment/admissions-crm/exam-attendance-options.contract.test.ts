@@ -1,19 +1,14 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { it, expect, describe } from 'vitest';
-import { AdmissionCrmExamAttendanceStatus } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmExamAttendanceStatus } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+import { readEnrollmentSource } from '../enrollment-source-contract';
 
-const workspaceSource = fs.readFileSync(
-  path.join(
-    process.cwd(),
-    'src',
-    'screens',
-    'student',
-    'enrollment',
-    'admissions-crm',
-    'exams-workspace.tsx'
-  ),
-  'utf8'
+const workspaceSource = readEnrollmentSource(
+  'src',
+  'screens',
+  'student',
+  'enrollment',
+  'admissions-crm',
+  'exams-workspace.tsx'
 );
 
 describe('entrance exam attendance options', () => {

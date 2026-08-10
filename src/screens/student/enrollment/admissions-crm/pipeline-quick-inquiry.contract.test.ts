@@ -1,18 +1,13 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { it, expect, describe } from 'vitest';
+import { readEnrollmentSource } from '../enrollment-source-contract';
 
-const pipelineSource = fs.readFileSync(
-  path.join(
-    process.cwd(),
-    'src',
-    'screens',
-    'student',
-    'enrollment',
-    'admissions-crm',
-    'pipeline-workspace.tsx'
-  ),
-  'utf8'
+const pipelineSource = readEnrollmentSource(
+  'src',
+  'screens',
+  'student',
+  'enrollment',
+  'admissions-crm',
+  'pipeline-workspace.tsx'
 );
 
 describe('Admissions Pipeline Add Inquiry contract', () => {
@@ -81,7 +76,7 @@ describe('Admissions Pipeline Add Inquiry contract', () => {
     expect(pipelineSource).toContain("onOpen: () => openApplicant(lead.id, 'inquiry')");
     expect(pipelineSource).toContain("openApplicant(created.id, 'inquiry')");
     expect(pipelineSource).toContain("openApplicant(lead.id, 'registration')");
-    expect(pipelineSource).toContain("StudentAdmissionsCrmApi.usePrefetch('getAdmissionCrmLead')");
+    expect(pipelineSource).toContain("AdmissionCrmCoreLeadsApi.usePrefetch('getAdmissionCrmLead')");
     expect(pipelineSource).not.toContain('component="button"');
     expect(pipelineSource).toMatch(
       /`pipeline:\$\{academicYearId \|\| 'none'\}:\$\{sessionIdentity\}`/

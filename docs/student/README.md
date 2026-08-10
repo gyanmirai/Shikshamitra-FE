@@ -43,7 +43,7 @@ Use these paths before searching broadly:
 | App Router pages | `src/app/(auth-route)/student/**` |
 | Screens and components | `src/screens/student/**` |
 | Student API clients | `src/redux/student/**` |
-| Admissions CRM client | `src/redux/student/admissions-crm/admissions-crm-api.ts` |
+| Admissions CRM clients | `src/redux/student/admissions-crm/core-leads-api.ts`, `setup-playbooks-api.ts`, `registration-documents-api.ts`, `communication-exams-events-api.ts`, `final-admission-api.ts`, `operations-governance-api.ts`, and `public-admissions-api.ts` in the same directory |
 | Student tests | `src/constants/student-menu.permissions.test.ts`, `src/redux/student/student-api.production.test.ts`, `src/screens/student/**/*.test.ts`, `e2e/student/**` |
 | Backend docs | `../../../Shikshamitra-BE/docs/modules/student/README.md` |
 | Backend Enrollment product rules | `../../../Shikshamitra-BE/docs/modules/student/product.md` and `../../../Shikshamitra-BE/docs/modules/student/workflows.md` |

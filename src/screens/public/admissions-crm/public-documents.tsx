@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { UploadFile } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import { AdmissionCrmApplicantDocumentStatus } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmApplicantDocumentStatus } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 import {
   Box,
   Chip,

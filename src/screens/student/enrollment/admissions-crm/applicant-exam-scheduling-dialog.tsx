@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -8,7 +8,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import {
   useGetAdmissionCrmExamSlotsQuery,
   useScheduleAdmissionCrmEntranceExamMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-api';
 import {
   Alert,
   Stack,

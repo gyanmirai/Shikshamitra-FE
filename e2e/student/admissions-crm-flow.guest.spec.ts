@@ -1616,7 +1616,9 @@ test.describe('Student admissions CRM E2E', () => {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
-    await page.getByPlaceholder('Search...').fill('Private registration 7777777777');
+    await page
+      .getByPlaceholder(/Search registration applicants/i)
+      .fill('Private registration 7777777777');
     await expect(page).not.toHaveURL(/page=2/);
     expect(decodeURIComponent(page.url())).not.toContain('Private registration');
     expect(page.url()).not.toContain('7777777777');

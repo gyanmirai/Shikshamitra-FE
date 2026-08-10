@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
-import type { AdmissionCrmMyWorkItemDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmMyWorkItemDto } from 'src/redux/student/admissions-crm/operations-governance-contracts';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -33,15 +33,22 @@ import {
 } from '@mui/material';
 import {
   AdmissionCrmWorkUrgency,
-  AdmissionCrmLeadPriority,
-  AdmissionCrmApplicantStepKey,
   AdmissionCrmWorkspaceSection,
   AdmissionCrmRecommendedAction,
-  useGetAdmissionCrmMyWorkQuery,
-  AdmissionCrmReviewAssignmentStatus,
-  useBulkCreateAdmissionCrmTasksMutation,
-  useGetMyAdmissionCrmReviewAssignmentsQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/operations-governance-contracts';
+
+import {
+  AdmissionCrmLeadPriority,
+  AdmissionCrmApplicantStepKey,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import { useGetAdmissionCrmMyWorkQuery } from 'src/redux/student/admissions-crm/operations-governance-api';
+
+import { AdmissionCrmReviewAssignmentStatus } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import { useBulkCreateAdmissionCrmTasksMutation } from 'src/redux/student/admissions-crm/core-leads-api';
+
+import { useGetMyAdmissionCrmReviewAssignmentsQuery } from 'src/redux/student/admissions-crm/communication-exams-events-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
@@ -182,6 +189,7 @@ export function EnrollmentOverviewWorkspace() {
     filters: privateColumnFilters,
     setFilters: setPrivateColumnFilters,
   } = useWorkspaceTableSessionState(`my-work:${academicYearId || 'none'}:${sessionIdentity}`);
+  const [debouncedSearch, setDebouncedSearch] = useState(() => search.trim());
   const [selectedWorkKeys, setSelectedWorkKeys] = useState<string[]>([]);
   const [bulkTaskOpen, setBulkTaskOpen] = useState(false);
   const [bulkTaskTitle, setBulkTaskTitle] = useState('');
@@ -189,6 +197,11 @@ export function EnrollmentOverviewWorkspace() {
     dayjs().add(1, 'day').format('YYYY-MM-DDTHH:mm')
   );
   const [bulkCreateTasks, bulkCreateTasksState] = useBulkCreateAdmissionCrmTasksMutation();
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 500);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     setSelectedWorkKeys([]);
@@ -200,7 +213,7 @@ export function EnrollmentOverviewWorkspace() {
   const query = useGetAdmissionCrmMyWorkQuery(
     {
       academicYearId: academicYearId || '',
-      search: search || undefined,
+      search: debouncedSearch || undefined,
       applicantSearch,
       targetClassSearch,
       priority: selectedPriority,
@@ -584,9 +597,7 @@ export function EnrollmentOverviewWorkspace() {
     (filters: IParams['filters']) => {
       const byColumn = new Map(filters.map((filter) => [filter.column, filter.value]));
       setPrivateColumnFilters(
-        filters.filter((filter) =>
-          ['applicantName', 'targetClassName'].includes(filter.column)
-        )
+        filters.filter((filter) => ['applicantName', 'targetClassName'].includes(filter.column))
       );
       updateState({
         urgency: enumValue(byColumn.get('urgency')),
@@ -763,6 +774,7 @@ export function EnrollmentOverviewWorkspace() {
             sorts={parseEnrollmentTableSorts(sorting, columns)}
             defaultRowsPerPage={25}
             rowsPerPageOptions={[10, 25, 50, 100]}
+            onSearchInputChange={setSearch}
             onServerPagination={(nextPage, nextPageSize) =>
               updateState({ page: nextPage, pageSize: nextPageSize }, 'push')
             }

@@ -1,12 +1,10 @@
-import type {
-  AdmissionCrmSlotTemplateDto,
-  AdmissionCrmPlaybookUpsertDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmSlotTemplateDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
-import {
-  AdmissionInquiryStage,
-  AdmissionCrmRegistrationPath,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmPlaybookUpsertDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
+
+import { AdmissionInquiryStage } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import { AdmissionCrmRegistrationPath } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 const normalizeTime = (value: string) => (value.length === 5 ? `${value}:00` : value);
 

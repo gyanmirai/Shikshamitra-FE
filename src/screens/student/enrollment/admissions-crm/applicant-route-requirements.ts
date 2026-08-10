@@ -1,4 +1,4 @@
-import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
 export type ApplicantRouteFieldKey =
   | 'relatedStudentId'
@@ -92,11 +92,7 @@ export function getApplicantRouteFields(routeType: AdmissionCrmRouteType) {
 
 export function getRequiredEvidenceCodes(codes: string[] | undefined) {
   return Array.from(
-    new Set(
-      (codes || [])
-        .map((code) => code.trim().toUpperCase())
-        .filter(Boolean)
-    )
+    new Set((codes || []).map((code) => code.trim().toUpperCase()).filter(Boolean))
   );
 }
 

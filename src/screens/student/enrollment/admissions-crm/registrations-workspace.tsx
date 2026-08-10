@@ -8,7 +8,7 @@ import { Button } from '@mui/material';
 import { useSelector } from 'react-redux';
 import AddRounded from '@mui/icons-material/AddRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmPipelineColumnKey } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorklistWorkspace } from './applicant-worklist-workspace';

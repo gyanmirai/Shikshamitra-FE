@@ -4,7 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type {
   AdmissionCrmLeadDto,
   AdmissionCrmStaffLookupDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -25,14 +25,16 @@ import {
   Autocomplete,
   LinearProgress,
 } from '@mui/material';
+import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { AdmissionCrmLeadPriority } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
 import {
-  AdmissionCrmRouteType,
-  AdmissionCrmLeadPriority,
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmTasksQuery,
   useAssignAdmissionCrmLeadOwnerMutation,
   useChangeAdmissionCrmLeadPriorityMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-api';
 
 import {
   formatEnumLabel,

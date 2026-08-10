@@ -2,9 +2,9 @@ import type {
   AdmissionCrmRegistrationFieldDto,
   AdmissionCrmRegistrationSectionDto,
   AdmissionCrmRegistrationTemplateUpsertDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
-import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmFormFieldType } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 const optionFieldTypes = new Set([
   AdmissionCrmFormFieldType.Select,

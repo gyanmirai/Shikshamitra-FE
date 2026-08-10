@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdmissionCrmRouteImpactPreviewDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmRouteImpactPreviewDto } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -11,7 +11,11 @@ import {
   AdmissionCrmRouteType,
   AdmissionCrmRouteAppealStatus,
   AdmissionCrmRouteDefinitionStatus,
-  AdmissionCrmRouteEligibilityStatus,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { AdmissionCrmRouteEligibilityStatus } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import {
   useAssignAdmissionCrmRouteMutation,
   useGetAdmissionCrmRouteAppealsQuery,
   useGetAdmissionCrmRouteHistoryQuery,
@@ -20,7 +24,7 @@ import {
   useDecideAdmissionCrmRouteAppealMutation,
   useRequestAdmissionCrmRouteAppealMutation,
   usePreviewAdmissionCrmRouteAssignmentMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { ApplicantInlineNotice } from './applicant-workspace-primitives';
 import {

@@ -1,8 +1,9 @@
 import {
   AdmissionCrmFormFieldType,
   type AdmissionCrmFormFieldDto,
-  type AdmissionCrmFormTemplateDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import type { AdmissionCrmFormTemplateDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 export type InquiryFormPreviewLanguage = 'en' | 'gu' | 'hi';
 export type InquiryFormPreviewFieldValue = string | string[] | boolean;

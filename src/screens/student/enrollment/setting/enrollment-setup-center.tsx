@@ -1,12 +1,12 @@
 'use client';
 
-import type { AdmissionCrmSetupStatusDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmSetupStatusDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { studentPaths } from 'src/constants/student-menu';
 import { Box, Chip, Alert, Stack, Paper, Button, Typography, LinearProgress } from '@mui/material';
-import { useGetAdmissionCrmSetupStatusQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { useGetAdmissionCrmSetupStatusQuery } from 'src/redux/student/admissions-crm/setup-playbooks-api';
 
 import { EnrollmentWorkspaceHeader } from '../admissions-crm/workspace-header';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';

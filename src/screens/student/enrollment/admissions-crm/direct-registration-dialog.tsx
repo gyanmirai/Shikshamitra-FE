@@ -1,6 +1,6 @@
 'use client';
 
-import type { CreateAdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { CreateAdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
@@ -25,16 +25,22 @@ import {
   InputAdornment,
   LinearProgress,
 } from '@mui/material';
+import { AdmissionInquiryChannel } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import { AdmissionCrmRegistrationTemplateStatus } from 'src/redux/student/admissions-crm/registration-documents-contracts';
+
 import {
-  AdmissionInquiryChannel,
-  AdmissionCrmRegistrationTemplateStatus,
   useGetAdmissionCrmFormNumberSeriesQuery,
-  useGetAdmissionCrmQuickInquiryOptionsQuery,
   useGetAdmissionCrmRegistrationTemplatesQuery,
-  usePreviewAdmissionCrmLeadDuplicatesMutation,
   useCreatePaperAdmissionCrmRegistrationMutation,
-  useGetAdmissionCrmOperationalStandardOptionsQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-api';
+
+import {
+  useGetAdmissionCrmQuickInquiryOptionsQuery,
+  usePreviewAdmissionCrmLeadDuplicatesMutation,
+} from 'src/redux/student/admissions-crm/core-leads-api';
+
+import { useGetAdmissionCrmOperationalStandardOptionsQuery } from 'src/redux/student/admissions-crm/operations-governance-api';
 
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import {
@@ -524,8 +530,8 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
           ) : null}
           {optionConfigurationMissing ? (
             <Alert severity="warning">
-              Paper registration needs the Manual entry channel, an admission pathway, and at least one
-              standard in Admission Year Setup.
+              Paper registration needs the Manual entry channel, an admission pathway, and at least
+              one standard in Admission Year Setup.
             </Alert>
           ) : null}
           {quickInquiryOptionsQuery.data?.isAdmissionCycleActive === false ? (

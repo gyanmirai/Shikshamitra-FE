@@ -5,7 +5,7 @@ import type {
   AdmissionCrmDocumentRequirementDto,
   AdmissionCrmDocumentChecklistTemplateDto,
   AdmissionCrmDocumentChecklistTemplateUpsertDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -37,13 +37,16 @@ import {
 import {
   AdmissionCrmDocumentRequirementLevel,
   AdmissionCrmDocumentChecklistTemplateStatus,
+} from 'src/redux/student/admissions-crm/registration-documents-contracts';
+
+import {
   useGetAdmissionCrmDocumentChecklistTemplatesQuery,
   useCreateAdmissionCrmDocumentChecklistTemplateMutation,
   useUpdateAdmissionCrmDocumentChecklistTemplateMutation,
   useRetireAdmissionCrmDocumentChecklistTemplateMutation,
   usePublishAdmissionCrmDocumentChecklistTemplateMutation,
   useCreateAdmissionCrmDocumentChecklistTemplateVersionMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/registration-documents-api';
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {

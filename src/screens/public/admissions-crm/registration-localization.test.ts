@@ -1,9 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import {
-  resolveRegistrationText,
-  resolveRegistrationOptions,
-} from './registration-localization';
+import { resolveRegistrationText, resolveRegistrationOptions } from './registration-localization';
 
 describe('registration localization', () => {
   it('uses the selected parent language and falls back to the canonical text', () => {

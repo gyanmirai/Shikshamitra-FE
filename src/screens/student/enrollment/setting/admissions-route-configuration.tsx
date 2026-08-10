@@ -8,11 +8,14 @@ import { Box, Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from 
 import {
   AdmissionCrmRouteType,
   AdmissionCrmRouteDefinitionStatus,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
   useGetAdmissionCrmRouteDefinitionsQuery,
   useCreateAdmissionCrmRouteDefinitionMutation,
   useSubmitAdmissionCrmRouteDefinitionMutation,
   usePublishAdmissionCrmRouteDefinitionMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';

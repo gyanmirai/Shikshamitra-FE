@@ -1,23 +1,17 @@
 'use client';
 
-import type { AdmissionCrmTimelineEventDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmTimelineEventDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { useMemo, useState } from 'react';
 import { Box, Alert, Stack, Button, Divider, Typography, LinearProgress } from '@mui/material';
 import {
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmTimelineQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-api';
 
 import { formatEnrollmentDate, joinEnrollmentMetadata } from './enrollment-display';
-import {
-  ApplicantSection,
-  ApplicantInlineNotice,
-} from './applicant-workspace-primitives';
-import {
-  getActivityActorLabel,
-  buildActivityActorLookupIds,
-} from './applicant-activity-actors';
+import { ApplicantSection, ApplicantInlineNotice } from './applicant-workspace-primitives';
+import { getActivityActorLabel, buildActivityActorLookupIds } from './applicant-activity-actors';
 
 type Props = {
   leadId: string;
@@ -63,9 +57,7 @@ export function ApplicantActivityTimeline({ leadId }: Props) {
       title="Activity & Audit"
       description="A chronological record of applicant, workflow, and automated changes."
     >
-      {timelineQuery.isFetching ? (
-        <LinearProgress aria-label="Loading applicant activity" />
-      ) : null}
+      {timelineQuery.isFetching ? <LinearProgress aria-label="Loading applicant activity" /> : null}
       {timelineQuery.isError ? (
         <Alert
           severity="error"

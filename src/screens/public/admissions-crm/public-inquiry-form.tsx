@@ -6,7 +6,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import {
   AdmissionCrmFormFieldType,
   type AdmissionCrmFormFieldDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 import {
   Link,
   Alert,
@@ -425,7 +425,9 @@ export default function PublicAdmissionInquiryFormScreen({
               </MenuItem>
             ))}
           </Select>
-          {(error || field.helperText) && <FormHelperText>{error || field.helperText}</FormHelperText>}
+          {(error || field.helperText) && (
+            <FormHelperText>{error || field.helperText}</FormHelperText>
+          )}
         </FormControl>
       );
     }
@@ -455,7 +457,9 @@ export default function PublicAdmissionInquiryFormScreen({
               </MenuItem>
             ))}
           </Select>
-          {(error || field.helperText) && <FormHelperText>{error || field.helperText}</FormHelperText>}
+          {(error || field.helperText) && (
+            <FormHelperText>{error || field.helperText}</FormHelperText>
+          )}
         </FormControl>
       );
     }
@@ -473,7 +477,9 @@ export default function PublicAdmissionInquiryFormScreen({
             }
             label={renderFieldLabel(field)}
           />
-          {(error || field.helperText) && <FormHelperText>{error || field.helperText}</FormHelperText>}
+          {(error || field.helperText) && (
+            <FormHelperText>{error || field.helperText}</FormHelperText>
+          )}
         </FormControl>
       );
     }
@@ -621,7 +627,11 @@ export default function PublicAdmissionInquiryFormScreen({
           </Stack>
           <Paper
             variant="outlined"
-            sx={{ p: 1.5, borderRadius: 1, borderColor: preferenceError ? 'error.main' : undefined }}
+            sx={{
+              p: 1.5,
+              borderRadius: 1,
+              borderColor: preferenceError ? 'error.main' : undefined,
+            }}
           >
             <Stack spacing={1}>
               <Typography variant="subtitle2">{text.communication}</Typography>

@@ -534,7 +534,7 @@ export const studentGroupType = {
   studentGroup: 'studentGroup',
 } as const;
 
-// ===== Student Admissions CRM API (reducerPath: StudentAdmissionsCrmApi) =====
+// ===== Focused Student Admissions CRM clients (shared Redux API) =====
 export const studentAdmissionsCrmType = {
   lead: 'Student-Admissions-Crm-Lead',
   configuration: 'Student-Admissions-Crm-Configuration',

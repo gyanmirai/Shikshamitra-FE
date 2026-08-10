@@ -18,13 +18,17 @@ import {
 import {
   AdmissionCrmConsentStatus,
   AdmissionCrmUdiseSyncStatus,
-  useGetAdmissionCrmLeadQuery,
   AdmissionCrmPersonProvenance,
-  useSearchAdmissionCrmPersonsQuery,
   AdmissionCrmGuardianRelationshipType,
   AdmissionCrmIdentityResolutionStatus,
-  useSearchAdmissionCrmHouseholdsQuery,
   AdmissionCrmIdentityVerificationStatus,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { useGetAdmissionCrmLeadQuery } from 'src/redux/student/admissions-crm/core-leads-api';
+
+import {
+  useSearchAdmissionCrmPersonsQuery,
+  useSearchAdmissionCrmHouseholdsQuery,
   useLinkAdmissionCrmPersonAccountMutation,
   useUpdateAdmissionCrmPersonIdentityMutation,
   useRecordAdmissionCrmIdentityConsentMutation,
@@ -34,7 +38,7 @@ import {
   useGetAdmissionCrmHouseholdIdentityProfileQuery,
   useOverrideAdmissionCrmIdentityReadinessMutation,
   useCreateAdmissionCrmHouseholdIdentityProfileMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { getEnrollmentApiErrorMessage } from './enrollment-api-errors';
 import { ApplicantSwitchRow, ApplicantInlineNotice } from './applicant-workspace-primitives';
@@ -102,10 +106,8 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
   const [guardianLastName, setGuardianLastName] = useState('');
   const [guardianPhone, setGuardianPhone] = useState('');
   const [guardianEmail, setGuardianEmail] = useState('');
-  const guardianPhoneInvalid =
-    !existingGuardianId && !isValidQuickInquiryPhone(guardianPhone);
-  const guardianEmailInvalid =
-    !existingGuardianId && !isValidQuickInquiryEmail(guardianEmail);
+  const guardianPhoneInvalid = !existingGuardianId && !isValidQuickInquiryPhone(guardianPhone);
+  const guardianEmailInvalid = !existingGuardianId && !isValidQuickInquiryEmail(guardianEmail);
   const [relationshipType, setRelationshipType] = useState(
     AdmissionCrmGuardianRelationshipType.Mother
   );
@@ -477,7 +479,9 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
                 value={guardianPhone}
                 error={guardianPhoneInvalid}
                 helperText={
-                  guardianPhoneInvalid ? 'Enter a valid contact number containing 7 to 15 digits.' : undefined
+                  guardianPhoneInvalid
+                    ? 'Enter a valid contact number containing 7 to 15 digits.'
+                    : undefined
                 }
                 slotProps={{
                   htmlInput: {

@@ -1,16 +1,16 @@
 import type { ReactNode } from 'react';
 import type {
   AdmissionCrmJourneyRuleDto,
-  AdmissionCrmMessageTemplateDto,
   AdmissionCrmCycleConfigurationDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
+
+import type { AdmissionCrmMessageTemplateDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import {
-  AdmissionCrmMessageChannel,
-  AdmissionCrmJourneyTrigger,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionCrmMessageChannel } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import { AdmissionCrmJourneyTrigger } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { CommunicationReminderSettings } from './communication-reminder-settings';
 
@@ -21,20 +21,34 @@ const apiMocks = vi.hoisted(() => ({
   previewImpactMutation: vi.fn(),
 }));
 
-vi.mock('src/redux/student/admissions-crm/admissions-crm-api', async (importOriginal) => {
+vi.mock('src/redux/student/admissions-crm/setup-playbooks-api', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('src/redux/student/admissions-crm/admissions-crm-api')>();
+    await importOriginal<typeof import('src/redux/student/admissions-crm/setup-playbooks-api')>();
 
   return {
     ...actual,
     useGetAdmissionCrmCycleConfigurationQuery: (...args: unknown[]) =>
       apiMocks.configurationQuery(...args),
-    useGetAdmissionCrmMessageTemplatesQuery: (...args: unknown[]) =>
-      apiMocks.templatesQuery(...args),
     useUpdateAdmissionCrmCycleConfigurationMutation: () => apiMocks.updateConfigurationMutation(),
     usePreviewAdmissionCrmConfigurationImpactMutation: () => apiMocks.previewImpactMutation(),
   };
 });
+
+vi.mock(
+  'src/redux/student/admissions-crm/communication-exams-events-api',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('src/redux/student/admissions-crm/communication-exams-events-api')
+      >();
+
+    return {
+      ...actual,
+      useGetAdmissionCrmMessageTemplatesQuery: (...args: unknown[]) =>
+        apiMocks.templatesQuery(...args),
+    };
+  }
+);
 
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {

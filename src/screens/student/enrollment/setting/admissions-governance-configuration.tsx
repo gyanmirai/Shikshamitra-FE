@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdmissionCrmStaffLookupDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { AdmissionCrmStaffLookupDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -20,35 +20,44 @@ import {
   Autocomplete,
   LinearProgress,
 } from '@mui/material';
+import { AdmissionCrmReportFrequency } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
 import {
-  AdmissionCrmReportFrequency,
   AdmissionCrmRetentionAction,
   AdmissionCrmDelegationStatus,
   AdmissionCrmExportReportType,
-  useGetAdmissionCrmStaffQuery,
   AdmissionCrmRetentionCategory,
-  useGetAdmissionCrmExportsQuery,
   AdmissionCrmOperationsQueueType,
   AdmissionCrmPrivacyRequestStatus,
+} from 'src/redux/student/admissions-crm/operations-governance-contracts';
+
+import { useGetAdmissionCrmStaffQuery } from 'src/redux/student/admissions-crm/core-leads-api';
+
+import {
+  useGetAdmissionCrmExportsQuery,
   useGetAdmissionCrmDelegationsQuery,
   useRequestAdmissionCrmExportMutation,
   useDownloadAdmissionCrmExportMutation,
   useGetAdmissionCrmPrivacyRequestsQuery,
   useGetAdmissionCrmReportSchedulesQuery,
-  AdmissionCrmGovernedConfigurationStatus,
   useCancelAdmissionCrmDelegationMutation,
   useCreateAdmissionCrmDelegationMutation,
   useGetAdmissionCrmAdvisoryForecastQuery,
   useGetAdmissionCrmRetentionPoliciesQuery,
   useCreateAdmissionCrmReportScheduleMutation,
   useDecideAdmissionCrmPrivacyRequestMutation,
-  useCreateAdmissionCrmRetentionPolicyMutation,
   useRunDueAdmissionCrmReportSchedulesMutation,
-  useSubmitAdmissionCrmRetentionPolicyMutation,
   useCompleteAdmissionCrmPrivacyRequestMutation,
-  usePublishAdmissionCrmRetentionPolicyMutation,
   useSetAdmissionCrmReportScheduleActiveMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/operations-governance-api';
+
+import { AdmissionCrmGovernedConfigurationStatus } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
+
+import {
+  useCreateAdmissionCrmRetentionPolicyMutation,
+  useSubmitAdmissionCrmRetentionPolicyMutation,
+  usePublishAdmissionCrmRetentionPolicyMutation,
+} from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
@@ -146,8 +155,9 @@ export default function AdmissionsGovernanceConfiguration() {
   const [scheduleName, setScheduleName] = useState(defaults.scheduleName);
   const [frequency, setFrequency] = useState(defaults.frequency);
   const [nextRunAt, setNextRunAt] = useState(defaults.nextRunAt);
-  const [scheduleRecipient, setScheduleRecipient] =
-    useState<AdmissionCrmStaffLookupDto | null>(null);
+  const [scheduleRecipient, setScheduleRecipient] = useState<AdmissionCrmStaffLookupDto | null>(
+    null
+  );
   const [delegator, setDelegator] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [delegate, setDelegate] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [staffSearch, setStaffSearch] = useState('');
@@ -168,10 +178,9 @@ export default function AdmissionsGovernanceConfiguration() {
         delegator?.id,
         delegate?.id,
         scheduleRecipient?.id,
-        ...(schedules.data || [])
-          .map((item) =>
-            item.destination.startsWith('user:') ? item.destination.slice('user:'.length) : undefined
-          ),
+        ...(schedules.data || []).map((item) =>
+          item.destination.startsWith('user:') ? item.destination.slice('user:'.length) : undefined
+        ),
         ...(delegations.data || []).flatMap((item) => [item.delegatorUserId, item.delegateUserId]),
       ]
         .filter((id): id is string => Boolean(id))

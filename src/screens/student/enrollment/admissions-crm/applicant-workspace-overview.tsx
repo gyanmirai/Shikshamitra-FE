@@ -5,8 +5,9 @@ import type {
   AdmissionCrmLeadDto,
   AdmissionCrmStaffLookupDto,
   AdmissionCrmFollowUpTaskDto,
-  AdmissionCrmPipelineStageDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import type { AdmissionCrmPipelineStageDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -33,8 +34,9 @@ import {
   DialogActions,
   LinearProgress,
 } from '@mui/material';
+import { AdmissionInquiryStage } from 'src/redux/student/admissions-crm/core-leads-contracts';
+
 import {
-  AdmissionInquiryStage,
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmTasksQuery,
   useCreateAdmissionCrmTaskMutation,
@@ -45,7 +47,7 @@ import {
   useChangeAdmissionCrmLeadStageMutation,
   useMergeAdmissionCrmDuplicateLeadMutation,
   useRecalculateAdmissionCrmLeadScoreMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/core-leads-api';
 
 import { getAdmissionCrmStageLabel } from './admissions-crm-utils';
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';

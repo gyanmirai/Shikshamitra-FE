@@ -2,8 +2,9 @@ import { it, expect, describe } from 'vitest';
 import {
   AdmissionCrmRouteType,
   AdmissionCrmPlacementTiming,
-  AdmissionCrmAdmissionYearSetupStatus,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import { AdmissionCrmAdmissionYearSetupStatus } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import {
   toAdmissionYearSetupForm,

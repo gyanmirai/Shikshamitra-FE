@@ -2,11 +2,15 @@ import {
   AdmissionInquiryStage,
   AdmissionInquiryChannel,
   type AdmissionCrmLeadDto,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import {
   AdmissionCrmMessageChannel,
   AdmissionCrmEligibilityDecision,
   type AdmissionCrmEntranceExamDto,
-  type AdmissionCrmPipelineStageDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import type { AdmissionCrmPipelineStageDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 export const admissionCrmStageLabels: Record<AdmissionInquiryStage, string> = {
   [AdmissionInquiryStage.NewInquiry]: 'New Inquiry',

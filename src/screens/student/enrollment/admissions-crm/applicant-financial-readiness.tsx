@@ -25,15 +25,19 @@ import {
   AdmissionCrmConcessionType,
   AdmissionCrmFeePolicyStatus,
   AdmissionCrmConcessionStatus,
+} from 'src/redux/student/admissions-crm/final-admission-contracts';
+
+import {
   useGetAdmissionCrmFeePoliciesQuery,
   useIssueAdmissionCrmQuotationMutation,
   useDecideAdmissionCrmConcessionMutation,
   useRequestAdmissionCrmConcessionMutation,
   useGetAdmissionCrmFinancialReadinessQuery,
   useRecordAdmissionCrmFinanceStateMutation,
-  useOverrideAdmissionCrmPaymentGateMutation,
   useAcknowledgeAdmissionCrmConcessionFinanceMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/final-admission-api';
+
+import { useOverrideAdmissionCrmPaymentGateMutation } from 'src/redux/student/admissions-crm/core-leads-api';
 
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 

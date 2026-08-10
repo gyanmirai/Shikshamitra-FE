@@ -4,7 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type {
   AdmissionCrmReviewConfigurationDto,
   UpdateAdmissionCrmReviewConfigurationDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { useSelector } from 'react-redux';
 import { DeleteOutline } from '@mui/icons-material';
@@ -26,7 +26,7 @@ import {
 import {
   useGetAdmissionCrmReviewConfigurationQuery,
   useUpdateAdmissionCrmReviewConfigurationMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-api';
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { admissionCrmActionPermissions } from '../admissions-crm/admission-action-permissions';
@@ -51,7 +51,9 @@ const toDraft = (
 
 const errorMessage = (error: unknown) => {
   const response = error as { data?: { detail?: string; error?: { message?: string } } };
-  return response.data?.error?.message || response.data?.detail || 'Review settings could not be saved.';
+  return (
+    response.data?.error?.message || response.data?.detail || 'Review settings could not be saved.'
+  );
 };
 
 export function StructuredReviewConfiguration({ academicYearId }: { academicYearId: string }) {
@@ -63,16 +65,15 @@ export function StructuredReviewConfiguration({ academicYearId }: { academicYear
   const canView =
     canManage ||
     hasGrantedPermission(permissions, admissionCrmActionPermissions.viewStructuredReviews);
-  const query = useGetAdmissionCrmReviewConfigurationQuery(
-    { academicYearId },
-    { skip: !canView }
-  );
+  const query = useGetAdmissionCrmReviewConfigurationQuery({ academicYearId }, { skip: !canView });
   const effective = useMemo(() => toDraft(query.data), [query.data]);
   const [draft, setDraft] = useState<UpdateAdmissionCrmReviewConfigurationDto | null>(null);
   const [saveConfiguration, saveState] = useUpdateAdmissionCrmReviewConfigurationMutation();
 
   useEffect(() => setDraft(effective), [effective]);
-  const isDirty = Boolean(draft && effective && JSON.stringify(draft) !== JSON.stringify(effective));
+  const isDirty = Boolean(
+    draft && effective && JSON.stringify(draft) !== JSON.stringify(effective)
+  );
   useEnrollmentSettingsDirtyState({
     source: 'structured-review-settings',
     dirty: isDirty,
@@ -80,7 +81,8 @@ export function StructuredReviewConfiguration({ academicYearId }: { academicYear
   });
 
   if (!canView) return null;
-  if (query.isLoading || !draft) return <LinearProgress aria-label="Loading structured review settings" />;
+  if (query.isLoading || !draft)
+    return <LinearProgress aria-label="Loading structured review settings" />;
   if (query.isError) {
     return (
       <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>

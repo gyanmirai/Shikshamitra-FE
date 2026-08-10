@@ -1,16 +1,20 @@
 import { it, expect, describe } from 'vitest';
 import {
   AdmissionInquiryStage,
-  EntranceExamStatusEnum,
   AdmissionInquiryChannel,
   AdmissionCrmLeadPriority,
   type AdmissionCrmLeadDto,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
+
+import {
+  EntranceExamStatusEnum,
   AdmissionCrmMessageChannel,
   AdmissionCrmEligibilityDecision,
   AdmissionCrmExamAttendanceStatus,
   type AdmissionCrmEntranceExamDto,
-  type AdmissionCrmPipelineStageDto,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+} from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
+
+import type { AdmissionCrmPipelineStageDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import {
   getAdmissionCrmKpis,
