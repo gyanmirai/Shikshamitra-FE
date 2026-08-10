@@ -77,32 +77,32 @@ const ScheduleExamPreviewDrawer = ({
     params: { academicMediumId: (medium as any)?.id },
     options: { skip: !open || !(medium as any)?.id },
   });
-  const { data: basicDetails, isLoading: basicLoading } = useQueryAndMutation({
+  const { data: basicDetails, isLoading: basicLoading, isFetching: basicFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamBasicDetailsQuery,
     params: { examId },
     options: { skip: !open || !examId },
   });
-  const { data: scheduleDetails, isLoading: scheduleLoading } = useQueryAndMutation({
+  const { data: scheduleDetails, isLoading: scheduleLoading, isFetching: scheduleFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamScheduleQuery,
     params: { examId },
     options: { skip: !open || !examId },
   });
-  const { data: roomAssignmentData, isLoading: roomLoading } = useQueryAndMutation({
+  const { data: roomAssignmentData, isLoading: roomLoading, isFetching: roomFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamRoomAssignmentsQuery,
     params: { examId },
     options: { skip: !open || !examId },
   });
-  const { data: examSubjectsData, isLoading: subjectsLoading } = useQueryAndMutation({
+  const { data: examSubjectsData, isLoading: subjectsLoading, isFetching: subjectsFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamSubjectsQuery,
     params: { examId },
     options: { skip: !open || !examId },
   });
 
-  const isDetailsLoading = basicLoading || scheduleLoading || roomLoading || subjectsLoading;
+  const isDetailsLoading = basicLoading || scheduleLoading || roomLoading || subjectsLoading || basicFetching || scheduleFetching || roomFetching || subjectsFetching;
   const hydratedExam = basicDetails
     ? mapBackendToFormik(
         basicDetails,
@@ -145,7 +145,7 @@ const ScheduleExamPreviewDrawer = ({
     : '';
 
   const gradingScaleId = previewExam?.gradingScaleId || exam?.gradingScaleId;
-  const gradeScalingsList = gradeScalingsData?.data ?? [];
+  const gradeScalingsList = gradeScalingsData?.items ?? gradeScalingsData?.data ?? [];
   const gradingScaleName = gradingScaleId
     ? gradeScalingsList.find((item: any) => item.id === gradingScaleId)?.name || '-'
     : '-';
@@ -636,13 +636,13 @@ const PreviewMetric = ({
         color: styles.color,
         border: '1px solid',
         borderColor: styles.borderColor,
-        boxShadow: `0 4px 12px 0 ${styles.shadowColor}`,
+        boxShadow: 'none',
         transition: theme.transitions.create(['transform', 'box-shadow'], {
           duration: theme.transitions.duration.shorter,
         }),
         '&:hover': {
           transform: 'translateY(-2px)',
-          boxShadow: `0 8px 20px 0 ${styles.shadowColor}`,
+          boxShadow: `0 4px 12px 0 ${styles.shadowColor}`,
         },
       }}
     >

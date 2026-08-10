@@ -10,19 +10,20 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { useGetSubjectsQuery } from 'src/redux/classManagementApi/subjectProgressManageApi/subjectProgressManageApi';
 import {
@@ -30,6 +31,10 @@ import {
   GradeEntryWorkflowStatusColor,
   GradeEntryWorkflowStatusLabel,
 } from 'src/enums/grade-entry-status';
+import {
+  TimetableSettingsSummaryCards,
+  type ITimetableSummaryCard,
+} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
   Card,
@@ -72,8 +77,6 @@ import { BulkGradeEntryToolbar } from './components/BulkGradeEntryToolbar';
 import { GradeEntryReviewDialog } from './components/GradeEntryReviewDialog';
 import { ImportMarksPreviewDialog } from './components/ImportMarksPreviewDialog';
 
-import { TimetableSettingsSummaryCards, type ITimetableSummaryCard } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
-
 import type { TabComponentType } from '../../hr/leave-request';
 import type {
   IExamMarkItem,
@@ -81,7 +84,6 @@ import type {
   IStudentExamGradeEntry,
   IExamMarksWorkflowFlags,
 } from './type';
-import { Scrollbar } from 'src/components/scrollbar';
 
 const GradeEntry = (props: TabComponentType) => {
   const dialog = useBoolean();
@@ -413,9 +415,7 @@ const GradeEntry = (props: TabComponentType) => {
     const selectedIds = new Set(selectedStudents);
     const selectedRows = tableRows.filter((r) => selectedIds.has(r.studentId));
     const maxTotalMarks =
-      selectedRows.length > 0
-        ? Math.max(...selectedRows.map((r) => r.totalMarks ?? 100))
-        : 100;
+      selectedRows.length > 0 ? Math.max(...selectedRows.map((r) => r.totalMarks ?? 100)) : 100;
 
     if (numMarks > maxTotalMarks) {
       shikshaMitraToast.error({
@@ -708,7 +708,30 @@ const GradeEntry = (props: TabComponentType) => {
         <CustomBreadcrumbs
           sx={{ mb: 1 }}
           heading="Grade Entry"
-          description="Enter and manage student examination marks and grades"
+          description={
+            <Box sx={{ p: 1.5, maxWidth: 350 }}>
+              <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                Grade Entry Workflow
+              </Typography>
+              <Box component="ol" sx={{ m: 0, pl: 2.5, '& li': { mb: 0.5 } }}>
+                <Typography component="li" variant="caption" color="text.secondary">
+                  <strong>Context Selection</strong> — Select Class, Division, Subject, and Exam to
+                  load students.
+                </Typography>
+                <Typography component="li" variant="caption" color="text.secondary">
+                  <strong>Mark Entry</strong> — Enter marks (up to the maximum) or mark as absent.
+                </Typography>
+                <Typography component="li" variant="caption" color="text.secondary">
+                  <strong>Status & Progress</strong> — Track pending and graded students through the
+                  top metric cards.
+                </Typography>
+                <Typography component="li" variant="caption" color="text.secondary">
+                  <strong>Submission</strong> — Click &quot;Submit for Review&quot; once all grades
+                  are verified to lock them.
+                </Typography>
+              </Box>
+            </Box>
+          }
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Examination', href: '/academic/scheduleExam' },
@@ -1222,97 +1245,95 @@ const GradeEntry = (props: TabComponentType) => {
                         </Stack>
                       )}
                     </Grid>
-                  </Grid >
-                </Box >
-              </Collapse >
-            </Card >
-          </motion.div >
+                  </Grid>
+                </Box>
+              </Collapse>
+            </Card>
+          </motion.div>
         )}
 
-        {
-          examId ? (
-            <Box
-              sx={{
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                flex: 1,
-                minHeight: 0,
-              }}
-            >
-              {/* Bulk actions toolbar */}
-              {!isGradeEntryLocked && (
-                <BulkGradeEntryToolbar
-                  selectedCount={selectedStudents.length}
-                  onClearSelection={() => setSelectedStudents([])}
-                  onMarkPresent={() => handleBulkMarkAttendance(0)}
-                  onMarkAbsent={() => handleBulkMarkAttendance(1)}
-                  onApplyMarks={handleBulkApplyMarks}
-                  onApplyRemark={handleBulkApplyRemark}
-                  onClearMarks={handleBulkClearMarks}
-                  onExport={handleExportTemplate}
-                  onImport={importMarksDialog.onTrue}
-                />
-              )}
-
-              <GradeEntryTable
-                selectedStudents={selectedStudents}
-                handleSelectStudent={handleSelectStudent}
-                actions={actions}
-                classId={classes}
-                divisionId={division}
-                subjectId={subject}
-                examId={examId}
-                isLocked={isGradeEntryLocked}
-                onAllAssignedChange={(val) => {
-                  setAllMarksAssigned(val);
-                  setIsDirty(true);
-                }}
-                onStatsChange={setAnalyticsStats}
-                onWorkflowFlagsChange={handleWorkflowFlagsChange}
-                onRowsChange={setTableRows}
-                bulkEditRequest={bulkEditRequest}
+        {examId ? (
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              minHeight: 0,
+            }}
+          >
+            {/* Bulk actions toolbar */}
+            {!isGradeEntryLocked && (
+              <BulkGradeEntryToolbar
+                selectedCount={selectedStudents.length}
+                onClearSelection={() => setSelectedStudents([])}
+                onMarkPresent={() => handleBulkMarkAttendance(0)}
+                onMarkAbsent={() => handleBulkMarkAttendance(1)}
+                onApplyMarks={handleBulkApplyMarks}
+                onApplyRemark={handleBulkApplyRemark}
+                onClearMarks={handleBulkClearMarks}
+                onExport={handleExportTemplate}
+                onImport={importMarksDialog.onTrue}
               />
-            </Box>
-          ) : (
-            <Card
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                border: (theme) => `1px dashed ${theme.palette.divider}`,
-                bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.03)`,
-                boxShadow: 'var(--shadows-2)',
+            )}
+
+            <GradeEntryTable
+              selectedStudents={selectedStudents}
+              handleSelectStudent={handleSelectStudent}
+              actions={actions}
+              classId={classes}
+              divisionId={division}
+              subjectId={subject}
+              examId={examId}
+              isLocked={isGradeEntryLocked}
+              onAllAssignedChange={(val) => {
+                setAllMarksAssigned(val);
+                setIsDirty(true);
               }}
-            >
-              <Stack spacing={1} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
-                <Box
-                  sx={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: '50%',
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: 'primary.main',
-                    bgcolor: (theme) => `rgba(${theme.palette.primary.mainChannel} / 0.12)`,
-                  }}
-                >
-                  <Iconify icon="solar:clipboard-list-bold" width={36} />
-                </Box>
-                <Stack spacing={1}>
-                  <Typography variant="h6">Please select an exam</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Choose an exam title from the filters above to view students and start entering
-                    marks.
-                  </Typography>
-                </Stack>
+              onStatsChange={setAnalyticsStats}
+              onWorkflowFlagsChange={handleWorkflowFlagsChange}
+              onRowsChange={setTableRows}
+              bulkEditRequest={bulkEditRequest}
+            />
+          </Box>
+        ) : (
+          <Card
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              border: (theme) => `1px dashed ${theme.palette.divider}`,
+              bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.03)`,
+              boxShadow: 'var(--shadows-2)',
+            }}
+          >
+            <Stack spacing={1} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
+              <Box
+                sx={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: 'primary.main',
+                  bgcolor: (theme) => `rgba(${theme.palette.primary.mainChannel} / 0.12)`,
+                }}
+              >
+                <Iconify icon="solar:clipboard-list-bold" width={36} />
+              </Box>
+              <Stack spacing={1}>
+                <Typography variant="h6">Please select an exam</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Choose an exam title from the filters above to view students and start entering
+                  marks.
+                </Typography>
               </Stack>
-            </Card>
-          )
-        }
+            </Stack>
+          </Card>
+        )}
 
         {/* Dialogs and drawers */}
         <CustomDialog
@@ -1713,8 +1734,8 @@ const GradeEntry = (props: TabComponentType) => {
             </LoadingButton>
           }
         />
-      </Box >
-    </Box >
+      </Box>
+    </Box>
   );
 };
 

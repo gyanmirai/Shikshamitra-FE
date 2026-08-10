@@ -18,55 +18,97 @@ const kpiCardSx = {
   boxShadow: 'none',
 };
 
+const parseDate = (dateStr: any) => {
+  if (!dateStr) return null;
+  if (typeof dateStr === 'string' && /^\d{2}-\d{2}-\d{4}/.test(dateStr)) {
+    const parts = dateStr.split('-');
+    const day = Number(parts[0]);
+    const month = Number(parts[1]);
+    const year = Number(parts[2]);
+    if (year > 1000 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      const parsed = dayjs(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+      return parsed.isValid() ? parsed : null;
+    }
+  }
+  const parsed = dayjs(dateStr);
+  return parsed.isValid() ? parsed : null;
+};
+
 const ScheduleExamKpiStrip = ({ summary, rows = [] }: ScheduleExamKpiStripProps) => {
+  const todayStart = dayjs().startOf('day');
   const nextSevenDays = dayjs().add(7, 'day').endOf('day');
+
   const upcomingFallback = rows.filter((row) => {
-    if (!row.startDate) return false;
-    const startDate = dayjs(row.startDate);
-    return !startDate.isBefore(dayjs().startOf('day')) && startDate.isBefore(nextSevenDays);
+    const startDate = parseDate(row.startDate);
+    if (!startDate) return false;
+    return !startDate.isBefore(todayStart) && startDate.isBefore(nextSevenDays);
   }).length;
+
+  const unassignedRoomsFallback = rows.filter(
+    (row) => (row.missingRoomAssignmentCount ?? 0) > 0
+  ).length;
+
+  const needsAttentionFallback = rows.filter(
+    (row) => (row.issueCount ?? 0) > 0 || (row.missingRoomAssignmentCount ?? 0) > 0
+  ).length;
+
+  const getMetricValue = (apiCount: any, fallbackCount: number) => {
+    if (typeof apiCount === 'number') {
+      return apiCount;
+    }
+    return fallbackCount;
+  };
 
   const cards = [
     {
       label: 'Draft Exams',
-      value: summary?.pendingCount ?? rows.filter((row) => row.status === examScheduledStatus.Pending).length,
+      value: getMetricValue(
+        summary?.pendingCount,
+        rows.filter((row) => row.status === examScheduledStatus.Pending).length
+      ),
       icon: 'solar:document-text-bold-duotone',
       color: 'warning.main',
     },
     {
       label: 'Published',
-      value: summary?.publishedCount ?? rows.filter((row) => row.status === examScheduledStatus.Published).length,
+      value: getMetricValue(
+        summary?.publishedCount,
+        rows.filter((row) => row.status === examScheduledStatus.Published).length
+      ),
       icon: 'solar:cloud-upload-bold-duotone',
       color: 'info.main',
     },
     {
       label: 'Upcoming 7 Days',
-      value: summary?.upcomingCount ?? upcomingFallback,
+      value: getMetricValue(summary?.upcomingCount, upcomingFallback),
       icon: 'solar:calendar-mark-bold-duotone',
       color: 'primary.main',
     },
     {
       label: 'Unassigned Rooms',
-      value: summary?.unassignedRoomsCount ?? rows.filter((row) => row.missingRoomAssignmentCount > 0).length,
+      value: getMetricValue(summary?.unassignedRoomsCount, unassignedRoomsFallback),
       icon: 'fluent:conference-room-24-filled',
       color: 'error.main',
     },
     {
       label: 'Needs Attention',
-      value: summary?.needsAttentionCount ?? rows.filter((row) => row.issueCount > 0).length,
+      value: getMetricValue(summary?.needsAttentionCount, needsAttentionFallback),
       icon: 'solar:danger-triangle-bold-duotone',
       color: 'error.main',
     },
     {
       label: 'Completed',
-      value: summary?.completedCount ?? rows.filter((row) => row.status === examScheduledStatus.Completed).length,
+      value: getMetricValue(
+        summary?.completedCount,
+        rows.filter((row) => row.status === examScheduledStatus.Completed).length
+      ),
       icon: 'solar:verified-check-bold-duotone',
       color: 'success.main',
     },
   ];
 
   return (
-    <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 0.5 }}>
+    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', pb: 0.5 }}>
       {cards.map((card) => (
         <Card key={card.label} sx={kpiCardSx}>
           <Stack direction="row" alignItems="center" spacing={1}>
