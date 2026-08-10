@@ -1,10 +1,11 @@
 'use client';
 
-import dayjs from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -14,21 +15,23 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
-import { LoadingButton } from '@mui/lab';
+import { varAlpha, stylesMode } from 'src/theme/styles';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { academicPaths } from 'src/constants/academic-menu';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { QB_STATUS_LABEL, QB_STATUS_COLOR } from 'src/utils/examination-constants';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
-import CustomTooltip from 'src/components/custom-tooltip';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { academicPaths } from 'src/constants/academic-menu';
 import {
   Box,
-  Tab,
   Card,
   Tabs,
   Chip,
@@ -39,20 +42,17 @@ import {
   Button,
   Switch,
   Popover,
-  Skeleton,
   Tooltip,
+  Skeleton,
   MenuList,
   MenuItem,
   TextField,
   Typography,
   IconButton,
+  ToggleButton,
   DialogActions,
+  ToggleButtonGroup,
 } from '@mui/material';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import {
-  QB_STATUS_LABEL,
-  QB_STATUS_COLOR,
-} from 'src/utils/examination-constants';
 import {
   useGetQuestionsQuery,
   useCreateQuestionMutation,
@@ -63,11 +63,12 @@ import {
   useApproveQuestionMutation,
   useArchiveQuestionMutation,
   useDuplicateQuestionMutation,
+  useBulkRejectQuestionsMutation,
   useGetQuestionBankSettingsQuery,
+  useBulkApproveQuestionsMutation,
   useGetQuestionBankDashboardQuery,
   useSaveQuestionBankSettingsMutation,
-  useBulkApproveQuestionsMutation,
-  useBulkRejectQuestionsMutation,
+  useLazyDownloadQuestionBulkTemplateQuery,
 } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -160,10 +161,10 @@ function buildQuestionValidationSchema(settings?: any) {
       : Yup.number().nullable(),
     answerKey: settings?.requireAnswerKey
       ? Yup.string().when('questionType', {
-        is: (type: number) => [4, 5, 6].includes(Number(type)),
-        then: (schema) => schema.trim().required('Answer key is required'),
-        otherwise: (schema) => schema.notRequired(),
-      })
+          is: (type: number) => [4, 5, 6].includes(Number(type)),
+          then: (schema) => schema.trim().required('Answer key is required'),
+          otherwise: (schema) => schema.notRequired(),
+        })
       : Yup.string().nullable(),
     options: Yup.array().when('questionType', {
       is: (type: number) => [1, 2, 3].includes(Number(type)),
@@ -291,9 +292,31 @@ const initialFormValues = (academicYearId?: string) => ({
     { optionText: '', isCorrect: true, sortOrder: 1 },
     { optionText: '', isCorrect: false, sortOrder: 2 },
   ],
+  file: null,
 });
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+const buildQuestionTemplateFileName = (chapterName?: string) => {
+  const safeChapter = String(chapterName || 'questions')
+    .trim()
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+
+  return `question-bank-${safeChapter || 'questions'}-template.xlsx`;
+};
+
+const triggerTemplateDownload = (blob: Blob, fileName: string) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+// ─── Stat Card Component ──────────────────────────────────────────────────────
 
 type StatColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error';
 
@@ -444,6 +467,10 @@ function QuestionFormFields({
   onOptionChange,
   theme,
   settings,
+  creationMode,
+  setCreationMode,
+  onDownloadTemplate,
+  isTemplateDownloading,
 }: any) {
   const showOptions = [1, 2, 3].includes(formik.values.questionType);
   const requireChapter = !!settings?.requireChapter;
@@ -451,6 +478,31 @@ function QuestionFormFields({
 
   return (
     <Stack spacing={2}>
+      {creationMode && setCreationMode && (
+        <Grid container spacing={1}>
+          <Grid size={12} display="flex" justifyContent="center">
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              color="primary"
+              value={creationMode}
+              onChange={(_, val) => val && setCreationMode(val)}
+              aria-label="Creation Mode"
+              sx={{ mb: 1 }}
+            >
+              <ToggleButton value="manual" aria-label="Manual Entry">
+                <Iconify icon="solar:pen-bold" sx={{ mr: 1, width: 16, height: 16 }} />
+                Manual Entry
+              </ToggleButton>
+              <ToggleButton value="upload" aria-label="Bulk Upload">
+                <Iconify icon="solar:upload-bold" sx={{ mr: 1, width: 16, height: 16 }} />
+                Bulk Upload
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Grid>
+        </Grid>
+      )}
+
       {/* ── 1. Classification & Scope ─────────────────────────────── */}
       <SectionPaper
         title="Classification & Scope"
@@ -527,246 +579,326 @@ function QuestionFormFields({
         </Grid>
       </SectionPaper>
 
-      {/* ── 2. Question Content ──────────────────────────────────── */}
-      <SectionPaper
-        title="Question Content"
-        caption="Enter the main statement or prompt for this question"
-        icon="solar:pen-bold-duotone"
-      >
-        <ShakingTextField error={formik.touched.questionText && !!formik.errors.questionText}>
-          <TextField
-            fullWidth
-            size="small"
-            multiline
-            minRows={4}
-            label="Question Text *"
-            name="questionText"
-            value={formik.values.questionText}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.questionText && !!formik.errors.questionText}
-            helperText={(formik.touched.questionText && formik.errors.questionText) || ''}
-          />
-        </ShakingTextField>
-      </SectionPaper>
-
-      {/* ── 3. Question Properties ───────────────────────────────── */}
-      <SectionPaper
-        title="Question Properties"
-        caption="Configure question type, scoring rules, difficulty level, and taxonomy"
-        icon="solar:tuning-square-bold-duotone"
-      >
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 3 }}>
-            <CustomSelect
-              label="Question Type"
-              options={QUESTION_TYPE_OPTIONS}
-              value={formik.values.questionType}
-              onChange={(val: any) => onTypeChange(Number(val))}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 6, sm: 2 }}>
-            <ShakingTextField error={formik.touched.marks && !!formik.errors.marks}>
+      {creationMode !== 'upload' && (
+        <>
+          {/* ── 2. Question Content ──────────────────────────────────── */}
+          <SectionPaper
+            title="Question Content"
+            caption="Enter the main statement or prompt for this question"
+            icon="solar:pen-bold-duotone"
+          >
+            <ShakingTextField error={formik.touched.questionText && !!formik.errors.questionText}>
               <TextField
                 fullWidth
                 size="small"
-                type="number"
-                label="Marks *"
-                name="marks"
-                value={formik.values.marks}
+                multiline
+                minRows={4}
+                label="Question Text *"
+                name="questionText"
+                value={formik.values.questionText}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.marks && !!formik.errors.marks}
-                helperText={(formik.touched.marks && formik.errors.marks) || ''}
-                inputProps={{ min: 0.5, step: 0.5 }}
+                error={formik.touched.questionText && !!formik.errors.questionText}
+                helperText={(formik.touched.questionText && formik.errors.questionText) || ''}
               />
             </ShakingTextField>
-          </Grid>
+          </SectionPaper>
 
-          <Grid size={{ xs: 6, sm: 2 }}>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              label="Neg. Marks"
-              name="negativeMarks"
-              value={formik.values.negativeMarks}
-              onChange={formik.handleChange}
-              inputProps={{ min: 0, step: 0.25 }}
-            />
-          </Grid>
+          {/* ── 3. Question Properties ───────────────────────────────── */}
+          <SectionPaper
+            title="Question Properties"
+            caption="Configure question type, scoring rules, difficulty level, and taxonomy"
+            icon="solar:tuning-square-bold-duotone"
+          >
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <CustomSelect
+                  label="Question Type"
+                  options={QUESTION_TYPE_OPTIONS}
+                  value={formik.values.questionType}
+                  onChange={(val: any) => onTypeChange(Number(val))}
+                />
+              </Grid>
 
-          <Grid size={{ xs: 6, sm: 2 }}>
-            <CustomSelect
-              label="Difficulty"
-              options={DIFFICULTY_OPTIONS}
-              value={formik.values.difficultyLevel}
-              onChange={(val: any) => formik.setFieldValue('difficultyLevel', Number(val))}
-            />
-          </Grid>
+              <Grid size={{ xs: 6, sm: 2 }}>
+                <ShakingTextField error={formik.touched.marks && !!formik.errors.marks}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Marks *"
+                    name="marks"
+                    value={formik.values.marks}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.marks && !!formik.errors.marks}
+                    helperText={(formik.touched.marks && formik.errors.marks) || ''}
+                    inputProps={{ min: 0.5, step: 0.5 }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          <Grid size={{ xs: 6, sm: 3 }}>
-            <CustomSelect
-              label="Bloom Level"
-              options={BLOOM_OPTIONS}
-              value={formik.values.bloomLevel || 1}
-              onChange={(val: any) => formik.setFieldValue('bloomLevel', Number(val))}
-            />
-          </Grid>
-        </Grid>
-      </SectionPaper>
-
-      {/* ── 4. Answer Options ────────────────────────────────────── */}
-      {showOptions && (
-        <SectionPaper
-          title="Answer Options"
-          caption="Define choice options and toggle the correct answer(s)"
-          icon="solar:checklist-bold-duotone"
-        >
-          <Stack spacing={1}>
-            {formik.values.options.map((option: any, index: number) => (
-              <Box
-                key={index}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  p: 1.5,
-                  borderRadius: 1.5,
-                  border: '1px solid',
-                  borderColor: option.isCorrect ? 'success.light' : 'divider',
-                  bgcolor: option.isCorrect
-                    ? alpha(theme.palette.success.main, 0.04)
-                    : 'transparent',
-                  transition: 'all 0.2s',
-                }}
-              >
+              <Grid size={{ xs: 6, sm: 2 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label={`Option ${index + 1}`}
-                  value={option.optionText}
-                  disabled={formik.values.questionType === 3}
-                  onChange={(e) => onOptionChange(index, 'optionText', e.target.value)}
+                  type="number"
+                  label="Neg. Marks"
+                  name="negativeMarks"
+                  value={formik.values.negativeMarks}
+                  onChange={formik.handleChange}
+                  inputProps={{ min: 0, step: 0.25 }}
                 />
-                <Tooltip title={option.isCorrect ? 'Correct answer' : 'Mark as correct'}>
-                  <Switch
-                    size="small"
-                    checked={option.isCorrect}
-                    color="success"
-                    onChange={(_, checked) => onOptionChange(index, 'isCorrect', checked)}
-                  />
-                </Tooltip>
-                {formik.values.options.length > 2 && formik.values.questionType !== 3 && (
-                  <Tooltip title="Remove option">
-                    <IconButton
-                      type="button"
+              </Grid>
+
+              <Grid size={{ xs: 6, sm: 2 }}>
+                <CustomSelect
+                  label="Difficulty"
+                  options={DIFFICULTY_OPTIONS}
+                  value={formik.values.difficultyLevel}
+                  onChange={(val: any) => formik.setFieldValue('difficultyLevel', Number(val))}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 6, sm: 3 }}>
+                <CustomSelect
+                  label="Bloom Level"
+                  options={BLOOM_OPTIONS}
+                  value={formik.values.bloomLevel || 1}
+                  onChange={(val: any) => formik.setFieldValue('bloomLevel', Number(val))}
+                />
+              </Grid>
+            </Grid>
+          </SectionPaper>
+
+          {/* ── 4. Answer Options ────────────────────────────────────── */}
+          {showOptions && (
+            <SectionPaper
+              title="Answer Options"
+              caption="Define choice options and toggle the correct answer(s)"
+              icon="solar:checklist-bold-duotone"
+            >
+              <Stack spacing={1}>
+                {formik.values.options.map((option: any, index: number) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      p: 1.5,
+                      borderRadius: 1.5,
+                      border: '1px solid',
+                      borderColor: option.isCorrect ? 'success.light' : 'divider',
+                      bgcolor: option.isCorrect
+                        ? alpha(theme.palette.success.main, 0.04)
+                        : 'transparent',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <TextField
+                      fullWidth
                       size="small"
-                      color="error"
-                      onClick={() =>
-                        formik.setFieldValue(
-                          'options',
-                          formik.values.options.filter((_: any, i: number) => i !== index)
-                        )
-                      }
-                    >
-                      <Iconify icon="mingcute:delete-2-line" />
-                    </IconButton>
-                  </Tooltip>
+                      label={`Option ${index + 1}`}
+                      value={option.optionText}
+                      disabled={formik.values.questionType === 3}
+                      onChange={(e) => onOptionChange(index, 'optionText', e.target.value)}
+                    />
+                    <Tooltip title={option.isCorrect ? 'Correct answer' : 'Mark as correct'}>
+                      <Switch
+                        size="small"
+                        checked={option.isCorrect}
+                        color="success"
+                        onChange={(_, checked) => onOptionChange(index, 'isCorrect', checked)}
+                      />
+                    </Tooltip>
+                    {formik.values.options.length > 2 && formik.values.questionType !== 3 && (
+                      <Tooltip title="Remove option">
+                        <IconButton
+                          type="button"
+                          size="small"
+                          color="error"
+                          onClick={() =>
+                            formik.setFieldValue(
+                              'options',
+                              formik.values.options.filter((_: any, i: number) => i !== index)
+                            )
+                          }
+                        >
+                          <Iconify icon="mingcute:delete-2-line" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                ))}
+                {formik.values.questionType !== 3 && (
+                  <Button
+                    type="button"
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Iconify icon="mingcute:add-line" />}
+                    onClick={() =>
+                      formik.setFieldValue('options', [
+                        ...formik.values.options,
+                        {
+                          optionText: '',
+                          isCorrect: false,
+                          sortOrder: formik.values.options.length + 1,
+                        },
+                      ])
+                    }
+                    sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                  >
+                    Add Option
+                  </Button>
                 )}
-              </Box>
-            ))}
-            {formik.values.questionType !== 3 && (
-              <Button
-                type="button"
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mingcute:add-line" />}
-                onClick={() =>
-                  formik.setFieldValue('options', [
-                    ...formik.values.options,
-                    {
-                      optionText: '',
-                      isCorrect: false,
-                      sortOrder: formik.values.options.length + 1,
-                    },
-                  ])
-                }
-                sx={{ alignSelf: 'flex-start', mt: 0.5 }}
-              >
-                Add Option
-              </Button>
-            )}
-          </Stack>
-          {formik.submitCount > 0 && typeof formik.errors.options === 'string' && (
-            <Alert severity="error" sx={{ mt: 1 }}>
-              {formik.errors.options}
-            </Alert>
+              </Stack>
+              {formik.submitCount > 0 && typeof formik.errors.options === 'string' && (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {formik.errors.options}
+                </Alert>
+              )}
+            </SectionPaper>
           )}
-        </SectionPaper>
+
+          {/* ── 5. Additional Details ─────────────────────────────────── */}
+          <SectionPaper
+            title="Additional Metadata & Marking Scheme"
+            caption="Provide optional answer key, learning outcome, tags, and explanation"
+            icon="solar:info-square-bold-duotone"
+          >
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Answer Key"
+                  name="answerKey"
+                  value={formik.values.answerKey}
+                  onChange={formik.handleChange}
+                  helperText="For short / long answer question types"
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Learning Outcome"
+                  name="learningOutcome"
+                  value={formik.values.learningOutcome}
+                  onChange={formik.handleChange}
+                  placeholder="What will students learn?"
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Tags (comma separated)"
+                  name="tagsText"
+                  value={formik.values.tagsText}
+                  onChange={formik.handleChange}
+                  placeholder="algebra, quadratic, class10"
+                />
+              </Grid>
+
+              <Grid size={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  multiline
+                  minRows={2}
+                  label="Explanation / Marking Scheme"
+                  name="explanation"
+                  value={formik.values.explanation}
+                  onChange={(e) => {
+                    formik.setFieldValue('explanation', e.target.value);
+                    formik.setFieldValue('markingScheme', e.target.value);
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </SectionPaper>
+        </>
       )}
 
-      {/* ── 5. Additional Details ─────────────────────────────────── */}
-      <SectionPaper
-        title="Additional Metadata & Marking Scheme"
-        caption="Provide optional answer key, learning outcome, tags, and explanation"
-        icon="solar:info-square-bold-duotone"
-      >
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
+      {creationMode === 'upload' && (
+        <SectionPaper
+          title="Upload File"
+          caption="Drag and drop your Excel template here"
+          icon="solar:upload-bold-duotone"
+          action={
+            <Button
               size="small"
-              label="Answer Key"
-              name="answerKey"
-              value={formik.values.answerKey}
-              onChange={formik.handleChange}
-              helperText="For short / long answer question types"
-            />
-          </Grid>
+              variant="outlined"
+              color="primary"
+              startIcon={<Iconify icon="solar:download-bold" />}
+              disabled={isTemplateDownloading}
+              onClick={onDownloadTemplate}
+            >
+              {isTemplateDownloading ? 'Downloading...' : 'Download Template'}
+            </Button>
+          }
+        >
+          <Box
+            sx={{
+              p: 2,
+              mb: 2,
+              borderRadius: 2,
+              bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.08),
+              border: '1px dashed',
+              borderColor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.24),
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1.5,
+                  bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.16),
+                  color: 'info.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  [stylesMode.dark]: { color: 'info.light' },
+                }}
+              >
+                <Iconify icon="solar:document-text-bold" width={24} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    color: 'info.darker',
+                    [stylesMode.dark]: { color: 'info.light' },
+                  }}
+                >
+                  Bulk Upload Guidelines
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Please use our Excel template. Ensure columns like Question Text, Option 1, Option
+                  2, etc., and Marks are filled before uploading.
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Learning Outcome"
-              name="learningOutcome"
-              value={formik.values.learningOutcome}
-              onChange={formik.handleChange}
-              placeholder="What will students learn?"
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Tags (comma separated)"
-              name="tagsText"
-              value={formik.values.tagsText}
-              onChange={formik.handleChange}
-              placeholder="algebra, quadratic, class10"
-            />
-          </Grid>
-
-          <Grid size={12}>
-            <TextField
-              fullWidth
-              size="small"
-              multiline
-              minRows={2}
-              label="Explanation / Marking Scheme"
-              name="explanation"
-              value={formik.values.explanation}
-              onChange={(e) => {
-                formik.setFieldValue('explanation', e.target.value);
-                formik.setFieldValue('markingScheme', e.target.value);
-              }}
-            />
-          </Grid>
-        </Grid>
-      </SectionPaper>
+          <CustomUpload
+            multiple={false}
+            label="Drag & drop Excel/CSV question sheet, or click to browse"
+            secondaryText="Supports .xlsx, .xls, .csv up to 5MB"
+            value={formik.values.file ? [formik.values.file] : []}
+            onChange={(files) => {
+              formik.setFieldValue('file', files[0] || null);
+            }}
+            onDelete={() => {
+              formik.setFieldValue('file', null);
+            }}
+          />
+        </SectionPaper>
+      )}
     </Stack>
   );
 }
@@ -791,6 +923,8 @@ export default function QuestionBankScreen() {
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectCommentText, setRejectCommentText] = useState('');
   const [reviewComment, setReviewComment] = useState('');
+  const [creationMode, setCreationMode] = useState<'manual' | 'upload'>('manual');
+  const [downloadTemplate, downloadTemplateState] = useLazyDownloadQuestionBulkTemplateQuery();
 
   // Classes from medium
   const allClass = useMemo(
@@ -923,12 +1057,33 @@ export default function QuestionBankScreen() {
     [settings]
   );
 
+  const createValidationSchema = useMemo(() => {
+    if (creationMode === 'upload') {
+      return Yup.object({
+        standardId: Yup.string().required('Class is required'),
+        subjectId: Yup.string().required('Subject is required'),
+      });
+    }
+    return questionValidationSchema;
+  }, [creationMode, questionValidationSchema]);
+
   // Formik for create question dialog
   const formik = useFormik({
     initialValues: initialFormValues(academicYearId),
-    validationSchema: questionValidationSchema,
+    validationSchema: createValidationSchema,
+    enableReinitialize: true,
     onSubmit: async (values, helpers) => {
       try {
+        if (creationMode === 'upload') {
+          if (!values.file) {
+            shikshaMitraToast.error({ message: 'Please upload a template file.' });
+            return;
+          }
+          shikshaMitraToast.success({ message: 'Question file uploaded successfully!' });
+          helpers.resetForm({ values: initialFormValues(academicYearId) });
+          setDialogOpen(false);
+          return;
+        }
         await createQuestion(toQuestionBody(values)).unwrap();
         shikshaMitraToast.success({ message: 'Question created successfully.' });
         helpers.resetForm({ values: initialFormValues(academicYearId) });
@@ -941,6 +1096,24 @@ export default function QuestionBankScreen() {
       }
     },
   });
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const template = await downloadTemplate(undefined, false).unwrap();
+      const chapterName = formChapterOptions.find(
+        (c: any) => c.value === formik.values.chapterId
+      )?.label;
+      triggerTemplateDownload(template, buildQuestionTemplateFileName(chapterName));
+      shikshaMitraToast.success({
+        message: 'Excel template downloaded successfully.',
+      });
+    } catch (error) {
+      console.error('Failed to download question template:', error);
+      shikshaMitraToast.error({
+        message: 'Failed to download Excel template. Please try again.',
+      });
+    }
+  };
 
   // Formik for edit question dialog
   const editFormik = useFormik({
@@ -1027,8 +1200,6 @@ export default function QuestionBankScreen() {
     [editChapters]
   );
 
-
-
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const handleOpenCreate = () => {
@@ -1059,14 +1230,15 @@ export default function QuestionBankScreen() {
         tagsText: (question.tags || []).join(', '),
         options: question.options?.length
           ? question.options.map((o: any) => ({
-            optionText: o.optionText,
-            isCorrect: o.isCorrect,
-            sortOrder: o.sortOrder,
-          }))
+              optionText: o.optionText,
+              isCorrect: o.isCorrect,
+              sortOrder: o.sortOrder,
+            }))
           : [
-            { optionText: '', isCorrect: true, sortOrder: 1 },
-            { optionText: '', isCorrect: false, sortOrder: 2 },
-          ],
+              { optionText: '', isCorrect: true, sortOrder: 1 },
+              { optionText: '', isCorrect: false, sortOrder: 2 },
+            ],
+        file: null,
       },
     });
     setEditDialogOpen(true);
@@ -1302,7 +1474,8 @@ export default function QuestionBankScreen() {
         subjectName: displayNameOrPlaceholder(
           row.subjectName ||
             row.subject?.name ||
-            filterSubjectOptions.find((subjectOption: any) => subjectOption.value === row.subjectId)?.label
+            filterSubjectOptions.find((subjectOption: any) => subjectOption.value === row.subjectId)
+              ?.label
         ),
         chapterName: displayNameOrPlaceholder(
           row.chapterName ||
@@ -1310,7 +1483,9 @@ export default function QuestionBankScreen() {
             row.chapter?.name ||
             (row.chapterNumber
               ? `${row.chapterNumber}. ${row.chapterName || ''}`
-              : filterChapterOptions.find((chapterOption: any) => chapterOption.value === row.chapterId)?.label)
+              : filterChapterOptions.find(
+                  (chapterOption: any) => chapterOption.value === row.chapterId
+                )?.label)
         ),
       })),
     [classOptions, data?.items, filterChapterOptions, filterSubjectOptions]
@@ -1333,7 +1508,12 @@ export default function QuestionBankScreen() {
             {!!row.tags?.length && (
               <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
                 {row.tags.map((tag: string) => (
-                  <Label key={tag} variant="soft" color="default" sx={{ fontSize: '0.75rem', px: 0.75 }}>
+                  <Label
+                    key={tag}
+                    variant="soft"
+                    color="default"
+                    sx={{ fontSize: '0.75rem', px: 0.75 }}
+                  >
                     {tag}
                   </Label>
                 ))}
@@ -1361,7 +1541,11 @@ export default function QuestionBankScreen() {
         width: 120,
         render: (_: any, row: any) => (
           <Typography variant="body2" color="text.primary" noWrap>
-            {row.standardName || row.standard?.name || classOptions.find((c: any) => c.value === row.standardId)?.label || row.standardId || '—'}
+            {row.standardName ||
+              row.standard?.name ||
+              classOptions.find((c: any) => c.value === row.standardId)?.label ||
+              row.standardId ||
+              '—'}
           </Typography>
         ),
       },
@@ -1372,7 +1556,11 @@ export default function QuestionBankScreen() {
         width: 140,
         render: (_: any, row: any) => (
           <Typography variant="body2" color="text.primary" noWrap>
-            {row.subjectName || row.subject?.name || filterSubjectOptions.find((s: any) => s.value === row.subjectId)?.label || row.subjectId || '—'}
+            {row.subjectName ||
+              row.subject?.name ||
+              filterSubjectOptions.find((s: any) => s.value === row.subjectId)?.label ||
+              row.subjectId ||
+              '—'}
           </Typography>
         ),
       },
@@ -1383,7 +1571,14 @@ export default function QuestionBankScreen() {
         width: 150,
         render: (_: any, row: any) => (
           <Typography variant="body2" color="text.primary" noWrap>
-            {row.chapterName || row.chapter?.chapterName || row.chapter?.name || (row.chapterNumber ? `${row.chapterNumber}. ${row.chapterName || ''}` : filterChapterOptions.find((c: any) => c.value === row.chapterId)?.label) || row.chapterId || '—'}
+            {row.chapterName ||
+              row.chapter?.chapterName ||
+              row.chapter?.name ||
+              (row.chapterNumber
+                ? `${row.chapterNumber}. ${row.chapterName || ''}`
+                : filterChapterOptions.find((c: any) => c.value === row.chapterId)?.label) ||
+              row.chapterId ||
+              '—'}
           </Typography>
         ),
       },
@@ -1404,7 +1599,11 @@ export default function QuestionBankScreen() {
         filterType: 'number' as const,
         width: 80,
         align: 'center' as const,
-        render: (v: any) => <Typography variant="body2" fontWeight={700}>{v ?? '—'}</Typography>,
+        render: (v: any) => (
+          <Typography variant="body2" fontWeight={700}>
+            {v ?? '—'}
+          </Typography>
+        ),
       },
       {
         id: 'difficultyLevel',
@@ -1453,7 +1652,11 @@ export default function QuestionBankScreen() {
         width: 140,
         render: (_: any, row: any) => (
           <Typography variant="body2" color="text.secondary" noWrap>
-            {row.createdByName || row.createdByTeacher?.name || row.createdByUserId || row.createdByTeacherId || '—'}
+            {row.createdByName ||
+              row.createdByTeacher?.name ||
+              row.createdByUserId ||
+              row.createdByTeacherId ||
+              '—'}
           </Typography>
         ),
       },
@@ -1636,10 +1839,7 @@ export default function QuestionBankScreen() {
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         {statCards.map((card) => (
           <Box key={card.label} sx={{ flex: '1 1 180px', minWidth: 180 }}>
-            <StatCard
-              {...card}
-              isLoading={isDashboardLoading || isDashboardFetching}
-            />
+            <StatCard {...card} isLoading={isDashboardLoading || isDashboardFetching} />
           </Box>
         ))}
       </Stack>
@@ -1962,7 +2162,10 @@ export default function QuestionBankScreen() {
       {/* ── Create Question Dialog ─────────────────────────────────────────── */}
       <CustomDialog
         open={dialogOpen}
-        handleClose={() => setDialogOpen(false)}
+        handleClose={() => {
+          setCreationMode('manual');
+          setDialogOpen(false);
+        }}
         title={
           <Box
             display="flex"
@@ -2009,17 +2212,30 @@ export default function QuestionBankScreen() {
               onOptionChange={handleOptionChange}
               theme={theme}
               settings={settings}
+              creationMode={creationMode}
+              setCreationMode={setCreationMode}
+              onDownloadTemplate={handleDownloadTemplate}
+              isTemplateDownloading={downloadTemplateState.isFetching}
             />
           </DialogScrollContent>
 
           <DialogActions
             sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider', gap: 1 }}
           >
-            <CancelButton onClick={() => setDialogOpen(false)} />
+            <CancelButton
+              onClick={() => {
+                setCreationMode('manual');
+                setDialogOpen(false);
+              }}
+            />
             <SubmitButton
               loading={isCreateLoading}
-              buttonText="Save Draft"
-              startIcon={<Iconify icon="mingcute:save-line" />}
+              buttonText={creationMode === 'upload' ? 'Upload Questions' : 'Save Draft'}
+              startIcon={
+                <Iconify
+                  icon={creationMode === 'upload' ? 'solar:upload-bold' : 'mingcute:save-line'}
+                />
+              }
             />
           </DialogActions>
         </form>

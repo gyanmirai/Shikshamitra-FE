@@ -9,7 +9,6 @@ interface Props {
   isReserved?: boolean;
   onRemove: () => void;
   onReserve: () => void;
-  onAddNote: () => void;
 }
 
 export function useSeatActionPopover(): UsePopoverReturn {
@@ -21,7 +20,6 @@ export default function SeatActionMenu({
   isReserved,
   onRemove,
   onReserve,
-  onAddNote,
   popover,
 }: Props & { popover: UsePopoverReturn }) {
   return (
@@ -42,86 +40,48 @@ export default function SeatActionMenu({
     >
       <MenuList sx={{ p: 0 }}>
         {hasStudent ? (
-          <>
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                onRemove();
-              }}
-              sx={{
-                borderRadius: 1,
-                color: 'error.main',
-                py: 0.75,
-                px: 1.25,
-                gap: 1,
-                '&:hover': {
-                  bgcolor: 'error.lighter',
-                },
-              }}
-            >
-              <Iconify icon="mdi:account-remove-outline" width={18} />
-              <Typography variant="body2" fontWeight={600}>
-                Remove from Seat
-              </Typography>
-            </MenuItem>
-
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                onAddNote();
-              }}
-              sx={{
-                borderRadius: 1,
-                py: 0.75,
-                px: 1.25,
-                mt: 0.5,
-                gap: 1,
-              }}
-            >
-              <Iconify icon="mdi:note-plus-outline" width={18} />
-              <Typography variant="body2">Add Note</Typography>
-            </MenuItem>
-          </>
+          <MenuItem
+            onClick={() => {
+              popover.onClose();
+              onRemove();
+            }}
+            sx={{
+              borderRadius: 1,
+              color: 'error.main',
+              py: 0.75,
+              px: 1.25,
+              gap: 1,
+              '&:hover': {
+                bgcolor: 'error.lighter',
+              },
+            }}
+          >
+            <Iconify icon="mdi:account-remove-outline" width={18} />
+            <Typography variant="body2" fontWeight={600}>
+              Remove from Seat
+            </Typography>
+          </MenuItem>
         ) : (
-          <>
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                onReserve();
-              }}
-              sx={{
-                borderRadius: 1,
-                py: 0.75,
-                px: 1.25,
-                gap: 1,
-              }}
-            >
-              <Iconify
-                icon={isReserved ? 'mdi:lock-open-outline' : 'mdi:lock-outline'}
-                width={18}
-              />
-              <Typography variant="body2">
-                {isReserved ? 'Unreserve Seat' : 'Reserve Seat'}
-              </Typography>
-            </MenuItem>
-
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                onAddNote();
-              }}
-              sx={{
-                borderRadius: 1,
-                py: 0.75,
-                px: 1.25,
-                mt: 0.5,
-                gap: 1,
-              }}
-            >
-              <Iconify icon="mdi:note-plus-outline" width={18} />
-              <Typography variant="body2">Add Note</Typography>
-            </MenuItem>
-          </>
+          <MenuItem
+            onClick={() => {
+              popover.onClose();
+              onReserve();
+            }}
+            sx={{
+              borderRadius: 1,
+              py: 0.75,
+              px: 1.25,
+              gap: 1,
+            }}
+          >
+            <Iconify
+              icon={isReserved ? 'mdi:lock-open-outline' : 'mdi:lock-outline'}
+              width={18}
+            />
+            <Typography variant="body2">
+              {isReserved ? 'Unreserve Seat' : 'Reserve Seat'}
+            </Typography>
+          </MenuItem>
         )}
       </MenuList>
     </CustomPopover>

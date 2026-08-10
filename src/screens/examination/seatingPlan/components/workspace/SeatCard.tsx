@@ -40,7 +40,6 @@ interface Props {
   onClick?: () => void;
   onRemove?: () => void;
   onReserve?: () => void;
-  onAddNote?: () => void;
   isReadOnly?: boolean;
 }
 
@@ -55,7 +54,6 @@ export default function SeatCard({
   onClick,
   onRemove,
   onReserve,
-  onAddNote,
   isReadOnly,
 }: Props) {
   const { setNodeRef: setDropNodeRef, isOver } = useDroppable({
@@ -228,7 +226,6 @@ export default function SeatCard({
         isReserved={seat.isReserved}
         onRemove={() => !isReadOnly && onRemove?.()}
         onReserve={() => !isReadOnly && onReserve?.()}
-        onAddNote={() => !isReadOnly && onAddNote?.()}
       />
       </Box>
     </Tooltip>

@@ -10,45 +10,26 @@ import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { useSession } from 'next-auth/react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { GlobalIcons } from 'src/utils/icons';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { ExamReportTitle, ExamReportApiTypeMap } from 'src/enums/examination-reports';
 import { usePreviewAcademicReportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import { TimetableSettingsSummaryCards, ITimetableSummaryCard } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
-  Box,
-  Card,
-  Stack,
-  Table,
-  Button,
-  Dialog,
-  Tooltip,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  TextField,
-  IconButton,
-  Typography,
-  Autocomplete,
-  DialogActions,
-  LinearProgress,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+  TimetableSettingsSummaryCards,
+  ITimetableSummaryCard,
+} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   useGetResultHeaderQuery,
   useFreezeResultMutation,
@@ -57,6 +38,27 @@ import {
   useGetResultReadinessQuery,
   useGetStudentResultDetailsQuery,
 } from 'src/redux/academicAPI/ExaminationApi/ResultApi/resultApi';
+import {
+  Box,
+  Card,
+  Stack,
+  Table,
+  Button,
+  Dialog,
+  Tooltip,
+  TableBody,
+  TableCell,
+  TableHead,
+  TextField,
+  Accordion,
+  IconButton,
+  Typography,
+  Autocomplete,
+  DialogActions,
+  LinearProgress,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -230,7 +232,10 @@ function ResultWorkflowPanel({
         </Stack>
 
         <Stack direction="row" alignItems="center" spacing={2} flexShrink={0} sx={{ mr: 1 }}>
-          <Typography variant="subtitle2" sx={{ color: 'text.primary', display: { xs: 'none', sm: 'block' } }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ color: 'text.primary', display: { xs: 'none', sm: 'block' } }}
+          >
             Result readiness
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -415,8 +420,8 @@ function StudentDetailsDialog({
         minWidth: 150,
         sticky: true,
         stickyPosition: 'left' as const,
-        render: (value: any, row: any) => {
-          const themeInfo = getSubjectTheme(row.subjectName ?? '');
+        render: (value: any, item: any) => {
+          const themeInfo = getSubjectTheme(item.subjectName ?? '');
           return (
             <Box display="flex" alignItems="center" gap={1}>
               <Box
@@ -434,7 +439,7 @@ function StudentDetailsDialog({
                 <Iconify icon={themeInfo.icon} width={16} />
               </Box>
               <Typography variant="body2" fontWeight={600}>
-                {row.subjectName}
+                {item.subjectName}
               </Typography>
             </Box>
           );
@@ -452,18 +457,17 @@ function StudentDetailsDialog({
         id: 'marksObtained',
         label: 'Score & Progress',
         minWidth: 200,
-        render: (value: any, row: any) => {
-          const marksObtainedStr = row.marksObtained ?? '—';
+        render: (value: any, item: any) => {
+          const marksObtainedStr = item.marksObtained ?? '—';
           const isSubjectAbsent =
             marksObtainedStr === 'Ab' || marksObtainedStr.toLowerCase() === 'absent';
           const marksObtained = isSubjectAbsent ? 0 : parseFloat(marksObtainedStr) || 0;
-          const maxMarks = parseFloat(row.maxMarks ?? '100') || 100;
-          const progressPct =
-            maxMarks > 0 ? Math.min((marksObtained / maxMarks) * 100, 100) : 0;
+          const maxMarks = parseFloat(item.maxMarks ?? '100') || 100;
+          const progressPct = maxMarks > 0 ? Math.min((marksObtained / maxMarks) * 100, 100) : 0;
           const isSubjectPassed =
-            row.isPassed !== undefined
-              ? row.isPassed
-              : (row.grade ?? '—') !== 'F' && !isSubjectAbsent;
+            item.isPassed !== undefined
+              ? item.isPassed
+              : (item.grade ?? '—') !== 'F' && !isSubjectAbsent;
 
           if (isSubjectAbsent) {
             return (
@@ -525,14 +529,12 @@ function StudentDetailsDialog({
           { label: 'E', value: 'E' },
           { label: 'F', value: 'F' },
         ],
-        render: (value: any, row: any) => {
+        render: (value: any, item: any) => {
           const subjectGrade = value ?? '—';
           const isSubjectAbsent =
-            row.marksObtained === 'Ab' || String(row.marksObtained).toLowerCase() === 'absent';
+            item.marksObtained === 'Ab' || String(item.marksObtained).toLowerCase() === 'absent';
           const isSubjectPassed =
-            row.isPassed !== undefined
-              ? row.isPassed
-              : subjectGrade !== 'F' && !isSubjectAbsent;
+            item.isPassed !== undefined ? item.isPassed : subjectGrade !== 'F' && !isSubjectAbsent;
 
           return (
             <Label
@@ -558,8 +560,8 @@ function StudentDetailsDialog({
         id: 'remarks',
         label: 'Remarks',
         minWidth: 150,
-        render: (value: any, row: any) => {
-          const marksObtainedStr = row.marksObtained ?? '—';
+        render: (value: any, item: any) => {
+          const marksObtainedStr = item.marksObtained ?? '—';
           const isSubjectAbsent =
             marksObtainedStr === 'Ab' || marksObtainedStr.toLowerCase() === 'absent';
           const subjectRemarks = value ?? (isSubjectAbsent ? 'Absent' : '—');
@@ -583,11 +585,11 @@ function StudentDetailsDialog({
           { label: 'FAIL', value: 'false' },
           { label: 'ABSENT', value: 'absent' },
         ],
-        render: (value: any, row: any) => {
-          const marksObtainedStr = row.marksObtained ?? '—';
+        render: (value: any, item: any) => {
+          const marksObtainedStr = item.marksObtained ?? '—';
           const isSubjectAbsent =
             marksObtainedStr === 'Ab' || marksObtainedStr.toLowerCase() === 'absent';
-          const subjectGrade = row.grade ?? '—';
+          const subjectGrade = item.grade ?? '—';
           const isSubjectPassed =
             value !== undefined ? value : subjectGrade !== 'F' && !isSubjectAbsent;
 
@@ -609,11 +611,7 @@ function StudentDetailsDialog({
               color={isSubjectPassed ? 'success' : 'error'}
               startIcon={
                 <Iconify
-                  icon={
-                    isSubjectPassed
-                      ? 'mdi:check-circle-outline'
-                      : 'mdi:close-circle-outline'
-                  }
+                  icon={isSubjectPassed ? 'mdi:check-circle-outline' : 'mdi:close-circle-outline'}
                 />
               }
             >
@@ -634,7 +632,14 @@ function StudentDetailsDialog({
         open={open}
         handleClose={onClose}
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+          <Box
+            display="flex"
+            flexDirection="row"
+            gap={1}
+            alignItems="center"
+            component="span"
+            sx={{ fontWeight: 'normal' }}
+          >
             <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
               Loading Result Details
             </Box>
@@ -643,7 +648,13 @@ function StudentDetailsDialog({
               placement="right"
               title="Fetching detailed student result card and marks performance breakdown."
             >
-              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+                width={16}
+                height={16}
+              />
             </CustomTooltip>
           </Box>
         }
@@ -703,7 +714,14 @@ function StudentDetailsDialog({
       open={open}
       handleClose={onClose}
       title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+        <Box
+          display="flex"
+          flexDirection="row"
+          gap={1}
+          alignItems="center"
+          component="span"
+          sx={{ fontWeight: 'normal' }}
+        >
           <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
             {examName || 'Result Details'}
           </Box>
@@ -712,7 +730,13 @@ function StudentDetailsDialog({
             placement="right"
             title="View comprehensive details of student academic report cards, marks obtained, percentage, and overall status."
           >
-            <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+            <Iconify
+              icon={GlobalIcons.info}
+              sx={{ cursor: 'pointer' }}
+              color="info.main"
+              width={16}
+              height={16}
+            />
           </CustomTooltip>
         </Box>
       }
@@ -734,7 +758,6 @@ function StudentDetailsDialog({
           gap: 1.5,
         }}
       >
-
         {/* Top Grid: Student Info, Result Summary */}
         <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1.2fr 1.4fr' }} gap={1.5}>
           {/* Student Info Card */}
@@ -844,8 +867,6 @@ function StudentDetailsDialog({
                 {status || '—'}
               </Label>
             </Box>
-
-
 
             {/* Sub-stats grid */}
             <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={0.75} width="100%" mb={2}>
@@ -1019,7 +1040,12 @@ function StudentDetailsDialog({
                     >
                       GRADE
                     </Typography>
-                    <Typography variant="subtitle2" fontWeight="bold" color="success.main" sx={{ lineHeight: 1.1 }}>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight="bold"
+                      color="success.main"
+                      sx={{ lineHeight: 1.1 }}
+                    >
                       {gradeValue || '—'}
                     </Typography>
                   </Box>
@@ -1047,7 +1073,12 @@ function StudentDetailsDialog({
                     >
                       CLASS RANK
                     </Typography>
-                    <Typography variant="subtitle2" fontWeight="bold" color="warning.main" sx={{ lineHeight: 1.1 }}>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight="bold"
+                      color="warning.main"
+                      sx={{ lineHeight: 1.1 }}
+                    >
                       #{rank} of {totalStudentsInClass}
                     </Typography>
                   </Box>
@@ -1098,7 +1129,11 @@ function StudentDetailsDialog({
           }}
         >
           <Box display="flex" alignItems="center" gap={1} mb={1}>
-            <Iconify icon="mdi:calculator-variant-outline" width={20} sx={{ color: 'primary.main' }} />
+            <Iconify
+              icon="mdi:calculator-variant-outline"
+              width={20}
+              sx={{ color: 'primary.main' }}
+            />
             <Typography
               variant="subtitle2"
               fontWeight="bold"
@@ -1319,7 +1354,7 @@ const ResultCreation = (_props: TabComponentType) => {
   const allFiltersSet = !!(classes && division && examId);
 
   // ─── Result header & analytics ─────────────────────────────────────────
-  const { data: resultHeaderData } = useQueryAndMutation({
+  const { data: rawResultHeaderData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetResultHeaderQuery,
     params: { examId, divisionId: division },
@@ -1327,13 +1362,16 @@ const ResultCreation = (_props: TabComponentType) => {
     popupConfig: { error: false },
   });
 
-  const { data: readinessData } = useQueryAndMutation({
+  const { data: rawReadinessData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetResultReadinessQuery,
     params: { examId, divisionId: division },
     options: { skip: !allFiltersSet },
     popupConfig: { error: false },
   });
+
+  const resultHeaderData = allFiltersSet ? rawResultHeaderData : null;
+  const readinessData = allFiltersSet ? rawReadinessData : null;
 
   const [generateResult, { isLoading: isGenerating }] = useQueryAndMutation<
     typeof useGenerateResultMutation
@@ -1437,8 +1475,12 @@ const ResultCreation = (_props: TabComponentType) => {
           minWidth: colId === 'RollNo' || colId === 'rollNo' ? 90 : 130,
           align: 'left' as const,
           sticky: colId === 'RollNo' || colId === 'StudentName',
-          stickyPosition: (colId === 'RollNo' || colId === 'StudentName') ? 'left' as const : undefined,
-          filterType: (colId === 'Total' || colId === 'total' || colId === 'RollNo' || colId === 'rollNo') ? 'number' as const : undefined,
+          stickyPosition:
+            colId === 'RollNo' || colId === 'StudentName' ? ('left' as const) : undefined,
+          filterType:
+            colId === 'Total' || colId === 'total' || colId === 'RollNo' || colId === 'rollNo'
+              ? ('number' as const)
+              : undefined,
           render: (value: any, row: any) => {
             if (value == null || value === '') {
               return (
@@ -1457,14 +1499,22 @@ const ResultCreation = (_props: TabComponentType) => {
             }
             if (isStatusColumn(colId)) {
               return (
-                <Label variant="soft" color={getStatusColor(String(value))} sx={{ fontWeight: 700 }}>
+                <Label
+                  variant="soft"
+                  color={getStatusColor(String(value))}
+                  sx={{ fontWeight: 700 }}
+                >
                   {value}
                 </Label>
               );
             }
             if (isPercentageColumn(colId)) {
               return (
-                <Label variant="soft" color={getPercentageColor(String(value))} sx={{ fontWeight: 700 }}>
+                <Label
+                  variant="soft"
+                  color={getPercentageColor(String(value))}
+                  sx={{ fontWeight: 700 }}
+                >
                   {value}
                 </Label>
               );
@@ -1523,7 +1573,11 @@ const ResultCreation = (_props: TabComponentType) => {
         const apiStatus = row.Status || row.status;
         if (apiStatus) {
           return (
-            <Label variant="soft" color={getStatusColor(String(apiStatus))} sx={{ fontWeight: 700 }}>
+            <Label
+              variant="soft"
+              color={getStatusColor(String(apiStatus))}
+              sx={{ fontWeight: 700 }}
+            >
               {apiStatus}
             </Label>
           );
@@ -1640,7 +1694,30 @@ const ResultCreation = (_props: TabComponentType) => {
       <CustomBreadcrumbs
         sx={{ mb: 1 }}
         heading="Result Creation"
-        description="Generate and review student-wise exam results with all subject marks"
+        description={
+          <Box sx={{ p: 1.5, maxWidth: 350 }}>
+            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+              Result Creation Workflow
+            </Typography>
+            <Box component="ol" sx={{ m: 0, pl: 2.5, '& li': { mb: 0.5 } }}>
+              <Typography component="li" variant="caption" color="text.secondary">
+                <strong>Context Selection</strong> — Select Class, Division, and Exam to begin.
+              </Typography>
+              <Typography component="li" variant="caption" color="text.secondary">
+                <strong>Readiness Check</strong> — Ensure all subject marks are entered and there
+                are no blockers.
+              </Typography>
+              <Typography component="li" variant="caption" color="text.secondary">
+                <strong>Draft Generation</strong> — Click &quot;Generate Result&quot; to compute
+                totals, percentages, and ranks.
+              </Typography>
+              <Typography component="li" variant="caption" color="text.secondary">
+                <strong>Publish</strong> — Review the draft. Click &quot;Publish&quot; to finalize,
+                lock, and make results available for reporting.
+              </Typography>
+            </Box>
+          </Box>
+        }
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Examination' },
@@ -1679,17 +1756,30 @@ const ResultCreation = (_props: TabComponentType) => {
               </LoadingButton>
             )}
 
-            {resultHeaderData?.statusCode === 0 && (
-              <LoadingButton
-                variant="contained"
-                size="small"
-                loading={isPublishing}
-                startIcon={<Iconify icon="mdi:publish" />}
-                onClick={handlePublish}
-                sx={{ minWidth: 110 }}
+            {(!allFiltersSet || !resultHeaderData || resultHeaderData?.statusCode === 0) && (
+              <Tooltip
+                title={
+                  !allFiltersSet
+                    ? 'Select class, division, and exam to publish results'
+                    : !resultHeaderData
+                      ? 'Generate result preview first'
+                      : ''
+                }
               >
-                Publish
-              </LoadingButton>
+                <span>
+                  <LoadingButton
+                    variant="contained"
+                    size="small"
+                    loading={isPublishing}
+                    disabled={!allFiltersSet || !resultHeaderData}
+                    startIcon={<Iconify icon="mdi:publish" />}
+                    onClick={handlePublish}
+                    sx={{ minWidth: 110 }}
+                  >
+                    Publish
+                  </LoadingButton>
+                </span>
+              </Tooltip>
             )}
 
             {resultHeaderData?.statusCode === 1 && (

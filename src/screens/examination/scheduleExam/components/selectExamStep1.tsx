@@ -591,9 +591,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               <Grid size={{ xs: 12, md: 6 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
                   <ShakingTextField
-                    error={Boolean(
-                      formik.errors.examName || (formik.touched.examName && formik.errors.examName)
-                    )}
+                    error={Boolean(formik.touched.examName && formik.errors.examName)}
                   >
                     <TextField
                       fullWidth
@@ -607,13 +605,10 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         formik.setFieldValue('examName', value);
                         formik.setFieldTouched('examName', true);
                       }}
-                      error={Boolean(
-                        formik.errors.examName ||
-                        (formik.touched.examName && formik.errors.examName)
-                      )}
+                      onBlur={formik.handleBlur}
+                      error={Boolean(formik.touched.examName && formik.errors.examName)}
                       helperText={
-                        formik.errors.examName ||
-                        (formik.touched.examName && formik.errors.examName)
+                        formik.touched.examName && formik.errors.examName
                           ? formik.errors.examName
                           : 'A short, descriptive name for this exam'
                       }
