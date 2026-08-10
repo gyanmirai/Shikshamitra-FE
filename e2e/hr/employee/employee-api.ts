@@ -72,7 +72,7 @@ export async function employeeApiRequest(
   init: RequestInit & { timeout?: number } = {}
 ): Promise<APIResponse> {
   const token = await getAccessToken(page);
-  const { body, ...requestInit } = init;
+  const { body, signal, ...requestInit } = init;
   const isMultipartBody = body instanceof FormData;
   const requestHeaders =
     init.headers instanceof Headers
@@ -83,6 +83,7 @@ export async function employeeApiRequest(
 
   return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
     ...requestInit,
+    ...(signal ? { signal } : {}),
     ...(body !== undefined ? (isMultipartBody ? { multipart: body } : { data: body }) : {}),
     headers: {
       accept: 'application/json',

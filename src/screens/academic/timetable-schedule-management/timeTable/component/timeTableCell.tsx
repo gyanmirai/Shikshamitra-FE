@@ -197,7 +197,7 @@ const TimeTableCell = ({
                   <Box>
                     {slotData.subjects.map((sub: any, index: number) => (
                       <Typography key={index} variant="caption">
-                        {sub.subject} ({sub.subjectCode})
+                        {sub.name || sub.subjectName || sub.subject} ({sub.subjectCode || sub.code})
                         {index < slotData.subjects.length - 1 && <br />}
                       </Typography>
                     ))}
@@ -205,8 +205,10 @@ const TimeTableCell = ({
                 }
               >
                 <Typography variant="subtitle2" fontWeight="medium">
-                  {slotData.subjects.map((sub: any) => sub.subject).join('/')}
-                </Typography>
+          {slotData.electiveGroupId && slotData.subjects.length > 1
+            ? slotData.electiveGroupName
+            : slotData.subjects.map((sub: any) => sub.name || sub.subjectName || sub.subject).join(' / ')}
+        </Typography>
               </CustomTooltip>
               <Box className="action-menu">
                 {showThreeDots && (
@@ -392,8 +394,8 @@ const TimeTableCell = ({
             title="Delete"
             content={
               <>
-                Are you sure you want to delete{' '}
-                <strong>{slotData?.subjects?.map((sub: any) => sub.subject).join(', ')}</strong> ?
+                Are you sure you want to remove{' '}
+                <strong>{slotData?.subjects?.map((sub: any) => sub.name || sub.subjectName || sub.subject).join(', ')}</strong> ?
               </>
             }
             action={

@@ -49,7 +49,7 @@ export async function libraryApiRequest(
   init: RequestInit & { timeout?: number } = {}
 ): Promise<APIResponse> {
   const token = await getAccessToken(page);
-  const { body, ...requestInit } = init;
+  const { body, signal, ...requestInit } = init;
   const requestHeaders =
     init.headers instanceof Headers
       ? Object.fromEntries(init.headers.entries())
@@ -59,6 +59,7 @@ export async function libraryApiRequest(
 
   return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
     ...requestInit,
+    ...(signal ? { signal } : {}),
     ...(body ? { data: body } : {}),
     headers: {
       accept: 'application/json',

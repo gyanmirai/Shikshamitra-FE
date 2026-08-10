@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies, no-restricted-syntax, no-await-in-loop */
 import { expect, type Page, type APIResponse } from '@playwright/test';
 
 export type AcademicYear = {
@@ -59,7 +60,7 @@ export async function academicApiRequest(
   init: RequestInit & { timeout?: number } = {}
 ): Promise<APIResponse> {
   const token = await getAccessToken(page);
-  const { body, ...requestInit } = init;
+  const { body, signal, ...requestInit } = init;
   const requestHeaders =
     init.headers instanceof Headers
       ? Object.fromEntries(init.headers.entries())
@@ -69,6 +70,7 @@ export async function academicApiRequest(
 
   return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
     ...requestInit,
+    ...(signal ? { signal } : {}),
     ...(body ? { data: body } : {}),
     headers: {
       accept: 'application/json',

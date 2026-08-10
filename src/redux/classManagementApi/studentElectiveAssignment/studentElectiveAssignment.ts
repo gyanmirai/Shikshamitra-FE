@@ -1,4 +1,4 @@
-import { classManagementType } from 'src/redux/tagTypes';
+import { academicType, classManagementType } from 'src/redux/tagTypes';
 
 import { classManagementApi } from '../classManagementApi';
 
@@ -19,7 +19,7 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [classManagementType.studentElectiveAssignment],
+      invalidatesTags: [classManagementType.studentElectiveAssignment, academicType.timetableManagement],
     }),
 
     lockStudentElectiveAssignments: builder.mutation({
@@ -28,7 +28,7 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [classManagementType.studentElectiveAssignment],
+      invalidatesTags: [classManagementType.studentElectiveAssignment, academicType.timetableManagement],
     }),
   }),
   overrideExisting: false,
