@@ -377,9 +377,19 @@ const SubjectScheduleRow = memo(
                   sx={{ width: 175 }}
                   error={!!(touched.gradeScalingId && errors.gradeScalingId)}
                   helperText={
-                    touched.gradeScalingId && errors.gradeScalingId ? errors.gradeScalingId : ' '
+                    touched.gradeScalingId && errors.gradeScalingId
+                      ? errors.gradeScalingId
+                      : 'Select grade scale for this subject'
                   }
-                  FormHelperTextProps={HELPER_TEXT_PROPS}
+                  FormHelperTextProps={{
+                    sx: {
+                      margin: 0,
+                      position: 'static',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
                   InputLabelProps={LABEL_PROPS}
                 />
               )}

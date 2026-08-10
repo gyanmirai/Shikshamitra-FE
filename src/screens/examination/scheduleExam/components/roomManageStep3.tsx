@@ -179,10 +179,16 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
     }));
 
   // Fetch rooms from API
-  const { data: roomsApiData, isLoading: roomsLoading } = useQueryAndMutation({
+  const {
+    data: roomsApiData,
+    isLoading: roomsLoading,
+    isFetching: roomsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomsQuery,
   });
+
+  const isRoomsLoading = roomsLoading || roomsFetching;
 
   // Flatten and sort: group by building → floor → room for display
   const roomOptions = useMemo(
@@ -242,6 +248,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
       <Grid size={{ xs: 12 }}>
         <CustomizableTable
           tableId={`room-assignment-${subjectName}`}
+          isLoading={isRoomsLoading}
           isSearch={false}
           isPagination={false}
           isFilter={false}
@@ -279,7 +286,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                   <Autocomplete
                     multiple
                     size="small"
-                    loading={roomsLoading}
+                    loading={isRoomsLoading}
                     options={roomOptions}
                     groupBy={(option: any) => option.group}
                     getOptionLabel={(option: any) => option.label}
