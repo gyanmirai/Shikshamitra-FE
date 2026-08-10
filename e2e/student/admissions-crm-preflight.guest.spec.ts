@@ -93,10 +93,11 @@ async function login(page: Page) {
 
 async function crmApiRequest(page: Page, path: string, init: JsonRequestInit = {}) {
   const token = await getAccessToken(page);
-  const { body, ...requestInit } = init;
+  const { body, signal, ...requestInit } = init;
 
   return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
     ...requestInit,
+    ...(signal ? { signal } : {}),
     ...(body === undefined ? {} : { data: body }),
     headers: {
       accept: 'application/json',

@@ -382,7 +382,7 @@ async function resolveEnrollmentTargetStandard(page: Page, academicYearId: strin
 
 async function crmApiRequest(page: Page, path: string, init: JsonRequestInit = {}) {
   const token = await getAccessToken(page);
-  const { body, ...requestInit } = init;
+  const { body, signal, ...requestInit } = init;
 
   try {
     return await page.request.fetch(`${apiBaseUrl()}/api${path}`, {
@@ -407,7 +407,7 @@ async function crmApiRequest(page: Page, path: string, init: JsonRequestInit = {
 }
 
 async function publicApiRequest(page: Page, path: string, init: JsonRequestInit = {}) {
-  const { body, ...requestInit } = init;
+  const { body, signal, ...requestInit } = init;
 
   try {
     return await page.request.fetch(`${apiBaseUrl()}/api${path}`, {

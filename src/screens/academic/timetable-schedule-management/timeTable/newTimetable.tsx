@@ -1309,7 +1309,7 @@ const TimeTableForm = ({
           id: resolvedId,
           subjectId: resolvedId,
           name: subject?.electiveGroupId
-            ? subject?.electiveGroupName
+            ? (subject?.subjects?.length === 1 ? subject?.subjects?.[0]?.subjectName : subject?.electiveGroupName)
             : subject?.subjects?.[0]?.subjectName,
           color: subject?.color,
           defaultDuration: 60,
