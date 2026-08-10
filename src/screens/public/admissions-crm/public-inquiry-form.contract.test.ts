@@ -25,13 +25,23 @@ const eventsSource = fs.readFileSync(
   path.join(process.cwd(), 'src', 'screens', 'public', 'admissions-crm', 'public-events.tsx'),
   'utf8'
 );
+const familyControlsSource = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    'src',
+    'screens',
+    'public',
+    'admissions-crm',
+    'public-family-controls.tsx'
+  ),
+  'utf8'
+);
 
 describe('public admission inquiry submission contract', () => {
-  it('exposes every supported applicant language', () => {
-    [source, statusSource].forEach((pageSource) => {
-      expect(pageSource).toContain('<MenuItem value="en">English</MenuItem>');
-      expect(pageSource).toContain('<MenuItem value="gu">ગુજરાતી</MenuItem>');
-      expect(pageSource).toContain('<MenuItem value="hi">हिन्दी</MenuItem>');
+  it('exposes tenant-configured applicant languages through a shared safe registry', () => {
+    [source, statusSource, familyAccessSource].forEach((pageSource) => {
+      expect(pageSource).toContain('getPublicAdmissionsLanguageOptions');
+      expect(pageSource).toContain('getPublicAdmissionsLanguageLabel');
     });
   });
 
@@ -72,5 +82,13 @@ describe('public admission inquiry submission contract', () => {
     expect(eventsSource).toContain('confirmingEventId === admissionEvent.id');
     expect(eventsSource).toContain('મુલાકાત અને કાર્યક્રમો');
     expect(eventsSource).toContain('भ्रमण और कार्यक्रम');
+  });
+
+  it('lets a verified family manage communication preferences and withdraw in two steps', () => {
+    expect(statusSource).toContain('<PublicFamilyControls');
+    expect(familyControlsSource).toContain('/communication-preferences');
+    expect(familyControlsSource).toContain('/withdraw');
+    expect(familyControlsSource).toContain('withdrawOpen');
+    expect(familyControlsSource).not.toContain('window.confirm');
   });
 });

@@ -52,6 +52,7 @@ import {
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
+import { downloadAdmissionExportFile } from '../admissions-crm/admission-export-download';
 
 const reportLabels: Record<AdmissionCrmExportReportType, string> = {
   [AdmissionCrmExportReportType.Funnel]: 'Funnel',
@@ -145,6 +146,8 @@ export default function AdmissionsGovernanceConfiguration() {
   const [scheduleName, setScheduleName] = useState(defaults.scheduleName);
   const [frequency, setFrequency] = useState(defaults.frequency);
   const [nextRunAt, setNextRunAt] = useState(defaults.nextRunAt);
+  const [scheduleRecipient, setScheduleRecipient] =
+    useState<AdmissionCrmStaffLookupDto | null>(null);
   const [delegator, setDelegator] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [delegate, setDelegate] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [staffSearch, setStaffSearch] = useState('');
@@ -164,12 +167,17 @@ export default function AdmissionsGovernanceConfiguration() {
       [
         delegator?.id,
         delegate?.id,
+        scheduleRecipient?.id,
+        ...(schedules.data || [])
+          .map((item) =>
+            item.destination.startsWith('user:') ? item.destination.slice('user:'.length) : undefined
+          ),
         ...(delegations.data || []).flatMap((item) => [item.delegatorUserId, item.delegateUserId]),
       ]
         .filter((id): id is string => Boolean(id))
         .slice(0, 25)
         .join(','),
-    [delegate?.id, delegations.data, delegator?.id]
+    [delegate?.id, delegations.data, delegator?.id, scheduleRecipient?.id, schedules.data]
   );
   const staff = useGetAdmissionCrmStaffQuery(
     {
@@ -183,12 +191,12 @@ export default function AdmissionsGovernanceConfiguration() {
     () =>
       Array.from(
         new Map(
-          [delegator, delegate, ...(staff.data || [])]
+          [delegator, delegate, scheduleRecipient, ...(staff.data || [])]
             .filter((item): item is AdmissionCrmStaffLookupDto => Boolean(item))
             .map((item) => [item.id, item])
         ).values()
       ),
-    [delegate, delegator, staff.data]
+    [delegate, delegator, scheduleRecipient, staff.data]
   );
   const staffById = useMemo(
     () => new Map(staffOptions.map((item) => [item.id, item])),
@@ -205,6 +213,7 @@ export default function AdmissionsGovernanceConfiguration() {
     setScheduleName(defaults.scheduleName);
     setFrequency(defaults.frequency);
     setNextRunAt(defaults.nextRunAt);
+    setScheduleRecipient(null);
   };
   const resetDelegationEditor = () => {
     setDelegator(null);
@@ -223,7 +232,8 @@ export default function AdmissionsGovernanceConfiguration() {
   const scheduleDirty =
     scheduleName !== defaults.scheduleName ||
     frequency !== defaults.frequency ||
-    nextRunAt !== defaults.nextRunAt;
+    nextRunAt !== defaults.nextRunAt ||
+    Boolean(scheduleRecipient);
   const delegationDirty =
     Boolean(delegator || delegate) ||
     queueType !== defaults.queueType ||
@@ -294,10 +304,14 @@ export default function AdmissionsGovernanceConfiguration() {
           name: scheduleName.trim(),
           reportType,
           frequency,
-          destination: 'manual:secure-export-queue',
+          destination: scheduleRecipient
+            ? `user:${scheduleRecipient.id}`
+            : 'manual:secure-export-queue',
           nextRunAt: new Date(nextRunAt).toISOString(),
         }).unwrap(),
-      'Manual report schedule created.'
+      scheduleRecipient
+        ? 'Scheduled coordinator report delivery created.'
+        : 'Manual report schedule created.'
     );
     if (created) resetScheduleEditor();
   };
@@ -323,13 +337,7 @@ export default function AdmissionsGovernanceConfiguration() {
   const download = async (exportId: string) => {
     try {
       const result = await downloadExport({ exportId }).unwrap();
-      const bytes = Uint8Array.from(atob(result.base64Content), (value) => value.charCodeAt(0));
-      const url = URL.createObjectURL(new Blob([bytes], { type: result.contentType }));
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = result.fileName;
-      anchor.click();
-      URL.revokeObjectURL(url);
+      downloadAdmissionExportFile(result);
     } catch (error) {
       shikshaMitraToast.error({ message: errorMessage(error) });
     }
@@ -647,6 +655,27 @@ export default function AdmissionsGovernanceConfiguration() {
               onChange={(event) => setNextRunAt(event.target.value)}
               InputLabelProps={{ shrink: true }}
             />
+            <Autocomplete
+              size="small"
+              options={staffOptions.filter((item) => Boolean(item.email))}
+              value={scheduleRecipient}
+              loading={staff.isFetching}
+              filterOptions={(options) => options}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option) => `${option.displayName} (${option.email})`}
+              onInputChange={(_, value, reason) => {
+                if (reason === 'input' || reason === 'clear') setStaffSearch(value);
+              }}
+              onChange={(_, value) => setScheduleRecipient(value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Email coordinator (optional)"
+                  helperText="Leave empty to keep the export in the secure manual queue."
+                />
+              )}
+              sx={{ minWidth: 280 }}
+            />
             <LoadingButton
               loading={createScheduleState.isLoading}
               disabled={!scheduleName.trim()}
@@ -660,9 +689,18 @@ export default function AdmissionsGovernanceConfiguration() {
               <Typography variant="body2" sx={{ flex: 1 }}>
                 {item.name} · {reportLabels[item.reportType]}
               </Typography>
+              <Chip
+                size="small"
+                label={
+                  item.destination.startsWith('user:')
+                    ? `Email: ${staffById.get(item.destination.slice('user:'.length))?.displayName || 'Coordinator'}`
+                    : 'Secure export queue'
+                }
+              />
               <Switch
                 size="small"
                 checked={item.isActive}
+                inputProps={{ 'aria-label': `${item.name} schedule active` }}
                 onChange={(_, active) =>
                   run(
                     () => setScheduleActive({ scheduleId: item.id, active }).unwrap(),

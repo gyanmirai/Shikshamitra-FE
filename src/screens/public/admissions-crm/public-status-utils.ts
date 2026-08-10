@@ -38,6 +38,8 @@ const getProblemDataValue = (
 
 const recoveryCopy = {
   en: {
+    network:
+      'We could not connect to the school admission service. Check your internet connection and try again.',
     wait: 'Please wait before requesting another OTP.',
     waitSeconds: (seconds: number) =>
       `Please wait ${seconds} second${seconds === 1 ? '' : 's'} before requesting another OTP.`,
@@ -52,6 +54,8 @@ const recoveryCopy = {
       'This registration changed in another tab. Your entries remain on this page; reload the latest version and review them before saving again.',
   },
   gu: {
+    network:
+      'શાળા પ્રવેશ સેવા સાથે જોડાઈ શકાયું નથી. તમારું ઇન્ટરનેટ કનેક્શન તપાસીને ફરી પ્રયાસ કરો.',
     wait: 'બીજો OTP માંગતા પહેલાં થોડી રાહ જુઓ.',
     waitSeconds: (seconds: number) => `બીજો OTP માંગતા પહેલાં ${seconds} સેકન્ડ રાહ જુઓ.`,
     invalidOtp: 'OTP કોડ ખોટો છે. તાજેતરનો કોડ તપાસીને ફરી પ્રયાસ કરો.',
@@ -64,6 +68,8 @@ const recoveryCopy = {
       'આ નોંધણી બીજી ટૅબમાં બદલાઈ છે. તમારી વિગતો આ પેજ પર છે; નવીનતમ આવૃત્તિ ફરી લોડ કરીને સાચવતા પહેલાં તપાસો.',
   },
   hi: {
+    network:
+      'विद्यालय प्रवेश सेवा से संपर्क नहीं हो सका। अपना इंटरनेट कनेक्शन जाँचकर फिर प्रयास करें।',
     wait: 'दूसरा OTP माँगने से पहले कुछ समय प्रतीक्षा करें।',
     waitSeconds: (seconds: number) => `दूसरा OTP माँगने से पहले ${seconds} सेकंड प्रतीक्षा करें।`,
     invalidOtp: 'OTP कोड गलत है। नवीनतम कोड जाँचकर फिर प्रयास करें।',
@@ -136,14 +142,26 @@ export const getPublicAdmissionStatusProblemMessage = (
     default:
       return {
         code,
-        message:
-          problem?.detail ||
-          problem?.error?.details ||
-          problem?.error?.message ||
-          problem?.title ||
-          fallback,
+        // Unknown server details may contain framework, provider, or infrastructure text.
+        // Public admission pages expose only reviewed recovery copy.
+        message: fallback,
       };
   }
+};
+
+export class PublicAdmissionSafeError extends Error {}
+
+export const createPublicAdmissionSafeError = (message: string) =>
+  new PublicAdmissionSafeError(message);
+
+export const getPublicAdmissionRequestErrorMessage = (
+  error: unknown,
+  fallback: string,
+  language: PublicAdmissionsLanguage = 'en'
+) => {
+  if (error instanceof TypeError) return recoveryCopy[language].network;
+  if (error instanceof PublicAdmissionSafeError && error.message.trim()) return error.message;
+  return fallback;
 };
 
 export async function readPublicAdmissionStatusProblem(

@@ -1,4 +1,6 @@
-export type PublicAdmissionsLanguage = 'en' | 'gu' | 'hi';
+import type { PublicAdmissionsCoreLanguage } from './public-admissions-portal';
+
+export type PublicAdmissionsLanguage = PublicAdmissionsCoreLanguage;
 
 export type PublicAdmissionsStatusCopy = {
   lastActivity: string;
@@ -49,6 +51,9 @@ type PublicAdmissionsShellCopy = {
   otpCode: string;
   verify: string;
   destination: string;
+  needHelp: string;
+  admissionsOffice: string;
+  officeHours: string;
 };
 
 export const publicAdmissionsCopy: Record<PublicAdmissionsLanguage, PublicAdmissionsShellCopy> = {
@@ -64,6 +69,9 @@ export const publicAdmissionsCopy: Record<PublicAdmissionsLanguage, PublicAdmiss
     otpCode: 'OTP code',
     verify: 'Verify',
     destination: 'Destination',
+    needHelp: 'Need help?',
+    admissionsOffice: 'Contact the admissions office',
+    officeHours: 'Office hours',
   },
   gu: {
     eyebrow: 'શાળા પ્રવેશ',
@@ -77,6 +85,9 @@ export const publicAdmissionsCopy: Record<PublicAdmissionsLanguage, PublicAdmiss
     otpCode: 'OTP કોડ',
     verify: 'ચકાસો',
     destination: 'મોકલેલ સંપર્ક',
+    needHelp: 'મદદ જોઈએ છે?',
+    admissionsOffice: 'પ્રવેશ કચેરીનો સંપર્ક કરો',
+    officeHours: 'કચેરીનો સમય',
   },
   hi: {
     eyebrow: 'विद्यालय प्रवेश',
@@ -90,6 +101,9 @@ export const publicAdmissionsCopy: Record<PublicAdmissionsLanguage, PublicAdmiss
     otpCode: 'OTP कोड',
     verify: 'पुष्टि करें',
     destination: 'भेजा गया संपर्क',
+    needHelp: 'सहायता चाहिए?',
+    admissionsOffice: 'प्रवेश कार्यालय से संपर्क करें',
+    officeHours: 'कार्यालय समय',
   },
 };
 

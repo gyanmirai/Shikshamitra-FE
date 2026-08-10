@@ -233,7 +233,6 @@ function EventEditorDialog({
                 submitted && !values.title.trim() ? 'Enter a clear event title.' : undefined
               }
               onChange={(e) => setValues((current) => ({ ...current, title: e.target.value }))}
-              autoFocus
             />
           <TextField
             select

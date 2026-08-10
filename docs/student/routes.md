@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-08-09
+updated_on: 2026-08-10
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -75,6 +75,9 @@ message. A successful OTP verification establishes the same short-lived family s
 without placing that session credential in the URL.
 The same verified status route shows future published visits and events only when staff enabled family
 self-scheduling for that event; reserve and cancel actions remain applicant-, tenant-, and session-scoped.
+The public routes share safe tenant branding, admissions support details, office hours, and configured
+language options. The verified status route also owns communication preferences and eligible
+application withdrawal without exposing internal notes, staff scores, or Finance details.
 
 The applicant workspace owns the six-stage command journey and one active stage operation.
 Pipeline, My Work, and focused worklists open the same applicant record rather than creating area-specific copies.

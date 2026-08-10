@@ -7,8 +7,12 @@ import { LoadingButton } from 'src/components/loading-button';
 import { Box, Alert, Stack, Divider, MenuItem, TextField, Typography } from '@mui/material';
 
 import { publicAdmissionsActionCopy } from './public-admissions-copy';
-import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { formatPublicNumber, formatPublicDateTime } from './public-admissions-format';
+import {
+  createPublicAdmissionSafeError,
+  readPublicAdmissionStatusProblem,
+  getPublicAdmissionRequestErrorMessage,
+} from './public-status-utils';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
@@ -110,7 +114,7 @@ export default function PublicExamScheduling({
           copy.examScheduleFailed,
           language
         );
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
       const exam = (await response.json()) as {
         slotNameSnapshot?: string | null;
@@ -148,7 +152,7 @@ export default function PublicExamScheduling({
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : copy.examScheduleFailed,
+        message: getPublicAdmissionRequestErrorMessage(error, copy.examScheduleFailed, language),
       });
     } finally {
       setIsScheduling(false);

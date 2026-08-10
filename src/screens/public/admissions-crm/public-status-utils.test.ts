@@ -1,6 +1,10 @@
 import { it, expect, describe } from 'vitest';
 
-import { getPublicAdmissionStatusProblemMessage } from './public-status-utils';
+import {
+  createPublicAdmissionSafeError,
+  getPublicAdmissionRequestErrorMessage,
+  getPublicAdmissionStatusProblemMessage,
+} from './public-status-utils';
 
 describe('public admissions status OTP errors', () => {
   it('shows retry seconds for resend cooldown responses', () => {
@@ -65,5 +69,35 @@ describe('public admissions status OTP errors', () => {
         'Unable to verify OTP.'
       ).message
     ).toBe('This OTP has expired. Request a new OTP to continue.');
+  });
+
+  it('does not expose unknown server or network implementation details', () => {
+    expect(
+      getPublicAdmissionStatusProblemMessage(
+        { detail: 'NpgsqlException: connection refused by 10.0.0.4' },
+        'The admission service is temporarily unavailable.'
+      ).message
+    ).toBe('The admission service is temporarily unavailable.');
+
+    expect(
+      getPublicAdmissionRequestErrorMessage(
+        new TypeError('Failed to fetch'),
+        'Unable to load the inquiry form.'
+      )
+    ).toBe(
+      'We could not connect to the school admission service. Check your internet connection and try again.'
+    );
+    expect(
+      getPublicAdmissionRequestErrorMessage(
+        new Error('NpgsqlException: connection refused by 10.0.0.4'),
+        'Unable to load the inquiry form.'
+      )
+    ).toBe('Unable to load the inquiry form.');
+    expect(
+      getPublicAdmissionRequestErrorMessage(
+        createPublicAdmissionSafeError('Please wait 10 seconds before requesting another OTP.'),
+        'Unable to create OTP challenge.'
+      )
+    ).toBe('Please wait 10 seconds before requesting another OTP.');
   });
 });

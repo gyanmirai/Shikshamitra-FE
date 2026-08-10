@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-28
+updated_on: 2026-08-10
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -23,7 +23,7 @@ Follow this order when changing Student frontend behavior:
 | 2 | [workflows.md](./workflows.md) | Trace Enrollment, records, attendance, reports, and notification flows |
 | 3 | [clients.md](./clients.md) | Find Redux Toolkit Query clients and backend contract ownership |
 | 4 | [testing.md](./testing.md) | Pick frontend docs, unit, contract, and browser checks |
-| 5 | [Backend Enrollment PRD](../../../Shikshamitra-BE/docs/modules/student/prd-student-enrollment.md) | Confirm the Admission Year Setup and Applicant Stepper requirement |
+| 5 | [Backend Enrollment product rules](../../../Shikshamitra-BE/docs/modules/student/product.md) | Confirm Enrollment boundaries, capabilities, and integrity rules |
 
 ## Ownership boundary
 
@@ -46,7 +46,7 @@ Use these paths before searching broadly:
 | Admissions CRM client | `src/redux/student/admissions-crm/admissions-crm-api.ts` |
 | Student tests | `src/constants/student-menu.permissions.test.ts`, `src/redux/student/student-api.production.test.ts`, `src/screens/student/**/*.test.ts`, `e2e/student/**` |
 | Backend docs | `../../../Shikshamitra-BE/docs/modules/student/README.md` |
-| Backend Enrollment PRD | `../../../Shikshamitra-BE/docs/modules/student/prd-student-enrollment.md` |
+| Backend Enrollment product rules | `../../../Shikshamitra-BE/docs/modules/student/product.md` and `../../../Shikshamitra-BE/docs/modules/student/workflows.md` |
 | Backend contracts | `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Students/**` |
 
 ## For agents
@@ -60,7 +60,7 @@ Use this table before code search:
 | Which API client owns a call? | [clients.md](./clients.md) |
 | Which command should I run? | [testing.md](./testing.md) |
 | Which backend API behavior is canonical? | `../../../Shikshamitra-BE/docs/modules/student/api.md` |
-| Which product requirement is current? | `../../../Shikshamitra-BE/docs/modules/student/prd-student-enrollment.md` |
+| Which Enrollment product behavior is current? | `../../../Shikshamitra-BE/docs/modules/student/product.md` and `../../../Shikshamitra-BE/docs/modules/student/workflows.md` |
 
 ## Validation
 

@@ -22,9 +22,13 @@ import {
 } from '@mui/material';
 
 import { publicAdmissionsActionCopy } from './public-admissions-copy';
-import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
 import { formatPublicDateTime, getPublicStatusLabel } from './public-admissions-format';
+import {
+  createPublicAdmissionSafeError,
+  readPublicAdmissionStatusProblem,
+  getPublicAdmissionRequestErrorMessage,
+} from './public-status-utils';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
@@ -94,7 +98,7 @@ export default function PublicOffer({
           copy.offerResponseFailed,
           language
         );
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
       const updated = (await response.json()) as PublicAdmissionOffer;
       onUpdated(updated);
@@ -103,7 +107,7 @@ export default function PublicOffer({
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : copy.offerResponseFailed,
+        message: getPublicAdmissionRequestErrorMessage(error, copy.offerResponseFailed, language),
       });
     } finally {
       setAction(null);

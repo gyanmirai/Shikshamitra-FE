@@ -26,7 +26,6 @@ import {
 } from '@mui/material';
 
 import { publicAdmissionsActionCopy } from './public-admissions-copy';
-import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
 import { formatPublicNumber, formatPublicDateTime } from './public-admissions-format';
 import {
@@ -37,6 +36,11 @@ import {
   getPublicRegistrationValue,
   isPublicRegistrationFieldVisible,
 } from './public-registration-utils';
+import {
+  createPublicAdmissionSafeError,
+  readPublicAdmissionStatusProblem,
+  getPublicAdmissionRequestErrorMessage,
+} from './public-status-utils';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
@@ -149,7 +153,7 @@ export default function PublicRegistration({
           submit ? copy.registrationSubmitFailed : copy.registrationSaveFailed,
           language
         );
-        throw new Error(problem.message);
+        throw createPublicAdmissionSafeError(problem.message);
       }
       const updated = (await response.json()) as PublicRegistrationApplication;
       onUpdated(updated);
@@ -158,7 +162,11 @@ export default function PublicRegistration({
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : copy.registrationActionFailed,
+        message: getPublicAdmissionRequestErrorMessage(
+          error,
+          copy.registrationActionFailed,
+          language
+        ),
       });
     } finally {
       if (submit) setIsSubmitting(false);

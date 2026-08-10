@@ -2,24 +2,37 @@
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { LoadingButton } from 'src/components/loading-button';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useGetAdmissionCrmAdmissionReportQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
   Box,
   Alert,
   Stack,
   Paper,
+  Select,
   Button,
   Skeleton,
+  MenuItem,
   TextField,
+  InputLabel,
   Typography,
+  FormControl,
   ToggleButton,
   LinearProgress,
   ToggleButtonGroup,
 } from '@mui/material';
+import {
+  useDownloadAdmissionCrmExportMutation,
+  useGetAdmissionCrmAdmissionReportQuery,
+  useGetAdmissionCrmAnalyticsSummaryQuery,
+  useGetAdmissionCrmAdvisoryForecastQuery,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
+import { downloadAdmissionExportFile } from './admission-export-download';
+import { AdmissionIntelligencePanel } from './admission-intelligence-panel';
 import { getAdmissionReportDateRangeError } from './admission-report-date-range';
 import {
   enrollmentTableWrapperSx,
@@ -147,6 +160,8 @@ export function AnalyticsWorkspace() {
   const reportView = state.reportView || 'lifecycle';
   const from = state.from || '';
   const to = state.to || '';
+  const compareCycle = state.compareCycle || '';
+  const scheduledExportId = state.exportId || '';
   const dateRangeError = getAdmissionReportDateRangeError(from, to);
   const reportQuery = useGetAdmissionCrmAdmissionReportQuery(
     {
@@ -156,12 +171,49 @@ export function AnalyticsWorkspace() {
     },
     { skip: !academicYearId || Boolean(dateRangeError) }
   );
+  const summaryQuery = useGetAdmissionCrmAnalyticsSummaryQuery(
+    {
+      academicYearId: academicYearId || '',
+      fromDate: from || undefined,
+      toDate: to || undefined,
+    },
+    { skip: !academicYearId || Boolean(dateRangeError) }
+  );
+  const forecastQuery = useGetAdmissionCrmAdvisoryForecastQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId }
+  );
+  const comparisonReportQuery = useGetAdmissionCrmAdmissionReportQuery(
+    {
+      academicYearId: compareCycle,
+      fromDate: from || undefined,
+      toDate: to || undefined,
+    },
+    { skip: !compareCycle || compareCycle === academicYearId || Boolean(dateRangeError) }
+  );
+  const academicYearsQuery = useGetYearQuery(undefined);
+  const [downloadExport, downloadExportState] = useDownloadAdmissionCrmExportMutation();
+  const academicYears =
+    ((academicYearsQuery.data as { items?: Array<{ id: string; name: string }> } | undefined)
+      ?.items ?? []);
+  const comparisonYearName = academicYears.find((year) => year.id === compareCycle)?.name;
   const report = reportQuery.data;
   const isInitialReportLoading = reportQuery.isLoading && !report;
   const showReportWorkspace =
     !dateRangeError && !reportQuery.isError && (Boolean(report) || isInitialReportLoading);
   const view = viewConfiguration[reportView];
   const reportData = report?.[reportView] || [];
+  const downloadScheduledExport = async () => {
+    if (!scheduledExportId) return;
+    try {
+      const result = await downloadExport({ exportId: scheduledExportId }).unwrap();
+      downloadAdmissionExportFile(result);
+      downloadExportState.reset();
+      updateState({ exportId: undefined }, 'replace');
+    } catch {
+      // The mutation state renders a persistent, applicant-safe recovery message below.
+    }
+  };
 
   if (!academicYearId) {
     return (
@@ -193,6 +245,26 @@ export function AnalyticsWorkspace() {
         description="Auditable admission status, source, standard, and outcome reporting."
       />
 
+      {scheduledExportId ? (
+        <Alert
+          severity={downloadExportState.isError ? 'error' : 'info'}
+          action={
+            <LoadingButton
+              size="small"
+              color="inherit"
+              loading={downloadExportState.isLoading}
+              onClick={downloadScheduledExport}
+            >
+              Download
+            </LoadingButton>
+          }
+        >
+          {downloadExportState.isError
+            ? 'This scheduled export could not be downloaded. It may have expired or your access may have changed.'
+            : 'Your scheduled admissions export is ready. Download it before it expires.'}
+        </Alert>
+      ) : null}
+
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems={{ sm: 'center' }}>
           <TextField
@@ -220,6 +292,26 @@ export function AnalyticsWorkspace() {
           >
             Clear Dates
           </Button>
+          <FormControl size="small" sx={{ minWidth: 210 }}>
+            <InputLabel id="admission-report-comparison-cycle-label">Compare cycle</InputLabel>
+            <Select
+              labelId="admission-report-comparison-cycle-label"
+              label="Compare cycle"
+              value={compareCycle}
+              onChange={(event) =>
+                updateState({ compareCycle: event.target.value || undefined }, 'replace')
+              }
+            >
+              <MenuItem value="">No comparison</MenuItem>
+              {academicYears
+                .filter((year) => year.id !== academicYearId)
+                .map((year) => (
+                  <MenuItem key={year.id} value={year.id}>
+                    {year.name}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
           {report ? (
             <Typography variant="caption" color="text.secondary" sx={{ ml: { sm: 'auto' } }}>
               As of {dateTimeFormatter.format(new Date(report.generatedAt))}
@@ -298,6 +390,26 @@ export function AnalyticsWorkspace() {
                   </Paper>
                 ))}
           </Box>
+
+          {summaryQuery.isError && forecastQuery.isError ? (
+            <Alert severity="info">
+              Enrollment intelligence is unavailable for your current access.
+            </Alert>
+          ) : (
+            <AdmissionIntelligencePanel
+              summary={summaryQuery.data}
+              forecast={forecastQuery.data}
+              currentReport={report}
+              comparisonReport={comparisonReportQuery.data}
+              comparisonName={comparisonYearName}
+            />
+          )}
+
+          {comparisonReportQuery.isError ? (
+            <Alert severity="warning">
+              The comparison cycle could not be loaded. The current-cycle report is unchanged.
+            </Alert>
+          ) : null}
 
           <Stack spacing={1} sx={{ flex: 1, minHeight: 0 }}>
             <Box sx={{ overflowX: 'auto' }}>
