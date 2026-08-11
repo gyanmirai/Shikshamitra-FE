@@ -9,6 +9,7 @@ import {
   EnrollmentTableEmptyState,
   enrollmentWorkspaceRootSx,
   enrollmentTableContainerSx,
+  EnrollmentWorkspaceErrorState,
   EnrollmentWorkspaceFilterPanel,
   EnrollmentWorkspaceLoadingState,
   enrollmentEmbeddedTableContainerSx,
@@ -84,5 +85,32 @@ describe('Enrollment workspace table patterns', () => {
     renderWithProviders(<EnrollmentWorkspaceLoadingState />);
 
     expect(screen.getByRole('status', { name: 'Loading Enrollment workspace' })).toBeVisible();
+  });
+
+  it('runs the retry action while idle', () => {
+    const onRetry = vi.fn();
+
+    renderWithProviders(
+      <EnrollmentWorkspaceErrorState message="Inquiry leads could not be loaded." onRetry={onRetry} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+    expect(onRetry).toHaveBeenCalledOnce();
+    expect(screen.getByRole('alert')).toHaveAttribute('aria-busy', 'false');
+  });
+
+  it('announces and displays retry progress', () => {
+    renderWithProviders(
+      <EnrollmentWorkspaceErrorState
+        message="Inquiry leads could not be loaded."
+        onRetry={vi.fn()}
+        isRetrying
+      />
+    );
+
+    expect(screen.getByRole('alert')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button', { name: 'Retrying…' })).toBeDisabled();
+    expect(screen.getByRole('progressbar', { name: 'Retrying request' })).toBeVisible();
   });
 });

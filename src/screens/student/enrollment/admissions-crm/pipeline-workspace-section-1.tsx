@@ -2,6 +2,8 @@
 
 import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
+import { useState } from 'react';
+
 import AddRounded from '@mui/icons-material/AddRounded';
 
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -180,6 +182,29 @@ export function PipelineWorkspaceSection1() {
     updateState,
   } = { ...controllerState, ...actions, ...meta };
 
+  const [isRetryingLeads, setIsRetryingLeads] = useState(false);
+  const [isRetryingStages, setIsRetryingStages] = useState(false);
+
+  const retryLeads = async () => {
+    if (isRetryingLeads) return;
+    setIsRetryingLeads(true);
+    try {
+      await leadsQuery.refetch();
+    } finally {
+      setIsRetryingLeads(false);
+    }
+  };
+
+  const retryStages = async () => {
+    if (isRetryingStages) return;
+    setIsRetryingStages(true);
+    try {
+      await stagesQuery.refetch();
+    } finally {
+      setIsRetryingStages(false);
+    }
+  };
+
   if (!academicYearId) return null;
 
   return (
@@ -322,10 +347,11 @@ export function PipelineWorkspaceSection1() {
       {(state.view || 'list') === 'list' && stagesQuery.isFetching && (
         <LinearProgress aria-label="Loading pipeline stages" />
       )}
-      {(state.view || 'list') === 'list' && stagesQuery.isError && (
+      {(state.view || 'list') === 'list' && (stagesQuery.isError || isRetryingStages) && (
         <EnrollmentWorkspaceErrorState
           message="Pipeline stages are unavailable. Review Enrollment configuration before continuing."
-          onRetry={() => stagesQuery.refetch()}
+          onRetry={retryStages}
+          isRetrying={isRetryingStages}
         />
       )}
       {state.view === 'board' && (
@@ -361,10 +387,11 @@ export function PipelineWorkspaceSection1() {
         </Stack>
       )}
       {(state.view || 'list') === 'list' &&
-        (leadsQuery.isError ? (
+        (leadsQuery.isError || isRetryingLeads ? (
           <EnrollmentWorkspaceErrorState
-            message="Inquiry leads are unavailable."
-            onRetry={() => leadsQuery.refetch()}
+            message="Inquiry leads could not be loaded. Your filters and current view are preserved."
+            onRetry={retryLeads}
+            isRetrying={isRetryingLeads}
           />
         ) : (
           <CustomizableTable
@@ -372,7 +399,7 @@ export function PipelineWorkspaceSection1() {
             tableTitle="Admissions Pipeline"
             columns={columns}
             data={leads}
-            isLoading={leadsQuery.isLoading}
+            isLoading={leadsQuery.isLoading || (leadsQuery.isFetching && !leadsQuery.data)}
             serverSide
             serverSidePagination
             serverSideSearch
