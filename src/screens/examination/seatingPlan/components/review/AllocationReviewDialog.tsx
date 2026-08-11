@@ -32,6 +32,7 @@ import {
   seatAllocationApi,
   useGetExamRoomsQuery,
   useGetExamDivisionsQuery,
+  useGetSeatingPlanScopesQuery,
   useGetSeatingPlanDraftQuery,
   useFinalizeSeatingPlanMutation,
   usePublishSeatingPlanMutation,
@@ -253,8 +254,6 @@ export default function AllocationReviewDialog({
   const canFinalize = hasGrantedPermission(permissions, `${seatAllocationBase}.Finalize`);
   const canPrint = hasGrantedPermission(permissions, `${seatAllocationBase}.Print`);
 
-  const seatingPlanId = drawerSeatingPlanId || '';
-
   const [rooms, setRooms] = useState<SeatingRoomLayout[]>([]);
   const [assignments, setAssignments] = useState<SeatingAssignment[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -279,6 +278,15 @@ export default function AllocationReviewDialog({
     type: 'mutation',
     currentQueryAndMutation: useLazyDownloadSeatingPrintExcelQuery,
   });
+
+  const { data: scopesData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatingPlanScopesQuery,
+    params: { examId },
+    options: { skip: !examId || !open || !!drawerSeatingPlanId },
+  });
+
+  const seatingPlanId = drawerSeatingPlanId || scopesData?.items?.[0]?.seatingPlanId || '';
 
   // ── Queries via useQueryAndMutation (skill § 4.1) ─────────────────────
   const {

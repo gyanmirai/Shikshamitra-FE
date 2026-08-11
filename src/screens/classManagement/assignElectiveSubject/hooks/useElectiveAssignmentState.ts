@@ -118,7 +118,10 @@ export default function useElectiveAssignmentState({
     if (searchTerm.trim()) {
       const term = searchTerm.trim().toLowerCase();
       list = list.filter(
-        (s) => s.studentName.toLowerCase().includes(term) || s.rollNo.toLowerCase().includes(term)
+        (s) =>
+          s.studentName.toLowerCase().includes(term) ||
+          s.rollNo.toLowerCase().includes(term) ||
+          (s.grNo && s.grNo.toLowerCase().includes(term))
       );
     }
 

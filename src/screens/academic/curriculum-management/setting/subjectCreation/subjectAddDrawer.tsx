@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 
 import { useSubjectAddDrawer } from './hooks/useSubjectAddDrawer';
+import { GlobalIcons } from 'src/utils/icons';
 
 interface SubjectAddDrawerProps {
   open: boolean;
@@ -47,24 +48,37 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
       anchor="right"
       open={open}
       onClose={requestClose}
+      slotProps={{
+        backdrop: {
+          sx: {
+            bgcolor: 'rgba(15, 23, 42, 0.44)',
+            backdropFilter: 'blur(3px)',
+          },
+        },
+      }}
       PaperProps={{
-        sx: { width: { xs: '100%', sm: 440 }, display: 'flex', flexDirection: 'column' },
+        sx: {
+          width: { xs: '100%', sm: 460 },
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
+        },
       }}
     >
       <Box
         sx={{
-          px: 2.5,
-          py: 1.75,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
+          gap: 1.5,
+          p: 2,
           borderBottom: '1px solid',
           borderColor: 'divider',
-          flexShrink: 0,
         }}
       >
-        <Box display="flex" alignItems="center" gap={1}>
-          <Typography variant="h6" fontWeight={600}>
+        <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
             Add Subjects
           </Typography>
           <CustomTooltip
@@ -72,7 +86,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
             placement="bottom"
             title="Add one or more subjects at once. Duplicate subject names are not allowed."
           >
-            <Iconify icon="lucide:info" color="info.main" sx={{ cursor: 'pointer' }} />
+            <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} sx={{ cursor: 'pointer' }} />
           </CustomTooltip>
           <Chip
             label={rows.length}
@@ -81,8 +95,8 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
             sx={{ height: 20, fontSize: '11px', fontWeight: 700 }}
           />
         </Box>
-        <IconButton size="small" onClick={requestClose} disabled={isSaving}>
-          <CloseIcon fontSize="small" />
+        <IconButton onClick={requestClose} disabled={isSaving} sx={{ p: 0.5, color: 'text.secondary' }}>
+          <Iconify icon="mdi:close" />
         </IconButton>
       </Box>
 
@@ -343,7 +357,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           flexShrink: 0,
         }}
       >
-        <Button variant="outlined" size="small" onClick={requestClose} disabled={isSaving}>
+        <Button variant="outlined" size="small" onClick={requestClose} disabled={isSaving} startIcon={<Iconify icon={GlobalIcons.cancel} />}>
           Cancel
         </Button>
         <LoadingButton

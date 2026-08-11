@@ -107,7 +107,6 @@ import {
   useCreateSubstitutionAction,
   useDailySheetExcelLazyQuery,
   useEmployeeOptionsLazyQuery,
-  useAffectedLecturesDataQuery,
   useAffectedLecturesLazyQuery,
   useCompleteSubstitutionAction,
   useSuggestedTeachersDataQuery,
@@ -413,8 +412,7 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
 });
 
 const formatLectureLabel = (item: ApiSubstitutionLecture) =>
-  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${
-    item.originalTeacherName || 'Teacher not assigned'
+  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${item.originalTeacherName || 'Teacher not assigned'
   }`;
 
 const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
@@ -585,12 +583,12 @@ const acknowledgementColor: Record<
 };
 
 const conflictColor: Record<ConflictStatus, 'default' | 'success' | 'error' | 'warning' | 'info'> =
-  {
-    Clear: 'success',
-    'Hard Block': 'error',
-    Warning: 'warning',
-    Info: 'info',
-  };
+{
+  Clear: 'success',
+  'Hard Block': 'error',
+  Warning: 'warning',
+  Info: 'info',
+};
 
 const priorityColor: Record<SubstitutionPriority, 'default' | 'primary' | 'error' | 'warning'> = {
   Low: 'default',
@@ -691,20 +689,18 @@ const SubstitutionManagementScreen = () => {
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
 
   const availabilityStartTimeStr = useMemo(() => {
-    if (availabilityForm.isFullDay) return '09:00';
     if (!availabilityForm.startTime) return '';
     return typeof availabilityForm.startTime === 'string'
       ? availabilityForm.startTime
       : dayjs(availabilityForm.startTime).format('HH:mm');
-  }, [availabilityForm.isFullDay, availabilityForm.startTime]);
+  }, [availabilityForm.startTime]);
 
   const availabilityEndTimeStr = useMemo(() => {
-    if (availabilityForm.isFullDay) return '14:15';
     if (!availabilityForm.endTime) return '';
     return typeof availabilityForm.endTime === 'string'
       ? availabilityForm.endTime
       : dayjs(availabilityForm.endTime).format('HH:mm');
-  }, [availabilityForm.isFullDay, availabilityForm.endTime]);
+  }, [availabilityForm.endTime]);
 
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
@@ -811,21 +807,7 @@ const SubstitutionManagementScreen = () => {
           !substitutionForm.originalTeacherName,
       }
     );
-  const { data: affectedLectureResult } = useAffectedLecturesDataQuery(
-    {
-      teacherId: availabilityForm.teacherId || undefined,
-      teacherName: availabilityForm.teacherName || undefined,
-      availabilityDate: toDateTimeOffset(availabilityForm.availabilityDate?.startOf('day')),
-      startTime: availabilityForm.isFullDay ? '09:00' : availabilityStartTimeStr,
-      endTime: availabilityForm.isFullDay ? '14:15' : availabilityEndTimeStr,
-      isFullDay: availabilityForm.isFullDay,
-      reason: availabilityForm.reason || 'Preview',
-      maxResultCount: 100,
-    },
-    {
-      skip: !availabilityForm.teacherId && !availabilityForm.teacherName,
-    }
-  );
+
   const { data: dailySheetResult } = useDailySheetDataQuery({
     date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
     maxResultCount: 500,
@@ -911,30 +893,30 @@ const SubstitutionManagementScreen = () => {
   const classSelectOptions: SelectOption[] = academicStandards.length
     ? academicStandards.map((item: Standards) => ({ value: item.id, label: item.name }))
     : uniqueLookupOptions(metadataStandards).map((item) => ({
-        value: item.id,
-        label: item.name,
-      }));
+      value: item.id,
+      label: item.name,
+    }));
   const divisionSelectOptions: SelectOption[] = selectedAcademicStandard?.divisions?.length
     ? selectedAcademicStandard.divisions.map((item: Standards['divisions'][number]) => ({
-        value: item.id,
-        label: item.name,
-      }))
+      value: item.id,
+      label: item.name,
+    }))
     : metadataDivisions.length > 0
       ? uniqueLookupOptions(metadataDivisions)
-          .filter(
-            (item) =>
-              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-          )
-          .map((item) => ({ value: item.id, label: item.name }))
+        .filter(
+          (item) =>
+            !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+        )
+        .map((item) => ({ value: item.id, label: item.name }))
       : [];
   const subjectSelectOptions: SelectOption[] =
     metadataSubjects.length > 0
       ? metadataSubjects
-          .filter(
-            (item) =>
-              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-          )
-          .map((item) => ({ value: item.id, label: item.name }))
+        .filter(
+          (item) =>
+            !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+        )
+        .map((item) => ({ value: item.id, label: item.name }))
       : subjectOptions;
   const teacherSelectOptions: SelectOption[] =
     metadataTeachers.length > 0
@@ -947,9 +929,9 @@ const SubstitutionManagementScreen = () => {
   const lectureSelectOptions =
     createLectureResult.length > 0
       ? createLectureResult.map((item) => ({
-          value: item.slotSubjectId,
-          label: formatLectureLabel(item),
-        }))
+        value: item.slotSubjectId,
+        label: formatLectureLabel(item),
+      }))
       : lectureSlotOptions;
 
   const filteredSubstitutions = useMemo(() => {
@@ -1028,37 +1010,14 @@ const SubstitutionManagementScreen = () => {
   const availableTeacherSelectOptions =
     suggestedTeacherRows.length > 0
       ? suggestedTeacherRows
-          .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
-          .map((teacher) => ({
-            value: teacher.teacherId,
-            label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
-          }))
+        .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
+        .map((teacher) => ({
+          value: teacher.teacherId,
+          label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
+        }))
       : [];
 
-  const affectedLectures = useMemo<AffectedLectureRow[]>(() => {
-    if (affectedLectureResult?.items) return affectedLectureResult.items.map(mapApiAffectedLecture);
-    if (!availabilityForm.teacherName) return affectedLectureTemplates;
 
-    return affectedLectureTemplates.filter((lecture) => {
-      const period = periodTimeMap[lecture.period];
-      const matchesTeacher = lecture.teacherName === availabilityForm.teacherName;
-      const matchesTime =
-        availabilityForm.isFullDay ||
-        isOverlap(
-          availabilityStartTimeStr,
-          availabilityEndTimeStr,
-          period.startTime,
-          period.endTime
-        );
-      return matchesTeacher && matchesTime;
-    });
-  }, [
-    availabilityEndTimeStr,
-    availabilityForm.isFullDay,
-    availabilityStartTimeStr,
-    availabilityForm.teacherName,
-    affectedLectureResult,
-  ]);
 
   const metrics = useMemo<MetricCard[]>(() => {
     const pending =
@@ -1361,15 +1320,15 @@ const SubstitutionManagementScreen = () => {
         const assignmentSegments = assignNow
           ? substitutionForm.selectedSubstitutes
           : [
-              {
-                teacherId: '',
-                teacherName: '',
-                startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
-                endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
-                score: 0,
-                isPartialCoverage: false,
-              },
-            ];
+            {
+              teacherId: '',
+              teacherName: '',
+              startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
+              endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
+              score: 0,
+              isPartialCoverage: false,
+            },
+          ];
         const createdRows = await Promise.all(
           assignmentSegments.map((segment) =>
             createSubstitution({
@@ -1530,27 +1489,7 @@ const SubstitutionManagementScreen = () => {
     setCreateDialogOpen(true);
   };
 
-  const openSubstitutionFromAffectedLecture = (lecture: AffectedLectureRow) => {
-    if (!availabilityForm.availabilityDate) {
-      setAvailabilityError('Select date before creating a substitution.');
-      return;
-    }
 
-    if (lecture.canCreateSubstitution === false) {
-      setAvailabilityError('This lecture already has an active substitution.');
-      return;
-    }
-
-    openSubstitutionForLecture(lecture, {
-      availabilityDate: availabilityForm.availabilityDate,
-      teacherId: availabilityForm.teacherId,
-      teacherName: availabilityForm.teacherName,
-      reason: availabilityForm.reason,
-      remarks: availabilityForm.remarks,
-      sourceType: availabilityForm.sourceType,
-      closeAvailabilityDialog: true,
-    });
-  };
 
   const handleCreateSubstitutionFromAvailability = async (row: TeacherAvailabilityRow) => {
     if (row.affectedLectureCount <= 0 || row.canCreateSubstitution === false) {
@@ -1625,7 +1564,6 @@ const SubstitutionManagementScreen = () => {
       })(),
       reason: !availabilityForm.reason.trim() ? 'Reason is required.' : '',
       time:
-        !availabilityForm.isFullDay &&
         toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
           ? 'End time must be later than start time.'
           : '',
@@ -1785,18 +1723,18 @@ const SubstitutionManagementScreen = () => {
         const updated =
           action === 'accept'
             ? await acknowledgeSubstitution({
-                id,
-                reason: reason || undefined,
-              }).unwrap()
+              id,
+              reason: reason || undefined,
+            }).unwrap()
             : action === 'reject'
               ? await rejectSubstitutionDuty({
-                  id,
-                  reason,
-                }).unwrap()
+                id,
+                reason,
+              }).unwrap()
               : await requestSubstitutionChange({
-                  id,
-                  reason,
-                }).unwrap();
+                id,
+                reason,
+              }).unwrap();
         if (updated) {
           updateSubstitution(id, () => mapApiSubstitution(updated));
         }
@@ -2016,23 +1954,23 @@ const SubstitutionManagementScreen = () => {
             bgcolor: (theme) =>
               varAlpha(
                 theme.vars.palette[item.color as 'success']?.mainChannel ||
-                  theme.vars.palette.text.primaryChannel,
+                theme.vars.palette.text.primaryChannel,
                 theme.palette.mode === 'dark' ? 0.12 : 0.04
               ),
             cursor: item.filterStatus ? 'pointer' : 'default',
             transition: 'all 0.15s ease-in-out',
             '&:hover': item.filterStatus
               ? {
-                  borderColor: `${item.color}.main`,
-                  bgcolor: (theme) =>
-                    varAlpha(
-                      theme.vars.palette[item.color as 'success']?.mainChannel ||
-                        theme.vars.palette.text.primaryChannel,
-                      theme.palette.mode === 'dark' ? 0.18 : 0.08
-                    ),
-                  boxShadow: (theme) =>
-                    `0 4px 12px ${varAlpha(theme.vars.palette[item.color as 'success']?.mainChannel ?? theme.vars.palette.common.blackChannel, 0.12)}`,
-                }
+                borderColor: `${item.color}.main`,
+                bgcolor: (theme) =>
+                  varAlpha(
+                    theme.vars.palette[item.color as 'success']?.mainChannel ||
+                    theme.vars.palette.text.primaryChannel,
+                    theme.palette.mode === 'dark' ? 0.18 : 0.08
+                  ),
+                boxShadow: (theme) =>
+                  `0 4px 12px ${varAlpha(theme.vars.palette[item.color as 'success']?.mainChannel ?? theme.vars.palette.common.blackChannel, 0.12)}`,
+              }
               : undefined,
           }}
           onClick={() => {
@@ -2066,7 +2004,7 @@ const SubstitutionManagementScreen = () => {
                   bgcolor: (theme) =>
                     varAlpha(
                       theme.vars.palette[item.color as 'success']?.mainChannel ||
-                        theme.vars.palette.primary.mainChannel,
+                      theme.vars.palette.primary.mainChannel,
                       0.08
                     ),
                   color: `${item.color}.main`,
@@ -3860,10 +3798,10 @@ const SubstitutionManagementScreen = () => {
               <Alert severity="success">
                 {substitutionForm.selectedSubstitutes.length > 0
                   ? `You are assigning ${substitutionForm.selectedSubstitutes
-                      .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
-                      .join(
-                        ', '
-                      )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
+                    .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
+                    .join(
+                      ', '
+                    )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
                   : 'Select a substitute teacher to preview the final notification.'}
               </Alert>
               <TextField
@@ -4078,9 +4016,9 @@ const SubstitutionManagementScreen = () => {
                     bgcolor: (theme) =>
                       selected
                         ? alpha(
-                            theme.palette.primary.main,
-                            theme.palette.mode === 'dark' ? 0.18 : 0.04
-                          )
+                          theme.palette.primary.main,
+                          theme.palette.mode === 'dark' ? 0.18 : 0.04
+                        )
                         : 'background.paper',
                     boxShadow: selected
                       ? (theme) => `0 4px 14px ${alpha(theme.palette.primary.main, 0.14)}`
@@ -4089,11 +4027,11 @@ const SubstitutionManagementScreen = () => {
                     opacity: teacher.hasConflict ? 0.6 : 1,
                     '&:hover': !teacher.hasConflict
                       ? {
-                          borderColor: (theme) =>
-                            selected ? theme.palette.primary.main : theme.palette.primary.light,
-                          boxShadow: (theme) =>
-                            `0 3px 10px ${alpha(theme.palette.common.black, 0.08)}`,
-                        }
+                        borderColor: (theme) =>
+                          selected ? theme.palette.primary.main : theme.palette.primary.light,
+                        boxShadow: (theme) =>
+                          `0 3px 10px ${alpha(theme.palette.common.black, 0.08)}`,
+                      }
                       : undefined,
                   }}
                 >
@@ -4322,10 +4260,10 @@ const SubstitutionManagementScreen = () => {
                   value={
                     availabilityForm.teacherId
                       ? {
-                          id: availabilityForm.teacherId,
-                          label: availabilityForm.teacherName,
-                          departmentName: availabilityForm.departmentName,
-                        }
+                        id: availabilityForm.teacherId,
+                        label: availabilityForm.teacherName,
+                        departmentName: availabilityForm.departmentName,
+                      }
                       : null
                   }
                   onChange={(_, value) =>
@@ -4367,26 +4305,9 @@ const SubstitutionManagementScreen = () => {
                   }}
                 />
               </Stack>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={availabilityForm.isFullDay}
-                    onChange={(event) =>
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        isFullDay: event.target.checked,
-                        startTime: event.target.checked ? '09:00' : current.startTime,
-                        endTime: event.target.checked ? '14:15' : current.endTime,
-                      }))
-                    }
-                  />
-                }
-                label="Full day unavailable"
-              />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <TimePicker
                   label="Start Time"
-                  disabled={availabilityForm.isFullDay}
                   value={
                     availabilityForm.startTime
                       ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
@@ -4412,7 +4333,6 @@ const SubstitutionManagementScreen = () => {
                 />
                 <TimePicker
                   label="End Time"
-                  disabled={availabilityForm.isFullDay}
                   value={
                     availabilityForm.endTime
                       ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
@@ -4512,50 +4432,7 @@ const SubstitutionManagementScreen = () => {
                 }
                 fullWidth
               />
-              <Card sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Affected Lecture Preview ({affectedLectures.length})
-                </Typography>
-                {availabilityForm.teacherName && availabilityForm.availabilityDate && (
-                  <Alert severity="info" sx={{ mb: 1 }}>
-                    {availabilityForm.teacherName} unavailable on{' '}
-                    {availabilityForm.availabilityDate.format('DD/MM/YYYY')} from{' '}
-                    {availabilityForm.isFullDay ? '09:00' : availabilityStartTimeStr} to{' '}
-                    {availabilityForm.isFullDay ? '14:15' : availabilityEndTimeStr}.
-                  </Alert>
-                )}
-                <Stack spacing={1}>
-                  {affectedLectures.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      No affected lectures found for the selected teacher and time.
-                    </Typography>
-                  )}
-                  {affectedLectures.map((lecture) => (
-                    <Stack
-                      key={lecture.id}
-                      direction={{ xs: 'column', sm: 'row' }}
-                      justifyContent="space-between"
-                      spacing={1}
-                      sx={{ p: 1, borderRadius: 1, bgcolor: 'background.paper' }}
-                    >
-                      <Typography variant="body2">
-                        {lecture.period} | {lecture.time} | {lecture.className}-
-                        {lecture.divisionName} {lecture.subjectName} | {lecture.roomName}
-                      </Typography>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        disabled={lecture.canCreateSubstitution === false}
-                        onClick={() => openSubstitutionFromAffectedLecture(lecture)}
-                      >
-                        {lecture.canCreateSubstitution === false
-                          ? 'Already created'
-                          : 'Create substitution'}
-                      </Button>
-                    </Stack>
-                  ))}
-                </Stack>
-              </Card>
+
               <TextField
                 size="small"
                 label="Remarks"

@@ -92,10 +92,7 @@ export default function SeatingPlanListPage() {
     setPreviewRow(null);
     setWorkspaceDrawer({
       row,
-      mode:
-        row.status === 'ready' || row.status === 'completed' || row.status === 'published'
-          ? 'review'
-          : 'allocation',
+      mode: 'allocation',
     });
   };
 
@@ -294,12 +291,12 @@ export default function SeatingPlanListPage() {
                   setWorkspaceDrawer((current) =>
                     current
                       ? {
-                          ...current,
-                          mode: 'review',
-                          divisionId: context.divisionId,
-                          roomIds: context.roomIds,
-                          seatingPlanId: context.seatingPlanId,
-                        }
+                        ...current,
+                        mode: 'review',
+                        divisionId: context.divisionId,
+                        roomIds: context.roomIds,
+                        seatingPlanId: context.seatingPlanId,
+                      }
                       : current
                   )
                 }

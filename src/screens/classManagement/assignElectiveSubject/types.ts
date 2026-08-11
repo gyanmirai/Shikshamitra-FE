@@ -18,6 +18,7 @@ export interface ElectiveSubjectOption {
 export interface StudentElectiveRow {
   studentId: string;
   studentName: string;
+  grNo?: string;
   rollNo: string;
   selectedSubjectId?: string;
   selectedSubjectName?: string;

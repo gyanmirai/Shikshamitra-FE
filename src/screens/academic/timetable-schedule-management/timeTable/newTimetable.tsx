@@ -1795,24 +1795,6 @@ const TimeTableForm = ({
               variant="outlined"
               size="small"
               color="inherit"
-              startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-              onClick={() => handleSubmit(formik.values.slots, 1)}
-              loading={isSubmitting}
-              disabled={isValidating}
-              sx={{
-                borderColor: 'divider',
-                color: 'text.primary',
-                fontWeight: 600,
-                '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
-              }}
-            >
-              Save Draft
-            </LoadingButton>
-
-            <LoadingButton
-              variant="outlined"
-              size="small"
-              color="inherit"
               startIcon={<Iconify icon="lucide:check-square" />}
               onClick={handleValidate}
               loading={isValidating}
@@ -1843,6 +1825,24 @@ const TimeTableForm = ({
             >
               Preview
             </Button>
+
+            <LoadingButton
+              variant="outlined"
+              size="small"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
+              onClick={() => handleSubmit(formik.values.slots, 1)}
+              loading={isSubmitting}
+              disabled={isValidating}
+              sx={{
+                borderColor: 'divider',
+                color: 'text.primary',
+                fontWeight: 600,
+                '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
+              }}
+            >
+              Draft
+            </LoadingButton>
 
             <LoadingButton
               variant="contained"

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
 import {
@@ -169,19 +171,28 @@ const AuditLogDetailsDrawer = ({
       anchor="right"
       open={open}
       onClose={onClose}
+      slotProps={{
+        backdrop: {
+          sx: {
+            bgcolor: 'rgba(15, 23, 42, 0.44)',
+            backdropFilter: 'blur(3px)',
+          },
+        },
+      }}
       PaperProps={{
         sx: {
           width: { xs: '100%', sm: 540, md: 600 },
           display: 'flex',
           flexDirection: 'column',
+          height: '100%',
+          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
       {/* Header */}
       <Box
         sx={{
-          p: 2.5,
-          pb: 2,
+          p: 2,
           borderBottom: `1px solid ${theme.palette.divider}`,
           background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(
             theme.palette.primary.light,
@@ -204,9 +215,20 @@ const AuditLogDetailsDrawer = ({
                   <AuditActionBadge action={log.action} variant="inline" />
                   {sourceLabel && <AuditSourceBadge source={log.source} />}
                 </Stack>
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 700, lineHeight: 1.25 }} noWrap>
-                  {log.actionLabel}
-                </Typography>
+                <Stack direction="row" alignItems="center" gap={0.75} sx={{ mt: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.25 }} noWrap>
+                    {log.actionLabel}
+                  </Typography>
+                  <CustomTooltip title="Comprehensive audit trail log details" placement="right" arrow>
+                    <Iconify
+                      icon={GlobalIcons.info}
+                      color="info.main"
+                      width={16}
+                      height={16}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  </CustomTooltip>
+                </Stack>
                 {showRecordRow ? (
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
                     {log.entityType} · <b>{log.entityName}</b>
@@ -217,8 +239,8 @@ const AuditLogDetailsDrawer = ({
                   </Typography>
                 )}
               </Box>
-              <IconButton size="small" onClick={onClose}>
-                <Iconify icon="mdi:close" width={18} />
+              <IconButton onClick={onClose} sx={{ p: 0.5, color: 'text.secondary' }}>
+                <Iconify icon="mdi:close" />
               </IconButton>
             </Stack>
 
@@ -236,14 +258,27 @@ const AuditLogDetailsDrawer = ({
                 )}
               </Stack>
             )}
+          </>
+        )}
+      </Box>
 
+      {/* Body */}
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          p: 2,
+          backgroundColor: alpha(theme.palette.grey[500], 0.06),
+        }}
+      >
+        {!loading && log && (
+          <Stack spacing={1}>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
               alignItems={{ xs: 'flex-start', sm: 'center' }}
               justifyContent="space-between"
               gap={1.5}
               sx={{
-                mt: 2,
                 p: 1.5,
                 borderRadius: 1.5,
                 backgroundColor: 'background.paper',
@@ -272,7 +307,7 @@ const AuditLogDetailsDrawer = ({
                   </Typography>
                 </Box>
               </Stack>
-              <Tooltip title={ts.full}>
+              <Tooltip title={ts?.full}>
                 <Stack
                   direction="row"
                   alignItems="center"
@@ -286,26 +321,11 @@ const AuditLogDetailsDrawer = ({
                 >
                   <Iconify icon="mdi:clock-outline" width={13} color="text.secondary" />
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    {ts.label}
+                    {ts?.label}
                   </Typography>
                 </Stack>
               </Tooltip>
             </Stack>
-          </>
-        )}
-      </Box>
-
-      {/* Body */}
-      <Box
-        sx={{
-          flex: 1,
-          overflow: 'auto',
-          p: 2,
-          backgroundColor: alpha(theme.palette.grey[500], 0.06),
-        }}
-      >
-        {!loading && log && (
-          <Stack spacing={1}>
             {/* Change Details */}
             <Section
               icon="mdi:clipboard-text-outline"

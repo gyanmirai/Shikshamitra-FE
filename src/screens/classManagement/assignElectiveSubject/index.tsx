@@ -33,7 +33,7 @@ import {
 import { workflowStatusConfig } from './statusConfig';
 import BulkAssignmentBar from './components/BulkAssignmentBar';
 import ElectiveContextBar from './components/ElectiveContextBar';
-import ReviewAndLockDrawer from './components/ReviewAndLockDrawer';
+import ReviewAndLockDialog from './components/ReviewAndLockDialog';
 import UnsavedChangesDialog from './components/UnsavedChangesDialog';
 import ValidationIssuesDrawer from './components/ValidationIssuesDrawer';
 import SubjectSelectionControl from './components/SubjectSelectionControl';
@@ -291,18 +291,9 @@ const AssignElectiveSubject = () => {
         ]}
         action={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
-              <Label color={statusInfo.color} variant="soft">
-                {statusInfo.label}
-              </Label>
-              {isLocked ? (
-                <Box sx={{ fontSize: 12, color: 'text.disabled' }}>Locked · editing disabled</Box>
-              ) : unsavedChangesCount > 0 ? (
-                <Box sx={{ fontSize: 12, color: 'text.disabled' }}>
-                  {unsavedChangesCount} unsaved change{unsavedChangesCount === 1 ? '' : 's'}
-                </Box>
-              ) : null}
-            </Box>
+            <Label color={statusInfo.color} variant="soft">
+              {statusInfo.label}
+            </Label>
 
             {electiveGroupId && (
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -385,7 +376,7 @@ const AssignElectiveSubject = () => {
               setStatusFilter(statusFilter === 'preferenceMismatch' ? 'all' : 'preferenceMismatch')
             }
             onOpenIssues={issuesDrawer.onTrue}
-            sx={{ mb: 1, width: 1 }}
+            sx={{ width: 1 }}
           />
 
           {/* BULK ASSIGNMENT BAR */}
@@ -467,15 +458,38 @@ const AssignElectiveSubject = () => {
                 align: 'left',
                 sticky: true,
                 stickyPosition: 'left',
+                isFilter: true,
+                filterType: 'string',
+                isSort: true,
+                render: (_, row) => (
+                  <Box component="span">
+                    {row.studentName}
+                    {row.grNo ? ` (${row.grNo})` : ''}
+                  </Box>
+                ),
               },
-              { id: 'rollNo', label: 'Roll No.', minWidth: '110px', align: 'left' },
+              {
+                id: 'rollNo',
+                label: 'Roll No.',
+                minWidth: '110px',
+                align: 'left',
+                isFilter: true,
+                filterType: 'number',
+                isSort: true,
+              },
               {
                 id: 'preference',
                 label: 'Preference Match',
                 minWidth: '160px',
                 align: 'left',
-                isFilter: false,
-                isSort: false,
+                isFilter: true,
+                filterType: 'enum',
+                enumOptions: [
+                  { label: 'Matched', value: 'matched' },
+                  { label: 'Mismatch', value: 'mismatch' },
+                  { label: 'No preference', value: 'noPreference' },
+                ],
+                isSort: true,
                 render: (_, row) => {
                   const match = preferenceMatch(row as any);
                   if (match === 'noPreference') {
@@ -486,12 +500,9 @@ const AssignElectiveSubject = () => {
                     );
                   }
                   return (
-                    <Chip
-                      size="small"
-                      variant="soft"
-                      color={match === 'matched' ? 'success' : 'warning'}
-                      label={match === 'matched' ? 'Matched' : 'Mismatch'}
-                    />
+                    <Label color={match === 'matched' ? 'success' : 'warning'} variant="soft">
+                      {match === 'matched' ? 'Matched' : 'Mismatch'}
+                    </Label>
                   );
                 },
               },
@@ -516,8 +527,17 @@ const AssignElectiveSubject = () => {
                 id: 'status',
                 label: 'Status',
                 minWidth: '120px',
-                isFilter: false,
-                isSort: false,
+                sticky: true,
+                stickyPosition: 'right',
+                isFilter: true,
+                filterType: 'enum',
+                enumOptions: [
+                  { label: 'Assigned', value: 'assigned' },
+                  { label: 'Unassigned', value: 'unassigned' },
+                  { label: 'Changed', value: 'changed' },
+                  { label: 'Locked', value: 'locked' },
+                ],
+                isSort: true,
                 align: 'left',
                 render: (_, row) => {
                   const status = isLocked ? 'locked' : rowStatus(row as any);
@@ -528,7 +548,7 @@ const AssignElectiveSubject = () => {
                     locked: { label: 'Locked', color: 'default' },
                   };
                   const s = map[status];
-                  return <Chip size="small" variant="soft" color={s.color} label={s.label} />;
+                  return <Label color={s.color} variant="soft">{s.label}</Label>;
                 },
               },
             ]}
@@ -589,8 +609,8 @@ const AssignElectiveSubject = () => {
         onGoToStudent={handleGoToStudent}
       />
 
-      {/* REVIEW AND LOCK DRAWER */}
-      <ReviewAndLockDrawer
+      {/* REVIEW AND LOCK DIALOG */}
+      <ReviewAndLockDialog
         open={reviewDrawer.value}
         onClose={reviewDrawer.onFalse}
         total={summary.total}

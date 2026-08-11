@@ -259,7 +259,7 @@ const Subjects = () => {
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AddNewChapter
             onClose={handleClose}
-            onSubmit={() => {}}
+            onSubmit={() => { }}
             initialValues={selectedChapter}
             isEdit={isEditMode}
             className={classes}
@@ -442,7 +442,7 @@ const Subjects = () => {
               deleteDialog.onFalse();
               setSelectedChapter(null);
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+          // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </LoadingButton>

@@ -7,6 +7,7 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -19,6 +20,7 @@ import {
   Box,
   Chip,
   Alert,
+  Stack,
   Drawer,
   Button,
   Divider,
@@ -153,21 +155,65 @@ const ElectiveSubjectSetting = () => {
           usageDrawer.onFalse();
           setSelected(null);
         }}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 480 } } }}
+        slotProps={{
+          backdrop: {
+            sx: {
+              bgcolor: 'rgba(15, 23, 42, 0.44)',
+              backdropFilter: 'blur(3px)',
+            },
+          },
+        }}
+        PaperProps={{
+          sx: {
+            width: { xs: '100%', sm: 480 },
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
+          },
+        }}
       >
-        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography variant="h6">{selected?.name}</Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 1.5,
+            p: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                {selected?.name || 'Elective Subject Usage'}
+              </Typography>
+              <CustomTooltip title="Usage across the system" placement="right" arrow>
+                <Iconify
+                  icon={GlobalIcons.info}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </CustomTooltip>
+            </Stack>
             <Typography variant="caption" color="text.secondary">
               Usage across the system
             </Typography>
-          </Box>
-          <IconButton onClick={usageDrawer.onFalse}>
-            <Iconify icon="mingcute:close-line" />
+          </Stack>
+          <IconButton
+            onClick={() => {
+              usageDrawer.onFalse();
+              setSelected(null);
+            }}
+            sx={{ p: 0.5, color: 'text.secondary' }}
+          >
+            <Iconify icon="mdi:close" />
           </IconButton>
         </Box>
-        <Divider />
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
           {isUsageFetching ? (
             <Typography variant="body2">Loading usage...</Typography>
           ) : (

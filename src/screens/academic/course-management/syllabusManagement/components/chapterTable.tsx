@@ -3,11 +3,12 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useMemo, useCallback } from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Chip, Stack, MenuList, MenuItem, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, MenuList, MenuItem, Typography, LinearProgress } from '@mui/material';
 
 import { statusColor, getCoverageStatus, getChapterProgress } from '../syllabusPlanningData';
 
@@ -140,42 +141,51 @@ const ChapterTable = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'chapterNumber',
-        label: 'Chapter No.',
-        align: 'left',
-        sticky: true,
-        minWidth: 120,
-        filterType: 'number',
-      },
-      {
         id: 'chapterName',
         label: 'Chapter Name',
         align: 'left',
         sticky: true,
+        minWidth: 220,
         filterType: 'string',
+        render: (value, row) => (
+          <Stack direction="row" alignItems="center" spacing={1}>
+            {row.chapterNumber !== undefined && row.chapterNumber !== null && (
+              <Typography variant="caption" fontSize="13px" noWrap sx={{ maxWidth: 200 }}>
+                {row.chapterNumber}.
+              </Typography>
+            )}
+            <Typography variant="caption" fontSize="13px" noWrap sx={{ maxWidth: 200 }}>
+              {value}
+            </Typography>
+          </Stack>
+        ),
       },
       {
         id: 'unitTerm',
         label: 'Unit / Term',
         align: 'left',
+        minWidth: 130,
         filterType: 'string',
       },
       {
         id: 'chapterStartTime',
         label: 'Start Date',
         align: 'left',
+        minWidth: 120,
         filterType: 'date',
       },
       {
         id: 'chapterEndTime',
         label: 'End Date',
         align: 'left',
+        minWidth: 120,
         filterType: 'date',
       },
       {
         id: 'plannedLoad',
         label: 'Teaching Load',
         align: 'left',
+        minWidth: 150,
         filterType: 'string',
       },
       {
@@ -193,91 +203,67 @@ const ChapterTable = ({
       {
         id: 'resources',
         label: 'Resources',
-        align: 'left',
-        filterType: 'string',
+        align: 'center',
+        minWidth: 120,
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Missing', value: 'Missing' },
+          { label: 'Complete', value: 'Complete' },
+          { label: 'In Progress', value: 'In Progress' },
+        ],
         render: (value, row) => (
-          <Chip
-            size="small"
-            variant="soft"
-            color={statusColor(row.resourceStatus || String(value)) as any}
-            label={value}
-          />
+          <Label color={statusColor(row.resourceStatus || String(value)) as any}>
+            {value}
+          </Label>
         ),
       },
       {
         id: 'lessonPlanStatus',
         label: 'Lesson Plan',
-        align: 'left',
-        filterType: 'string',
+        align: 'center',
+        minWidth: 130,
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Linked', value: 'Linked' },
+          { label: 'Not Linked', value: 'Not Linked' },
+          { label: 'In Progress', value: 'In Progress' },
+          { label: 'Approved', value: 'Approved' },
+        ],
         render: (value) => (
-          <Chip
-            size="small"
-            variant="soft"
-            color={statusColor(String(value)) as any}
-            label={value}
-          />
+          <Label color={statusColor(String(value)) as any}>
+            {value}
+          </Label>
         ),
       },
       {
         id: 'homeworkStatus',
         label: 'Homework',
-        align: 'left',
-        filterType: 'string',
+        align: 'center',
+        minWidth: 130,
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Mapped', value: 'Mapped' },
+          { label: 'Not Mapped', value: 'Not Mapped' },
+          { label: 'Assigned', value: 'Assigned' },
+        ],
         render: (value) => (
-          <Chip
-            size="small"
-            variant="soft"
-            color={statusColor(String(value)) as any}
-            label={value}
-          />
+          <Label color={statusColor(String(value)) as any}>
+            {value}
+          </Label>
         ),
       },
       {
         id: 'questionCount',
         label: 'Questions',
-        align: 'left',
+        align: 'center',
+        minWidth: 110,
         filterType: 'number',
       },
-      {
-        id: 'assessmentStatus',
-        label: 'Assessment',
-        align: 'left',
-        filterType: 'string',
-        render: (value) => (
-          <Chip
-            size="small"
-            variant="soft"
-            color={statusColor(String(value)) as any}
-            label={value}
-          />
-        ),
-      },
-      {
-        id: 'progressPercentage',
-        label: 'Progress',
-        align: 'left',
-        minWidth: 160,
-        filterType: 'number',
-        render: (value, row) => (
-          <Stack spacing={1} sx={{ minWidth: 140 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="caption">{value}%</Typography>
-              <Chip
-                size="small"
-                variant="soft"
-                color={statusColor(row.coverageStatus) as any}
-                label={row.coverageStatus}
-              />
-            </Stack>
-            <LinearProgress variant="determinate" value={Number(value) || 0} />
-          </Stack>
-        ),
-      },
-
       {
         id: 'description',
         label: 'Description',
         align: 'left',
+        minWidth: 180,
         filterType: 'string',
         render: (value, row) => {
           // value is already plain text (HTML stripped in tableData), use descriptionHtml for tooltip
@@ -313,33 +299,52 @@ const ChapterTable = ({
               }}
             >
               <Typography
-                variant="inherit"
+                variant="body2"
                 noWrap
                 sx={{
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                   display: 'block',
-                  maxWidth: 0,
-                  minWidth: '100%',
+                  maxWidth: 180,
                 }}
               >
-                {value}
+                {value || '-'}
               </Typography>
             </CustomTooltip>
           );
         },
       },
-
+      {
+        id: 'progressPercentage',
+        label: 'Progress',
+        align: 'left',
+        minWidth: 160,
+        sticky: true,
+        stickyPosition: 'right',
+        filterType: 'number',
+        render: (value, row) => (
+          <Stack spacing={1} sx={{ minWidth: 140 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="caption">{value}%</Typography>
+              <Label color={statusColor(row.coverageStatus) as any}>
+                {row.coverageStatus}
+              </Label>
+            </Stack>
+            <LinearProgress variant="determinate" value={Number(value) || 0} />
+          </Stack>
+        ),
+      },
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: 80,
-        width: 80,
+        minWidth: 60,
+        width: 60,
         isSort: false,
         isFilter: false,
-        align: 'left',
+        align: 'center',
         sticky: true,
+        stickyPosition: 'right',
         render(value, row) {
           const chapter = row as IChapter;
           return (

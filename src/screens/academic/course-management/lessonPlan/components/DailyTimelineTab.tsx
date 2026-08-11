@@ -12,6 +12,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
+import { LessonTimelineCard } from './LessonTimelineCard';
 import {
   Box,
   Card,
@@ -98,7 +99,7 @@ const DailyTimelineTab = ({
   return (
     <Card
       sx={{
-        p: { xs: 2, md: 3 },
+        p: 1,
         flex: '1 0 auto',
         minHeight: '100%',
         display: 'flex',
@@ -109,7 +110,7 @@ const DailyTimelineTab = ({
       }}
     >
       {/* ── Top Header Bar & Controls ── */}
-      <Stack spacing={2} sx={{ mb: 3 }}>
+      <Stack spacing={2} sx={{ mb: 2 }}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           justifyContent="space-between"
@@ -279,365 +280,19 @@ const DailyTimelineTab = ({
       ) : (
         /* Timeline slots track */
         <Stack spacing={2} sx={{ flex: 1, overflow: 'auto', pr: 0.5 }}>
-          {slots.map((slot, index) => {
-            const hasPlan = !!slot.lessonPlan;
-            const plan = slot.lessonPlan;
-            const planStatus = toPlanStatusLabel(plan?.status);
-            const normalizedPlan = hasPlan
-              ? {
-                ...plan,
-                status: planStatus,
-                planStatus,
-                className: plan.className || plan.standardName || slot.standardName,
-                divisionName: plan.divisionName || slot.divisionName,
-                subjectName: plan.subjectName || slot.subjectName,
-              }
-              : null;
-            const insightSeverity =
-              slot.insightSeverity === 'error' || slot.insightSeverity === 'warning'
-                ? slot.insightSeverity
-                : 'info';
-
-            const isManualSlot = !slot.timetableSlotId && !slot.startTime;
-
-            // Border status color mapping
-            const cardAccentColor = hasPlan
-              ? planStatus === 'Approved'
-                ? theme.palette.success.main
-                : planStatus === 'NeedsChanges'
-                  ? theme.palette.warning.main
-                  : planStatus === 'Rejected'
-                    ? theme.palette.error.main
-                    : theme.palette.info.main
-              : theme.palette.divider;
-
-            return (
-              <Paper
-                key={slot.timetableSlotId ?? `manual-${plan?.id ?? plan?.Id ?? index}`}
-                variant="outlined"
-                sx={{
-                  p: { xs: 2, sm: 2.5 },
-                  borderRadius: 2,
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  borderLeft: `4px solid ${cardAccentColor}`,
-                  bgcolor: hasPlan ? 'background.paper' : 'background.neutral',
-                  boxShadow: 'var(--shadows-2)',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: 'var(--shadows-8)',
-                    borderColor: hasPlan ? cardAccentColor : 'primary.main',
-                  },
-                }}
-              >
-                <Grid container spacing={2} alignItems="center">
-                  {/* Period & Time Slot Section */}
-                  <Grid size={{ xs: 12, md: 3.5 }}>
-                    {isManualSlot ? (
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Box
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            bgcolor: 'action.selected',
-                            color: 'text.secondary',
-                            display: 'flex',
-                          }}
-                        >
-                          <Iconify icon="solar:pen-new-square-bold" width={22} />
-                        </Box>
-                        <Box>
-                          <Label color="default" variant="soft" sx={{ fontWeight: 700 }}>
-                            Manual Plan
-                          </Label>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                            sx={{ mt: 0.5 }}
-                          >
-                            Grade {slot.standardName}
-                            {slot.divisionName ? `-${slot.divisionName}` : ''}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    ) : (
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Box
-                          sx={{
-                            px: 1.75,
-                            py: 1,
-                            borderRadius: 1.5,
-                            bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
-                            color: 'primary.main',
-                            textAlign: 'center',
-                            minWidth: 84,
-                            border: (t) =>
-                              `1px solid ${varAlpha(t.vars.palette.primary.mainChannel, 0.2)}`,
-                          }}
-                        >
-                          <Typography variant="subtitle2" fontWeight={800} fontSize={13}>
-                            {slot.periodName}
-                          </Typography>
-                        </Box>
-
-                        <Stack spacing={0.25}>
-                          <Stack direction="row" spacing={0.5} alignItems="center">
-                            <Iconify
-                              icon="solar:clock-circle-bold"
-                              width={14}
-                              color="text.secondary"
-                            />
-                            <Typography variant="body2" fontWeight={700} color="text.primary">
-                              {slot.startTime} – {slot.endTime}
-                            </Typography>
-                          </Stack>
-
-                          <Stack direction="row" spacing={0.5} alignItems="center">
-                            <Chip
-                              size="small"
-                              label={`Grade ${slot.standardName}-${slot.divisionName}`}
-                              variant="outlined"
-                              sx={{ height: 20, fontSize: 11, fontWeight: 600 }}
-                            />
-                          </Stack>
-                        </Stack>
-                      </Stack>
-                    )}
-                  </Grid>
-
-                  {/* Slot Details (Plan Info or Draft Prompt) */}
-                  <Grid size={{ xs: 12, md: 5.5 }}>
-                    {hasPlan ? (
-                      <Stack spacing={1}>
-                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                          <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                            {slot.subjectName} — {plan.chapterName || 'Curriculum'}
-                          </Typography>
-                          <Label color={planStatusColor[planStatus] || 'default'} variant="soft">
-                            {planStatus}
-                          </Label>
-                          {plan.isAiGenerated && (
-                            <Label
-                              color="secondary"
-                              variant="soft"
-                              startIcon={
-                                <Iconify icon="solar:stars-minimalistic-bold" width={12} />
-                              }
-                            >
-                              AI Generated
-                            </Label>
-                          )}
-                        </Stack>
-
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13 }}>
-                          Topic: <strong>{plan.topic}</strong>
-                        </Typography>
-
-                        {plan.learningObjective && (
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                            noWrap
-                            sx={{ maxWidth: 400 }}
-                          >
-                            Objective: {plan.learningObjective}
-                          </Typography>
-                        )}
-
-                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5 }}>
-                          <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                            Completion: {plan.plannedCompletionPercentage}%
-                          </Typography>
-                          <Box sx={{ width: 120 }}>
-                            <LinearProgress
-                              variant="determinate"
-                              value={plan.plannedCompletionPercentage}
-                              color={
-                                plan.plannedCompletionPercentage >= 100 ? 'success' : 'primary'
-                              }
-                              sx={{ height: 6, borderRadius: 3 }}
-                            />
-                          </Box>
-                        </Stack>
-                      </Stack>
-                    ) : (
-                      <Stack spacing={1}>
-                        <Stack direction="row" spacing={1.25} alignItems="center">
-                          <Box
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: '50%',
-                              bgcolor: 'action.hover',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'text.disabled',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Iconify
-                              icon={
-                                slot.isPlanCreationBlocked
-                                  ? 'solar:calendar-minimalistic-bold'
-                                  : 'solar:document-add-bold'
-                              }
-                              width={18}
-                            />
-                          </Box>
-                          <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                            {slot.isPlanCreationBlocked
-                              ? 'This period is unavailable for lesson planning.'
-                              : 'No lesson plan created for this period.'}
-                          </Typography>
-                        </Stack>
-
-                        {slot.insightMessage && (
-                          <Alert
-                            severity={insightSeverity}
-                            icon={<Iconify icon="solar:info-circle-bold" width={18} />}
-                            sx={{ py: 0.5, px: 1.5, borderRadius: 1 }}
-                          >
-                            {slot.insightMessage}
-                          </Alert>
-                        )}
-                      </Stack>
-                    )}
-                  </Grid>
-
-                  {/* Actions Panel */}
-                  <Grid size={{ xs: 12, md: 3 }}>
-                    {hasPlan ? (
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
-                        alignItems="center"
-                      >
-                        {['Draft', 'NeedsChanges', 'Rejected'].includes(planStatus) && (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            color="primary"
-                            startIcon={<Iconify icon="solar:plain-bold" width={16} />}
-                            onClick={() => onSubmitPlan(plan.id || plan.Id)}
-                          >
-                            Submit
-                          </Button>
-                        )}
-                        {planStatus === 'Approved' && (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            color="success"
-                            startIcon={<Iconify icon="solar:notebook-bookmark-bold" width={16} />}
-                            onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
-                          >
-                            Record Diary
-                          </Button>
-                        )}
-                        {planStatus === 'Submitted' && (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            disabled
-                            startIcon={<Iconify icon="solar:clock-circle-bold" width={16} />}
-                          >
-                            Pending HOD
-                          </Button>
-                        )}
-
-                        {planStatus !== 'Submitted' && (
-                          <IconButton
-                            size="small"
-                            title="More actions"
-                            onClick={(e) =>
-                              normalizedPlan && openCardMenu(e, normalizedPlan)
-                            }
-                            sx={{
-                              border: (t) => `1px solid ${t.palette.divider}`,
-                              '&:hover': { bgcolor: 'action.hover' },
-                            }}
-                          >
-                            <Iconify icon="eva:more-vertical-fill" width={18} />
-                          </IconButton>
-                        )}
-                      </Stack>
-                    ) : (
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
-                        alignItems="center"
-                      >
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          size="small"
-                          startIcon={<Iconify icon="mdi:plus-circle-outline" />}
-                          disabled={slot.isPlanCreationBlocked}
-                          onClick={() =>
-                            onAddLesson(selectedDate, {
-                              timetableSlotId: slot.timetableSlotId,
-                              period: slot.periodName,
-                              className: slot.standardName,
-                              divisionName: slot.divisionName,
-                              subjectName: slot.subjectName,
-                              standardId: slot.standardId,
-                              divisionId: slot.divisionId,
-                              subjectId: slot.subjectId,
-                            })
-                          }
-                        >
-                          {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
-                        </Button>
-                      </Stack>
-                    )}
-                  </Grid>
-                </Grid>
-
-                {/* Footer: HOD remarks & Insights */}
-                {hasPlan &&
-                  ((planStatus === 'NeedsChanges' && plan.reviewRemarks) ||
-                    plan.insightMessage) && (
-                    <Stack
-                      spacing={1}
-                      direction={{ xs: 'column', sm: 'row' }}
-                      sx={{ mt: 1.5, pt: 1.5, borderTop: (t) => `1px dashed ${t.palette.divider}` }}
-                    >
-                      {planStatus === 'NeedsChanges' && plan.reviewRemarks && (
-                        <Alert
-                          severity="warning"
-                          icon={<Iconify icon="solar:danger-bold" width={18} />}
-                          sx={{
-                            flex: 1,
-                            py: 0.75,
-                            px: 1.5,
-                            alignItems: 'center',
-                            borderLeft: '4px solid',
-                            borderColor: 'warning.main',
-                          }}
-                        >
-                          <strong>HOD Remarks:</strong> {plan.reviewRemarks}
-                        </Alert>
-                      )}
-                      {plan.insightMessage && (
-                        <Alert
-                          severity={plan.insightSeverity === 'error' ? 'error' : 'warning'}
-                          icon={<Iconify icon="solar:info-circle-bold" width={18} />}
-                          sx={{ flex: 1, py: 0.75, px: 1.5, alignItems: 'center' }}
-                        >
-                          {plan.insightMessage}
-                        </Alert>
-                      )}
-                    </Stack>
-                  )}
-              </Paper>
-            );
-          })}
+          {slots.map((slot, index) => (
+            <LessonTimelineCard
+              key={slot.timetableSlotId ?? `manual-${slot.lessonPlan?.id ?? slot.lessonPlan?.Id ?? index}`}
+              slot={slot}
+              selectedDate={selectedDate}
+              onAddLesson={onAddLesson}
+              onEditLesson={onEditLesson}
+              onViewDetails={onViewDetails}
+              onSubmitDiary={onSubmitDiary}
+              onSubmitPlan={onSubmitPlan}
+              openCardMenu={openCardMenu}
+            />
+          ))}
         </Stack>
       )}
 

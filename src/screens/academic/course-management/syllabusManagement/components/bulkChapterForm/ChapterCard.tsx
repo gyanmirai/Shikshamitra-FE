@@ -11,7 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomUpload from 'src/components/custom-upload/custom-upload';
+import FileUploader from 'src/components/custom-upload';
 import {
   Box,
   Grid,
@@ -30,6 +30,26 @@ import {
 
 import type { IChapterCardProps } from './type';
 
+const getFileNameFromUrl = (file: string | File, localFileNames?: Record<string, string>): string => {
+  if (!file) return '';
+  if (typeof file !== 'string') return file.name;
+  if (localFileNames && localFileNames[file]) return localFileNames[file];
+
+  const normalized = file.split('?')[0];
+  const segments = normalized.split('/').filter(Boolean);
+  let rawName = decodeURIComponent(segments[segments.length - 1] || '');
+
+  if (rawName.length > 37 && rawName[36] === '_') {
+    const maybeUuid = rawName.substring(0, 36);
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(maybeUuid)) {
+      rawName = rawName.substring(37);
+    }
+  }
+
+  return rawName;
+};
+
 const ChapterCard: React.FC<IChapterCardProps> = ({
   entry,
   index,
@@ -38,6 +58,8 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
   onChange,
   onBlur,
   onFileUpload,
+  onPreviewDocument,
+  localFileNames,
   errors,
   touched,
   isExpanded,
@@ -204,8 +226,8 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
                 }}
                 value={entry.chapterName}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                  onChange(entry.uid, 'chapterName', value);
+                  // const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  onChange(entry.uid, 'chapterName', e.target.value);
                 }}
                 onBlur={() => onBlur(entry.uid, 'chapterName')}
                 error={!!(touched?.chapterName && errors?.chapterName)}
@@ -309,13 +331,31 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
         </Stack>
         <Divider sx={{ mb: 2 }} />
 
-        <CustomUpload
+        <FileUploader
           multiple
-          previewCount={6}
-          onChange={(files) => onFileUpload(entry.uid, files)}
-          value={entry.documents}
-          label="Drag & drop files here, or click to browse"
-          outputFormat="file"
+          showVisibleDocumentCount={6}
+          onChange={(droppedFiles) => onFileUpload(entry.uid, droppedFiles)}
+          onPreview={(file: any) => {
+            if (onPreviewDocument) {
+              const url =
+                file instanceof File
+                  ? URL.createObjectURL(file)
+                  : file?.url || file?.filePath || (typeof file === 'string' ? file : '');
+              onPreviewDocument(url);
+            }
+          }}
+          value={entry.documents?.map((doc: any) => {
+            if (typeof doc === 'string') {
+              return {
+                url: doc,
+                filePath: doc,
+                name: getFileNameFromUrl(doc, localFileNames),
+                size: undefined,
+              };
+            }
+            return doc;
+          })}
+          primaryText="Drag & drop files here, or click to browse"
         />
       </AccordionDetails>
     </Accordion>
