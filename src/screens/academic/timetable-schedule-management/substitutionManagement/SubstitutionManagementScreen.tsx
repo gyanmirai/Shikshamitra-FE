@@ -9,7 +9,6 @@ import type {
   ApiSubstitutionRow,
   ApiSuggestedTeacher,
   ApiSubstitutionLecture,
-  ApiSubstitutionSettings,
   ApiTeacherAvailabilityRow,
   ApiSubstitutionCreateMetadata,
 } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
@@ -117,12 +116,10 @@ import {
   useAcknowledgeSubstitutionAction,
   useMySubstitutionDutiesDataQuery,
   useSubstitutionLecturesDataQuery,
-  useSubstitutionSettingsDataQuery,
   useSendSubstitutionReminderAction,
   useSubstitutionDashboardDataQuery,
   useCreateTeacherAvailabilityAction,
   useRequestSubstitutionChangeAction,
-  useUpdateSubstitutionSettingsAction,
   useSubstitutionCreateMetadataDataQuery,
   useSuggestedTeachersByContextDataQuery,
 } from './substitutionManagement.hooks';
@@ -559,18 +556,6 @@ const defaultAvailabilityForm: AvailabilityFormState = {
   attachmentName: '',
 };
 
-const settingsResultDefaults: ApiSubstitutionSettings = {
-  academicYearId: null,
-  maxSubstitutionsPerTeacherPerDay: 3,
-  maxSubstitutionsPerTeacherPerWeek: 8,
-  acknowledgementRequiredByDefault: true,
-  autoReminderEnabled: true,
-  reminderBeforeMinutes: 15,
-  notifyLeadershipForUrgent: true,
-  allowTeacherReject: true,
-  studentVisibleDailySheet: false,
-};
-
 const statusColor: Record<
   SubstitutionStatus,
   'default' | 'primary' | 'success' | 'error' | 'warning' | 'info'
@@ -721,8 +706,6 @@ const SubstitutionManagementScreen = () => {
       : dayjs(availabilityForm.endTime).format('HH:mm');
   }, [availabilityForm.isFullDay, availabilityForm.endTime]);
 
-  const [settingsForm, setSettingsForm] = useState(settingsResultDefaults);
-  const teacherResponseActionsAllowed = settingsForm.allowTeacherReject;
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
   const [dutyAction, setDutyAction] = useState<{
@@ -847,7 +830,6 @@ const SubstitutionManagementScreen = () => {
     date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
     maxResultCount: 500,
   });
-  const { data: settingsResult } = useSubstitutionSettingsDataQuery();
   const [createSubstitution] = useCreateSubstitutionAction();
   const [assignSubstitute, { isLoading: isAssigning }] = useAssignSubstituteAction();
   const [sendSubstitutionReminder] = useSendSubstitutionReminderAction();
@@ -857,8 +839,6 @@ const SubstitutionManagementScreen = () => {
   const [requestSubstitutionChange] = useRequestSubstitutionChangeAction();
   const [rejectSubstitutionDuty] = useRejectSubstitutionDutyAction();
   const [createTeacherAvailability] = useCreateTeacherAvailabilityAction();
-  const [updateSubstitutionSettings, { isLoading: isSettingsSaving }] =
-    useUpdateSubstitutionSettingsAction();
   const [downloadDailyPdf] = useDailySheetPdfLazyQuery();
   const [downloadDailyExcel] = useDailySheetExcelLazyQuery();
   const [getAffectedLectures] = useAffectedLecturesLazyQuery();
@@ -917,12 +897,6 @@ const SubstitutionManagementScreen = () => {
       setTeacherAvailability(availabilityResult.items.map(mapApiTeacherAvailability));
     }
   }, [availabilityResult]);
-
-  useEffect(() => {
-    if (settingsResult) {
-      setSettingsForm(settingsResult);
-    }
-  }, [settingsResult]);
 
   const metadataStandards = createMetadata?.standards ?? [];
   const metadataDivisions = createMetadata?.divisions ?? [];
@@ -1784,18 +1758,11 @@ const SubstitutionManagementScreen = () => {
    */
   const openDutyConfirmModal = useCallback(
     (id: string, action: 'accept' | 'reject' | 'change') => {
-      if (action !== 'accept' && !teacherResponseActionsAllowed) {
-        shikshaMitraToast.info({
-          message: 'Rejecting or requesting changes is restricted by the administrator.',
-        });
-        return;
-      }
-
       setDutyConfirmPayload({ id, action });
       setDutyConfirmNote('');
       setDutyConfirmOpen(true);
     },
-    [teacherResponseActionsAllowed]
+      []
   );
 
   const closeDutyConfirmModal = useCallback(() => {
@@ -1812,13 +1779,6 @@ const SubstitutionManagementScreen = () => {
    */
   const handleTeacherDutyAction = useCallback(
     async (id: string, action: 'accept' | 'reject' | 'change', reason: string) => {
-      if (action !== 'accept' && !teacherResponseActionsAllowed) {
-        shikshaMitraToast.info({
-          message: 'Rejecting or requesting changes is restricted by the administrator.',
-        });
-        return;
-      }
-
       if (dutyAction) return;
       setDutyAction({ id, action });
       try {
@@ -1868,7 +1828,6 @@ const SubstitutionManagementScreen = () => {
       refetchMyDuties,
       refetchSubstitutions,
       refetchDashboard,
-      teacherResponseActionsAllowed,
     ]
   );
 
@@ -1901,16 +1860,6 @@ const SubstitutionManagementScreen = () => {
       shikshaMitraToast.error({ message });
     }
   };
-
-  const handleSaveSettings = useCallback(async () => {
-    try {
-      await updateSubstitutionSettings(settingsForm).unwrap();
-      shikshaMitraToast.success({ message: 'Substitution settings saved.' });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to save settings.';
-      shikshaMitraToast.error({ message });
-    }
-  }, [settingsForm, updateSubstitutionSettings]);
 
   const renderStatus = (status: SubstitutionStatus) => (
     <Label color={statusColor[status]} variant="soft">
@@ -2742,12 +2691,6 @@ const SubstitutionManagementScreen = () => {
               iconPosition="start"
             />
             <Tab value="myDuties" label="My Duties" icon={<FactCheck />} iconPosition="start" />
-            <Tab
-              value="analytics"
-              label="Settings"
-              icon={<Iconify icon="mdi:cog-outline" />}
-              iconPosition="start"
-            />
           </Tabs>
 
           {/* Date Picker & Filters Button aligned on the right side of the Tabs row */}
@@ -3222,372 +3165,37 @@ const SubstitutionManagementScreen = () => {
                       >
                         {isAccepting ? 'Accepting…' : isAccepted ? 'Accepted' : 'Accept Duty'}
                       </LoadingButton>
-                      {teacherResponseActionsAllowed && (
-                        <LoadingButton
-                          size="small"
-                          variant="outlined"
-                          color="warning"
-                          disabled={isCardBusy || isChangeRequested}
-                          loading={isChanging}
-                          startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
-                          onClick={() => openDutyConfirmModal(item.id, 'change')}
-                        >
-                          {isChanging
-                            ? 'Sending…'
-                            : isChangeRequested
-                              ? 'Change Requested'
-                              : 'Request Change'}
-                        </LoadingButton>
-                      )}
-                      {teacherResponseActionsAllowed && (
-                        <LoadingButton
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          disabled={isCardBusy || isChangeRequested}
-                          loading={isRejecting}
-                          startIcon={<Iconify icon="mdi:close" width={16} />}
-                          onClick={() => openDutyConfirmModal(item.id, 'reject')}
-                        >
-                          {isRejecting ? 'Rejecting…' : 'Reject'}
-                        </LoadingButton>
-                      )}
-                      {!teacherResponseActionsAllowed && (
-                        <Stack direction="row" spacing={0.75} alignItems="center">
-                          <Iconify icon="mdi:lock-outline" width={16} color="text.disabled" />
-                          <Typography variant="caption" color="text.secondary">
-                            Reject/change restricted by admin
-                          </Typography>
-                        </Stack>
-                      )}
+                      <LoadingButton
+                        size="small"
+                        variant="outlined"
+                        color="warning"
+                        disabled={isCardBusy || isChangeRequested}
+                        loading={isChanging}
+                        startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
+                        onClick={() => openDutyConfirmModal(item.id, 'change')}
+                      >
+                        {isChanging
+                          ? 'Sending…'
+                          : isChangeRequested
+                            ? 'Change Requested'
+                            : 'Request Change'}
+                      </LoadingButton>
+                      <LoadingButton
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        disabled={isCardBusy || isChangeRequested}
+                        loading={isRejecting}
+                        startIcon={<Iconify icon="mdi:close" width={16} />}
+                        onClick={() => openDutyConfirmModal(item.id, 'reject')}
+                      >
+                        {isRejecting ? 'Rejecting…' : 'Reject'}
+                      </LoadingButton>
                     </Stack>
                   )}
                 </Card>
               );
             })}
-          </Stack>
-        )}
-
-        {activeTab === 'analytics' && (
-          <Stack spacing={1} sx={{ flexShrink: 0 }}>
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              justifyContent="space-between"
-              alignItems={{ xs: 'flex-start', sm: 'center' }}
-              spacing={1}
-            >
-              <Box>
-                <Typography variant="h6">Substitution Rules</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Set limits and default behaviour applied whenever a substitution duty is created
-                  or assigned.
-                </Typography>
-              </Box>
-              <Button
-                variant="contained"
-                onClick={handleSaveSettings}
-                disabled={isSettingsSaving}
-                startIcon={<Iconify icon="mdi:content-save-check-outline" width={18} />}
-                sx={{ borderRadius: 2, px: 3, alignSelf: { xs: 'stretch', sm: 'center' } }}
-              >
-                {isSettingsSaving ? 'Saving…' : 'Save Settings'}
-              </Button>
-            </Stack>
-
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: '1fr', md: 'repeat(3, 1fr)' }}
-              gap={1}
-              alignItems="stretch"
-            >
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  boxShadow: 'none',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  sx={{
-                    px: 2.5,
-                    py: 2,
-                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 1.5,
-                      display: 'grid',
-                      placeItems: 'center',
-                      bgcolor: 'action.hover',
-                      color: 'text.secondary',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Iconify icon="mdi:scale-balance" width={18} />
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Workload Limits
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Keep duties fairly spread across teachers
-                    </Typography>
-                  </Box>
-                </Stack>
-                <CardContent sx={{ p: 2.5 }}>
-                  <Stack spacing={1}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      label="Max duties per teacher / day"
-                      helperText="Stops a teacher being assigned more than this many duties in one day"
-                      value={settingsForm.maxSubstitutionsPerTeacherPerDay}
-                      onChange={(event) =>
-                        setSettingsForm((current) => ({
-                          ...current,
-                          maxSubstitutionsPerTeacherPerDay: Number(event.target.value),
-                        }))
-                      }
-                      fullWidth
-                      inputProps={{ min: 1 }}
-                    />
-                    <TextField
-                      size="small"
-                      type="number"
-                      label="Max duties per teacher / week"
-                      helperText="Weekly cap used when suggesting or auto-assigning substitutes"
-                      value={settingsForm.maxSubstitutionsPerTeacherPerWeek}
-                      onChange={(event) =>
-                        setSettingsForm((current) => ({
-                          ...current,
-                          maxSubstitutionsPerTeacherPerWeek: Number(event.target.value),
-                        }))
-                      }
-                      fullWidth
-                      inputProps={{ min: 1 }}
-                    />
-                  </Stack>
-                </CardContent>
-              </Card>
-
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  boxShadow: 'none',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  sx={{
-                    px: 2.5,
-                    py: 2,
-                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 1.5,
-                      display: 'grid',
-                      placeItems: 'center',
-                      bgcolor: 'action.hover',
-                      color: 'text.secondary',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Iconify icon="mdi:bell-check-outline" width={18} />
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Acknowledgement & Reminders
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Confirm duties reach the right teacher on time
-                    </Typography>
-                  </Box>
-                </Stack>
-                <CardContent sx={{ p: 2.5 }}>
-                  <Stack spacing={1}>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      spacing={1}
-                      sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
-                    >
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Acknowledgement required by default
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Substitute teacher must confirm the duty
-                        </Typography>
-                      </Box>
-                      <Switch
-                        checked={settingsForm.acknowledgementRequiredByDefault}
-                        onChange={(event) =>
-                          setSettingsForm((current) => ({
-                            ...current,
-                            acknowledgementRequiredByDefault: event.target.checked,
-                          }))
-                        }
-                      />
-                    </Stack>
-                    <Divider sx={{ borderStyle: 'dashed' }} />
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      spacing={1}
-                      sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
-                    >
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Send automatic reminder
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Nudges the substitute teacher before the period starts
-                        </Typography>
-                      </Box>
-                      <Switch
-                        checked={settingsForm.autoReminderEnabled}
-                        onChange={(event) =>
-                          setSettingsForm((current) => ({
-                            ...current,
-                            autoReminderEnabled: event.target.checked,
-                          }))
-                        }
-                      />
-                    </Stack>
-                    <TextField
-                      size="small"
-                      type="number"
-                      label="Minutes before period"
-                      disabled={!settingsForm.autoReminderEnabled}
-                      value={settingsForm.reminderBeforeMinutes}
-                      onChange={(event) =>
-                        setSettingsForm((current) => ({
-                          ...current,
-                          reminderBeforeMinutes: Number(event.target.value),
-                        }))
-                      }
-                      fullWidth
-                      inputProps={{ min: 0, max: 240 }}
-                    />
-                  </Stack>
-                </CardContent>
-              </Card>
-
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  boxShadow: 'none',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  sx={{
-                    px: 2.5,
-                    py: 2,
-                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 1.5,
-                      display: 'grid',
-                      placeItems: 'center',
-                      bgcolor: 'action.hover',
-                      color: 'text.secondary',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Iconify icon="mdi:account-alert-outline" width={18} />
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Escalation & Teacher Response
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Decide how urgent gaps and pushback are handled
-                    </Typography>
-                  </Box>
-                </Stack>
-                <CardContent sx={{ p: 2.5 }}>
-                  <Stack spacing={1}>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      spacing={1}
-                      sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
-                    >
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Notify leadership for urgent duties
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Alerts admins/principal when a high priority duty stays unassigned
-                        </Typography>
-                      </Box>
-                      <Switch
-                        checked={settingsForm.notifyLeadershipForUrgent}
-                        onChange={(event) =>
-                          setSettingsForm((current) => ({
-                            ...current,
-                            notifyLeadershipForUrgent: event.target.checked,
-                          }))
-                        }
-                      />
-                    </Stack>
-                    <Divider sx={{ borderStyle: 'dashed' }} />
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      spacing={1}
-                      sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
-                    >
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Allow teachers to reject / request change
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Substitutes can reject a duty or ask for a change from My Duties
-                        </Typography>
-                      </Box>
-                      <Switch
-                        checked={settingsForm.allowTeacherReject}
-                        onChange={(event) =>
-                          setSettingsForm((current) => ({
-                            ...current,
-                            allowTeacherReject: event.target.checked,
-                          }))
-                        }
-                      />
-                    </Stack>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Box>
           </Stack>
         )}
 
