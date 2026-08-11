@@ -162,18 +162,6 @@ export type ApiSubstitutionAnalytics = {
   workloadPatterns: ApiAnalyticsBreakdown[];
 };
 
-export type ApiSubstitutionSettings = {
-  academicYearId?: string | null;
-  maxSubstitutionsPerTeacherPerDay: number;
-  maxSubstitutionsPerTeacherPerWeek: number;
-  acknowledgementRequiredByDefault: boolean;
-  autoReminderEnabled: boolean;
-  reminderBeforeMinutes: number;
-  notifyLeadershipForUrgent: boolean;
-  allowTeacherReject: boolean;
-  studentVisibleDailySheet: boolean;
-};
-
 export type ApiLookupOption = {
   id: string;
   name: string;
@@ -461,22 +449,6 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
       }),
       providesTags: [academicType.substitutionManagement],
     }),
-    getSubstitutionSettings: builder.query<ApiSubstitutionSettings, QueryParams | void>({
-      query: (params) => ({
-        url: 'academics/timetable/substitutions/settings',
-        method: 'GET',
-        params: params || undefined,
-      }),
-      providesTags: [academicType.substitutionManagement],
-    }),
-    updateSubstitutionSettings: builder.mutation<ApiSubstitutionSettings, ApiSubstitutionSettings>({
-      query: (body) => ({
-        url: 'academics/timetable/substitutions/settings',
-        method: 'PUT',
-        body,
-      }),
-      invalidatesTags: [academicType.substitutionManagement],
-    }),
   }),
 });
 
@@ -504,6 +476,4 @@ export const {
   useLazyGetDailySheetPdfQuery,
   useLazyGetDailySheetExcelQuery,
   useGetSubstitutionAnalyticsQuery,
-  useGetSubstitutionSettingsQuery,
-  useUpdateSubstitutionSettingsMutation,
 } = substitutionManagementApi;

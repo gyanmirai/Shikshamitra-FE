@@ -15,7 +15,6 @@ import {
   useLazyGetDailySheetExcelQuery,
   useLazyGetAffectedLecturesQuery,
   useGetMySubstitutionDutiesQuery,
-  useGetSubstitutionSettingsQuery,
   useGetSubstitutionLecturesQuery,
   useCompleteSubstitutionMutation,
   useGetSubstitutionDashboardQuery,
@@ -26,7 +25,6 @@ import {
   useRequestSubstitutionChangeMutation,
   useGetSubstitutionCreateMetadataQuery,
   useGetSuggestedTeachersByContextQuery,
-  useUpdateSubstitutionSettingsMutation,
 } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -162,15 +160,6 @@ export const useDailySheetDataQuery = (
     popupConfig: silentQueryPopup,
   }) as ReturnType<typeof useGetDailySheetQuery>;
 
-export const useSubstitutionSettingsDataQuery = (): ReturnType<
-  typeof useGetSubstitutionSettingsQuery
-> =>
-  useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSubstitutionSettingsQuery,
-    popupConfig: silentQueryPopup,
-  }) as ReturnType<typeof useGetSubstitutionSettingsQuery>;
-
 export const useCreateSubstitutionAction = (): ReturnType<typeof useCreateSubstitutionMutation> =>
   useQueryAndMutation({
     type: 'mutation',
@@ -245,15 +234,6 @@ export const useCreateTeacherAvailabilityAction = (): ReturnType<
     currentQueryAndMutation: useCreateTeacherAvailabilityMutation,
     popupConfig: mutationPopup,
   }) as ReturnType<typeof useCreateTeacherAvailabilityMutation>;
-
-export const useUpdateSubstitutionSettingsAction = (): ReturnType<
-  typeof useUpdateSubstitutionSettingsMutation
-> =>
-  useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateSubstitutionSettingsMutation,
-    popupConfig: mutationPopup,
-  }) as ReturnType<typeof useUpdateSubstitutionSettingsMutation>;
 
 export const useDailySheetPdfLazyQuery = (): ReturnType<typeof useLazyGetDailySheetPdfQuery> =>
   useQueryAndMutation({
