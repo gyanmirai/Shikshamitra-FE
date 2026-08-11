@@ -1,8 +1,18 @@
 import type { ReactNode } from 'react';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import RefreshRounded from '@mui/icons-material/RefreshRounded';
 import FilterAltOffRounded from '@mui/icons-material/FilterAltOffRounded';
-import { Box, Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
+import {
+  Box,
+  Alert,
+  Paper,
+  Stack,
+  Button,
+  Skeleton,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 
 export const enrollmentWorkspaceRootSx = {
   flex: 1,
@@ -52,7 +62,8 @@ type EmptyStateProps = {
 
 type ErrorStateProps = {
   message: string;
-  onRetry: () => void;
+  onRetry: () => void | Promise<unknown>;
+  isRetrying?: boolean;
 };
 
 export const enrollmentActionsColumn: Pick<
@@ -148,17 +159,37 @@ export function EnrollmentTableEmptyState({ title, description, action }: EmptyS
   );
 }
 
-export function EnrollmentWorkspaceErrorState({ message, onRetry }: ErrorStateProps) {
+export function EnrollmentWorkspaceErrorState({
+  message,
+  onRetry,
+  isRetrying = false,
+}: ErrorStateProps) {
   return (
     <Alert
       severity="error"
+      aria-busy={isRetrying}
       action={
-        <Button size="small" color="inherit" onClick={onRetry}>
-          Retry
+        <Button
+          size="small"
+          color="inherit"
+          loading={isRetrying}
+          loadingPosition="start"
+          startIcon={<RefreshRounded />}
+          onClick={onRetry}
+        >
+          {isRetrying ? 'Retrying…' : 'Retry'}
         </Button>
       }
+      sx={{ position: 'relative', overflow: 'hidden', alignItems: 'center' }}
     >
       {message}
+      {isRetrying ? (
+        <LinearProgress
+          aria-label="Retrying request"
+          color="inherit"
+          sx={{ position: 'absolute', right: 0, bottom: 0, left: 0, height: 2 }}
+        />
+      ) : null}
     </Alert>
   );
 }
