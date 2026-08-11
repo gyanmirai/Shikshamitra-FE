@@ -65,13 +65,10 @@ type BuildingWithFloors = {
 const RoomAvailabilityScreen = () => {
   const { data: session } = useSession() as any;
 
-  const isApprover = useMemo(() => {
-    const role = session?.profile?.role;
-    if (!role) return false;
-    const roles = Array.isArray(role) ? role : [role];
-    const approverRoles = ['admin', 'coordinator', 'hod', 'principal'];
-    return roles.some((r: any) => typeof r === 'string' && approverRoles.includes(r.toLowerCase()));
-  }, [session]);
+  // The API applies the reporting hierarchy and self-approval rule. Keep the
+  // tab available to every signed-in employee so users can see their own
+  // pending requests even when they are not approvers.
+  const isApprover = Boolean(session);
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<TabType>('availability');
