@@ -3,6 +3,8 @@ import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
 
@@ -51,10 +53,13 @@ const lead = {
 const slot = (remainingCapacity: number) => ({
   id: 'slot-1',
   slotName: 'Morning Slot',
-  startDate: '2026-08-10T09:00:00Z',
+  startDate: '2026-08-20T09:00:00Z',
   remainingCapacity,
   isActive: true,
 });
+
+const renderDialog = (component: React.ReactNode) =>
+  render(<LocalizationProvider dateAdapter={AdapterDayjs}>{component}</LocalizationProvider>);
 
 describe('Applicant exam scheduling dialog', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -76,7 +81,7 @@ describe('Applicant exam scheduling dialog', () => {
     const user = userEvent.setup();
     const onScheduled = vi.fn();
     const onClose = vi.fn();
-    render(
+    renderDialog(
       <ApplicantExamSchedulingDialog
         lead={lead}
         academicYearId="year-1"
@@ -85,8 +90,8 @@ describe('Applicant exam scheduling dialog', () => {
       />
     );
 
-    await user.click(screen.getByLabelText('Exam Slot'));
-    await user.click(screen.getByRole('option', { name: /Morning Slot/ }));
+    await user.click(screen.getByRole('gridcell', { name: '20' }));
+    await user.click(screen.getByRole('button', { name: /Morning Slot/ }));
     await user.click(screen.getByRole('button', { name: 'Schedule Assessment' }));
 
     await waitFor(() =>
@@ -109,10 +114,10 @@ describe('Applicant exam scheduling dialog', () => {
     const onClose = vi.fn();
     const confirm = vi.fn(() => false);
     vi.stubGlobal('confirm', confirm);
-    render(<ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={onClose} />);
+    renderDialog(<ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={onClose} />);
 
-    await user.click(screen.getByLabelText('Exam Slot'));
-    await user.click(screen.getByRole('option', { name: /Morning Slot/ }));
+    await user.click(screen.getByRole('gridcell', { name: '20' }));
+    await user.click(screen.getByRole('button', { name: /Morning Slot/ }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).not.toHaveBeenCalled();
 
@@ -124,14 +129,9 @@ describe('Applicant exam scheduling dialog', () => {
   it('prevents selecting a full slot until a governed override is enabled', async () => {
     mocks.slots.data = { items: [slot(0)] };
     const user = userEvent.setup();
-    render(<ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={vi.fn()} />);
+    renderDialog(<ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={vi.fn()} />);
 
-    await user.click(screen.getByLabelText('Exam Slot'));
-    expect(screen.getByRole('option', { name: /Morning Slot/ })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    await user.keyboard('{Escape}');
+    expect(screen.getByRole('gridcell', { name: '20' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Schedule Assessment' })).toBeDisabled();
     expect(
       screen.queryByRole('switch', { name: 'Override slot capacity' })
@@ -142,7 +142,7 @@ describe('Applicant exam scheduling dialog', () => {
   it('requires override permission and a reason before scheduling beyond capacity', async () => {
     mocks.slots.data = { items: [slot(0)] };
     const user = userEvent.setup();
-    render(
+    renderDialog(
       <ApplicantExamSchedulingDialog
         lead={lead}
         academicYearId="year-1"
@@ -152,8 +152,8 @@ describe('Applicant exam scheduling dialog', () => {
     );
 
     await user.click(screen.getByRole('switch', { name: 'Override slot capacity' }));
-    await user.click(screen.getByLabelText('Exam Slot'));
-    await user.click(screen.getByRole('option', { name: /Morning Slot/ }));
+    await user.click(screen.getByRole('gridcell', { name: '20' }));
+    await user.click(screen.getByRole('button', { name: /Morning Slot/ }));
     await user.type(
       screen.getByRole('textbox', { name: /Capacity Override Reason/ }),
       'Approved overflow seat'
@@ -176,10 +176,10 @@ describe('Applicant exam scheduling dialog', () => {
     mocks.unwrap.mockRejectedValue(new Error('capacity changed'));
     const user = userEvent.setup();
     const onClose = vi.fn();
-    render(<ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={onClose} />);
+    renderDialog(<ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={onClose} />);
 
-    await user.click(screen.getByLabelText('Exam Slot'));
-    await user.click(screen.getByRole('option', { name: /Morning Slot/ }));
+    await user.click(screen.getByRole('gridcell', { name: '20' }));
+    await user.click(screen.getByRole('button', { name: /Morning Slot/ }));
     await user.click(screen.getByRole('button', { name: 'Schedule Assessment' }));
 
     await waitFor(() => expect(mocks.error).toHaveBeenCalledOnce());
@@ -189,7 +189,7 @@ describe('Applicant exam scheduling dialog', () => {
 
   it('shows load and retry states without exposing a usable submit action', () => {
     mocks.slots.isFetching = true;
-    const { rerender } = render(
+    const { rerender } = renderDialog(
       <ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={vi.fn()} />
     );
     expect(screen.getByLabelText('Loading entrance exam slots')).toBeVisible();
@@ -198,7 +198,9 @@ describe('Applicant exam scheduling dialog', () => {
     mocks.slots.isFetching = false;
     mocks.slots.isError = true;
     rerender(
-      <ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={vi.fn()} />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <ApplicantExamSchedulingDialog lead={lead} academicYearId="year-1" onClose={vi.fn()} />
+      </LocalizationProvider>
     );
     expect(screen.getByText(/Exam slots could not be loaded/)).toBeVisible();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeVisible();

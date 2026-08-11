@@ -99,7 +99,7 @@ describe('Enrollment workspace URL state', () => {
     expect(serialized.get('eventStatus')).toBe(String(AdmissionCrmEventStatus.Published));
   });
 
-  it('canonicalizes the legacy Activity tab to next with a URL-backed drawer', () => {
+  it('canonicalizes the legacy Activity tab to next without retaining drawer state', () => {
     const returnTo = '/student/enrollment/pipeline?cycle=cycle-1&view=list&page=3';
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams({
@@ -113,14 +113,13 @@ describe('Enrollment workspace URL state', () => {
       applicant: 'lead-1',
       returnTo,
       applicantTab: 'next',
-      applicantActivity: true,
     });
 
     const serialized = serializeEnrollmentWorkspaceState(state);
     expect(serialized.get('applicant')).toBe('lead-1');
     expect(serialized.get('return')).toBe(returnTo);
     expect(serialized.get('tab')).toBe('next');
-    expect(serialized.get('activity')).toBe('1');
+    expect(serialized.get('activity')).toBeNull();
   });
 
   it('canonicalizes the legacy Overview tab and preserves targeted exam handoffs', () => {

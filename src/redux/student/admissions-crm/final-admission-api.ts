@@ -29,6 +29,7 @@ import {
   AdmissionCrmFinancialReadinessDto,
   AdmissionCrmGeneratedDocumentAvailabilityDto,
   AdmissionCrmGeneratedDocumentDto,
+  AdmissionCrmGeneratedDocumentDeliveryDto,
   AdmissionCrmGeneratedDocumentHistoryDto,
   AdmissionCrmGeneratedDocumentType,
   AdmissionCrmGuardianRelationshipType,
@@ -106,6 +107,22 @@ export const AdmissionCrmFinalAdmissionApi = api.injectEndpoints({
     >({
       query: ({ leadId, ...body }) => ({
         url: `/student-enrollment/admissions-crm/leads/${leadId}/documents/issue`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.timeline],
+    }),
+    sendAdmissionCrmGeneratedDocumentEmail: builder.mutation<
+      AdmissionCrmGeneratedDocumentDeliveryDto,
+      {
+        leadId: string;
+        documentType: AdmissionCrmGeneratedDocumentType;
+        language?: string;
+        reason?: string | null;
+      }
+    >({
+      query: ({ leadId, ...body }) => ({
+        url: `/student-enrollment/admissions-crm/leads/${leadId}/documents/send-email`,
         method: 'POST',
         body,
       }),
@@ -1253,6 +1270,7 @@ export const AdmissionCrmFinalAdmissionApi = api.injectEndpoints({
 export const {
   usePreviewAdmissionCrmGeneratedDocumentMutation,
   useIssueAdmissionCrmGeneratedDocumentMutation,
+  useSendAdmissionCrmGeneratedDocumentEmailMutation,
   useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   useGetAdmissionCrmGeneratedDocumentAvailabilityQuery,
   useGetAdmissionCrmApplicationStagePolicyQuery,

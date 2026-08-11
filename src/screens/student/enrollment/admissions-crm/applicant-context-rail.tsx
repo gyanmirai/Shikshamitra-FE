@@ -6,10 +6,9 @@ import type {
   AdmissionCrmStaffLookupDto,
 } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
-import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import {
@@ -18,12 +17,10 @@ import {
   Stack,
   Paper,
   Button,
-  Divider,
   MenuItem,
   TextField,
   Typography,
   Autocomplete,
-  LinearProgress,
 } from '@mui/material';
 import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
@@ -31,14 +28,12 @@ import { AdmissionCrmLeadPriority } from 'src/redux/student/admissions-crm/core-
 
 import {
   useGetAdmissionCrmStaffQuery,
-  useGetAdmissionCrmTasksQuery,
   useAssignAdmissionCrmLeadOwnerMutation,
   useChangeAdmissionCrmLeadPriorityMutation,
 } from 'src/redux/student/admissions-crm/core-leads-api';
 
 import {
   formatEnumLabel,
-  formatEnrollmentDate,
   joinEnrollmentMetadata,
   getApplicantUpdateError,
   getDistinctAdmissionIntent,
@@ -64,8 +59,6 @@ type Props = {
   academicYearId?: string;
   hasRegistration: boolean;
   canViewGovernance: boolean;
-  onOpenInquiry: () => void;
-  onOpenActivity: () => void;
   onOpenGovernance: () => void;
   refetchLead: () => Promise<unknown>;
 };
@@ -75,8 +68,6 @@ export function ApplicantContextRail({
   academicYearId,
   hasRegistration,
   canViewGovernance,
-  onOpenInquiry,
-  onOpenActivity,
   onOpenGovernance,
   refetchLead,
 }: Props) {
@@ -99,7 +90,6 @@ export function ApplicantContextRail({
       ? formatEnumLabel(AdmissionCrmRouteType[lead.intendedRouteType])
       : 'Not captured');
 
-  const tasksQuery = useGetAdmissionCrmTasksQuery({ leadId: lead.id, maxResultCount: 10 });
   const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
       filter: debouncedOwnerSearch || undefined,
@@ -131,13 +121,6 @@ export function ApplicantContextRail({
     else if (!lead.ownerUserId) setOwner(null);
   }, [lead.ownerUserId, ownerStaffQuery.data]);
 
-  const openTasks = useMemo(
-    () =>
-      [...(tasksQuery.data?.items || [])]
-        .filter((task) => task.status === 1)
-        .sort((first, second) => dayjs(first.dueAt).valueOf() - dayjs(second.dueAt).valueOf()),
-    [tasksQuery.data?.items]
-  );
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     try {
@@ -323,60 +306,8 @@ export function ApplicantContextRail({
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 1.5 }}>
-        <Stack spacing={1}>
-          <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1">Follow-ups</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {openTasks.length} open task{openTasks.length === 1 ? '' : 's'}
-              </Typography>
-            </Box>
-            <Button size="small" onClick={onOpenInquiry}>
-              Manage
-            </Button>
-          </Stack>
-          {tasksQuery.isFetching ? <LinearProgress aria-label="Loading follow-up tasks" /> : null}
-          {tasksQuery.isError ? (
-            <Alert
-              severity="error"
-              action={
-                <Button color="inherit" size="small" onClick={() => tasksQuery.refetch()}>
-                  Retry
-                </Button>
-              }
-            >
-              Follow-up tasks could not be loaded.
-            </Alert>
-          ) : null}
-          {!tasksQuery.isFetching && !tasksQuery.isError && openTasks.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              No open follow-up tasks.
-            </Typography>
-          ) : null}
-          {openTasks.slice(0, 3).map((task) => (
-            <Box key={task.id} sx={{ minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
-                {task.title}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Due {formatEnrollmentDate(task.dueAt, true)}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Paper>
-
       <Paper variant="outlined" sx={{ p: 1 }}>
-        <Stack divider={<Divider flexItem />}>
-          <Button
-            color="inherit"
-            startIcon={<Iconify icon="solar:history-bold-duotone" />}
-            onClick={onOpenActivity}
-            sx={{ minHeight: 44, justifyContent: 'flex-start' }}
-          >
-            Activity & Audit
-          </Button>
+        <Stack>
           {hasRegistration && canViewGovernance ? (
             <Button
               color="inherit"

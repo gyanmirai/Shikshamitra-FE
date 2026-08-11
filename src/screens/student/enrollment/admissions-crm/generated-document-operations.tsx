@@ -3,16 +3,19 @@
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import { Download, Visibility, Description } from '@mui/icons-material';
+import { Download, Visibility, Description, EmailOutlined, ReplayOutlined } from '@mui/icons-material';
 import { Chip, Alert, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { AdmissionCrmGeneratedDocumentType } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
 import {
   useIssueAdmissionCrmGeneratedDocumentMutation,
+  useSendAdmissionCrmGeneratedDocumentEmailMutation,
   useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   usePreviewAdmissionCrmGeneratedDocumentMutation,
   useGetAdmissionCrmGeneratedDocumentAvailabilityQuery,
 } from 'src/redux/student/admissions-crm/final-admission-api';
+import { useRetryAdmissionCrmMessageDeliveryMutation } from 'src/redux/student/admissions-crm/communication-exams-events-api';
+import type { AdmissionCrmMessageDeliveryLogDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { ApplicantSection } from './applicant-workspace-primitives';
 
@@ -99,8 +102,12 @@ export function GeneratedDocumentOperations({
   const [language, setLanguage] = useState('en');
   const [reason, setReason] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
+  const [delivery, setDelivery] = useState<AdmissionCrmMessageDeliveryLogDto | null>(null);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
   const [preview, previewState] = usePreviewAdmissionCrmGeneratedDocumentMutation();
   const [issue, issueState] = useIssueAdmissionCrmGeneratedDocumentMutation();
+  const [sendEmail, sendEmailState] = useSendAdmissionCrmGeneratedDocumentEmailMutation();
+  const [retryDelivery, retryState] = useRetryAdmissionCrmMessageDeliveryMutation();
   const historyQuery = useGetAdmissionCrmGeneratedDocumentHistoryQuery({ leadId });
   const visibleHistory = useMemo(
     () =>
@@ -145,6 +152,59 @@ export function GeneratedDocumentOperations({
       shikshaMitraToast.error({ message: readError(error, 'Unable to issue the document.') });
     }
   };
+
+  const runSendEmail = async () => {
+    try {
+      const result = await sendEmail({
+        leadId,
+        documentType,
+        language,
+        reason: reason.trim() || null,
+      }).unwrap();
+      setDelivery(result.delivery || null);
+      setDeliveryError(result.deliveryError || null);
+      if (result.deliveryError || !result.delivery) {
+        shikshaMitraToast.warning({
+          message: 'The hall ticket was issued, but the email was not sent. Check the applicant email and retry.',
+        });
+        return;
+      }
+      const delivered = ['Sent', 'Delivered'].includes(result.delivery.status);
+      if (delivered) {
+        shikshaMitraToast.success({ message: 'Hall ticket sent to the applicant email.' });
+      } else {
+        shikshaMitraToast.warning({
+          message: `Hall ticket issued; email status is ${result.delivery.status}.`,
+        });
+      }
+    } catch (error) {
+      shikshaMitraToast.error({ message: readError(error, 'Unable to email the hall ticket.') });
+    }
+  };
+
+  const runRetry = async () => {
+    if (!delivery) return;
+    try {
+      const result = await retryDelivery({
+        deliveryLogId: delivery.id,
+        body: { reason: 'Retry hall ticket email' },
+      }).unwrap();
+      setDelivery(result);
+      setDeliveryError(null);
+      shikshaMitraToast.success({ message: `Email retry recorded with status ${result.status}.` });
+    } catch (error) {
+      shikshaMitraToast.error({ message: readError(error, 'Unable to retry the email.') });
+    }
+  };
+
+  const hallTicketOnly =
+    configuredDocumentTypes.length === 1 &&
+    configuredDocumentTypes[0] === AdmissionCrmGeneratedDocumentType.HallTicket;
+  const hallTicketDisabled =
+    hallTicketOnly &&
+    unavailableDocuments.some((item) => item.reasonCode === 'AdmissionCrm:HallTicketDisabledForExam');
+
+  if (hallTicketDisabled) return null;
 
   return (
     <ApplicantSection
@@ -224,18 +284,55 @@ export function GeneratedDocumentOperations({
                 loading={previewState.isLoading}
                 onClick={runPreview}
               >
-                Preview
+                {hallTicketOnly ? 'Preview Hall Ticket' : 'Preview'}
               </LoadingButton>
-              <LoadingButton
-                variant="contained"
-                startIcon={<Description />}
-                loading={issueState.isLoading}
-                onClick={runIssue}
-              >
-                Issue document
-              </LoadingButton>
+              {hallTicketOnly ? (
+                <LoadingButton
+                  variant="contained"
+                  startIcon={<EmailOutlined />}
+                  loading={sendEmailState.isLoading}
+                  onClick={runSendEmail}
+                >
+                  Send Hall Ticket
+                </LoadingButton>
+              ) : (
+                <LoadingButton
+                  variant="contained"
+                  startIcon={<Description />}
+                  loading={issueState.isLoading}
+                  onClick={runIssue}
+                >
+                  Issue document
+                </LoadingButton>
+              )}
             </Stack>
           </>
+        ) : null}
+        {delivery ? (
+          <Alert
+            severity={['Sent', 'Delivered'].includes(delivery.status) ? 'success' : 'warning'}
+            action={
+              !['Sent', 'Delivered'].includes(delivery.status) ? (
+                <LoadingButton
+                  color="inherit"
+                  size="small"
+                  startIcon={<ReplayOutlined />}
+                  loading={retryState.isLoading}
+                  onClick={runRetry}
+                >
+                  Retry
+                </LoadingButton>
+              ) : undefined
+            }
+          >
+            Email status: {delivery.status}. {delivery.statusDetails}
+          </Alert>
+        ) : null}
+        {deliveryError && !delivery ? (
+          <Alert severity="warning">
+            Hall ticket issued, but the email was not sent: {deliveryError}. Correct the applicant
+            email or communication setup, then use Send Hall Ticket again.
+          </Alert>
         ) : null}
         {historyQuery.isFetching ? (
           <Typography variant="caption">{'Loading issue history\u2026'}</Typography>

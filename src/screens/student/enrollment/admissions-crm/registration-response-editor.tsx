@@ -19,7 +19,12 @@ import {
   Stack,
   Paper,
   Alert,
+  Button,
+  Step,
+  Stepper,
   Checkbox,
+  StepButton,
+  StepContent,
   MenuItem,
   TextField,
   Typography,
@@ -80,6 +85,7 @@ export function RegistrationResponseEditor({ registration }: Props) {
   );
   const [concurrencyStamp, setConcurrencyStamp] = useState(registration.concurrencyStamp);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [activeSection, setActiveSection] = useState(0);
   const [saveResponses, saveState] = useSaveAdmissionCrmStaffRegistrationResponsesMutation();
   const [submitResponses, submitState] = useSubmitAdmissionCrmStaffRegistrationResponsesMutation();
   const dirty = !sameResponses(responses, savedResponses);
@@ -120,6 +126,19 @@ export function RegistrationResponseEditor({ registration }: Props) {
   const completionPercentage = useMemo(
     () => calculateRegistrationCompletion(registration.sections, responses, registration.prefill),
     [registration.prefill, registration.sections, responses]
+  );
+
+  const sectionCompletion = useMemo(
+    () =>
+      visibleSections.map((section) => {
+        const errors = validateRegistrationResponses(
+          [{ ...section, fields: section.fields.filter((field) => field.required) }],
+          responses,
+          registration.prefill
+        );
+        return Object.keys(errors).length === 0;
+      }),
+    [registration.prefill, responses, visibleSections]
   );
 
   const getEffectiveValue = (field: AdmissionCrmRegistrationFieldDto) =>
@@ -262,10 +281,9 @@ export function RegistrationResponseEditor({ registration }: Props) {
       <Stack spacing={1.5}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
           <Box>
-            <Typography variant="subtitle2">Paper / staff-entered registration</Typography>
+            <Typography variant="subtitle2">Registration details</Typography>
             <Typography variant="caption" color="text.secondary">
-              Enter a returned paper form here. The same template validation is used as the online
-              form.
+              Review what has been received and complete the remaining template sections.
             </Typography>
           </Box>
           <Chip size="small" label={`${completionPercentage.toFixed(0)}% complete`} />
@@ -289,30 +307,57 @@ export function RegistrationResponseEditor({ registration }: Props) {
           </Alert>
         ) : null}
 
-        {visibleSections.map((section) => (
-          <Box component="fieldset" key={section.key} sx={{ border: 0, p: 0, m: 0 }}>
-            <Typography component="legend" variant="subtitle2" sx={{ mb: 0.25 }}>
-              {section.title}
-            </Typography>
-            {section.description ? (
-              <Typography variant="caption" color="text.secondary">
-                {section.description}
-              </Typography>
-            ) : null}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-                gap: 1.25,
-                mt: 1,
-              }}
-            >
-              {[...section.fields]
-                .sort((left, right) => left.displayOrder - right.displayOrder)
-                .map(renderField)}
-            </Box>
-          </Box>
-        ))}
+        <Stepper activeStep={activeSection} orientation="vertical" nonLinear>
+          {visibleSections.map((section, index) => (
+            <Step key={section.key} completed={sectionCompletion[index]}>
+              <StepButton onClick={() => setActiveSection(index)}>
+                <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                  <Typography variant="subtitle2">{section.title}</Typography>
+                  <Chip
+                    size="small"
+                    color={sectionCompletion[index] ? 'success' : 'default'}
+                    label={sectionCompletion[index] ? 'Complete' : 'Needs details'}
+                  />
+                </Stack>
+              </StepButton>
+              <StepContent>
+                {section.description ? (
+                  <Typography variant="caption" color="text.secondary">
+                    {section.description}
+                  </Typography>
+                ) : null}
+                <Box
+                  component="fieldset"
+                  sx={{
+                    border: 0,
+                    p: 0,
+                    m: 0,
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                    gap: 1.25,
+                    mt: 1,
+                  }}
+                >
+                  {[...section.fields]
+                    .sort((left, right) => left.displayOrder - right.displayOrder)
+                    .map(renderField)}
+                </Box>
+                <Stack direction="row" gap={1} sx={{ mt: 1.25 }}>
+                  {index > 0 ? (
+                    <Button size="small" onClick={() => setActiveSection(index - 1)}>
+                      Previous
+                    </Button>
+                  ) : null}
+                  {index < visibleSections.length - 1 ? (
+                    <Button size="small" variant="outlined" onClick={() => setActiveSection(index + 1)}>
+                      Next section
+                    </Button>
+                  ) : null}
+                </Stack>
+              </StepContent>
+            </Step>
+          ))}
+        </Stepper>
 
         <Stack direction="row" justifyContent="flex-end" gap={1} flexWrap="wrap">
           <LoadingButton

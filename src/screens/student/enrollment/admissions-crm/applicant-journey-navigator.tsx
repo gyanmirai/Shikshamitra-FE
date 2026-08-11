@@ -1,19 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { Iconify } from 'src/components/iconify';
+import LockOutlined from '@mui/icons-material/LockOutlined';
+import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
+import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
+import RemoveCircleOutlineOutlined from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import {
-  Box,
-  Chip,
-  Stack,
-  Paper,
-  Button,
-  Collapse,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Paper, Step, Stepper, Tooltip, StepLabel, StepButton, Typography } from '@mui/material';
 
 import {
   getJourneyTab,
@@ -31,222 +24,136 @@ type Props = {
   onSelect: (tab: ApplicantCommandTab) => void;
 };
 
-const stateTone = (state: ApplicantJourneyStep['state']) => {
-  if (state === 'complete') return 'success';
-  if (state === 'needs-review') return 'warning';
-  if (state === 'blocked') return 'error';
-  if (state === 'in-progress') return 'primary';
-  return 'default';
-};
-
-function JourneyStepContent({
+function JourneyStateIcon({
   step,
-  index,
-  current,
   selected,
+  index,
 }: {
   step: ApplicantJourneyStep;
-  index: number;
-  current: boolean;
   selected: boolean;
+  index: number;
 }) {
-  const tone = stateTone(step.state);
+  const common = {
+    width: 28,
+    height: 28,
+    borderRadius: '50%',
+    display: 'grid',
+    placeItems: 'center',
+    border: 1,
+    borderColor: selected ? 'primary.main' : 'divider',
+  } as const;
 
+  if (step.state === 'complete') {
+    return <TaskAltOutlined color="success" sx={{ fontSize: 28 }} />;
+  }
+  if (step.state === 'blocked') {
+    return (
+      <Box sx={{ ...common, color: 'error.main', bgcolor: 'error.lighter' }}>
+        <LockOutlined sx={{ fontSize: 16 }} />
+      </Box>
+    );
+  }
+  if (step.state === 'needs-review') {
+    return <WarningAmberOutlined color="warning" sx={{ fontSize: 28 }} />;
+  }
+  if (step.state === 'skipped') {
+    return <RemoveCircleOutlineOutlined color="disabled" sx={{ fontSize: 28 }} />;
+  }
   return (
-    <Stack direction="row" alignItems="flex-start" gap={1} sx={{ minWidth: 0, width: '100%' }}>
-      <Box
-        aria-hidden="true"
-        sx={(theme) => ({
-          width: 28,
-          height: 28,
-          mt: 0.1,
-          borderRadius: '50%',
-          flexShrink: 0,
-          display: 'grid',
-          placeItems: 'center',
-          bgcolor:
-            tone === 'default'
-              ? theme.palette.action.selected
-              : alpha(theme.palette[tone].main, selected || current ? 0.2 : 0.12),
-          color: tone === 'default' ? 'text.secondary' : `${tone}.main`,
-          border: 1,
-          borderColor: selected ? 'primary.main' : 'divider',
-          fontSize: 12,
-          fontWeight: 700,
-        })}
-      >
-        {index + 1}
-      </Box>
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography
-          variant="subtitle2"
-          sx={{ color: selected ? 'primary.main' : 'text.primary', overflowWrap: 'anywhere' }}
-        >
-          {step.label}
-        </Typography>
-        <Stack direction="row" gap={0.5} alignItems="center" flexWrap="wrap">
-          <Typography
-            variant="caption"
-            color={tone === 'default' ? 'text.secondary' : `${tone}.main`}
-          >
-            {getJourneyStateLabel(step)}
-          </Typography>
-          {current ? (
-            <Chip size="small" color="primary" label="Current" sx={{ height: 20 }} />
-          ) : null}
-        </Stack>
-      </Box>
-    </Stack>
+    <Box
+      sx={(theme) => ({
+        ...common,
+        color: selected ? 'primary.contrastText' : 'text.secondary',
+        bgcolor: selected ? 'primary.main' : alpha(theme.palette.text.primary, 0.08),
+        fontSize: 12,
+        fontWeight: 700,
+      })}
+    >
+      {index + 1}
+    </Box>
   );
 }
 
 export function ApplicantJourneyNavigator({ steps, currentStep, selectedTab, onSelect }: Props) {
   const theme = useTheme();
-  const compact = useMediaQuery(theme.breakpoints.down('md'));
-  const [expanded, setExpanded] = useState(false);
-  const currentIndex = Math.max(
+  const vertical = useMediaQuery(theme.breakpoints.down('md'));
+  const selectedIndex = Math.max(
     0,
-    steps.findIndex((step) => step.id === currentStep?.id)
+    steps.findIndex((step) => getJourneyTab(step) === selectedTab)
   );
-  const progress = steps.length ? ((currentIndex + 1) / steps.length) * 100 : 0;
 
   if (!steps.length) return null;
-
-  if (compact) {
-    return (
-      <Paper component="nav" aria-label="Admission journey" variant="outlined" sx={{ p: 1.25 }}>
-        <Stack spacing={1}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="overline" color="text.secondary">
-                Admission Journey
-              </Typography>
-              <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                {currentStep?.label || 'Applicant progress'} · Step {currentIndex + 1} of{' '}
-                {steps.length}
-              </Typography>
-            </Box>
-            <Button
-              size="small"
-              variant="text"
-              aria-expanded={expanded}
-              aria-controls="applicant-journey-details"
-              endIcon={
-                <Iconify icon={expanded ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} />
-              }
-              onClick={() => setExpanded((value) => !value)}
-              sx={{ minHeight: 44, flexShrink: 0 }}
-            >
-              {expanded ? 'Hide journey' : 'View journey'}
-            </Button>
-          </Stack>
-          <LinearProgress
-            variant="determinate"
-            value={progress}
-            aria-label={`Admission journey progress: step ${currentIndex + 1} of ${steps.length}`}
-          />
-          <Collapse in={expanded}>
-            <Stack id="applicant-journey-details" spacing={0.75} pt={0.5}>
-              {steps.map((step, index) => {
-                const tab = getJourneyTab(step);
-                const openable = canOpenJourneyStep(step);
-                const content = (
-                  <JourneyStepContent
-                    step={step}
-                    index={index}
-                    current={step.id === currentStep?.id}
-                    selected={tab === selectedTab}
-                  />
-                );
-
-                return openable ? (
-                  <Button
-                    key={step.id}
-                    color="inherit"
-                    aria-controls="applicant-stage-panel"
-                    aria-current={step.id === currentStep?.id ? 'step' : undefined}
-                    onClick={() => onSelect(tab)}
-                    sx={{ minHeight: 52, p: 1, justifyContent: 'flex-start', textAlign: 'left' }}
-                  >
-                    {content}
-                  </Button>
-                ) : (
-                  <Box
-                    key={step.id}
-                    role="group"
-                    aria-label={`${step.label}, ${getJourneyStateLabel(step)}`}
-                    sx={{ minHeight: 52, p: 1 }}
-                  >
-                    {content}
-                  </Box>
-                );
-              })}
-            </Stack>
-          </Collapse>
-        </Stack>
-      </Paper>
-    );
-  }
 
   return (
     <Paper
       component="nav"
       aria-label="Admission journey"
       variant="outlined"
-      sx={{ p: 1, overflow: 'hidden' }}
+      sx={{ px: { xs: 1, sm: 1.5 }, py: 1.25, overflow: 'hidden' }}
     >
-      <Box
+      <Stepper
+        activeStep={selectedIndex}
+        orientation={vertical ? 'vertical' : 'horizontal'}
+        alternativeLabel={!vertical}
         sx={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))`,
-          gap: 0.75,
-          minWidth: 0,
+          '& .MuiStepConnector-line': { borderColor: 'divider' },
+          '& .MuiStepLabel-labelContainer': { minWidth: 0 },
+          '& .MuiStepButton-root': { borderRadius: 1, minHeight: 44 },
         }}
       >
         {steps.map((step, index) => {
           const tab = getJourneyTab(step);
+          const selected = tab === selectedTab;
+          const current = step.id === currentStep?.id;
           const openable = canOpenJourneyStep(step);
-          const content = (
-            <JourneyStepContent
-              step={step}
-              index={index}
-              current={step.id === currentStep?.id}
-              selected={tab === selectedTab}
-            />
+          const reason = step.reason || `${step.label} is not available yet.`;
+          const icon = <JourneyStateIcon step={step} selected={selected} index={index} />;
+          const optional = (
+            <Typography variant="caption" color="text.secondary">
+              {current ? 'Current · ' : ''}
+              {getJourneyStateLabel(step)}
+            </Typography>
+          );
+          const title = (
+            <Typography variant="subtitle2" color={selected ? 'primary.main' : 'text.primary'}>
+              {step.label}
+            </Typography>
           );
 
-          return openable ? (
-            <Button
+          return (
+            <Step
               key={step.id}
-              color="inherit"
-              aria-controls="applicant-stage-panel"
-              aria-current={step.id === currentStep?.id ? 'step' : undefined}
-              onClick={() => onSelect(tab)}
-              sx={{
-                minWidth: 0,
-                minHeight: 56,
-                p: 0.75,
-                justifyContent: 'flex-start',
-                textAlign: 'left',
-                border: 1,
-                borderColor: tab === selectedTab ? 'primary.main' : 'transparent',
-                bgcolor: tab === selectedTab ? 'action.selected' : 'transparent',
-              }}
+              completed={step.state === 'complete'}
+              active={selected}
+              aria-current={current ? 'step' : undefined}
             >
-              {content}
-            </Button>
-          ) : (
-            <Box
-              key={step.id}
-              role="group"
-              aria-label={`${step.label}, ${getJourneyStateLabel(step)}`}
-              sx={{ minWidth: 0, minHeight: 56, p: 0.75 }}
-            >
-              {content}
-            </Box>
+              {openable ? (
+                <StepButton
+                  icon={icon}
+                  optional={optional}
+                  aria-controls="applicant-stage-panel"
+                  onClick={() => onSelect(tab)}
+                >
+                  {title}
+                </StepButton>
+              ) : (
+                <Tooltip title={reason} arrow describeChild>
+                  <Box
+                    tabIndex={0}
+                    role="group"
+                    aria-label={`${step.label}, ${getJourneyStateLabel(step)}. ${reason}`}
+                    sx={{ borderRadius: 1, cursor: 'help', '&:focus-visible': { outline: 2, outlineColor: 'primary.main' } }}
+                  >
+                    <StepLabel icon={icon} optional={optional}>
+                      {title}
+                    </StepLabel>
+                  </Box>
+                </Tooltip>
+              )}
+            </Step>
           );
         })}
-      </Box>
+      </Stepper>
     </Paper>
   );
 }

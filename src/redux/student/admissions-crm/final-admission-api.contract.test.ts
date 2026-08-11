@@ -135,5 +135,8 @@ describe('final-admission admissions CRM API contracts', () => {
     expect(
       AdmissionCrmFinalAdmissionApi.endpoints.getAdmissionCrmGeneratedDocumentAvailability
     ).toBeTruthy();
+    expect(
+      AdmissionCrmFinalAdmissionApi.endpoints.sendAdmissionCrmGeneratedDocumentEmail
+    ).toBeTruthy();
   });
 });

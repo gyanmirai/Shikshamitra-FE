@@ -59,6 +59,7 @@ describe('registration-documents admissions CRM API contracts', () => {
         leadId: 'lead-1',
         body: {
           registrationTemplateId: 'template-1',
+          accessMode: 0,
           formNumberSeriesId: 'series-1',
           waiveFee: false,
         },
@@ -68,6 +69,7 @@ describe('registration-documents admissions CRM API contracts', () => {
       method: 'POST',
       body: {
         registrationTemplateId: 'template-1',
+        accessMode: 0,
         formNumberSeriesId: 'series-1',
         waiveFee: false,
       },
@@ -124,6 +126,10 @@ describe('registration-documents admissions CRM API contracts', () => {
 
     expect(
       AdmissionCrmRegistrationDocumentsApi.endpoints.getCurrentAdmissionCrmRegistrationByLead
+    ).toBeTruthy();
+
+    expect(
+      AdmissionCrmRegistrationDocumentsApi.endpoints.sendAdmissionCrmRegistrationInvitation
     ).toBeTruthy();
 
     expect(

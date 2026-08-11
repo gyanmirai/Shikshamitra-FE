@@ -1,4 +1,5 @@
 import type { FetchArgs } from '@reduxjs/toolkit/query';
+import type { AdmissionCrmMessageDeliveryLogDto } from './communication-exams-events-contracts';
 
 import {
   AdmissionCrmFormFieldType,
@@ -58,6 +59,12 @@ export enum AdmissionCrmRegistrationDataEntryState {
   InProgress = 1,
   Submitted = 2,
   Verified = 3,
+}
+
+export enum AdmissionCrmRegistrationAccessMode {
+  Online = 0,
+  StaffAssisted = 1,
+  Both = 2,
 }
 
 export enum AdmissionCrmDocumentChecklistTemplateStatus {
@@ -175,12 +182,31 @@ export type AdmissionCrmFormNumberSeriesDto = AdmissionCrmFormNumberSeriesUpsert
 
 export type IssueAdmissionCrmRegistrationApplicationDto = {
   registrationTemplateId: string;
+  accessMode: AdmissionCrmRegistrationAccessMode;
   formNumberSeriesId?: string | null;
   manualFormNumber?: string | null;
   playbookId?: string | null;
   linkExpiryDays?: number | null;
   waiveFee: boolean;
   waiverReason?: string | null;
+};
+
+export type AdmissionCrmRegistrationReadinessBlockerDto = {
+  code: string;
+  message: string;
+  actionCode?: string | null;
+};
+
+export type AdmissionCrmRegistrationReadinessDto = {
+  canIssue: boolean;
+  registrationPath: AdmissionCrmRegistrationPath;
+  blockers: AdmissionCrmRegistrationReadinessBlockerDto[];
+};
+
+export type AdmissionCrmRegistrationIssuanceResultDto = {
+  registration: AdmissionCrmRegistrationApplicationDto;
+  delivery?: AdmissionCrmMessageDeliveryLogDto | null;
+  deliveryError?: string | null;
 };
 
 export type CreateDirectAdmissionCrmRegistrationDto = {
@@ -217,6 +243,7 @@ export type AdmissionCrmRegistrationApplicationDto = {
   playbookId?: string | null;
   formNumber: string;
   provenance: AdmissionCrmRegistrationProvenance;
+  accessMode: AdmissionCrmRegistrationAccessMode;
   dataEntryState: AdmissionCrmRegistrationDataEntryState;
   physicalFormNumber?: string | null;
   physicalFormReceivedDate?: string | null;

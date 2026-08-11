@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Stack, Switch, Typography } from '@mui/material';
+import { Box, Paper, Stack, Switch, Typography } from '@mui/material';
 
 type SectionProps = {
   title: string;
@@ -14,7 +14,7 @@ type SectionProps = {
 
 export function ApplicantSection({ title, description, action, children }: SectionProps) {
   return (
-    <Box component="section" sx={{ py: 0.5 }}>
+    <Paper component="section" variant="outlined" sx={{ p: { xs: 1.25, sm: 1.5 } }}>
       <Stack
         direction="row"
         alignItems="flex-start"
@@ -35,7 +35,7 @@ export function ApplicantSection({ title, description, action, children }: Secti
         {action}
       </Stack>
       {children}
-    </Box>
+    </Paper>
   );
 }
 

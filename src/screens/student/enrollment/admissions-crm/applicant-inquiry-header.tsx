@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import Link from 'next/link';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Chip, Stack, Paper, Button, Skeleton, Typography, Link as MuiLink } from '@mui/material';
 
 import { ApplicantTitleTransition } from './enrollment-route-transition';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
@@ -28,7 +28,17 @@ type Props = {
   onBack: (event: MouseEvent<HTMLAnchorElement>) => void;
 };
 
-function ApplicantFact({ label, value, icon }: { label: string; value: string; icon: string }) {
+function ApplicantFact({
+  label,
+  value,
+  icon,
+  href,
+}: {
+  label: string;
+  value: string;
+  icon: string;
+  href?: string;
+}) {
   return (
     <Stack direction="row" gap={1} alignItems="flex-start" sx={{ minWidth: 0 }}>
       <Box
@@ -50,9 +60,21 @@ function ApplicantFact({ label, value, icon }: { label: string; value: string; i
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
           {label}
         </Typography>
-        <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
-          {value}
-        </Typography>
+        {href ? (
+          <MuiLink
+            href={href}
+            variant="body2"
+            fontWeight={600}
+            underline="hover"
+            sx={{ display: 'inline-block', overflowWrap: 'anywhere' }}
+          >
+            {value}
+          </MuiLink>
+        ) : (
+          <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+            {value}
+          </Typography>
+        )}
       </Box>
     </Stack>
   );
@@ -143,14 +165,14 @@ export function ApplicantInquiryHeader({
       <Paper
         variant="outlined"
         sx={(theme) => ({
-          p: { xs: 1.5, sm: 1.75 },
+          p: { xs: 1.25, sm: 1.5 },
           borderRadius: 2,
           overflow: 'hidden',
           bgcolor: 'background.paper',
           borderTopColor: alpha(theme.palette.primary.main, 0.45),
         })}
       >
-        <Stack spacing={1.5}>
+        <Stack spacing={1.25}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             alignItems={{ md: 'flex-start' }}
@@ -240,17 +262,23 @@ export function ApplicantInquiryHeader({
               label="Contact"
               value={contact}
               icon="solar:phone-calling-bold-duotone"
+              href={
+                lead.primaryContactNo
+                  ? `tel:${lead.primaryContactNo}`
+                  : lead.email
+                    ? `mailto:${lead.email}`
+                    : undefined
+              }
             />
           </Box>
 
           {!isClosed ? (
-            <Paper
-              variant="outlined"
+            <Box
               sx={(theme) => ({
                 px: 1.5,
-                py: 1.25,
+                py: 1,
                 borderRadius: 1.5,
-                bgcolor: alpha(theme.palette.info.main, 0.045),
+                bgcolor: alpha(theme.palette.primary.main, 0.06),
               })}
             >
               <Stack
@@ -260,10 +288,10 @@ export function ApplicantInquiryHeader({
                 gap={1.25}
               >
                 <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="overline" color="info.main">
-                    Next Best Action
+                  <Typography variant="caption" color="primary.main" fontWeight={700}>
+                    Next best action
                   </Typography>
-                  <Typography variant="subtitle1" sx={{ textWrap: 'balance' }}>
+                  <Typography variant="subtitle2" sx={{ textWrap: 'balance' }}>
                     {journeyStatusLabel}
                   </Typography>
                   <Typography
@@ -276,12 +304,17 @@ export function ApplicantInquiryHeader({
                   </Typography>
                 </Box>
                 {primaryAction ? (
-                  <Box sx={{ flexShrink: 0, '& .MuiButton-root': { minHeight: 44 } }}>
+                  <Box
+                    sx={{
+                      flexShrink: 0,
+                      '& .MuiButton-root': { minHeight: 36, px: 1.5 },
+                    }}
+                  >
                     {primaryAction}
                   </Box>
                 ) : null}
               </Stack>
-            </Paper>
+            </Box>
           ) : null}
         </Stack>
       </Paper>

@@ -14,9 +14,9 @@ const expectedApiModules = [
   'registration-documents-api.ts',
   'setup-playbooks-api.ts',
 ];
-const expectedEndpointCount = 296;
+const expectedEndpointCount = 299;
 const expectedEndpointInventoryHash =
-  '26627f136928a5bbf08eb84224adf2589a55d4bb9e5167e79c21e805a75080f9';
+  '12267d4ba6340f9be7cdbb64b221827f72da2470c14ebe33b42115cd470afdf9';
 
 // Existing exceptions are frozen at the decomposition baseline. They can shrink, but cannot grow.
 const oversizedComponentRatchet = {

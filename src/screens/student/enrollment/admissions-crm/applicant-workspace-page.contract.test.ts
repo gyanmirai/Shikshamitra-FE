@@ -5,7 +5,7 @@ const read = (file: string) =>
   readEnrollmentSource('src', 'screens', 'student', 'enrollment', 'admissions-crm', file);
 
 describe('Student Enrollment applicant workspace page contracts', () => {
-  it('uses a dedicated responsive inquiry workspace with one journey and an audit drawer', () => {
+  it('uses a dedicated responsive inquiry workspace with one MUI journey and inline audit', () => {
     const page = read('applicant-workspace-page.tsx');
     const header = read('applicant-inquiry-header.tsx');
     const journey = read('applicant-journey-navigator.tsx');
@@ -14,7 +14,7 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain('<ApplicantInquiryHeader');
     expect(page).not.toContain('<CustomBreadcrumbs');
     expect(header).toContain('Back to Pipeline');
-    expect(header).toContain('Next Best Action');
+    expect(header).toContain('Next best action');
     expect(header).toContain('label="Target Grade"');
     expect(header).toContain('label="Inquiry Source"');
     expect(header).toContain('label="Guardian"');
@@ -25,11 +25,12 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain("maxWidth: 'xl'");
     expect(page).toContain("overflowX: 'hidden'");
     expect(page).toContain('<ApplicantActivityTimeline');
-    expect(page).toContain('<Drawer');
-    expect(page).toContain('activityOpen');
+    expect(page).not.toContain('<Drawer');
+    expect(page).not.toContain('activityOpen');
     expect(page).not.toContain('<CustomTabs');
-    expect(journey).toContain('gridTemplateColumns:');
-    expect(journey).toContain('minmax(0, 1fr)');
+    expect(journey).toContain('<Stepper');
+    expect(journey).toContain('<StepButton');
+    expect(journey).toContain('<Tooltip');
     expect(journey).toContain("useMediaQuery(theme.breakpoints.down('md'))");
     expect(journey).not.toContain("overflowX: 'auto'");
     expect(page).not.toContain("role: 'dialog'");
@@ -52,7 +53,7 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(contextRail).toContain('canAssignOwner ? (');
     expect(contextRail).toContain('canSetPriority ? (');
     expect(contextRail).toContain("position: { lg: 'sticky' }");
-    expect(contextRail).toContain('Activity & Audit');
+    expect(contextRail).not.toContain('Activity & Audit');
     expect(activity).toContain('useGetAdmissionCrmTimelineQuery');
     expect(activity).toContain('Activity & Audit');
     expect(overview).not.toContain('Save Owner');
@@ -165,7 +166,7 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain('examAction: primaryAction.examAction');
     expect(page).toContain("params.set('applicantReturn', returnTo)");
     expect(page).toContain('requestTransition(() => router.push(href))');
-    expect(page).toContain('onClose={() => requestTransition(() => onActivityChange?.(false))}');
+    expect(page).not.toContain('onActivityChange');
     expect(exams).toContain('useGetAdmissionCrmEntranceExamByLeadQuery');
     expect(exams).toContain("'record-result': 'exam-results-section'");
     expect(exams).toContain("'review-eligibility': 'exam-eligibility-section'");
@@ -197,7 +198,7 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain('closedOutcomeLabel');
     expect(page).toMatch(/\? `Closed · \$\{closedOutcomeLabel \|\| 'Outcome recorded'\}`/);
     expect(page).toContain('pipelineColumnLabel={pipelineColumnLabel}');
-    expect(page).toContain('onOpenActivity={() => requestTransition(');
+    expect(page).toContain('title="Activity & audit"');
   });
 
   it('keeps generated documents in their owning workflow', () => {
@@ -211,6 +212,10 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain('allowedDocumentTypes={activationDocumentTypes}');
     expect(documents).toContain('useGetAdmissionCrmGeneratedDocumentAvailabilityQuery');
     expect(documents).toContain('availableDocumentTypes.length === 0');
+    expect(documents).toContain('AdmissionCrm:HallTicketDisabledForExam');
+    expect(documents).toContain('Preview Hall Ticket');
+    expect(documents).toContain('useSendAdmissionCrmGeneratedDocumentEmailMutation');
+    expect(documents).toContain('useRetryAdmissionCrmMessageDeliveryMutation');
   });
 
   it('allows staff to upload registration checklist documents', () => {
@@ -290,5 +295,23 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(registration).toContain('documentFileByKey');
     expect(registration).toContain('documentValidUntilByKey');
     expect(registration).toContain('overrideReadiness');
+  });
+
+  it('uses backend readiness, explicit access modes, and a section stepper for registration', () => {
+    const controller = read('applicant-registration-operations-controller.tsx');
+    const view = read('applicant-registration-operations-view.tsx');
+    const editor = read('registration-response-editor.tsx');
+
+    expect(controller).toContain('useGetAdmissionCrmRegistrationReadinessQuery');
+    expect(controller).toContain('AdmissionCrmRegistrationAccessMode.Online');
+    expect(view).toContain('Online');
+    expect(view).toContain('Staff-assisted');
+    expect(view).toContain('Both');
+    expect(view).toContain('readinessQuery.data?.blockers');
+    expect(view).toContain('!readinessQuery.data?.canIssue');
+    expect(view).toContain('useSendAdmissionCrmRegistrationInvitationMutation');
+    expect(view).toContain('Retry invitation');
+    expect(editor).toContain('orientation="vertical"');
+    expect(editor).toContain('sectionCompletion');
   });
 });

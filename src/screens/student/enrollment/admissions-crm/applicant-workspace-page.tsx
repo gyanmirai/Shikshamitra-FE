@@ -29,11 +29,8 @@ import {
   Stack,
   Alert,
   Button,
-  Drawer,
-  Divider,
   Skeleton,
   Accordion,
-  IconButton,
   Typography,
   AccordionDetails,
   AccordionSummary,
@@ -46,6 +43,7 @@ import { ApplicantInquiryHeader } from './applicant-inquiry-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantJourneyNavigator } from './applicant-journey-navigator';
 import { ApplicantWorkspaceOverview } from './applicant-workspace-overview';
+import { ApplicantSection } from './applicant-workspace-primitives';
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
 import { buildApplicantJourney, getApplicantNextJourneyStep } from './applicant-journey-model';
@@ -109,12 +107,10 @@ type Props = {
   leadId?: string;
   academicYearId?: string;
   initialTab?: ApplicantWorkspaceTab;
-  activityOpen?: boolean;
   returnTo?: string;
   returnHref?: string;
   workItem?: ApplicantWorkContextItem;
   onTabChange?: (tab: ApplicantWorkspaceTab) => void;
-  onActivityChange?: (open: boolean) => void;
   onAcademicYearResolved?: (academicYearId: string) => void;
   onClose: () => void;
 };
@@ -185,12 +181,10 @@ function ApplicantWorkspaceContent({
   leadId,
   academicYearId,
   initialTab = 'inquiry',
-  activityOpen = false,
   returnTo,
   returnHref = studentPaths.enrollment.pipeline,
   workItem,
   onTabChange,
-  onActivityChange,
   onAcademicYearResolved,
   onClose,
 }: Props) {
@@ -278,7 +272,6 @@ function ApplicantWorkspaceContent({
     registrationQuery.data || lead?.registrationFormIssuedAt || lead?.registrationFormNumber
   );
   const isJourneyLoading = progressQuery.isLoading || registrationQuery.isFetching;
-  const isViewingCurrent = selectedJourneyStep?.id === currentJourneyStep?.id;
 
   useEffect(() => setRequestedTab(initialTab), [initialTab, leadId]);
   useEffect(() => {
@@ -520,20 +513,6 @@ function ApplicantWorkspaceContent({
               }}
             >
               <Stack id="applicant-stage-panel" spacing={1.5} sx={{ minWidth: 0 }}>
-                {!isViewingCurrent && selectedJourneyStep ? (
-                  <Alert
-                    severity="info"
-                    action={
-                      <Button color="inherit" size="small" onClick={() => changeTab('next')}>
-                        Return to Current Work
-                      </Button>
-                    }
-                  >
-                    Reviewing {selectedJourneyStep.label} history. Current work remains{' '}
-                    {currentJourneyStep?.label || 'the next admission step'}.
-                  </Alert>
-                ) : null}
-
                 <Box
                   id="applicant-stage-operation"
                   tabIndex={-1}
@@ -547,13 +526,32 @@ function ApplicantWorkspaceContent({
                   }}
                 >
                   {selectedTab === 'inquiry' ? (
-                    <ApplicantWorkspaceOverview
-                      lead={lead}
-                      academicYearId={applicantAcademicYearId}
-                      stages={stagesQuery.data || []}
-                      slaDueAt={slaDueAt}
-                      refetchLead={() => leadQuery.refetch()}
-                    />
+                    <Stack spacing={1.5}>
+                      <ApplicantWorkspaceOverview
+                        lead={lead}
+                        academicYearId={applicantAcademicYearId}
+                        stages={stagesQuery.data || []}
+                        slaDueAt={slaDueAt}
+                        refetchLead={() => leadQuery.refetch()}
+                      />
+                      {leadId ? (
+                        <ApplicantSection
+                          title="Activity & audit"
+                          description="Recorded updates, decisions, and communication for this applicant."
+                        >
+                          <Box
+                            sx={{
+                              maxHeight: { xs: 360, md: 420 },
+                              overflowY: 'auto',
+                              overscrollBehavior: 'contain',
+                              pr: 0.5,
+                            }}
+                          >
+                            <ApplicantActivityTimeline leadId={leadId} />
+                          </Box>
+                        </ApplicantSection>
+                      ) : null}
+                    </Stack>
                   ) : null}
 
                   {leadId && applicantAcademicYearId && selectedTab === 'exam' ? (
@@ -567,17 +565,12 @@ function ApplicantWorkspaceContent({
                             : undefined
                         }
                       />
-                      <ApplicantDocumentDisclosure
-                        title="Exam Documents"
-                        description="Generate a hall ticket only when the school uses one."
-                      >
-                        <GeneratedDocumentOperations
-                          leadId={leadId}
-                          allowedDocumentTypes={examDocumentTypes}
-                          title="Exam Documents"
-                          description="Generate a hall ticket only when the school uses one for entrance exams."
-                        />
-                      </ApplicantDocumentDisclosure>
+                      <GeneratedDocumentOperations
+                        leadId={leadId}
+                        allowedDocumentTypes={examDocumentTypes}
+                        title="Hall ticket"
+                        description="Preview the hall ticket or send the generated PDF to the applicant email."
+                      />
                     </Stack>
                   ) : null}
 
@@ -690,8 +683,6 @@ function ApplicantWorkspaceContent({
                 academicYearId={applicantAcademicYearId}
                 hasRegistration={hasRegistration}
                 canViewGovernance={canViewGovernance}
-                onOpenInquiry={() => changeTab('inquiry')}
-                onOpenActivity={() => requestTransition(() => onActivityChange?.(true))}
                 onOpenGovernance={() => changeTab('governance')}
                 refetchLead={() => leadQuery.refetch()}
               />
@@ -699,51 +690,6 @@ function ApplicantWorkspaceContent({
           ) : null}
         </Stack>
       </Box>
-
-      <Drawer
-        anchor="right"
-        open={activityOpen}
-        onClose={() => requestTransition(() => onActivityChange?.(false))}
-        aria-labelledby="applicant-activity-title"
-        slotProps={{
-          paper: {
-            sx: {
-              width: { xs: '100%', sm: 560 },
-              maxWidth: '100%',
-              overscrollBehavior: 'contain',
-            },
-          },
-        }}
-      >
-        <Stack sx={{ height: '100%', minHeight: 0 }}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            gap={1}
-            sx={{ px: 2, py: 1.5 }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              <Typography id="applicant-activity-title" variant="h6">
-                Activity & Audit
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Review the applicant’s recorded history without leaving current work.
-              </Typography>
-            </Box>
-            <IconButton
-              aria-label="Close activity and audit"
-              onClick={() => requestTransition(() => onActivityChange?.(false))}
-            >
-              <Iconify icon="mingcute:close-line" />
-            </IconButton>
-          </Stack>
-          <Divider />
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
-            {activityOpen && leadId ? <ApplicantActivityTimeline leadId={leadId} /> : null}
-          </Box>
-        </Stack>
-      </Drawer>
 
       <ApplicantExamSchedulingDialog
         lead={scheduleExamOpen && primaryAction?.kind === 'schedule-exam' ? lead || null : null}
@@ -782,11 +728,6 @@ export function ApplicantWorkspacePage({ leadId }: { leadId: string }) {
     (applicantTab: ApplicantWorkspaceTab) => updateState({ applicantTab }),
     [updateState]
   );
-  const handleActivityChange = useCallback(
-    (applicantActivity: boolean) =>
-      updateState({ applicantActivity: applicantActivity || undefined }),
-    [updateState]
-  );
   const handleAcademicYearResolved = useCallback(
     (cycle: string) => updateState({ cycle }, 'replace'),
     [updateState]
@@ -797,12 +738,10 @@ export function ApplicantWorkspacePage({ leadId }: { leadId: string }) {
       leadId={leadId}
       academicYearId={academicYearId}
       initialTab={state.applicantTab || 'inquiry'}
-      activityOpen={Boolean(state.applicantActivity)}
       returnTo={state.returnTo}
       returnHref={applicantReturnHref}
       workItem={applicantWorkItem}
       onTabChange={handleTabChange}
-      onActivityChange={handleActivityChange}
       onAcademicYearResolved={handleAcademicYearResolved}
       onClose={closeApplicant}
     />

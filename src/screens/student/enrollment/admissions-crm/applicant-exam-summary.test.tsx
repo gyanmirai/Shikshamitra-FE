@@ -14,6 +14,10 @@ vi.mock('src/redux/student/admissions-crm/communication-exams-events-api', () =>
   useDecideAdmissionCrmEligibilityMutation: () => [vi.fn(), { isLoading: false }],
 }));
 
+vi.mock('react-redux', () => ({
+  useSelector: () => [],
+}));
+
 describe('Applicant exam summary', () => {
   it('schedules an unscheduled exam without leaving the applicant workspace', () => {
     const onScheduleExam = vi.fn();

@@ -1,4 +1,5 @@
 import type { FetchArgs } from '@reduxjs/toolkit/query';
+import type { AdmissionCrmGeneratedDocumentType } from './final-admission-contracts';
 
 import {
   AdmissionCrmListParams,
@@ -598,6 +599,10 @@ export type AdmissionCrmMessageDeliveryLogDto = {
   providerMessageId?: string | null;
   subjectSnapshot?: string | null;
   bodySnapshot: string;
+  generatedDocumentType?: AdmissionCrmGeneratedDocumentType | null;
+  attachmentLanguage?: string | null;
+  attachmentFileName?: string | null;
+  attachmentContentType?: string | null;
   status: string;
   statusDetails: string;
   attemptCount: number;
