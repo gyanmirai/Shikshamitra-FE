@@ -13,12 +13,12 @@ describe('Student Enrollment display helpers', () => {
     expect(getDistinctAdmissionIntent(' Fresh   Admission ', 'fresh admission')).toBeUndefined();
   });
 
-  it('keeps distinct intent notes and legacy intent values', () => {
+  it('keeps distinct intent notes even when no pathway label is available', () => {
     expect(
       getDistinctAdmissionIntent('Family needs an accessible campus tour.', 'Fresh admission')
     ).toBe('Family needs an accessible campus tour.');
-    expect(getDistinctAdmissionIntent('Legacy inquiry context', undefined)).toBe(
-      'Legacy inquiry context'
+    expect(getDistinctAdmissionIntent('Inquiry context supplied by the family', undefined)).toBe(
+      'Inquiry context supplied by the family'
     );
   });
 

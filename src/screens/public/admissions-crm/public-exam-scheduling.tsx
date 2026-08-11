@@ -104,8 +104,11 @@ export default function PublicExamScheduling({
         `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/exam/schedule`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessSessionToken, entranceExamSlotId: selectedSlotId }),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admission-Access-Session': accessSessionToken,
+          },
+          body: JSON.stringify({ entranceExamSlotId: selectedSlotId }),
         }
       );
       if (!response.ok) {

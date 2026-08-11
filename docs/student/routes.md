@@ -11,7 +11,7 @@ audience: humans-and-agents
 # Find Student frontend routes
 
 TL;DR: `src/constants/student-menu.ts` owns visible Student navigation.
-Student Enrollment uses school-facing canonical routes, while superseded URLs exist only as compatibility redirects.
+Student Enrollment uses only the school-facing canonical routes; superseded URLs are removed.
 
 ## Student Enrollment navigation
 
@@ -84,46 +84,18 @@ Pipeline, My Work, and focused worklists open the same applicant record rather t
 Pipeline rows, applicant names, generic applicant actions, and newly created inquiries use `tab=inquiry`.
 Focused worklists use explicit `exam`, `registration`, `finance`, `offer`, `activation`, or `governance` stage values.
 Explicit stage links remain on that historical or focused stage while the header continues to show current work.
-Legacy `tab=overview` becomes `tab=next`, and legacy `tab=activity` becomes `tab=next&activity=1`.
 The Activity and Audit drawer uses `activity=1`.
 Targeted exam handoffs use `/student/enrollment/entrance-exams?cycle={academicYearId}&applicant={leadId}&examAction={record-result|review-eligibility|review-absence}`.
 The `applicantReturn` value carries the session-backed Pipeline return token through an exam handoff.
 The internal return token is versioned and restores the originating URL, scroll position, applicant focus target, and Pipeline view after data readiness.
 The `cycle` query key carries the selected Institute Setup academic year between Enrollment pages.
 
-## Compatibility redirects
-
-Compatibility routes are not visible navigation and must not appear in new links, tests, or documentation examples.
-Redirects preserve existing query parameters, including repeated values.
-
-| Superseded route                                                                | Canonical destination                                                |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `/student/enrollment`                                                           | `/student/enrollment/my-work`                                        |
-| `/student/enrollment/overview`                                                  | `/student/enrollment/my-work`                                        |
-| `/student/enrollment/exams`                                                     | `/student/enrollment/entrance-exams`                                 |
-| `/student/enrollment/registrations`                                             | `/student/enrollment/registration`                                   |
-| `/student/enrollment/offers-seats`                                              | `/student/enrollment/class-placement`                                |
-| `/student/enrollment/operations`                                                | `/student/enrollment/follow-ups-messages`                            |
-| `/student/enrollment/analytics`                                                 | `/student/enrollment/reports`                                        |
-| `/student/enrollment/settings/admission-cycles`                                 | `/student/enrollment/settings/admission-year`                        |
-| `/student/enrollment/settings/admission-cycles/{academicYearId}`                | `/student/enrollment/settings/admission-year?cycle={academicYearId}` |
-| `/student/enrollment/settings/admission-cycles/{academicYearId}/{workspaceTab}` | `/student/enrollment/settings/admission-year?cycle={academicYearId}` |
-| `/student/enrollment/settings/journey`                                          | `/student/enrollment/settings/pipeline`                              |
-| `/student/enrollment/settings/inquiry-capture`                                  | `/student/enrollment/settings/pipeline`                              |
-| `/student/enrollment/settings/routing-scoring`                                  | `/student/enrollment/settings/pipeline`                              |
-| `/student/enrollment/settings/entrance-exams`                                   | `/student/enrollment/settings/entrance-exam`                         |
-| `/student/enrollment/settings/registration-documents`                           | `/student/enrollment/settings/registration`                          |
-| `/student/enrollment/settings/offers-seats`                                     | `/student/enrollment/settings/class-placement`                       |
-| `/student/enrollment/settings/communications`                                   | `/student/enrollment/settings/communication`                         |
-| `/student/enrollment/settings/automation`                                       | `/student/enrollment/settings/communication`                         |
-| `/student/enrollment/settings/governance`                                       | `/student/enrollment/settings`                                       |
-
 ## Route ownership rules
 
-`/student/enrollment` is a redirect and never renders a second My Work implementation.
+`/student/enrollment/my-work` is the canonical Enrollment landing route.
 Admission Year Setup extends an academic year from Institute Setup and never creates a parallel academic-year record.
 New frontend links must use canonical properties from `studentPaths.enrollment`.
-Legacy property aliases may remain temporarily for source compatibility, but they resolve to canonical URLs.
+Removed routes are not redirected or retained for source compatibility.
 Frontend permission checks control visibility and interaction only.
 Backend permissions remain the security boundary.
 

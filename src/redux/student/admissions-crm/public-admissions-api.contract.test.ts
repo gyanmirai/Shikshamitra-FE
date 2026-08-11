@@ -4,7 +4,6 @@ import { it, expect, describe } from 'vitest';
 import { PublicAdmissionsCrmApi } from './public-admissions-api';
 
 import {
-  buildPublicAdmissionCrmDeliveryCallbackRequest,
   buildPublicAdmissionCrmDocumentUploadUrl,
   buildPublicAdmissionCrmFormRequest,
   buildSavePublicAdmissionCrmRegistrationRequest,
@@ -16,8 +15,8 @@ describe('public-admissions admissions CRM API contracts', () => {
       buildSavePublicAdmissionCrmRegistrationRequest({
         tenantId: 'tenant-1',
         token: 'status-token',
+        accessSessionToken: 'session-token',
         body: {
-          accessSessionToken: 'session-token',
           concurrencyStamp: 'version-1',
           responses: { firstName: 'Aarav' },
         },
@@ -25,8 +24,8 @@ describe('public-admissions admissions CRM API contracts', () => {
     ).toEqual({
       url: '/public/student-enrollment/admissions-crm/tenant-1/status/status-token/registration',
       method: 'PUT',
+      headers: { 'X-Admission-Access-Session': 'session-token' },
       body: {
-        accessSessionToken: 'session-token',
         concurrencyStamp: 'version-1',
         responses: { firstName: 'Aarav' },
       },
@@ -41,67 +40,7 @@ describe('public-admissions admissions CRM API contracts', () => {
     );
   });
 
-  it('builds duplicate merge, template, entrance exam, analytics, and public form route requests', () => {
-    expect(
-      buildPublicAdmissionCrmDeliveryCallbackRequest({
-        tenantId: 'tenant-1',
-        deliveryLogId: 'delivery-log-1',
-        body: {
-          status: 'delivered',
-          statusDetails: 'Provider accepted delivery receipt.',
-          providerMessageId: 'provider-message-1',
-          callbackSecret: 'secret-1',
-        },
-      })
-    ).toEqual({
-      url: '/public/student-enrollment/admissions-crm/tenant-1/communication/delivery-logs/delivery-log-1/callback',
-      method: 'POST',
-      body: {
-        status: 'delivered',
-        statusDetails: 'Provider accepted delivery receipt.',
-        providerMessageId: 'provider-message-1',
-        callbackSecret: 'secret-1',
-      },
-    });
-
-    expect(
-      buildPublicAdmissionCrmDeliveryCallbackRequest({
-        tenantId: 'tenant-1',
-        deliveryLogId: 'delivery-log-2',
-        body: {
-          payload: {
-            event: {
-              status: 'failed',
-              description: 'Provider reported delivery failure.',
-            },
-            message: {
-              id: 'provider-message-2',
-            },
-            auth: {
-              secret: 'secret-1',
-            },
-          },
-        },
-      })
-    ).toEqual({
-      url: '/public/student-enrollment/admissions-crm/tenant-1/communication/delivery-logs/delivery-log-2/callback',
-      method: 'POST',
-      body: {
-        payload: {
-          event: {
-            status: 'failed',
-            description: 'Provider reported delivery failure.',
-          },
-          message: {
-            id: 'provider-message-2',
-          },
-          auth: {
-            secret: 'secret-1',
-          },
-        },
-      },
-    });
-
+  it('builds the public form route request', () => {
     expect(
       buildPublicAdmissionCrmFormRequest({ tenantId: 'tenant-1', templateId: 'template-1' })
     ).toEqual({
@@ -110,9 +49,7 @@ describe('public-admissions admissions CRM API contracts', () => {
     });
   });
 
-  it('registers workspace, configuration, task, public form, exam, and analytics endpoints', () => {
-    expect(PublicAdmissionsCrmApi.endpoints.applyPublicAdmissionCrmDeliveryCallback).toBeTruthy();
-
+  it('registers the browser-safe public form endpoint only', () => {
     expect(PublicAdmissionsCrmApi.endpoints.getPublicAdmissionCrmForm).toBeTruthy();
   });
 });

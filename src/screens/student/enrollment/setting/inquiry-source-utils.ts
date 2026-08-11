@@ -12,28 +12,6 @@ export const resolveInquirySourceAcademicYearId = (
   fallbackAcademicYearId?: string | null
 ) => selectedAcademicYearId || fallbackAcademicYearId || undefined;
 
-export const buildInquirySourceOptions = (
-  activeItems: InquirySourceOption[] = [],
-  selectedInquirySourceId?: string | null,
-  selectedInquirySourceName?: string | null
-) => {
-  const hasSelectedOption = activeItems.some((item) => item.id === selectedInquirySourceId);
-
-  if (!selectedInquirySourceId || hasSelectedOption || !selectedInquirySourceName) {
-    return activeItems;
-  }
-
-  return [
-    ...activeItems,
-    {
-      id: selectedInquirySourceId,
-      displayName: `${selectedInquirySourceName} (Inactive)`,
-      preferenceName: `${selectedInquirySourceName} (Inactive)`,
-      isActive: false,
-    },
-  ];
-};
-
 export const sortInquirySourcesForSelection = (items: InquirySourceOption[] = []) =>
   [...items].sort((left, right) => {
     const leftOrder = left.displayOrder ?? Number.MAX_SAFE_INTEGER;

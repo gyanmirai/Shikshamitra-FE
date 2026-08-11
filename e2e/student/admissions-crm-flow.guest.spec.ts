@@ -35,23 +35,23 @@ const principalScopeBoard = () =>
 const principalDeniedScopeBoard = () => process.env.E2E_PRINCIPAL_DENIED_SCOPE_BOARD || 'CBSE';
 const enrollmentWorkspaceRoutes = [
   '/student/enrollment/pipeline',
-  '/student/enrollment/exams',
-  '/student/enrollment/registrations',
-  '/student/enrollment/offers-seats',
+  '/student/enrollment/entrance-exams',
+  '/student/enrollment/registration',
   '/student/enrollment/activation',
-  '/student/enrollment/operations',
-  '/student/enrollment/analytics',
+  '/student/enrollment/activation',
+  '/student/enrollment/my-work',
+  '/student/enrollment/reports',
 ] as const;
 const enrollmentSettingsRoutes = [
   '/student/enrollment/settings/journey',
   '/student/enrollment/settings/inquiry-capture',
   '/student/enrollment/settings/routing-scoring',
-  '/student/enrollment/settings/entrance-exams',
-  '/student/enrollment/settings/registration-documents',
-  '/student/enrollment/settings/offers-seats',
+  '/student/enrollment/settings/entrance-exam',
+  '/student/enrollment/settings/registration',
+  '/student/enrollment/settings/activation',
   '/student/enrollment/settings/activation',
   '/student/enrollment/settings/governance',
-  '/student/enrollment/settings/communications',
+  '/student/enrollment/settings/communication',
   '/student/enrollment/settings/automation',
 ] as const;
 let otpWebhookServer: Server | undefined;
@@ -907,11 +907,11 @@ async function openExamRowInWorkspace(
     },
     { timeout: 60_000 }
   );
-  const response = await page.goto(workspaceUrl('/student/enrollment/exams', academicYearId), {
+  const response = await page.goto(workspaceUrl('/student/enrollment/entrance-exams', academicYearId), {
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   });
-  expect(response?.status(), 'GET /student/enrollment/exams').toBeLessThan(400);
+  expect(response?.status(), 'GET /student/enrollment/entrance-exams').toBeLessThan(400);
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 15_000 });
   await expect(page.getByRole('heading', { name: 'Assessments' })).toBeVisible({
     timeout: 30_000,
@@ -1867,24 +1867,6 @@ test.describe('Student admissions CRM E2E', () => {
     await builder.getByRole('button', { name: 'Close', exact: true }).click();
   });
 
-  test('legacy settings routes redirect to the canonical setup center without losing context', async ({
-    page,
-  }) => {
-    await login(page);
-    const academicYearId = await resolveAcademicYearId(page);
-
-    await page.goto(
-      `/student/enrollment/settings/governance?cycle=${academicYearId}&panel=configuration-safety`,
-      { waitUntil: 'domcontentloaded', timeout: 60_000 }
-    );
-    await expect(page).toHaveURL(
-      new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
-    );
-    await expect(page).toHaveURL(/panel=configuration-safety/);
-    await expect(page.getByRole('heading', { name: 'Enrollment Setup Center' })).toBeVisible();
-    await expect(page.getByText('View Configuration References')).toHaveCount(0);
-  });
-
   test('principal can create quick inquiry, review duplicate warning, and open CRM workspace', async ({
     page,
   }) => {
@@ -2178,7 +2160,7 @@ test.describe('Student admissions CRM E2E', () => {
         )
     );
     await page.goto(
-      `${workspaceUrl(`/student/enrollment/applicants/${lead.id}`, academicYearId)}&tab=overview`,
+      `${workspaceUrl(`/student/enrollment/applicants/${lead.id}`, academicYearId)}&tab=next`,
       { waitUntil: 'domcontentloaded', timeout: 60_000 }
     );
     const browserLeadResponse = await browserLeadResponsePromise;
@@ -2216,7 +2198,7 @@ test.describe('Student admissions CRM E2E', () => {
     );
 
     try {
-      await page.goto(workspaceUrl('/student/enrollment/registrations', academicYearId), {
+      await page.goto(workspaceUrl('/student/enrollment/registration', academicYearId), {
         waitUntil: 'domcontentloaded',
         timeout: 60_000,
       });

@@ -16,26 +16,17 @@ type StoredWorkspaceTableSessionState = WorkspaceTableSessionState & {
   version: 1;
 };
 
-type SessionStorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'>;
+type SessionStorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
-const legacyStoragePrefix = 'student-enrollment:table-state:v1:';
 const storagePrefix = 'student-enrollment:table-state:v2:';
 const maximumSearchLength = 2_000;
 const maximumFilterCount = 50;
 const maximumTokenLength = 200;
 const emptyState: WorkspaceTableSessionState = { search: '', filters: [] };
 
-const removeLegacyState = (storage: SessionStorageLike) => {
-  for (let index = storage.length - 1; index >= 0; index -= 1) {
-    const key = storage.key(index);
-    if (key?.startsWith(legacyStoragePrefix)) storage.removeItem(key);
-  }
-};
-
 const getSessionStorage = (): SessionStorageLike | undefined => {
   try {
     if (typeof window === 'undefined') return undefined;
-    removeLegacyState(window.sessionStorage);
     return window.sessionStorage;
   } catch {
     return undefined;

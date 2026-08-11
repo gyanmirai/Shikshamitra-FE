@@ -14,7 +14,7 @@ import {
   useDownloadStudentDocumentQuery,
   useUploadStudentDocumentsMutation,
   useLazyDownloadStudentDocumentQuery,
-} from 'src/redux/student/registration/registration-api';
+} from 'src/redux/student/records/student-record-profile-api';
 
 const formatAcceptedFormat = (format: unknown) => {
   if (typeof format === 'string' && format.trim()) {

@@ -179,11 +179,15 @@ describe('Admissions CRM configuration helpers', () => {
         { id: 'user-2', name: 'Zara' },
         { id: 'user-1', name: 'Asha' },
       ],
-      ['user-1', 'legacy-owner-id', 'legacy-owner-id']
+      ['user-1', 'unavailable-owner-id', 'unavailable-owner-id']
     );
 
-    expect(options.map((option) => option.id)).toEqual(['user-1', 'user-2', 'legacy-owner-id']);
-    expect(getCrmUserLabel(options, 'legacy-owner-id')).toBe('Unknown user (legacy-o)');
+    expect(options.map((option) => option.id)).toEqual([
+      'user-1',
+      'user-2',
+      'unavailable-owner-id',
+    ]);
+    expect(getCrmUserLabel(options, 'unavailable-owner-id')).toBe('Unknown user (unavaila)');
   });
 
   it('updates provider adapter settings while preserving provider JSON fields', () => {

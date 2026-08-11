@@ -253,8 +253,6 @@ Pipeline rows, applicant names, generic Open Inquiry actions, and newly created 
 Stage-specific worklist actions continue to use their explicit stage tab.
 Direct applicant URLs without an explicit tab open Inquiry; `tab=next` remains the backend-projected current-work destination.
 Focused worklists may use `tab=exam`, `tab=registration`, `tab=finance`, `tab=offer`, `tab=activation`, or `tab=governance`.
-Legacy `tab=overview` canonicalizes to `tab=next`.
-Legacy `tab=activity` canonicalizes to `tab=next&activity=1`.
 The Activity and Audit drawer uses `activity=1`.
 Targeted exam work uses `/student/enrollment/entrance-exams?cycle={academicYearId}&applicant={leadId}&examAction={action}`.
 A versioned session-backed return token expires after four hours and preserves the source URL, Pipeline scroll position, originating applicant, and focus target.

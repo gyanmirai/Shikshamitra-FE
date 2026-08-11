@@ -69,8 +69,8 @@ export interface IGeneralInformationResponse {
     isoCode: string;
   };
   pincode: string;
-  inquiryPreference: string;
-  inquiryPreferenceId: string;
+  inquirySource: string;
+  inquirySourceId: string;
 }
 
 export interface IFamilyInformationResponse {

@@ -200,19 +200,6 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 4 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              disabled={!isAdditionalDetailsEditable.value}
-              checked={formik.values.transportMember}
-              onChange={(e, val) => formik.setFieldValue('transportMember', val)}
-              name="transportMember"
-            />
-          }
-          label="Transport Member?"
-        />
-      </Grid>
     </SectionCard>
   );
 };

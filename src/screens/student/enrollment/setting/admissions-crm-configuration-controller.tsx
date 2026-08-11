@@ -2380,7 +2380,7 @@ export function useAdmissionsCrmConfigurationController({
 
   const handleProviderCallbackMappingPathChange = (
     channel: AdmissionCrmMessageChannel,
-    field: 'statusPath' | 'statusDetailsPath' | 'providerMessageIdPath' | 'callbackSecretPath',
+    field: 'statusPath' | 'statusDetailsPath' | 'providerMessageIdPath',
     value: string
   ) => {
     setProviderForms((prev) => {

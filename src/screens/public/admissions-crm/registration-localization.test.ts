@@ -20,13 +20,4 @@ describe('registration localization', () => {
     ]);
     expect(resolveRegistrationOptions(canonical, { hi: ['बस'] }, 'hi')).toEqual(canonical);
   });
-
-  it('resolves legacy mixed-case localization keys', () => {
-    expect(resolveRegistrationText('Student name', { GU: 'Student in Gujarati' }, 'gu')).toBe(
-      'Student in Gujarati'
-    );
-    expect(
-      resolveRegistrationOptions(['Bus', 'Self'], { Hi: ['Bus Hindi', 'Self Hindi'] }, 'hi')
-    ).toEqual(['Bus Hindi', 'Self Hindi']);
-  });
 });

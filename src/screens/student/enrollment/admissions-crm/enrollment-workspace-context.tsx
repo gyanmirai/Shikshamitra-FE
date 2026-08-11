@@ -23,7 +23,6 @@ import {
   areSearchParamsEquivalent,
   getPersonaWorkspaceDefaults,
   parseEnrollmentWorkspaceState,
-  migrateLegacyWorkspaceFilters,
   serializeEnrollmentWorkspaceState,
 } from './enrollment-workspace-state';
 import { runEnrollmentNavigation } from './enrollment-route-transition';
@@ -78,7 +77,6 @@ type EnrollmentWorkspaceContextValue = {
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
-const legacyApplicantWorkStoragePrefix = 'student-enrollment:applicant-work:';
 const applicantWorkStoragePrefix = 'student-enrollment:applicant-work:v2:';
 const applicantWorkExpiryMs = 4 * 60 * 60 * 1_000;
 
@@ -295,22 +293,6 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     readApplicantReturnContext(state.returnTo)?.returnTo || fallbackApplicantReturnHref;
 
   useEffect(() => {
-    try {
-      for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
-        const key = window.sessionStorage.key(index);
-        if (
-          key?.startsWith(legacyApplicantWorkStoragePrefix) &&
-          !key.startsWith(applicantWorkStoragePrefix)
-        ) {
-          window.sessionStorage.removeItem(key);
-        }
-      }
-    } catch {
-      // Legacy cleanup must not block the enrollment workspace.
-    }
-  }, []);
-
-  useEffect(() => {
     if (pendingNavigationPathRef.current === pathname) {
       pendingNavigationPathRef.current = null;
     }
@@ -423,22 +405,15 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
 
   useIsomorphicLayoutEffect(() => {
     const current = new URLSearchParams(searchParams.toString());
-    const legacyKey = `student-enrollment:${workspace}:filters`;
-    const hasWorkspaceState = Array.from(current.keys()).some((key) => key !== 'cycle');
-    const legacy = !hasWorkspaceState
-      ? migrateLegacyWorkspaceFilters(sessionStorage.getItem(legacyKey))
-      : {};
     const currentState = parseEnrollmentWorkspaceState(current, defaults);
     const cycle = current.get('cycle') || (currentYear?.id as string | undefined);
     const board = current.get('board') || (currentBoard?.id as string | undefined);
     const medium = current.get('medium') || (currentMedium?.id as string | undefined);
 
-    sessionStorage.removeItem(legacyKey);
-    if (!cycle && !Object.keys(legacy).length && current.size === 0) return;
+    if (!cycle && current.size === 0) return;
 
     const next = {
       ...defaults,
-      ...legacy,
       ...currentState,
       cycle,
       board,

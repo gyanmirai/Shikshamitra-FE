@@ -124,7 +124,7 @@ describe('student production API wiring', () => {
     const studentIdPlaceholder = `$${'{studentId}'}`;
     const documentIdPlaceholder = `$${'{documentId}'}`;
     const staleDocumentEndpoint = `/student-enrollment/${studentIdPlaceholder}/documents/${documentIdPlaceholder}`;
-    const registrationDocumentEndpoint = `/student/enrollment/registrations/${studentIdPlaceholder}/documents`;
+    const recordDocumentEndpoint = `/students/records/profiles/${studentIdPlaceholder}/documents`;
     const sources = collectSourceFiles(path.join(repoRoot, 'src/redux/student')).map(
       (filePath) => ({
         relativePath: path.relative(repoRoot, filePath),
@@ -142,10 +142,10 @@ describe('student production API wiring', () => {
         .filter((pattern) => source.includes(pattern))
         .map((pattern) => `${relativePath} contains ${pattern}`)
     );
-    const registrationSource = readSource('src/redux/student/registration/registration-api.ts');
+    const profileSource = readSource('src/redux/student/records/student-record-profile-api.ts');
 
     expect(offenders).toEqual([]);
-    expect(registrationSource).toContain(registrationDocumentEndpoint);
+    expect(profileSource).toContain(recordDocumentEndpoint);
   });
 
   it('validates manual roll numbers against duplicates, positive values, and student count', () => {

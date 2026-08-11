@@ -121,9 +121,11 @@ export default function PublicEvents({
         `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/events/${admissionEvent.id}/${action}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admission-Access-Session': accessSessionToken,
+          },
           body: JSON.stringify({
-            accessSessionToken,
             ...(cancel ? { reason: 'Cancelled from the family admissions center.' } : {}),
           }),
         }

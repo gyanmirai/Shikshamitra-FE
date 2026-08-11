@@ -1,5 +1,4 @@
 import {
-  AdmissionInquiryStage,
   AdmissionInquiryChannel,
   AdmissionCrmLeadPriority,
   AdmissionCrmPipelineColumnKey,
@@ -131,25 +130,9 @@ export type EnrollmentWorkspaceStatePatch = Partial<
   Record<keyof EnrollmentWorkspaceState, EnrollmentWorkspaceState[keyof EnrollmentWorkspaceState]>
 >;
 
-type LegacyWorkspaceFilters = {
-  stageFilter?: AdmissionInquiryStage | 'all';
-  channelFilter?: AdmissionInquiryChannel | 'all';
-  campaignFilter?: string;
-  ownerFilter?: string;
-  classFilter?: string;
-  scoreBandFilter?: ScoreBandFilter;
-  priorityFilter?: AdmissionCrmLeadPriority | 'all';
-  operationsQueueType?: AdmissionCrmOperationsQueueType;
-  operationsOwnerUserId?: string;
-  operationsAssignedToUserId?: string;
-  operationsUrgentOnly?: boolean;
-  operationsMinimumAgeDays?: string;
-};
-
 const enumValues = <T extends number>(source: Record<string, string | number>) =>
   new Set(Object.values(source).filter((value): value is T => typeof value === 'number'));
 
-const stages = enumValues<AdmissionInquiryStage>(AdmissionInquiryStage);
 const pipelineColumns = enumValues<AdmissionCrmPipelineColumnKey>(AdmissionCrmPipelineColumnKey);
 const channels = enumValues<AdmissionInquiryChannel>(AdmissionInquiryChannel);
 const priorities = enumValues<AdmissionCrmLeadPriority>(AdmissionCrmLeadPriority);
@@ -241,22 +224,15 @@ const parsePositiveInteger = (value: string | null, maximum = 10_000) => {
 
 export const getWorkspaceFromPathname = (pathname: string): EnrollmentWorkspace => {
   if (pathname.includes('/applicants/')) return 'applicant';
-  if (/\/student\/enrollment\/?$/.test(pathname)) return 'overview';
   if (pathname.includes('/my-work')) return 'overview';
-  if (pathname.includes('/overview')) return 'overview';
   if (pathname.includes('/settings')) return 'settings';
   if (pathname.includes('/entrance-exams')) return 'exams';
-  if (pathname.includes('/exams')) return 'exams';
   if (pathname.includes('/visits-events')) return 'events';
   if (pathname.includes('/registration')) return 'registrations';
-  if (pathname.includes('/registrations')) return 'registrations';
   if (pathname.includes('/class-placement')) return 'offers';
-  if (pathname.includes('/offers-seats')) return 'offers';
   if (pathname.includes('/activation')) return 'activation';
   if (pathname.includes('/follow-ups-messages')) return 'operations';
-  if (pathname.includes('/operations')) return 'operations';
   if (pathname.includes('/reports')) return 'analytics';
-  if (pathname.includes('/analytics')) return 'analytics';
   return 'pipeline';
 };
 
@@ -298,9 +274,7 @@ export const parseEnrollmentWorkspaceState = (
   const reportViewValue = searchParams.get('report') as EnrollmentReportView | null;
   const settingsPanelValue = searchParams.get('panel') as EnrollmentSettingsPanel | null;
   const applicantTabValue = searchParams.get('tab') as EnrollmentApplicantTab | null;
-  const rawApplicantTab = searchParams.get('tab');
   const examActionValue = searchParams.get('examAction') as EnrollmentExamAction | null;
-  const legacyStage = parseEnum(searchParams.get('stage'), stages);
 
   return {
     ...defaults,
@@ -313,15 +287,11 @@ export const parseEnrollmentWorkspaceState = (
     applicant: parseToken(searchParams.get('applicant')) ?? defaults.applicant,
     workItem: parseToken(searchParams.get('workItem')) ?? defaults.workItem,
     applicantTab:
-      rawApplicantTab === 'overview' || rawApplicantTab === 'activity'
-        ? 'next'
-        : applicantTabValue && applicantTabs.has(applicantTabValue)
-          ? applicantTabValue
-          : defaults.applicantTab,
+      applicantTabValue && applicantTabs.has(applicantTabValue)
+        ? applicantTabValue
+        : defaults.applicantTab,
     applicantActivity:
-      searchParams.get('activity') === '1' || rawApplicantTab === 'activity'
-        ? true
-        : defaults.applicantActivity,
+      searchParams.get('activity') === '1' ? true : defaults.applicantActivity,
     examAction:
       examActionValue && examActions.has(examActionValue) ? examActionValue : defaults.examAction,
     page: parsePositiveInteger(searchParams.get('page')) ?? defaults.page ?? 1,
@@ -335,9 +305,7 @@ export const parseEnrollmentWorkspaceState = (
         ? viewValue
         : (defaults.view as PipelineView | undefined),
     pipelineColumn:
-      parseEnum(searchParams.get('column'), pipelineColumns) ??
-      mapLegacyStageToPipelineColumn(legacyStage) ??
-      defaults.pipelineColumn,
+      parseEnum(searchParams.get('column'), pipelineColumns) ?? defaults.pipelineColumn,
     channel: parseEnum(searchParams.get('channel'), channels) ?? defaults.channel,
     campaign: parseToken(searchParams.get('campaign')) ?? defaults.campaign,
     owner: parseToken(searchParams.get('owner')) ?? defaults.owner,
@@ -444,53 +412,4 @@ export const areSearchParamsEquivalent = (left: URLSearchParams, right: URLSearc
     );
 
   return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
-};
-
-export const migrateLegacyWorkspaceFilters = (
-  serialized: string | null
-): Partial<EnrollmentWorkspaceState> => {
-  if (!serialized) return {};
-  try {
-    const legacy = JSON.parse(serialized) as LegacyWorkspaceFilters;
-    return {
-      pipelineColumn:
-        legacy.stageFilter === 'all'
-          ? undefined
-          : mapLegacyStageToPipelineColumn(legacy.stageFilter),
-      channel: legacy.channelFilter === 'all' ? undefined : legacy.channelFilter,
-      campaign:
-        legacy.campaignFilter === 'all' ? undefined : parseToken(legacy.campaignFilter || null),
-      owner: legacy.ownerFilter === 'all' ? undefined : parseToken(legacy.ownerFilter || null),
-      className: legacy.classFilter === 'all' ? undefined : parseToken(legacy.classFilter || null),
-      score: legacy.scoreBandFilter === 'all' ? undefined : legacy.scoreBandFilter,
-      priority: legacy.priorityFilter === 'all' ? undefined : legacy.priorityFilter,
-      queue: legacy.operationsQueueType,
-      assignee: parseToken(legacy.operationsAssignedToUserId || null),
-      urgent: legacy.operationsUrgentOnly || undefined,
-      minimumAgeDays: parsePositiveInteger(legacy.operationsMinimumAgeDays || null, 3_650),
-    };
-  } catch {
-    return {};
-  }
-};
-
-const mapLegacyStageToPipelineColumn = (
-  stage: AdmissionInquiryStage | undefined
-): AdmissionCrmPipelineColumnKey | undefined => {
-  switch (stage) {
-    case AdmissionInquiryStage.NewInquiry:
-      return AdmissionCrmPipelineColumnKey.NewInquiry;
-    case AdmissionInquiryStage.FollowUp:
-      return AdmissionCrmPipelineColumnKey.FollowUp;
-    case AdmissionInquiryStage.ExamReady:
-    case AdmissionInquiryStage.ExamScheduled:
-      return AdmissionCrmPipelineColumnKey.ExamPending;
-    case AdmissionInquiryStage.ExamCompleted:
-    case AdmissionInquiryStage.Waitlisted:
-      return AdmissionCrmPipelineColumnKey.ExamDone;
-    case AdmissionInquiryStage.Eligible:
-      return AdmissionCrmPipelineColumnKey.Eligible;
-    default:
-      return undefined;
-  }
 };

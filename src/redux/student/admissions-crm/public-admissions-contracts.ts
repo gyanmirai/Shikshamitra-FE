@@ -1,22 +1,22 @@
 import type { FetchArgs } from '@reduxjs/toolkit/query';
 
-import { ApplyAdmissionCrmDeliveryCallbackDto } from './communication-exams-events-contracts';
-
 export const buildSavePublicAdmissionCrmRegistrationRequest = ({
   tenantId,
   token,
+  accessSessionToken,
   body,
 }: {
   tenantId: string;
   token: string;
+  accessSessionToken: string;
   body: {
-    accessSessionToken: string;
     concurrencyStamp: string;
     responses: Record<string, unknown>;
   };
 }): FetchArgs => ({
   url: `/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/registration`,
   method: 'PUT',
+  headers: { 'X-Admission-Access-Session': accessSessionToken },
   body,
 });
 
@@ -28,20 +28,6 @@ export const buildPublicAdmissionCrmDocumentUploadUrl = ({
   token: string;
 }) =>
   `/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/registration/documents`;
-
-export const buildPublicAdmissionCrmDeliveryCallbackRequest = ({
-  tenantId,
-  deliveryLogId,
-  body,
-}: {
-  tenantId: string;
-  deliveryLogId: string;
-  body: ApplyAdmissionCrmDeliveryCallbackDto;
-}): FetchArgs => ({
-  url: `/public/student-enrollment/admissions-crm/${tenantId}/communication/delivery-logs/${deliveryLogId}/callback`,
-  method: 'POST',
-  body,
-});
 
 export const buildPublicAdmissionCrmFormRequest = ({
   tenantId,

@@ -10,7 +10,7 @@ import StateComponent from 'src/components/stardard-address/state-component';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { Box, Grid, Divider, TextField, Typography, InputAdornment } from '@mui/material';
-import { useLazySearchStudentRegistrationsQuery } from 'src/redux/student/registration/registration-api';
+import { useLazySearchStudentRegistrationsQuery } from 'src/redux/student/records/student-record-profile-api';
 import {
   CardActions,
   SectionCard,

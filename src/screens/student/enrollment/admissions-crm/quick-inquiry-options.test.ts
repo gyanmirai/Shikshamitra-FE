@@ -94,7 +94,7 @@ describe('Add Inquiry options', () => {
     });
   });
 
-  it('keeps setup route types usable without legacy route definitions', () => {
+  it('keeps setup route types usable without duplicate route definitions', () => {
     const options = mapQuickInquiryOptions({
       academicYearId: 'year-1',
       cycleName: '2026-27 admissions',

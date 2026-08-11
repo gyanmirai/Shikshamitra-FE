@@ -30,8 +30,8 @@ const RenderAcademicYear = (props: any) => {
           setFieldValue('board', null);
           setFieldValue('medium', null);
           setFieldValue('class', null);
-          setFieldValue('inquiryPreference', null);
-          setFieldValue('inquiryPreferenceName', '');
+          setFieldValue('inquirySource', null);
+          setFieldValue('inquirySourceName', '');
         }}
         error={!!(touched.academicYear && errors.academicYear) || false}
         helperText={(touched.academicYear && errors.academicYear) || ''}

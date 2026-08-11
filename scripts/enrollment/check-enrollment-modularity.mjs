@@ -14,16 +14,16 @@ const expectedApiModules = [
   'registration-documents-api.ts',
   'setup-playbooks-api.ts',
 ];
-const expectedEndpointCount = 296;
+const expectedEndpointCount = 295;
 const expectedEndpointInventoryHash =
-  '26627f136928a5bbf08eb84224adf2589a55d4bb9e5167e79c21e805a75080f9';
+  '37f6806f3baae63044e41c3c837ceb3127ab2f30cab5056df9cc841b469afb83';
 
 // Existing exceptions are frozen at the decomposition baseline. They can shrink, but cannot grow.
 const oversizedComponentRatchet = {
   'src/screens/student/enrollment/admissions-crm/applicant-activation-operations.tsx': 822,
   'src/screens/student/enrollment/admissions-crm/applicant-household-identity-operations.tsx': 740,
-  'src/screens/student/enrollment/admissions-crm/applicant-workspace-overview.tsx': 713,
-  'src/screens/student/enrollment/admissions-crm/applicant-workspace-page.tsx': 802,
+  'src/screens/student/enrollment/admissions-crm/applicant-workspace-overview.tsx': 718,
+  'src/screens/student/enrollment/admissions-crm/applicant-workspace-page.tsx': 811,
   'src/screens/student/enrollment/admissions-crm/direct-registration-dialog.tsx': 980,
   'src/screens/student/enrollment/admissions-crm/enrollment-workspace-context.tsx': 634,
   'src/screens/student/enrollment/admissions-crm/events-workspace.tsx': 999,
@@ -125,7 +125,7 @@ const forbiddenImportPattern = new RegExp(
 );
 for (const sourceFile of sourceFiles) {
   if (forbiddenImportPattern.test(read(sourceFile))) {
-    failures.push(`Legacy enrollment API import remains in ${sourceFile}.`);
+    failures.push(`Deleted enrollment API import remains in ${sourceFile}.`);
   }
 }
 

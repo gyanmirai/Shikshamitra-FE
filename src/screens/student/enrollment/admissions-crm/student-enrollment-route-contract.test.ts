@@ -90,34 +90,6 @@ describe('Student Enrollment workspace route contracts', () => {
     ).toBe(false);
   });
 
-  it('redirects the Enrollment root to the canonical My Work route', () => {
-    const source = read('src', 'app', '(auth-route)', 'student', 'enrollment', 'page.tsx');
-    expect(source).toContain(
-      'redirectEnrollmentRoute(studentPaths.enrollment.myWork, searchParams)'
-    );
-  });
-
-  it.each([
-    ['overview', 'studentPaths.enrollment.myWork'],
-    ['exams', 'studentPaths.enrollment.entranceExams'],
-    ['registrations', 'studentPaths.enrollment.registration'],
-    ['offers-seats', 'studentPaths.enrollment.classPlacement'],
-    ['operations', 'studentPaths.enrollment.followUpsMessages'],
-    ['analytics', 'studentPaths.enrollment.reports'],
-  ])('redirects the legacy %s route without discarding URL state', (route, destination) => {
-    const source = read('src', 'app', '(auth-route)', 'student', 'enrollment', route, 'page.tsx');
-    expect(source).toContain('searchParams: EnrollmentRouteSearchParams');
-    expect(source).toContain(`redirectEnrollmentRoute(${destination}, searchParams)`);
-  });
-
-  it('preserves repeated query values and explicit route overrides during redirects', () => {
-    const source = read('src', 'routes', 'enrollment-redirect.ts');
-    expect(source).toContain('value.forEach((entry) => query.append(key, entry))');
-    expect(source).toContain('Object.entries(overrides)');
-    expect(source).toContain('query.set(key, value)');
-    expect(source).toMatch(/`\$\{destination\}\?\$\{serialized\}`/);
-  });
-
   it('keeps bounded server pagination and debounced staff search in owning workspaces', () => {
     const pipeline = read(
       'src',
@@ -227,7 +199,6 @@ describe('Student Enrollment workspace route contracts', () => {
 
   it('keeps the Enrollment navigation and registration title concise', () => {
     const menu = read('src', 'constants', 'student-menu.ts');
-    const root = read('src', 'app', '(auth-route)', 'student', 'enrollment', 'page.tsx');
     const admissionYearRoute = read(
       'src',
       'app',
@@ -252,7 +223,6 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(menu).toContain("admissionYear: '/student/enrollment/settings/admission-year'");
     expect(menu).not.toContain("'/student/enrollment/overview'");
     expect(menu).not.toContain("'/student/enrollment/settings/admission-cycles'");
-    expect(root).toContain('studentPaths.enrollment.myWork');
     expect(admissionYearRoute).toContain('AdmissionYearSetup');
     expect(menu).toContain("title: 'Registration'");
     expect(menu).not.toContain("title: 'Registrations & Documents'");
@@ -277,22 +247,11 @@ describe('Student Enrollment workspace route contracts', () => {
       'admissions-crm',
       'offers-workspace.tsx'
     );
-    const legacyRoute = read(
-      'src',
-      'app',
-      '(auth-route)',
-      'student',
-      'enrollment',
-      'offers-seats',
-      'page.tsx'
-    );
-
     expect(menu).toContain("title: 'Class Placement'");
     expect(menu).toContain("classPlacement: '/student/enrollment/class-placement'");
     expect(menu).not.toContain("'/student/enrollment/offers-seats'");
     expect(setup).toContain("title: 'Class Placement Settings'");
     expect(offers).toContain('title="Class Placement"');
-    expect(legacyRoute).toContain('studentPaths.enrollment.classPlacement');
   });
 
   it('uses the shared compact icon stage filter across enrollment worklists', () => {
@@ -336,17 +295,6 @@ describe('Student Enrollment workspace route contracts', () => {
       'setting',
       'admission-year-setup.tsx'
     );
-    const legacyDetailRoute = read(
-      'src',
-      'app',
-      '(auth-route)',
-      'student',
-      'enrollment',
-      'settings',
-      'admission-cycles',
-      '[academicYearId]',
-      'page.tsx'
-    );
     const academicYearToken = ['$', '{academicYearId}'].join('');
 
     expect(api).toContain(
@@ -370,7 +318,6 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(workspace).toContain("'Review and publish'");
     expect(workspace).toContain('CustomizableTable');
     expect(workspace).toContain('tableId="student-enrollment-admission-year-versions"');
-    expect(legacyDetailRoute).toContain('{ cycle: academicYearId }');
     expect(
       fs.existsSync(
         path.join(
@@ -384,30 +331,6 @@ describe('Student Enrollment workspace route contracts', () => {
         )
       )
     ).toBe(false);
-  });
-
-  it.each([
-    ['journey', 'pipeline'],
-    ['inquiry-capture', 'pipeline'],
-    ['routing-scoring', 'pipeline'],
-    ['entrance-exams', 'entranceExam'],
-    ['registration-documents', 'registration'],
-    ['offers-seats', 'classPlacement'],
-    ['communications', 'communication'],
-    ['automation', 'communication'],
-  ])('redirects the legacy %s settings route to %s', (route, destination) => {
-    const source = read(
-      'src',
-      'app',
-      '(auth-route)',
-      'student',
-      'enrollment',
-      'settings',
-      route,
-      'page.tsx'
-    );
-    expect(source).toContain(`studentPaths.enrollment.settingsSections.${destination}`);
-    expect(source).toContain('searchParams');
   });
 
   it('pins the entrance exam admission status beside the actions column', () => {
@@ -464,7 +387,7 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(myWork).not.toContain("searchParams.get('targetClassSearch')");
   });
 
-  it('renders legacy or unknown admission pathway values without crashing Pipeline', () => {
+  it('renders unknown admission pathway values without crashing Pipeline', () => {
     const pipeline = read(
       'src',
       'screens',
@@ -661,8 +584,42 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(settings).not.toContain('label="Settings JSON"');
   });
 
-  it('keeps removed legacy Enrollment routes and clients absent', () => {
+  it('keeps removed superseded Enrollment routes and clients absent', () => {
     const removedPaths = [
+      ['src', 'routes', 'enrollment-redirect.ts'],
+      ['src', 'app', '(auth-route)', 'student', 'enrollment', 'page.tsx'],
+      ...['overview', 'exams', 'registrations', 'offers-seats', 'operations', 'analytics'].map(
+        (route) => [
+          'src',
+          'app',
+          '(auth-route)',
+          'student',
+          'enrollment',
+          route,
+          'page.tsx',
+        ]
+      ),
+      ...[
+        'admission-cycles',
+        'journey',
+        'inquiry-capture',
+        'routing-scoring',
+        'entrance-exams',
+        'registration-documents',
+        'offers-seats',
+        'communications',
+        'automation',
+        'governance',
+      ].map((route) => [
+        'src',
+        'app',
+        '(auth-route)',
+        'student',
+        'enrollment',
+        'settings',
+        route,
+        'page.tsx',
+      ]),
       ['src', 'app', '(auth-route)', 'student', 'enrollment', 'follow-up', 'page.tsx'],
       ['src', 'app', '(auth-route)', 'student', 'enrollment', 'enroll', 'page.tsx'],
       [

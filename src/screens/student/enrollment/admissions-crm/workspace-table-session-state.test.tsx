@@ -54,11 +54,7 @@ describe('Student Enrollment table session state', () => {
     });
   });
 
-  it('keeps sensitive state isolated by tenant and user scope and removes legacy keys', () => {
-    window.sessionStorage.setItem(
-      'student-enrollment:table-state:v1:pipeline:year-1',
-      JSON.stringify({ version: 1, search: 'legacy phone', filters: [] })
-    );
+  it('keeps sensitive state isolated by tenant and user scope', () => {
     writeWorkspaceTableSessionState('pipeline:year-1:tenant-a:user-a', {
       search: '9988776655',
       filters: [],
@@ -68,9 +64,6 @@ describe('Student Enrollment table session state', () => {
       '9988776655'
     );
     expect(readWorkspaceTableSessionState('pipeline:year-1:tenant-a:user-b').search).toBe('');
-    expect(
-      window.sessionStorage.getItem('student-enrollment:table-state:v1:pipeline:year-1')
-    ).toBeNull();
   });
 
   it('persists hook updates and keeps workspace scopes isolated', async () => {

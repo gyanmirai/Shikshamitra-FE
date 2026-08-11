@@ -15,7 +15,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useGetStudentDocumentsQuery,
   useUploadStudentDocumentsMutation,
-} from 'src/redux/student/registration/registration-api';
+} from 'src/redux/student/records/student-record-profile-api';
 import {
   Box,
   Grid,

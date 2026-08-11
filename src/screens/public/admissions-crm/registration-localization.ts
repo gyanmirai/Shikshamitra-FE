@@ -6,11 +6,7 @@ type LocalizedOptions = Record<string, string[]> | undefined;
 const resolveLocalizedValue = <T>(
   localizations: Record<string, T> | undefined,
   language: PublicAdmissionsLanguage
-) =>
-  localizations?.[language] ??
-  Object.entries(localizations || {}).find(
-    ([localizationLanguage]) => localizationLanguage.toLowerCase() === language
-  )?.[1];
+) => localizations?.[language];
 
 export const resolveRegistrationText = (
   fallback: string | null | undefined,

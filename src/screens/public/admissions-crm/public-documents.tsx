@@ -111,14 +111,17 @@ export default function PublicDocuments({
     setUploadingKey(document.requirementKey);
     try {
       const form = new FormData();
-      form.append('AccessSessionToken', accessSessionToken);
       form.append('RequirementKey', document.requirementKey);
       if (validUntil[document.requirementKey])
         form.append('ValidUntil', validUntil[document.requirementKey]);
       form.append('File', file);
       const response = await fetch(
         `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/registration/documents`,
-        { method: 'POST', body: form }
+        {
+          method: 'POST',
+          headers: { 'X-Admission-Access-Session': accessSessionToken },
+          body: form,
+        }
       );
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(

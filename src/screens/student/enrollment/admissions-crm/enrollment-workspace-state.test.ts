@@ -1,6 +1,5 @@
 import { it, expect, describe } from 'vitest';
 import {
-  AdmissionInquiryStage,
   AdmissionInquiryChannel,
   AdmissionCrmPipelineColumnKey,
   AdmissionCrmServiceHandoffStatus,
@@ -29,7 +28,6 @@ import {
   areSearchParamsEquivalent,
   getPersonaWorkspaceDefaults,
   parseEnrollmentWorkspaceState,
-  migrateLegacyWorkspaceFilters,
   serializeEnrollmentWorkspaceState,
 } from './enrollment-workspace-state';
 
@@ -99,35 +97,7 @@ describe('Enrollment workspace URL state', () => {
     expect(serialized.get('eventStatus')).toBe(String(AdmissionCrmEventStatus.Published));
   });
 
-  it('canonicalizes the legacy Activity tab to next with a URL-backed drawer', () => {
-    const returnTo = '/student/enrollment/pipeline?cycle=cycle-1&view=list&page=3';
-    const state = parseEnrollmentWorkspaceState(
-      new URLSearchParams({
-        applicant: 'lead-1',
-        return: returnTo,
-        tab: 'activity',
-      })
-    );
-
-    expect(state).toMatchObject({
-      applicant: 'lead-1',
-      returnTo,
-      applicantTab: 'next',
-      applicantActivity: true,
-    });
-
-    const serialized = serializeEnrollmentWorkspaceState(state);
-    expect(serialized.get('applicant')).toBe('lead-1');
-    expect(serialized.get('return')).toBe(returnTo);
-    expect(serialized.get('tab')).toBe('next');
-    expect(serialized.get('activity')).toBe('1');
-  });
-
-  it('canonicalizes the legacy Overview tab and preserves targeted exam handoffs', () => {
-    const legacy = parseEnrollmentWorkspaceState(new URLSearchParams({ tab: 'overview' }));
-    expect(legacy.applicantTab).toBe('next');
-    expect(serializeEnrollmentWorkspaceState(legacy).get('tab')).toBe('next');
-
+  it('preserves targeted exam handoffs', () => {
     const handoff = parseEnrollmentWorkspaceState(
       new URLSearchParams({
         applicant: 'lead-1',
@@ -217,18 +187,10 @@ describe('Enrollment workspace URL state', () => {
     expect(getWorkspaceFromPathname('/student/enrollment/applicants/lead-1')).toBe('applicant');
   });
 
-  it('treats Admission Year workspace tab routes as settings paths without query-owned tab state', () => {
-    expect(
-      getWorkspaceFromPathname('/student/enrollment/settings/admission-cycles/cycle-1/setup')
-    ).toBe('settings');
-    expect(
-      getWorkspaceFromPathname(
-        '/student/enrollment/settings/admission-cycles/cycle-1/journey-rules'
-      )
-    ).toBe('settings');
-    expect(
-      getWorkspaceFromPathname('/student/enrollment/settings/admission-cycles/cycle-1/activity')
-    ).toBe('settings');
+  it('treats the canonical Admission Year route as settings without query-owned tab state', () => {
+    expect(getWorkspaceFromPathname('/student/enrollment/settings/admission-year')).toBe(
+      'settings'
+    );
 
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams('cycle=cycle-1&board=board-1&medium=medium-1&tab=setup')
@@ -254,25 +216,6 @@ describe('Enrollment workspace URL state', () => {
     expect(state.page).toBe(1);
     expect(state.from).toBeUndefined();
     expect(state.settingsPanel).toBeUndefined();
-  });
-
-  it('migrates non-sensitive legacy filters and excludes free-text search', () => {
-    const migrated = migrateLegacyWorkspaceFilters(
-      JSON.stringify({
-        searchText: 'parent phone number',
-        stageFilter: AdmissionInquiryStage.FollowUp,
-        channelFilter: AdmissionInquiryChannel.WalkInReception,
-        operationsQueueType: AdmissionCrmOperationsQueueType.RejectedDocument,
-        operationsUrgentOnly: true,
-      })
-    );
-    expect(migrated).toEqual({
-      pipelineColumn: AdmissionCrmPipelineColumnKey.FollowUp,
-      channel: AdmissionInquiryChannel.WalkInReception,
-      queue: AdmissionCrmOperationsQueueType.RejectedDocument,
-      urgent: true,
-    });
-    expect(migrated).not.toHaveProperty('searchText');
   });
 
   it('provides role-focused defaults without changing persisted business state', () => {

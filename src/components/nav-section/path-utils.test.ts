@@ -7,8 +7,8 @@ describe('preservePathQueryParams', () => {
     const current = new URLSearchParams('cycle=academic-year-2&applicant=private-lead-id');
 
     expect(
-      preservePathQueryParams('/student/enrollment/settings/journey', ['cycle'], current)
-    ).toBe('/student/enrollment/settings/journey?cycle=academic-year-2');
+      preservePathQueryParams('/student/enrollment/settings/pipeline', ['cycle'], current)
+    ).toBe('/student/enrollment/settings/pipeline?cycle=academic-year-2');
   });
 
   it('keeps existing target parameters and ignores missing values', () => {

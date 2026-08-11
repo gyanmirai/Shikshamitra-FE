@@ -12,7 +12,7 @@ import {
   CardActions,
 } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
-import RenderInquiryPrefrance from '../RenderInquiryPrefrance';
+import RenderInquirySource from '../RenderInquirySource';
 
 import type { SectionProps } from './section-types';
 
@@ -294,11 +294,11 @@ const IdentificationSection: React.FC<SectionProps> = ({
     <Grid size={{ xs: 12, md: 3 }}>
       <ShakingTextField
         error={
-          (formik.touched as any).inquiryPreference &&
-          Boolean((formik.errors as any).inquiryPreference)
+          (formik.touched as any).inquirySource &&
+          Boolean((formik.errors as any).inquirySource)
         }
       >
-        <RenderInquiryPrefrance formik={formik} disabled={!isEdit.value} />
+		<RenderInquirySource formik={formik} disabled={!isEdit.value} />
       </ShakingTextField>
     </Grid>
 

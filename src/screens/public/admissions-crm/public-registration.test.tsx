@@ -121,9 +121,12 @@ describe('PublicRegistration', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const request = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(request.headers).toMatchObject({
+      'X-Admission-Access-Session': 'session-1',
+    });
     expect(JSON.parse(String(request.body))).toMatchObject({
-      accessSessionToken: 'session-1',
       concurrencyStamp: 'version-1',
     });
+    expect(JSON.parse(String(request.body))).not.toHaveProperty('accessSessionToken');
   });
 });

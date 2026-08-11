@@ -126,7 +126,6 @@ describe('communication-exams-events admissions CRM API contracts', () => {
         statusPath: 'event.status',
         statusDetailsPath: 'event.description',
         providerMessageIdPath: 'message.id',
-        callbackSecretPath: 'auth.secret',
       },
     };
 

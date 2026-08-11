@@ -1,7 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
 import {
-  buildInquirySourceOptions,
   sortInquirySourcesForSelection,
   buildInquirySourceSelectOptions,
   resolveInquirySourceAcademicYearId,
@@ -14,23 +13,6 @@ describe('Inquiry Source helpers', () => {
     );
     expect(resolveInquirySourceAcademicYearId('', 'current-year')).toBe('current-year');
     expect(resolveInquirySourceAcademicYearId(null, null)).toBeUndefined();
-  });
-
-  it('keeps existing inactive selected source visible without duplicating active options', () => {
-    const activeItems = [{ id: 'active-source', preferenceName: 'Walk In', isActive: true }];
-
-    expect(
-      buildInquirySourceOptions(activeItems, 'legacy-source', 'Old Campaign').map((item) => ({
-        id: item.id,
-        preferenceName: item.preferenceName,
-        isActive: item.isActive,
-      }))
-    ).toEqual([
-      { id: 'active-source', preferenceName: 'Walk In', isActive: true },
-      { id: 'legacy-source', preferenceName: 'Old Campaign (Inactive)', isActive: false },
-    ]);
-
-    expect(buildInquirySourceOptions(activeItems, 'active-source', 'Walk In')).toBe(activeItems);
   });
 
   it('sorts inquiry sources for settings selectors by display order and name', () => {
@@ -47,7 +29,7 @@ describe('Inquiry Source helpers', () => {
     expect(
       buildInquirySourceSelectOptions(
         [{ id: 'known-source', preferenceName: 'Walk In', displayOrder: 10, isActive: true }],
-        ['known-source', 'legacy-source-id', 'legacy-source-id']
+        ['known-source', 'unavailable-source-id', 'unavailable-source-id']
       ).map((item) => ({
         id: item.id,
         preferenceName: item.preferenceName,
@@ -56,8 +38,8 @@ describe('Inquiry Source helpers', () => {
     ).toEqual([
       { id: 'known-source', preferenceName: 'Walk In', isActive: true },
       {
-        id: 'legacy-source-id',
-        preferenceName: 'Unknown source (legacy-s)',
+        id: 'unavailable-source-id',
+        preferenceName: 'Unknown source (unavaila)',
         isActive: false,
       },
     ]);

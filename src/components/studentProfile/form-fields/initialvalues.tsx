@@ -61,8 +61,8 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
   addressLine2: editData?.address2 || '',
   addressLine3: editData?.address3 || '',
   pinCode: editData?.pincode || '',
-  inquiryPreference: editData?.inquiryPreferenceId || null,
-  inquiryPreferenceName: editData?.inquiryPreference || '',
+  inquirySource: editData?.inquirySourceId || null,
+  inquirySourceName: editData?.inquirySource || '',
   apparId: editData?.apparId || '',
   apaarConsentStatus: editData?.apaarConsentStatus ?? '',
   apaarVerificationStatus: editData?.apaarVerificationStatus ?? '',
@@ -323,7 +323,6 @@ export const additionalDetailsInitialValues = (
   singleParentChild: editData?.isSingleParentChild || false,
   singleChild: editData?.isSingleChild || false,
   libraryMember: editData?.isLibraryMember || false,
-  transportMember: editData?.isTransportMember || false,
 });
 
 export const medicalFieldsInitialValues = (editData?: IMedicalInformationResponse | null) => ({

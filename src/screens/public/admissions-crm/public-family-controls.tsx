@@ -151,8 +151,11 @@ export default function PublicFamilyControls({
         `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/communication-preferences`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessSessionToken, ...draft }),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admission-Access-Session': accessSessionToken,
+          },
+          body: JSON.stringify(draft),
         }
       );
       if (!response.ok) {
@@ -189,8 +192,11 @@ export default function PublicFamilyControls({
         `${API_BASE}/public/student-enrollment/admissions-crm/${tenantId}/status/${token}/withdraw`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessSessionToken, reason: withdrawReason.trim() }),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admission-Access-Session': accessSessionToken,
+          },
+          body: JSON.stringify({ reason: withdrawReason.trim() }),
         }
       );
       if (!response.ok) {

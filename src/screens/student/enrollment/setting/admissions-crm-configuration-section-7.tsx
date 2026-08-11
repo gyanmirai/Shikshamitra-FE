@@ -455,21 +455,6 @@ export function AdmissionsCrmConfigurationSection7() {
                             )
                           }
                         />
-                        <TextField
-                          size="small"
-                          label="Callback secret path"
-                          value={getAdmissionCrmProviderCallbackMappingPath(
-                            providerForm.settingsJson,
-                            'callbackSecretPath'
-                          )}
-                          onChange={(event) =>
-                            handleProviderCallbackMappingPathChange(
-                              provider.channel,
-                              'callbackSecretPath',
-                              event.target.value
-                            )
-                          }
-                        />
                       </Box>
                       <LoadingButton
                         size="small"

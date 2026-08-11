@@ -552,7 +552,6 @@ export type AdmissionCrmCommunicationProviderSettingsDto = {
     statusPath?: string | null;
     statusDetailsPath?: string | null;
     providerMessageIdPath?: string | null;
-    callbackSecretPath?: string | null;
   };
 };
 
@@ -635,14 +634,6 @@ export type AdmissionCrmMessageTemplatePreviewDto = {
   renderedBody: string;
   resolvedVariables: Record<string, string>;
   unresolvedVariables: string[];
-};
-
-export type ApplyAdmissionCrmDeliveryCallbackDto = {
-  status?: string;
-  statusDetails?: string | null;
-  providerMessageId?: string | null;
-  callbackSecret?: string;
-  payload?: Record<string, unknown>;
 };
 
 export const buildAdmissionCrmExamListRequest = ({

@@ -189,7 +189,6 @@ export type AdmissionCrmProviderCallbackMappings = {
   statusPath?: string;
   statusDetailsPath?: string;
   providerMessageIdPath?: string;
-  callbackSecretPath?: string;
 };
 
 export type AdmissionCrmProviderCallbackMappingField = keyof AdmissionCrmProviderCallbackMappings;

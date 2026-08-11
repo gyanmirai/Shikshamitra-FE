@@ -245,11 +245,6 @@ export const studentReportType = {
   studentReportExport: 'Student-Report-Export',
 } as const;
 
-// ===== Entrance Exam API (reducerPath: EntranceExamApi) =====
-export const entranceExamType = {
-  entranceExam: 'Entrance-Exam',
-} as const;
-
 // ===== Event Holiday API (reducerPath: EventHolidayApi) =====
 export const eventHolidayType = {
   eventHoliday: 'EventHoliday',
@@ -325,11 +320,6 @@ export const incomeType = {
 // ===== Income Details API (reducerPath: IncomeDetailsApi) =====
 export const incomeDetailsType = {
   incomeDetails: 'IncomeDetails',
-} as const;
-
-// ===== Inquiry Preference API (reducerPath: inquiryPreferenceApi) =====
-export const inquiryPreferenceType = {
-  studentDocumentType: 'Student-Document-Type',
 } as const;
 
 // ===== Institute Setup API (reducerPath: instituteSetupApi) =====
@@ -563,9 +553,9 @@ export const studentReceiptType = {
   studentReceipt: 'StudentReceipt',
 } as const;
 
-// ===== Student Registration API (reducerPath: StudentRegistrationApi) =====
-export const studentRegistrationType = {
-  studentRegistration: 'Student-Registration',
+// ===== Student record profile API =====
+export const studentRecordProfileType = {
+  studentProfile: 'Student-Profile',
   studentDocument: 'Student-Document',
 } as const;
 
@@ -579,10 +569,6 @@ export const studentTakeAttendanceType = {
   studentTakeAttendance: 'Student-Take-Attendance',
 } as const;
 
-// ===== Bulk Student API (reducerPath: BulkStudentApi) =====
-export const bulkStudentType = {
-  studentDocumentType: 'Student-Document-Type',
-} as const;
 
 // ===== Tenant API (reducerPath: tenantApi) =====
 export const tenantType = {
@@ -670,7 +656,6 @@ export const allTagTypes = {
   ...earningComponentType,
   ...employeeType,
   ...studentReportType,
-  ...entranceExamType,
   ...eventHolidayType,
   ...expenseType,
   ...feeConcessionType,
@@ -680,7 +665,6 @@ export const allTagTypes = {
   ...budgetsCategoryType,
   ...incomeType,
   ...incomeDetailsType,
-  ...inquiryPreferenceType,
   ...instituteSetupType,
   ...invoiceType,
   ...issueReturnFormType,
@@ -720,10 +704,10 @@ export const allTagTypes = {
   ...studentInvoiceType,
   ...studentLeaveType,
   ...studentReceiptType,
-  ...studentRegistrationType,
+  ...studentRecordProfileType,
   ...studentRollNumberType,
   ...studentTakeAttendanceType,
-  ...bulkStudentType,
+
   ...tenantType,
   ...transportType,
   ...yearType,

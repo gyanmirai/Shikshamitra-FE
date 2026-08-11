@@ -11,7 +11,7 @@ import {
   useGetPreviousSchoolDetailsQuery,
   useGetStudentAdditionalDetailsQuery,
   useGetStudentCommunicationDetailsQuery,
-} from 'src/redux/student/registration/registration-api';
+} from 'src/redux/student/records/student-record-profile-api';
 
 import { familyFields } from './form-fields/register-fields';
 import { generalFormFields } from './form-fields/GeneralFormFields';

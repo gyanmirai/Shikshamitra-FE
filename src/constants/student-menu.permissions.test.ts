@@ -41,13 +41,14 @@ describe('student permission groups', () => {
     expect(shellSource).toContain('StudentPermissionGuard');
 
     const workspacePaths = [
+      'src/app/(auth-route)/student/enrollment/my-work/page.tsx',
       'src/app/(auth-route)/student/enrollment/pipeline/page.tsx',
-      'src/app/(auth-route)/student/enrollment/exams/page.tsx',
-      'src/app/(auth-route)/student/enrollment/registrations/page.tsx',
-      'src/app/(auth-route)/student/enrollment/offers-seats/page.tsx',
+      'src/app/(auth-route)/student/enrollment/entrance-exams/page.tsx',
+      'src/app/(auth-route)/student/enrollment/registration/page.tsx',
+      'src/app/(auth-route)/student/enrollment/class-placement/page.tsx',
       'src/app/(auth-route)/student/enrollment/activation/page.tsx',
-      'src/app/(auth-route)/student/enrollment/operations/page.tsx',
-      'src/app/(auth-route)/student/enrollment/analytics/page.tsx',
+      'src/app/(auth-route)/student/enrollment/follow-ups-messages/page.tsx',
+      'src/app/(auth-route)/student/enrollment/reports/page.tsx',
       'src/app/(auth-route)/student/attendance/layout.tsx',
       'src/app/(auth-route)/student/attendance/leave-absent/layout.tsx',
       'src/app/(auth-route)/student/attendance/notification/layout.tsx',

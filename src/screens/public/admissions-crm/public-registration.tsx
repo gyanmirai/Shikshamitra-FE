@@ -137,9 +137,11 @@ export default function PublicRegistration({
     try {
       const response = await fetch(path, {
         method: submit ? 'POST' : 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admission-Access-Session': accessSessionToken,
+        },
         body: JSON.stringify({
-          accessSessionToken,
           concurrencyStamp: application.concurrencyStamp,
           responses,
         }),

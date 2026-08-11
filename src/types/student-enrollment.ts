@@ -22,7 +22,7 @@ export interface IInquiryFormValues {
   primaryContactNumber: string;
   secondaryContactNumber: string;
   previousSchool: string;
-  inquiryPreferences: string;
+  inquirySources: string;
   country: { name: ICountry['name']; isoCode: ICountry['isoCode'] };
   city: { name: ICity['name'] };
   state: { name: IState['name']; isoCode: IState['isoCode'] };
@@ -57,8 +57,8 @@ export interface IInquiryResponse {
   primaryContactNo: string;
   secondaryContactNo: string;
   previousSchool: string;
-  inquiryPreference: string;
-  inquiryPreferenceId: string;
+  inquirySource: string;
+  inquirySourceId: string;
   nextReminderDate: string;
 
   formNo: string;
@@ -114,7 +114,7 @@ export interface StudentMedicalRecords {
   immunisationRemarks: string;
 }
 
-export interface InquiryPreference {
+export interface InquirySource {
   id: string;
   creationTime: string;
   creatorId: string;
@@ -232,7 +232,7 @@ export interface IInquiryData {
   studentName: string;
   id: string;
   userId: string;
-  inquiryPreferencesId: string;
+  inquirySourcesId: string;
   studentEnrollmentState: number;
   inquiryNumber: string | undefined;
   formNumber: string;
@@ -282,8 +282,8 @@ export interface IInquiryData {
   standard: Standards;
   division: Division;
   divisionId: string;
-  inquiryPreferenceId: string;
-  inquiryPreference: InquiryPreference;
+  inquirySourceId: string;
+  inquirySource: InquirySource;
   studentBasicDetails: StudentBasicDetails;
   fatherDetails: ParentDetails;
   motherDetails: ParentDetails;
