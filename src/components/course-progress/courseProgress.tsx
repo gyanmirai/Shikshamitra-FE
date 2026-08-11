@@ -23,7 +23,9 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Label } from 'src/components/label';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
   Card,
@@ -34,10 +36,14 @@ import {
   MenuList,
   MenuItem,
   TextField,
+  Accordion,
   Typography,
   LinearProgress,
   DialogActions,
+  AccordionSummary,
+  AccordionDetails,
   CircularProgress,
+  IconButton,
 } from '@mui/material';
 import {
   useGetSubjectsQuery,
@@ -155,15 +161,15 @@ const CourseProgressComponent = ({
       : useGetSubjectsQuery,
     params: isEmployeeMode
       ? {
-          employeeId,
-          classId: selectedClass,
-          divisionId: selectedDivision,
-        }
+        employeeId,
+        classId: selectedClass,
+        divisionId: selectedDivision,
+      }
       : {
-          academicMediumId: (currentMedium as Medium)?.id,
-          classId: selectedClass,
-          divisionId: selectedDivision,
-        },
+        academicMediumId: (currentMedium as Medium)?.id,
+        classId: selectedClass,
+        divisionId: selectedDivision,
+      },
     options: {
       skip: !isApiActive,
     },
@@ -269,8 +275,8 @@ const CourseProgressComponent = ({
       : 0;
     const expectedProgress = total
       ? Math.round(
-          chapterDetails.reduce((sum, chapter) => sum + (chapter.expectedProgress ?? 0), 0) / total
-        )
+        chapterDetails.reduce((sum, chapter) => sum + (chapter.expectedProgress ?? 0), 0) / total
+      )
       : 0;
 
     return {
@@ -307,7 +313,7 @@ const CourseProgressComponent = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        <MenuItem onClick={() => {}}>
+        <MenuItem onClick={() => { }}>
           <Iconify icon={GlobalIcons.bell} />
           Reminder
         </MenuItem>
@@ -345,24 +351,37 @@ const CourseProgressComponent = ({
     }
   };
 
+  const navOpen = useBoolean(true);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Grid
-        container
-        spacing={isVertical ? 3 : 1}
-        direction={isVertical ? 'column' : 'row'}
+      <Box
         sx={{
           mt: 0,
           flexGrow: 1,
           display: 'flex',
+          flexDirection: isVertical ? 'column' : 'row',
+          gap: 1.5,
           height: isVertical ? 'auto' : '100%',
-          minHeight: '0',
+          minHeight: 0,
+          width: '100%',
         }}
       >
         {/* Left Section – Course Cards */}
-        <Grid
-          size={{ xs: 12, md: isVertical ? 12 : 3 }}
-          sx={{ height: isVertical ? 'auto' : '100%' }}
+        <Box
+          sx={{
+            width: isVertical
+              ? '100%'
+              : navOpen.value
+                ? { xs: '100%', md: 320 }
+                : 0,
+            opacity: isVertical || navOpen.value ? 1 : 0,
+            overflow: 'hidden',
+            visibility: !isVertical && !navOpen.value ? 'hidden' : 'visible',
+            transition: 'width 0.25s ease-in-out, opacity 0.2s ease-in-out, visibility 0.25s ease-in-out',
+            flexShrink: 0,
+            height: isVertical ? 'auto' : '100%',
+          }}
         >
           {isVertical ? (
             <Box>
@@ -384,6 +403,36 @@ const CourseProgressComponent = ({
                 flexDirection: 'column',
               }}
             >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  px: 0.5,
+                  pb: 1,
+                  borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                  mb: 1,
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
+                  Subjects
+                </Typography>
+                <CustomTooltip arrow title="Collapse subject navigation">
+                  <IconButton
+                    size="small"
+                    onClick={navOpen.onToggle}
+                    aria-label="Collapse subject navigation"
+                    aria-expanded="true"
+                    sx={{
+                      p: 0.25,
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                  >
+                    <Iconify icon="eva:arrow-ios-back-fill" width={16} height={16} />
+                  </IconButton>
+                </CustomTooltip>
+              </Box>
+
               <CourseCardsGrid
                 key={`${selectedClass}-${selectedDivision}`}
                 courses={courses}
@@ -393,12 +442,18 @@ const CourseProgressComponent = ({
               />
             </Card>
           )}
-        </Grid>
+        </Box>
 
         {/* Right Section – Chapter Details */}
-        <Grid
-          size={{ xs: 12, md: isVertical ? 12 : 9 }}
-          sx={{ height: isVertical ? 'auto' : '100%', display: 'flex', flexDirection: 'column' }}
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            width: '100%',
+            height: isVertical ? 'auto' : '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
         >
           <Card
             sx={{
@@ -412,48 +467,102 @@ const CourseProgressComponent = ({
           >
             {selectedCourse ? (
               <>
-                <Box display="flex" alignItems="center" gap={1} sx={{ flexShrink: 0, mb: 1 }}>
-                  <SubjectColorIndicator color={selectedCourse.color} />
-                  <Typography variant="h6" fontWeight={700}>
-                    {selectedCourse.name} Details
-                  </Typography>
-                </Box>
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1}
-                  sx={{ flexShrink: 0, mb: 1.5 }}
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  gap={1}
+                  sx={{ flexShrink: 0, mb: 1 }}
                 >
-                  {[
-                    { label: 'Actual', value: `${progressSummary.averageProgress}%` },
-                    { label: 'Expected', value: `${progressSummary.expectedProgress}%` },
-                    {
-                      label: 'Variance',
-                      value: `${progressSummary.variance >= 0 ? '+' : ''}${progressSummary.variance}%`,
-                    },
-                    { label: 'Completed', value: `${progressSummary.completed}/${progressSummary.total}` },
-                    { label: 'Delayed', value: progressSummary.delayed },
-                    { label: 'High Risk', value: progressSummary.highRisk },
-                  ].map((item) => (
-                    <Box
-                      key={item.label}
-                      sx={{
-                        px: 1.25,
-                        py: 0.75,
-                        border: (theme) => `1px solid ${theme.palette.divider}`,
-                        borderRadius: 1,
-                        minWidth: 112,
-                        bgcolor: 'background.paper',
-                      }}
-                    >
-                      <Typography variant="caption" color="text.secondary">
-                        {item.label}
-                      </Typography>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        {item.value}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    {!navOpen.value && !isVertical && (
+                      <CustomTooltip arrow title="Open subject navigation">
+                        <IconButton
+                          size="small"
+                          color="inherit"
+                          onClick={navOpen.onToggle}
+                          aria-label="Open subject navigation"
+                          aria-expanded="false"
+                          sx={{
+                            p: 0.25,
+                            mr: 0.5,
+                            '&:hover': { bgcolor: 'action.hover' },
+                          }}
+                        >
+                          <Iconify icon="eva:arrow-ios-forward-fill" width={16} height={16} />
+                        </IconButton>
+                      </CustomTooltip>
+                    )}
+                    <SubjectColorIndicator color={selectedCourse.color} />
+                    <Typography variant="h6" fontWeight={700}>
+                      {selectedCourse.name} Details
+                    </Typography>
+                  </Box>
+                </Box>
+                <Accordion
+                  defaultExpanded
+                  sx={{
+                    mb: 1.5,
+                    flexShrink: 0,
+                    bgcolor: 'transparent',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    borderRadius: '8px !important',
+                    '&:before': { display: 'none' },
+                  }}
+                >
+                  <AccordionSummary
+                    expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
+                    sx={{ minHeight: 40, px: 1.5, '& .MuiAccordionSummary-content': { my: 0.5 } }}
+                  >
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Summary Overview
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ p: 1.5, pt: 0 }}>
+                    <TimetableSettingsSummaryCards
+                      cards={[
+                        {
+                          label: 'Actual',
+                          value: `${progressSummary.averageProgress}%`,
+                          icon: 'solar:chart-2-bold-duotone',
+                          color: 'primary',
+                        },
+                        {
+                          label: 'Expected',
+                          value: `${progressSummary.expectedProgress}%`,
+                          icon: 'solar:target-bold-duotone',
+                          color: 'info',
+                        },
+                        {
+                          label: 'Variance',
+                          value: `${progressSummary.variance >= 0 ? '+' : ''}${progressSummary.variance}%`,
+                          icon: 'solar:graph-up-bold-duotone',
+                          color: progressSummary.variance < 0 ? 'error' : 'success',
+                        },
+                        {
+                          label: 'Completed',
+                          value: `${progressSummary.completed}/${progressSummary.total}`,
+                          icon: 'solar:check-circle-bold-duotone',
+                          color: 'success',
+                        },
+                        {
+                          label: 'Delayed',
+                          value: progressSummary.delayed,
+                          icon: 'solar:clock-circle-bold-duotone',
+                          color: progressSummary.delayed > 0 ? 'warning' : 'info',
+                        },
+                        {
+                          label: 'High Risk',
+                          value: progressSummary.highRisk,
+                          icon: 'solar:danger-bold-duotone',
+                          color: progressSummary.highRisk > 0 ? 'error' : 'info',
+                        },
+                      ]}
+                      cardsPerRow={3}
+                    />
+                  </AccordionDetails>
+                </Accordion>
                 {isAction ? (
                   <CustomizableTable
                     tableId="course-progress-table"
@@ -461,27 +570,34 @@ const CourseProgressComponent = ({
                     noDataText={<>No Chapters Found For This Course Found </>}
                     columns={[
                       {
-                        id: 'chapterNumber',
-                        label: 'Chapter No.',
+                        id: 'chapterName',
+                        label: 'Chapter Name',
                         align: 'left',
-                        minWidth: 120,
-                        filterType: 'number',
+                        minWidth: 280,
+                        sticky: true,
+                        stickyPosition: 'left',
+                        isFilter: true,
+                        filterType: 'string',
+                        isSort: true,
+                        render: (value, row) => (
+                          <Box component="span">
+                            {row.chapterNumber ? `(${row.chapterNumber}) ` : ''}
+                            {value}
+                          </Box>
+                        ),
                       },
-                      { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
                       {
                         id: 'startDate',
                         label: 'Start Date',
                         align: 'left',
                         filterType: 'date',
                         minWidth: 170,
-                        render: (value) => {
-                          const isValidDate = value && value !== '-' && dayjs(value).isValid();
-                          return (
-                            <Typography variant="inherit" gutterBottom>
-                              {isValidDate ? dayjs(value).format('DD-MM-YYYY') : '-'}
-                            </Typography>
-                          );
-                        },
+                        isSort: true,
+                        render: (value) => (
+                          <Typography variant="body2" sx={{ fontSize: 13 }}>
+                            {formatDateCell(value)}
+                          </Typography>
+                        ),
                       },
                       {
                         id: 'endDate',
@@ -489,13 +605,14 @@ const CourseProgressComponent = ({
                         minWidth: 170,
                         align: 'left',
                         filterType: 'date',
+                        isSort: true,
                         renderColumn: () => <EndToolTip />,
                         render(value, row) {
                           const isValidDate = value && value !== '-' && dayjs(value).isValid();
 
                           if (!isValidDate) {
                             return (
-                              <Typography variant="caption" fontSize="13px">
+                              <Typography variant="body2" sx={{ fontSize: 13, color: 'text.secondary' }}>
                                 -
                               </Typography>
                             );
@@ -507,14 +624,13 @@ const CourseProgressComponent = ({
 
                           if (row.progress === 100) {
                             return (
-                              <Typography variant="caption" fontSize="13px">
+                              <Typography variant="body2" sx={{ fontSize: 13, color: 'text.secondary' }}>
                                 {endDate.format('DD-MM-YYYY')}
                               </Typography>
                             );
                           }
 
                           let color = 'text.secondary';
-
                           if (diffDays <= 7) {
                             color = 'error.main';
                           } else if (diffDays <= 30) {
@@ -524,7 +640,7 @@ const CourseProgressComponent = ({
                           }
 
                           return (
-                            <Typography variant="caption" fontSize="13px" sx={{ color }}>
+                            <Typography variant="body2" sx={{ fontSize: 13, color, fontWeight: diffDays <= 7 ? 700 : 500 }}>
                               {endDate.format('DD-MM-YYYY')}
                             </Typography>
                           );
@@ -535,6 +651,7 @@ const CourseProgressComponent = ({
                         label: 'Progress',
                         filterType: 'number',
                         align: 'left',
+                        isSort: true,
                         render(value, row) {
                           return (
                             <Box sx={{ minWidth: 190 }}>
@@ -549,7 +666,7 @@ const CourseProgressComponent = ({
                               <LinearProgress
                                 variant="determinate"
                                 value={value}
-                                sx={{ height: 8, borderRadius: 1, mb: 0.5 }}
+                                sx={{ height: 6, borderRadius: 1, mb: 0.5 }}
                               />
                               <Typography
                                 variant="caption"
@@ -565,43 +682,26 @@ const CourseProgressComponent = ({
                           );
                         },
                       },
-                      {
-                        id: 'status',
-                        label: 'Status',
-                        minWidth: 150,
-                        align: 'left',
-                        render(value, row) {
-                          return (
-                            <Stack spacing={0.5} alignItems="flex-start">
-                              <Chip
-                                label={value || 'Not Started'}
-                                size="small"
-                                color={getStatusChipColor(value) as any}
-                                variant="outlined"
-                              />
-                              <Chip
-                                label={row.scheduleStatus || 'On Track'}
-                                size="small"
-                                color={getStatusChipColor(row.scheduleStatus) as any}
-                                variant="filled"
-                              />
-                            </Stack>
-                          );
-                        },
-                      },
+
                       {
                         id: 'riskLevel',
                         label: 'Risk',
                         minWidth: 120,
                         align: 'left',
+                        isFilter: true,
+                        filterType: 'enum',
+                        enumOptions: [
+                          { label: 'Low', value: 'Low' },
+                          { label: 'Medium', value: 'Medium' },
+                          { label: 'High', value: 'High' },
+                          { label: 'Critical', value: 'Critical' },
+                        ],
+                        isSort: true,
                         render(value) {
                           return (
-                            <Chip
-                              label={value || 'Low'}
-                              size="small"
-                              color={getRiskChipColor(value) as any}
-                              variant="filled"
-                            />
+                            <Label color={getRiskChipColor(value) as any} variant="soft">
+                              {value || 'Low'}
+                            </Label>
                           );
                         },
                       },
@@ -610,8 +710,13 @@ const CourseProgressComponent = ({
                         label: 'Actual Start',
                         minWidth: 140,
                         align: 'left',
+                        isFilter: true,
+                        filterType: 'date',
+                        isSort: true,
                         render: (value) => (
-                          <Typography variant="caption">{formatDateCell(value)}</Typography>
+                          <Typography variant="body2" sx={{ fontSize: 13 }}>
+                            {formatDateCell(value)}
+                          </Typography>
                         ),
                       },
                       {
@@ -619,8 +724,13 @@ const CourseProgressComponent = ({
                         label: 'Actual End',
                         minWidth: 140,
                         align: 'left',
+                        isFilter: true,
+                        filterType: 'date',
+                        isSort: true,
                         render: (value) => (
-                          <Typography variant="caption">{formatDateCell(value)}</Typography>
+                          <Typography variant="body2" sx={{ fontSize: 13 }}>
+                            {formatDateCell(value)}
+                          </Typography>
                         ),
                       },
                       {
@@ -628,9 +738,38 @@ const CourseProgressComponent = ({
                         label: 'Last Updated',
                         minWidth: 155,
                         align: 'left',
+                        isFilter: true,
+                        filterType: 'date',
+                        isSort: true,
                         render: (value) => (
-                          <Typography variant="caption">{formatDateCell(value)}</Typography>
+                          <Typography variant="body2" sx={{ fontSize: 13 }}>
+                            {formatDateCell(value)}
+                          </Typography>
                         ),
+                      },
+                      {
+                        id: 'status',
+                        label: 'Status',
+                        minWidth: 150,
+                        align: 'left',
+                        sticky: true,
+                        stickyPosition: 'right',
+                        isSort: true,
+                        isFilter: false,
+                        render(value, row) {
+                          return (
+                            <Stack spacing={0.5} alignItems="flex-start">
+                              <Label color={getStatusChipColor(value) as any} variant="soft">
+                                {value || 'Not Started'}
+                              </Label>
+                              {row.scheduleStatus && (
+                                <Label color={getStatusChipColor(row.scheduleStatus) as any} variant="outlined">
+                                  {row.scheduleStatus}
+                                </Label>
+                              )}
+                            </Stack>
+                          );
+                        },
                       },
                       {
                         id: 'actions',
@@ -638,6 +777,7 @@ const CourseProgressComponent = ({
                         minWidth: 50,
                         align: 'left',
                         sticky: true,
+                        stickyPosition: 'right',
                         isSort: false,
                         isFilter: false,
                         render(value: any, row: any) {
@@ -781,8 +921,8 @@ const CourseProgressComponent = ({
               </Box>
             )}
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Dialogs */}
       <CustomDialog

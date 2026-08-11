@@ -41,6 +41,7 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   useGetLessonPlansQuery,
   useGetTeacherDiariesQuery,
@@ -172,15 +173,15 @@ const normalizeSlotTime = (value: unknown) => {
 const getPlannedSlotTime = (plan: any) => {
   const start = normalizeSlotTime(
     plan.startTime ||
-      plan.slotStartTime ||
-      plan.timetableSlot?.startTime ||
-      plan.timetableSlot?.slotStartTime
+    plan.slotStartTime ||
+    plan.timetableSlot?.startTime ||
+    plan.timetableSlot?.slotStartTime
   );
   const end = normalizeSlotTime(
     plan.endTime ||
-      plan.slotEndTime ||
-      plan.timetableSlot?.endTime ||
-      plan.timetableSlot?.slotEndTime
+    plan.slotEndTime ||
+    plan.timetableSlot?.endTime ||
+    plan.timetableSlot?.slotEndTime
   );
 
   return start && end ? `${start} - ${end}` : '';
@@ -740,6 +741,59 @@ const LessonPlanScreen = () => {
     dueAt: dayjs().add(1, 'day'),
   });
   const [homeworkError, setHomeworkError] = useState('');
+  const [homeworkTouched, setHomeworkTouched] = useState(false);
+
+  const mediumMinDate = useMemo(() => {
+    const startStr = (currentMedium as any)?.startDate || (currentYear as any)?.startDate;
+    return startStr ? dayjs(startStr) : undefined;
+  }, [currentMedium, currentYear]);
+
+  const mediumMaxDate = useMemo(() => {
+    const endStr = (currentMedium as any)?.endDate || (currentYear as any)?.endDate;
+    return endStr ? dayjs(endStr) : undefined;
+  }, [currentMedium, currentYear]);
+
+  const homeworkFieldErrors = useMemo(() => {
+    const errors: Record<string, string> = {};
+    if (!homeworkForm.homeworkTypeId) {
+      errors.homeworkTypeId = 'Homework Type is required.';
+    }
+    if (!homeworkForm.title.trim()) {
+      errors.title = 'Homework Title is required.';
+    }
+    if (!homeworkForm.description.trim()) {
+      errors.description = 'Description is required.';
+    }
+
+    if (!homeworkForm.publishAt || !homeworkForm.publishAt.isValid()) {
+      errors.publishAt = 'Publish Date is required.';
+    } else {
+      if (mediumMinDate && homeworkForm.publishAt.isBefore(mediumMinDate, 'day')) {
+        errors.publishAt = `Publish Date must be on or after ${mediumMinDate.format('DD/MM/YYYY')}`;
+      } else if (mediumMaxDate && homeworkForm.publishAt.isAfter(mediumMaxDate, 'day')) {
+        errors.publishAt = `Publish Date must be on or before ${mediumMaxDate.format('DD/MM/YYYY')}`;
+      }
+    }
+
+    if (!homeworkForm.dueAt || !homeworkForm.dueAt.isValid()) {
+      errors.dueAt = 'Due Date is required.';
+    } else {
+      if (mediumMinDate && homeworkForm.dueAt.isBefore(mediumMinDate, 'day')) {
+        errors.dueAt = `Due Date must be on or after ${mediumMinDate.format('DD/MM/YYYY')}`;
+      } else if (mediumMaxDate && homeworkForm.dueAt.isAfter(mediumMaxDate, 'day')) {
+        errors.dueAt = `Due Date must be on or before ${mediumMaxDate.format('DD/MM/YYYY')}`;
+      } else if (
+        homeworkForm.publishAt &&
+        homeworkForm.publishAt.isValid() &&
+        (homeworkForm.dueAt.isBefore(homeworkForm.publishAt) ||
+          homeworkForm.dueAt.isSame(homeworkForm.publishAt))
+      ) {
+        errors.dueAt = 'Due date/time must be after publish date/time.';
+      }
+    }
+
+    return errors;
+  }, [homeworkForm, mediumMinDate, mediumMaxDate]);
 
   /**
    * Memoization Justification:
@@ -917,37 +971,25 @@ const LessonPlanScreen = () => {
       dueAt: dayjs().add(1, 'day'),
     });
     setHomeworkError('');
+    setHomeworkTouched(false);
   }, []);
 
   const closeHomeworkFromPlan = () => {
     setHomeworkPlan(null);
     setHomeworkError('');
+    setHomeworkTouched(false);
   };
 
   const saveHomeworkFromPlan = async () => {
     if (!homeworkPlan) return;
+    setHomeworkTouched(true);
+
     if (!currentMedium?.id) {
-      setHomeworkError('Academic medium is required before creating homework.');
+      shikshaMitraToast.error({ message: 'Academic medium is required before creating homework.' });
       return;
     }
-    if (!homeworkForm.homeworkTypeId) {
-      setHomeworkError('Homework type is required.');
-      return;
-    }
-    if (!homeworkForm.title.trim()) {
-      setHomeworkError('Homework title is required.');
-      return;
-    }
-    if (!homeworkForm.description.trim()) {
-      setHomeworkError('Homework description is required.');
-      return;
-    }
-    if (!homeworkForm.publishAt || !homeworkForm.dueAt) {
-      setHomeworkError('Publish date and due date are required.');
-      return;
-    }
-    if (homeworkForm.dueAt.isBefore(homeworkForm.publishAt)) {
-      setHomeworkError('Due date must be after publish date.');
+
+    if (Object.keys(homeworkFieldErrors).length > 0) {
       return;
     }
 
@@ -960,15 +1002,17 @@ const LessonPlanScreen = () => {
           title: homeworkForm.title.trim(),
           description: homeworkForm.description.trim(),
           submissionType: homeworkForm.submissionType,
-          publishAt: homeworkForm.publishAt.toISOString(),
-          dueAt: homeworkForm.dueAt.toISOString(),
+          publishAt: homeworkForm.publishAt!.toISOString(),
+          dueAt: homeworkForm.dueAt!.toISOString(),
         },
       }).unwrap();
 
       closeHomeworkFromPlan();
-      shikshaMitraToast.success({ message: 'Homework created from lesson plan.' });
+      shikshaMitraToast.success({ message: 'Homework created from lesson plan successfully.' });
     } catch (err: any) {
-      setHomeworkError(err?.data?.error?.message || 'Failed to create homework from lesson plan.');
+      shikshaMitraToast.error({
+        message: err?.data?.error?.message || 'Failed to create homework from lesson plan.',
+      });
     }
   };
 
@@ -1133,10 +1177,10 @@ const LessonPlanScreen = () => {
           await submitTeacherDiary({ id: diaryId }).unwrap();
         }
 
+        setDiaryModalOpen(false);
         await refetchTeacherDiaries();
         await refetchLessonPlans();
         await refetchTimeline();
-        setDiaryModalOpen(false);
         shikshaMitraToast.success({
           message: submit ? 'Teacher diary submitted successfully.' : 'Teacher diary notes saved.',
         });
@@ -1378,7 +1422,7 @@ const LessonPlanScreen = () => {
         id: 'planStatus',
         label: (
           <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
+            <Typography variant="subtitle2" fontWeight={700} fontSize="0.9rem">
               Plan Status
             </Typography>
             <CustomTooltip title={PlanStatusHeaderTooltip} placement="top" arrow>
@@ -1402,14 +1446,15 @@ const LessonPlanScreen = () => {
           { label: 'Rejected', value: 'Rejected' },
           { label: 'Cancelled', value: 'Cancelled' },
         ],
-        minWidth: 140,
+        minWidth: 70,
+        maxWidth: 180,
         render: (v: PlanStatus) => renderPlanStatus(v),
       },
       {
         id: 'diaryStatus',
         label: (
           <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8125rem">
+            <Typography variant="subtitle2" fontWeight={700} fontSize="0.9rem">
               Diary Status
             </Typography>
             <CustomTooltip title={DiaryStatusHeaderTooltip} placement="top" arrow>
@@ -1433,7 +1478,7 @@ const LessonPlanScreen = () => {
           { label: 'Approved', value: 'Approved' },
           { label: 'Rejected', value: 'Rejected' },
         ],
-        minWidth: 140,
+        minWidth: 80,
         render: (v: DiaryStatus) => renderDiaryStatus(v),
       },
       {
@@ -1860,7 +1905,7 @@ const LessonPlanScreen = () => {
               tableTitle={`Lesson Plans (${filteredPlans.length})`}
               data={filteredPlans}
               columns={visibleLessonColumns}
-              isLoading={isPlansLoading || isPlansFetching}
+              isLoading={isPlansLoading || (!lessonModalOpen && isPlansFetching)}
               noDataText="No lesson plans match the current filters. Try adjusting or clearing filters, or add a new lesson plan."
             />
           )}
@@ -1891,7 +1936,16 @@ const LessonPlanScreen = () => {
               tableTitle="Teacher Diary"
               data={lessonPlans.filter((p) => p.plannedDate <= todayIso)}
               columns={visibleDiaryColumns}
-              isLoading={isPlansLoading || isPlansFetching || isDiariesLoading || isDiariesFetching}
+              isLoading={
+                isPlansLoading ||
+                isDiariesLoading ||
+                // Only show isFetching loading when the diary/lesson modal is fully closed.
+                // When a modal is open and a partial mutation succeeds (e.g. create succeeds
+                // but submit fails), RTK Query tag invalidation can trigger isFetching even
+                // though the overall operation errored. Gate the background loading so the
+                // table does not flash a spinner while the user is still in the modal.
+                (!diaryModalOpen && !lessonModalOpen && (isPlansFetching || isDiariesFetching))
+              }
               noDataText="No past or today lessons available for diary."
             />
           )}
@@ -1909,6 +1963,8 @@ const LessonPlanScreen = () => {
               isApproving={isApproving}
               isRejecting={isRejecting}
               isRequesting={isRequestingPlanChanges}
+              isLoading={isPlansLoading || isPlansFetching}
+              onRefresh={refetchLessonPlans}
             />
           )}
         </Scrollbar>
@@ -1954,44 +2010,78 @@ const LessonPlanScreen = () => {
 
       <CustomDialog
         open={Boolean(homeworkPlan)}
-        title="Create Homework From Lesson Plan"
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="h6" fontWeight={700}>
+              Create Homework From Lesson Plan
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="bottom-start"
+              title={
+                <Box sx={{ p: 1, maxWidth: 320 }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
+                    Homework Guidance
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    Generate homework assignments directly from planned topics. Pre-fills topic and objectives, allowing you to configure submission type, deadlines, and publishing rules.
+                  </Typography>
+                </Box>
+              }
+            >
+              <IconButton size="small" color="info">
+                <Iconify icon="lucide:info" width={18} />
+              </IconButton>
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="sm"
         handleClose={closeHomeworkFromPlan}
       >
-        <DialogScrollContent sx={{ bgcolor: 'background.neutral', pb: 2 }}>
-          <Stack spacing={1}>
-            {homeworkError && (
-              <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
-                {homeworkError}
-              </Alert>
-            )}
-
+        <DialogScrollContent sx={{ p: 2.5 }}>
+          <Stack spacing={2}>
             {homeworkPlan && (
-              <Box
+              <Paper
+                elevation={0}
                 sx={{
                   p: 2,
-                  borderRadius: 1,
-                  bgcolor: 'background.paper',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
                 }}
               >
                 <Stack spacing={1}>
-                  <Typography variant="subtitle2">{homeworkPlan.topic}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {homeworkPlan.className}-{homeworkPlan.divisionName} /{' '}
-                    {homeworkPlan.subjectName} / {homeworkPlan.chapterName}
-                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Iconify icon="solar:notebook-bold-duotone" width={20} sx={{ color: 'primary.main' }} />
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      {homeworkPlan.topic}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" spacing={0.75} flexWrap="wrap" alignItems="center">
+                    <Label variant="soft" color="primary">
+                      {homeworkPlan.className}-{homeworkPlan.divisionName}
+                    </Label>
+                    <Label variant="soft" color="info">
+                      {homeworkPlan.subjectName}
+                    </Label>
+                    {homeworkPlan.chapterName && (
+                      <Typography variant="caption" color="text.secondary">
+                        Chapter: {homeworkPlan.chapterName}
+                      </Typography>
+                    )}
+                  </Stack>
                   {homeworkPlan.insightMessage && (
                     <Alert
                       severity={homeworkPlan.insightSeverity === 'error' ? 'error' : 'warning'}
                       icon={<Iconify icon="mdi:information-outline" />}
-                      sx={{ mt: 1, py: 0.25, px: 1 }}
+                      sx={{ py: 0.25, px: 1, borderRadius: 1 }}
                     >
                       {homeworkPlan.insightMessage}
                     </Alert>
                   )}
                 </Stack>
-              </Box>
+              </Paper>
             )}
 
             <CustomSelect
@@ -2006,6 +2096,8 @@ const LessonPlanScreen = () => {
                 }))
               }
               formControlProps={{ fullWidth: true }}
+              error={homeworkTouched && Boolean(homeworkFieldErrors.homeworkTypeId)}
+              helperText={homeworkTouched ? homeworkFieldErrors.homeworkTypeId : undefined}
             />
 
             <TextField
@@ -2016,6 +2108,8 @@ const LessonPlanScreen = () => {
                 setHomeworkForm((current) => ({ ...current, title: event.target.value }))
               }
               fullWidth
+              error={homeworkTouched && Boolean(homeworkFieldErrors.title)}
+              helperText={homeworkTouched ? homeworkFieldErrors.title : undefined}
             />
 
             <TextField
@@ -2028,6 +2122,8 @@ const LessonPlanScreen = () => {
               fullWidth
               multiline
               minRows={3}
+              error={homeworkTouched && Boolean(homeworkFieldErrors.description)}
+              helperText={homeworkTouched ? homeworkFieldErrors.description : undefined}
             />
 
             <CustomSelect
@@ -2047,7 +2143,7 @@ const LessonPlanScreen = () => {
               formControlProps={{ fullWidth: true }}
             />
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <DateTimePicker
                 label="Publish Date *"
                 value={homeworkForm.publishAt}
@@ -2056,7 +2152,18 @@ const LessonPlanScreen = () => {
                 }
                 format="DD/MM/YYYY HH:mm"
                 ampm={false}
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                minDate={mediumMinDate}
+                maxDate={mediumMaxDate}
+                disablePast
+                slotProps={{
+                  popper: { placement: 'top-start', sx: { zIndex: 1300 } },
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: homeworkTouched && Boolean(homeworkFieldErrors.publishAt),
+                    helperText: homeworkTouched ? homeworkFieldErrors.publishAt : undefined,
+                  },
+                }}
               />
               <DateTimePicker
                 label="Due Date *"
@@ -2064,7 +2171,22 @@ const LessonPlanScreen = () => {
                 onChange={(value) => setHomeworkForm((current) => ({ ...current, dueAt: value }))}
                 format="DD/MM/YYYY HH:mm"
                 ampm={false}
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                minDate={
+                  homeworkForm.publishAt && homeworkForm.publishAt.isValid()
+                    ? homeworkForm.publishAt
+                    : mediumMinDate
+                }
+                maxDate={mediumMaxDate}
+                disablePast
+                slotProps={{
+                  popper: { placement: 'top-start', sx: { zIndex: 1300 } },
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: homeworkTouched && Boolean(homeworkFieldErrors.dueAt),
+                    helperText: homeworkTouched ? homeworkFieldErrors.dueAt : undefined,
+                  },
+                }}
               />
             </Stack>
           </Stack>
@@ -2073,13 +2195,14 @@ const LessonPlanScreen = () => {
         <Divider />
         <Stack
           direction="row"
-          spacing={1}
+          spacing={1.5}
           justifyContent="flex-end"
-          sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}
+          sx={{ p: 2, bgcolor: 'background.paper' }}
         >
           <Button
             size="small"
             variant="outlined"
+            color="inherit"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={closeHomeworkFromPlan}
           >
@@ -2091,6 +2214,13 @@ const LessonPlanScreen = () => {
             loading={isCreatingHomeworkFromPlan}
             startIcon={<Iconify icon="mdi:book-plus-outline" />}
             onClick={saveHomeworkFromPlan}
+            sx={{
+              bgcolor: 'text.primary',
+              color: 'background.paper',
+              borderRadius: 1,
+              px: 2,
+              '&:hover': { bgcolor: 'text.secondary' },
+            }}
           >
             Create Homework
           </LoadingButton>

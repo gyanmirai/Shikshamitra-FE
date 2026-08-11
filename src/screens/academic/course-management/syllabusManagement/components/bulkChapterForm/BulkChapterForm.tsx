@@ -31,6 +31,8 @@ import {
 } from '@mui/material';
 import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
+import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
+
 import ChapterCard from './ChapterCard';
 
 import type { IBulkChapterEntry, IBulkChapterFormProps } from './type';
@@ -63,6 +65,8 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<string | null>(null);
+  const [localFileNames, setLocalFileNames] = useState<Record<string, string>>({});
 
   // ── API hooks ──────────────────────────────────────────────────────────
 
@@ -267,36 +271,50 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
   );
 
   const handleFileUpload = useCallback(
-    async (uid: string, files: (File | string)[]) => {
-      if (!files.length) {
+    async (uid: string, droppedFiles: any[]) => {
+      const newFiles = droppedFiles.filter((f): f is File => f instanceof File);
+      const existingFiles = droppedFiles
+        .filter((f) => !(f instanceof File))
+        .map((f) => (typeof f === 'string' ? f : f.url || f.filePath || ''))
+        .filter(Boolean);
+
+      if (newFiles.length === 0) {
         formik.setFieldValue(
           'chapters',
-          formik.values.chapters.map((ch) => (ch.uid === uid ? { ...ch, documents: [] } : ch))
+          formik.values.chapters.map((ch) => (ch.uid === uid ? { ...ch, documents: existingFiles } : ch))
         );
         return;
       }
+
       try {
-        const uploadPromises = files.map(async (file) => {
-          if (typeof file === 'string') {
-            return file;
-          }
+        const uploadPromises = newFiles.map(async (file) => {
           const formData = new FormData();
-          formData.append('File', file as File);
+          formData.append('File', file);
           const response = await uploadCurriculumFile(formData).unwrap();
-          return response.data;
+          return { data: response.data, name: file.name };
         });
 
         const results = await Promise.all(uploadPromises);
-        const validUrls = results.filter((res): res is string => typeof res === 'string' && Boolean(res));
 
+        const newDocs = [...existingFiles];
+        const nameUpdates: Record<string, string> = {};
+
+        results.forEach((res) => {
+          if (res.data) {
+            newDocs.push(res.data);
+            nameUpdates[res.data] = res.name;
+          }
+        });
+
+        setLocalFileNames((prev) => ({ ...prev, ...nameUpdates }));
         formik.setFieldValue(
           'chapters',
-          formik.values.chapters.map((ch) =>
-            ch.uid === uid ? { ...ch, documents: validUrls } : ch
-          )
+          formik.values.chapters.map((ch) => (ch.uid === uid ? { ...ch, documents: newDocs } : ch))
         );
+        shikshaMitraToast.success({ message: 'Document(s) uploaded successfully' });
       } catch (error) {
-        shikshaMitraToast.error({ message: 'Failed to upload one or more files.' });
+        console.error('Upload failed:', error);
+        shikshaMitraToast.error({ message: 'Upload failed' });
       }
     },
     [formik, uploadCurriculumFile]
@@ -440,6 +458,8 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
                     onChange={handleEntryChange}
                     onBlur={handleEntryBlur}
                     onFileUpload={handleFileUpload}
+                    onPreviewDocument={(url) => setPreviewDoc(url)}
+                    localFileNames={localFileNames}
                     errors={getEntryErrors(index)}
                     touched={getEntryTouched(index)}
                   />
@@ -510,6 +530,13 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
               Chapter{formik.values.chapters.length !== 1 ? 's' : ''}
             </LoadingButton>
           </DialogActions>
+
+          <DocumentPreviewDialog
+            open={!!previewDoc}
+            onClose={() => setPreviewDoc(null)}
+            url={previewDoc || ''}
+            documentName={previewDoc ? previewDoc.split('/').pop() || '' : ''}
+          />
         </Box>
       </form>
     </BackPopUpChecked>

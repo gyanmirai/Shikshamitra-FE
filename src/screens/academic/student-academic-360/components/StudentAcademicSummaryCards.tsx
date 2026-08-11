@@ -1,7 +1,7 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Card, Grid, Tooltip, Typography } from '@mui/material';
 
 import { getMetricPercentage, matchesAcademicFilter } from '../listUtils';
 
@@ -13,6 +13,7 @@ type SummaryCard = {
   value: string;
   helper: string;
   icon: string;
+  color: 'primary' | 'success' | 'warning' | 'error' | 'info';
 };
 
 type StudentAcademicSummaryCardsProps = {
@@ -54,6 +55,7 @@ export function StudentAcademicSummaryCards({
       value: String(items.length),
       helper: 'Enrolled student list',
       icon: 'mdi:account-group-outline',
+      color: 'primary',
     },
     {
       key: 'needsAttention',
@@ -61,6 +63,7 @@ export function StudentAcademicSummaryCards({
       value: String(items.filter((item) => matchesAcademicFilter(item, 'needsAttention')).length),
       helper: 'Priority review queue',
       icon: 'mdi:alert-circle-outline',
+      color: 'error',
     },
     {
       key: 'lowAttendance',
@@ -68,6 +71,7 @@ export function StudentAcademicSummaryCards({
       value: attendanceAverage === undefined ? 'No data' : `${attendanceAverage}%`,
       helper: 'Click to show low attendance',
       icon: 'mdi:calendar-check-outline',
+      color: 'info',
     },
     {
       key: 'overdueHomework',
@@ -75,6 +79,7 @@ export function StudentAcademicSummaryCards({
       value: homeworkAverage === undefined ? 'No data' : `${homeworkAverage}%`,
       helper: 'Click to show pending homework',
       icon: 'mdi:clipboard-text-clock-outline',
+      color: 'warning',
     },
     {
       key: 'performanceDecline',
@@ -82,6 +87,7 @@ export function StudentAcademicSummaryCards({
       value: examAverage === undefined ? 'No data' : `${examAverage}%`,
       helper: 'Click to show decline',
       icon: 'mdi:chart-line',
+      color: 'success',
     },
     {
       key: 'activeIntervention',
@@ -91,55 +97,74 @@ export function StudentAcademicSummaryCards({
       ),
       helper: 'Students with support plan',
       icon: 'mdi:hand-heart-outline',
+      color: 'info',
     },
   ];
 
   return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
-        gap: 1,
-        mb: 1,
-      }}
-    >
+    <Grid container spacing={1} sx={{ mb: 1 }}>
       {cards.map((card) => {
         const active = activeFilter === card.key;
 
         return (
-          <Tooltip key={card.label} title={card.helper}>
-            <Card
-              role="button"
-              tabIndex={0}
-              onClick={() => onFilterChange(card.key)}
-              onKeyDown={(event) => event.key === 'Enter' && onFilterChange(card.key)}
-              sx={{
-                p: 1.5,
-                cursor: 'pointer',
-                border: (theme) =>
-                  `1px solid ${active ? theme.palette.primary.main : theme.palette.divider}`,
-                boxShadow: active ? 4 : 0,
-              }}
-            >
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Iconify
-                  icon={card.icon}
-                  width={20}
-                  sx={{ color: active ? 'primary.main' : 'text.secondary' }}
-                />
+          <Grid key={card.key} size={{ xs: 6, sm: 4, md: 2 }}>
+            <Tooltip title={card.helper}>
+              <Card
+                role="button"
+                tabIndex={0}
+                onClick={() => onFilterChange(card.key)}
+                onKeyDown={(event) => event.key === 'Enter' && onFilterChange(card.key)}
+                sx={{
+                  p: 1.75,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  cursor: 'pointer',
+                  boxShadow: 'var(--shadows-3)',
+                  transition: 'all 0.2s ease-in-out',
+                  ...(active && {
+                    border: (theme) => `2px solid ${theme.palette[card.color].main}`,
+                    bgcolor: (theme) =>
+                      `color-mix(in srgb, ${theme.palette[card.color].main} 8%, transparent)`,
+                  }),
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: 'var(--shadows-8)',
+                  },
+                }}
+              >
+                {/* Colored icon badge */}
+                <Box
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    bgcolor: (theme) =>
+                      `color-mix(in srgb, ${theme.palette[card.color].main} 14%, transparent)`,
+                    color: `${card.color}.main`,
+                  }}
+                >
+                  <Iconify icon={card.icon} width={20} />
+                </Box>
+
+                {/* Value above label */}
                 <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="caption" color="text.secondary" noWrap>
-                    {card.label}
-                  </Typography>
-                  <Typography variant="subtitle1" noWrap>
+                  <Typography variant="h6" fontWeight={700} noWrap>
                     {card.value}
                   </Typography>
+                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+                    {card.label}
+                  </Typography>
                 </Box>
-              </Stack>
-            </Card>
-          </Tooltip>
+              </Card>
+            </Tooltip>
+          </Grid>
         );
       })}
-    </Box>
+    </Grid>
   );
 }

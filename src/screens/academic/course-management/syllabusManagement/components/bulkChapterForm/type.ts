@@ -29,7 +29,9 @@ export interface IChapterCardProps {
   onRemove: (uid: string) => void;
   onChange: (uid: string, field: string, value: unknown) => void;
   onBlur: (uid: string, field: string) => void;
-  onFileUpload: (uid: string, files: (File | string)[]) => Promise<void>;
+  onFileUpload: (uid: string, files: any[]) => Promise<void>;
+  onPreviewDocument?: (file: any) => void;
+  localFileNames?: Record<string, string>;
   errors?: Record<string, string>;
   touched?: Record<string, boolean>;
   isExpanded: boolean;

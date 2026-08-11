@@ -1,6 +1,8 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Chip, Stack, Button, Avatar, Tooltip, IconButton, Typography } from '@mui/material';
 
 import { RegistrationStatusType, RegistrationStatusTypeColor } from 'src/enums/registration-status-type';
@@ -81,6 +83,15 @@ export function StudentSuccessHeader({
               <Typography variant="h6" noWrap>
                 {name || 'Student'}
               </Typography>
+              <CustomTooltip title="360° academic performance overview, attendance metrics & intervention history" placement="right" arrow>
+                <Iconify
+                  icon={GlobalIcons.info}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </CustomTooltip>
               {(() => {
                 const rawStatus = student.operationalStatus ?? student.status;
                 let statusLabel = 'Active';

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Paper, Button, Typography } from '@mui/material';
+import { Box, Paper, Button } from '@mui/material';
 
 import type { ElectiveSubjectOption } from '../types';
 
@@ -40,14 +42,10 @@ export default function BulkAssignmentBar({
         gap: 1.5,
         flexWrap: 'wrap',
         borderRadius: 1.5,
-        bgcolor: 'primary.lighter',
-        border: (theme) => `1px solid ${theme.vars.palette.primary.light}`,
+        bgcolor: 'background.paper',
+        border: (theme) => `1px solid ${theme.vars.palette.divider}`,
       }}
     >
-      <Typography variant="subtitle2" sx={{ color: 'primary.darker' }}>
-        {selectedCount} student{selectedCount === 1 ? '' : 's'} selected
-      </Typography>
-
       <CustomSelect
         label="Assign to subject"
         options={subjects}
@@ -62,7 +60,7 @@ export default function BulkAssignmentBar({
         variant="contained"
         size="small"
         disabled={!subjectId}
-        startIcon={<Iconify icon="solar:check-circle-bold" />}
+        startIcon={<Iconify icon={GlobalIcons.submit} />}
         onClick={() => {
           if (subjectId) onAssign(subjectId);
         }}
@@ -74,15 +72,25 @@ export default function BulkAssignmentBar({
         variant="outlined"
         size="small"
         color="inherit"
+        startIcon={<Iconify icon="solar:eraser-bold-duotone" />}
         onClick={onClearAssignments}
         sx={{ bgcolor: 'background.paper' }}
       >
         Clear Assignments
       </Button>
 
+      <Label color="info" variant="soft" sx={{ height: 28, px: 1.5, fontSize: '0.8125rem' }}>
+        {selectedCount} student{selectedCount === 1 ? '' : 's'} selected
+      </Label>
+
       <Box sx={{ flexGrow: 1 }} />
 
-      <Button size="small" color="inherit" onClick={onClearSelection}>
+      <Button
+        size="small"
+        color="inherit"
+        startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        onClick={onClearSelection}
+      >
         Clear Selection
       </Button>
     </Paper>

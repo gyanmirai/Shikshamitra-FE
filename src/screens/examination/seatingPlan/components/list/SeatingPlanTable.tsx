@@ -28,15 +28,15 @@ function DivisionProgressCell({ row }: { row: SeatingPlanListRow }) {
     divisionProgress.length > 0
       ? divisionProgress
       : [
-          {
-            divisionId: row.examId,
-            divisionName: 'Total',
-            totalStudents: row.totalStudents,
-            allocatedStudents: row.allocatedStudents,
-            pendingStudents: row.pendingStudents,
-            progress: row.progress,
-          },
-        ];
+        {
+          divisionId: row.examId,
+          divisionName: 'Total',
+          totalStudents: row.totalStudents,
+          allocatedStudents: row.allocatedStudents,
+          pendingStudents: row.pendingStudents,
+          progress: row.progress,
+        },
+      ];
 
   const totalProgress = row.totalStudents > 0 ? Math.round((row.allocatedStudents / row.totalStudents) * 100) : 0;
   const chipColor = totalProgress >= 100 ? 'success' : totalProgress > 0 ? 'warning' : 'default';

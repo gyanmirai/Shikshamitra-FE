@@ -67,13 +67,21 @@ export const RoomDetailDrawer = ({
       anchor="right"
       open={open}
       onClose={onClose}
+      slotProps={{
+        backdrop: {
+          sx: {
+            bgcolor: 'rgba(15, 23, 42, 0.44)',
+            backdropFilter: 'blur(3px)',
+          },
+        },
+      }}
       PaperProps={{
         sx: {
           width: { xs: '100%', sm: 480 },
           display: 'flex',
           flexDirection: 'column',
-          borderTopLeftRadius: { sm: 16 },
-          borderBottomLeftRadius: { sm: 16 },
+          height: '100%',
+          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
@@ -129,16 +137,8 @@ export const RoomDetailDrawer = ({
             </Typography>
           </Box>
         </Stack>
-        <IconButton
-          onClick={onClose}
-          sx={{
-            bgcolor: 'background.paper',
-            border: 1,
-            borderColor: 'divider',
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
-        >
-          <Iconify icon="mdi:close" width={20} />
+        <IconButton onClick={onClose} sx={{ p: 0.5, color: 'text.secondary' }}>
+          <Iconify icon="mdi:close" />
         </IconButton>
       </Stack>
 

@@ -4,7 +4,9 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import LoadingButton from '@mui/lab/LoadingButton';
-import React, { useState, useCallback, useRef } from 'react';
+import type { RootState } from 'src/redux/store';
+import { useSelector } from 'react-redux';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   Box,
   List,
@@ -235,6 +237,7 @@ const SubmitDiaryModal = ({
     return defaultDiaryForm;
   });
 
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState('');
   const [previewFile, setPreviewFile] = useState<{
@@ -257,11 +260,21 @@ const SubmitDiaryModal = ({
     }[]
   >([]);
 
+  const mediumMinDate = useMemo(() => {
+    const startStr = (currentMedium as any)?.startDate || (currentYear as any)?.startDate;
+    return startStr ? dayjs(startStr) : undefined;
+  }, [currentMedium, currentYear]);
+
+  const mediumMaxDate = useMemo(() => {
+    const endStr = (currentMedium as any)?.endDate || (currentYear as any)?.endDate;
+    return endStr ? dayjs(endStr) : undefined;
+  }, [currentMedium, currentYear]);
+
   const handleSelectActualFiles = (files: FileList | File[] | null) => {
     if (!files || files.length === 0) return;
 
     const filesArray: File[] = Array.from(files);
-    const newStagedFiles = filesArray.map((file, i) => {
+    const newUploadedFiles = filesArray.map((file, i) => {
       const isPdf = file.type.includes('pdf') || file.name.endsWith('.pdf');
       const isDoc = file.name.endsWith('.doc') || file.name.endsWith('.docx');
       const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.name);
@@ -277,13 +290,13 @@ const SubmitDiaryModal = ({
         name: file.name,
         size: sizeStr,
         type: defaultType,
-        status: 'staged' as const,
-        progress: 0,
+        status: 'uploaded' as const,
+        progress: 100,
         previewUrl,
       };
     });
 
-    setMockFiles((prev) => [...prev, ...newStagedFiles]);
+    setMockFiles((prev) => [...prev, ...newUploadedFiles]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -299,37 +312,6 @@ const SubmitDiaryModal = ({
     setMockFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
-  const handleStartUpload = (targetId?: string) => {
-    setMockFiles((prev) =>
-      prev.map((f) => {
-        if (!targetId || f.id === targetId) {
-          if (f.status === 'staged' || f.status === 'failed') {
-            return { ...f, status: 'uploading', progress: 25, error: undefined };
-          }
-        }
-        return f;
-      })
-    );
-
-    setTimeout(() => {
-      setMockFiles((prev) =>
-        prev.map((f) => (f.status === 'uploading' ? { ...f, progress: 70 } : f))
-      );
-    }, 400);
-
-    setTimeout(() => {
-      setMockFiles((prev) =>
-        prev.map((f) =>
-          f.status === 'uploading' ? { ...f, status: 'uploaded', progress: 100 } : f
-        )
-      );
-    }, 900);
-  };
-
-  const handleClearStaged = () => {
-    setMockFiles((prev) => prev.filter((f) => f.status === 'uploaded'));
-  };
-
   const set = useCallback(
     <K extends keyof DiaryFormState>(key: K, value: DiaryFormState[K]) =>
       setForm((prev) => ({ ...prev, [key]: value })),
@@ -337,7 +319,19 @@ const SubmitDiaryModal = ({
   );
 
   const validate = (): string => {
-    if (!form.actualDate) return 'Actual date is required.';
+    if (!form.actualDate || !form.actualDate.isValid()) return 'Actual date is required.';
+    if (mediumMinDate && form.actualDate.isBefore(mediumMinDate, 'day'))
+      return `Actual date must be on or after ${mediumMinDate.format('DD/MM/YYYY')}.`;
+    if (mediumMaxDate && form.actualDate.isAfter(mediumMaxDate, 'day'))
+      return `Actual date must be on or before ${mediumMaxDate.format('DD/MM/YYYY')}.`;
+
+    if (form.rescheduledToDate && form.rescheduledToDate.isValid()) {
+      if (mediumMinDate && form.rescheduledToDate.isBefore(mediumMinDate, 'day'))
+        return `Rescheduled date must be on or after ${mediumMinDate.format('DD/MM/YYYY')}.`;
+      if (mediumMaxDate && form.rescheduledToDate.isAfter(mediumMaxDate, 'day'))
+        return `Rescheduled date must be on or before ${mediumMaxDate.format('DD/MM/YYYY')}.`;
+    }
+
     if (form.classConducted) {
       if (!form.actualTopicCovered.trim()) return 'Actual topic covered is required.';
       if (form.actualCompletionPercentage < 0 || form.actualCompletionPercentage > 100)
@@ -364,16 +358,6 @@ const SubmitDiaryModal = ({
     }
 
     setError('');
-
-    const hasStaged = mockFiles.some((f) => f.status === 'staged' || f.status === 'uploading');
-    if (hasStaged) {
-      handleStartUpload();
-      setTimeout(() => {
-        onSave(form, submit);
-      }, 1000);
-      return;
-    }
-
     onSave(form, submit);
   };
 
@@ -413,9 +397,7 @@ const SubmitDiaryModal = ({
     form.teacherRemarks.trim()
   );
 
-  const isEvidenceComplete = mockFiles.some(
-    (f) => f.status === 'uploaded' || f.status === 'staged'
-  );
+  const isEvidenceComplete = mockFiles.length > 0;
 
   return (
     <>
@@ -697,6 +679,8 @@ const SubmitDiaryModal = ({
                       label="Actual Date *"
                       value={form.actualDate}
                       onChange={(v) => set('actualDate', v)}
+                      minDate={mediumMinDate}
+                      maxDate={mediumMaxDate}
                       slotProps={{ textField: { size: 'small', sx: { maxWidth: 220, width: '100%' } } }}
                     />
                     <FormControlLabel
@@ -846,6 +830,8 @@ const SubmitDiaryModal = ({
                         label="Rescheduled To"
                         value={form.rescheduledToDate}
                         onChange={(v) => set('rescheduledToDate', v)}
+                        minDate={mediumMinDate}
+                        maxDate={mediumMaxDate}
                         slotProps={{ textField: { size: 'small', sx: { maxWidth: 240, width: '100%' } } }}
                       />
                     </Stack>
@@ -929,38 +915,8 @@ const SubmitDiaryModal = ({
             )}
 
             {tab === 'Evidence' && (
-              <SectionCard
-                title="Supporting Evidence"
-                icon="mdi:paperclip"
-                action={
-                  mockFiles.some((f) => f.status === 'staged') ? (
-                    <Stack direction="row" spacing={1}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color="inherit"
-                        onClick={handleClearStaged}
-                      >
-                        Clear Staged
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color="primary"
-                        startIcon={<Iconify icon={GlobalIcons.upload} />}
-                        onClick={() => handleStartUpload()}
-                      >
-                        Upload Selected ({mockFiles.filter((f) => f.status === 'staged').length})
-                      </Button>
-                    </Stack>
-                  ) : undefined
-                }
-              >
+              <SectionCard title="Supporting Evidence" icon="mdi:paperclip">
                 <Stack spacing={2}>
-                  <Alert severity="info" icon={<Iconify icon={GlobalIcons.info} />}>
-                    Select or drop classroom evidence files to stage them locally. Choose the file type before uploading.
-                  </Alert>
-
                   {/* Hidden File Input */}
                   <input
                     ref={fileInputRef}
@@ -1002,7 +958,7 @@ const SubmitDiaryModal = ({
                       Click or drag files to select evidence (Images, PDF, Worksheets)
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Files from your computer will be staged locally for type tagging before uploading. Max 10 MB each.
+                      Select classroom evidence files to attach. Max 10 MB each.
                     </Typography>
                   </Box>
 
@@ -1029,33 +985,97 @@ const SubmitDiaryModal = ({
                                 mb: 1,
                                 borderRadius: 1.5,
                                 border: '1px solid',
-                                borderColor:
-                                  file.status === 'uploaded'
-                                    ? (theme) => alpha(theme.palette.success.main, 0.3)
-                                    : file.status === 'uploading'
-                                      ? (theme) => alpha(theme.palette.warning.main, 0.3)
-                                      : 'divider',
-                                bgcolor: (theme) =>
-                                  file.status === 'uploaded'
-                                    ? alpha(theme.palette.success.main, 0.04)
-                                    : file.status === 'uploading'
-                                      ? alpha(theme.palette.warning.main, 0.04)
-                                      : 'background.neutral',
+                                borderColor: 'divider',
+                                bgcolor: 'background.neutral',
                                 transition: 'all 0.2s',
                               }}
                             >
-                              <Stack spacing={1}>
+                              <Stack
+                                direction="row"
+                                spacing={1.5}
+                                alignItems="center"
+                                justifyContent="space-between"
+                              >
                                 <Stack
                                   direction="row"
                                   spacing={1.5}
                                   alignItems="center"
-                                  justifyContent="space-between"
+                                  sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
+                                  onClick={() =>
+                                    setPreviewFile({
+                                      name: file.name,
+                                      type: file.type,
+                                      size: file.size,
+                                      previewUrl: file.previewUrl,
+                                    })
+                                  }
                                 >
-                                  <Stack
-                                    direction="row"
-                                    spacing={1.5}
-                                    alignItems="center"
-                                    sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
+                                  <Box
+                                    sx={{
+                                      width: 38,
+                                      height: 38,
+                                      borderRadius: 1,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      bgcolor: isPdf ? 'error.lighter' : 'primary.lighter',
+                                      color: isPdf ? 'error.main' : 'primary.main',
+                                      flexShrink: 0,
+                                      overflow: 'hidden',
+                                    }}
+                                  >
+                                    {file.previewUrl ? (
+                                      <Box
+                                        component="img"
+                                        src={file.previewUrl}
+                                        alt={file.name}
+                                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                      />
+                                    ) : (
+                                      <Iconify
+                                        icon={
+                                          isPdf
+                                            ? GlobalIcons.pdf
+                                            : isPhoto
+                                              ? GlobalIcons.image
+                                              : GlobalIcons.doc
+                                        }
+                                        width={22}
+                                      />
+                                    )}
+                                  </Box>
+
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{
+                                        fontWeight: 600,
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                      }}
+                                    >
+                                      {file.name}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {file.size}
+                                    </Typography>
+                                  </Box>
+                                </Stack>
+
+                                <CustomSelect
+                                  label="Type"
+                                  options={evidenceTypeOptions}
+                                  value={file.type}
+                                  onChange={(val) => handleFileTypeChange(file.id, val as string)}
+                                  formControlProps={{ sx: { minWidth: 160 } }}
+                                />
+
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                  <IconButton
+                                    size="small"
+                                    color="info"
+                                    title="Preview File"
                                     onClick={() =>
                                       setPreviewFile({
                                         name: file.name,
@@ -1065,155 +1085,17 @@ const SubmitDiaryModal = ({
                                       })
                                     }
                                   >
-                                    <Box
-                                      sx={{
-                                        width: 38,
-                                        height: 38,
-                                        borderRadius: 1,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        bgcolor: isPdf ? 'error.lighter' : 'primary.lighter',
-                                        color: isPdf ? 'error.main' : 'primary.main',
-                                        flexShrink: 0,
-                                        overflow: 'hidden',
-                                      }}
-                                    >
-                                      {file.previewUrl ? (
-                                        <Box
-                                          component="img"
-                                          src={file.previewUrl}
-                                          alt={file.name}
-                                          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                      ) : (
-                                        <Iconify
-                                          icon={
-                                            isPdf
-                                              ? GlobalIcons.pdf
-                                              : isPhoto
-                                                ? GlobalIcons.image
-                                                : GlobalIcons.doc
-                                          }
-                                          width={22}
-                                        />
-                                      )}
-                                    </Box>
-
-                                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                                      <Typography
-                                        variant="body2"
-                                        sx={{
-                                          fontWeight: 600,
-                                          whiteSpace: 'nowrap',
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                        }}
-                                      >
-                                        {file.name}
-                                      </Typography>
-                                      <Typography variant="caption" color="text.secondary">
-                                        {file.size}
-                                      </Typography>
-                                    </Box>
-                                  </Stack>
-
-                                  <CustomSelect
-                                    label="Type"
-                                    options={evidenceTypeOptions}
-                                    value={file.type}
-                                    onChange={(val) => handleFileTypeChange(file.id, val as string)}
-                                    disabled={file.status === 'uploading'}
-                                    formControlProps={{ sx: { minWidth: 160 } }}
-                                  />
-
-                                  {file.status === 'staged' && (
-                                    <Label
-                                      color="info"
-                                      variant="soft"
-                                      startIcon={<Iconify icon={GlobalIcons.clock} />}
-                                    >
-                                      Staged
-                                    </Label>
-                                  )}
-                                  {file.status === 'uploading' && (
-                                    <Label color="warning" variant="soft">
-                                      Uploading {file.progress}%
-                                    </Label>
-                                  )}
-                                  {file.status === 'uploaded' && (
-                                    <Label
-                                      color="success"
-                                      variant="soft"
-                                      startIcon={<Iconify icon={GlobalIcons.tick} />}
-                                    >
-                                      Uploaded
-                                    </Label>
-                                  )}
-                                  {file.status === 'failed' && (
-                                    <Label
-                                      color="error"
-                                      variant="soft"
-                                      startIcon={<Iconify icon="mdi:alert-circle" />}
-                                    >
-                                      Failed
-                                    </Label>
-                                  )}
-
-                                  <Stack direction="row" spacing={0.5} alignItems="center">
-                                    <IconButton
-                                      size="small"
-                                      color="info"
-                                      title="Preview File"
-                                      onClick={() =>
-                                        setPreviewFile({
-                                          name: file.name,
-                                          type: file.type,
-                                          size: file.size,
-                                          previewUrl: file.previewUrl,
-                                        })
-                                      }
-                                    >
-                                      <Iconify icon={GlobalIcons.eye} />
-                                    </IconButton>
-                                    {file.status === 'staged' && (
-                                      <IconButton
-                                        size="small"
-                                        color="primary"
-                                        title="Upload File"
-                                        onClick={() => handleStartUpload(file.id)}
-                                      >
-                                        <Iconify icon={GlobalIcons.upload} />
-                                      </IconButton>
-                                    )}
-                                    {file.status === 'failed' && (
-                                      <Button
-                                        size="small"
-                                        color="warning"
-                                        onClick={() => handleStartUpload(file.id)}
-                                      >
-                                        Retry
-                                      </Button>
-                                    )}
-                                    <IconButton
-                                      size="small"
-                                      color="default"
-                                      title="Remove"
-                                      onClick={() => handleRemoveFile(file.id)}
-                                    >
-                                      <Iconify icon={GlobalIcons.cancel} />
-                                    </IconButton>
-                                  </Stack>
+                                    <Iconify icon={GlobalIcons.eye} />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    color="default"
+                                    title="Remove"
+                                    onClick={() => handleRemoveFile(file.id)}
+                                  >
+                                    <Iconify icon={GlobalIcons.cancel} />
+                                  </IconButton>
                                 </Stack>
-
-                                {file.status === 'uploading' && (
-                                  <LinearProgress
-                                    variant="determinate"
-                                    value={file.progress}
-                                    color="warning"
-                                    sx={{ height: 4, borderRadius: 1 }}
-                                  />
-                                )}
                               </Stack>
                             </Box>
                           );

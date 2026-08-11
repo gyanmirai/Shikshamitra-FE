@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Stack, Paper, Drawer, Divider, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Paper, Drawer, Divider, Typography, LinearProgress, IconButton } from '@mui/material';
 
 import { summarizeImpact } from '../utils/auditFormatters';
 import { MOCK_AUDIT_LOGS } from '../constants/auditLogs.mock';
@@ -70,18 +72,28 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
       anchor="right"
       open={open}
       onClose={onClose}
+      slotProps={{
+        backdrop: {
+          sx: {
+            bgcolor: 'rgba(15, 23, 42, 0.44)',
+            backdropFilter: 'blur(3px)',
+          },
+        },
+      }}
       PaperProps={{
         sx: {
           width: { xs: '100%', sm: 460 },
           display: 'flex',
           flexDirection: 'column',
+          height: '100%',
+          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
       {/* Header */}
       <Box
         sx={{
-          p: 2.5,
+          p: 2,
           borderBottom: `1px solid ${theme.palette.divider}`,
           background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.06)} 0%, ${alpha(theme.palette.primary.main, 0.03)} 100%)`,
         }}
@@ -102,14 +114,29 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
               <Iconify icon="mdi:robot-outline" width={22} color="success.main" />
             </Box>
             <Box>
-              <Typography variant="subtitle1" fontWeight={800}>
-                {isExplainMode ? 'AI Explain Change' : 'AI Audit Summary'}
-              </Typography>
+              <Stack direction="row" alignItems="center" gap={0.5}>
+                <Typography variant="subtitle1" fontWeight={800}>
+                  {isExplainMode ? 'AI Explain Change' : 'AI Audit Summary'}
+                </Typography>
+                <CustomTooltip title="AI generated audit trail analysis & summary" placement="right" arrow>
+                  <Iconify
+                    icon={GlobalIcons.info}
+                    color="info.main"
+                    width={16}
+                    height={16}
+                    sx={{ cursor: 'pointer' }}
+                  />
+                </CustomTooltip>
+              </Stack>
               <Typography variant="caption" color="text.secondary">
                 {isExplainMode ? log?.entityName : 'Last 7 days overview'}
               </Typography>
             </Box>
           </Stack>
+
+          <IconButton onClick={onClose} sx={{ p: 0.5, color: 'text.secondary' }}>
+            <Iconify icon="mdi:close" />
+          </IconButton>
         </Stack>
       </Box>
 

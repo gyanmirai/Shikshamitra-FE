@@ -1,8 +1,9 @@
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import React, { useRef, useState, useEffect } from 'react';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { Box, Card, Chip, Stack, Skeleton, IconButton, Typography, LinearProgress } from '@mui/material';
+import { Box, Card, Stack, Skeleton, IconButton, Typography, LinearProgress } from '@mui/material';
 
 import type { IAppWidgetProps, ICourseCardsGridProps } from '../type';
 
@@ -123,15 +124,26 @@ export default function CourseCardsGrid({
               width: isVertical ? undefined : '100%',
               cursor: 'pointer',
               flexShrink: 0,
-              borderRadius: 1,
+              borderRadius: 1.5,
               position: 'relative',
               overflow: 'hidden',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.2s ease-in-out',
               backgroundColor: (theme) =>
-                isSelected ? theme.palette.action.hover : theme.vars.palette.background.paper,
-              border: (theme) => `1px solid ${theme.palette.divider}`,
+                isSelected
+                  ? `color-mix(in srgb, ${courseColor} 6%, ${theme.palette.background.paper})`
+                  : theme.palette.background.paper,
+              border: (theme) =>
+                isSelected
+                  ? `1px solid ${courseColor}`
+                  : `1px solid ${theme.palette.divider}`,
+              boxShadow: isSelected ? 'var(--shadows-3)' : 'none',
               '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover,
+                backgroundColor: (theme) =>
+                  isSelected
+                    ? `color-mix(in srgb, ${courseColor} 10%, ${theme.palette.background.paper})`
+                    : theme.palette.action.hover,
+                borderColor: (theme) => (isSelected ? courseColor : theme.palette.divider),
+                boxShadow: 'var(--shadows-4)',
               },
               ...(isSelected && {
                 '&::before': {
@@ -140,7 +152,7 @@ export default function CourseCardsGrid({
                   left: 0,
                   top: 0,
                   bottom: 0,
-                  width: '5px',
+                  width: '4px',
                   backgroundColor: courseColor,
                   borderRadius: '0 4px 4px 0',
                 },
@@ -265,7 +277,9 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
             {title}
           </Typography>
         </Box>
-        <Chip label={riskLevel} size="small" color={riskColor} variant="filled" />
+        <Label color={riskColor} variant="soft">
+          {riskLevel}
+        </Label>
       </Box>
 
       <Box>

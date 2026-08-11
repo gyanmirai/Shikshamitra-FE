@@ -156,6 +156,7 @@ export const ReviewQueueTab = ({
   // Review Dialog State
   const [reviewDialog, setReviewDialog] = useState(false);
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [reviewCommentTouched, setReviewCommentTouched] = useState(false);
   const [review, setReview] = useState<ReviewState>({
     target: null,
     action: 'approve',
@@ -166,18 +167,29 @@ export const ReviewQueueTab = ({
   const openReview = (target: ReviewTarget, defaultAction: ReviewState['action'] = 'approve') => {
     if (!canReviewSubmissions) return;
     setReview({ target, action: defaultAction, comment: '', updateProgress: true });
+    setReviewCommentTouched(false);
     setReviewDialog(true);
   };
 
-  const closeReview = () => setReviewDialog(false);
+  const closeReview = () => {
+    setReviewCommentTouched(false);
+    setReviewDialog(false);
+  };
 
   const isSubmitLoading =
     (review.action === 'approve' && isApproving) ||
     (review.action === 'reject' && isRejecting) ||
     (review.action === 'changes' && isRequesting);
 
+  const commentRequired = review.action === 'reject' || review.action === 'changes';
+  const commentError = commentRequired && reviewCommentTouched && !review.comment.trim();
+
   const submitReview = async () => {
     if (!review.target) return;
+    if (commentRequired && !review.comment.trim()) {
+      setReviewCommentTouched(true);
+      return;
+    }
     try {
       let success = false;
       if (review.action === 'approve') {
@@ -817,13 +829,25 @@ export const ReviewQueueTab = ({
 
               <TextField
                 label="Review Remarks / Comments"
-                placeholder="Enter remarks or feedback for the teacher..."
                 multiline
                 rows={3}
                 fullWidth
                 size="small"
+                required={commentRequired}
+                error={commentError}
+                helperText={
+                  commentError
+                    ? review.action === 'reject'
+                      ? 'Rejection reason is required.'
+                      : 'Please describe the changes required.'
+                    : undefined
+                }
                 value={review.comment}
-                onChange={(e) => setReview((prev) => ({ ...prev, comment: e.target.value }))}
+                onChange={(e) => {
+                  setReview((prev) => ({ ...prev, comment: e.target.value }));
+                  if (!reviewCommentTouched) setReviewCommentTouched(true);
+                }}
+                onBlur={() => setReviewCommentTouched(true)}
               />
             </Stack>
           </DialogScrollContent>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
@@ -8,15 +8,12 @@ import {
   Button,
   Drawer,
   Switch,
-  Divider,
   MenuItem,
   TextField,
   Typography,
   IconButton,
   LinearProgress,
 } from '@mui/material';
-
-import { Iconify } from 'src/components/iconify';
 
 import type { AllocationStrategy, SeatingAllocationRules } from '../../types';
 
@@ -86,14 +83,13 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
   const theme = useTheme();
   const [localRules, setLocalRules] = useState<SeatingAllocationRules>(rules);
   const [preview, setPreview] = useState<PreviewSummary | null>(null);
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handlePreview = () => {
-    setIsPreviewing(true);
-    // Simulated latency-free computation, but keep a tick so the button shows feedback.
+  const handleGenerate = () => {
+    setIsGenerating(true);
     const result = onPreview(localRules);
     setPreview(result);
-    setIsPreviewing(false);
+    setIsGenerating(false);
   };
 
   const handleClose = () => {
@@ -117,7 +113,7 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
         sx={{
           display: 'flex',
           alignItems: 'flex-start',
-          gap: 1,
+          gap: 1.5,
           px: 2.5,
           py: 2,
           borderBottom: '1px solid',
@@ -137,14 +133,18 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
             flexShrink: 0,
           }}
         >
-          <Iconify icon="mdi:auto-fix" width={22} />
+          <Iconify icon={preview ? 'mdi:check-decagram' : 'mdi:auto-fix'} width={22} />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle1" fontWeight={700}>
             Auto Allocate
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Configure rules to automatically seat students
+          <Typography
+            variant="body2"
+            color={preview ? 'success.main' : 'text.secondary'}
+            fontWeight={preview ? 600 : 400}
+          >
+            {preview ? 'Allocation Ready' : 'Configure rules to automatically seat students'}
           </Typography>
         </Box>
         <IconButton size="small" onClick={handleClose}>
@@ -154,144 +154,291 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
 
       {/* Scrollable content */}
       <Box sx={{ flex: 1, overflowY: 'auto', px: 2.5, py: 2.5 }}>
-        <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
-          Strategy
-        </Typography>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          value={localRules.strategy}
-          onChange={(e) => setLocalRules((r) => ({ ...r, strategy: e.target.value as AllocationStrategy }))}
-          sx={{ mt: 1, mb: 0.75 }}
-        >
-          {STRATEGIES.map((s) => (
-            <MenuItem key={s.value} value={s.value} disabled={s.disabled}>
-              {s.label}
-            </MenuItem>
-          ))}
-        </TextField>
-        {selectedStrategy && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2.5 }}>
-            {selectedStrategy.description}
-          </Typography>
-        )}
+        {!preview ? (
+          /* CONFIGURATION STATE */
+          <>
+            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5, fontWeight: 700 }}>
+              Strategy
+            </Typography>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              value={localRules.strategy}
+              onChange={(e) => setLocalRules((r) => ({ ...r, strategy: e.target.value as AllocationStrategy }))}
+              sx={{ mt: 1, mb: 0.75 }}
+            >
+              {STRATEGIES.map((s) => (
+                <MenuItem key={s.value} value={s.value} disabled={s.disabled}>
+                  {s.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            {selectedStrategy && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2.5 }}>
+                {selectedStrategy.description}
+              </Typography>
+            )}
 
-        <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
-          Fill Direction
-        </Typography>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          value={localRules.fillDirection}
-          onChange={(e) => setLocalRules((r) => ({ ...r, fillDirection: e.target.value as any }))}
-          sx={{ mt: 1, mb: 3 }}
-        >
-          {FILL_DIRECTIONS.map((d) => (
-            <MenuItem key={d.value} value={d.value}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Iconify icon={d.icon} width={16} />
-                {d.label}
-              </Box>
-            </MenuItem>
-          ))}
-        </TextField>
+            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5, fontWeight: 700 }}>
+              Fill Direction
+            </Typography>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              value={localRules.fillDirection}
+              onChange={(e) => setLocalRules((r) => ({ ...r, fillDirection: e.target.value as any }))}
+              sx={{ mt: 1, mb: 3 }}
+            >
+              {FILL_DIRECTIONS.map((d) => (
+                <MenuItem key={d.value} value={d.value}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Iconify icon={d.icon} width={16} />
+                    {d.label}
+                  </Box>
+                </MenuItem>
+              ))}
+            </TextField>
 
-        <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
-          Rules
-        </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-          {RULE_TOGGLES.map((toggle) => {
-            const checked = localRules[toggle.key];
-            return (
-              <Box
-                key={toggle.key}
-                onClick={() => setLocalRules((r) => ({ ...r, [toggle.key]: !r[toggle.key] }))}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  p: 1.5,
-                  borderRadius: 1.5,
-                  border: '1px solid',
-                  borderColor: checked ? alpha(theme.palette.primary.main, 0.4) : 'divider',
-                  bgcolor: checked ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'all 150ms ease',
-                  '&:hover': { borderColor: alpha(theme.palette.primary.main, 0.4) },
-                }}
-              >
-                <Iconify
-                  icon={toggle.icon}
-                  width={20}
-                  color={checked ? theme.palette.primary.main : theme.palette.text.secondary}
-                  style={{ flexShrink: 0 }}
-                />
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" fontWeight={600}>
-                    {toggle.label}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {toggle.description}
-                  </Typography>
-                </Box>
-                <Switch
-                  size="small"
-                  checked={checked}
-                  onChange={(e) => setLocalRules((r) => ({ ...r, [toggle.key]: e.target.checked }))}
-                  onClick={(e) => e.stopPropagation()}
-                  inputProps={{ 'aria-label': toggle.label }}
-                />
-              </Box>
-            );
-          })}
-        </Box>
-
-        {preview && (
-          <Box sx={{ mt: 3 }}>
-            <Divider sx={{ mb: 2.5 }} />
+            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5, fontWeight: 700 }}>
+              Rules
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+              {RULE_TOGGLES.map((toggle) => {
+                const checked = localRules[toggle.key];
+                return (
+                  <Box
+                    key={toggle.key}
+                    onClick={() => setLocalRules((r) => ({ ...r, [toggle.key]: !r[toggle.key] }))}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      p: 1.5,
+                      borderRadius: 1.5,
+                      border: '1px solid',
+                      borderColor: checked ? alpha(theme.palette.primary.main, 0.4) : 'divider',
+                      bgcolor: checked ? alpha(theme.palette.primary.main, 0.04) : 'background.paper',
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease',
+                      '&:hover': { borderColor: alpha(theme.palette.primary.main, 0.4) },
+                    }}
+                  >
+                    <Iconify
+                      icon={toggle.icon}
+                      width={20}
+                      color={checked ? theme.palette.primary.main : theme.palette.text.secondary}
+                      style={{ flexShrink: 0 }}
+                    />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" fontWeight={600}>
+                        {toggle.label}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+                        {toggle.description}
+                      </Typography>
+                    </Box>
+                    <Switch
+                      size="small"
+                      checked={checked}
+                      onChange={(e) => setLocalRules((r) => ({ ...r, [toggle.key]: e.target.checked }))}
+                      onClick={(e) => e.stopPropagation()}
+                      inputProps={{ 'aria-label': toggle.label }}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          </>
+        ) : (
+          /* RESULT STATE */
+          <>
+            {/* Status Alert Banner */}
             <Alert
               severity={fullyAllocated ? 'success' : 'warning'}
-              icon={<Iconify icon={fullyAllocated ? 'mdi:check-circle-outline' : 'mdi:alert-outline'} width={20} />}
-              sx={{ mb: 2 }}
+              icon={<Iconify icon={fullyAllocated ? 'mdi:check-circle-outline' : 'mdi:alert-outline'} width={22} />}
+              sx={{
+                mb: 3,
+                borderRadius: 1.5,
+                py: 0.75,
+                '& .MuiAlert-message': { fontWeight: 600, fontSize: '0.9rem' },
+              }}
             >
               {fullyAllocated
                 ? 'All eligible students can be allocated.'
-                : `${preview.remaining} students could not be allocated with current rooms/rules.`}
+                : `${preview.remaining} student${preview.remaining > 1 ? 's' : ''} could not be allocated with current rules.`}
             </Alert>
 
-            <Box sx={{ mb: 1.5 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Allocation progress
+            {/* Main Result & Progress Bar */}
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                bgcolor: (t) =>
+                  fullyAllocated ? alpha(t.palette.success.main, 0.06) : alpha(t.palette.warning.main, 0.06),
+                border: '1px solid',
+                borderColor: (t) =>
+                  fullyAllocated ? alpha(t.palette.success.main, 0.25) : alpha(t.palette.warning.main, 0.25),
+                mb: 3,
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
+                <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                  {preview.allocated} / {preview.totalStudents} students allocated
                 </Typography>
-                <Typography variant="caption" fontWeight={700}>
-                  {preview.allocated} / {preview.totalStudents}
+                <Typography
+                  variant="subtitle2"
+                  fontWeight={700}
+                  color={fullyAllocated ? 'success.main' : 'warning.main'}
+                >
+                  {preview.totalStudents ? Math.round((preview.allocated / preview.totalStudents) * 100) : 0}%
                 </Typography>
               </Box>
               <LinearProgress
                 variant="determinate"
                 value={preview.totalStudents ? Math.min(100, (preview.allocated / preview.totalStudents) * 100) : 0}
                 color={fullyAllocated ? 'success' : 'warning'}
-                sx={{ height: 6, borderRadius: 3 }}
+                sx={{ height: 8, borderRadius: 4 }}
               />
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip size="small" variant="outlined" label={`Total: ${preview.totalStudents}`} />
-              <Chip size="small" color="success" variant="soft" label={`Allocated: ${preview.allocated}`} />
-              <Chip
-                size="small"
-                color={preview.remaining > 0 ? 'warning' : 'default'}
-                variant="soft"
-                label={`Remaining: ${preview.remaining}`}
-              />
-              <Chip size="small" variant="outlined" label={`Rooms used: ${preview.roomsUsed}`} />
-              <Chip size="small" variant="outlined" label={`Empty seats: ${preview.emptySeats}`} />
-              <Chip size="small" color="info" variant="soft" label={`Utilization: ${preview.utilization}%`} />
+            {/* Allocation Summary Section */}
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+              Allocation Summary
+            </Typography>
+
+            <Box
+              sx={{
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                overflow: 'hidden',
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                {/* Students */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: 1.75,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                    Students
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700}>
+                    {preview.totalStudents}
+                  </Typography>
+                </Box>
+
+                {/* Allocated (Visually Prioritized) */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: 1.75,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: (t) => alpha(t.palette.success.main, 0.05),
+                  }}
+                >
+                  <Typography variant="body2" color="success.dark" fontWeight={600}>
+                    Allocated
+                  </Typography>
+                  <Chip
+                    size="small"
+                    label={preview.allocated}
+                    color="success"
+                    variant="soft"
+                    sx={{ fontWeight: 700, minWidth: 36 }}
+                  />
+                </Box>
+
+                {/* Remaining (Visually Prioritized) */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: 1.75,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: (t) => (preview.remaining > 0 ? alpha(t.palette.warning.main, 0.05) : 'transparent'),
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    color={preview.remaining > 0 ? 'warning.dark' : 'text.secondary'}
+                    fontWeight={600}
+                  >
+                    Remaining
+                  </Typography>
+                  <Chip
+                    size="small"
+                    label={preview.remaining}
+                    color={preview.remaining > 0 ? 'warning' : 'default'}
+                    variant="soft"
+                    sx={{ fontWeight: 700, minWidth: 36 }}
+                  />
+                </Box>
+
+                {/* Rooms Used */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: 1.75,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                    Rooms Used
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700}>
+                    {preview.roomsUsed}
+                  </Typography>
+                </Box>
+
+                {/* Empty Seats */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: 1.75,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                    Empty Seats
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700}>
+                    {preview.emptySeats}
+                  </Typography>
+                </Box>
+
+                {/* Utilization */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1.75 }}>
+                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                    Utilization
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700}>
+                    {preview.utilization}%
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
-          </Box>
+          </>
         )}
       </Box>
 
@@ -299,34 +446,37 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
       <Box sx={{ px: 2.5, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
         {!preview ? (
           <Button
-            variant="outlined"
+            variant="contained"
             fullWidth
-            size="medium"
-            onClick={handlePreview}
-            disabled={isPreviewing}
-            startIcon={<Iconify icon="mdi:eye-outline" width={18} />}
+            size="large"
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            startIcon={<Iconify icon="mdi:play-circle-outline" width={20} />}
+            sx={{ height: 44, fontWeight: 700 }}
           >
-            {isPreviewing ? 'Calculating…' : 'Preview Allocation'}
+            {isGenerating ? 'Generating…' : 'Generate Allocation'}
           </Button>
         ) : (
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
             <Button
-              variant="text"
-              size="small"
+              variant="outlined"
+              size="medium"
+              sx={{ flex: 1, height: 42, fontWeight: 600 }}
               onClick={() => setPreview(null)}
-              startIcon={<Iconify icon="mdi:tune" width={16} />}
+              startIcon={<Iconify icon="mdi:tune" width={18} />}
             >
               Adjust Rules
             </Button>
             <Button
               variant="contained"
-              size="small"
-              sx={{ flex: 1 }}
+              size="medium"
+              color="primary"
+              sx={{ flex: 1.2, height: 42, fontWeight: 700 }}
               onClick={() => {
                 onApply();
                 handleClose();
               }}
-              startIcon={<Iconify icon="mdi:check" width={16} />}
+              startIcon={<Iconify icon="mdi:check-circle-outline" width={18} />}
             >
               Apply Allocation
             </Button>

@@ -110,6 +110,16 @@ export default function SeatingWorkspaceHeader({
           </span>
         </Tooltip>
         <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={!canAutoAllocate}
+          startIcon={<Iconify icon="mdi:auto-fix" width={16} />}
+          onClick={onAutoAllocate}
+        >
+          Auto Allocate
+        </Button>
         <SubmitButton
           size="small"
           variant="outlined"
@@ -120,15 +130,6 @@ export default function SeatingWorkspaceHeader({
           disabled={isSaving || isReadOnly}
           type="button"
         />
-        <Button
-          size="small"
-          variant="outlined"
-          disabled={!canAutoAllocate}
-          startIcon={<Iconify icon="mdi:auto-fix" width={16} />}
-          onClick={onAutoAllocate}
-        >
-          Auto Allocate
-        </Button>
         <Button
           size="small"
           variant="contained"

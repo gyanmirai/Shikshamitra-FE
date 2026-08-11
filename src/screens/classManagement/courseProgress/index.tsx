@@ -52,7 +52,7 @@ const CourseProgress = () => {
       />
       {/* Class and Division selection filters */}
       <Card sx={{ p: 1, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <CustomSelect
             options={allClass}
             label="Class"
