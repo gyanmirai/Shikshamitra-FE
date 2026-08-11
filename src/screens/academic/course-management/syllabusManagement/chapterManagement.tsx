@@ -34,6 +34,11 @@ import BulkChapterForm from './components/bulkChapterForm/BulkChapterForm';
 import CreateQuestionDialog from '../../../examination/question-bank/components/CreateQuestionDialog';
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 import ChapterQuestionsDialog from '../../../examination/question-bank/components/ChapterQuestionsDialog';
+import {
+  buildSyllabusSubjectOptions,
+  resolveSyllabusSubject,
+  type SyllabusAssignmentItem,
+} from './subjectOptions';
 
 import type { IChapter, SubjectOption } from './type';
 
@@ -297,58 +302,22 @@ const Subjects = () => {
                   }}
                 />
                 <CustomSelect
-                  options={(() => {
-                    const allOptions: SubjectOption[] = [];
-
-                    subjectOptionsData?.data?.items?.forEach((item: any) => {
-                      if (item.status !== SubjectAssignmentStatus.Published) return;
-
-                      if (item.subjects?.length > 1) {
-                        // Elective group — each subject as its own dropdown entry
-                        // API shape confirmed: { subjectId, subjectName, subjectCode, color }
-                        item.subjects.forEach((sub: any, index: number) => {
-                          const subId = sub.subjectId || String(index);
-                          allOptions.push({
-                            value: `${item.id}::${subId}`,
-                            label: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
-                            originalItem: item,
-                            isElective: true,
-                            electiveGroupId: item.id,
-                          });
-                        });
-                      } else {
-                        // Regular single subject
-                        allOptions.push({
-                          value: item.id,
-                          label:
-                            item.subjects?.[0]?.subject?.name ||
-                            item.subjects?.[0]?.subjectName ||
-                            '',
-                          originalItem: item,
-                          isElective: false,
-                        });
-                      }
-                    });
-
-                    return allOptions;
-                  })()}
+                  options={buildSyllabusSubjectOptions(
+                    (subjectOptionsData?.data?.items || []) as SyllabusAssignmentItem[]
+                  ) as SubjectOption[]}
                   value={subjectSelectValue}
                   disabled={!classes}
                   onChange={(val) => {
                     const strVal = String(val);
+                    const resolved = resolveSyllabusSubject(
+                      strVal,
+                      (subjectOptionsData?.data?.items || []) as SyllabusAssignmentItem[]
+                    );
 
                     // Resolve the individual subjectId for API calls.
                     // Elective: composite "assignmentId::subjectId" — extract the individual subjectId.
                     // Regular: value is item.id (assignment record) — look up subjects[0].subjectId.
-                    const resolvedSubjectId = (() => {
-                      if (strVal.includes('::')) {
-                        return strVal.split('::')[1];
-                      }
-                      const selected = subjectOptionsData?.data?.items?.find(
-                        (item: any) => item.id === strVal
-                      );
-                      return selected?.subjects?.[0]?.subjectId || strVal;
-                    })();
+                    const resolvedSubjectId = resolved.subjectId || strVal;
 
                     const label = (() => {
                       if (strVal.includes('::')) {
@@ -373,7 +342,7 @@ const Subjects = () => {
                       );
                     })();
 
-                    setSubject(label);
+                    setSubject(resolved.label || label);
                     setSubjectSelectValue(strVal); // composite key — keeps dropdown display in sync
                     setSubjectId(resolvedSubjectId); // individual subjectId — used for API calls
                   }}

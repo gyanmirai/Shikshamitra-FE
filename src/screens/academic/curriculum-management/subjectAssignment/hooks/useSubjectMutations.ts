@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
@@ -7,7 +7,6 @@ import {
   usePublishSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
-import { SubjectAssignmentStatus } from '../enum/subjectType';
 import { getSubjectDisplayLabel } from '../utils/getSubjectDisplayLabel';
 
 import type { ISubjectFormValues } from '../component/type';
@@ -29,6 +28,7 @@ export function useSubjectMutations({
   onDeleteComplete,
   onPublishComplete,
 }: UseSubjectMutationsParams) {
+  const deleteInFlightRef = useRef(false);
   const [deleteSubjectAssignment, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteSubjectAssignmentMutation,
@@ -45,26 +45,14 @@ export function useSubjectMutations({
    * Contains async mutation and optimistic cache update logic.
    */
   const handleConfirmDelete = useCallback(async () => {
-    if (!selectedSubject?.id) return;
+    if (!selectedSubject?.id || deleteInFlightRef.current) return;
+    deleteInFlightRef.current = true;
     try {
       await deleteSubjectAssignment({
         assignmentId: selectedSubject.id,
         force: true,
         permanent: true,
       }).unwrap();
-
-      // If subject was not already archived, issue second pass to purge from archived state in one action
-      if (selectedSubject.status !== SubjectAssignmentStatus.Archived) {
-        try {
-          await deleteSubjectAssignment({
-            assignmentId: selectedSubject.id,
-            force: true,
-            permanent: true,
-          }).unwrap();
-        } catch {
-          // If first call already purged record, catch silent 404
-        }
-      }
 
       const label = getSubjectDisplayLabel(selectedSubject);
       shikshaMitraToast.success({
@@ -75,8 +63,10 @@ export function useSubjectMutations({
       shikshaMitraToast.error({
         message: error?.data?.message || 'Failed to delete subject assignment.',
       });
+    } finally {
+      deleteInFlightRef.current = false;
+      onDeleteComplete();
     }
-    onDeleteComplete();
   }, [selectedSubject, deleteSubjectAssignment, refetch, onDeleteComplete]);
 
   /**
@@ -107,7 +97,10 @@ export function useSubjectMutations({
       });
     } catch (err: any) {
       shikshaMitraToast.error({
-        message: err?.data?.error?.message || err?.data?.message || 'Failed to publish subject assignment.',
+        message:
+          err?.data?.error?.message ||
+          err?.data?.message ||
+          'Failed to publish subject assignment.',
       });
     } finally {
       onPublishComplete();
