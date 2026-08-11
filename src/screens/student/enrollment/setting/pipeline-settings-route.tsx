@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert } from '@mui/material';
+import { Stack, Typography, Box, Alert } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { PipelineCatalogSettings } from './pipeline-catalog-settings';
@@ -55,6 +55,44 @@ const panels: Array<{
   },
 ];
 
+const PipelineSettingsUserGuide = (
+  <Stack spacing={1.5} sx={{ p: 0.5, maxWidth: 320 }}>
+    <Box>
+      <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+        Pipeline Settings — Overview
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '13px' }}>
+        Configure inquiry capture, ownership, and prioritization without changing the admission lifecycle.
+      </Typography>
+    </Box>
+
+    <Box>
+      <Typography
+        variant="caption"
+        fontWeight={700}
+        color="text.primary"
+        sx={{ display: 'block', mb: 0.5 }}
+      >
+        How to use:
+      </Typography>
+      <Stack spacing={0.75} sx={{ pl: 0.5 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', gap: 0.75 }}>
+          •{' '}
+          <span>
+            <strong>Capture</strong>: Manage inquiry sources, types, and form configurations.
+          </span>
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', gap: 0.75 }}>
+          •{' '}
+          <span>
+            <strong>Routing</strong>: Assign admissions staff pools and configure lead scoring signals.
+          </span>
+        </Typography>
+      </Stack>
+    </Box>
+  </Stack>
+);
+
 export function PipelineSettingsRoute() {
   const configurationDialog = useBoolean();
   const { academicYearId, state } = useEnrollmentWorkspace();
@@ -65,7 +103,7 @@ export function PipelineSettingsRoute() {
   return (
     <EnrollmentSettingsPage
       title="Pipeline Settings"
-      description="Configure inquiry capture, ownership, and prioritization without changing the admission lifecycle."
+      description={PipelineSettingsUserGuide}
       layout={isCatalogPanel ? 'table' : 'document'}
     >
       <EnrollmentSettingsTaskNav

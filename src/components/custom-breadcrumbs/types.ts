@@ -1,5 +1,4 @@
 import type { ElementType } from 'react';
-
 import type { TooltipProps } from '@mui/material';
 import type { Theme, SxProps } from '@mui/material/styles';
 import type { BreadcrumbsProps } from '@mui/material/Breadcrumbs';

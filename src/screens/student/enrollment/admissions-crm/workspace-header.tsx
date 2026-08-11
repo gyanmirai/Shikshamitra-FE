@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { Theme, SxProps } from '@mui/material/styles';
 
 import { useEffect } from 'react';
 import { Stack } from '@mui/material';
@@ -9,15 +10,16 @@ import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 
 type Props = {
   title: string;
-  description: string;
+  description: ReactNode;
   actions?: ReactNode;
   section?: {
     name: string;
     href: string;
   };
+  sx?: SxProps<Theme>;
 };
 
-export function EnrollmentWorkspaceHeader({ title, description, actions, section }: Props) {
+export function EnrollmentWorkspaceHeader({ title, description, actions, section, sx }: Props) {
   const { state } = useEnrollmentWorkspace();
   const cycleQuery = state.cycle ? `?cycle=${encodeURIComponent(state.cycle)}` : '';
 
@@ -30,7 +32,7 @@ export function EnrollmentWorkspaceHeader({ title, description, actions, section
       heading={title}
       headingComponent="h1"
       description={description}
-      descriptionDisplay="visible"
+      descriptionDisplay="tooltip"
       links={[
         { name: 'Student', href: studentPaths.dashboard },
         { name: 'Student Enrollment', href: `${studentPaths.enrollment.myWork}${cycleQuery}` },
@@ -55,18 +57,21 @@ export function EnrollmentWorkspaceHeader({ title, description, actions, section
         moreLink: {},
         breadcrumbs: { display: { xs: 'none', sm: 'block' } },
       }}
-      sx={{
-        px: 2,
-        py: { xs: 1.25, md: 0 },
-        minHeight: { xs: 'auto', md: 56 },
-        flexDirection: { xs: 'column', md: 'row' },
-        alignItems: { xs: 'stretch', md: 'center' },
-        gap: { xs: 1, md: 2 },
-        overflow: 'visible',
-        '& > .MuiBox-root': {
-          width: { xs: '100%', md: 'auto' },
+      sx={[
+        {
+          px: 2,
+          py: { xs: 1.25, md: 0 },
+          minHeight: { xs: 'auto', md: 56 },
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'stretch', md: 'center' },
+          gap: { xs: 1, md: 2 },
+          overflow: 'visible',
+          '& > .MuiBox-root': {
+            width: { xs: '100%', md: 'auto' },
+          },
         },
-      }}
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
     />
   );
 }

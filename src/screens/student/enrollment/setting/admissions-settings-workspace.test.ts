@@ -230,7 +230,7 @@ describe('Enrollment settings route contracts', () => {
     expect(workspaceHeader).toContain('section.href');
     expect(workspaceHeader).toContain('cycleQuery');
     expect(workspaceHeader).toContain('headingComponent="h1"');
-    expect(workspaceHeader).toContain('descriptionDisplay="visible"');
+    expect(workspaceHeader).toContain('descriptionDisplay="tooltip"');
     expect(workspaceHeader).toContain('px: 2,');
     expect(workspaceHeader).toContain("flexDirection: { xs: 'column', md: 'row' }");
     expect(workspaceHeader).toContain("breadcrumbs: { display: { xs: 'none', sm: 'block' } }");
