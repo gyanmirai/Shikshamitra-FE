@@ -21,6 +21,7 @@ type SettingsPageProps = {
   description: string;
   children: ReactNode;
   layout: 'table' | 'document';
+  actions?: ReactNode;
 };
 
 type SettingsPanelOption = {
@@ -42,12 +43,13 @@ export function EnrollmentSettingsPage({
   description,
   children,
   layout,
+  actions,
 }: SettingsPageProps) {
   const isTableLayout = layout === 'table';
 
   return (
     <Stack
-      spacing={1.5}
+      spacing={isTableLayout ? 1 : 1.5}
       sx={{
         minWidth: 0,
         minHeight: isTableLayout ? 0 : undefined,
@@ -61,14 +63,16 @@ export function EnrollmentSettingsPage({
           title={title}
           description={description}
           section={{ name: 'Settings', href: studentPaths.enrollment.settings }}
+          actions={actions}
+          sx={isTableLayout ? { px: 0 } : undefined}
         />
       </Box>
       <Box
         sx={{
-          px: 2,
+          px: isTableLayout ? 0 : 2,
           display: isTableLayout ? 'flex' : undefined,
           flexDirection: isTableLayout ? 'column' : undefined,
-          gap: isTableLayout ? 1.5 : undefined,
+          gap: isTableLayout ? 1 : 1.5,
           minWidth: 0,
           minHeight: isTableLayout ? 0 : undefined,
           flex: isTableLayout ? 1 : undefined,
@@ -130,27 +134,24 @@ export function EnrollmentSettingsTaskNav({ label, value, options }: SettingsPan
                 }}
                 sx={{
                   position: 'relative',
-                  minHeight: 76,
-                  p: 1.25,
+                  minHeight: 80,
+                  p: 1.5,
                   border: 1,
-                  borderColor: isActive ? 'primary.main' : 'divider',
-                  borderRadius: 1.5,
+                  borderColor: alpha(theme.palette.grey[500], 0.2),
+                  borderRadius: 2,
                   alignItems: 'flex-start',
                   justifyContent: 'flex-start',
                   textAlign: 'left',
                   bgcolor: isActive ? alpha(theme.palette.primary.main, 0.08) : 'background.paper',
-                  transition: theme.transitions.create(['border-color', 'background-color']),
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    inset: '0 auto 0 0',
-                    width: 3,
-                    borderRadius: '6px 0 0 6px',
-                    bgcolor: isActive ? 'primary.main' : 'transparent',
-                  },
+                  transition: theme.transitions.create([
+                    'background-color',
+                    'box-shadow',
+                    'transform',
+                  ]),
                   '&:hover': {
-                    borderColor: 'primary.main',
-                    bgcolor: alpha(theme.palette.primary.main, isActive ? 0.1 : 0.04),
+                    bgcolor: isActive ? alpha(theme.palette.primary.main, 0.12) : alpha(theme.palette.grey[500], 0.04),
+                    boxShadow: theme.customShadows?.z4 || '0 4px 20px 0 rgba(0,0,0,0.05)',
+                    transform: 'translateY(-2px)',
                   },
                   '&:focus-visible': {
                     outline: `3px solid ${alpha(theme.palette.primary.main, 0.35)}`,
@@ -158,24 +159,33 @@ export function EnrollmentSettingsTaskNav({ label, value, options }: SettingsPan
                   },
                 }}
               >
-                <Stack direction="row" spacing={1} sx={{ minWidth: 0, width: '100%' }}>
+                <Stack direction="row" spacing={1.5} sx={{ minWidth: 0, width: '100%' }}>
                   <Box
                     sx={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 1,
-                      display: 'grid',
-                      placeItems: 'center',
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       flexShrink: 0,
                       color: isActive ? 'primary.main' : 'text.secondary',
-                      bgcolor: isActive ? alpha(theme.palette.primary.main, 0.12) : 'action.hover',
+                      bgcolor: isActive
+                        ? alpha(theme.palette.primary.main, 0.12)
+                        : alpha(theme.palette.grey[500], 0.08),
                     }}
                   >
-                    <Iconify icon={option.icon || 'mdi:tune-variant'} width={20} />
+                    <Iconify icon={option.icon || 'mdi:tune-variant'} width={22} />
                   </Box>
-                  <Stack spacing={0.125} sx={{ minWidth: 0, flex: 1 }}>
+                  <Stack spacing={0.25} sx={{ minWidth: 0, flex: 1, mt: 0.25 }}>
                     <Stack direction="row" spacing={0.75} alignItems="baseline">
-                      <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          color: isActive ? 'primary.main' : 'text.primary',
+                          fontWeight: 700,
+                        }}
+                      >
                         {option.label}
                       </Typography>
                       {option.meta ? (

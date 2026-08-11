@@ -8,6 +8,9 @@ import {
   AdmissionCrmPlacementTiming,
 } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
+import dayjs from 'dayjs';
+import * as Yup from 'yup';
+
 export type AdmissionYearSetupStep = 0 | 1 | 2 | 3;
 export type AdmissionYearSetupForm = UpdateAdmissionCrmAdmissionYearSetupDto;
 
@@ -45,45 +48,150 @@ export const toAdmissionYearSetupForm = (
   stepOwners: { ...setup.stepOwners },
 });
 
-export const validateAdmissionYearSetupStep = (
-  form: AdmissionYearSetupForm,
-  step: AdmissionYearSetupStep
-): string[] => {
-  const errors: string[] = [];
+export const admissionScopeSchema = Yup.object().shape({
+  targetStandardIds: Yup.array()
+    .of(Yup.string())
+    .min(1, 'Select at least one standard that is open for admission.'),
+  routeTypes: Yup.array().of(Yup.number()).min(1, 'Select at least one admission route.'),
+});
 
-  if (step === 0) {
-    if (!form.targetStandardIds.length) {
-      errors.push('Select at least one standard that is open for admission.');
-    }
-    if (!form.routeTypes.length) {
-      errors.push('Select at least one admission route.');
-    }
+export const datesAndGatesSchema = Yup.object().shape({
+  inquiryOpenDate: Yup.string()
+    .required('Inquiry open date is required')
+    .test(
+      'is-valid-date',
+      'Inquiry open date is invalid',
+      (value) => !value || dayjs(value, 'YYYY-MM-DD', true).isValid()
+    ),
+  inquiryCloseDate: Yup.string()
+    .required('Inquiry close date is required')
+    .test(
+      'is-valid-date',
+      'Inquiry close date is invalid',
+      (value) => !value || dayjs(value, 'YYYY-MM-DD', true).isValid()
+    )
+    .test(
+      'is-after-open',
+      'Inquiry close date cannot be earlier than inquiry open date',
+      function (value) {
+        const { inquiryOpenDate } = this.parent;
+        if (!value || !inquiryOpenDate) return true;
+        return dayjs(value).diff(dayjs(inquiryOpenDate), 'day') >= 0;
+      }
+    ),
+  registrationCloseDate: Yup.string()
+    .required('Registration close date is required')
+    .test(
+      'is-valid-date',
+      'Registration close date is invalid',
+      (value) => !value || dayjs(value, 'YYYY-MM-DD', true).isValid()
+    )
+    .test(
+      'is-after-inquiry-close',
+      'Registration close date cannot be earlier than inquiry close date',
+      function (value) {
+        const { inquiryCloseDate } = this.parent;
+        if (!value || !inquiryCloseDate) return true;
+        return dayjs(value).diff(dayjs(inquiryCloseDate), 'day') >= 0;
+      }
+    ),
+  activationTargetDate: Yup.string()
+    .required('Activation target date is required')
+    .test(
+      'is-valid-date',
+      'Activation target date is invalid',
+      (value) => !value || dayjs(value, 'YYYY-MM-DD', true).isValid()
+    )
+    .test(
+      'is-after-registration-close',
+      'Activation target date cannot be earlier than registration close date',
+      function (value) {
+        const { registrationCloseDate } = this.parent;
+        if (!value || !registrationCloseDate) return true;
+        return dayjs(value).diff(dayjs(registrationCloseDate), 'day') >= 0;
+      }
+    ),
+  entranceExamRequired: Yup.boolean(),
+  financeVerificationRequired: Yup.boolean(),
+  placementTiming: Yup.number().required('Placement timing is required'),
+});
+
+export const ownershipSchema = Yup.object().shape({
+  defaultOwnerUserId: Yup.string().nullable(),
+  stepOwners: Yup.object().nullable(),
+});
+
+export const getValidationSchemaForStep = (step: AdmissionYearSetupStep) => {
+  switch (step) {
+    case 0:
+      return admissionScopeSchema;
+    case 1:
+      return datesAndGatesSchema;
+    case 2:
+      return ownershipSchema;
+    default:
+      return Yup.object(); // No validation for review step
   }
-
-  if (step === 1) {
-    const dates = [
-      form.inquiryOpenDate,
-      form.inquiryCloseDate,
-      form.registrationCloseDate,
-      form.activationTargetDate,
-    ];
-    if (dates.some((value) => !value)) {
-      errors.push('Complete all admission dates.');
-    } else if (
-      form.inquiryOpenDate > form.inquiryCloseDate ||
-      form.inquiryCloseDate > form.registrationCloseDate ||
-      form.registrationCloseDate > form.activationTargetDate
-    ) {
-      errors.push(
-        'Dates must follow inquiry opening, inquiry closing, registration closing, and activation target order.'
-      );
-    }
-  }
-
-  return errors;
 };
 
-export const validateAdmissionYearSetupForPublish = (form: AdmissionYearSetupForm): string[] =>
-  ([0, 1, 2, 3] as AdmissionYearSetupStep[]).flatMap((step) =>
-    validateAdmissionYearSetupStep(form, step)
-  );
+export const admissionYearSetupPublishSchema = Yup.object().shape({
+  targetStandardIds: Yup.array()
+    .of(Yup.string())
+    .min(1, 'Select at least one standard that is open for admission.'),
+  routeTypes: Yup.array().of(Yup.number()).min(1, 'Select at least one admission route.'),
+  inquiryOpenDate: Yup.string()
+    .required('Inquiry open date is required')
+    .test(
+      'is-valid-date',
+      'Inquiry open date is invalid',
+      (value) => !value || dayjs(value, 'YYYY-MM-DD', true).isValid()
+    ),
+  inquiryCloseDate: Yup.string()
+    .required('Inquiry close date is required')
+    .test(
+      'is-valid-date',
+      'Inquiry close date is invalid',
+      (value) => !value || dayjs(value, 'YYYY-MM-DD', true).isValid()
+    )
+    .test(
+      'is-after-open',
+      'Inquiry close date cannot be earlier than inquiry open date',
+      function (value) {
+        const { inquiryOpenDate } = this.parent;
+        if (!value || !inquiryOpenDate) return true;
+        return dayjs(value).diff(dayjs(inquiryOpenDate), 'day') >= 0;
+      }
+    ),
+  registrationCloseDate: Yup.string()
+    .required('Registration close date is required')
+    .test(
+      'is-valid-date',
+      'Registration close date is invalid',
+      (value) => !value || dayjs(value, 'YYYY-MM-DD', true).isValid()
+    )
+    .test(
+      'is-after-inquiry-close',
+      'Registration close date cannot be earlier than inquiry close date',
+      function (value) {
+        const { inquiryCloseDate } = this.parent;
+        if (!value || !inquiryCloseDate) return true;
+        return dayjs(value).diff(dayjs(inquiryCloseDate), 'day') >= 0;
+      }
+    ),
+  activationTargetDate: Yup.string()
+    .required('Activation target date is required')
+    .test(
+      'is-valid-date',
+      'Activation target date is invalid',
+      (value) => !value || dayjs(value, 'YYYY-MM-DD', true).isValid()
+    )
+    .test(
+      'is-after-registration-close',
+      'Activation target date cannot be earlier than registration close date',
+      function (value) {
+        const { registrationCloseDate } = this.parent;
+        if (!value || !registrationCloseDate) return true;
+        return dayjs(value).diff(dayjs(registrationCloseDate), 'day') >= 0;
+      }
+    ),
+});

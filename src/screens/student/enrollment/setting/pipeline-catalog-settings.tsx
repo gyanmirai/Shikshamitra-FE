@@ -10,6 +10,8 @@ import type {
 
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { Label } from 'src/components/label';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
@@ -262,7 +264,7 @@ export function PipelineCatalogSettings({
               <Chip
                 key={channel}
                 size="small"
-                variant="outlined"
+                variant="soft"
                 label={getAdmissionCrmChannelLabel(channel)}
               />
             ))}
@@ -290,50 +292,58 @@ export function PipelineCatalogSettings({
           { value: false, label: 'Inactive' },
         ],
         render: (value) => (
-          <Chip
-            size="small"
-            variant="outlined"
-            color={value ? 'success' : 'default'}
-            label={value ? 'Active' : 'Inactive'}
-          />
+          <Label color={value ? 'success' : 'default'}>
+            {value ? 'Active' : 'Inactive'}
+          </Label>
         ),
       },
       {
         id: 'actions',
-        label: '',
+        label: 'Action',
         minWidth: 100,
-        align: 'right',
+        align: 'center',
         excludeFromExport: true,
         render: (_value, row) => {
           const record = row as CatalogRecord;
           return (
-            <Stack direction="row" justifyContent="flex-end">
-              <Tooltip title={`Edit ${record.displayName}`}>
-                <IconButton
-                  size="small"
-                  onClick={() => openEditor(record)}
-                  aria-label={`Edit ${record.displayName}`}
-                >
-                  <Iconify icon="mdi:pencil-outline" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={`${record.isActive ? 'Disable' : 'Enable'} ${record.displayName}`}>
+            <Box display="flex" gap={1} alignItems="center" justifyContent="center">
+              <Tooltip title="Edit">
                 <span>
                   <IconButton
-                    size="small"
-                    disabled={isChangingStatus}
-                    onClick={() => toggleStatus(record)}
-                    aria-label={`${record.isActive ? 'Disable' : 'Enable'} ${record.displayName}`}
+                    aria-label="Edit"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditor(record);
+                    }}
+                    sx={{ p: 0 }}
                   >
                     <Iconify
-                      icon={
-                        record.isActive ? 'mdi:pause-circle-outline' : 'mdi:play-circle-outline'
-                      }
+                      icon="solar:pen-bold"
+                      sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
                     />
                   </IconButton>
                 </span>
               </Tooltip>
-            </Stack>
+              <Tooltip title={record.isActive ? 'Disable' : 'Enable'}>
+                <span>
+                  <IconButton
+                    aria-label={record.isActive ? 'Disable' : 'Enable'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStatus(record);
+                    }}
+                    disabled={isChangingStatus}
+                    sx={{ p: 0 }}
+                  >
+                    <Iconify
+                      icon={record.isActive ? 'solar:pause-circle-bold' : 'solar:play-circle-bold'}
+                      color={record.isActive ? 'warning.main' : 'success.main'}
+                      sx={{ height: '18px', width: '18px', cursor: 'pointer' }}
+                    />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </Box>
           );
         },
       }
