@@ -87,7 +87,6 @@ export type EnrollmentWorkspaceState = {
   applicant?: string;
   workItem?: string;
   applicantTab?: EnrollmentApplicantTab;
-  applicantActivity?: boolean;
   examAction?: EnrollmentExamAction;
   page: number;
   pageSize?: number;
@@ -318,10 +317,6 @@ export const parseEnrollmentWorkspaceState = (
         : applicantTabValue && applicantTabs.has(applicantTabValue)
           ? applicantTabValue
           : defaults.applicantTab,
-    applicantActivity:
-      searchParams.get('activity') === '1' || rawApplicantTab === 'activity'
-        ? true
-        : defaults.applicantActivity,
     examAction:
       examActionValue && examActions.has(examActionValue) ? examActionValue : defaults.examAction,
     page: parsePositiveInteger(searchParams.get('page')) ?? defaults.page ?? 1,
@@ -396,7 +391,6 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('applicant', state.applicant);
   set('workItem', state.workItem);
   set('tab', state.applicantTab);
-  if (state.applicantActivity) set('activity', 1);
   set('examAction', state.examAction);
   if (state.page > 1) set('page', state.page);
   set('pageSize', state.pageSize);

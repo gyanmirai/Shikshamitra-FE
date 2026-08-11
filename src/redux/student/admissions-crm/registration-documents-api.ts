@@ -16,6 +16,8 @@ import {
   AdmissionCrmFormNumberSeriesDto,
   AdmissionCrmFormNumberSeriesUpsertDto,
   AdmissionCrmRegistrationApplicationDto,
+  AdmissionCrmRegistrationIssuanceResultDto,
+  AdmissionCrmRegistrationReadinessDto,
   AdmissionCrmRegistrationTemplateDto,
   AdmissionCrmRegistrationTemplateListParams,
   AdmissionCrmRegistrationTemplateUpsertDto,
@@ -131,11 +133,31 @@ export const AdmissionCrmRegistrationDocumentsApi = api.injectEndpoints({
       invalidatesTags: [studentAdmissionsCrmType.configuration],
     }),
     issueAdmissionCrmRegistrationApplication: builder.mutation<
-      AdmissionCrmRegistrationApplicationDto,
+      AdmissionCrmRegistrationIssuanceResultDto,
       { leadId: string; body: IssueAdmissionCrmRegistrationApplicationDto }
     >({
       query: buildIssueAdmissionCrmRegistrationApplicationRequest,
       invalidatesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.timeline],
+    }),
+    sendAdmissionCrmRegistrationInvitation: builder.mutation<
+      AdmissionCrmRegistrationIssuanceResultDto,
+      { registrationId: string }
+    >({
+      query: ({ registrationId }) => ({
+        url: `/student-enrollment/admissions-crm/registrations/${registrationId}/invitation/send`,
+        method: 'POST',
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.timeline],
+    }),
+    getAdmissionCrmRegistrationReadiness: builder.query<
+      AdmissionCrmRegistrationReadinessDto,
+      { leadId: string }
+    >({
+      query: ({ leadId }) => ({
+        url: `/student-enrollment/admissions-crm/leads/${leadId}/registrations/readiness`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.configuration],
     }),
     createDirectAdmissionCrmRegistration: builder.mutation<
       AdmissionCrmDirectRegistrationResultDto,
@@ -457,6 +479,8 @@ export const {
   useCreateAdmissionCrmFormNumberSeriesMutation,
   useUpdateAdmissionCrmFormNumberSeriesMutation,
   useIssueAdmissionCrmRegistrationApplicationMutation,
+  useSendAdmissionCrmRegistrationInvitationMutation,
+  useGetAdmissionCrmRegistrationReadinessQuery,
   useCreateDirectAdmissionCrmRegistrationMutation,
   useCreatePaperAdmissionCrmRegistrationMutation,
   useGetAdmissionCrmRegistrationApplicationQuery,

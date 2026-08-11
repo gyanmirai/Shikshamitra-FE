@@ -8,6 +8,7 @@ import {
   AdmissionInquiryStage,
 } from './core-leads-contracts';
 
+import type { AdmissionCrmMessageDeliveryLogDto } from './communication-exams-events-contracts';
 import { AdmissionCrmRouteEligibilityStatus } from './communication-exams-events-contracts';
 
 import {
@@ -1262,6 +1263,12 @@ export type AdmissionCrmGeneratedDocumentDto = {
   isPreview: boolean;
   generatedAt: string;
   timelineEventId?: string | null;
+};
+
+export type AdmissionCrmGeneratedDocumentDeliveryDto = {
+  document: AdmissionCrmGeneratedDocumentDto;
+  delivery?: AdmissionCrmMessageDeliveryLogDto | null;
+  deliveryError?: string | null;
 };
 
 export type AdmissionCrmGeneratedDocumentHistoryDto = {

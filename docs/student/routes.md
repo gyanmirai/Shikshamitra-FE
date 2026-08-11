@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-08-10
+updated_on: 2026-08-11
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -84,8 +84,8 @@ Pipeline, My Work, and focused worklists open the same applicant record rather t
 Pipeline rows, applicant names, generic applicant actions, and newly created inquiries use `tab=inquiry`.
 Focused worklists use explicit `exam`, `registration`, `finance`, `offer`, `activation`, or `governance` stage values.
 Explicit stage links remain on that historical or focused stage while the header continues to show current work.
-Legacy `tab=overview` becomes `tab=next`, and legacy `tab=activity` becomes `tab=next&activity=1`.
-The Activity and Audit drawer uses `activity=1`.
+Legacy `tab=overview` and `tab=activity` both become `tab=next`.
+Activity and audit are rendered inline below Inquiry follow-up; there is no drawer URL state.
 Targeted exam handoffs use `/student/enrollment/entrance-exams?cycle={academicYearId}&applicant={leadId}&examAction={record-result|review-eligibility|review-absence}`.
 The `applicantReturn` value carries the session-backed Pipeline return token through an exam handoff.
 The internal return token is versioned and restores the originating URL, scroll position, applicant focus target, and Pipeline view after data readiness.

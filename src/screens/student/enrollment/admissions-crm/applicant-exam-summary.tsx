@@ -1,10 +1,14 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { LoadingButton } from 'src/components/loading-button';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import OpenInNewRounded from '@mui/icons-material/OpenInNewRounded';
 import {
   useDecideAdmissionCrmEligibilityMutation,
@@ -31,6 +35,7 @@ import {
 
 import { ApplicantEmptyState } from './applicant-workspace-primitives';
 import { formatEnumLabel, formatEnrollmentDate } from './enrollment-display';
+import { admissionCrmActionPermissions } from './admission-action-permissions';
 
 const enumLabel = (source: Record<string, string | number>, value: number) => {
   const raw = source[value];
@@ -48,10 +53,19 @@ export function ApplicantExamSummary({
 }) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overrideReason, setOverrideReason] = useState('');
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canOverrideEligibility = hasGrantedPermission(
+    permissions,
+    admissionCrmActionPermissions.overrideEligibility
+  );
   const query = useGetAdmissionCrmEntranceExamByLeadQuery({ leadId });
   const [decideEligibility, decisionState] = useDecideAdmissionCrmEligibilityMutation();
   const exam = query.data;
   const examHref = `${studentPaths.enrollment.entranceExams}?cycle=${encodeURIComponent(academicYearId)}&applicant=${encodeURIComponent(leadId)}`;
+  const recordResultHref = `${examHref}&examAction=record-result`;
+  const awaitingResult = exam != null && !exam.resultRecordedAt;
   const unresolvedAbsence =
     exam != null &&
     [
@@ -78,6 +92,27 @@ export function ApplicantExamSummary({
       await query.refetch();
     } catch {
       shikshaMitraToast.error({ message: 'The eligibility decision could not be saved.' });
+    }
+  };
+
+  const overrideAndContinue = async () => {
+    if (!exam || !overrideReason.trim()) return;
+    try {
+      await decideEligibility({
+        examRecordId: exam.id,
+        body: {
+          decision: AdmissionCrmEligibilityDecision.Eligible,
+          reason: 'Eligibility approved by authorized override.',
+          overrideDecision: true,
+          overrideReason: overrideReason.trim(),
+        },
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Exam requirement overridden. Registration is now available.' });
+      setOverrideOpen(false);
+      setOverrideReason('');
+      await query.refetch();
+    } catch {
+      shikshaMitraToast.error({ message: 'The exam override could not be saved.' });
     }
   };
 
@@ -136,6 +171,18 @@ export function ApplicantExamSummary({
           label={`Eligibility: ${enumLabel(AdmissionCrmEligibilityDecision, exam.eligibilityDecision)}`}
         />
       </Stack>
+      {awaitingResult && !unresolvedAbsence ? (
+        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+          <Button component={Link} href={recordResultHref} size="small" variant="contained">
+            Record Exam Result
+          </Button>
+          {canOverrideEligibility ? (
+            <Button size="small" variant="outlined" onClick={() => setOverrideOpen(true)}>
+              Override & Continue
+            </Button>
+          ) : null}
+        </Stack>
+      ) : null}
       {exam.totalMarks != null && exam.obtainedMarks != null ? (
         <Typography variant="body2">
           Marks {exam.obtainedMarks}/{exam.totalMarks}
@@ -207,6 +254,36 @@ export function ApplicantExamSummary({
             onClick={rejectApplication}
           >
             Reject application
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={overrideOpen} onClose={() => setOverrideOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Override entrance exam requirement</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mt: 1, mb: 1 }}>
+            This records the applicant as eligible without an exam result and unlocks registration.
+          </Alert>
+          <TextField
+            fullWidth
+            required
+            multiline
+            minRows={3}
+            margin="dense"
+            label="Override reason"
+            value={overrideReason}
+            onChange={(event) => setOverrideReason(event.target.value)}
+            helperText="The reason and acting user are recorded in the audit timeline."
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOverrideOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={decisionState.isLoading}
+            disabled={!overrideReason.trim()}
+            onClick={overrideAndContinue}
+          >
+            Override & Continue
           </LoadingButton>
         </DialogActions>
       </Dialog>

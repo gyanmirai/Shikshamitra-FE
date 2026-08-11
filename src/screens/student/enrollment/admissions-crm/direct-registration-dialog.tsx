@@ -27,8 +27,7 @@ import {
 } from '@mui/material';
 import { AdmissionInquiryChannel } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
-import { AdmissionCrmRegistrationTemplateStatus } from 'src/redux/student/admissions-crm/registration-documents-contracts';
-
+import { AdmissionCrmRegistrationAccessMode, AdmissionCrmRegistrationTemplateStatus } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 import {
   useGetAdmissionCrmFormNumberSeriesQuery,
   useGetAdmissionCrmRegistrationTemplatesQuery,
@@ -425,6 +424,7 @@ export function DirectRegistrationDialog({ open, onClose, onCreated }: Props) {
           applicant,
           registration: {
             registrationTemplateId: form.registrationTemplateId,
+            accessMode: AdmissionCrmRegistrationAccessMode.StaffAssisted,
             formNumberSeriesId: form.formNumberSeriesId || null,
             manualFormNumber: form.formNumberSeriesId
               ? form.manualFormNumber.trim().toUpperCase() || null

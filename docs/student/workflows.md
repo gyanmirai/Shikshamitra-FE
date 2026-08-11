@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-08-10
+updated_on: 2026-08-11
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -49,14 +49,15 @@ The interface presents `Skipped` as `Not required` and never uses a completion c
 Optional steps show `Not required` only when the immutable Admission Year Setup snapshot permits the skip or an authorized bypass is recorded.
 Blocked steps identify the missing field, document, Finance state, capacity issue, or permission requirement.
 Completed and current stages are navigable, while blocked, optional, and future stages remain readable without starting invalid work.
-Desktop renders one six-column journey without horizontal scrolling.
-Tablet and mobile render current-step progress plus a `View Journey` disclosure with a vertical status list.
+Desktop renders one horizontal MUI Stepper without horizontal scrolling.
+Tablet and mobile render the same journey as a vertical Stepper. Blocked reasons are available by keyboard focus and pointer hover.
 The applicant header owns identity, lifecycle status, labeled inquiry facts, SLA, and the next best action.
 Every applicant receives one immutable, short Applicant ID at inquiry creation. The same padded ID
 is displayed as the pinned left identity column in Pipeline, My Work, Assessments, Registration,
 Offers, Activation, and Operations, and remains visible in the applicant header throughout Enrollment.
-The main column owns the active operation, while the sticky desktop context rail owns pathway, ownership, priority, lead score, follow-ups, Activity and Audit, and Additional Checks.
-Activity and Audit opens as a URL-backed drawer rather than a competing applicant tab.
+The main column owns Follow-up and its bounded inline Activity and Audit timeline. The sticky desktop context rail owns concise admission profile, operational context, and permission-gated Additional Checks.
+Assessment scheduling loads availability by visible calendar month, disables dates without capacity, and presents time, room, and remaining capacity after date selection.
+Registration issuance supports Online, Staff-assisted, and Both modes over one shared draft. Its template sections render as a vertical completion and validation Stepper; invitation failure remains retryable without losing the issued registration.
 Parent-facing status uses the same step order but hides internal notes, scoring details, duplicate evidence, and staff permissions.
 One verified guardian session can show related active applications for the same tenant and primary
 contact, or applications explicitly granted to the same authority-verified portal guardian, so a

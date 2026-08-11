@@ -1,7 +1,9 @@
 'use client';
 
 import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
+import type { Dayjs } from 'dayjs';
 
+import dayjs from 'dayjs';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
@@ -11,22 +13,23 @@ import {
 } from 'src/redux/student/admissions-crm/communication-exams-events-api';
 import {
   Alert,
+  Box,
+  Chip,
   Stack,
+  Paper,
   Switch,
   Button,
   Dialog,
-  Select,
-  MenuItem,
   TextField,
-  InputLabel,
+  ButtonBase,
   Typography,
-  FormControl,
   DialogTitle,
   DialogContent,
   DialogActions,
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 
 import { formatEnrollmentDate } from './enrollment-display';
 import { getAdmissionCrmLeadName } from './admissions-crm-utils';
@@ -51,10 +54,16 @@ export function ApplicantExamSchedulingDialog({
   onScheduled,
 }: Props) {
   const [selectedSlotId, setSelectedSlotId] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
+  const [visibleMonth, setVisibleMonth] = useState(() => dayjs().startOf('month'));
   const [overrideCapacity, setOverrideCapacity] = useState(false);
   const [capacityOverrideReason, setCapacityOverrideReason] = useState('');
   const slotsQuery = useGetAdmissionCrmExamSlotsQuery(
-    { academicYearId: academicYearId || '' },
+    {
+      academicYearId: academicYearId || '',
+      from: visibleMonth.startOf('month').toISOString(),
+      to: visibleMonth.endOf('month').toISOString(),
+    },
     { skip: !academicYearId || !lead }
   );
   const [scheduleExam, scheduleExamState] = useScheduleAdmissionCrmEntranceExamMutation();
@@ -66,10 +75,27 @@ export function ApplicantExamSchedulingDialog({
     () => (slotsQuery.data?.items || []).filter((slot) => slot.isActive),
     [slotsQuery.data?.items]
   );
+  const availableDates = useMemo(
+    () =>
+      new Set(
+        activeExamSlots
+          .filter((slot) => slot.remainingCapacity > 0 || capacityOverrideEnabled)
+          .map((slot) => dayjs(slot.startDate).format('YYYY-MM-DD'))
+      ),
+    [activeExamSlots, capacityOverrideEnabled]
+  );
+  const slotsForSelectedDate = useMemo(
+    () =>
+      selectedDate
+        ? activeExamSlots.filter((slot) => dayjs(slot.startDate).isSame(selectedDate, 'day'))
+        : [],
+    [activeExamSlots, selectedDate]
+  );
 
   useEffect(() => {
     if (lead) return;
     setSelectedSlotId('');
+    setSelectedDate(null);
     setOverrideCapacity(false);
     setCapacityOverrideReason('');
   }, [lead]);
@@ -113,7 +139,7 @@ export function ApplicantExamSchedulingDialog({
       open={Boolean(lead)}
       onClose={scheduleExamState.isLoading ? undefined : requestClose}
       fullWidth
-      maxWidth="sm"
+      maxWidth="md"
       slotProps={{ paper: { sx: { overscrollBehavior: 'contain' } } }}
     >
       <DialogTitle>Schedule Assessment</DialogTitle>
@@ -144,27 +170,86 @@ export function ApplicantExamSchedulingDialog({
               No active exam slots are available for this admission year.
             </Alert>
           ) : null}
-          <FormControl fullWidth disabled={slotsQuery.isFetching || slotsQuery.isError}>
-            <InputLabel id="applicant-exam-slot-label">Exam Slot</InputLabel>
-            <Select
-              labelId="applicant-exam-slot-label"
-              name="entranceExamSlot"
-              label="Exam Slot"
-              value={selectedSlotId}
-              onChange={(event) => setSelectedSlotId(event.target.value)}
-            >
-              {activeExamSlots.map((slot) => (
-                <MenuItem
-                  key={slot.id}
-                  value={slot.id}
-                  disabled={slot.remainingCapacity <= 0 && !capacityOverrideEnabled}
-                >
-                  {slot.slotName} · {formatEnrollmentDate(slot.startDate, true)} ·{' '}
-                  {slot.remainingCapacity} seats
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '320px minmax(0, 1fr)' },
+              gap: 1.5,
+              alignItems: 'start',
+            }}
+          >
+            <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
+              <DateCalendar
+                value={selectedDate}
+                disablePast
+                loading={slotsQuery.isFetching}
+                onMonthChange={(month) => {
+                  setVisibleMonth(month.startOf('month'));
+                  setSelectedDate(null);
+                  setSelectedSlotId('');
+                }}
+                onChange={(date) => {
+                  setSelectedDate(date);
+                  setSelectedSlotId('');
+                }}
+                shouldDisableDate={(date) => !availableDates.has(date.format('YYYY-MM-DD'))}
+              />
+            </Paper>
+            <Stack spacing={1} aria-live="polite">
+              <Box>
+                <Typography variant="subtitle2">Available times</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {selectedDate
+                    ? selectedDate.format('dddd, DD MMMM YYYY')
+                    : 'Choose an available date to view its exam slots.'}
+                </Typography>
+              </Box>
+              {selectedDate && slotsForSelectedDate.length === 0 ? (
+                <Alert severity="info">No active slots are available on this date.</Alert>
+              ) : null}
+              {slotsForSelectedDate.map((slot) => {
+                const full = slot.remainingCapacity <= 0;
+                const selected = slot.id === selectedSlotId;
+                return (
+                  <ButtonBase
+                    key={slot.id}
+                    disabled={full && !capacityOverrideEnabled}
+                    onClick={() => setSelectedSlotId(slot.id)}
+                    aria-pressed={selected}
+                    sx={{ width: '100%', borderRadius: 1 }}
+                  >
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        width: '100%',
+                        p: 1.25,
+                        textAlign: 'left',
+                        borderColor: selected ? 'primary.main' : 'divider',
+                        bgcolor: selected ? 'action.selected' : 'background.paper',
+                      }}
+                    >
+                      <Stack direction="row" justifyContent="space-between" gap={1}>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="subtitle2">{slot.slotName}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {formatEnrollmentDate(slot.startDate, true)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {slot.roomOrHall || 'Venue to be confirmed'}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          size="small"
+                          color={full ? 'warning' : 'success'}
+                          label={full ? 'Full' : `${slot.remainingCapacity} seats`}
+                        />
+                      </Stack>
+                    </Paper>
+                  </ButtonBase>
+                );
+              })}
+            </Stack>
+          </Box>
           {canOverrideCapacity ? (
             <FormControlLabel
               control={

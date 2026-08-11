@@ -13,6 +13,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import {
   AdmissionCrmRegistrationTemplateStatus,
   AdmissionCrmDocumentChecklistTemplateStatus,
+  AdmissionCrmRegistrationAccessMode,
 } from 'src/redux/student/admissions-crm/registration-documents-contracts';
 
 import {
@@ -23,6 +24,7 @@ import {
   useReissueAdmissionCrmRegistrationMutation,
   useWaiveAdmissionCrmRegistrationFeeMutation,
   useGetAdmissionCrmRegistrationTemplatesQuery,
+  useGetAdmissionCrmRegistrationReadinessQuery,
   useWaiveAdmissionCrmApplicantDocumentMutation,
   useAssignAdmissionCrmDocumentChecklistMutation,
   useReviewAdmissionCrmApplicantDocumentMutation,
@@ -74,59 +76,51 @@ export function useApplicantRegistrationController({
   requestedActionCode,
 }: Props) {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
-
   const canUploadDocuments = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.reviewDocuments
   );
-
   const canIssueRegistration = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.issueRegistrationForm
   );
-
   const canVerifyRegistration = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.verifyRegistration
   );
-
   const canManageRegistrationLinks = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.manageRegistrationLinks
   );
-
   const canWaiveRegistrationFee = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.waiveRegistrationFee
   );
-
   const canAssignDocumentChecklist = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.manageDocumentConfiguration
   );
-
   const canWaiveDocuments = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.waiveDocuments
   );
-
   const canConfirmOriginalSeen = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.confirmOriginalSeen
   );
-
   const canConfirmAdmissionReadiness = hasGrantedPermission(
     permissions,
     admissionCrmActionPermissions.confirmAdmissionReadiness
   );
-
   const registrationQuery = useGetCurrentAdmissionCrmRegistrationByLeadQuery(
     { leadId },
     { skip: !hasRegistration }
   );
-
   const registration = registrationQuery.data;
-
+  const readinessQuery = useGetAdmissionCrmRegistrationReadinessQuery(
+    { leadId },
+    { skip: Boolean(registration) }
+  );
   const templatesQuery = useGetAdmissionCrmRegistrationTemplatesQuery(
     {
       academicYearId,
@@ -153,6 +147,8 @@ export function useApplicantRegistrationController({
   );
 
   const [registrationTemplateId, setRegistrationTemplateId] = useState('');
+
+  const [accessMode, setAccessMode] = useState(AdmissionCrmRegistrationAccessMode.Online);
 
   const [issueFormOpen, setIssueFormOpen] = useState(false);
 
@@ -304,6 +300,7 @@ export function useApplicantRegistrationController({
     setIssueFormOpen(false);
     setRegistrationTemplateId('');
     setSeriesId('');
+    setAccessMode(AdmissionCrmRegistrationAccessMode.Online);
   };
 
   const clearDocumentReason = (requirementKey: string) => {
@@ -317,6 +314,7 @@ export function useApplicantRegistrationController({
   return {
     state: {
       allFieldKeys,
+      accessMode,
       checklist,
       checklistTemplateId,
       correctionFields,
@@ -355,6 +353,7 @@ export function useApplicantRegistrationController({
       readinessState,
       recordPayment,
       setChecklistTemplateId,
+      setAccessMode,
       setCorrectionFields,
       setDocumentFileByKey,
       setDocumentReasonByKey,
@@ -392,6 +391,7 @@ export function useApplicantRegistrationController({
       originalState,
       paymentState,
       registrationQuery,
+      readinessQuery,
       reissueState,
       reviewState,
       revokeState,

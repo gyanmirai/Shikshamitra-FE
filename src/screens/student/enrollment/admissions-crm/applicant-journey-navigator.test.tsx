@@ -85,16 +85,15 @@ describe('Applicant journey navigator', () => {
 
     expect(screen.getByText('Not required')).toBeVisible();
     expect(screen.queryByText('Registration must be verified first.')).not.toBeInTheDocument();
-    expect(screen.getByText('Needs review')).toBeVisible();
-    expect(screen.getByText('1')).toBeVisible();
+    expect(screen.getByText(/Needs review/)).toBeVisible();
     expect(screen.getByText('6')).toBeVisible();
     expect(screen.getAllByRole('button')).toHaveLength(2);
 
-    fireEvent.click(screen.getByRole('button', { name: /registration needs review current/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Registration.*Needs review/i }));
     expect(onSelect).toHaveBeenCalledWith('registration');
   });
 
-  it('uses a keyboard-operable journey disclosure in compact layouts', () => {
+  it('uses a vertical keyboard-operable stepper and exposes blocked reasons on hover', async () => {
     setCompact(true);
     render(
       <ApplicantJourneyNavigator
@@ -105,13 +104,13 @@ describe('Applicant journey navigator', () => {
       />
     );
 
-    const disclosure = screen.getByRole('button', { name: 'View journey' });
-    expect(disclosure).toHaveAttribute('aria-expanded', 'false');
-    fireEvent.click(disclosure);
-    expect(screen.getByRole('button', { name: 'Hide journey' })).toHaveAttribute(
-      'aria-expanded',
-      'true'
-    );
+    expect(screen.getByRole('navigation', { name: 'Admission journey' })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Inquiry.*Complete/i })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Registration.*Needs review/i })).toBeVisible();
+    const blockedStep = screen.getByRole('group', { name: /Finance, Blocked/ });
+    expect(blockedStep).toHaveAttribute('tabindex', '0');
+    fireEvent.mouseOver(blockedStep);
+    expect(await screen.findByText('Registration must be verified first.')).toBeVisible();
     expect(
       screen.queryByText('Entrance exam is optional for this admission year.')
     ).not.toBeInTheDocument();
