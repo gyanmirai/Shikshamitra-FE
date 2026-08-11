@@ -70,14 +70,13 @@ const getStates = (steps: ReturnType<typeof buildApplicantJourney>) =>
   >;
 
 describe('Applicant journey model', () => {
-  it('maps the backend projection in the fixed six-step order', () => {
+  it('omits optional Finance and preserves the configured journey order', () => {
     const steps = buildJourney();
 
     expect(steps.map((step) => step.id)).toEqual([
       'inquiry',
       'exam',
       'registration',
-      'finance',
       'placement',
       'activation',
     ]);
@@ -85,10 +84,27 @@ describe('Applicant journey model', () => {
       inquiry: 'complete',
       exam: 'in-progress',
       registration: 'blocked',
-      finance: 'skipped',
       placement: 'blocked',
       activation: 'blocked',
     });
+  });
+
+  it('shows Finance when it is required by the applicant journey projection', () => {
+    const progress = makeProgress();
+    progress.steps[3] = {
+      ...progress.steps[3],
+      status: AdmissionCrmApplicantStepStatus.NotStarted,
+      isRequired: true,
+    };
+
+    expect(buildJourney(progress).map((step) => step.id)).toEqual([
+      'inquiry',
+      'exam',
+      'registration',
+      'finance',
+      'placement',
+      'activation',
+    ]);
   });
 
   it('prioritizes review, active work, and then not-started work', () => {

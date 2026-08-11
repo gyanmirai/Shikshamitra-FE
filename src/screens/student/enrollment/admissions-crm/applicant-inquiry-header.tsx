@@ -34,8 +34,8 @@ function ApplicantFact({ label, value, icon }: { label: string; value: string; i
       <Box
         aria-hidden="true"
         sx={(theme) => ({
-          width: 34,
-          height: 34,
+          width: 30,
+          height: 30,
           borderRadius: 1.25,
           display: 'grid',
           placeItems: 'center',
@@ -44,7 +44,7 @@ function ApplicantFact({ label, value, icon }: { label: string; value: string; i
           bgcolor: alpha(theme.palette.primary.main, 0.08),
         })}
       >
-        <Iconify icon={icon} width={18} />
+        <Iconify icon={icon} width={16} />
       </Box>
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
@@ -62,13 +62,13 @@ function ApplicantInquiryHeaderSkeleton() {
   return (
     <Stack component="header" spacing={1.25} aria-label="Loading applicant summary">
       <Skeleton variant="text" width={150} height={32} />
-      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2.25 }, borderRadius: 2 }}>
-        <Stack spacing={2}>
+      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 1.75 }, borderRadius: 2 }}>
+        <Stack spacing={1.5}>
           <Skeleton variant="text" width="min(420px, 80%)" height={46} />
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
               gap: 1.5,
             }}
           >
@@ -76,7 +76,7 @@ function ApplicantInquiryHeaderSkeleton() {
               <Skeleton key={item} variant="rounded" height={48} />
             ))}
           </Box>
-          <Skeleton variant="rounded" height={92} />
+          <Skeleton variant="rounded" height={76} />
         </Stack>
       </Paper>
     </Stack>
@@ -143,16 +143,14 @@ export function ApplicantInquiryHeader({
       <Paper
         variant="outlined"
         sx={(theme) => ({
-          p: { xs: 1.5, sm: 2.25 },
+          p: { xs: 1.5, sm: 1.75 },
           borderRadius: 2,
           overflow: 'hidden',
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.07)}, ${alpha(
-            theme.palette.background.paper,
-            0.96
-          )} 46%)`,
+          bgcolor: 'background.paper',
+          borderTopColor: alpha(theme.palette.primary.main, 0.45),
         })}
       >
-        <Stack spacing={2}>
+        <Stack spacing={1.5}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             alignItems={{ md: 'flex-start' }}
@@ -170,7 +168,7 @@ export function ApplicantInquiryHeader({
               <ApplicantTitleTransition leadId={lead.id}>
                 <Typography
                   component="h1"
-                  variant="h4"
+                  variant="h5"
                   sx={{ mt: 0.25, textWrap: 'balance', overflowWrap: 'anywhere' }}
                 >
                   {getAdmissionCrmLeadName(lead)}
@@ -217,11 +215,10 @@ export function ApplicantInquiryHeader({
             sx={{
               display: 'grid',
               gridTemplateColumns: {
-                xs: 'minmax(0, 1fr)',
-                sm: 'repeat(2, minmax(0, 1fr))',
+                xs: 'repeat(2, minmax(0, 1fr))',
                 lg: 'repeat(4, minmax(0, 1fr))',
               },
-              gap: 1.5,
+              gap: 1.25,
             }}
           >
             <ApplicantFact
@@ -250,7 +247,8 @@ export function ApplicantInquiryHeader({
             <Paper
               variant="outlined"
               sx={(theme) => ({
-                p: 1.5,
+                px: 1.5,
+                py: 1.25,
                 borderRadius: 1.5,
                 bgcolor: alpha(theme.palette.info.main, 0.045),
               })}
@@ -277,7 +275,11 @@ export function ApplicantInquiryHeader({
                       'Review the inquiry record and confirm the next admissions step.'}
                   </Typography>
                 </Box>
-                {primaryAction ? <Box sx={{ flexShrink: 0 }}>{primaryAction}</Box> : null}
+                {primaryAction ? (
+                  <Box sx={{ flexShrink: 0, '& .MuiButton-root': { minHeight: 44 } }}>
+                    {primaryAction}
+                  </Box>
+                ) : null}
               </Stack>
             </Paper>
           ) : null}

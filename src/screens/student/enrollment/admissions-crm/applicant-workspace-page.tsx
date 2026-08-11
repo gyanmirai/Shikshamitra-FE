@@ -12,11 +12,22 @@ import { Iconify } from 'src/components/iconify';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
+import { useGetAdmissionCrmPipelineStagesQuery } from 'src/redux/student/admissions-crm/setup-playbooks-api';
+import { AdmissionCrmGeneratedDocumentType } from 'src/redux/student/admissions-crm/final-admission-contracts';
+import { useGetCurrentAdmissionCrmRegistrationByLeadQuery } from 'src/redux/student/admissions-crm/registration-documents-api';
+import {
+  useGetAdmissionCrmLeadQuery,
+  useGetAdmissionCrmApplicantProgressQuery,
+} from 'src/redux/student/admissions-crm/core-leads-api';
+import {
+  AdmissionInquiryStage,
+  AdmissionCrmClosedOutcome,
+  AdmissionCrmPipelineColumnKey,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 import {
   Box,
   Stack,
   Alert,
-  Paper,
   Button,
   Drawer,
   Divider,
@@ -27,23 +38,8 @@ import {
   AccordionDetails,
   AccordionSummary,
 } from '@mui/material';
-import {
-  AdmissionInquiryStage,
-  AdmissionCrmClosedOutcome,
-  AdmissionCrmPipelineColumnKey,
-} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
-import {
-  useGetAdmissionCrmLeadQuery,
-  useGetAdmissionCrmApplicantProgressQuery,
-} from 'src/redux/student/admissions-crm/core-leads-api';
-
-import { AdmissionCrmGeneratedDocumentType } from 'src/redux/student/admissions-crm/final-admission-contracts';
-
-import { useGetAdmissionCrmPipelineStagesQuery } from 'src/redux/student/admissions-crm/setup-playbooks-api';
-
-import { useGetCurrentAdmissionCrmRegistrationByLeadQuery } from 'src/redux/student/admissions-crm/registration-documents-api';
-
+import { formatEnumLabel } from './enrollment-display';
 import { ApplicantWorkContext } from './applicant-work-context';
 import { ApplicantContextRail } from './applicant-context-rail';
 import { ApplicantInquiryHeader } from './applicant-inquiry-header';
@@ -53,7 +49,6 @@ import { ApplicantWorkspaceOverview } from './applicant-workspace-overview';
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
 import { buildApplicantJourney, getApplicantNextJourneyStep } from './applicant-journey-model';
-import { formatEnumLabel } from './enrollment-display';
 import {
   ApplicantWorkspaceDirtyProvider,
   useApplicantWorkspaceTransition,
@@ -293,6 +288,15 @@ function ApplicantWorkspaceContent({
   }, [academicYearId, lead?.academicYearId, onAcademicYearResolved]);
   useEffect(() => {
     if (
+      !isJourneyLoading &&
+      requestedTab === 'finance' &&
+      !journeySteps.some((step) => step.id === 'finance')
+    ) {
+      setRequestedTab('next');
+      onTabChange?.('next');
+      return;
+    }
+    if (
       requestedTab === 'next' ||
       requestedTab === 'governance' ||
       isJourneyLoading ||
@@ -303,7 +307,7 @@ function ApplicantWorkspaceContent({
     }
     setRequestedTab('next');
     onTabChange?.('next');
-  }, [isJourneyLoading, onTabChange, requestedTab, selectedJourneyStep]);
+  }, [isJourneyLoading, journeySteps, onTabChange, requestedTab, selectedJourneyStep]);
   useEffect(() => {
     if (!focusedActionCode) return undefined;
     const frame = window.requestAnimationFrame(() => {
@@ -557,6 +561,11 @@ function ApplicantWorkspaceContent({
                       <ApplicantExamSummary
                         leadId={leadId}
                         academicYearId={applicantAcademicYearId}
+                        onScheduleExam={
+                          primaryAction?.kind === 'schedule-exam'
+                            ? () => setScheduleExamOpen(true)
+                            : undefined
+                        }
                       />
                       <ApplicantDocumentDisclosure
                         title="Exam Documents"
