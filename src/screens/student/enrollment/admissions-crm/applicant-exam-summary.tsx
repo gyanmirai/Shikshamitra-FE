@@ -7,6 +7,10 @@ import { studentPaths } from 'src/constants/student-menu';
 import { LoadingButton } from 'src/components/loading-button';
 import OpenInNewRounded from '@mui/icons-material/OpenInNewRounded';
 import {
+  useDecideAdmissionCrmEligibilityMutation,
+  useGetAdmissionCrmEntranceExamByLeadQuery,
+} from 'src/redux/student/admissions-crm/communication-exams-events-api';
+import {
   Chip,
   Alert,
   Stack,
@@ -25,11 +29,6 @@ import {
   AdmissionCrmExamAttendanceStatus,
 } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
-import {
-  useDecideAdmissionCrmEligibilityMutation,
-  useGetAdmissionCrmEntranceExamByLeadQuery,
-} from 'src/redux/student/admissions-crm/communication-exams-events-api';
-
 import { ApplicantEmptyState } from './applicant-workspace-primitives';
 import { formatEnumLabel, formatEnrollmentDate } from './enrollment-display';
 
@@ -41,9 +40,11 @@ const enumLabel = (source: Record<string, string | number>, value: number) => {
 export function ApplicantExamSummary({
   leadId,
   academicYearId,
+  onScheduleExam,
 }: {
   leadId: string;
   academicYearId: string;
+  onScheduleExam?: () => void;
 }) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -85,11 +86,18 @@ export function ApplicantExamSummary({
     return (
       <ApplicantEmptyState
         title="Entrance exam is not scheduled"
-        description="Schedule the required test, interview, or interaction from the Assessments workspace."
+        description="Choose an available assessment slot and schedule it for this applicant."
         action={
-          <Button component={Link} href={examHref} color="inherit" size="small">
-            Open Assessments
-          </Button>
+          onScheduleExam ? (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={onScheduleExam}
+              sx={{ minHeight: 44 }}
+            >
+              Schedule Entrance Exam
+            </Button>
+          ) : undefined
         }
       />
     );

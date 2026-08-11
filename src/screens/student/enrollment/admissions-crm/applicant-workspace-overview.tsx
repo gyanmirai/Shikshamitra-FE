@@ -1,13 +1,12 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { AdmissionCrmPipelineStageDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 import type {
   AdmissionCrmLeadDto,
   AdmissionCrmStaffLookupDto,
   AdmissionCrmFollowUpTaskDto,
 } from 'src/redux/student/admissions-crm/core-leads-contracts';
-
-import type { AdmissionCrmPipelineStageDto } from 'src/redux/student/admissions-crm/setup-playbooks-contracts';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -17,6 +16,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { AdmissionInquiryStage } from 'src/redux/student/admissions-crm/core-leads-contracts';
 import {
   Box,
   Stack,
@@ -34,8 +34,6 @@ import {
   DialogActions,
   LinearProgress,
 } from '@mui/material';
-import { AdmissionInquiryStage } from 'src/redux/student/admissions-crm/core-leads-contracts';
-
 import {
   useGetAdmissionCrmStaffQuery,
   useGetAdmissionCrmTasksQuery,
@@ -207,7 +205,7 @@ export function ApplicantWorkspaceOverview({
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="h6">Inquiry & Follow-up</Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage inquiry communication, tasks, and governed lead actions.
+            Manage inquiry communication, follow-ups, and governed lead actions.
           </Typography>
         </Box>
         <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
@@ -286,6 +284,7 @@ export function ApplicantWorkspaceOverview({
               size="small"
               variant="outlined"
               startIcon={<Iconify icon="solar:notes-bold-duotone" />}
+              sx={{ minHeight: 44 }}
               onClick={() => {
                 setTaskFormOpen(false);
                 setNoteFormOpen((open) => !open);
@@ -298,12 +297,13 @@ export function ApplicantWorkspaceOverview({
                 size="small"
                 variant="contained"
                 startIcon={<Iconify icon="solar:checklist-minimalistic-bold-duotone" />}
+                sx={{ minHeight: 44 }}
                 onClick={() => {
                   setNoteFormOpen(false);
                   setTaskFormOpen((open) => !open);
                 }}
               >
-                New task
+                Schedule follow-up
               </Button>
             ) : null}
           </Stack>
@@ -356,7 +356,7 @@ export function ApplicantWorkspaceOverview({
         {taskFormOpen ? (
           <ApplicantActionPanel>
             <Stack spacing={1}>
-              <Typography variant="subtitle2">Create follow-up task</Typography>
+              <Typography variant="subtitle2">Schedule a follow-up</Typography>
               <Box
                 sx={{
                   display: 'grid',
@@ -391,7 +391,12 @@ export function ApplicantWorkspaceOverview({
                 getOptionLabel={getStaffLabel}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 renderInput={(params) => (
-                  <TextField {...params} size="small" label="Assignee" placeholder="Search staff" />
+                  <TextField
+                    {...params}
+                    size="small"
+                    label="Assignee"
+                    placeholder="Search staff…"
+                  />
                 )}
               />
               <TextField

@@ -39,30 +39,18 @@ const stateTone = (state: ApplicantJourneyStep['state']) => {
   return 'default';
 };
 
-const stateIcon = (step: ApplicantJourneyStep, index: number) => {
-  if (step.state === 'complete') return 'solar:check-circle-bold';
-  if (step.state === 'blocked') return 'solar:lock-keyhole-minimalistic-bold';
-  if (step.state === 'skipped') return 'solar:minus-circle-bold';
-  if (step.state === 'needs-review') return 'solar:danger-triangle-bold';
-  return `${index + 1}`;
-};
-
 function JourneyStepContent({
   step,
   index,
   current,
   selected,
-  compact = false,
 }: {
   step: ApplicantJourneyStep;
   index: number;
   current: boolean;
   selected: boolean;
-  compact?: boolean;
 }) {
   const tone = stateTone(step.state);
-  const icon = stateIcon(step, index);
-  const iconIsNumber = /^\d+$/.test(icon);
 
   return (
     <Stack direction="row" alignItems="flex-start" gap={1} sx={{ minWidth: 0, width: '100%' }}>
@@ -87,7 +75,7 @@ function JourneyStepContent({
           fontWeight: 700,
         })}
       >
-        {iconIsNumber ? icon : <Iconify icon={icon} width={17} />}
+        {index + 1}
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
@@ -107,16 +95,6 @@ function JourneyStepContent({
             <Chip size="small" color="primary" label="Current" sx={{ height: 20 }} />
           ) : null}
         </Stack>
-        {(compact || current || step.state === 'blocked' || step.state === 'skipped') &&
-        step.reason ? (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', mt: 0.25, overflowWrap: 'anywhere' }}
-          >
-            {step.reason}
-          </Typography>
-        ) : null}
       </Box>
     </Stack>
   );
@@ -178,7 +156,6 @@ export function ApplicantJourneyNavigator({ steps, currentStep, selectedTab, onS
                     index={index}
                     current={step.id === currentStep?.id}
                     selected={tab === selectedTab}
-                    compact
                   />
                 );
 
@@ -197,7 +174,7 @@ export function ApplicantJourneyNavigator({ steps, currentStep, selectedTab, onS
                   <Box
                     key={step.id}
                     role="group"
-                    aria-label={`${step.label}, ${getJourneyStateLabel(step)}${step.reason ? `: ${step.reason}` : ''}`}
+                    aria-label={`${step.label}, ${getJourneyStateLabel(step)}`}
                     sx={{ minHeight: 52, p: 1 }}
                   >
                     {content}
@@ -247,7 +224,7 @@ export function ApplicantJourneyNavigator({ steps, currentStep, selectedTab, onS
               onClick={() => onSelect(tab)}
               sx={{
                 minWidth: 0,
-                minHeight: 64,
+                minHeight: 56,
                 p: 0.75,
                 justifyContent: 'flex-start',
                 textAlign: 'left',
@@ -262,8 +239,8 @@ export function ApplicantJourneyNavigator({ steps, currentStep, selectedTab, onS
             <Box
               key={step.id}
               role="group"
-              aria-label={`${step.label}, ${getJourneyStateLabel(step)}${step.reason ? `: ${step.reason}` : ''}`}
-              sx={{ minWidth: 0, minHeight: 64, p: 0.75 }}
+              aria-label={`${step.label}, ${getJourneyStateLabel(step)}`}
+              sx={{ minWidth: 0, minHeight: 56, p: 0.75 }}
             >
               {content}
             </Box>

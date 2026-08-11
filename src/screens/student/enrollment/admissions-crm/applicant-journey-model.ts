@@ -90,7 +90,9 @@ export function buildApplicantJourney(
   permissions: ApplicantJourneyPermissions
 ): ApplicantJourneyStep[] {
   if (!progress) return [];
-  return progress.steps.map((step) => mapStep(step, permissions));
+  return progress.steps
+    .filter((step) => step.step !== AdmissionCrmApplicantStepKey.Finance || step.isRequired)
+    .map((step) => mapStep(step, permissions));
 }
 
 export function getApplicantNextJourneyStep(steps: ApplicantJourneyStep[]) {

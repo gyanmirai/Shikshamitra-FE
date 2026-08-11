@@ -84,8 +84,10 @@ describe('Applicant journey navigator', () => {
     );
 
     expect(screen.getByText('Not required')).toBeVisible();
-    expect(screen.getByText('Registration must be verified first.')).toBeVisible();
+    expect(screen.queryByText('Registration must be verified first.')).not.toBeInTheDocument();
     expect(screen.getByText('Needs review')).toBeVisible();
+    expect(screen.getByText('1')).toBeVisible();
+    expect(screen.getByText('6')).toBeVisible();
     expect(screen.getAllByRole('button')).toHaveLength(2);
 
     fireEvent.click(screen.getByRole('button', { name: /registration needs review current/i }));
@@ -110,6 +112,8 @@ describe('Applicant journey navigator', () => {
       'aria-expanded',
       'true'
     );
-    expect(screen.getByText('Entrance exam is optional for this admission year.')).toBeVisible();
+    expect(
+      screen.queryByText('Entrance exam is optional for this admission year.')
+    ).not.toBeInTheDocument();
   });
 });
