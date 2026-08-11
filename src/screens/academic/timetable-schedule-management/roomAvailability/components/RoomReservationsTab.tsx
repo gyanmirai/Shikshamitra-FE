@@ -45,14 +45,14 @@ const STATUS_TABS: {
   label: string;
   color: LabelColor;
 }[] = [
-    { value: 'all', label: 'All', color: 'info' },
-    { value: 'active', label: 'Active', color: 'primary' },
-    { value: 'pendingApproval', label: 'Pending', color: 'warning' },
-    { value: 'approved', label: 'Approved', color: 'success' },
-    { value: 'completed', label: 'Completed', color: 'success' },
-    { value: 'cancelled', label: 'Cancelled', color: 'error' },
-    { value: 'rejected', label: 'Rejected', color: 'error' },
-  ];
+  { value: 'all', label: 'All', color: 'info' },
+  { value: 'active', label: 'Active', color: 'primary' },
+  { value: 'pendingApproval', label: 'Pending', color: 'warning' },
+  { value: 'approved', label: 'Approved', color: 'success' },
+  { value: 'completed', label: 'Completed', color: 'success' },
+  { value: 'cancelled', label: 'Cancelled', color: 'error' },
+  { value: 'rejected', label: 'Rejected', color: 'error' },
+];
 
 export const RoomReservationsTab = ({
   reservations,
@@ -149,7 +149,8 @@ export const RoomReservationsTab = ({
     const close = () => popover.onClose();
     const canEditRow = Boolean(onEdit) && ['draft', 'pendingApproval'].includes(row.status);
     const canApproveRow = canApprove && row.approvalStatus === 'pending';
-    const canCancelRow = Boolean(onCancel) && ['active', 'approved', 'pendingApproval'].includes(row.status);
+    const canCancelRow =
+      Boolean(onCancel) && ['active', 'approved', 'pendingApproval'].includes(row.status);
     const actionDisabled = (type: 'approve' | 'reject') =>
       isAnyActionPending && !isBusy(row.id, type);
 
@@ -317,6 +318,17 @@ export const RoomReservationsTab = ({
             ),
           },
           {
+            id: 'requestedBy',
+            label: 'Reserved By',
+            minWidth: 150,
+            filterType: 'string',
+            render: (v) => (
+              <Typography variant="body2" noWrap sx={{ maxWidth: 150 }}>
+                {v || '—'}
+              </Typography>
+            ),
+          },
+          {
             id: 'reservationType',
             label: 'Type',
             minWidth: 110,
@@ -373,7 +385,11 @@ export const RoomReservationsTab = ({
               return (
                 <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                   <Tooltip title="View Room Details">
-                    <IconButton size="small" color="default" onClick={() => onViewRoom?.(row.roomId)}>
+                    <IconButton
+                      size="small"
+                      color="default"
+                      onClick={() => onViewRoom?.(row.roomId)}
+                    >
                       <Iconify icon={GlobalIcons.eye} width={18} />
                     </IconButton>
                   </Tooltip>
