@@ -42,6 +42,10 @@ type ElectiveReadiness = {
   assignedCounts: Record<string, number>;
 };
 
+type StudentElectiveAssignmentsResponse = {
+  records?: Array<{ selectedSubjectId?: string | null }>;
+};
+
 const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
 
 const isSelectableSetting = (item: any) =>
@@ -171,10 +175,40 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
         };
       }
 
-      // With the readiness API disabled, treat every elective group as ready to select.
-      return { isReady: true, assignedCounts: {} };
+      try {
+        const assignments = await Promise.all(
+          selectedDivisionIds.map((divisionId) =>
+            checkElectiveAssignments({
+              academicMediumId: medium.id,
+              classId: formik.values.className,
+              divisionId,
+              electiveGroupId,
+            }).unwrap() as Promise<StudentElectiveAssignmentsResponse>
+          )
+        );
+
+        const assignedCounts = assignments.reduce<Record<string, number>>(
+          (counts, assignment) => {
+            (assignment.records ?? []).forEach(({ selectedSubjectId }) => {
+              if (selectedSubjectId) {
+                counts[selectedSubjectId] = (counts[selectedSubjectId] ?? 0) + 1;
+              }
+            });
+            return counts;
+          },
+          {}
+        );
+
+        return { isReady: true, assignedCounts };
+      } catch {
+        return {
+          isReady: false,
+          message: 'Unable to load elective subject assignments. Please try again.',
+          assignedCounts: {},
+        };
+      }
     },
-    [formik.values.className, medium?.id, selectedDivisionIds]
+    [checkElectiveAssignments, formik.values.className, medium?.id, selectedDivisionIds]
   );
 
   const handleSubjectsChange = useCallback(
@@ -201,30 +235,31 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           }
 
           const assignedElectiveSubjects = isElective
-            ? (sub.subjects ?? []).map((subjectItem: any) => {
-                const assignedStudentCount =
-                  readiness?.assignedCounts?.[subjectItem.subjectId] ??
-                  readiness?.assignedCounts?.[subjectItem.id] ??
-                  0;
-                return {
-                  ...subjectItem,
-                  assignedStudentCount,
-                  // Readiness API disabled: never lock elective subjects on count.
-                  isExamSelectionDisabled: false,
-                  subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
-                  examDate: subjectItem.examDate || null,
-                  startTime: subjectItem.startTime || null,
-                  endTime: subjectItem.endTime || null,
-                  totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                  passingMarks: subjectItem.passingMarks ?? '',
-                  notes: subjectItem.notes || '',
-                  gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
-                };
-              })
-            : // Readiness API disabled: keep every elective subject instead of
-              // filtering by assigned-student count (which would all be 0).
-              // .filter((subjectItem: any) => subjectItem.assignedStudentCount > 0)
-              sub.subjects;
+            ? (sub.subjects ?? [])
+                .filter((subjectItem: any) => {
+                  const subjectId = subjectItem.subjectId ?? subjectItem.id;
+                  return (readiness?.assignedCounts?.[subjectId] ?? 0) > 0;
+                })
+                .map((subjectItem: any) => {
+                  const assignedStudentCount =
+                    readiness?.assignedCounts?.[subjectItem.subjectId] ??
+                    readiness?.assignedCounts?.[subjectItem.id] ??
+                    0;
+                  return {
+                    ...subjectItem,
+                    assignedStudentCount,
+                    isExamSelectionDisabled: false,
+                    subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
+                    examDate: subjectItem.examDate || null,
+                    startTime: subjectItem.startTime || null,
+                    endTime: subjectItem.endTime || null,
+                    totalMarks: subjectItem.totalMarks || defaultTotalMarks,
+                    passingMarks: subjectItem.passingMarks ?? '',
+                    notes: subjectItem.notes || '',
+                    gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
+                  };
+                })
+            : sub.subjects;
 
           return {
             ...sub,

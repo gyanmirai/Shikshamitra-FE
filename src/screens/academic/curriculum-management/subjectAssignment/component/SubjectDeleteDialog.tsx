@@ -43,6 +43,7 @@ const SubjectDeleteDialog = ({
       action={
         <LoadingButton
           loading={isLoading}
+          disabled={isLoading}
           variant="contained"
           color="error"
           size="small"
