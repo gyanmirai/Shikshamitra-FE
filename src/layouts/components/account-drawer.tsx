@@ -135,12 +135,14 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
         slotProps={{ backdrop: { invisible: true } }}
         PaperProps={{ sx: { width: 320 } }}
       >
-        <IconButton
-          onClick={handleCloseDrawer}
-          sx={{ top: 12, left: 12, zIndex: 9, position: 'absolute' }}
-        >
-          <Iconify icon="mingcute:close-line" />
-        </IconButton>
+        <Box sx={{ width: 320 }}>
+          <IconButton
+            onClick={handleCloseDrawer}
+            sx={{ top: 12, right: 12, zIndex: 9, position: 'absolute' }}
+          >
+            <Iconify icon="mingcute:close-line" />
+          </IconButton>
+        </Box>
 
         <Scrollbar>
           <Stack alignItems="center" sx={{ pt: 8 }}>

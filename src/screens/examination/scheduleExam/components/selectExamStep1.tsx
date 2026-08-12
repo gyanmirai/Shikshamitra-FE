@@ -236,29 +236,29 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
           const assignedElectiveSubjects = isElective
             ? (sub.subjects ?? [])
-                .filter((subjectItem: any) => {
-                  const subjectId = subjectItem.subjectId ?? subjectItem.id;
-                  return (readiness?.assignedCounts?.[subjectId] ?? 0) > 0;
-                })
-                .map((subjectItem: any) => {
-                  const assignedStudentCount =
-                    readiness?.assignedCounts?.[subjectItem.subjectId] ??
-                    readiness?.assignedCounts?.[subjectItem.id] ??
-                    0;
-                  return {
-                    ...subjectItem,
-                    assignedStudentCount,
-                    isExamSelectionDisabled: false,
-                    subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
-                    examDate: subjectItem.examDate || null,
-                    startTime: subjectItem.startTime || null,
-                    endTime: subjectItem.endTime || null,
-                    totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                    passingMarks: subjectItem.passingMarks ?? '',
-                    notes: subjectItem.notes || '',
-                    gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
-                  };
-                })
+              .filter((subjectItem: any) => {
+                const subjectId = subjectItem.subjectId ?? subjectItem.id;
+                return (readiness?.assignedCounts?.[subjectId] ?? 0) > 0;
+              })
+              .map((subjectItem: any) => {
+                const assignedStudentCount =
+                  readiness?.assignedCounts?.[subjectItem.subjectId] ??
+                  readiness?.assignedCounts?.[subjectItem.id] ??
+                  0;
+                return {
+                  ...subjectItem,
+                  assignedStudentCount,
+                  isExamSelectionDisabled: false,
+                  subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
+                  examDate: subjectItem.examDate || null,
+                  startTime: subjectItem.startTime || null,
+                  endTime: subjectItem.endTime || null,
+                  totalMarks: subjectItem.totalMarks || defaultTotalMarks,
+                  passingMarks: subjectItem.passingMarks ?? '',
+                  notes: subjectItem.notes || '',
+                  gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
+                };
+              })
             : sub.subjects;
 
           return {
@@ -376,7 +376,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     <ExamTypeForm
                       onClose={examTypeDialog.onFalse}
                       data={null}
-                      onSubmit={() => {}}
+                      onSubmit={() => { }}
                       isEdit={false}
                     />
                   </CustomDialog>
@@ -694,36 +694,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   </ShakingTextField>
                 </motion.div>
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      minHeight: 40,
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 1,
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="subtitle2">Enable Room Assignment</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Turn on room planning in Step 3.
-                      </Typography>
-                    </Box>
-                    <Switch
-                      checked={formik.values.isRoomAssign}
-                      onChange={(event) => {
-                        formik.setFieldValue('isRoomAssign', event.target.checked);
-                      }}
-                      inputProps={{ 'aria-label': 'Enable room assignment' }}
-                    />
-                  </Paper>
-                </motion.div>
-              </Grid>
+
 
               {/* <Grid size={{ xs: 12 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
@@ -912,8 +883,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             .join(' · ')}
                         </strong>
                         {formik.values.subjects.length > 0 &&
-                          ` · ${formik.values.subjects.length} subject${
-                            formik.values.subjects.length !== 1 ? 's' : ''
+                          ` · ${formik.values.subjects.length} subject${formik.values.subjects.length !== 1 ? 's' : ''
                           }`}
                       </Typography>
                     </Box>

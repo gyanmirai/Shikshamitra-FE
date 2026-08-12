@@ -682,7 +682,6 @@ const SubstitutionManagementScreen = () => {
   const [assignRemarks, setAssignRemarks] = useState('');
   const [formError, setFormError] = useState('');
   const [availabilityError, setAvailabilityError] = useState('');
-  const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
   const [createSubmitType, setCreateSubmitType] = useState<'draft' | 'assign' | null>(null);
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
@@ -704,10 +703,6 @@ const SubstitutionManagementScreen = () => {
 
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
-  const [dutyAction, setDutyAction] = useState<{
-    id: string;
-    action: 'accept' | 'reject' | 'change';
-  } | null>(null);
   const [dutyConfirmOpen, setDutyConfirmOpen] = useState(false);
   const [dutyConfirmPayload, setDutyConfirmPayload] = useState<{
     id: string;
@@ -719,10 +714,6 @@ const SubstitutionManagementScreen = () => {
   const [availabilityFormDirty, setAvailabilityFormDirty] = useState(false);
   const [availabilityUnsavedConfirmOpen, setAvailabilityUnsavedConfirmOpen] = useState(false);
   const [availabilitySubmitted, setAvailabilitySubmitted] = useState(false);
-  const [dutyLoadingId, setDutyLoadingId] = useState<string | null>(null);
-  const [dutyLoadingAction, setDutyLoadingAction] = useState<'accept' | 'reject' | 'change' | null>(
-    null
-  );
   const createFormSnapshotRef = useRef<string>(JSON.stringify(defaultSubstitutionForm));
   const availabilityFormSnapshotRef = useRef<string>(JSON.stringify(defaultAvailabilityForm));
   const { user: profile, employee: currentEmployee } = useSelector((state: any) => state.auth);
@@ -739,96 +730,137 @@ const SubstitutionManagementScreen = () => {
     academicYearId: currentYear?.id || undefined,
     academicMediumId: medium?.id || undefined,
   };
-  const { data: substitutionResult, refetch: refetchSubstitutions } = useSubstitutionsDataQuery({
+  const {
+    data: substitutionResult,
+    isLoading: isSubstitutionsLoading,
+    isFetching: isSubstitutionsFetching,
+    refetch: refetchSubstitutions,
+  } = useSubstitutionsDataQuery({
     ...academicContextParams,
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
-  const { data: dashboardResult, refetch: refetchDashboard } = useSubstitutionDashboardDataQuery({
+  const {
+    data: dashboardResult,
+    isLoading: isDashboardLoading,
+    isFetching: isDashboardFetching,
+    refetch: refetchDashboard,
+  } = useSubstitutionDashboardDataQuery({
     ...academicContextParams,
     date: toDateTimeOffset(dayjs(todayIso).startOf('day')),
   });
-  const { data: myDutiesResult, refetch: refetchMyDuties } = useMySubstitutionDutiesDataQuery({
+  const {
+    data: myDutiesResult,
+    isLoading: isMyDutiesLoading,
+    isFetching: isMyDutiesFetching,
+    refetch: refetchMyDuties,
+  } = useMySubstitutionDutiesDataQuery({
     ...academicContextParams,
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
-  const { data: availabilityResult } = useTeacherAvailabilityDataQuery({
+  const {
+    data: availabilityResult,
+    isLoading: isAvailabilityLoading,
+    isFetching: isAvailabilityFetching,
+  } = useTeacherAvailabilityDataQuery({
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
-  const { data: rawCreateMetadata, isFetching: isFetchingCreateMetadata } =
-    useSubstitutionCreateMetadataDataQuery(academicContextParams, { skip: !medium?.id });
+  const {
+    data: rawCreateMetadata,
+    isLoading: isCreateMetadataLoading,
+    isFetching: isFetchingCreateMetadata,
+  } = useSubstitutionCreateMetadataDataQuery(academicContextParams, { skip: !medium?.id });
   const createMetadata = rawCreateMetadata as ApiSubstitutionCreateMetadata | undefined;
-  const { data: rawCreateLectureResult, isFetching: isFetchingLectures } =
-    useSubstitutionLecturesDataQuery(
-      {
-        ...academicContextParams,
-        date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
-        standardId: substitutionForm.standardId,
-        divisionId: substitutionForm.divisionId,
-      },
-      {
-        skip:
-          !createDialogOpen ||
-          !substitutionForm.date ||
-          !substitutionForm.standardId ||
-          !substitutionForm.divisionId,
-      }
-    );
+  const {
+    data: rawCreateLectureResult,
+    isLoading: isLecturesLoading,
+    isFetching: isFetchingLectures,
+  } = useSubstitutionLecturesDataQuery(
+    {
+      ...academicContextParams,
+      date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
+      standardId: substitutionForm.standardId,
+      divisionId: substitutionForm.divisionId,
+    },
+    {
+      skip:
+        !createDialogOpen ||
+        !substitutionForm.date ||
+        !substitutionForm.standardId ||
+        !substitutionForm.divisionId,
+    }
+  );
   const createLectureResult = (rawCreateLectureResult ?? []) as ApiSubstitutionLecture[];
-  const { data: suggestedTeacherResult } = useSuggestedTeachersDataQuery(selectedSubstitutionId, {
+  const {
+    data: suggestedTeacherResult,
+    isLoading: isSuggestedTeachersLoading,
+    isFetching: isFetchingSuggestedTeachersList,
+  } = useSuggestedTeachersDataQuery(selectedSubstitutionId, {
     skip: !selectedSubstitutionId || !assignDialogOpen,
   });
   const selectedCreateLecture = createLectureResult.find(
     (lecture) => lecture.slotSubjectId === substitutionForm.timetableSlotSubjectId
   );
-  const { data: createSuggestedTeacherResult, isFetching: isFetchingSuggestedTeachers } =
-    useSuggestedTeachersByContextDataQuery(
-      {
-        ...academicContextParams,
-        date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
-        originalTeacherId: substitutionForm.originalTeacherId,
-        originalTeacherName: substitutionForm.originalTeacherName,
-        standardId: substitutionForm.standardId,
-        subjectId: substitutionForm.subjectId,
-        subjectName: substitutionForm.subjectName,
-        startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
-        endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
-      },
-      {
-        skip:
-          !createDialogOpen ||
-          !substitutionForm.date ||
-          !(selectedCreateLecture || (substitutionForm.startTime && substitutionForm.endTime)) ||
-          !substitutionForm.originalTeacherName,
-      }
-    );
+  const {
+    data: createSuggestedTeacherResult,
+    isLoading: isCreateSuggestedTeachersLoading,
+    isFetching: isFetchingSuggestedTeachers,
+  } = useSuggestedTeachersByContextDataQuery(
+    {
+      ...academicContextParams,
+      date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
+      originalTeacherId: substitutionForm.originalTeacherId,
+      originalTeacherName: substitutionForm.originalTeacherName,
+      standardId: substitutionForm.standardId,
+      subjectId: substitutionForm.subjectId,
+      subjectName: substitutionForm.subjectName,
+      startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
+      endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
+    },
+    {
+      skip:
+        !createDialogOpen ||
+        !substitutionForm.date ||
+        !(selectedCreateLecture || (substitutionForm.startTime && substitutionForm.endTime)) ||
+        !substitutionForm.originalTeacherName,
+    }
+  );
 
-  const { data: dailySheetResult } = useDailySheetDataQuery({
+  const {
+    data: dailySheetResult,
+    isLoading: isDailySheetLoading,
+    isFetching: isDailySheetFetching,
+  } = useDailySheetDataQuery({
     date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
     maxResultCount: 500,
   });
-  const [createSubstitution] = useCreateSubstitutionAction();
+  const [createSubstitution, { isLoading: isCreatingSubstitution }] = useCreateSubstitutionAction();
   const [assignSubstitute, { isLoading: isAssigning }] = useAssignSubstituteAction();
-  const [sendSubstitutionReminder] = useSendSubstitutionReminderAction();
-  const [completeSubstitution] = useCompleteSubstitutionAction();
-  const [cancelSubstitution] = useCancelSubstitutionAction();
-  const [acknowledgeSubstitution] = useAcknowledgeSubstitutionAction();
-  const [requestSubstitutionChange] = useRequestSubstitutionChangeAction();
-  const [rejectSubstitutionDuty] = useRejectSubstitutionDutyAction();
-  const [createTeacherAvailability] = useCreateTeacherAvailabilityAction();
-  const [downloadDailyPdf] = useDailySheetPdfLazyQuery();
-  const [downloadDailyExcel] = useDailySheetExcelLazyQuery();
-  const [getAffectedLectures] = useAffectedLecturesLazyQuery();
-  const [getEmployeeOptions] = useEmployeeOptionsLazyQuery();
+  const [sendSubstitutionReminder, { isLoading: isSendingReminder }] = useSendSubstitutionReminderAction();
+  const [completeSubstitution, { isLoading: isCompletingSubstitution }] = useCompleteSubstitutionAction();
+  const [cancelSubstitution, { isLoading: isCancellingSubstitution }] = useCancelSubstitutionAction();
+  const [acknowledgeSubstitution, { isLoading: isAcknowledging }] = useAcknowledgeSubstitutionAction();
+  const [requestSubstitutionChange, { isLoading: isRequestingChange }] = useRequestSubstitutionChangeAction();
+  const [rejectSubstitutionDuty, { isLoading: isRejectingDuty }] = useRejectSubstitutionDutyAction();
+  const [createTeacherAvailability, { isLoading: isCreatingAvailability }] = useCreateTeacherAvailabilityAction();
+  const [downloadDailyPdf, { isLoading: isDownloadingPdf }] = useDailySheetPdfLazyQuery();
+  const [downloadDailyExcel, { isLoading: isDownloadingExcel }] = useDailySheetExcelLazyQuery();
+  const [getAffectedLectures, { isLoading: isFetchingAffectedLectures }] = useAffectedLecturesLazyQuery();
+  const [getEmployeeOptions, { isLoading: isFetchingEmployeeOptions }] = useEmployeeOptionsLazyQuery();
   const seenAvailabilityTeacherIdsRef = useRef<Set<string>>(new Set());
 
   const isCreateDialogLoading =
-    isFetchingCreateMetadata || isFetchingLectures || isFetchingSuggestedTeachers;
+    isCreateMetadataLoading ||
+    isFetchingCreateMetadata ||
+    isLecturesLoading ||
+    isFetchingLectures ||
+    isCreateSuggestedTeachersLoading ||
+    isFetchingSuggestedTeachers;
 
   const fetchAvailabilityTeacherOptions = useCallback(
     async (query: string, page: number = 1) => {
@@ -1315,7 +1347,6 @@ const SubstitutionManagementScreen = () => {
       }
 
       try {
-        setIsCreateSubmitting(true);
         setCreateSubmitType(assignNow ? 'assign' : 'draft');
         const assignmentSegments = assignNow
           ? substitutionForm.selectedSubstitutes
@@ -1379,7 +1410,6 @@ const SubstitutionManagementScreen = () => {
         const message = error instanceof Error ? error.message : 'Unable to create substitution.';
         setFormError(message);
       } finally {
-        setIsCreateSubmitting(false);
         setCreateSubmitType(null);
       }
     },
@@ -1700,7 +1730,7 @@ const SubstitutionManagementScreen = () => {
       setDutyConfirmNote('');
       setDutyConfirmOpen(true);
     },
-      []
+    []
   );
 
   const closeDutyConfirmModal = useCallback(() => {
@@ -1717,8 +1747,6 @@ const SubstitutionManagementScreen = () => {
    */
   const handleTeacherDutyAction = useCallback(
     async (id: string, action: 'accept' | 'reject' | 'change', reason: string) => {
-      if (dutyAction) return;
-      setDutyAction({ id, action });
       try {
         const updated =
           action === 'accept'
@@ -1750,22 +1778,23 @@ const SubstitutionManagementScreen = () => {
       } catch (error) {
         const message = resolveDutyActionErrorMessage(
           error,
-          'Failed to update substitution duty status.'
+          action === 'accept'
+            ? 'Unable to accept substitution duty.'
+            : action === 'reject'
+              ? 'Unable to reject substitution duty.'
+              : 'Unable to request substitution change.'
         );
         shikshaMitraToast.error({ message });
-      } finally {
-        setDutyAction(null);
       }
     },
     [
-      dutyAction,
       acknowledgeSubstitution,
+      refetchDashboard,
+      refetchMyDuties,
+      refetchSubstitutions,
       rejectSubstitutionDuty,
       requestSubstitutionChange,
       updateSubstitution,
-      refetchMyDuties,
-      refetchSubstitutions,
-      refetchDashboard,
     ]
   );
 
@@ -2508,6 +2537,7 @@ const SubstitutionManagementScreen = () => {
         tableTitle="Substitution Board"
         data={filteredSubstitutions}
         columns={substitutionColumns}
+        isLoading={isSubstitutionsLoading || isSubstitutionsFetching}
       />
     );
   };
@@ -2744,6 +2774,7 @@ const SubstitutionManagementScreen = () => {
               tableTitle="Substitution Board"
               data={filteredSubstitutions}
               columns={substitutionColumns}
+              isLoading={isSubstitutionsLoading || isSubstitutionsFetching}
             />
           </Box>
         )}
@@ -2754,6 +2785,7 @@ const SubstitutionManagementScreen = () => {
               tableId="teacher-availability-table"
               tableTitle="Teacher Availability"
               data={teacherAvailability}
+              isLoading={isAvailabilityLoading || isAvailabilityFetching}
               columns={[
                 {
                   id: 'teacherName',
@@ -2821,14 +2853,15 @@ const SubstitutionManagementScreen = () => {
                       availability.canCreateSubstitution === false;
 
                     return (
-                      <Button
+                      <LoadingButton
                         size="small"
                         variant="outlined"
                         disabled={isDisabled}
+                        loading={isFetchingAffectedLectures}
                         onClick={() => handleCreateSubstitutionFromAvailability(availability)}
                       >
                         {isDisabled ? 'Already created' : 'Create substitution'}
-                      </Button>
+                      </LoadingButton>
                     );
                   },
                 },
@@ -2839,6 +2872,7 @@ const SubstitutionManagementScreen = () => {
 
         {activeTab === 'myDuties' && (
           <Stack spacing={1.5} sx={{ flexShrink: 0 }}>
+            {(isMyDutiesLoading || isMyDutiesFetching) && <LinearProgress sx={{ borderRadius: 1 }} />}
             {myDutyRows.length === 0 && (
               <Card
                 sx={{
@@ -2869,11 +2903,11 @@ const SubstitutionManagementScreen = () => {
             {myDutyRows.map((item) => {
               const isTerminal = ['Completed', 'Cancelled', 'Rejected'].includes(item.status);
               const isAccepted = item.acknowledgementStatus === 'Accepted';
-              const cardAction = dutyAction?.id === item.id ? dutyAction.action : null;
-              const isAccepting = cardAction === 'accept';
-              const isChanging = cardAction === 'change';
-              const isRejecting = cardAction === 'reject';
-              const isCardBusy = Boolean(cardAction);
+              const isDutyTarget = dutyConfirmPayload?.id === item.id;
+              const isAccepting = isAcknowledging && isDutyTarget;
+              const isChanging = isRequestingChange && isDutyTarget;
+              const isRejecting = isRejectingDuty && isDutyTarget;
+              const isCardBusy = isAcknowledging || isRequestingChange || isRejectingDuty;
               const isChangeRequested = item.acknowledgementStatus === 'Change Requested';
               return (
                 <Card
@@ -3254,13 +3288,13 @@ const SubstitutionManagementScreen = () => {
                 <LinearProgress />
               </Box>
             )}
-            <Stack spacing={1}>
+            <Stack spacing={2}>
               {formError && <Alert severity="error">{formError}</Alert>}
               <Alert severity="info" icon={<AutoAwesome />}>
                 Select the affected lecture, review auto-filled details, choose a substitute
                 teacher, then save draft or assign and notify.
               </Alert>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <DatePicker
                   label="Date"
                   value={substitutionForm.date}
@@ -3379,7 +3413,7 @@ const SubstitutionManagementScreen = () => {
                   }
                 />
               </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <CustomSelect
                   label="Lecture Slot"
                   options={lectureSelectOptions}
@@ -3461,7 +3495,7 @@ const SubstitutionManagementScreen = () => {
                   }}
                 />
               </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <CustomSelect
                   label="Original Teacher"
                   options={teacherSelectOptions}
@@ -3831,9 +3865,12 @@ const SubstitutionManagementScreen = () => {
               size="small"
               variant="outlined"
               startIcon={<Save />}
-              loading={isCreateSubmitting && createSubmitType === 'draft'}
-              disabled={isCreateSubmitting}
-              onClick={() => handleCreateSubstitution(false)}
+              loading={isCreatingSubstitution && createSubmitType === 'draft'}
+              disabled={isCreatingSubstitution}
+              onClick={() => {
+                setCreateSubmitType('draft');
+                handleCreateSubstitution(false);
+              }}
             >
               Save Draft
             </LoadingButton>
@@ -3841,9 +3878,12 @@ const SubstitutionManagementScreen = () => {
               size="small"
               variant="contained"
               startIcon={<Send />}
-              loading={isCreateSubmitting && createSubmitType === 'assign'}
-              disabled={isCreateSubmitting}
-              onClick={() => handleCreateSubstitution(true)}
+              loading={isCreatingSubstitution && createSubmitType === 'assign'}
+              disabled={isCreatingSubstitution}
+              onClick={() => {
+                setCreateSubmitType('assign');
+                handleCreateSubstitution(true);
+              }}
             >
               Assign & Notify
             </LoadingButton>
@@ -4251,9 +4291,8 @@ const SubstitutionManagementScreen = () => {
           handleClose={handleCloseAvailabilityDialog}
         >
           <DialogScrollContent>
-            <Stack spacing={1}>
-              {availabilityError && <Alert severity="error">{availabilityError}</Alert>}
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Stack spacing={2}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <PaginatedSearchSelect<EmployeeOption>
                   label="Teacher"
                   fetchOptions={fetchAvailabilityTeacherOptions}
@@ -4305,7 +4344,7 @@ const SubstitutionManagementScreen = () => {
                   }}
                 />
               </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TimePicker
                   label="Start Time"
                   value={
@@ -4358,7 +4397,7 @@ const SubstitutionManagementScreen = () => {
                   }}
                 />
               </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <CustomSelect
                   label="Availability Status"
                   options={availabilityStatusOptions}
@@ -4379,7 +4418,7 @@ const SubstitutionManagementScreen = () => {
                   }
                 />
               </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -4456,14 +4495,16 @@ const SubstitutionManagementScreen = () => {
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               size="small"
               variant="contained"
               startIcon={<Send />}
+              loading={isCreatingAvailability}
+              disabled={isCreatingAvailability}
               onClick={handleMarkUnavailable}
             >
               Save and Notify
-            </Button>
+            </LoadingButton>
           </Stack>
         </CustomDialog>
 
@@ -4719,10 +4760,13 @@ const SubstitutionManagementScreen = () => {
                     : 'warning'
               }
               disabled={
-                dutyConfirmPayload?.action !== 'accept' &&
-                dutyConfirmNote.trim().length < DUTY_ACTION_REASON_MIN_LENGTH
+                (dutyConfirmPayload?.action !== 'accept' &&
+                  dutyConfirmNote.trim().length < DUTY_ACTION_REASON_MIN_LENGTH) ||
+                isAcknowledging ||
+                isRequestingChange ||
+                isRejectingDuty
               }
-              loading={Boolean(dutyAction)}
+              loading={isAcknowledging || isRequestingChange || isRejectingDuty}
               onClick={handleDutyConfirmSubmit}
               startIcon={
                 <Iconify

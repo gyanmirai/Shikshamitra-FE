@@ -116,11 +116,11 @@ export const FilterToolbar = ({
           <Box sx={{ minWidth: { xs: 1, sm: 130 } }}>
             <CustomSelect
               label="Class"
-              options={[{ label: 'All Classes', value: '' }, ...classOptions]}
+              options={[{ label: 'All Classes', value: 'all' }, ...classOptions]}
               labelKey="label"
               valueKey="value"
-              value={selectedClass}
-              onChange={(val) => onClassChange(String(val))}
+              value={selectedClass || 'all'}
+              onChange={(val) => onClassChange(val === 'all' ? '' : String(val))}
               formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
             />
           </Box>
@@ -131,11 +131,11 @@ export const FilterToolbar = ({
           <Box sx={{ minWidth: { xs: 1, sm: 130 } }}>
             <CustomSelect
               label="Subject"
-              options={[{ label: 'All Subjects', value: '' }, ...subjectOptions]}
+              options={[{ label: 'All Subjects', value: 'all' }, ...subjectOptions]}
               labelKey="label"
               valueKey="value"
-              value={selectedSubject}
-              onChange={(val) => onSubjectChange(String(val))}
+              value={selectedSubject || 'all'}
+              onChange={(val) => onSubjectChange(val === 'all' ? '' : String(val))}
               formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
             />
           </Box>
@@ -146,11 +146,11 @@ export const FilterToolbar = ({
           <Box sx={{ minWidth: { xs: 1, sm: 140 } }}>
             <CustomSelect
               label="Reviewer"
-              options={[{ label: 'All Reviewers', value: '' }, ...reviewerOptions]}
+              options={[{ label: 'All Reviewers', value: 'all' }, ...reviewerOptions]}
               labelKey="label"
               valueKey="value"
-              value={selectedReviewer}
-              onChange={(val) => onReviewerChange(String(val))}
+              value={selectedReviewer || 'all'}
+              onChange={(val) => onReviewerChange(val === 'all' ? '' : String(val))}
               formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
             />
           </Box>

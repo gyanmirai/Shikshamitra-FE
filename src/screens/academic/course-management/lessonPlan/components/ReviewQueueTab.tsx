@@ -468,11 +468,6 @@ export const ReviewQueueTab = ({
         <Card sx={{ p: 4 }}>
           <EmptyContent
             title={statusFilter === 'pending' ? 'No Pending Reviews' : 'No Reviews Found'}
-            description={
-              statusFilter === 'pending'
-                ? 'No pending review items match your selected filters.'
-                : 'Try adjusting your search criteria, teacher name, class, subject, or date range.'
-            }
             action={
               <Button
                 size="small"
@@ -833,7 +828,6 @@ export const ReviewQueueTab = ({
                 rows={3}
                 fullWidth
                 size="small"
-                required={commentRequired}
                 error={commentError}
                 helperText={
                   commentError

@@ -14,6 +14,8 @@ import {
   IconButton,
   LinearProgress,
 } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { GlobalIcons } from 'src/utils/icons';
 
 import type { AllocationStrategy, SeatingAllocationRules } from '../../types';
 
@@ -136,9 +138,26 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
           <Iconify icon={preview ? 'mdi:check-decagram' : 'mdi:auto-fix'} width={22} />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" fontWeight={700}>
-            Auto Allocate
-          </Typography>
+          <Box display="flex" alignItems="center" gap={0.5}>
+            <Typography variant="subtitle1" fontWeight={700}>
+              Auto Allocate
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Automatically assign seats based on your configured strategy and rules"
+            >
+              <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                <Iconify
+                  icon={GlobalIcons.info}
+                  color="info.main"
+                  width={16}
+                  height={16}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </Box>
+            </CustomTooltip>
+          </Box>
           <Typography
             variant="body2"
             color={preview ? 'success.main' : 'text.secondary'}
@@ -443,25 +462,23 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
       </Box>
 
       {/* Sticky footer */}
-      <Box sx={{ px: 2.5, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
         {!preview ? (
           <Button
             variant="contained"
             fullWidth
-            size="large"
+            size="small"
             onClick={handleGenerate}
             disabled={isGenerating}
             startIcon={<Iconify icon="mdi:play-circle-outline" width={20} />}
-            sx={{ height: 44, fontWeight: 700 }}
           >
             {isGenerating ? 'Generating…' : 'Generate Allocation'}
           </Button>
         ) : (
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
             <Button
               variant="outlined"
-              size="medium"
-              sx={{ flex: 1, height: 42, fontWeight: 600 }}
+              size="small"
               onClick={() => setPreview(null)}
               startIcon={<Iconify icon="mdi:tune" width={18} />}
             >
@@ -469,9 +486,8 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
             </Button>
             <Button
               variant="contained"
-              size="medium"
+              size="small"
               color="primary"
-              sx={{ flex: 1.2, height: 42, fontWeight: 700 }}
               onClick={() => {
                 onApply();
                 handleClose();
