@@ -240,6 +240,19 @@ const availabilityStatusLabelMap: Record<number, string> = {
   5: 'Other Duty',
 };
 
+const getAvailabilityStatusColor = (
+  status?: string
+): 'error' | 'warning' | 'info' | 'secondary' | 'primary' | 'success' | 'default' => {
+  const norm = (status || '').toLowerCase();
+  if (norm.includes('unavail')) return 'error';
+  if (norm.includes('leave')) return 'warning';
+  if (norm.includes('train')) return 'info';
+  if (norm.includes('meet')) return 'secondary';
+  if (norm.includes('exam')) return 'primary';
+  if (norm.includes('avail')) return 'success';
+  return 'default';
+};
+
 const sourceTypeLabelMap: Record<number, string> = {
   0: 'Manual',
   1: 'HR Leave',
@@ -381,6 +394,9 @@ const mapApiTeacherAvailability = (item: ApiTeacherAvailabilityRow) => ({
   canCreateSubstitution: item.canCreateSubstitution,
   autoCreateSubstitutions: item.autoCreateSubstitutions,
   notifyLeadership: item.notifyLeadership,
+  activeSubstitutionStatuses: (item.activeSubstitutionStatuses ?? [])
+    .map(toSubstitutionStatus)
+    .filter((status, index, statuses) => statuses.indexOf(status) === index),
   attachmentName: item.attachmentName || undefined,
   remarks: item.remarks || undefined,
 });
@@ -420,6 +436,7 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
   roomId: item.roomId,
   teacherId: item.teacherId,
   existingSubstitutionId: item.existingSubstitutionId,
+  existingSubstitutionStatus: item.existingSubstitutionStatus,
   canCreateSubstitution: item.canCreateSubstitution,
   period: item.period,
   time: item.time,
@@ -440,6 +457,22 @@ const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
   teacher.coverageStartTime && teacher.coverageEndTime
     ? `${teacher.coverageStartTime}-${teacher.coverageEndTime}`
     : 'Selected slot';
+
+const getAvailabilityActionLabel = (availability: TeacherAvailabilityRow) => {
+  if (availability.affectedLectureCount <= 0) return 'No affected lectures';
+  if (availability.canCreateSubstitution !== false) return 'Create substitution';
+
+  const statuses = availability.activeSubstitutionStatuses ?? [];
+  if (statuses.includes('Pending')) return 'Pending assignment';
+  if (statuses.includes('Conflict')) return 'Conflict';
+  if (statuses.includes('Waiting Ack')) return 'Awaiting acknowledgement';
+  if (statuses.includes('Assigned')) return 'Assigned';
+  if (statuses.includes('Acknowledged')) return 'Covered';
+  if (statuses.includes('Completed')) return 'Completed';
+  if (statuses.includes('Rejected')) return 'Rejected';
+  if (statuses.includes('Cancelled')) return 'Cancelled';
+  return 'Already created';
+};
 
 const downloadBlob = (blob: Blob, fileName: string) => {
   const url = URL.createObjectURL(blob);
@@ -1056,6 +1089,33 @@ const SubstitutionManagementScreen = () => {
     () => (filters.filterDate ? filters.filterDate.format('YYYY-MM-DD') : todayIso),
     [filters.filterDate]
   );
+
+  const filteredTeacherAvailability = useMemo(() => {
+    const dateValue = filters.filterDate ? filters.filterDate.format('YYYY-MM-DD') : null;
+
+    return teacherAvailability.filter((item) => {
+      const matchesDate = !dateValue || item.availabilityDate === dateValue;
+      const matchesTeacher =
+        filters.teacherFilter === 'all' || item.teacherName === filters.teacherFilter;
+      const matchesDept =
+        filters.departmentFilter === 'all' || item.departmentName === filters.departmentFilter;
+      const matchesStatus =
+        filters.statusFilter === 'all' || item.availabilityStatus === filters.statusFilter;
+      const matchesSource =
+        filters.sourceFilter === 'all' || item.sourceType === filters.sourceFilter;
+      const matchesReason =
+        filters.reasonFilter === 'all' || item.reason === filters.reasonFilter;
+
+      return (
+        matchesDate &&
+        matchesTeacher &&
+        matchesDept &&
+        matchesStatus &&
+        matchesSource &&
+        matchesReason
+      );
+    });
+  }, [filters, teacherAvailability]);
 
   const todayRows = useMemo(
     () => substitutions.filter((item) => item.date === selectedDateIso),
@@ -2151,27 +2211,66 @@ const SubstitutionManagementScreen = () => {
       filterType: 'string' as const,
       minWidth: 170,
       sticky: true,
+      align: 'left' as const,
     },
-    { id: 'departmentName', label: 'Department', filterType: 'string' as const, minWidth: 140 },
+    {
+      id: 'departmentName',
+      label: 'Department',
+      filterType: 'string' as const,
+      minWidth: 140,
+      align: 'left' as const,
+      render: (value: any) => value || '-',
+    },
     {
       id: 'availabilityDate',
       label: 'Date',
       filterType: 'date' as const,
       minWidth: 120,
+      align: 'left' as const,
       render: (value: any) => formatViewDate(value),
     },
-    { id: 'startTime', label: 'Start Time', filterType: 'string' as const, minWidth: 100 },
-    { id: 'endTime', label: 'End Time', filterType: 'string' as const, minWidth: 100 },
-    { id: 'sourceType', label: 'Source', filterType: 'string' as const, minWidth: 130 },
-    { id: 'reason', label: 'Reason', filterType: 'string' as const, minWidth: 180 },
+    {
+      id: 'startTime',
+      label: 'Start Time',
+      filterType: 'string' as const,
+      minWidth: 100,
+      align: 'center' as const,
+      render: (value: any) => value || '-',
+    },
+    {
+      id: 'endTime',
+      label: 'End Time',
+      filterType: 'string' as const,
+      minWidth: 100,
+      align: 'center' as const,
+      render: (value: any) => value || '-',
+    },
+    {
+      id: 'sourceType',
+      label: 'Source',
+      filterType: 'enum' as const,
+      enumOptions: sourceTypeOptions,
+      minWidth: 130,
+      align: 'center' as const,
+      render: (value: any) => (value ? <Label color="default" variant="soft">{value}</Label> : '-'),
+    },
+    {
+      id: 'reason',
+      label: 'Reason',
+      filterType: 'string' as const,
+      minWidth: 180,
+      align: 'left' as const,
+      render: (value: any) => value || '-',
+    },
     {
       id: 'affectedLectureCount',
       label: 'Affected Lectures',
       filterType: 'number' as const,
       minWidth: 140,
+      align: 'center' as const,
       render: (value: any) => (
         <Label color={Number(value) > 0 ? 'warning' : 'default'} variant="soft">
-          {value}
+          {value ?? 0}
         </Label>
       ),
     },
@@ -2184,6 +2283,7 @@ const SubstitutionManagementScreen = () => {
         { label: 'No', value: false },
       ],
       minWidth: 120,
+      align: 'center' as const,
       render: (value: any) => (
         <Label color={value ? 'success' : 'default'} variant="soft">
           {value ? 'Yes' : 'No'}
@@ -2195,13 +2295,25 @@ const SubstitutionManagementScreen = () => {
       label: 'Attachment',
       filterType: 'string' as const,
       minWidth: 140,
-      render: (value: any) => value || '-',
+      align: 'left' as const,
+      render: (value: any) =>
+        value ? (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Iconify icon="solar:paperclip-bold" width={14} height={14} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+            <Typography variant="caption" noWrap sx={{ maxWidth: 120 }}>
+              {value}
+            </Typography>
+          </Stack>
+        ) : (
+          '-'
+        ),
     },
     {
       id: 'remarks',
       label: 'Remarks',
       filterType: 'string' as const,
       minWidth: 160,
+      align: 'left' as const,
       render: (value: any) => value || '-',
     },
     {
@@ -2209,29 +2321,19 @@ const SubstitutionManagementScreen = () => {
       label: 'Status',
       filterType: 'enum' as const,
       sticky: true,
+      stickyPosition: 'right' as const,
       enumOptions: availabilityStatusOptions,
       minWidth: 140,
       render: (value: any) => (
-        <Label
-          color={
-            value === 'Unavailable'
-              ? 'error'
-              : value === 'Leave'
-                ? 'warning'
-                : value === 'Training'
-                  ? 'info'
-                  : 'default'
-          }
-          variant="soft"
-        >
-          {value}
+        <Label color={getAvailabilityStatusColor(value)} variant="soft">
+          {value || 'Unavailable'}
         </Label>
       ),
     },
     {
       id: 'actions',
       label: 'Action',
-      minWidth: 205,
+      minWidth: 200,
       isFilter: false,
       isSort: false,
       sticky: true,
@@ -3070,13 +3172,12 @@ const SubstitutionManagementScreen = () => {
           )}
         </Stack>
 
-        {/* Active Chips Row (under the borderBottom divider, inside the Card) */}
-        {activeTab === 'board' && getActiveFilters(filters).length > 0 && (
+        {['board', 'availability'].includes(activeTab) && getActiveFilters(filters).length > 0 && (
           <Box
             sx={{
-              px: 2,
-              py: 1,
-              borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
+              p: 1.5,
+              borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+              bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.4),
             }}
           >
             <SubstitutionActiveFilters
@@ -3107,8 +3208,8 @@ const SubstitutionManagementScreen = () => {
             <CustomizableTable
               tableId="teacher-availability-table"
               tableTitle="Teacher Availability"
-              data={teacherAvailability}
               isLoading={isAvailabilityLoading || isAvailabilityFetching}
+              data={filteredTeacherAvailability}
               columns={availabilityColumns}
             />
           </Box>

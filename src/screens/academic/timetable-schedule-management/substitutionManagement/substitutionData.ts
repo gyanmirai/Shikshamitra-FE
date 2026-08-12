@@ -82,6 +82,7 @@ export type TeacherAvailabilityRow = {
   canCreateSubstitution?: boolean;
   autoCreateSubstitutions: boolean;
   notifyLeadership: boolean;
+  activeSubstitutionStatuses?: SubstitutionStatus[];
   attachmentName?: string;
   remarks?: string;
 };
@@ -97,6 +98,7 @@ export type AffectedLectureRow = {
   roomId?: string | null;
   teacherId?: string | null;
   existingSubstitutionId?: string | null;
+  existingSubstitutionStatus?: string | number | null;
   canCreateSubstitution?: boolean;
   period: string;
   time: string;
