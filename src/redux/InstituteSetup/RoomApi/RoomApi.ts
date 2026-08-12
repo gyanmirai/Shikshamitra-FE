@@ -52,6 +52,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
 
 export const {
   useGetRoomsQuery,
+  useLazyGetRoomsQuery,
   useAddRoomMutation,
   useGetRoomByIdQuery,
   useUpdateRoomMutation,
