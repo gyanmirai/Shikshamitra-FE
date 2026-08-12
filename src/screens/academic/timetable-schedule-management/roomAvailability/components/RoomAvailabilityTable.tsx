@@ -85,18 +85,6 @@ export const RoomAvailabilityTable = ({
           </Tooltip>
         )}
 
-        {onViewSchedule && (
-          <MenuItem
-            onClick={() => {
-              close();
-              onViewSchedule(row.roomId);
-            }}
-          >
-            <Iconify icon="mdi:calendar-clock" />
-            View Schedule
-          </MenuItem>
-        )}
-
         {canMaintenance && (
           <MenuItem
             onClick={() => {

@@ -3,6 +3,7 @@ import type { DatePickerProps } from '@mui/x-date-pickers/DatePicker';
 
 import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DayCalendarSkeleton } from '@mui/x-date-pickers/DayCalendarSkeleton';
 
 import { getCalendarDayTitle } from './academic-date-picker-utils';
 import AcademicCalendarPickersDay from './AcademicCalendarPickersDay';
@@ -125,6 +126,7 @@ export default function AcademicDatePicker({
         },
       }}
       loading={datePickerProps.loading || isFetching}
+      renderLoading={datePickerProps.renderLoading || (() => <DayCalendarSkeleton />)}
     />
   );
 }

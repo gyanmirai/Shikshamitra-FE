@@ -1,9 +1,5 @@
 export type AssignmentWorkflowStatus =
-  | 'draft'
-  | 'saved'
-  | 'partiallyAssigned'
-  | 'readyToLock'
-  | 'locked';
+  'draft' | 'saved' | 'partiallyAssigned' | 'readyToLock' | 'locked';
 
 export type AssignmentStatus = 'assigned' | 'unassigned' | 'changed';
 

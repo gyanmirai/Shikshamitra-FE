@@ -134,45 +134,45 @@ const OtpInputField: React.FC<{
   disabled = false,
   pasteTransformer,
 }) => (
-  <Box sx={{ position: 'relative' }}>
-    <FormLabel
-      error={error}
-      sx={{
-        fontSize: '0.75rem',
-        display: 'block',
-        mb: 0.5,
-        color: error ? 'error.main' : 'text.secondary',
-      }}
-    >
-      {label}
-    </FormLabel>
-    <OTPInput
-      maxLength={maxLength}
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      pattern={pattern}
-      disabled={disabled}
-      pasteTransformer={pasteTransformer}
-      containerClassName=""
-      render={({ slots }) => (
-        <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
-          {slots.map((slot, i) => (
-            <React.Fragment key={i}>
-              <OtpSlot {...slot} error={error} disabled={disabled} />
-              {groupBy && i < maxLength - 1 && (i + 1) % groupBy === 0 && <OtpSep />}
-            </React.Fragment>
-          ))}
-        </Box>
+    <Box sx={{ position: 'relative' }}>
+      <FormLabel
+        error={error}
+        sx={{
+          fontSize: '0.75rem',
+          display: 'block',
+          mb: 0.5,
+          color: error ? 'error.main' : 'text.secondary',
+        }}
+      >
+        {label}
+      </FormLabel>
+      <OTPInput
+        maxLength={maxLength}
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
+        pattern={pattern}
+        disabled={disabled}
+        pasteTransformer={pasteTransformer}
+        containerClassName=""
+        render={({ slots }) => (
+          <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
+            {slots.map((slot, i) => (
+              <React.Fragment key={i}>
+                <OtpSlot {...slot} error={error} disabled={disabled} />
+                {groupBy && i < maxLength - 1 && (i + 1) % groupBy === 0 && <OtpSep />}
+              </React.Fragment>
+            ))}
+          </Box>
+        )}
+      />
+      {helperText && (
+        <FormHelperText error={error} sx={{ mx: '14px', mt: '3px' }}>
+          {helperText}
+        </FormHelperText>
       )}
-    />
-    {helperText && (
-      <FormHelperText error={error} sx={{ mx: '14px', mt: '3px' }}>
-        {helperText}
-      </FormHelperText>
-    )}
-  </Box>
-);
+    </Box>
+  );
 
 export const SectionCard = ({
   title,
@@ -249,8 +249,8 @@ const actionButtonsVariant = {
 };
 export const CardActions = ({
   isEdit,
-  onCancel = () => {},
-  onSave = async () => {},
+  onCancel = () => { },
+  onSave = async () => { },
   isLoading = false,
 }: {
   isEdit: UseBooleanReturn;

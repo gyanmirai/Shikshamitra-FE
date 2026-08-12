@@ -497,29 +497,28 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         }
         maxWidth="sm"
       >
-        {!isSelectedInPerson ? (
-          <AssignGrade
-            data={selectedStudent}
-            onClose={() => {
-              viewSubmissionDialog.onFalse();
-              setTimeout(() => {
-                setSelectedStudent(null);
-              }, 300);
-            }}
-            isEdit
-            homeworkId={selectedHomework?.id}
-            hasPrevious={selectedIndex > 0}
-            hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
-            onPrevious={() => moveStudent(-1)}
-            onNext={() => moveStudent(1)}
-            selectedClass={selectedClass}
-            selectedSubject={selectedSubject}
-            selectedHomework={selectedHomework}
-            hasRubricAssessment={hasRubricAssessment}
-            isSelectedInPerson={isSelectedInPerson}
-            ensureInPersonSubmissionId={ensureInPersonSubmissionId}
-          />
-        ) : null}
+        <AssignGrade
+          data={selectedStudent}
+          onClose={() => {
+            viewSubmissionDialog.onFalse();
+            setTimeout(() => {
+              setSelectedStudent(null);
+            }, 300);
+          }}
+          isEdit
+          homeworkId={selectedHomework?.id}
+          hasPrevious={selectedIndex > 0}
+          hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
+          onPrevious={() => moveStudent(-1)}
+          onNext={() => moveStudent(1)}
+          selectedClass={selectedClass}
+          selectedSubject={selectedSubject}
+          selectedHomework={selectedHomework}
+          hasRubricAssessment={hasRubricAssessment}
+          isSelectedInPerson={isSelectedInPerson}
+          ensureInPersonSubmissionId={ensureInPersonSubmissionId}
+        />
+
       </CustomDialog>
     </Box>
   );
