@@ -68,6 +68,7 @@ export type ApiTeacherAvailabilityRow = {
   notifyLeadership: boolean;
   attachmentName?: string | null;
   remarks?: string | null;
+  activeSubstitutionStatuses?: Array<string | number>;
 };
 
 export type ApiSuggestedTeacher = {
@@ -128,6 +129,7 @@ export type ApiAffectedLecture = {
   teacherId?: string | null;
   teacherName: string;
   existingSubstitutionId?: string | null;
+  existingSubstitutionStatus?: string | number | null;
   canCreateSubstitution: boolean;
 };
 

@@ -360,6 +360,9 @@ const mapApiTeacherAvailability = (item: ApiTeacherAvailabilityRow) => ({
   canCreateSubstitution: item.canCreateSubstitution,
   autoCreateSubstitutions: item.autoCreateSubstitutions,
   notifyLeadership: item.notifyLeadership,
+  activeSubstitutionStatuses: (item.activeSubstitutionStatuses ?? [])
+    .map(toSubstitutionStatus)
+    .filter((status, index, statuses) => statuses.indexOf(status) === index),
   attachmentName: item.attachmentName || undefined,
   remarks: item.remarks || undefined,
 });
@@ -399,6 +402,7 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
   roomId: item.roomId,
   teacherId: item.teacherId,
   existingSubstitutionId: item.existingSubstitutionId,
+  existingSubstitutionStatus: item.existingSubstitutionStatus,
   canCreateSubstitution: item.canCreateSubstitution,
   period: item.period,
   time: item.time,
@@ -419,6 +423,22 @@ const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
   teacher.coverageStartTime && teacher.coverageEndTime
     ? `${teacher.coverageStartTime}-${teacher.coverageEndTime}`
     : 'Selected slot';
+
+const getAvailabilityActionLabel = (availability: TeacherAvailabilityRow) => {
+  if (availability.affectedLectureCount <= 0) return 'No affected lectures';
+  if (availability.canCreateSubstitution !== false) return 'Create substitution';
+
+  const statuses = availability.activeSubstitutionStatuses ?? [];
+  if (statuses.includes('Pending')) return 'Pending assignment';
+  if (statuses.includes('Conflict')) return 'Conflict';
+  if (statuses.includes('Waiting Ack')) return 'Awaiting acknowledgement';
+  if (statuses.includes('Assigned')) return 'Assigned';
+  if (statuses.includes('Acknowledged')) return 'Covered';
+  if (statuses.includes('Completed')) return 'Completed';
+  if (statuses.includes('Rejected')) return 'Rejected';
+  if (statuses.includes('Cancelled')) return 'Cancelled';
+  return 'Already created';
+};
 
 const downloadBlob = (blob: Blob, fileName: string) => {
   const url = URL.createObjectURL(blob);
@@ -2827,7 +2847,7 @@ const SubstitutionManagementScreen = () => {
                         disabled={isDisabled}
                         onClick={() => handleCreateSubstitutionFromAvailability(availability)}
                       >
-                        {isDisabled ? 'Already created' : 'Create substitution'}
+                        {getAvailabilityActionLabel(availability)}
                       </Button>
                     );
                   },

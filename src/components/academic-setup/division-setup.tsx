@@ -9,9 +9,9 @@ import { Add } from '@mui/icons-material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
-import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
+import { useLazyGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import {
   Tab,
   Box,
@@ -32,9 +32,9 @@ import {
 } from 'src/redux/division/divisionApi';
 
 import { Iconify } from '../iconify';
-import CustomSelect from '../custom-select';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
+import { PaginatedSearchSelect } from '../paginated-search-select';
 import CustomDialog, { DialogScrollContent } from '../customDialog';
 
 interface IDivision {
@@ -219,6 +219,14 @@ interface IDivisionForm {
   editData: null | Record<string, any>;
   classId: string | number;
 }
+
+interface RoomOption {
+  id: string;
+  roomName: string;
+  buildingName?: string;
+  floorName?: string;
+}
+
 export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) => {
   const confirm = useBoolean();
   const [addDivision, { isLoading }] = useQueryAndMutation({
@@ -229,14 +237,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
       successMessage: 'Division added Successfully',
     },
   });
-  const {
-    data: rooms,
-    isLoading: isRoomLoading,
-    isFetching: isRoomFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRoomsQuery,
-  });
+  const [fetchRooms, { isFetching: isRoomFetching }] = useLazyGetRoomsQuery();
   const [updatedivision, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateDivisionMutation,
@@ -247,13 +248,28 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
   });
   const dispatch = useDispatch();
 
-  const roomsOptions = useMemo(
-    () =>
-      rooms?.items?.map((item: any) => ({
-        roomName: `${item.buildingName} > ${item.floorName} > ${item.roomName}`,
-        id: item.id,
-      })),
-    [rooms]
+  /**
+   * Memoization Justification:
+   * - The paginated autocomplete uses this function as its data-fetch dependency.
+   * - Keeping its identity stable prevents the search hook from rebuilding its debounced loader.
+   */
+  const fetchRoomOptions = useCallback(
+    async (query: string, page: number) => {
+      const pageSize = 25;
+      const response = await fetchRooms({
+        filter: query || undefined,
+        skipCount: (page - 1) * pageSize,
+        maxResultCount: pageSize,
+        sorting: 'RoomName asc',
+      }).unwrap();
+
+      const items = response?.items ?? [];
+      return {
+        data: items,
+        hasMore: (page - 1) * pageSize + items.length < (response?.totalCount ?? 0),
+      };
+    },
+    [fetchRooms]
   );
 
   const formik = useFormik({
@@ -366,17 +382,19 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
             helperText={formik.touched.strength && formik.errors.strength}
             size="small"
           />
-          <CustomSelect
-            options={roomsOptions || []}
-            loading={isRoomLoading || isRoomFetching}
-            value={formik.values.roomId}
-            valueKey="id"
-            labelKey="roomName"
+          <PaginatedSearchSelect<RoomOption>
             label="Room No *"
-            onChange={(value) => formik.setFieldValue('roomId', value)}
+            placeholder="Search or scroll to select a room"
+            fetchOptions={fetchRoomOptions}
+            minChars={0}
+            isLoading={isRoomFetching}
+            getOptionLabel={(option) =>
+              `${option.buildingName} > ${option.floorName} > ${option.roomName}`
+            }
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            onChange={(_, option) => formik.setFieldValue('roomId', option?.id ?? '')}
             error={formik.touched.roomId && Boolean(formik.errors.roomId)}
-            // @ts-ignore
-            helperText={formik.touched.roomId && formik.errors.roomId}
+            helperText={formik.touched.roomId ? (formik.errors.roomId as string) : undefined}
             size="small"
           />
         </Stack>
