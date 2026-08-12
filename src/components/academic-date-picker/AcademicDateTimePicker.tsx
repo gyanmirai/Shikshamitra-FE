@@ -1,6 +1,7 @@
 import type { DateTimePickerProps } from '@mui/x-date-pickers/DateTimePicker';
 
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DayCalendarSkeleton } from '@mui/x-date-pickers/DayCalendarSkeleton';
 
 import AcademicCalendarPickersDay from './AcademicCalendarPickersDay';
 import { getCalendarDayTitle } from './academic-date-picker-utils';
@@ -78,6 +79,7 @@ export default function AcademicDateTimePicker({
         },
       }}
       loading={dateTimePickerProps.loading || isFetching}
+      renderLoading={dateTimePickerProps.renderLoading || (() => <DayCalendarSkeleton />)}
     />
   );
 }

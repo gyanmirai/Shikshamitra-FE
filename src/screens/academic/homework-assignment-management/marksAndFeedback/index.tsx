@@ -50,7 +50,6 @@ const MarksFeedbackHomeworkAssignment = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Evaluation & Feedback"
         description={
           currentActiveComponent?.value === 'homeworkMarks'

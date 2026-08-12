@@ -172,13 +172,13 @@ export function EvaluationSummaryCards({
     },
     ...(showMarks
       ? [
-          {
-            label: 'Average Marks',
-            value: summary.averageMarks ?? '-',
-            icon: 'solar:chart-2-bold',
-            color: 'info' as const,
-          },
-        ]
+        {
+          label: 'Average Marks',
+          value: summary.averageMarks ?? '-',
+          icon: 'solar:chart-2-bold',
+          color: 'info' as const,
+        },
+      ]
       : []),
   ];
 
@@ -227,7 +227,7 @@ export function FeedbackStatusChip({ row }: { row: any }) {
     isReviewed || ((hasFeedback || hasMarks) && apiStatus === 'Draft')
       ? 'Reviewed'
       : apiStatus ||
-        (isNeedsReview ? 'Needs Review' : hasFeedback || hasMarks ? 'Reviewed' : 'Not Started');
+      (isNeedsReview ? 'Needs Review' : hasFeedback || hasMarks ? 'Reviewed' : 'Not Started');
 
   return (
     <Label
