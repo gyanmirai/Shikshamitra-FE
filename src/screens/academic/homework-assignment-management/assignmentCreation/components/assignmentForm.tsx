@@ -49,7 +49,10 @@ import {
   FormControl,
   Autocomplete,
 } from '@mui/material';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  useGetSubjectAssignmentsQuery,
+  useUploadCurriculumFileMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useAddAssignmentMutation,
   useGetAssignmentByIdQuery,
@@ -194,7 +197,12 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
   const [pendingAssignmentTypeId, setPendingAssignmentTypeId] = useState<string | null>(null);
   const [pendingSubmitValues, setPendingSubmitValues] = useState<AssignmentFormValues | null>(null);
 
+  const [uploadCurriculumFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
+  const [previewFileState, setPreviewFileState] = useState<any>(null);
 
   const getFileNameFromUrl = (file: string | File): string => {
     if (!file) return '';
@@ -912,17 +920,39 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                     }
                     multiple={false}
                     showVisibleDocumentCount={1}
-                    onChange={(value) => {
-                      if (!value) {
+                    onChange={async (value) => {
+                      const file = Array.isArray(value) ? value[0] : value;
+                      if (file instanceof File) {
+                        try {
+                          const formData = new FormData();
+                          formData.append('File', file);
+                          const response = await uploadCurriculumFile(formData).unwrap();
+                          if (response.data) {
+                            const uploadedFile = {
+                              name: file.name,
+                              size: file.size,
+                              type: file.type,
+                              url: response.data,
+                              filePath: response.data,
+                            };
+                            formik.setFieldValue('attachment', uploadedFile);
+                            formik.setFieldValue('removeAttachment', false);
+                            shikshaMitraToast.success({ message: 'File uploaded successfully' });
+                          }
+                        } catch (e) {
+                          console.error(e);
+                          shikshaMitraToast.error({ message: 'Upload failed' });
+                        }
+                      } else if (file) {
+                        formik.setFieldValue('attachment', file);
+                        formik.setFieldValue('removeAttachment', false);
+                      } else {
                         formik.setFieldValue('attachment', null);
                         formik.setFieldValue('removeAttachment', Boolean(editData?.attachment));
-                        return;
                       }
-
-                      formik.setFieldValue('attachment', value);
-                      formik.setFieldValue('removeAttachment', false);
                     }}
                     onPreview={(file) => {
+                      setPreviewFileState(file);
                       const url =
                         file instanceof File
                           ? URL.createObjectURL(file)
@@ -1201,7 +1231,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           open={!!previewDoc}
           onClose={() => setPreviewDoc(null)}
           url={previewDoc || ''}
-          documentName={previewDoc ? getFileNameFromUrl(previewDoc) : ''}
+          documentName={previewFileState ? previewFileState.name : 'Document Preview'}
         />
         <ConfirmDialog
           open={typeDefaultsDialog.value}

@@ -109,7 +109,6 @@ import {
   acknowledgementOptions,
   affectedLectureTemplates,
   availabilityStatusOptions,
-  initialTeacherAvailability,
 } from './substitutionData';
 import {
   useDailySheetDataQuery,
@@ -717,7 +716,7 @@ const SubstitutionManagementScreen = () => {
   const [boardView, setBoardView] = useState<SubstitutionViewType>('table');
   const [filters, setFilters] = useState(DEFAULT_SUBSTITUTION_FILTERS);
   const [substitutions, setSubstitutions] = useState<SubstitutionRow[]>([]);
-  const [teacherAvailability, setTeacherAvailability] = useState(initialTeacherAvailability);
+  const [teacherAvailability, setTeacherAvailability] = useState<TeacherAvailabilityRow[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
@@ -814,7 +813,9 @@ const SubstitutionManagementScreen = () => {
     data: availabilityResult,
     isLoading: isAvailabilityLoading,
     isFetching: isAvailabilityFetching,
+    refetch: refetchAvailability,
   } = useTeacherAvailabilityDataQuery({
+    ...academicContextParams,
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
@@ -1900,7 +1901,12 @@ const SubstitutionManagementScreen = () => {
         if (updated) {
           updateSubstitution(id, () => mapApiSubstitution(updated));
         }
-        await Promise.all([refetchMyDuties?.(), refetchSubstitutions?.(), refetchDashboard?.()]);
+        await Promise.all([
+          refetchMyDuties?.(),
+          refetchSubstitutions?.(),
+          refetchDashboard?.(),
+          refetchAvailability?.(),
+        ]);
         shikshaMitraToast.success({
           message:
             action === 'accept'
@@ -1923,6 +1929,7 @@ const SubstitutionManagementScreen = () => {
     },
     [
       acknowledgeSubstitution,
+      refetchAvailability,
       refetchDashboard,
       refetchMyDuties,
       refetchSubstitutions,
