@@ -292,9 +292,7 @@ export function PipelineCatalogSettings({
           { value: false, label: 'Inactive' },
         ],
         render: (value) => (
-          <Label color={value ? 'success' : 'default'}>
-            {value ? 'Active' : 'Inactive'}
-          </Label>
+          <Label color={value ? 'success' : 'default'}>{value ? 'Active' : 'Inactive'}</Label>
         ),
       },
       {
@@ -307,38 +305,35 @@ export function PipelineCatalogSettings({
           const record = row as CatalogRecord;
           return (
             <Box display="flex" gap={1} alignItems="center" justifyContent="center">
-              <Tooltip title="Edit">
+              <Tooltip title={`Edit ${record.displayName}`}>
                 <span>
                   <IconButton
-                    aria-label="Edit"
+                    aria-label={`Edit ${record.displayName}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       openEditor(record);
                     }}
-                    sx={{ p: 0 }}
+                    sx={{ minWidth: 44, minHeight: 44 }}
                   >
-                    <Iconify
-                      icon="solar:pen-bold"
-                      sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-                    />
+                    <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
                   </IconButton>
                 </span>
               </Tooltip>
-              <Tooltip title={record.isActive ? 'Disable' : 'Enable'}>
+              <Tooltip title={`${record.isActive ? 'Disable' : 'Enable'} ${record.displayName}`}>
                 <span>
                   <IconButton
-                    aria-label={record.isActive ? 'Disable' : 'Enable'}
+                    aria-label={`${record.isActive ? 'Disable' : 'Enable'} ${record.displayName}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleStatus(record);
                     }}
                     disabled={isChangingStatus}
-                    sx={{ p: 0 }}
+                    sx={{ minWidth: 44, minHeight: 44 }}
                   >
                     <Iconify
                       icon={record.isActive ? 'solar:pause-circle-bold' : 'solar:play-circle-bold'}
                       color={record.isActive ? 'warning.main' : 'success.main'}
-                      sx={{ height: '18px', width: '18px', cursor: 'pointer' }}
+                      sx={{ height: '18px', width: '18px' }}
                     />
                   </IconButton>
                 </span>

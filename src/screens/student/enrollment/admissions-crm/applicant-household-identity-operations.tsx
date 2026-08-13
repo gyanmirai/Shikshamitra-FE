@@ -118,7 +118,6 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
   const [hasPickupAuthorization, setHasPickupAuthorization] = useState(true);
   const [hasPortalAccess, setHasPortalAccess] = useState(true);
   const [addGuardian, addGuardianState] = useAddAdmissionCrmGuardianRelationshipMutation();
-
   const [aadhaar, setAadhaar] = useState('');
   const [penNumber, setPenNumber] = useState('');
   const [apaarId, setApaarId] = useState('');
@@ -141,7 +140,6 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
       setHouseholdName(`${displayName || 'Applicant'} household`);
     }
   }, [householdName, lead]);
-
   const run = async (action: () => Promise<unknown>, success: string) => {
     try {
       await action();
@@ -151,7 +149,9 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
     }
   };
 
-  if (profileQuery.isFetching || leadQuery.isFetching) return <LinearProgress />;
+  if (profileQuery.isFetching || leadQuery.isFetching) {
+    return <LinearProgress aria-label="Loading applicant household identity" />;
+  }
 
   if (!profile) {
     return (

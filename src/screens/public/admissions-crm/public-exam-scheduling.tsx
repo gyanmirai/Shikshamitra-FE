@@ -175,6 +175,8 @@ export default function PublicExamScheduling({
           <TextField
             select
             size="small"
+            name="entranceExamSlot"
+            autoComplete="off"
             label={copy.availableSlot}
             value={selectedSlotId}
             onChange={(event) => setSelectedSlotId(event.target.value)}

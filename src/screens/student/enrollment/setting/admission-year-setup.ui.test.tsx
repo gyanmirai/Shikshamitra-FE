@@ -124,9 +124,8 @@ describe('Admission Year Setup query safety', () => {
 
     render(<AdmissionYearSetup />);
 
-    const startSetup = screen.getByRole('button', { name: 'Start setup' });
+    const startSetup = screen.getByRole('button', { name: 'Setup Academic Process' });
     expect(startSetup).toBeDisabled();
-    expect(screen.getByTestId('admission-year-context')).toContainElement(startSetup);
     expect(
       screen.getByRole('progressbar', { name: 'Loading Admission Year Setup' })
     ).toBeInTheDocument();

@@ -300,6 +300,8 @@ export default function PublicFamilyControls({
             <Stack spacing={1.5}>
               <Alert severity="warning">{labels.warning}</Alert>
               <TextField
+                name="withdrawalReason"
+                autoComplete="off"
                 label={labels.reason}
                 value={withdrawReason}
                 onChange={(event) => {

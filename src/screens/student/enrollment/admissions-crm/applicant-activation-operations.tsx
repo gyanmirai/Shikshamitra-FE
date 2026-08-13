@@ -243,7 +243,7 @@ export function ApplicantActivationOperations({
           )}
         </Stack>
         {(placements.isFetching || series.isFetching || activation.isFetching) && (
-          <LinearProgress />
+          <LinearProgress aria-label="Loading applicant activation readiness" />
         )}
         {activation.isError || placements.isError || series.isError ? (
           <Alert

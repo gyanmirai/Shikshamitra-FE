@@ -3,7 +3,6 @@
 import type {
   AdmissionCrmLeadDto,
   AdmissionCrmLeadListParams,
-  AdmissionCrmPipelineColumnKey,
 } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { useRef, useState, useEffect } from 'react';
@@ -23,19 +22,14 @@ import {
   CircularProgress,
 } from '@mui/material';
 
+import type { EnrollmentPipelineColumnDefinition } from './pipeline-column-definitions';
+
 const PAGE_SIZE = 25;
 const emptyLeads: AdmissionCrmLeadDto[] = [];
 
-export type PipelineColumnDefinition = {
-  key: AdmissionCrmPipelineColumnKey;
-  label: string;
-  description: string;
-  color: string;
-};
-
 type Props = {
   academicYearId: string;
-  column: PipelineColumnDefinition;
+  column: EnrollmentPipelineColumnDefinition;
   query: Omit<AdmissionCrmLeadListParams, 'pipelineColumn' | 'skipCount' | 'maxResultCount'>;
   resetKey: string;
   renderLead: (lead: AdmissionCrmLeadDto) => React.ReactNode;
@@ -115,6 +109,8 @@ export function PipelineStageColumn({
   }, [data, page, resetKey]);
 
   const canLoadMore = loadedLeads.length < totalCount;
+  const isInitialLoading = shouldLoad && isFetching && !data && loadedLeads.length === 0;
+  const isRefreshing = shouldLoad && isFetching && !isInitialLoading && page === 0;
   const tooltipTitle = (
     <Typography variant="caption" color="inherit">
       {column.description}
@@ -139,7 +135,9 @@ export function PipelineStageColumn({
         flexDirection: 'column',
         overflow: 'hidden',
         bgcolor: 'background.neutral',
-        borderTop: `3px solid ${column.color}`,
+        borderTop: 3,
+        borderTopStyle: 'solid',
+        borderTopColor: `${column.color}.main`,
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
@@ -148,7 +146,8 @@ export function PipelineStageColumn({
             size="small"
             variant="outlined"
             label={column.label}
-            sx={{ borderColor: column.color, color: 'text.primary' }}
+            color={column.color}
+            sx={{ color: 'text.primary' }}
           />
           <Tooltip title={tooltipTitle} arrow>
             <IconButton size="small" aria-label={`${column.label} column details`}>
@@ -164,14 +163,22 @@ export function PipelineStageColumn({
           )}
         </Typography>
       </Stack>
-      {!shouldLoad && (
-        <Stack spacing={1} aria-label={`${column.label} loads when visible`}>
+      {!shouldLoad || isInitialLoading ? (
+        <Stack
+          role="status"
+          spacing={1}
+          aria-label={
+            shouldLoad ? `Loading ${column.label} applicants` : `${column.label} loads when visible`
+          }
+        >
           <Skeleton variant="rounded" height={112} />
           <Skeleton variant="rounded" height={112} />
         </Stack>
-      )}
-      {isFetching && page === 0 && <LinearProgress sx={{ mb: 1 }} />}
-      {shouldLoad && isError ? (
+      ) : null}
+      {isRefreshing ? (
+        <LinearProgress aria-label={`Refreshing ${column.label} applicants`} sx={{ mb: 1 }} />
+      ) : null}
+      {shouldLoad && !isInitialLoading && isError ? (
         <Alert
           severity="error"
           action={
@@ -182,7 +189,7 @@ export function PipelineStageColumn({
         >
           Column unavailable
         </Alert>
-      ) : shouldLoad ? (
+      ) : shouldLoad && !isInitialLoading ? (
         <Stack
           spacing={1}
           sx={{

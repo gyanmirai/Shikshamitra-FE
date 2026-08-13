@@ -28,6 +28,7 @@ Apply these priorities in order.
 | Enrollment filters, empty states, and errors | `src/screens/student/enrollment/admissions-crm/workspace-table-patterns.tsx`        |
 | Enrollment settings task navigation          | `src/screens/student/enrollment/setting/enrollment-settings-page.tsx`               |
 | Guided settings editor drawer                | `src/screens/student/enrollment/setting/enrollment-settings-editor-drawer.tsx`      |
+| Public admissions shell                      | `src/screens/public/admissions-crm/public-admissions-shell.tsx`                     |
 
 These files are reference implementations, not exemptions from this contract.
 When a reference conflicts with this document, follow this document and improve the shared primitive.
@@ -331,16 +332,16 @@ Configure the route in the constants layer first, then create the App Router ent
 
 ### Route source map
 
-| Responsibility | Source path | What belongs there |
-| --- | --- | --- |
-| Module root path | `src/routes/paths.ts` | One stable root path per module, such as `transportPath = '/transport'`. |
-| Feature paths and permissions | `src/constants/<module>-menu.ts` | Feature URLs, nested path objects, permission names, menu labels, icons, and navigation hierarchy. |
-| Sidebar registration | `src/layouts/config-nav-dashboard.tsx` | Import the module constant and connect its root path to the main module navigation. |
-| Route entry | `src/app/(auth-route)/<module>/<feature>/page.tsx` | Thin page adapter that imports and renders the owning screen. |
-| Route protection | `src/app/(auth-route)/<module>/<feature>/layout.tsx` | Feature-level permission guard or route-specific layout when required. |
-| Screen implementation | `src/screens/<module>/<Feature>/` | Page UI, component composition, hooks, state, tables, forms, and workflow behavior. |
-| Breadcrumb links | Owning file under `src/screens/<module>/` | Use the same configured path constant; never duplicate a literal route when a constant exists. |
-| Route helpers | `src/routes/paths.ts`, `src/routes/hooks/`, `src/routes/components/` | Shared route constants, pathname/params/router hooks, and link adapters. |
+| Responsibility                | Source path                                                          | What belongs there                                                                                 |
+| ----------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Module root path              | `src/routes/paths.ts`                                                | One stable root path per module, such as `transportPath = '/transport'`.                           |
+| Feature paths and permissions | `src/constants/<module>-menu.ts`                                     | Feature URLs, nested path objects, permission names, menu labels, icons, and navigation hierarchy. |
+| Sidebar registration          | `src/layouts/config-nav-dashboard.tsx`                               | Import the module constant and connect its root path to the main module navigation.                |
+| Route entry                   | `src/app/(auth-route)/<module>/<feature>/page.tsx`                   | Thin page adapter that imports and renders the owning screen.                                      |
+| Route protection              | `src/app/(auth-route)/<module>/<feature>/layout.tsx`                 | Feature-level permission guard or route-specific layout when required.                             |
+| Screen implementation         | `src/screens/<module>/<Feature>/`                                    | Page UI, component composition, hooks, state, tables, forms, and workflow behavior.                |
+| Breadcrumb links              | Owning file under `src/screens/<module>/`                            | Use the same configured path constant; never duplicate a literal route when a constant exists.     |
+| Route helpers                 | `src/routes/paths.ts`, `src/routes/hooks/`, `src/routes/components/` | Shared route constants, pathname/params/router hooks, and link adapters.                           |
 
 ### Numbered route creation workflow
 
@@ -541,15 +542,15 @@ Use the same constant for menu items, `CustomBreadcrumbs`, cards, table actions,
 
 ### Route naming and anti-patterns
 
-| Prefer | Avoid |
-| --- | --- |
-| `transportPaths.newFeature` | Repeating `'/transport/new-feature'` throughout the codebase |
-| `src/app/(auth-route)/transport/new-feature/page.tsx` | Putting a feature page only under `src/screens/` without an App Router entry |
-| A thin route adapter plus a screen component | Implementing the whole page inside `page.tsx` |
-| Module constants first, then route files | Creating a route before defining its path and permission |
-| `StudentPermissionGuard` or the module’s established guard | Relying on hidden menu items as authorization |
-| `src/routes/hooks` and `RouterLink`/existing route helpers | Calling `window.location` for internal navigation |
-| Existing module casing and URL conventions | Mixing kebab-case, camelCase, and arbitrary spellings in one module |
+| Prefer                                                     | Avoid                                                                        |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `transportPaths.newFeature`                                | Repeating `'/transport/new-feature'` throughout the codebase                 |
+| `src/app/(auth-route)/transport/new-feature/page.tsx`      | Putting a feature page only under `src/screens/` without an App Router entry |
+| A thin route adapter plus a screen component               | Implementing the whole page inside `page.tsx`                                |
+| Module constants first, then route files                   | Creating a route before defining its path and permission                     |
+| `StudentPermissionGuard` or the module’s established guard | Relying on hidden menu items as authorization                                |
+| `src/routes/hooks` and `RouterLink`/existing route helpers | Calling `window.location` for internal navigation                            |
+| Existing module casing and URL conventions                 | Mixing kebab-case, camelCase, and arbitrary spellings in one module          |
 
 ## Shared component design system
 
@@ -562,60 +563,60 @@ Each component entry is intentionally structured so its detailed configuration a
 Use this index to find the rule section and source implementation quickly.
 The spelling in the `Source path` column is the repository’s current path and must be preserved in imports.
 
-| No. | Component | Rule section | Source path |
-| ---: | --- | --- | --- |
-| 01 | Breadcrumb / `CustomBreadcrumbs` | [01. Breadcrumb](#01-breadcrumb) | `src/components/custom-breadcrumbs/` |
-| 02 | FilterPanel pattern | [02. FilterPanel](#02-filterpanel-pattern) | Feature-owned; reference `src/screens/hr/i-card/index.tsx` |
-| 03 | Tabs | [03. Tabs and CustomTabs](#03-tabs-and-customtabs) | `src/theme/core/components/tabs.tsx` and `src/hooks/use-tabs.ts` |
-| 04 | CustomTabs | [03. Tabs and CustomTabs](#03-tabs-and-customtabs) | `src/components/custom-tabs/` |
-| 05 | ThreeDotsActions | [04. Table family](#04-table-family) | `src/components/three-dots-actions/` |
-| 06 | Label | [04. Table family](#04-table-family) | `src/components/label/` |
-| 07 | CustomizableTable | [04. Table family](#04-table-family) | `src/components/customizabaleTable/` |
-| 08 | ConfirmDialog | [05. Dialog family](#05-dialog-family) | `src/components/confirm-dialog/` |
-| 09 | BackPopUpChecked | [05. Dialog family](#05-dialog-family) | `src/components/back-popup-check/` |
-| 10 | DeleteConfirmationDialog | [05. Dialog family](#05-dialog-family) | `src/components/delete-confirmation/` |
-| 11 | CustomSelect | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup) | `src/components/custom-select/` |
-| 12 | ShakingTextField | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup) | `src/components/shaking-text-field/` |
-| 13 | NumericFormatCustom | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup) | `src/components/custom-numeric-format/` |
-| 14 | OtpInputField | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup) | `src/components/otp-input-field/` |
-| 15 | PaginatedSearchSelect | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup) | `src/components/paginated-search-select/` |
-| 16 | StandardAddress | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup) | `src/components/stardard-address/` |
-| 17 | CustomDateRangePicker | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup) | `src/components/custom-date-range-picker/` |
-| 18 | AcademicDatePicker | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup) | `src/components/academic-date-picker/` |
-| 19 | CustomStepperWithFormik | [07. Stepper with Formik](#07-stepper-with-formik) | `src/components/custom-stepper/` |
-| 20 | SectionCard | [08. SectionCard](#08-sectioncard) | Existing implementations; reference `src/screens/hr/employee/employee-form-fields/InformationFields.tsx` |
-| 21 | Drawer | [09. Drawer](#09-drawer) | `src/theme/core/components/drawer.tsx`, `src/layouts/components/`, and feature drawers |
-| 22 | Button | [10. Button](#10-button) | `src/theme/core/components/button.tsx`, `src/components/loading-button/`, `src/components/submit-button/`, `src/components/cancel-button/` |
-| 23 | Types | [11. Types](#11-types) | Component-local `types.ts` files and shared domain types |
-| 24 | Iconify | [12. Icons](#12-icons) | `src/components/iconify/` |
-| 25 | shikshaMitraToast | [13. Toast](#13-toast) | `src/components/toast/` |
-| 26 | CustomUpload | [14. Upload](#14-upload) | `src/components/custom-upload/` |
-| 27 | EmptyContent | [15. EmptyContent](#15-emptycontent) | `src/components/empty-content/` |
-| 28 | CustomTooltip | [16. Tooltip](#16-tooltip) | `src/components/custom-tooltip/` |
-| 29 | CustomAccordion | [17. Accordion](#17-accordion) | `src/components/custom-accordian/` |
-| 30 | Editor | [18. Editor](#18-editor) | `src/components/editor/` |
-| 31 | Scrollbar | [19. Scrollbar](#19-scrollbar) | `src/components/scrollbar/` |
-| 32 | Hooks | [20. Hooks](#20-hooks) | `src/hooks/` |
-| 33 | CommonCalender | [21. Calendar](#21-calendar) | `src/components/calender/` |
-| 34 | Chart | [22. Chart](#22-chart) | `src/components/chart/` and `src/components/charts/` |
-| 35 | Redux and API integration | [23. Redux and API integration](#23-redux-and-api-integration) | `src/redux/` |
-| 36 | Utilities | [24. Utilities](#24-utilities) | `src/utils/` |
+| No. | Component                        | Rule section                                                   | Source path                                                                                                                                |
+| --: | -------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+|  01 | Breadcrumb / `CustomBreadcrumbs` | [01. Breadcrumb](#01-breadcrumb)                               | `src/components/custom-breadcrumbs/`                                                                                                       |
+|  02 | FilterPanel pattern              | [02. FilterPanel](#02-filterpanel-pattern)                     | Feature-owned; reference `src/screens/hr/i-card/index.tsx`                                                                                 |
+|  03 | Tabs                             | [03. Tabs and CustomTabs](#03-tabs-and-customtabs)             | `src/theme/core/components/tabs.tsx` and `src/hooks/use-tabs.ts`                                                                           |
+|  04 | CustomTabs                       | [03. Tabs and CustomTabs](#03-tabs-and-customtabs)             | `src/components/custom-tabs/`                                                                                                              |
+|  05 | ThreeDotsActions                 | [04. Table family](#04-table-family)                           | `src/components/three-dots-actions/`                                                                                                       |
+|  06 | Label                            | [04. Table family](#04-table-family)                           | `src/components/label/`                                                                                                                    |
+|  07 | CustomizableTable                | [04. Table family](#04-table-family)                           | `src/components/customizabaleTable/`                                                                                                       |
+|  08 | ConfirmDialog                    | [05. Dialog family](#05-dialog-family)                         | `src/components/confirm-dialog/`                                                                                                           |
+|  09 | BackPopUpChecked                 | [05. Dialog family](#05-dialog-family)                         | `src/components/back-popup-check/`                                                                                                         |
+|  10 | DeleteConfirmationDialog         | [05. Dialog family](#05-dialog-family)                         | `src/components/delete-confirmation/`                                                                                                      |
+|  11 | CustomSelect                     | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup)         | `src/components/custom-select/`                                                                                                            |
+|  12 | ShakingTextField                 | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup)         | `src/components/shaking-text-field/`                                                                                                       |
+|  13 | NumericFormatCustom              | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup)         | `src/components/custom-numeric-format/`                                                                                                    |
+|  14 | OtpInputField                    | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup)         | `src/components/otp-input-field/`                                                                                                          |
+|  15 | PaginatedSearchSelect            | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup)         | `src/components/paginated-search-select/`                                                                                                  |
+|  16 | StandardAddress                  | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup)         | `src/components/stardard-address/`                                                                                                         |
+|  17 | CustomDateRangePicker            | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup)         | `src/components/custom-date-range-picker/`                                                                                                 |
+|  18 | AcademicDatePicker               | [06. Forms, Formik, and Yup](#06-forms-formik-and-yup)         | `src/components/academic-date-picker/`                                                                                                     |
+|  19 | CustomStepperWithFormik          | [07. Stepper with Formik](#07-stepper-with-formik)             | `src/components/custom-stepper/`                                                                                                           |
+|  20 | SectionCard                      | [08. SectionCard](#08-sectioncard)                             | Existing implementations; reference `src/screens/hr/employee/employee-form-fields/InformationFields.tsx`                                   |
+|  21 | Drawer                           | [09. Drawer](#09-drawer)                                       | `src/theme/core/components/drawer.tsx`, `src/layouts/components/`, and feature drawers                                                     |
+|  22 | Button                           | [10. Button](#10-button)                                       | `src/theme/core/components/button.tsx`, `src/components/loading-button/`, `src/components/submit-button/`, `src/components/cancel-button/` |
+|  23 | Types                            | [11. Types](#11-types)                                         | Component-local `types.ts` files and shared domain types                                                                                   |
+|  24 | Iconify                          | [12. Icons](#12-icons)                                         | `src/components/iconify/`                                                                                                                  |
+|  25 | shikshaMitraToast                | [13. Toast](#13-toast)                                         | `src/components/toast/`                                                                                                                    |
+|  26 | CustomUpload                     | [14. Upload](#14-upload)                                       | `src/components/custom-upload/`                                                                                                            |
+|  27 | EmptyContent                     | [15. EmptyContent](#15-emptycontent)                           | `src/components/empty-content/`                                                                                                            |
+|  28 | CustomTooltip                    | [16. Tooltip](#16-tooltip)                                     | `src/components/custom-tooltip/`                                                                                                           |
+|  29 | CustomAccordion                  | [17. Accordion](#17-accordion)                                 | `src/components/custom-accordian/`                                                                                                         |
+|  30 | Editor                           | [18. Editor](#18-editor)                                       | `src/components/editor/`                                                                                                                   |
+|  31 | Scrollbar                        | [19. Scrollbar](#19-scrollbar)                                 | `src/components/scrollbar/`                                                                                                                |
+|  32 | Hooks                            | [20. Hooks](#20-hooks)                                         | `src/hooks/`                                                                                                                               |
+|  33 | CommonCalender                   | [21. Calendar](#21-calendar)                                   | `src/components/calender/`                                                                                                                 |
+|  34 | Chart                            | [22. Chart](#22-chart)                                         | `src/components/chart/` and `src/components/charts/`                                                                                       |
+|  35 | Redux and API integration        | [23. Redux and API integration](#23-redux-and-api-integration) | `src/redux/`                                                                                                                               |
+|  36 | Utilities                        | [24. Utilities](#24-utilities)                                 | `src/utils/`                                                                                                                               |
 
 ### How to read and extend a component entry
 
 Every component entry must answer the same questions:
 
-| Section | Required content |
-| --- | --- |
-| Purpose | What user problem the component solves and when it is appropriate |
-| Source of truth | Actual implementation, types, tests, and related theme primitive |
-| Configuration | Public props, defaults, controlled state, callbacks, slots, and styling extension points |
-| Usage | Preferred composition, a minimal example, and an anti-pattern example when useful |
-| Rules | Behavioral, layout, state, data, and ownership constraints |
-| Accessibility | Required names, roles, keyboard behavior, focus, announcements, and contrast |
-| Responsive behavior | Narrow-screen, touch, overflow, and desktop behavior |
-| Validation | Required unit, integration, visual, accessibility, and browser checks |
-| Open decisions | Rules that are not yet supplied or need product agreement |
+| Section             | Required content                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| Purpose             | What user problem the component solves and when it is appropriate                        |
+| Source of truth     | Actual implementation, types, tests, and related theme primitive                         |
+| Configuration       | Public props, defaults, controlled state, callbacks, slots, and styling extension points |
+| Usage               | Preferred composition, a minimal example, and an anti-pattern example when useful        |
+| Rules               | Behavioral, layout, state, data, and ownership constraints                               |
+| Accessibility       | Required names, roles, keyboard behavior, focus, announcements, and contrast             |
+| Responsive behavior | Narrow-screen, touch, overflow, and desktop behavior                                     |
+| Validation          | Required unit, integration, visual, accessibility, and browser checks                    |
+| Open decisions      | Rules that are not yet supplied or need product agreement                                |
 
 When adding a rule, place it in the narrowest applicable component entry first.
 Promote a rule to the global sections above only when it applies to multiple components or all authenticated pages.
@@ -626,42 +627,42 @@ Backend permissions, tenant isolation, domain invariants, and API contracts rema
 
 The paths below reflect the current shared implementation names, including legacy spellings that must not be silently renamed in documentation or imports.
 
-| Group | Component | Source of truth | Configuration to document |
-| --- | --- | --- | --- |
-| Navigation | Breadcrumb | `src/components/custom-breadcrumbs/` | Links, active item, separator, overflow, responsive display |
-| Navigation | FilterPanel | `src/components/filters-result/` and feature filter components | Filter fields, URL state, reset behavior, result count, layout |
-| Navigation | CustomTabs | `src/components/custom-tabs/` | Variant, value, change handler, icons, panel composition |
-| Table | ThreeDotsActions | `src/components/three-dots-actions/` | Menu items, labels, disabled/hidden state, row context |
-| Table | Label | `src/components/label/` | Text, color/status mapping, size, variant |
-| Table | CustomizableTable | `src/components/customizabaleTable/` | Columns, rows, query state, pagination, sorting, toolbar, sticky columns |
-| Dialog | ConfirmDialog | `src/components/confirm-dialog/` | Open state, title, content, confirm/cancel actions, loading, severity |
-| Dialog | BackPopUpChecked | `src/components/back-popup-check/` | Dirty state, navigation interception, confirmation callbacks |
-| Dialog | DeleteConfirmationDialog | `src/components/delete-confirmation/` | Record identity, destructive copy, confirm loading, close behavior |
-| Forms | CustomSelect | `src/components/custom-select/` | Options, value shape, multiple mode, labels, errors, disabled state |
-| Forms | ShakingTextField | `src/components/shaking-text-field/` | Label, value, error, helper text, animation, input props |
-| Forms | NumericFormatCustom | `src/components/custom-numeric-format/` | Numeric constraints, formatting, precision, empty value, Formik binding |
-| Forms | OtpInputField | `src/components/otp-input-field/` | Length, value, auto-focus, masking, paste, error state |
-| Forms | PaginatedSearchSelect | `src/components/paginated-search-select/` | Search, pagination, option mapping, selection mode, loading |
-| Forms | StandardAddress | `src/components/stardard-address/` | Address fields, dependent geography, validation, value mapping |
-| Forms | Stepper with Formik | `src/components/custom-stepper/` | Ordered steps, validation boundary, navigation, submit state |
-| Forms | SectionCard | Existing `SectionCard` implementations, primarily `src/screens/hr/employee/employee-form-fields/InformationFields.tsx` | Group related fields, section title, optional header content, loading, and layout |
-| Overlay | Drawer | `src/theme/core/components/drawer.tsx` and feature drawers | Anchor, width, full-screen breakpoint, close guard, action footer |
-| Actions | Button | `src/theme/core/components/button.tsx` and shared button components | Variant, intent, loading, icons, disabled state, touch target |
-| Contracts | Types | Component-local `types.ts` files and shared domain types | Naming, required/optional props, generic parameters, value contracts |
-| Icons | Iconify | `src/components/iconify/` | Icon name, size, color, accessible label, loading/fallback |
-| Feedback | shikshaMitraToast | `src/components/toast/` | Severity, message, duration, action, deduplication, placement |
-| Upload | CustomUpload | `src/components/custom-upload/` and `src/components/upload/` | Accepted files, size/count limits, preview, rejection, progress |
-| Date | CustomDateRangePicker | `src/components/custom-date-range-picker/` | Range value, mode, shortcuts, min/max, validation, timezone |
-| Date | AcademicDatePicker | `src/components/academic-date-picker/` | Academic calendar rules, blocked days, value serialization |
-| Calendar | CommonCalender | `src/components/calender/` | Events, view, date, toolbar, filters, drag/drop, resize, and container layout |
-| Feedback | EmptyContent | `src/components/empty-content/` | Title, explanation, illustration/icon, primary action, density |
-| Feedback | CustomTooltip | `src/components/custom-tooltip/` | Title, placement, trigger, delay, disabled behavior |
-| Data display | Chart | `src/components/chart/` and `src/components/charts/` | Type, series, options, theme, loading, empty, resize behavior |
-| Disclosure | CustomAccordion | `src/components/custom-accordian/` | Expanded state, summary, details, disabled state, nesting |
-| Editing | Editor | `src/components/editor/` | Value, toolbar, extensions, upload behavior, read-only state |
-| Layout | Scrollbar | `src/components/scrollbar/` | Scroll owner, axis, height, keyboard access, mobile behavior |
-| State | Redux | `src/redux/` | Slice ownership, RTK Query service, query args, tags, invalidation |
-| Utilities | Shared utility functions | `src/utils/` | Formatting, parsing, validation, permissions, serialization, calculations, and reusable data transformations |
+| Group        | Component                | Source of truth                                                                                                        | Configuration to document                                                                                    |
+| ------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Navigation   | Breadcrumb               | `src/components/custom-breadcrumbs/`                                                                                   | Links, active item, separator, overflow, responsive display                                                  |
+| Navigation   | FilterPanel              | `src/components/filters-result/` and feature filter components                                                         | Filter fields, URL state, reset behavior, result count, layout                                               |
+| Navigation   | CustomTabs               | `src/components/custom-tabs/`                                                                                          | Variant, value, change handler, icons, panel composition                                                     |
+| Table        | ThreeDotsActions         | `src/components/three-dots-actions/`                                                                                   | Menu items, labels, disabled/hidden state, row context                                                       |
+| Table        | Label                    | `src/components/label/`                                                                                                | Text, color/status mapping, size, variant                                                                    |
+| Table        | CustomizableTable        | `src/components/customizabaleTable/`                                                                                   | Columns, rows, query state, pagination, sorting, toolbar, sticky columns                                     |
+| Dialog       | ConfirmDialog            | `src/components/confirm-dialog/`                                                                                       | Open state, title, content, confirm/cancel actions, loading, severity                                        |
+| Dialog       | BackPopUpChecked         | `src/components/back-popup-check/`                                                                                     | Dirty state, navigation interception, confirmation callbacks                                                 |
+| Dialog       | DeleteConfirmationDialog | `src/components/delete-confirmation/`                                                                                  | Record identity, destructive copy, confirm loading, close behavior                                           |
+| Forms        | CustomSelect             | `src/components/custom-select/`                                                                                        | Options, value shape, multiple mode, labels, errors, disabled state                                          |
+| Forms        | ShakingTextField         | `src/components/shaking-text-field/`                                                                                   | Label, value, error, helper text, animation, input props                                                     |
+| Forms        | NumericFormatCustom      | `src/components/custom-numeric-format/`                                                                                | Numeric constraints, formatting, precision, empty value, Formik binding                                      |
+| Forms        | OtpInputField            | `src/components/otp-input-field/`                                                                                      | Length, value, auto-focus, masking, paste, error state                                                       |
+| Forms        | PaginatedSearchSelect    | `src/components/paginated-search-select/`                                                                              | Search, pagination, option mapping, selection mode, loading                                                  |
+| Forms        | StandardAddress          | `src/components/stardard-address/`                                                                                     | Address fields, dependent geography, validation, value mapping                                               |
+| Forms        | Stepper with Formik      | `src/components/custom-stepper/`                                                                                       | Ordered steps, validation boundary, navigation, submit state                                                 |
+| Forms        | SectionCard              | Existing `SectionCard` implementations, primarily `src/screens/hr/employee/employee-form-fields/InformationFields.tsx` | Group related fields, section title, optional header content, loading, and layout                            |
+| Overlay      | Drawer                   | `src/theme/core/components/drawer.tsx` and feature drawers                                                             | Anchor, width, full-screen breakpoint, close guard, action footer                                            |
+| Actions      | Button                   | `src/theme/core/components/button.tsx` and shared button components                                                    | Variant, intent, loading, icons, disabled state, touch target                                                |
+| Contracts    | Types                    | Component-local `types.ts` files and shared domain types                                                               | Naming, required/optional props, generic parameters, value contracts                                         |
+| Icons        | Iconify                  | `src/components/iconify/`                                                                                              | Icon name, size, color, accessible label, loading/fallback                                                   |
+| Feedback     | shikshaMitraToast        | `src/components/toast/`                                                                                                | Severity, message, duration, action, deduplication, placement                                                |
+| Upload       | CustomUpload             | `src/components/custom-upload/` and `src/components/upload/`                                                           | Accepted files, size/count limits, preview, rejection, progress                                              |
+| Date         | CustomDateRangePicker    | `src/components/custom-date-range-picker/`                                                                             | Range value, mode, shortcuts, min/max, validation, timezone                                                  |
+| Date         | AcademicDatePicker       | `src/components/academic-date-picker/`                                                                                 | Academic calendar rules, blocked days, value serialization                                                   |
+| Calendar     | CommonCalender           | `src/components/calender/`                                                                                             | Events, view, date, toolbar, filters, drag/drop, resize, and container layout                                |
+| Feedback     | EmptyContent             | `src/components/empty-content/`                                                                                        | Title, explanation, illustration/icon, primary action, density                                               |
+| Feedback     | CustomTooltip            | `src/components/custom-tooltip/`                                                                                       | Title, placement, trigger, delay, disabled behavior                                                          |
+| Data display | Chart                    | `src/components/chart/` and `src/components/charts/`                                                                   | Type, series, options, theme, loading, empty, resize behavior                                                |
+| Disclosure   | CustomAccordion          | `src/components/custom-accordian/`                                                                                     | Expanded state, summary, details, disabled state, nesting                                                    |
+| Editing      | Editor                   | `src/components/editor/`                                                                                               | Value, toolbar, extensions, upload behavior, read-only state                                                 |
+| Layout       | Scrollbar                | `src/components/scrollbar/`                                                                                            | Scroll owner, axis, height, keyboard access, mobile behavior                                                 |
+| State        | Redux                    | `src/redux/`                                                                                                           | Slice ownership, RTK Query service, query args, tags, invalidation                                           |
+| Utilities    | Shared utility functions | `src/utils/`                                                                                                           | Formatting, parsing, validation, permissions, serialization, calculations, and reusable data transformations |
 
 ### 01. Breadcrumb
 
@@ -672,22 +673,22 @@ Use this component for page headers, list pages, detail views, create/edit views
 
 **Configuration**
 
-| Prop | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `heading` | `string \| ReactNode` | Recommended | — | Use the current page or task name as the visible heading. |
-| `description` | `ReactNode` | Yes | — | Always provide concise, real information about what the current screen or task does. |
-| `links` | `BreadcrumbsLinkProps[]` | Yes | — | Provide the real navigation hierarchy; ancestor items use their actual route path and the current item has no `href`. |
-| `links[].name` | `string` | Recommended | — | Use the visible product term used by the destination page. |
-| `links[].href` | `string` | Conditional | — | Use only for navigable ancestors and use the actual route, such as `/transport/dashboard`. |
-| `links[].icon` | `ReactElement` | Optional | — | Add only when the icon improves recognition and is consistent with the surrounding navigation. |
-| `links[].onClick` | `(event) => void` | Optional | — | Use for an in-page or stateful transition when a normal route link is not the correct behavior. |
-| `isBack` | `boolean` | Conditional | `false` | Set to `true` for contextual create, edit, detail, or dialog states that need an explicit return action. |
-| `onBack` | `() => void` | Conditional | no-op | Pass the real close, cancel, or return handler whenever `isBack` is `true`. |
-| `descriptionDisplay` | `'tooltip' \| 'visible'` | Optional | `'tooltip'` | Use the default tooltip for short supporting context; use `visible` when the explanation is important to completing the task. |
-| `action` | `ReactNode` | Optional | — | Place the page-level action here only when it belongs to the header context. |
-| `activeLast` | `boolean` | Optional | — | Use only when the final breadcrumb must retain link behavior; otherwise keep the current page non-navigable. |
-| `showDivider` | `boolean` | Optional | `false` | Use only when the owning design explicitly requires a divider; do not introduce it for spacing. |
-| `sx` / `slotProps` | MUI styling props | Optional | — | Do not use these to add margin, padding, gaps, or page spacing. |
+| Prop                 | Type                     | Required    | Default     | Rule                                                                                                                          |
+| -------------------- | ------------------------ | ----------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `heading`            | `string \| ReactNode`    | Recommended | —           | Use the current page or task name as the visible heading.                                                                     |
+| `description`        | `ReactNode`              | Yes         | —           | Always provide concise, real information about what the current screen or task does.                                          |
+| `links`              | `BreadcrumbsLinkProps[]` | Yes         | —           | Provide the real navigation hierarchy; ancestor items use their actual route path and the current item has no `href`.         |
+| `links[].name`       | `string`                 | Recommended | —           | Use the visible product term used by the destination page.                                                                    |
+| `links[].href`       | `string`                 | Conditional | —           | Use only for navigable ancestors and use the actual route, such as `/transport/dashboard`.                                    |
+| `links[].icon`       | `ReactElement`           | Optional    | —           | Add only when the icon improves recognition and is consistent with the surrounding navigation.                                |
+| `links[].onClick`    | `(event) => void`        | Optional    | —           | Use for an in-page or stateful transition when a normal route link is not the correct behavior.                               |
+| `isBack`             | `boolean`                | Conditional | `false`     | Set to `true` for contextual create, edit, detail, or dialog states that need an explicit return action.                      |
+| `onBack`             | `() => void`             | Conditional | no-op       | Pass the real close, cancel, or return handler whenever `isBack` is `true`.                                                   |
+| `descriptionDisplay` | `'tooltip' \| 'visible'` | Optional    | `'tooltip'` | Use the default tooltip for short supporting context; use `visible` when the explanation is important to completing the task. |
+| `action`             | `ReactNode`              | Optional    | —           | Place the page-level action here only when it belongs to the header context.                                                  |
+| `activeLast`         | `boolean`                | Optional    | —           | Use only when the final breadcrumb must retain link behavior; otherwise keep the current page non-navigable.                  |
+| `showDivider`        | `boolean`                | Optional    | `false`     | Use only when the owning design explicitly requires a divider; do not introduce it for spacing.                               |
+| `sx` / `slotProps`   | MUI styling props        | Optional    | —           | Do not use these to add margin, padding, gaps, or page spacing.                                                               |
 
 **Preferred usage**
 
@@ -702,7 +703,7 @@ The following example uses routes already present in the frontend:
     { name: 'Transport', href: '/transport/dashboard' },
     { name: 'Transport Staff Management' },
   ]}
-/>;
+/>
 ```
 
 For a contextual detail or edit state, keep the hierarchy and add an explicit back action:
@@ -718,7 +719,7 @@ For a contextual detail or edit state, keep the hierarchy and add an explicit ba
     { name: 'Vehicle Management', href: '/transport/vehicle-management' },
     { name: 'Vehicle Details' },
   ]}
-/>;
+/>
 ```
 
 **Rules**
@@ -759,16 +760,16 @@ The reference pattern is used in the employee workflow at `src/screens/hr/i-card
 
 **Configuration**
 
-| Concern | Required configuration |
-| --- | --- |
-| Container | Use one contained horizontal filter row with the same compact bordered/surface treatment shown in the reference design. |
-| Internal spacing | Use exactly one spacing unit inside the panel: `p: 1` for the panel and `spacing={1}` for the filter row. Do not add nested spacing, ad-hoc margins, or extra gaps. |
-| Filter controls | Use the appropriate existing shared control, such as `CustomSelect`, for each filter. Keep labels visible and specific. |
-| Width | Make controls fill the available row naturally; use a deliberate minimum width only when the control needs one to remain readable. |
-| Layout direction | Use a horizontal row on wider screens and stack controls vertically on narrow screens, for example `direction={{ xs: 'column', sm: 'row' }}`. |
-| Default option | Provide an explicit all-records option such as `All Organizations`, `All Groups`, or `All Statuses` when clearing that filter is valid. |
-| State | Keep each selected value in the owning screen state, Formik state, URL state, or query state according to the page contract. |
-| Table relationship | Render the filter panel directly before the table it controls. Do not place unrelated cards, actions, or explanatory content between the filters and the table. |
+| Concern            | Required configuration                                                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Container          | Use one contained horizontal filter row with the same compact bordered/surface treatment shown in the reference design.                                             |
+| Internal spacing   | Use exactly one spacing unit inside the panel: `p: 1` for the panel and `spacing={1}` for the filter row. Do not add nested spacing, ad-hoc margins, or extra gaps. |
+| Filter controls    | Use the appropriate existing shared control, such as `CustomSelect`, for each filter. Keep labels visible and specific.                                             |
+| Width              | Make controls fill the available row naturally; use a deliberate minimum width only when the control needs one to remain readable.                                  |
+| Layout direction   | Use a horizontal row on wider screens and stack controls vertically on narrow screens, for example `direction={{ xs: 'column', sm: 'row' }}`.                       |
+| Default option     | Provide an explicit all-records option such as `All Organizations`, `All Groups`, or `All Statuses` when clearing that filter is valid.                             |
+| State              | Keep each selected value in the owning screen state, Formik state, URL state, or query state according to the page contract.                                        |
+| Table relationship | Render the filter panel directly before the table it controls. Do not place unrelated cards, actions, or explanatory content between the filters and the table.     |
 
 **Preferred usage**
 
@@ -838,17 +839,17 @@ The component source is `src/components/custom-tabs/`, the state hook is `src/ho
 
 **Configuration**
 
-| Concern | Required configuration |
-| --- | --- |
-| Tab definitions | Define tabs as objects with exactly the base shape `{ value, label }`. |
-| `value` | Use a stable, unique string identifier such as `'role'` or `'user'`; do not use the visible label as the state contract when labels may change. |
-| `label` | Use the user-facing plural or task label, such as `Roles` or `Users`. |
-| State | Initialize `useTabs` with the first valid tab value or the page’s explicit default. |
-| Shared tab control | Render the tab list with `CustomTabs`, passing `value={tabs.value}` and `onChange={tabs.onChange}`. |
-| Tab items | Map the tab definitions to MUI `Tab` elements with `key`, `value`, and `label`. |
-| Tab content | Render content from the selected tab value; do not render every panel simultaneously when panels are expensive or stateful. |
-| Variant | Use the default variant unless the page layout explicitly requires another supported MUI variant, such as `fullWidth`. |
-| URL state | Use URL-backed state when the selected tab is a durable/shareable page view; preserve the same `{ value, label }` definition shape. |
+| Concern            | Required configuration                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab definitions    | Define tabs as objects with exactly the base shape `{ value, label }`.                                                                          |
+| `value`            | Use a stable, unique string identifier such as `'role'` or `'user'`; do not use the visible label as the state contract when labels may change. |
+| `label`            | Use the user-facing plural or task label, such as `Roles` or `Users`.                                                                           |
+| State              | Initialize `useTabs` with the first valid tab value or the page’s explicit default.                                                             |
+| Shared tab control | Render the tab list with `CustomTabs`, passing `value={tabs.value}` and `onChange={tabs.onChange}`.                                             |
+| Tab items          | Map the tab definitions to MUI `Tab` elements with `key`, `value`, and `label`.                                                                 |
+| Tab content        | Render content from the selected tab value; do not render every panel simultaneously when panels are expensive or stateful.                     |
+| Variant            | Use the default variant unless the page layout explicitly requires another supported MUI variant, such as `fullWidth`.                          |
+| URL state          | Use URL-backed state when the selected tab is a durable/shareable page view; preserve the same `{ value, label }` definition shape.             |
 
 **Required tab definition**
 
@@ -925,30 +926,30 @@ Use `ThreeDotsActions` from `src/components/three-dots-actions/` for row actions
 
 **Configuration**
 
-| Concern | Required configuration |
-| --- | --- |
-| Component | Use `<CustomizableTable />`; do not create a separate table toolbar, pagination, filter menu, or scroll container when the shared table supports the requirement. |
-| `tableId` | Provide a stable, unique identifier for the table instance. |
-| `tableTitle` | Provide a meaningful title so the table has a contextual accessible name and export title. |
-| `columns` | Define columns with stable `id` values, readable labels, and data shaped for the current view. |
-| `data` | Pass view-ready rows; map API records into the exact display shape required by the screen before rendering the table. |
-| `filterType` | Set the default filter type according to the field: `string`, `number`, `date`, `dateTime`, `enum`, or `formattedNumber`. |
-| Status column | Always set `sticky: true`, normally use `stickyPosition: 'right'`, set `filterType: 'enum'` when filterable, and render the value with `Label`. |
-| Action column | Always set `sticky: true`, `stickyPosition: 'right'`, `isSort: false`, and `isFilter: false`; render row actions with `ThreeDotsActions`. |
-| Server-side data | When the API supports server-side pagination, search, sorting, or filtering, enable the corresponding `serverSide*` props and provide the matching callbacks. |
-| Loading | Pass the API loading state through `isLoading`; retain the table geometry while the request is in progress. |
-| Pagination | Use server-side pagination for API-backed collections that can grow; pass `totalCount` and handle `onServerPagination`. |
+| Concern          | Required configuration                                                                                                                                            |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Component        | Use `<CustomizableTable />`; do not create a separate table toolbar, pagination, filter menu, or scroll container when the shared table supports the requirement. |
+| `tableId`        | Provide a stable, unique identifier for the table instance.                                                                                                       |
+| `tableTitle`     | Provide a meaningful title so the table has a contextual accessible name and export title.                                                                        |
+| `columns`        | Define columns with stable `id` values, readable labels, and data shaped for the current view.                                                                    |
+| `data`           | Pass view-ready rows; map API records into the exact display shape required by the screen before rendering the table.                                             |
+| `filterType`     | Set the default filter type according to the field: `string`, `number`, `date`, `dateTime`, `enum`, or `formattedNumber`.                                         |
+| Status column    | Always set `sticky: true`, normally use `stickyPosition: 'right'`, set `filterType: 'enum'` when filterable, and render the value with `Label`.                   |
+| Action column    | Always set `sticky: true`, `stickyPosition: 'right'`, `isSort: false`, and `isFilter: false`; render row actions with `ThreeDotsActions`.                         |
+| Server-side data | When the API supports server-side pagination, search, sorting, or filtering, enable the corresponding `serverSide*` props and provide the matching callbacks.     |
+| Loading          | Pass the API loading state through `isLoading`; retain the table geometry while the request is in progress.                                                       |
+| Pagination       | Use server-side pagination for API-backed collections that can grow; pass `totalCount` and handle `onServerPagination`.                                           |
 
 **Field-to-filter mapping**
 
-| Field value | `filterType` | Additional configuration |
-| --- | --- | --- |
-| Name, code, description, free text | `string` | Use server-side search/filtering when the dataset is large. |
-| Integer, decimal, count, amount | `number` | Use `formattedNumber` only when the displayed value contains formatting that needs numeric parsing. |
-| Calendar date | `date` | Use the shared date formatter in `render`. |
-| Date and time | `dateTime` | Preserve the relevant timezone and use the shared date/time formatter. |
-| Status, category, type, finite state | `enum` | Provide `enumOptions` with stable values and visible labels. |
-| Formatted currency or numeric display | `formattedNumber` | Keep the underlying numeric value available for sorting and filtering. |
+| Field value                           | `filterType`      | Additional configuration                                                                            |
+| ------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------- |
+| Name, code, description, free text    | `string`          | Use server-side search/filtering when the dataset is large.                                         |
+| Integer, decimal, count, amount       | `number`          | Use `formattedNumber` only when the displayed value contains formatting that needs numeric parsing. |
+| Calendar date                         | `date`            | Use the shared date formatter in `render`.                                                          |
+| Date and time                         | `dateTime`        | Preserve the relevant timezone and use the shared date/time formatter.                              |
+| Status, category, type, finite state  | `enum`            | Provide `enumOptions` with stable values and visible labels.                                        |
+| Formatted currency or numeric display | `formattedNumber` | Keep the underlying numeric value available for sorting and filtering.                              |
 
 **Preferred usage**
 
@@ -963,7 +964,9 @@ const columns: IColumn[] = [
     enumOptions: statusOptions,
     sticky: true,
     stickyPosition: 'right',
-    render: (value, row) => <Label color={statusColors[row.status]}>{statusLabels[row.status]}</Label>,
+    render: (value, row) => (
+      <Label color={statusColors[row.status]}>{statusLabels[row.status]}</Label>
+    ),
   },
   {
     id: 'action',
@@ -1018,7 +1021,7 @@ When the API provides paging, search, sorting, or filtering, connect those capab
   onServerSearch={handleServerSearch}
   onServerSort={handleServerSort}
   onServerFilter={handleServerFilter}
-/>;
+/>
 ```
 
 **Rules**
@@ -1068,32 +1071,25 @@ Use `DialogScrollContent` from the same module for scrollable dialog bodies, esp
 
 **Configuration**
 
-| Prop or region | Required configuration |
-| --- | --- |
-| `CustomDialog` | Always use the shared `CustomDialog` component for feature dialogs. |
-| `title` | Always provide a clear, task-specific `title`; never leave the title empty or replace it with placeholder text. |
-| `open` | Control visibility from the owning screen or workflow state. |
-| `handleClose` | Pass the owning close handler so the dialog can reset state, clear selected data, and handle unsaved changes correctly. |
-| `maxWidth` | Choose the smallest width that supports the content; use a larger width only when the form or content needs it. |
-| `hasForm` | Use the form-enabled default for Formik forms; set `hasForm={false}` only for content that is not submitted as a form. |
-| `disableClose` | Use only when closing would be unsafe or unsupported; explain the reason through the owning workflow. |
-| Body | Use `DialogScrollContent` for form or long content so the body owns scrolling and the header/footer remain stable. |
-| Footer | Use MUI `DialogActions` for form actions and keep Cancel before Submit. |
+| Prop or region | Required configuration                                                                                                  |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `CustomDialog` | Always use the shared `CustomDialog` component for feature dialogs.                                                     |
+| `title`        | Always provide a clear, task-specific `title`; never leave the title empty or replace it with placeholder text.         |
+| `open`         | Control visibility from the owning screen or workflow state.                                                            |
+| `handleClose`  | Pass the owning close handler so the dialog can reset state, clear selected data, and handle unsaved changes correctly. |
+| `maxWidth`     | Choose the smallest width that supports the content; use a larger width only when the form or content needs it.         |
+| `hasForm`      | Use the form-enabled default for Formik forms; set `hasForm={false}` only for content that is not submitted as a form.  |
+| `disableClose` | Use only when closing would be unsafe or unsupported; explain the reason through the owning workflow.                   |
+| Body           | Use `DialogScrollContent` for form or long content so the body owns scrolling and the header/footer remain stable.      |
+| Footer         | Use MUI `DialogActions` for form actions and keep Cancel before Submit.                                                 |
 
 **Required form structure**
 
 When a dialog contains a form, use Formik with a Yup validation schema and follow this structure:
 
 ```tsx
-<CustomDialog
-  open={open}
-  title="Add Employee"
-  handleClose={handleClose}
-  maxWidth="sm"
->
-  <DialogScrollContent>
-    {/* Formik fields and validation messages */}
-  </DialogScrollContent>
+<CustomDialog open={open} title="Add Employee" handleClose={handleClose} maxWidth="sm">
+  <DialogScrollContent>{/* Formik fields and validation messages */}</DialogScrollContent>
 
   <DialogActions>
     <Button variant="outlined" size="small" onClick={handleClose}>
@@ -1165,31 +1161,31 @@ Use `ShakingTextField` to provide the shared validation feedback animation aroun
 
 **Source of truth**
 
-| Concern | Path |
-| --- | --- |
+| Concern                   | Path                                                                      |
+| ------------------------- | ------------------------------------------------------------------------- |
 | Form state and submission | `formik` with `useFormik` or the project’s established Formik composition |
-| Validation | `yup` schema defined with the form contract |
-| Validation wrapper | `src/components/shaking-text-field/` |
-| Select field | `src/components/custom-select/` |
-| Numeric field | `src/components/custom-numeric-format/` |
-| OTP field | `src/components/otp-input-field/` |
-| Paginated search field | `src/components/paginated-search-select/` |
-| Standard address fields | `src/components/stardard-address/` |
-| Date range field | `src/components/custom-date-range-picker/` |
-| Academic date field | `src/components/academic-date-picker/` |
+| Validation                | `yup` schema defined with the form contract                               |
+| Validation wrapper        | `src/components/shaking-text-field/`                                      |
+| Select field              | `src/components/custom-select/`                                           |
+| Numeric field             | `src/components/custom-numeric-format/`                                   |
+| OTP field                 | `src/components/otp-input-field/`                                         |
+| Paginated search field    | `src/components/paginated-search-select/`                                 |
+| Standard address fields   | `src/components/stardard-address/`                                        |
+| Date range field          | `src/components/custom-date-range-picker/`                                |
+| Academic date field       | `src/components/academic-date-picker/`                                    |
 
 **Field selection rules**
 
-| Field requirement | Required component |
-| --- | --- |
-| Text, multiline text, identifier, or free-form value | MUI text field wrapped in `ShakingTextField` |
-| One or multiple values from a bounded option list | `CustomSelect` wrapped in `ShakingTextField` when validation feedback is needed |
-| Currency, amount, count, or constrained numeric value | `NumericFormatCustom` wrapped in `ShakingTextField` |
-| One-time password or fixed-length verification code | `OtpInputField` wrapped in `ShakingTextField` |
-| Large or remote option list requiring search and pagination | `PaginatedSearchSelect` wrapped in `ShakingTextField` |
-| Country, state, and city address data | Standard address components from `src/components/stardard-address/` |
-| General date interval | `CustomDateRangePicker` wrapped in `ShakingTextField` when validation feedback is needed |
-| Academic-calendar-aware date or date-time | `AcademicDatePicker` or its academic date-time variant, only inside the academic module |
+| Field requirement                                           | Required component                                                                       |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Text, multiline text, identifier, or free-form value        | MUI text field wrapped in `ShakingTextField`                                             |
+| One or multiple values from a bounded option list           | `CustomSelect` wrapped in `ShakingTextField` when validation feedback is needed          |
+| Currency, amount, count, or constrained numeric value       | `NumericFormatCustom` wrapped in `ShakingTextField`                                      |
+| One-time password or fixed-length verification code         | `OtpInputField` wrapped in `ShakingTextField`                                            |
+| Large or remote option list requiring search and pagination | `PaginatedSearchSelect` wrapped in `ShakingTextField`                                    |
+| Country, state, and city address data                       | Standard address components from `src/components/stardard-address/`                      |
+| General date interval                                       | `CustomDateRangePicker` wrapped in `ShakingTextField` when validation feedback is needed |
+| Academic-calendar-aware date or date-time                   | `AcademicDatePicker` or its academic date-time variant, only inside the academic module  |
 
 **Required form pattern**
 
@@ -1266,20 +1262,20 @@ The component already creates and manages the Formik instance internally, so a s
 
 **Configuration**
 
-| Prop | Required configuration |
-| --- | --- |
-| `steps` | Ordered, user-facing step labels as a string array. |
-| `activeStep` | State owned by the parent workflow and kept within the valid step range. |
-| `initialValues` | One complete value object shared across all steps. |
-| `validationSchema` | Yup schema passed to the stepper; use step-aware validation when different steps have different requirements. |
-| `renderItem` | Render the active step and use the `formik` instance supplied in the callback. |
-| `handleNext` | Persist or advance the workflow using the validated values supplied by the stepper. |
-| `handleBack` | Move to the previous step without creating a second form-state owner. |
-| `onStepClick` | Use only when direct step navigation is appropriate; guard forward navigation with validation where required. |
-| `validateForwardStepClick` | Enable when users may click future steps and those transitions must validate the current step first. |
-| `showSaveButton` | Keep enabled when the workflow supports saving a draft/current step; disable only when that action is not valid. |
-| `scrollbarHeight` | Set when the stepper is inside a bounded dialog or drawer; keep the content area scrollable and the footer stable. |
-| `viewMode` | Use `horizontal` by default; use `vertical` for a wide desktop setup workflow when the layout benefits from side navigation. |
+| Prop                       | Required configuration                                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `steps`                    | Ordered, user-facing step labels as a string array.                                                                          |
+| `activeStep`               | State owned by the parent workflow and kept within the valid step range.                                                     |
+| `initialValues`            | One complete value object shared across all steps.                                                                           |
+| `validationSchema`         | Yup schema passed to the stepper; use step-aware validation when different steps have different requirements.                |
+| `renderItem`               | Render the active step and use the `formik` instance supplied in the callback.                                               |
+| `handleNext`               | Persist or advance the workflow using the validated values supplied by the stepper.                                          |
+| `handleBack`               | Move to the previous step without creating a second form-state owner.                                                        |
+| `onStepClick`              | Use only when direct step navigation is appropriate; guard forward navigation with validation where required.                |
+| `validateForwardStepClick` | Enable when users may click future steps and those transitions must validate the current step first.                         |
+| `showSaveButton`           | Keep enabled when the workflow supports saving a draft/current step; disable only when that action is not valid.             |
+| `scrollbarHeight`          | Set when the stepper is inside a bounded dialog or drawer; keep the content area scrollable and the footer stable.           |
+| `viewMode`                 | Use `horizontal` by default; use `vertical` for a wide desktop setup workflow when the layout benefits from side navigation. |
 
 **Preferred usage**
 
@@ -1342,14 +1338,14 @@ The established shared implementation is exported from `src/screens/hr/employee/
 
 **Configuration**
 
-| Prop | Rule |
-| --- | --- |
-| `title` | Use a concise, user-facing section name such as `Basic Information`, `Contact Information`, or `Address Details`. |
-| `children` | Render the related fields or content for that section. |
-| `headerContent` | Use for a section-specific action or supporting control that belongs in the section header. |
-| `isLoading` | Use when the section’s data is loading and the section should preserve its geometry. |
-| `paperProps` | Use only for intentional section-level presentation changes; do not use it to create arbitrary page spacing. |
-| `gridProps` | Use to configure the field grid within the section while preserving the shared grouping pattern. |
+| Prop            | Rule                                                                                                              |
+| --------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `title`         | Use a concise, user-facing section name such as `Basic Information`, `Contact Information`, or `Address Details`. |
+| `children`      | Render the related fields or content for that section.                                                            |
+| `headerContent` | Use for a section-specific action or supporting control that belongs in the section header.                       |
+| `isLoading`     | Use when the section’s data is loading and the section should preserve its geometry.                              |
+| `paperProps`    | Use only for intentional section-level presentation changes; do not use it to create arbitrary page spacing.      |
+| `gridProps`     | Use to configure the field grid within the section while preserving the shared grouping pattern.                  |
 
 **Preferred usage**
 
@@ -1482,13 +1478,13 @@ Do not call Sonner directly from feature screens.
 
 **Configuration**
 
-| Method | Configuration | Use for |
-| --- | --- | --- |
-| `shikshaMitraToast.success` | `{ message, alertProps? }` | Successful create, update, delete, save, or completed user action |
-| `shikshaMitraToast.error` | `{ message, alertProps? }` | Failed request, rejected action, or recoverable error |
-| `shikshaMitraToast.warning` | `{ message, alertProps? }` | Risk, incomplete prerequisite, or action that needs user attention |
-| `shikshaMitraToast.info` | `{ message, alertProps? }` | Neutral progress, contextual information, or undo action |
-| `shikshaMitraToast.promise` | `promise, { pending?, success?, error? }` | A request with distinct pending, success, and failure states |
+| Method                      | Configuration                             | Use for                                                            |
+| --------------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
+| `shikshaMitraToast.success` | `{ message, alertProps? }`                | Successful create, update, delete, save, or completed user action  |
+| `shikshaMitraToast.error`   | `{ message, alertProps? }`                | Failed request, rejected action, or recoverable error              |
+| `shikshaMitraToast.warning` | `{ message, alertProps? }`                | Risk, incomplete prerequisite, or action that needs user attention |
+| `shikshaMitraToast.info`    | `{ message, alertProps? }`                | Neutral progress, contextual information, or undo action           |
+| `shikshaMitraToast.promise` | `promise, { pending?, success?, error? }` | A request with distinct pending, success, and failure states       |
 
 **Preferred usage**
 
@@ -1546,16 +1542,16 @@ Use `CustomUpload` from `src/components/custom-upload/` for file selection, drag
 
 **Configuration**
 
-| Prop | Rule |
-| --- | --- |
-| `onChange` | Required; update the owning form or workflow with the selected file or files. |
-| `value` | Keep controlled by the owning form or workflow so existing files and selected files render consistently. |
-| `multiple` | Use `true` for multiple documents and `false` for one file; match the API payload contract. |
-| `onPreview` | Pass when preview behavior belongs to the owning workflow; otherwise use the component preview behavior. |
-| `error` | Pass a safe, field-level validation message when the upload is invalid. |
-| `primaryText` / `secondaryText` | Explain what the user can upload and any important requirement. |
-| `propertyPr` | Use for concise file requirements such as accepted type or size. |
-| `parentsProps` / `dragProps` | Use only for intentional layout or drag-area customization; preserve the shared upload interaction. |
+| Prop                            | Rule                                                                                                     |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `onChange`                      | Required; update the owning form or workflow with the selected file or files.                            |
+| `value`                         | Keep controlled by the owning form or workflow so existing files and selected files render consistently. |
+| `multiple`                      | Use `true` for multiple documents and `false` for one file; match the API payload contract.              |
+| `onPreview`                     | Pass when preview behavior belongs to the owning workflow; otherwise use the component preview behavior. |
+| `error`                         | Pass a safe, field-level validation message when the upload is invalid.                                  |
+| `primaryText` / `secondaryText` | Explain what the user can upload and any important requirement.                                          |
+| `propertyPr`                    | Use for concise file requirements such as accepted type or size.                                         |
+| `parentsProps` / `dragProps`    | Use only for intentional layout or drag-area customization; preserve the shared upload interaction.      |
 
 **Rules**
 
@@ -1582,14 +1578,14 @@ Use `EmptyContent` from `src/components/empty-content/` for an explicit empty st
 
 **Configuration**
 
-| Prop | Rule |
-| --- | --- |
-| `title` | State what is empty in clear, user-facing language. |
-| `description` | Explain why the state may be empty and what the user can do next. |
-| `action` | Provide the next useful action, such as Create, Clear filters, Retry, or Configure. |
-| `filled` | Use when the empty state should have the shared filled surface treatment. |
-| `imgUrl` | Use only when a contextual illustration is needed; otherwise keep the shared empty illustration. |
-| `slotProps` / `sx` | Use for deliberate local presentation changes without changing the state contract. |
+| Prop               | Rule                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `title`            | State what is empty in clear, user-facing language.                                              |
+| `description`      | Explain why the state may be empty and what the user can do next.                                |
+| `action`           | Provide the next useful action, such as Create, Clear filters, Retry, or Configure.              |
+| `filled`           | Use when the empty state should have the shared filled surface treatment.                        |
+| `imgUrl`           | Use only when a contextual illustration is needed; otherwise keep the shared empty illustration. |
+| `slotProps` / `sx` | Use for deliberate local presentation changes without changing the state contract.               |
 
 **Rules**
 
@@ -1618,12 +1614,12 @@ Use `CustomAccordion` from `src/components/custom-accordian/` for collapsible se
 
 **Configuration**
 
-| Prop | Rule |
-| --- | --- |
-| `title` | Required concise section label. |
-| `content` | The collapsible content for the section. |
-| `expanded` | Control from the owning screen when expansion is meaningful state. |
-| `onChange` | Update the owning expanded state. |
+| Prop       | Rule                                                                      |
+| ---------- | ------------------------------------------------------------------------- |
+| `title`    | Required concise section label.                                           |
+| `content`  | The collapsible content for the section.                                  |
+| `expanded` | Control from the owning screen when expansion is meaningful state.        |
+| `onChange` | Update the owning expanded state.                                         |
 | `isActive` | Use only when the section represents the active context or selected item. |
 
 **Rules**
@@ -1641,14 +1637,14 @@ Use `Editor` from `src/components/editor/` for rich text content.
 
 **Configuration**
 
-| Prop | Rule |
-| --- | --- |
-| `value` / `onChange` | Keep editor content controlled by the owning form or workflow. |
-| `placeholder` | Explain the content expected from the user. |
-| `helperText` / `error` | Connect editor validation to Formik/Yup when the editor is a form field. |
-| `isToolbarShow` | Show the toolbar when formatting is supported; hide it only for an intentional constrained editor. |
-| `mentionable` / `mentionItems` | Enable only when the workflow supports the corresponding mention contract. |
-| `fullItem` / `resetValue` | Use only for the intended editor layout or reset behavior. |
+| Prop                           | Rule                                                                                               |
+| ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `value` / `onChange`           | Keep editor content controlled by the owning form or workflow.                                     |
+| `placeholder`                  | Explain the content expected from the user.                                                        |
+| `helperText` / `error`         | Connect editor validation to Formik/Yup when the editor is a form field.                           |
+| `isToolbarShow`                | Show the toolbar when formatting is supported; hide it only for an intentional constrained editor. |
+| `mentionable` / `mentionItems` | Enable only when the workflow supports the corresponding mention contract.                         |
+| `fullItem` / `resetValue`      | Use only for the intended editor layout or reset behavior.                                         |
 
 **Rules**
 
@@ -1681,16 +1677,16 @@ Use the existing hook that matches the state or browser behavior before creating
 
 **Current hook inventory**
 
-| Concern | Existing hooks |
-| --- | --- |
-| Boolean and object state | `useBoolean`, `useSetState` |
-| Form and confirmation workflows | `useConfirmDialog`, `useConfirmWithUndo` |
-| Persistence | `useLocalStorage`, `useCookies` |
-| Timing and interaction | `useDebounceEffect`, `useDoubleClick`, `useEventListener`, `useKeyboardShortcuts` |
-| Clipboard and connectivity | `useCopyToClipboard`, `useOffLine` |
-| Responsive and scroll state | `useResponsive`, `useWidth`, `useScrollOffSetTop` |
-| Navigation state | `useSearchParam`, `useNewSearchParam`, `useCustomSearchParams`, `useTabs` |
-| Domain options | `useAccountHeadOptions` |
+| Concern                         | Existing hooks                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| Boolean and object state        | `useBoolean`, `useSetState`                                                       |
+| Form and confirmation workflows | `useConfirmDialog`, `useConfirmWithUndo`                                          |
+| Persistence                     | `useLocalStorage`, `useCookies`                                                   |
+| Timing and interaction          | `useDebounceEffect`, `useDoubleClick`, `useEventListener`, `useKeyboardShortcuts` |
+| Clipboard and connectivity      | `useCopyToClipboard`, `useOffLine`                                                |
+| Responsive and scroll state     | `useResponsive`, `useWidth`, `useScrollOffSetTop`                                 |
+| Navigation state                | `useSearchParam`, `useNewSearchParam`, `useCustomSearchParams`, `useTabs`         |
+| Domain options                  | `useAccountHeadOptions`                                                           |
 
 **Rules**
 
@@ -1741,22 +1737,22 @@ The component name and folder use the existing project spelling `Calender`; pres
 
 **Configuration**
 
-| Prop | Rule |
-| --- | --- |
-| `data` | Required event source; pass normalized FullCalendar event data or `undefined` while loading. |
-| `isLoading` | Pass the API or workflow loading state so the shared toolbar can show loading feedback. |
-| `initialView` | Set the initial FullCalendar view appropriate to the workflow. |
-| `initialDate` | Set the initial date when the screen has a selected or URL-backed date context. |
-| `showCalendarToolbar` | Keep enabled for normal calendar navigation; disable only when the owning layout provides an equivalent complete toolbar. |
-| `formate` | Use the established date display format when the toolbar needs a specific format. |
-| `viewOptions` | Pass only supported view choices with stable `value`, visible `label`, and an icon identifier. |
-| `onDateClick` | Handle event selection or click behavior in the owning workflow. |
-| `onEventDrop` | Handle drag/drop persistence when the workflow permits moving events. |
-| `onEventResize` | Handle resize persistence when the workflow permits changing event duration. |
-| `showCalendarFilter` / `onOPenFiler` | Use when the calendar has a filter workflow; preserve the existing prop spelling `onOPenFiler`. |
-| `renderCompToHeader` | Add compact, calendar-specific header content only. |
-| `canReset` | Enable the toolbar’s reset/today behavior only when reset is meaningful for the view. |
-| `containerProps` | Use for intentional container sizing and flex layout; preserve the calendar’s available height and avoid document overflow. |
+| Prop                                 | Rule                                                                                                                        |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `data`                               | Required event source; pass normalized FullCalendar event data or `undefined` while loading.                                |
+| `isLoading`                          | Pass the API or workflow loading state so the shared toolbar can show loading feedback.                                     |
+| `initialView`                        | Set the initial FullCalendar view appropriate to the workflow.                                                              |
+| `initialDate`                        | Set the initial date when the screen has a selected or URL-backed date context.                                             |
+| `showCalendarToolbar`                | Keep enabled for normal calendar navigation; disable only when the owning layout provides an equivalent complete toolbar.   |
+| `formate`                            | Use the established date display format when the toolbar needs a specific format.                                           |
+| `viewOptions`                        | Pass only supported view choices with stable `value`, visible `label`, and an icon identifier.                              |
+| `onDateClick`                        | Handle event selection or click behavior in the owning workflow.                                                            |
+| `onEventDrop`                        | Handle drag/drop persistence when the workflow permits moving events.                                                       |
+| `onEventResize`                      | Handle resize persistence when the workflow permits changing event duration.                                                |
+| `showCalendarFilter` / `onOPenFiler` | Use when the calendar has a filter workflow; preserve the existing prop spelling `onOPenFiler`.                             |
+| `renderCompToHeader`                 | Add compact, calendar-specific header content only.                                                                         |
+| `canReset`                           | Enable the toolbar’s reset/today behavior only when reset is meaningful for the view.                                       |
+| `containerProps`                     | Use for intentional container sizing and flex layout; preserve the calendar’s available height and avoid document overflow. |
 
 **Preferred usage**
 
@@ -1813,15 +1809,15 @@ Feature screens must use the shared API and must not depend directly on the unde
 
 **Configuration**
 
-| Prop | Required configuration |
-| --- | --- |
-| `type` | Required supported chart type: `line`, `area`, `bar`, `pie`, `donut`, `radialBar`, `scatter`, `bubble`, `heatmap`, `candlestick`, `boxPlot`, `radar`, `polarArea`, `rangeBar`, `rangeArea`, or `treemap`. |
-| `series` | Provide data in the shape expected by the selected chart type; keep series names, categories, and values stable. |
-| `options` | Pass chart-specific labels, colors, axes, legends, tooltips, data labels, and interaction options. |
-| `width` | Defaults to `100%`; use the default unless the chart is intentionally bounded by its parent. |
-| `height` | Set a deliberate height or inherit the parent’s stable chart geometry; do not allow layout jumps between loading, empty, and loaded states. |
-| `loadingProps` | Use only for loading-related styling supported by the shared component; coordinate request loading with the owning card/skeleton state. |
-| `sx` | Use for chart placement and bounded layout styling; do not use it to replace responsive chart options or create page overflow. |
+| Prop           | Required configuration                                                                                                                                                                                    |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`         | Required supported chart type: `line`, `area`, `bar`, `pie`, `donut`, `radialBar`, `scatter`, `bubble`, `heatmap`, `candlestick`, `boxPlot`, `radar`, `polarArea`, `rangeBar`, `rangeArea`, or `treemap`. |
+| `series`       | Provide data in the shape expected by the selected chart type; keep series names, categories, and values stable.                                                                                          |
+| `options`      | Pass chart-specific labels, colors, axes, legends, tooltips, data labels, and interaction options.                                                                                                        |
+| `width`        | Defaults to `100%`; use the default unless the chart is intentionally bounded by its parent.                                                                                                              |
+| `height`       | Set a deliberate height or inherit the parent’s stable chart geometry; do not allow layout jumps between loading, empty, and loaded states.                                                               |
+| `loadingProps` | Use only for loading-related styling supported by the shared component; coordinate request loading with the owning card/skeleton state.                                                                   |
+| `sx`           | Use for chart placement and bounded layout styling; do not use it to replace responsive chart options or create page overflow.                                                                            |
 
 **Preferred usage**
 
@@ -1883,15 +1879,15 @@ The authenticated RTK Query base service is `src/redux/service.ts`, the store is
 
 **Architecture**
 
-| Concern | Source of truth | Rule |
-| --- | --- | --- |
-| Authenticated API base | `src/redux/service.ts` | Reuse the shared `api` base query; do not create a second fetch or Axios base client for a feature. |
-| Store registration | `src/redux/store.ts` | Register only actual standalone reducers/API services that are not already composed through the shared service. |
-| RTK Query tags | `src/redux/tagTypes.ts` | Add a domain tag before using it in `providesTags` or `invalidatesTags`. |
-| Feature endpoints | `src/redux/<module>/...` | Define the query/mutation contract close to the owning module and inject endpoints into the appropriate API service. |
-| Generated hooks | Feature API file exports | Export and use the generated `use...Query`, `useLazy...Query`, and `use...Mutation` hooks. |
-| Screen integration | `src/screens/...` | Call the generated hook from the owning screen/container and map the response into the view model. |
-| Shared request wrapper | `src/redux/customQueryAndMutation.tsx` | Use when the screen needs standardized refetch behavior and shared toast-based error handling. |
+| Concern                | Source of truth                        | Rule                                                                                                                 |
+| ---------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Authenticated API base | `src/redux/service.ts`                 | Reuse the shared `api` base query; do not create a second fetch or Axios base client for a feature.                  |
+| Store registration     | `src/redux/store.ts`                   | Register only actual standalone reducers/API services that are not already composed through the shared service.      |
+| RTK Query tags         | `src/redux/tagTypes.ts`                | Add a domain tag before using it in `providesTags` or `invalidatesTags`.                                             |
+| Feature endpoints      | `src/redux/<module>/...`               | Define the query/mutation contract close to the owning module and inject endpoints into the appropriate API service. |
+| Generated hooks        | Feature API file exports               | Export and use the generated `use...Query`, `useLazy...Query`, and `use...Mutation` hooks.                           |
+| Screen integration     | `src/screens/...`                      | Call the generated hook from the owning screen/container and map the response into the view model.                   |
+| Shared request wrapper | `src/redux/customQueryAndMutation.tsx` | Use when the screen needs standardized refetch behavior and shared toast-based error handling.                       |
 
 **How to add a new API**
 
@@ -2008,20 +2004,20 @@ Do not duplicate formatting, parsing, validation, permission, serialization, or 
 
 **Utility categories**
 
-| Need | Use the existing utility area |
-| --- | --- |
-| Date/time display and comparison | `src/utils/format-time.ts`, `src/utils/date-only.ts`, `src/utils/dateConvertor.ts` |
-| Number, currency, percentage, and file-size display | `src/utils/format-number.ts`, `src/utils/cureencyFormater.ts` |
-| API error normalization | `src/utils/api-problem-details.ts` |
-| Permission checks | `src/utils/permissions.ts` |
-| Input normalization | `src/utils/input-format.ts`, `src/utils/validate-phone-number.ts` |
-| HTML safety | `src/utils/sanitize-html.ts` |
-| File and Base64 conversion | `src/utils/file-to-base64.ts`, `src/utils/base64ToFile.ts`, `src/utils/base64Formate.ts`, `src/utils/get-base64-string.ts` |
-| Query and collection helpers | `src/utils/sort-query-string.ts`, `src/utils/helper.ts` |
-| Academic hierarchy and scope | `src/utils/academicHierarchyUtils.ts`, `src/utils/academic-year.ts` |
-| Domain calculations and mappings | The owning utility file, such as `fee-structure-assignment-calculations.ts`, `distributeConcession.ts`, or `timetable-capacity.ts` |
-| Stable IDs and storage | `src/utils/uuidv4.ts`, `src/utils/storage-available.ts` |
-| Shared icon constants | `src/utils/icons.ts`, subject to the Iconify/`mdi:` rules above |
+| Need                                                | Use the existing utility area                                                                                                      |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Date/time display and comparison                    | `src/utils/format-time.ts`, `src/utils/date-only.ts`, `src/utils/dateConvertor.ts`                                                 |
+| Number, currency, percentage, and file-size display | `src/utils/format-number.ts`, `src/utils/cureencyFormater.ts`                                                                      |
+| API error normalization                             | `src/utils/api-problem-details.ts`                                                                                                 |
+| Permission checks                                   | `src/utils/permissions.ts`                                                                                                         |
+| Input normalization                                 | `src/utils/input-format.ts`, `src/utils/validate-phone-number.ts`                                                                  |
+| HTML safety                                         | `src/utils/sanitize-html.ts`                                                                                                       |
+| File and Base64 conversion                          | `src/utils/file-to-base64.ts`, `src/utils/base64ToFile.ts`, `src/utils/base64Formate.ts`, `src/utils/get-base64-string.ts`         |
+| Query and collection helpers                        | `src/utils/sort-query-string.ts`, `src/utils/helper.ts`                                                                            |
+| Academic hierarchy and scope                        | `src/utils/academicHierarchyUtils.ts`, `src/utils/academic-year.ts`                                                                |
+| Domain calculations and mappings                    | The owning utility file, such as `fee-structure-assignment-calculations.ts`, `distributeConcession.ts`, or `timetable-capacity.ts` |
+| Stable IDs and storage                              | `src/utils/uuidv4.ts`, `src/utils/storage-available.ts`                                                                            |
+| Shared icon constants                               | `src/utils/icons.ts`, subject to the Iconify/`mdi:` rules above                                                                    |
 
 **Preferred usage**
 

@@ -81,7 +81,7 @@ export function AdmissionsPlaybookSection1() {
             ) : null}
           </Stack>
         </Stack>
-        {isFetching ? <LinearProgress /> : <Divider />}
+        {isFetching ? <LinearProgress aria-label="Loading assessment playbooks" /> : <Divider />}
         {playbooksQuery.isError ? (
           <Alert
             severity="error"

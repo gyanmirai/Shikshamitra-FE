@@ -11,6 +11,7 @@ import { AdmissionCrmSeatOfferStatus } from 'src/redux/student/admissions-crm/fi
 import { ApplicantEmptyState } from './applicant-workspace-primitives';
 
 import { useApplicantFinalAdmissionWorkspace } from './applicant-final-admission-operations-context';
+import { formatEnrollmentDate } from './enrollment-display';
 
 const offerStatusLabels: Record<AdmissionCrmSeatOfferStatus, string> = {
   [AdmissionCrmSeatOfferStatus.Draft]: 'Draft',
@@ -70,7 +71,7 @@ export function ApplicantSeatOffersPanel() {
                   {offer.offerNumber} - v{offer.version}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Expires {new Date(offer.validUntil).toLocaleString()}
+                  Expires {formatEnrollmentDate(offer.validUntil, true)}
                 </Typography>
               </Box>
               <Chip
@@ -88,7 +89,7 @@ export function ApplicantSeatOffersPanel() {
             {offer.reservation ? (
               <Typography variant="caption" color="text.secondary">
                 Reservation {offer.reservation.status} - expires{' '}
-                {new Date(offer.reservation.expiresAt).toLocaleString()}
+                {formatEnrollmentDate(offer.reservation.expiresAt, true)}
               </Typography>
             ) : null}
             {!finalAdmissionQueriesFailed ? (

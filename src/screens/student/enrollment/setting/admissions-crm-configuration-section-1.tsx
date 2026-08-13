@@ -10,7 +10,7 @@ export function AdmissionsCrmConfigurationSection1() {
 
   return (
     <>
-      {isFetching && <LinearProgress />}
+      {isFetching ? <LinearProgress aria-label="Loading admissions configuration" /> : null}
       {!academicYearId && (
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
           <Typography variant="body2" color="text.secondary">

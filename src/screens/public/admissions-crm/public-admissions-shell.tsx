@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, MouseEvent } from 'react';
 
 import { useEffect } from 'react';
 import { Box, Link, Stack, Typography } from '@mui/material';
 
 import { publicAdmissionsCopy } from './public-admissions-copy';
+import { getSafePublicAdmissionsAccent } from './public-admissions-portal';
 
 import type { PublicAdmissionPortal } from './public-admissions-portal';
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
@@ -26,6 +27,15 @@ export function PublicAdmissionsShell({
   portal,
 }: Props) {
   const copy = publicAdmissionsCopy[language];
+  const accentColor = getSafePublicAdmissionsAccent(portal?.primaryColor);
+
+  const skipToMainContent = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    const main = document.getElementById('public-admissions-content');
+    if (!main) return;
+    main.focus({ preventScroll: true });
+    main.scrollIntoView({ block: 'start' });
+  };
 
   useEffect(() => {
     document.title = `${title} | ${portal?.schoolName || 'GyanMirai'}`;
@@ -40,8 +50,33 @@ export function PublicAdmissionsShell({
         px: { xs: 1.5, sm: 2.5 },
         pt: { xs: 'max(20px, env(safe-area-inset-top))', sm: 4 },
         pb: { xs: 'max(20px, env(safe-area-inset-bottom))', sm: 4 },
+        overflowX: 'hidden',
+        '& a, & button': { touchAction: 'manipulation' },
       }}
     >
+      <Box
+        component="a"
+        href="#public-admissions-content"
+        onClick={skipToMainContent}
+        sx={{
+          position: 'fixed',
+          top: 8,
+          left: 8,
+          zIndex: (theme) => theme.zIndex.tooltip + 1,
+          transform: 'translateY(-160%)',
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          px: 1.5,
+          py: 1,
+          borderRadius: 1,
+          boxShadow: 3,
+          transition: (theme) => theme.transitions.create('transform'),
+          '&:focus-visible': { transform: 'translateY(0)' },
+          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+        }}
+      >
+        {copy.skipToContent}
+      </Box>
       <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 780, mx: 'auto' }}>
         <Stack
           component="header"
@@ -49,8 +84,8 @@ export function PublicAdmissionsShell({
           spacing={1.5}
           alignItems="flex-start"
           sx={{
-            borderTop: portal?.primaryColor ? `4px solid ${portal.primaryColor}` : undefined,
-            pt: portal?.primaryColor ? 1.5 : 0,
+            borderTop: accentColor ? `4px solid ${accentColor}` : undefined,
+            pt: accentColor ? 1.5 : 0,
           }}
         >
           {portal?.logoDataUrl ? (
@@ -60,15 +95,12 @@ export function PublicAdmissionsShell({
               alt={`${portal.schoolName} logo`}
               width={56}
               height={56}
+              loading="eager"
               sx={{ objectFit: 'contain', borderRadius: 1, flexShrink: 0 }}
             />
           ) : null}
           <Box sx={{ minWidth: 0 }}>
-            <Typography
-              variant="overline"
-              color={portal?.primaryColor ? undefined : 'primary.darker'}
-              sx={{ color: portal?.primaryColor, overflowWrap: 'anywhere' }}
-            >
+            <Typography variant="overline" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
               {eyebrow || portal?.schoolName || copy.eyebrow}
             </Typography>
             <Typography variant="h4" component="h1" sx={{ textWrap: 'balance' }}>
@@ -85,7 +117,12 @@ export function PublicAdmissionsShell({
             )}
           </Box>
         </Stack>
-        <Box component="main" sx={{ minWidth: 0 }}>
+        <Box
+          id="public-admissions-content"
+          component="main"
+          tabIndex={-1}
+          sx={{ minWidth: 0, scrollMarginTop: 2 }}
+        >
           {children}
         </Box>
         <Stack component="footer" spacing={0.75} alignItems="center" textAlign="center">

@@ -36,6 +36,8 @@ import {
   useRecommendAdmissionCrmPlaybookSlotMutation,
 } from 'src/redux/student/admissions-crm/setup-playbooks-api';
 
+import { formatEnrollmentDate } from '../admissions-crm/enrollment-display';
+
 type Props = {
   playbook: AdmissionCrmPlaybookDto;
   open: boolean;
@@ -275,7 +277,7 @@ export const AdmissionsPlaybookOperations = ({ playbook, open, onClose }: Props)
                   <Stack spacing={0.5}>
                     <Typography variant="subtitle2">{recommendation.slotName}</Typography>
                     <Typography variant="body2">
-                      {new Date(recommendation.startTime).toLocaleString()} - Room{' '}
+                      {formatEnrollmentDate(recommendation.startTime, true)} - Room{' '}
                       {recommendation.roomNo}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">

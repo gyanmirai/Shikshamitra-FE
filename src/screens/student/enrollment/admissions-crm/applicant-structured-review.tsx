@@ -40,6 +40,7 @@ import {
 } from 'src/redux/student/admissions-crm/communication-exams-events-api';
 
 import { admissionCrmActionPermissions } from './admission-action-permissions';
+import { formatEnrollmentDate } from './enrollment-display';
 
 const reviewStatusLabels: Record<AdmissionCrmStructuredReviewStatus, string> = {
   [AdmissionCrmStructuredReviewStatus.InReview]: 'In review',
@@ -222,7 +223,7 @@ export function ApplicantStructuredReview({
                   {assignment.isCurrentReviewer ? ' (you)' : ''}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Due {new Date(assignment.dueAt).toLocaleString()}
+                  Due {formatEnrollmentDate(assignment.dueAt, true)}
                 </Typography>
               </Box>
               <Chip size="small" label={assignmentStatusLabels[assignment.status]} />

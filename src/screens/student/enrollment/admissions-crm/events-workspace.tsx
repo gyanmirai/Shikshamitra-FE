@@ -79,7 +79,11 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { getEnrollmentApiErrorMessage } from './enrollment-api-errors';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { useWorkspaceTableSessionState } from './workspace-table-session-state';
-import { formatEnrollmentDate, formatApplicantContact } from './enrollment-display';
+import {
+  formatEnrollmentDate,
+  formatEnrollmentNumber,
+  formatApplicantContact,
+} from './enrollment-display';
 import { parseEnrollmentTableSorts, serializeEnrollmentTableSort } from './workspace-table-sorting';
 import {
   enrollmentActionsColumn,
@@ -104,14 +108,12 @@ const eventStatusLabels: Record<AdmissionCrmEventStatus, string> = {
   [AdmissionCrmEventStatus.Cancelled]: 'Cancelled',
   [AdmissionCrmEventStatus.Completed]: 'Completed',
 };
-
 const registrationStatusLabels: Record<AdmissionCrmEventRegistrationStatus, string> = {
   [AdmissionCrmEventRegistrationStatus.Reserved]: 'Reserved',
   [AdmissionCrmEventRegistrationStatus.CheckedIn]: 'Checked in',
   [AdmissionCrmEventRegistrationStatus.Cancelled]: 'Cancelled',
   [AdmissionCrmEventRegistrationStatus.NoShow]: 'No-show',
 };
-
 const eventTypeOptions = Object.entries(eventTypeLabels).map(([value, label]) => ({
   value: Number(value),
   label,
@@ -123,13 +125,11 @@ const eventStatusOptions = Object.entries(eventStatusLabels).map(([value, label]
 
 const applicantName = (lead: AdmissionCrmLeadDto) =>
   [lead.firstName, lead.middleName, lead.lastName].filter(Boolean).join(' ') || 'Unnamed applicant';
-
 const pad = (value: number) => String(value).padStart(2, '0');
 const toLocalDateTimeInput = (value: string | Date) => {
   const date = new Date(value);
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
-
 const createInitialEvent = (): AdmissionCrmEventUpsertDto => {
   const starts = new Date(Date.now() + 24 * 60 * 60 * 1000);
   starts.setMinutes(0, 0, 0);
@@ -317,7 +317,7 @@ function EventEditorDialog({
               slotProps={{ htmlInput: { min: minimumCapacity, max: 5000 } }}
               helperText={
                 submitted && !hasValidCapacity
-                  ? `Enter a capacity from ${minimumCapacity.toLocaleString('en-IN')} to 5,000.`
+                  ? `Enter a capacity from ${formatEnrollmentNumber(minimumCapacity)} to 5,000.`
                   : event?.reservedCount
                     ? `${event.reservedCount} places are already reserved.`
                     : undefined

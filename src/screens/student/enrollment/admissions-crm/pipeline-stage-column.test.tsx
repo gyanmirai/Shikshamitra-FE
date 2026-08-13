@@ -72,10 +72,10 @@ describe('PipelineStageColumn query scope', () => {
     const { rerender } = render(
       <PipelineStageColumn
         academicYearId="year-a"
-        column={{ key: 1, label: 'New', description: 'New inquiries', color: '#1976d2' }}
+        column={{ key: 1, label: 'New', description: 'New inquiries', color: 'primary' }}
         query={{ academicMediumId: 'medium-a' }}
         resetKey="year-a:medium-a"
-        renderLead={(item) => <div>{item.firstName}</div>}
+        renderLead={(item) => <div key={item.id}>{item.firstName}</div>}
       />
     );
 
@@ -86,10 +86,10 @@ describe('PipelineStageColumn query scope', () => {
     rerender(
       <PipelineStageColumn
         academicYearId="year-b"
-        column={{ key: 1, label: 'New', description: 'New inquiries', color: '#1976d2' }}
+        column={{ key: 1, label: 'New', description: 'New inquiries', color: 'primary' }}
         query={{ academicMediumId: 'medium-b' }}
         resetKey="year-b:medium-b"
-        renderLead={(item) => <div>{item.firstName}</div>}
+        renderLead={(item) => <div key={item.id}>{item.firstName}</div>}
       />
     );
 
@@ -110,5 +110,69 @@ describe('PipelineStageColumn query scope', () => {
       expect.objectContaining({ academicYearId: 'year-b', skipCount: 25 }),
       expect.anything()
     );
+  });
+
+  it('uses skeleton cards without a competing progress bar for the initial request', async () => {
+    const result = {
+      currentData: undefined,
+      isFetching: true,
+      isError: false,
+      refetch: vi.fn(),
+    };
+    getLeadsQueryMock.mockImplementation((_args: unknown, options: { skip: boolean }) =>
+      options.skip ? { ...result, isFetching: false } : result
+    );
+
+    render(
+      <PipelineStageColumn
+        academicYearId="year-a"
+        column={{ key: 1, label: 'New', description: 'New inquiries', color: 'primary' }}
+        query={{ academicMediumId: 'medium-a' }}
+        resetKey="year-a:medium-a"
+        renderLead={(item) => <div key={item.id}>{item.firstName}</div>}
+      />
+    );
+
+    expect(
+      await screen.findByRole('status', { name: 'Loading New applicants' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByText('No applicants')).not.toBeInTheDocument();
+  });
+
+  it('keeps loaded cards visible and labels background refresh progress', async () => {
+    const skippedResult = {
+      currentData: undefined,
+      isFetching: false,
+      isError: false,
+      refetch: vi.fn(),
+    };
+    const refreshingResult = {
+      currentData: { items: [lead('a-1', 'Year A first')], totalCount: 1 },
+      isFetching: true,
+      isError: false,
+      refetch: vi.fn(),
+    };
+    getLeadsQueryMock.mockImplementation((_args: unknown, options: { skip: boolean }) =>
+      options.skip ? skippedResult : refreshingResult
+    );
+
+    render(
+      <PipelineStageColumn
+        academicYearId="year-a"
+        column={{ key: 1, label: 'New', description: 'New inquiries', color: 'primary' }}
+        query={{ academicMediumId: 'medium-a' }}
+        resetKey="year-a:medium-a"
+        renderLead={(item) => <div key={item.id}>{item.firstName}</div>}
+      />
+    );
+
+    expect(await screen.findByText('Year A first')).toBeInTheDocument();
+    expect(
+      screen.getByRole('progressbar', { name: 'Refreshing New applicants' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('status', { name: 'Loading New applicants' })
+    ).not.toBeInTheDocument();
   });
 });

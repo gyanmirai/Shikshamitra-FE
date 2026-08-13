@@ -20,7 +20,7 @@ Every worklist opens the same applicant workspace and uses the backend progress 
 | My Work               | `/student/enrollment/my-work`             | Assigned tasks, due work, blockers, and one recommended action                                       |
 | Pipeline              | `/student/enrollment/pipeline`            | Board and list views over every pre-admission applicant                                              |
 | Assessments           | `/student/enrollment/entrance-exams`      | Written tests, interviews, interactions, scheduling, attendance, decisions, absence, and retest work |
-| Visits & Events       | `/student/enrollment/visits-events`        | Campus visits, open houses, counselling, orientations, capacity, reservations, and attendance         |
+| Visits & Events       | `/student/enrollment/visits-events`       | Campus visits, open houses, counselling, orientations, capacity, reservations, and attendance        |
 | Registration          | `/student/enrollment/registration`        | Form progress, missing items, corrections, documents, and verification                               |
 | Class Placement       | `/student/enrollment/class-placement`     | Capacity review and division assignment                                                              |
 | Activation            | `/student/enrollment/activation`          | Gate review, approval, repair state, and Student Records handoff                                     |
@@ -35,14 +35,14 @@ The backend applicant progress projection decides each step status, blocker, and
 The projection `currentStep`, `nextAction`, `nextActionCode`, step status, and reason are the only lifecycle and primary-action authority.
 The workspace does not derive competing instructions from the lead stage.
 
-| Order | Step            | Completion meaning                                                                                             |
-| ----- | --------------- | -------------------------------------------------------------------------------------------------------------- |
-| 1     | Inquiry         | Minimum applicant, guardian, academic preference, source, type, and owner data are captured                    |
+| Order | Step            | Completion meaning                                                                                                            |
+| ----- | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Inquiry         | Minimum applicant, guardian, academic preference, source, type, and owner data are captured                                   |
 | 2     | Assessment      | The required assessment is completed and an eligibility decision exists, or the published Admission Year Setup permits a skip |
-| 3     | Registration    | Required responses, documents, corrections, and verification are complete                                      |
-| 4     | Finance         | Finance confirms the configured admission requirement, or the published setup marks Finance as optional        |
-| 5     | Class Placement | Board, medium, standard, and required division placement are confirmed                                         |
-| 6     | Activation      | Configured gates pass and the applicant is handed to Student Records as an active student                      |
+| 3     | Registration    | Required responses, documents, corrections, and verification are complete                                                     |
+| 4     | Finance         | Finance confirms the configured admission requirement, or the published setup marks Finance as optional                       |
+| 5     | Class Placement | Board, medium, standard, and required division placement are confirmed                                                        |
+| 6     | Activation      | Configured gates pass and the applicant is handed to Student Records as an active student                                     |
 
 Step statuses are `Not Started`, `In Progress`, `Complete`, `Skipped`, `Blocked`, and `Needs Review` in the API.
 The interface presents `Skipped` as `Not required` and never uses a completion check for it.
@@ -109,15 +109,15 @@ Each focused submodule uses one `CustomizableTable`.
 Filtering, sorting, and pagination are server-owned for bounded performance.
 Actions open or update the same applicant record used by Pipeline and My Work.
 
-| Worklist              | Required row context                                                                                                                        |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| My Work               | Applicant ID, applicant, current step, issue, due time, owner, priority, and recommended action                                           |
-| Assessments           | Applicant ID, written test, interview, or interaction schedule; attendance, result, decision, absence, retest, and review state           |
-| Visits & Events       | Event type, date, location, capacity, reservation count, lifecycle status, and attendance roster                                           |
-| Registration          | Applicant ID, completion, missing fields, missing documents, correction state, and verification                                           |
-| Class Placement       | Applicant ID, board, medium, standard, division, capacity state, and override authority                                                    |
-| Activation            | Applicant ID, registration, assessment, Finance, placement, approval, account setup, and repair gates                                     |
-| Follow-ups & Messages | Applicant ID, due state, assignee, channel, template, provider state, and last attempt                                                     |
+| Worklist              | Required row context                                                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| My Work               | Applicant ID, applicant, current step, issue, due time, owner, priority, and recommended action                                 |
+| Assessments           | Applicant ID, written test, interview, or interaction schedule; attendance, result, decision, absence, retest, and review state |
+| Visits & Events       | Event type, date, location, capacity, reservation count, lifecycle status, and attendance roster                                |
+| Registration          | Applicant ID, completion, missing fields, missing documents, correction state, and verification                                 |
+| Class Placement       | Applicant ID, board, medium, standard, division, capacity state, and override authority                                         |
+| Activation            | Applicant ID, registration, assessment, Finance, placement, approval, account setup, and repair gates                           |
+| Follow-ups & Messages | Applicant ID, due state, assignee, channel, template, provider state, and last attempt                                          |
 
 The Registration worklist presents Eligible, Registration Pending, and Registration Done as a
 labeled, mutually exclusive Registration Stage filter. The selected stage, target class, admission
@@ -138,13 +138,16 @@ The table region owns data scrolling, while the document must not gain horizonta
 The page header, admission-year context, filters, and tabs remain mounted during loading, empty, and error states.
 Durable tabs, views, paging, sorting, and meaningful filters use shareable URL state.
 `SplashScreen` is reserved for authentication, permission, or application bootstrap rather than normal Enrollment route or tab changes.
+Pipeline list and board modes share one semantic column definition. Product UI colors resolve through theme palette tokens; validated tenant-configured stage colors remain domain data and are always paired with a visible label.
+Enrollment dates, operational times, counts, currency, and missing values use the shared `Intl`-based display formatters rather than browser-default locale methods.
+The public admissions shell localizes skip navigation in English, Gujarati, and Hindi. A validated tenant color may decorate the shell as an accent, but it never replaces contrast-safe theme text or conveys status by color alone.
 
-| Page type          | Enrollment surfaces                                                                                                                                         |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page type          | Enrollment surfaces                                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Table workspace    | My Work, Pipeline list, Assessments, Visits and Events, Registration, Class Placement, Activation, Follow-ups and Messages, Admission Reports, and table-first Settings panels |
-| Document workspace | Setup Centre, Finance Handoff forms, provider forms, and other pages whose primary task is guidance or data entry                                           |
-| Sequential setup   | Admission Year Setup and the genuinely ordered Registration and Documents setup flow                                                                        |
-| Mixed workspace    | Applicant, Admission Year history, Activation Settings, and other routes that must explicitly separate a primary table panel from document-style panels     |
+| Document workspace | Setup Centre, Finance Handoff forms, provider forms, and other pages whose primary task is guidance or data entry                                                              |
+| Sequential setup   | Admission Year Setup and the genuinely ordered Registration and Documents setup flow                                                                                           |
+| Mixed workspace    | Applicant, Admission Year history, Activation Settings, and other routes that must explicitly separate a primary table panel from document-style panels                        |
 
 A bounded table is permitted only for an embedded preview, import result, comparison, or history.
 The component and its tests must name that exception explicitly.

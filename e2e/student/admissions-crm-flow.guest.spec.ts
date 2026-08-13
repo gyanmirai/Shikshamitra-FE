@@ -34,25 +34,26 @@ const principalScopeBoard = () =>
   (principalEmail().toLowerCase().includes('gseb') ? 'GSEB' : undefined);
 const principalDeniedScopeBoard = () => process.env.E2E_PRINCIPAL_DENIED_SCOPE_BOARD || 'CBSE';
 const enrollmentWorkspaceRoutes = [
+  '/student/enrollment/my-work',
   '/student/enrollment/pipeline',
-  '/student/enrollment/exams',
-  '/student/enrollment/registrations',
-  '/student/enrollment/offers-seats',
+  '/student/enrollment/entrance-exams',
+  '/student/enrollment/visits-events',
+  '/student/enrollment/registration',
+  '/student/enrollment/class-placement',
   '/student/enrollment/activation',
-  '/student/enrollment/operations',
-  '/student/enrollment/analytics',
+  '/student/enrollment/follow-ups-messages',
+  '/student/enrollment/reports',
 ] as const;
 const enrollmentSettingsRoutes = [
-  '/student/enrollment/settings/journey',
-  '/student/enrollment/settings/inquiry-capture',
-  '/student/enrollment/settings/routing-scoring',
-  '/student/enrollment/settings/entrance-exams',
-  '/student/enrollment/settings/registration-documents',
-  '/student/enrollment/settings/offers-seats',
+  '/student/enrollment/settings',
+  '/student/enrollment/settings/admission-year',
+  '/student/enrollment/settings/pipeline',
+  '/student/enrollment/settings/entrance-exam',
+  '/student/enrollment/settings/registration',
+  '/student/enrollment/settings/finance-handoff',
+  '/student/enrollment/settings/class-placement',
   '/student/enrollment/settings/activation',
-  '/student/enrollment/settings/governance',
-  '/student/enrollment/settings/communications',
-  '/student/enrollment/settings/automation',
+  '/student/enrollment/settings/communication',
 ] as const;
 let otpWebhookServer: Server | undefined;
 let otpWebhookUrl = '';
@@ -1130,6 +1131,79 @@ test.describe('Student admissions CRM E2E', () => {
     if (!otpWebhookServer) return;
     const server = otpWebhookServer;
     await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
+  test('public family inquiry keeps stable, localized geometry with deterministic fixtures', async ({
+    page,
+  }) => {
+    const tenantId = 'deterministic-tenant';
+    const templateId = 'deterministic-template';
+    await page.route(
+      `**/api/public/student-enrollment/admissions-crm/${tenantId}/portal`,
+      (route) =>
+        route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify({
+            schoolName: 'ShikshaMitra Demonstration School',
+            primaryColor: '#1976D2',
+            defaultLanguage: 'en',
+            supportedLanguages: ['en', 'gu', 'hi'],
+            admissionsEmail: 'admissions@example.test',
+            admissionsPhone: '+1 604 555 0100',
+          }),
+        })
+    );
+    await page.route(
+      `**/api/public/student-enrollment/admissions-crm/${tenantId}/forms/${templateId}?*`,
+      (route) =>
+        route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify({
+            tenantId,
+            templateId,
+            templateName: 'Deterministic Family Admissions',
+            description: 'A read-only browser fixture for the public family journey.',
+            consentText: 'I agree that the school may process these admission details.',
+            privacyNoticeUrl: 'https://example.test/privacy',
+            consentVersion: 'fixture-v1',
+            fields: [],
+          }),
+        })
+    );
+
+    // Viewport changes and public-route navigations remain serial on one page.
+    // eslint-disable-next-line no-restricted-syntax
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 768, height: 1024 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(`/student/admissions/inquiry/${tenantId}/${templateId}`, {
+        waitUntil: 'domcontentloaded',
+      });
+      await expect(
+        page.getByRole('heading', { name: 'Deterministic Family Admissions' })
+      ).toBeVisible();
+      const skipLink = page.getByRole('link', { name: 'Skip to admission content' });
+      await skipLink.focus();
+      await skipLink.press('Enter');
+      await expect(page.locator('#public-admissions-content')).toBeFocused();
+
+      const widths = await page.evaluate(() => ({
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+      }));
+      expect(
+        Math.max(widths.document, widths.body),
+        `public inquiry at ${viewport.width}x${viewport.height} document overflow`
+      ).toBeLessThanOrEqual(widths.viewport + 1);
+    }
+
+    await page.getByLabel('Language').click();
+    await page.getByRole('option', { name: 'ગુજરાતી' }).click();
+    await expect(page.getByRole('link', { name: 'પ્રવેશ સામગ્રી પર જાઓ' })).toBeVisible();
   });
 
   test('anonymous users cannot access protected CRM lead APIs', async ({ page }) => {

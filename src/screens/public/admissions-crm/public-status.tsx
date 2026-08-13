@@ -359,6 +359,7 @@ export default function PublicAdmissionStatusScreen({
               labelId="admission-status-language"
               label={copy.language}
               value={language}
+              inputProps={{ name: 'admission-status-language' }}
               onChange={(event) => setLanguage(event.target.value)}
             >
               {languageOptions.map((option) => (
@@ -368,7 +369,7 @@ export default function PublicAdmissionStatusScreen({
               ))}
             </Select>
           </FormControl>
-          {isIssuing && <LinearProgress />}
+          {isIssuing ? <LinearProgress aria-label={copy.sendOtp} /> : null}
 
           {!challenge && !status && (
             <LoadingButton variant="contained" loading={isIssuing} onClick={issueOtp}>
@@ -425,6 +426,7 @@ export default function PublicAdmissionStatusScreen({
                         labelId="family-application-select-label"
                         label={statusCopy.familyApplications}
                         value={currentToken}
+                        inputProps={{ name: 'family-application' }}
                         disabled={isSwitchingApplication}
                         onChange={(event) => switchApplication(event.target.value)}
                       >

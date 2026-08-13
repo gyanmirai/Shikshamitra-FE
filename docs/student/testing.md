@@ -52,6 +52,7 @@ Enrollment layout tests must verify rendered behavior rather than only checking 
 Use canonical routes rather than compatibility redirects in new browser tests.
 Use semantic readiness assertions rather than `networkidle` when polling or background requests can remain active.
 Keep the deterministic UI consistency suite read-only and separate it from record-creating workflow tests.
+Public-family browser coverage must use deterministic portal and form fixtures for layout, localization, focus, and overflow checks. Keep record creation in the explicitly mutation-enabled workflow suite.
 
 Validate these viewports for every table-first route and representative document, setup, drawer, and dialog surfaces:
 
@@ -68,6 +69,7 @@ Verify URL round trips for tabs, report views, paging, sorting, meaningful filte
 Verify visible focus, keyboard applicant navigation, specific icon-button names, sort direction, expansion state, and tab relationships.
 For Pipeline-to-applicant navigation, verify `tab=inquiry`, native modified-click behavior, data prefetch on hover and focus, directional and reduced-motion transitions, and restoration of Pipeline URL state, scroll, and focus after data readiness.
 Verify that an expired, malformed, external, or applicant-detail return location falls back safely.
+Verify public inquiry and family access in English, Gujarati, and Hindi, including skip navigation, first-error focus, labelled progress, success feedback, safe tenant-brand fallback, and 44-pixel touch targets.
 
 ## Add coverage when needed
 

@@ -9,6 +9,7 @@ import { AdmissionCrmWaitlistStatus } from 'src/redux/student/admissions-crm/fin
 import { useGetAdmissionCrmWaitlistHistoryQuery } from 'src/redux/student/admissions-crm/final-admission-api';
 
 import { useApplicantFinalAdmissionWorkspace } from './applicant-final-admission-operations-context';
+import { formatEnrollmentDate } from './enrollment-display';
 
 const waitlistStatusLabels: Record<AdmissionCrmWaitlistStatus, string> = {
   [AdmissionCrmWaitlistStatus.Active]: 'Active',
@@ -24,7 +25,7 @@ function WaitlistHistory({ entryId }: { entryId: string }) {
   const latest = history.data[history.data.length - 1];
   return (
     <Typography variant="caption" color="text.secondary">
-      Last change: {latest.reason} · {new Date(latest.occurredAt).toLocaleString()}
+      Last change: {latest.reason} · {formatEnrollmentDate(latest.occurredAt, true)}
     </Typography>
   );
 }

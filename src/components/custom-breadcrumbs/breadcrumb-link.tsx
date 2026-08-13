@@ -21,15 +21,20 @@ export function BreadcrumbsLink({ link, activeLast, disabled, ...props }: Props)
     typography: 'body2',
     alignItems: 'center',
     color: (theme) =>
-      activeLast ? theme.vars.palette.primary.dark : theme.vars.palette.text.primary,
+      activeLast
+        ? theme.vars?.palette.primary.dark || theme.palette.primary.dark
+        : theme.vars?.palette.text.primary || theme.palette.text.primary,
     display: 'inline-flex',
-    transition: 'all 0.2s ease-in-out',
+    transition: 'color 0.2s ease-in-out, background-color 0.2s ease-in-out',
     fontWeight: activeLast ? 600 : 400,
     '&:hover': {
       color: 'primary.main',
       textDecoration: 'none',
       backgroundColor: activeLast ? 'unset' : 'action.hover',
       borderRadius: 0.9,
+    },
+    '@media (prefers-reduced-motion: reduce)': {
+      transition: 'none',
     },
     ...(disabled &&
       !activeLast && {

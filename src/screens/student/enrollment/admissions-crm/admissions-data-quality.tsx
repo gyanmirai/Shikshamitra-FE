@@ -18,6 +18,8 @@ import {
   useAcknowledgeAdmissionCrmDataQualityIssueMutation,
 } from 'src/redux/student/admissions-crm/operations-governance-api';
 
+import { formatEnrollmentDate } from './enrollment-display';
+
 const severityColor = (severity: AdmissionCrmDataQualityIssueSeverity) =>
   severity === AdmissionCrmDataQualityIssueSeverity.Critical
     ? 'error'
@@ -98,7 +100,7 @@ export function AdmissionsDataQuality({ academicYearId }: { academicYearId: stri
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {AdmissionCrmDataQualityIssueType[issue.issueType]} - last detected{' '}
-                    {new Date(issue.lastDetectedAt).toLocaleString()}
+                    {formatEnrollmentDate(issue.lastDetectedAt, true)}
                   </Typography>
                 </Box>
                 <Stack direction="row" gap={1} flexWrap="wrap">

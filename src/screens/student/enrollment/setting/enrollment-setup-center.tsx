@@ -195,6 +195,7 @@ export function EnrollmentSetupCenter() {
                   </Typography>
                 </Stack>
                 <LinearProgress
+                  aria-label="Essential enrollment setup completion"
                   variant="determinate"
                   value={
                     essentialCount ? Math.min(100, (completedCount / essentialCount) * 100) : 0

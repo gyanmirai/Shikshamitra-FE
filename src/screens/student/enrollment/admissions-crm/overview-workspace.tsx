@@ -691,6 +691,12 @@ export function EnrollmentOverviewWorkspace() {
         />
       ) : (
         <>
+          {showEmptyWorkQueue ? (
+            <Alert severity="info">
+              You have no pending tasks for this admission year. Open Pipeline to review all
+              applicants or clear filters to widen the view.
+            </Alert>
+          ) : null}
           {query.isFetching && !query.isLoading ? (
             <LinearProgress aria-label="Refreshing My Work" />
           ) : null}
@@ -803,12 +809,6 @@ export function EnrollmentOverviewWorkspace() {
             wrapperProps={{ sx: enrollmentTableWrapperSx }}
             tableContainerProps={{ sx: enrollmentTableContainerSx }}
           />
-          {showEmptyWorkQueue ? (
-            <Alert severity="info">
-              You have no pending tasks for this admission year. Open Pipeline to review all
-              applicants or clear filters to widen the view.
-            </Alert>
-          ) : null}
           {query.data ? (
             <Typography variant="caption" color="text.secondary" textAlign="right">
               Updated {formatEnrollmentDate(query.data.generatedAt, true)}
