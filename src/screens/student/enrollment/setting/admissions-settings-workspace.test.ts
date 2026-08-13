@@ -272,7 +272,7 @@ describe('Enrollment settings route contracts', () => {
     );
 
     expect(settingsPage).toContain('<Box');
-    expect(settingsPage).toContain('px: 2');
+    expect(settingsPage).toContain('px: isTableLayout ? 0 : 2');
     expect(configuration).toContain('function SettingsHelpLabel');
     expect(configuration).toContain('component="span"');
     expect(configuration).toContain("display: 'inline-flex'");

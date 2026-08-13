@@ -13,6 +13,11 @@ export type PublicAdmissionPortal = {
 export const getPublicAdmissionsPortalUrl = (apiBase: string, tenantId: string) =>
   `${apiBase}/public/student-enrollment/admissions-crm/${tenantId}/portal`;
 
+export const getSafePublicAdmissionsAccent = (value?: string | null) => {
+  const normalized = value?.trim();
+  return normalized && /^#[0-9a-f]{6}$/i.test(normalized) ? normalized : undefined;
+};
+
 export type PublicAdmissionsCoreLanguage = 'en' | 'gu' | 'hi';
 
 const CORE_LANGUAGE_LABELS: Record<PublicAdmissionsCoreLanguage, string> = {

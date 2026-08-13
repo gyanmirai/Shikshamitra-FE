@@ -205,6 +205,7 @@ export default function PublicFamilyAccessScreen({ tenantId }: { tenantId: strin
               labelId="family-access-language"
               label={copy.language}
               value={language}
+              inputProps={{ name: 'family-access-language' }}
               onChange={(event) => setLanguage(event.target.value)}
             >
               {languageOptions.map((option) => (

@@ -91,7 +91,9 @@ export function AdmissionsRegistrationSection1() {
                 </Button>
               </Stack>
             ) : null}
-            {templatesQuery.isFetching ? <LinearProgress /> : null}
+            {templatesQuery.isFetching ? (
+              <LinearProgress aria-label="Loading registration templates" />
+            ) : null}
             <CustomizableTable
               tableId="student-enrollment-registration-templates"
               tableTitle="Registration Templates"
@@ -121,7 +123,9 @@ export function AdmissionsRegistrationSection1() {
                 </Button>
               </Stack>
             ) : null}
-            {seriesQuery.isFetching ? <LinearProgress /> : null}
+            {seriesQuery.isFetching ? (
+              <LinearProgress aria-label="Loading registration number series" />
+            ) : null}
             {(seriesQuery.data?.items || []).map((series) => (
               <Stack
                 key={series.id}

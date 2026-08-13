@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { RouterLink } from 'src/routes/components';
 import { alpha, useTheme } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { studentPaths } from 'src/constants/student-menu';
 import { Iconify } from 'src/components/iconify';
 import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
@@ -18,7 +19,7 @@ import type { EnrollmentSettingsPanel } from '../admissions-crm/enrollment-works
 
 type SettingsPageProps = {
   title: string;
-  description: string;
+  description: ReactNode;
   children: ReactNode;
   layout: 'table' | 'document';
   actions?: ReactNode;
@@ -88,6 +89,8 @@ export function EnrollmentSettingsTaskNav({ label, value, options }: SettingsPan
   const theme = useTheme();
   const pathname = usePathname();
   const { state, updateState } = useEnrollmentWorkspace();
+  const translucent = (channel: string | undefined, color: string, opacity: number) =>
+    channel ? varAlpha(channel, opacity) : alpha(color, opacity);
 
   const getPanelHref = (panel: EnrollmentSettingsPanel) => {
     const query = serializeEnrollmentWorkspaceState({
@@ -137,25 +140,53 @@ export function EnrollmentSettingsTaskNav({ label, value, options }: SettingsPan
                   minHeight: 80,
                   p: 1.5,
                   border: 1,
-                  borderColor: alpha(theme.palette.grey[500], 0.2),
+                  borderColor: translucent(
+                    theme.vars?.palette.grey['500Channel'],
+                    theme.palette.grey[500],
+                    0.2
+                  ),
                   borderRadius: 2,
                   alignItems: 'flex-start',
                   justifyContent: 'flex-start',
                   textAlign: 'left',
-                  bgcolor: isActive ? alpha(theme.palette.primary.main, 0.08) : 'background.paper',
+                  bgcolor: isActive
+                    ? translucent(
+                        theme.vars?.palette.primary.mainChannel,
+                        theme.palette.primary.main,
+                        0.08
+                      )
+                    : 'background.paper',
                   transition: theme.transitions.create([
                     'background-color',
                     'box-shadow',
                     'transform',
                   ]),
                   '&:hover': {
-                    bgcolor: isActive ? alpha(theme.palette.primary.main, 0.12) : alpha(theme.palette.grey[500], 0.04),
-                    boxShadow: theme.customShadows?.z4 || '0 4px 20px 0 rgba(0,0,0,0.05)',
+                    bgcolor: isActive
+                      ? translucent(
+                          theme.vars?.palette.primary.mainChannel,
+                          theme.palette.primary.main,
+                          0.12
+                        )
+                      : translucent(
+                          theme.vars?.palette.grey['500Channel'],
+                          theme.palette.grey[500],
+                          0.04
+                        ),
+                    boxShadow: theme.customShadows?.z4 || theme.shadows[4],
                     transform: 'translateY(-2px)',
                   },
                   '&:focus-visible': {
-                    outline: `3px solid ${alpha(theme.palette.primary.main, 0.35)}`,
+                    outline: `3px solid ${translucent(
+                      theme.vars?.palette.primary.mainChannel,
+                      theme.palette.primary.main,
+                      0.35
+                    )}`,
                     outlineOffset: 2,
+                  },
+                  '@media (prefers-reduced-motion: reduce)': {
+                    transition: 'none',
+                    '&:hover': { transform: 'none' },
                   },
                 }}
               >
@@ -171,8 +202,16 @@ export function EnrollmentSettingsTaskNav({ label, value, options }: SettingsPan
                       flexShrink: 0,
                       color: isActive ? 'primary.main' : 'text.secondary',
                       bgcolor: isActive
-                        ? alpha(theme.palette.primary.main, 0.12)
-                        : alpha(theme.palette.grey[500], 0.08),
+                        ? translucent(
+                            theme.vars?.palette.primary.mainChannel,
+                            theme.palette.primary.main,
+                            0.12
+                          )
+                        : translucent(
+                            theme.vars?.palette.grey['500Channel'],
+                            theme.palette.grey[500],
+                            0.08
+                          ),
                     }}
                   >
                     <Iconify icon={option.icon || 'mdi:tune-variant'} width={22} />

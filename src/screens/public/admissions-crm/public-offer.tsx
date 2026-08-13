@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Close, CheckCircle } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
@@ -65,15 +65,18 @@ export default function PublicOffer({
 }) {
   const copy = publicAdmissionsActionCopy[language];
   const [reason, setReason] = useState('');
+  const [reasonError, setReasonError] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [action, setAction] = useState<'accept' | 'decline' | null>(null);
+  const reasonInputRef = useRef<HTMLInputElement>(null);
   const isOpen = [AdmissionCrmSeatOfferStatus.Issued, AdmissionCrmSeatOfferStatus.Opened].includes(
     offer.status
   );
 
   const respond = async (accept: boolean) => {
     if (!accept && !reason.trim()) {
-      shikshaMitraToast.error({ message: copy.declineReasonRequired });
+      setReasonError(true);
+      reasonInputRef.current?.focus();
       return;
     }
     setAction(accept ? 'accept' : 'decline');
@@ -157,6 +160,7 @@ export default function PublicOffer({
             <FormControlLabel
               control={
                 <Checkbox
+                  name="offerTermsAccepted"
                   checked={termsAccepted}
                   onChange={(event) => setTermsAccepted(event.target.checked)}
                 />
@@ -165,9 +169,17 @@ export default function PublicOffer({
             />
             <TextField
               size="small"
+              name="offerDeclineReason"
+              autoComplete="off"
               label={copy.declineReason}
               value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              onChange={(event) => {
+                setReason(event.target.value);
+                if (event.target.value.trim()) setReasonError(false);
+              }}
+              inputRef={reasonInputRef}
+              error={reasonError}
+              helperText={reasonError ? copy.declineReasonRequired : undefined}
               multiline
               minRows={2}
             />
@@ -187,7 +199,7 @@ export default function PublicOffer({
                 color="error"
                 startIcon={<Close />}
                 loading={action === 'decline'}
-                disabled={action === 'accept' || !reason.trim()}
+                disabled={action === 'accept'}
                 onClick={() => respond(false)}
               >
                 {copy.declineOffer}

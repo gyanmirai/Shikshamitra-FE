@@ -281,7 +281,9 @@ export default function AdmissionsNumberSeriesConfiguration() {
       <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
         <Stack spacing={1}>
           <Typography variant="subtitle2">Series register</Typography>
-          {series.isFetching && <LinearProgress />}
+          {series.isFetching ? (
+            <LinearProgress aria-label="Loading activation number series" />
+          ) : null}
           {!series.isFetching && !series.data?.length && (
             <Alert severity="info">No activation number series are configured.</Alert>
           )}
@@ -343,7 +345,9 @@ export default function AdmissionsNumberSeriesConfiguration() {
               </Stack>
             </Stack>
           ))}
-          {governance.isFetching && <LinearProgress />}
+          {governance.isFetching ? (
+            <LinearProgress aria-label="Loading number governance records" />
+          ) : null}
           {governance.isError && (
             <Alert
               severity="error"

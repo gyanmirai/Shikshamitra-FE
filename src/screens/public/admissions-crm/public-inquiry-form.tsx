@@ -535,7 +535,7 @@ export default function PublicAdmissionInquiryFormScreen({
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Stack spacing={2}>
             <Typography variant="h6">{text.loading}</Typography>
-            <LinearProgress />
+            <LinearProgress aria-label={text.loading} />
           </Stack>
         </Paper>
       </PublicAdmissionsShell>
@@ -608,6 +608,7 @@ export default function PublicAdmissionInquiryFormScreen({
               labelId="admission-form-language"
               label={text.language}
               value={language}
+              inputProps={{ name: 'admission-form-language' }}
               onChange={(event) => setLanguage(event.target.value)}
             >
               {languageOptions.map((option) => (

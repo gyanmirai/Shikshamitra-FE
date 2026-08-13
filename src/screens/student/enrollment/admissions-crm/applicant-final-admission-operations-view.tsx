@@ -34,6 +34,7 @@ import { ApplicantWaitlistEntryPanel } from './applicant-final-admission-operati
 import { ApplicantSeatOffersPanel } from './applicant-final-admission-operations-section-2';
 
 import { ApplicantOfferPreparationPanel } from './applicant-final-admission-operations-section-1';
+import { formatEnrollmentDate } from './enrollment-display';
 
 const offerStatusLabels: Record<AdmissionCrmSeatOfferStatus, string> = {
   [AdmissionCrmSeatOfferStatus.Draft]: 'Draft',
@@ -172,7 +173,7 @@ export function ApplicantFinalAdmissionView() {
             </Stack>
           ) : null}
         </Stack>
-        {anyLoading ? <LinearProgress /> : null}
+        {anyLoading ? <LinearProgress aria-label="Loading final admission readiness" /> : null}
         {finalAdmissionQueriesFailed ? (
           <Alert
             severity="error"
@@ -445,7 +446,7 @@ export function ApplicantFinalAdmissionView() {
                 <Chip size="small" label={decisionStatusLabels[decision.status]} />
                 <Typography variant="body2">{decision.reason}</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {decision.decidedAt ? new Date(decision.decidedAt).toLocaleString() : ''}
+                  {decision.decidedAt ? formatEnrollmentDate(decision.decidedAt, true) : ''}
                   {decision.overrideUsed ? ' - override' : ''}
                 </Typography>
               </Stack>

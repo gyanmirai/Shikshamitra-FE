@@ -27,7 +27,6 @@ import {
 import {
   AdmissionInquiryChannel,
   AdmissionCrmLeadPriority,
-  AdmissionCrmPipelineColumnKey,
 } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { PipelineStageColumn } from './pipeline-stage-column';
@@ -51,6 +50,8 @@ import {
 } from './workspace-table-patterns';
 
 import { usePipelineWorkspaceWorkspace } from './pipeline-workspace-context';
+
+import { enrollmentPipelineColumns } from './pipeline-column-definitions';
 
 const pageSize = 50;
 
@@ -83,75 +84,6 @@ const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
   [AdmissionCrmLeadPriority.Cold]: 'Cold',
   [AdmissionCrmLeadPriority.Low]: 'Low',
 };
-
-const pipelineColumns = [
-  {
-    key: AdmissionCrmPipelineColumnKey.NewInquiry,
-    label: 'New Inquiry',
-    description: 'Newly captured applicants awaiting the first admissions action.',
-    color: '#455a64',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.FollowUp,
-    label: 'Follow-up',
-    description: 'Applicants with an open follow-up or a follow-up stage.',
-    color: '#00796b',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.ExamPending,
-    label: 'Exam Pending',
-    description: 'Entrance exam scheduling, attendance, or result entry is pending.',
-    color: '#1565c0',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.ExamDone,
-    label: 'Exam Done',
-    description: 'The exam is complete and an eligibility decision still needs attention.',
-    color: '#5e35b1',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.Eligible,
-    label: 'Eligible',
-    description: 'The applicant is eligible and registration has not started.',
-    color: '#2e7d32',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.RegistrationPending,
-    label: 'Registration Pending',
-    description: 'Registration is ready to start or is still in progress.',
-    color: '#ef6c00',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.RegistrationDone,
-    label: 'Registration Done',
-    description: 'Registration is verified and the next required handoff has not started.',
-    color: '#00838f',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.FinanceVerification,
-    label: 'Finance Verification',
-    description: 'Finance confirmation or an approved waiver is required.',
-    color: '#6d4c41',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.PlacementPending,
-    label: 'Placement Pending',
-    description: 'Class capacity and placement work is pending.',
-    color: '#ad1457',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.ReadyForActivation,
-    label: 'Ready for Activation',
-    description: 'All admission gates are complete and activation can proceed.',
-    color: '#558b2f',
-  },
-  {
-    key: AdmissionCrmPipelineColumnKey.Activated,
-    label: 'Activated',
-    description: 'The student record has been activated and handed to Student Records.',
-    color: '#1b5e20',
-  },
-] as const;
 
 export function PipelineWorkspaceSection1() {
   const { state: controllerState, actions, meta } = usePipelineWorkspaceWorkspace();
@@ -368,7 +300,7 @@ export function PipelineWorkspaceSection1() {
             pb: 1,
           }}
         >
-          {pipelineColumns.map((column) => (
+          {enrollmentPipelineColumns.map((column) => (
             <PipelineStageColumn
               key={column.key}
               academicYearId={academicYearId}

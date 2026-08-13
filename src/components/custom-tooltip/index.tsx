@@ -9,16 +9,16 @@ const LightTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
   [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: theme.vars.palette.background.paper,
-    color: theme.vars.palette.text.primary,
+    backgroundColor: theme.vars?.palette.background.paper || theme.palette.background.paper,
+    color: theme.vars?.palette.text.primary || theme.palette.text.primary,
     boxShadow: theme.shadows[4],
     fontSize: 11,
     p: 0,
   },
   [`& .${tooltipClasses.arrow}`]: {
-    color: theme.vars.palette.background.paper,
+    color: theme.vars?.palette.background.paper || theme.palette.background.paper,
     '&::before': {
-      backgroundColor: theme.vars.palette.background.paper,
+      backgroundColor: theme.vars?.palette.background.paper || theme.palette.background.paper,
       boxShadow: theme.shadows[5],
     },
   },

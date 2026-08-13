@@ -62,6 +62,7 @@ import {
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import { downloadAdmissionExportFile } from '../admissions-crm/admission-export-download';
+import { formatEnrollmentDate } from '../admissions-crm/enrollment-display';
 
 const reportLabels: Record<AdmissionCrmExportReportType, string> = {
   [AdmissionCrmExportReportType.Funnel]: 'Funnel',
@@ -132,7 +133,6 @@ export default function AdmissionsGovernanceConfiguration() {
     { academicYearId: academicYearId || '' },
     { skip }
   );
-
   const [createPolicy, createPolicyState] = useCreateAdmissionCrmRetentionPolicyMutation();
   const [submitPolicy] = useSubmitAdmissionCrmRetentionPolicyMutation();
   const [publishPolicy] = usePublishAdmissionCrmRetentionPolicyMutation();
@@ -391,7 +391,7 @@ export default function AdmissionsGovernanceConfiguration() {
 
   return (
     <Stack spacing={1.5}>
-      {busy && <LinearProgress />}
+      {busy ? <LinearProgress aria-label="Updating enrollment governance" /> : null}
       <Alert severity="info">
         Retention and privacy actions are governed workflows. The ERP records decisions and blockers
         but does not claim automatic legal compliance.
@@ -628,7 +628,7 @@ export default function AdmissionsGovernanceConfiguration() {
               <Typography variant="body2" sx={{ flex: 1 }}>
                 {item.fileName}
               </Typography>
-              <Chip size="small" label={`Expires ${new Date(item.expiresAt).toLocaleString()}`} />
+              <Chip size="small" label={`Expires ${formatEnrollmentDate(item.expiresAt, true)}`} />
               <Button size="small" startIcon={<Download />} onClick={() => download(item.id)}>
                 Download
               </Button>

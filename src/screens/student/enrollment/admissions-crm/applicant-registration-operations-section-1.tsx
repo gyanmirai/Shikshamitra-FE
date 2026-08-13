@@ -14,6 +14,7 @@ import {
 import { RegistrationResponseEditor } from './registration-response-editor';
 
 import { useApplicantRegistrationWorkspace } from './applicant-registration-operations-context';
+import { formatEnrollmentDate } from './enrollment-display';
 
 const registrationStatusLabels: Record<AdmissionCrmRegistrationStatus, string> = {
   [AdmissionCrmRegistrationStatus.Issued]: 'Issued',
@@ -82,7 +83,7 @@ export function ApplicantRegistrationSection1() {
             <Box>
               <Typography variant="subtitle2">Registration {registration.formNumber}</Typography>
               <Typography variant="caption" color="text.secondary">
-                Expires {new Date(registration.linkExpiresAt).toLocaleDateString()} -{' '}
+                Expires {formatEnrollmentDate(registration.linkExpiresAt)} -{' '}
                 {registration.completionPercentage.toFixed(0)}% complete
               </Typography>
             </Box>
@@ -310,7 +311,9 @@ export function ApplicantRegistrationSection1() {
               ) : null}
             </Stack>
           ) : null}
-          {isRegistrationBusy ? <LinearProgress /> : null}
+          {isRegistrationBusy ? (
+            <LinearProgress aria-label="Updating applicant registration" />
+          ) : null}
         </Stack>
       </Box>
     </>

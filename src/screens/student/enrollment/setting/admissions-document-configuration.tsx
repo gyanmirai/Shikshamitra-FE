@@ -105,7 +105,6 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
   const readOnly =
     editing?.status !== undefined &&
     editing.status !== AdmissionCrmDocumentChecklistTemplateStatus.Draft;
-
   const updateRequirement = (index: number, patch: Partial<AdmissionCrmDocumentRequirementDto>) =>
     setForm((current) => ({
       ...current,
@@ -113,7 +112,6 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
         itemIndex === index ? { ...item, ...patch } : item
       ),
     }));
-
   const save = async () => {
     if (!academicYearId) return;
     const errors = validateDocumentChecklistTemplate(form);
@@ -162,7 +160,6 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
     [editing]
   );
   const editorDirty = open && !readOnly && JSON.stringify(form) !== JSON.stringify(editorBaseline);
-
   useEnrollmentSettingsDirtyState({
     source: 'admissions-document-checklist-editor',
     dirty: editorDirty,
@@ -172,7 +169,6 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
       setForm(createDocumentChecklistTemplate());
     },
   });
-
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -329,7 +325,11 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
             New Checklist
           </Button>
         </Stack>
-        {query.isFetching ? <LinearProgress /> : <Divider />}
+        {query.isFetching ? (
+          <LinearProgress aria-label="Loading document checklists" />
+        ) : (
+          <Divider />
+        )}
         {query.isError ? (
           <Alert
             severity="error"

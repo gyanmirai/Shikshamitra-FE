@@ -109,27 +109,23 @@ const routeTypeLabels: Record<AdmissionCrmRouteType, string> = {
 const routeTypeOptions = Object.values(AdmissionCrmRouteType)
   .filter((value): value is AdmissionCrmRouteType => typeof value === 'number')
   .map((value) => ({ value, label: routeTypeLabels[value] }));
-
 const statusLabels: Record<AdmissionCrmAdmissionYearSetupStatus, string> = {
   [AdmissionCrmAdmissionYearSetupStatus.Draft]: 'Draft',
   [AdmissionCrmAdmissionYearSetupStatus.Published]: 'Published',
   [AdmissionCrmAdmissionYearSetupStatus.Closed]: 'Closed',
   [AdmissionCrmAdmissionYearSetupStatus.Superseded]: 'Superseded',
 };
-
 const statusColor = (status: AdmissionCrmAdmissionYearSetupStatus) => {
   if (status === AdmissionCrmAdmissionYearSetupStatus.Published) return 'success';
   if (status === AdmissionCrmAdmissionYearSetupStatus.Draft) return 'warning';
   return 'default';
 };
-
 const getErrorMessage = (error: unknown, fallback: string) => {
   const response = error as {
     data?: { error?: { message?: string; code?: string }; message?: string };
   };
   return response.data?.error?.message || response.data?.message || fallback;
 };
-
 const standardLabel = (option: AdmissionCrmAdmissionYearStandardOptionDto) =>
   `${option.standardName} | ${option.mediumName} | ${option.boardName}`;
 
@@ -1644,8 +1640,12 @@ export function AdmissionYearSetup() {
               </Label>
             )}
           </Box>
-          <IconButton size="small" onClick={() => setViewVersion(null)}>
-            <Iconify icon="lucide:x" />
+          <IconButton
+            size="small"
+            aria-label="Close admission year version details"
+            onClick={() => setViewVersion(null)}
+          >
+            <Iconify icon="lucide:x" aria-hidden="true" />
           </IconButton>
         </Box>
 

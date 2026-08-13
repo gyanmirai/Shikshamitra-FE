@@ -41,6 +41,7 @@ export type PublicAdmissionsStatusCopy = {
 };
 
 type PublicAdmissionsShellCopy = {
+  skipToContent: string;
   eyebrow: string;
   privacy: string;
   statusTitle: string;
@@ -58,6 +59,7 @@ type PublicAdmissionsShellCopy = {
 
 export const publicAdmissionsCopy: Record<PublicAdmissionsLanguage, PublicAdmissionsShellCopy> = {
   en: {
+    skipToContent: 'Skip to admission content',
     eyebrow: 'School Admissions',
     privacy: 'Your information is protected and used only for the school admission process.',
     statusTitle: 'Admission Status',
@@ -74,6 +76,7 @@ export const publicAdmissionsCopy: Record<PublicAdmissionsLanguage, PublicAdmiss
     officeHours: 'Office hours',
   },
   gu: {
+    skipToContent: 'પ્રવેશ સામગ્રી પર જાઓ',
     eyebrow: 'શાળા પ્રવેશ',
     privacy: 'તમારી માહિતી સુરક્ષિત છે અને તેનો ઉપયોગ માત્ર શાળા પ્રવેશ પ્રક્રિયા માટે થાય છે.',
     statusTitle: 'પ્રવેશ સ્થિતિ',
@@ -90,6 +93,7 @@ export const publicAdmissionsCopy: Record<PublicAdmissionsLanguage, PublicAdmiss
     officeHours: 'કચેરીનો સમય',
   },
   hi: {
+    skipToContent: 'प्रवेश सामग्री पर जाएँ',
     eyebrow: 'विद्यालय प्रवेश',
     privacy: 'आपकी जानकारी सुरक्षित है और केवल विद्यालय प्रवेश प्रक्रिया के लिए उपयोग की जाती है।',
     statusTitle: 'प्रवेश स्थिति',

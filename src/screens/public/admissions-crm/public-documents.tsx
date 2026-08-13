@@ -217,6 +217,7 @@ export default function PublicDocuments({
                 size="small"
                 type="file"
                 inputProps={{
+                  name: document.requirementKey,
                   accept: document.acceptedExtensions.map((item) => `.${item}`).join(','),
                   'aria-label': `Choose ${document.requirementName}`,
                 }}
@@ -231,6 +232,8 @@ export default function PublicDocuments({
                 <TextField
                   size="small"
                   type="date"
+                  name={`${document.requirementKey}-valid-until`}
+                  autoComplete="off"
                   label={copy.validUntil}
                   InputLabelProps={{ shrink: true }}
                   value={validUntil[document.requirementKey] || ''}

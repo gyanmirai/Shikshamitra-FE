@@ -34,8 +34,7 @@ export function ApplicantRegistrationView() {
   const [invitationDelivery, setInvitationDelivery] =
     useState<AdmissionCrmMessageDeliveryLogDto | null>(null);
   const [invitationError, setInvitationError] = useState<string | null>(null);
-  const [sendInvitation, sendInvitationState] =
-    useSendAdmissionCrmRegistrationInvitationMutation();
+  const [sendInvitation, sendInvitationState] = useSendAdmissionCrmRegistrationInvitationMutation();
   const { state: controllerState, actions, meta } = useApplicantRegistrationWorkspace();
   const {
     canIssueRegistration,
@@ -71,7 +70,9 @@ export function ApplicantRegistrationView() {
     setInvitationError(result.deliveryError || null);
   };
 
-  if (registrationQuery.isFetching) return <LinearProgress />;
+  if (registrationQuery.isFetching) {
+    return <LinearProgress aria-label="Loading applicant registration" />;
+  }
 
   if (registrationQuery.isError) {
     return (
@@ -171,9 +172,7 @@ export function ApplicantRegistrationView() {
                   <ToggleButton value={AdmissionCrmRegistrationAccessMode.StaffAssisted}>
                     Staff-assisted
                   </ToggleButton>
-                  <ToggleButton value={AdmissionCrmRegistrationAccessMode.Both}>
-                    Both
-                  </ToggleButton>
+                  <ToggleButton value={AdmissionCrmRegistrationAccessMode.Both}>Both</ToggleButton>
                 </ToggleButtonGroup>
                 <Typography variant="caption" color="text.secondary">
                   {accessMode === AdmissionCrmRegistrationAccessMode.Online
@@ -231,27 +230,24 @@ export function ApplicantRegistrationView() {
                     !readinessQuery.data?.canIssue
                   }
                   onClick={() => {
-                    perform(
-                      async () => {
-                        const result = await issue({
-                          leadId,
-                          body: {
-                            registrationTemplateId,
-                            accessMode,
-                            formNumberSeriesId: seriesId || null,
-                            waiveFee: false,
-                          },
-                        }).unwrap();
-                        applyInvitationResult(result);
-                        if (result.deliveryError) {
-                          shikshaMitraToast.warning({
-                            message:
-                              'Registration was issued, but the invitation was not sent. Use the inline retry action after correcting the delivery issue.',
-                          });
-                        }
-                      },
-                      'Registration issued.'
-                    ).then((saved) => {
+                    perform(async () => {
+                      const result = await issue({
+                        leadId,
+                        body: {
+                          registrationTemplateId,
+                          accessMode,
+                          formNumberSeriesId: seriesId || null,
+                          waiveFee: false,
+                        },
+                      }).unwrap();
+                      applyInvitationResult(result);
+                      if (result.deliveryError) {
+                        shikshaMitraToast.warning({
+                          message:
+                            'Registration was issued, but the invitation was not sent. Use the inline retry action after correcting the delivery issue.',
+                        });
+                      }
+                    }, 'Registration issued.').then((saved) => {
                       if (saved) closeIssueForm();
                     });
                   }}
@@ -274,7 +270,13 @@ export function ApplicantRegistrationView() {
       {registration.accessMode !== AdmissionCrmRegistrationAccessMode.StaffAssisted &&
       canIssueRegistration ? (
         <Alert
-          severity={invitationDelivered ? 'success' : invitationDelivery || invitationError ? 'warning' : 'info'}
+          severity={
+            invitationDelivered
+              ? 'success'
+              : invitationDelivery || invitationError
+                ? 'warning'
+                : 'info'
+          }
           action={
             !invitationDelivered ? (
               <LoadingButton
@@ -283,13 +285,12 @@ export function ApplicantRegistrationView() {
                 startIcon={<ReplayOutlined />}
                 loading={sendInvitationState.isLoading}
                 onClick={() =>
-                  perform(
-                    async () => {
-                      const result = await sendInvitation({ registrationId: registration.id }).unwrap();
-                      applyInvitationResult(result);
-                    },
-                    'Registration invitation attempt recorded.'
-                  )
+                  perform(async () => {
+                    const result = await sendInvitation({
+                      registrationId: registration.id,
+                    }).unwrap();
+                    applyInvitationResult(result);
+                  }, 'Registration invitation attempt recorded.')
                 }
               >
                 {invitationDelivery || invitationError ? 'Retry invitation' : 'Send invitation'}

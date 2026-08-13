@@ -3,7 +3,13 @@
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import { Download, Visibility, Description, EmailOutlined, ReplayOutlined } from '@mui/icons-material';
+import {
+  Download,
+  Visibility,
+  Description,
+  EmailOutlined,
+  ReplayOutlined,
+} from '@mui/icons-material';
 import { Chip, Alert, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { AdmissionCrmGeneratedDocumentType } from 'src/redux/student/admissions-crm/final-admission-contracts';
 
@@ -18,6 +24,7 @@ import { useRetryAdmissionCrmMessageDeliveryMutation } from 'src/redux/student/a
 import type { AdmissionCrmMessageDeliveryLogDto } from 'src/redux/student/admissions-crm/communication-exams-events-contracts';
 
 import { ApplicantSection } from './applicant-workspace-primitives';
+import { formatEnrollmentDate } from './enrollment-display';
 
 type Props = {
   leadId: string;
@@ -165,7 +172,8 @@ export function GeneratedDocumentOperations({
       setDeliveryError(result.deliveryError || null);
       if (result.deliveryError || !result.delivery) {
         shikshaMitraToast.warning({
-          message: 'The hall ticket was issued, but the email was not sent. Check the applicant email and retry.',
+          message:
+            'The hall ticket was issued, but the email was not sent. Check the applicant email and retry.',
         });
         return;
       }
@@ -202,7 +210,9 @@ export function GeneratedDocumentOperations({
     configuredDocumentTypes[0] === AdmissionCrmGeneratedDocumentType.HallTicket;
   const hallTicketDisabled =
     hallTicketOnly &&
-    unavailableDocuments.some((item) => item.reasonCode === 'AdmissionCrm:HallTicketDisabledForExam');
+    unavailableDocuments.some(
+      (item) => item.reasonCode === 'AdmissionCrm:HallTicketDisabledForExam'
+    );
 
   if (hallTicketDisabled) return null;
 
@@ -360,7 +370,7 @@ export function GeneratedDocumentOperations({
                   <Chip size="small" label={item.language.toUpperCase()} variant="outlined" />
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
-                  {new Date(item.generatedAt).toLocaleString()}
+                  {formatEnrollmentDate(item.generatedAt, true)}
                 </Typography>
               </Stack>
             ))}

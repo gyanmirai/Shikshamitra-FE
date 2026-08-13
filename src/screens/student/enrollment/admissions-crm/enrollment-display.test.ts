@@ -1,6 +1,11 @@
 import { it, expect, describe } from 'vitest';
 
-import { formatApplicantNumber, getDistinctAdmissionIntent } from './enrollment-display';
+import {
+  formatEnrollmentDate,
+  formatApplicantNumber,
+  formatEnrollmentNumber,
+  getDistinctAdmissionIntent,
+} from './enrollment-display';
 
 describe('Student Enrollment display helpers', () => {
   it('formats the persistent applicant number as a short communication ID', () => {
@@ -24,5 +29,11 @@ describe('Student Enrollment display helpers', () => {
 
   it('omits an empty admission intent', () => {
     expect(getDistinctAdmissionIntent('   ', 'Fresh admission')).toBeUndefined();
+  });
+
+  it('uses shared locale-safe formatting with neutral invalid-value fallbacks', () => {
+    expect(formatEnrollmentNumber(12500)).toBe('12,500');
+    expect(formatEnrollmentNumber(Number.NaN)).toBe('Not set');
+    expect(formatEnrollmentDate('not-a-date')).toBe('Not set');
   });
 });

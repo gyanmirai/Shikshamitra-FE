@@ -43,6 +43,7 @@ import {
 
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
+import { formatEnrollmentDate } from '../admissions-crm/enrollment-display';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const nextYear = () => {
@@ -113,7 +114,6 @@ export default function AdmissionsPolicyPackConfiguration() {
   const [reviewDueAt, setReviewDueAt] = useState(defaults.reviewDueAt);
   const [sources, setSources] = useState<AdmissionCrmPolicySourceDto[]>(defaults.sources);
   const [rules, setRules] = useState<AdmissionCrmPolicyRuleDto[]>(defaults.rules);
-
   const packs = useGetAdmissionCrmPolicyPacksQuery({ maxResultCount: 200 });
   const adoptions = useGetAdmissionCrmPolicyAdoptionsQuery(
     { academicYearId: academicYearId || '' },
@@ -126,7 +126,6 @@ export default function AdmissionsPolicyPackConfiguration() {
   const [adoptPack, adoptState] = useAdoptAdmissionCrmPolicyPackMutation();
   const [installBaselines, installBaselineState] =
     useInstallAdmissionCrmOfficialPolicyBaselinesMutation();
-
   const resetEditor = () => {
     setCode(defaults.code);
     setName(defaults.name);
@@ -150,7 +149,6 @@ export default function AdmissionsPolicyPackConfiguration() {
       sources,
       rules,
     }) !== JSON.stringify(defaults);
-
   useEnrollmentSettingsDirtyState({
     source: 'policy-pack-editor',
     dirty: isEditorDirty,
@@ -548,7 +546,9 @@ export default function AdmissionsPolicyPackConfiguration() {
             <Typography variant="subtitle2">Policy versions and cycle adoption</Typography>
             <Chip size="small" label={`${packs.data?.totalCount || 0} version(s)`} />
           </Stack>
-          {(packs.isFetching || adoptions.isFetching) && <LinearProgress />}
+          {packs.isFetching || adoptions.isFetching ? (
+            <LinearProgress aria-label="Loading policy versions and adoption" />
+          ) : null}
           {!packs.isFetching && !packs.data?.items.length && (
             <Alert severity="info">No policy packs are configured.</Alert>
           )}
@@ -575,7 +575,7 @@ export default function AdmissionsPolicyPackConfiguration() {
                     color={pack.sourceReviewOverdue ? 'error.main' : 'text.secondary'}
                   >
                     {pack.jurisdiction} - {pack.board} - {pack.rules.length} rules - review{' '}
-                    {new Date(pack.reviewDueAt).toLocaleDateString()}
+                    {formatEnrollmentDate(pack.reviewDueAt)}
                   </Typography>
                 </Box>
                 <Stack direction="row" gap={1} alignItems="center">

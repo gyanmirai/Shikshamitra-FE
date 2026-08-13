@@ -72,11 +72,23 @@ export const enrollmentDateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
   minute: '2-digit',
 });
 
+export const enrollmentNumberFormatter = new Intl.NumberFormat('en-IN');
+
 export const formatEnrollmentDate = (value?: string | Date | null, includeTime = false) => {
   if (!value) return 'Not set';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Not set';
   return (includeTime ? enrollmentDateTimeFormatter : enrollmentDateFormatter).format(date);
+};
+
+export const formatEnrollmentNumber = (
+  value?: number | null,
+  options?: Intl.NumberFormatOptions
+) => {
+  if (value == null || !Number.isFinite(value)) return 'Not set';
+  return options
+    ? new Intl.NumberFormat('en-IN', options).format(value)
+    : enrollmentNumberFormatter.format(value);
 };
 
 export const joinEnrollmentMetadata = (...values: Array<string | null | undefined>) =>

@@ -274,6 +274,7 @@ export default function PublicRegistration({
                       key={field.key}
                       control={
                         <Checkbox
+                          name={field.key}
                           checked={Boolean(value)}
                           disabled={!editable}
                           onChange={(event) => updateValue(field.key, event.target.checked)}

@@ -188,7 +188,9 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
             />
           ) : null}
         </Stack>
-        {(readinessQuery.isFetching || policiesQuery.isFetching) && <LinearProgress />}
+        {readinessQuery.isFetching || policiesQuery.isFetching ? (
+          <LinearProgress aria-label="Loading applicant financial readiness" />
+        ) : null}
         {financialQueriesFailed ? (
           <Alert
             severity="error"

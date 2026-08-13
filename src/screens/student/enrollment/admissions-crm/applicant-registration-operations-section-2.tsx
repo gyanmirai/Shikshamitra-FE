@@ -81,7 +81,9 @@ export function ApplicantRegistrationSection2() {
       <Box component="section">
         <Stack spacing={1.25}>
           <Typography variant="subtitle2">Document Verification</Typography>
-          {checklistQuery.isFetching ? <LinearProgress /> : null}
+          {checklistQuery.isFetching ? (
+            <LinearProgress aria-label="Loading applicant document checklist" />
+          ) : null}
           {checklistQuery.isError || checklistTemplatesQuery.isError ? (
             <Alert
               severity="error"

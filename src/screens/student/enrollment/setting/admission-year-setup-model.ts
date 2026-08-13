@@ -195,3 +195,32 @@ export const admissionYearSetupPublishSchema = Yup.object().shape({
       }
     ),
 });
+
+const DATE_ORDER_ERROR =
+  'Dates must follow inquiry opening, inquiry closing, registration closing, and activation target order.';
+
+const validateAdmissionYearSetupSchema = (
+  schema: Yup.ObjectSchema<Record<string, unknown>>,
+  form: AdmissionYearSetupForm
+) => {
+  try {
+    schema.validateSync(form, { abortEarly: false });
+    return [];
+  } catch (error) {
+    if (!(error instanceof Yup.ValidationError)) throw error;
+
+    const messages = error.inner.length ? error.inner.map((issue) => issue.message) : error.errors;
+    const normalizedMessages = messages.map((message) =>
+      message.includes('cannot be earlier than') ? DATE_ORDER_ERROR : message
+    );
+    return [...new Set(normalizedMessages)];
+  }
+};
+
+export const validateAdmissionYearSetupStep = (
+  form: AdmissionYearSetupForm,
+  step: AdmissionYearSetupStep
+) => validateAdmissionYearSetupSchema(getValidationSchemaForStep(step), form);
+
+export const validateAdmissionYearSetupForPublish = (form: AdmissionYearSetupForm) =>
+  validateAdmissionYearSetupSchema(admissionYearSetupPublishSchema, form);
