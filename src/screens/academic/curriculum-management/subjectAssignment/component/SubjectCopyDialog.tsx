@@ -88,7 +88,6 @@ const SubjectCopyDialog = ({
   const [selectionMode, setSelectionMode] = useState<'ALL' | 'SPECIFIC'>('ALL');
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [subjectSearch, setSubjectSearch] = useState('');
-  const [includeCurriculumDetails, setIncludeCurriculumDetails] = useState(true);
   const [includeDocuments, setIncludeDocuments] = useState(true);
   const [includeTeachers, setIncludeTeachers] = useState(false);
   const [conflictStrategy, setConflictStrategy] = useState<'SKIP' | 'OVERWRITE'>('SKIP');
@@ -98,7 +97,6 @@ const SubjectCopyDialog = ({
       copyFromClass: null,
       selectionMode: 'ALL',
       selectedSubjectIds: [],
-      includeCurriculumDetails: true,
       includeDocuments: true,
       includeTeachers: false,
       conflictStrategy: 'SKIP',
@@ -111,7 +109,6 @@ const SubjectCopyDialog = ({
       copyFromClass,
       selectionMode,
       selectedSubjectIds,
-      includeCurriculumDetails,
       includeDocuments,
       includeTeachers,
       conflictStrategy,
@@ -120,7 +117,6 @@ const SubjectCopyDialog = ({
       copyFromClass,
       selectionMode,
       selectedSubjectIds,
-      includeCurriculumDetails,
       includeDocuments,
       includeTeachers,
       conflictStrategy,
@@ -235,7 +231,6 @@ const SubjectCopyDialog = ({
       setSelectionMode('ALL');
       setSelectedSubjectIds([]);
       setSubjectSearch('');
-      setIncludeCurriculumDetails(true);
       setIncludeDocuments(true);
       setIncludeTeachers(false);
       setConflictStrategy('SKIP');
@@ -270,7 +265,7 @@ const SubjectCopyDialog = ({
         targetClassId: sourceClassId,
         subjectIds: selectionMode === 'ALL' ? null : selectedSubjectIds,
         includeTeachers,
-        includeCurriculumDetails,
+        includeCurriculumDetails: true,
         includeDocuments,
         conflictStrategy,
         targetStatus: 0,
@@ -718,38 +713,6 @@ const SubjectCopyDialog = ({
                     Include Component Options
                   </Typography>
                   <Stack spacing={1}>
-                    <Paper
-                      variant="outlined"
-                      onClick={() => setIncludeCurriculumDetails(!includeCurriculumDetails)}
-                      sx={{
-                        p: 1.25,
-                        borderRadius: 1.5,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        bgcolor: 'background.paper',
-                        borderColor: 'divider',
-                        transition: 'all 0.15s ease-in-out',
-                        '&:hover': { borderColor: 'text.primary' },
-                      }}
-                    >
-                      <Box sx={{ pr: 1 }}>
-                        <Typography variant="body2" fontWeight={600}>
-                          Curriculum Specs
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          Goals, prerequisites &amp; descriptions
-                        </Typography>
-                      </Box>
-                      <Switch
-                        size="small"
-                        checked={includeCurriculumDetails}
-                        onChange={(e) => setIncludeCurriculumDetails(e.target.checked)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </Paper>
-
                     <Paper
                       variant="outlined"
                       onClick={() => setIncludeDocuments(!includeDocuments)}

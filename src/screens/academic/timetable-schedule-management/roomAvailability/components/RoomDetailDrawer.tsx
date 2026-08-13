@@ -36,7 +36,6 @@ interface RoomDetailDrawerProps {
   room: RoomAvailabilityItem | null;
   onClose: () => void;
   onReserve?: (room: RoomAvailabilityItem) => void;
-  onMaintenance?: (room: RoomAvailabilityItem) => void;
   onViewFullSchedule?: (roomId: string) => void;
 }
 
@@ -45,7 +44,6 @@ export const RoomDetailDrawer = ({
   room,
   onClose,
   onReserve,
-  onMaintenance,
   onViewFullSchedule,
 }: RoomDetailDrawerProps) => {
   const tabState = useBoolean(false); // false=schedule, true=audit
@@ -388,17 +386,6 @@ export const RoomDetailDrawer = ({
             onClick={() => onReserve(room)}
           >
             Reserve Room
-          </Button>
-        )}
-        {onMaintenance && room && (
-          <Button
-            variant="outlined"
-            color="warning"
-            size="small"
-            startIcon={<Iconify icon="mdi:wrench" />}
-            onClick={() => onMaintenance(room)}
-          >
-            Mark Maintenance
           </Button>
         )}
         <Button

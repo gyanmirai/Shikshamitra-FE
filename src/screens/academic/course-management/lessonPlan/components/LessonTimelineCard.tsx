@@ -15,6 +15,7 @@ import {
   Paper,
   Button,
   Chip,
+  Tooltip,
   Typography,
   IconButton,
   LinearProgress,
@@ -342,15 +343,20 @@ export const LessonTimelineCard: React.FC<LessonTimelineCardProps> = ({
               ) : null}
 
               {['Approved', 'completed', 'inProgress'].includes(statusConfig.stateKey) || planStatus === 'Approved' ? (
-                <Button
-                  variant="contained"
-                  size="small"
-                  color="success"
-                  startIcon={<Iconify icon="solar:notebook-bookmark-bold" width={16} />}
-                  onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
-                >
-                  Record Diary
-                </Button>
+                <Tooltip title={plan?.diaryStatus === 1 || plan?.diaryStatus === 'Submitted' ? "Diary already submitted" : ""} arrow>
+                  <Box component="span">
+                    <Button
+                      variant="contained"
+                      size="small"
+                      color="success"
+                      disabled={plan?.diaryStatus === 1 || plan?.diaryStatus === 'Submitted'}
+                      startIcon={<Iconify icon="solar:notebook-bookmark-bold" width={16} />}
+                      onClick={() => normalizedPlan && onSubmitDiary(normalizedPlan)}
+                    >
+                      Record Diary
+                    </Button>
+                  </Box>
+                </Tooltip>
               ) : null}
 
               {statusConfig.stateKey === 'submitted' || planStatus === 'Submitted' ? (

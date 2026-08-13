@@ -350,7 +350,14 @@ const SubmitDiaryModal = ({
       return;
     }
 
-    if (submit && plan && plan.planStatus !== 'Approved' && plan.approvalStatus !== 'Approved') {
+    if (
+      submit &&
+      plan &&
+      plan.planStatus !== 'Approved' &&
+      plan.approvalStatus !== 'Approved' &&
+      plan.status !== 'Approved' &&
+      (plan.status as any) !== 2
+    ) {
       const businessErr = 'Teacher diary can be submitted only against an approved lesson plan.';
       setError(businessErr);
       shikshaMitraToast.error({ message: businessErr });
