@@ -450,7 +450,7 @@ const Subjects = () => {
       />
 
       <CustomDialog
-        maxWidth="md"
+        maxWidth="xs"
         open={viewDocumentDialog.value}
         handleClose={() => {
           viewDocumentDialog.onFalse();

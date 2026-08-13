@@ -38,7 +38,6 @@ import { RoomAuditLogDrawer } from './components/RoomAuditLogDrawer';
 import { RoomReservationsTab } from './components/RoomReservationsTab';
 // Removed AIRoomAssistantPanel
 import { RoomAvailabilityTable } from './components/RoomAvailabilityTable';
-import { RoomMaintenanceDrawer } from './components/RoomMaintenanceDrawer';
 import { DEFAULT_ROOM_AVAILABILITY_FILTERS } from './roomAvailability.constants';
 import { useRoomAvailability, useRoomReservations } from './roomAvailability.hooks';
 // Removed RoomAvailabilityKpiCards
@@ -83,12 +82,10 @@ const RoomAvailabilityScreen = () => {
   const [prefilledRoom, setPrefilledRoom] = useState<{ roomId: string; roomName: string } | null>(
     null
   );
-  const [isMaintenanceOpen, setMaintenanceOpen] = useState(false);
   const [isDirectReservationOpen, setDirectReservationOpen] = useState(false);
   const [directReservationRoom, setDirectReservationRoom] = useState<RoomAvailabilityItem | null>(
     null
   );
-  const [maintenanceRoom, setMaintenanceRoom] = useState<RoomAvailabilityItem | null>(null);
   const [showAudit, setShowAudit] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     id: string;
@@ -182,11 +179,6 @@ const RoomAvailabilityScreen = () => {
     setSelectedRoomId(roomId);
     setActiveTab('availability');
     shikshaMitraToast.info({ message: 'Scroll to room schedule in table view.' });
-  }, []);
-
-  const handleOpenMaintenance = useCallback((room: RoomAvailabilityItem) => {
-    setMaintenanceRoom(room);
-    setMaintenanceOpen(true);
   }, []);
 
   const handleReservationSuccess = useCallback(
@@ -462,12 +454,10 @@ const RoomAvailabilityScreen = () => {
               data={availability.data}
               isLoading={availability.isLoading || availability.isFetching}
               canReserve
-              canMaintenance
               canApprove={isApprover}
               onViewRoom={handleViewRoom}
               onReserveRoom={handleOpenReservation}
               onViewSchedule={handleViewSchedule}
-              onMarkMaintenance={handleOpenMaintenance}
             />
           </Box>
         )}
@@ -516,10 +506,6 @@ const RoomAvailabilityScreen = () => {
           setDetailOpen(false);
           handleOpenReservation(room);
         }}
-        onMaintenance={(room) => {
-          setDetailOpen(false);
-          handleOpenMaintenance(room);
-        }}
         onViewFullSchedule={(roomId) => {
           setDetailOpen(false);
           setSelectedRoomId(roomId);
@@ -545,17 +531,6 @@ const RoomAvailabilityScreen = () => {
           setDirectReservationRoom(null);
         }}
         onSuccess={handleReservationSuccess}
-      />
-
-      {/* Maintenance Drawer */}
-      <RoomMaintenanceDrawer
-        open={isMaintenanceOpen}
-        room={maintenanceRoom}
-        onClose={() => setMaintenanceOpen(false)}
-        onSuccess={() => {
-          availability.fetch();
-          shikshaMitraToast.success({ message: 'Maintenance block added.' });
-        }}
       />
     </Box>
   );

@@ -505,6 +505,7 @@ export default function AllocationReviewDialog({
         body: { notifyStudents: true, notifyParents: true },
       }).unwrap();
       shikshaMitraToast.success({ message: 'Seating plan published successfully.' });
+      onClose();
     } catch (err: unknown) {
       const e = err as {
         data?: { error?: { message?: string }; message?: string; detail?: string };
@@ -721,7 +722,7 @@ export default function AllocationReviewDialog({
               }
               loading={isPublishing}
               disabled={isPublishing || planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED}
-              startIcon={<Iconify icon="solar:eye-bold" />}
+              startIcon={<Iconify icon={GlobalIcons.publish} />}
               onClick={handlePublish}
               type="button"
             />
