@@ -16,7 +16,7 @@ export function ApplicantSection({ title, description, action, children }: Secti
   return (
     <Paper component="section" variant="outlined" sx={{ p: { xs: 1.25, sm: 1.5 } }}>
       <Stack
-        direction="row"
+        direction={{ xs: 'column', sm: 'row' }}
         alignItems="flex-start"
         justifyContent="space-between"
         gap={2}
@@ -32,7 +32,7 @@ export function ApplicantSection({ title, description, action, children }: Secti
             </Typography>
           ) : null}
         </Box>
-        {action}
+        {action ? <Box sx={{ flexShrink: 0 }}>{action}</Box> : null}
       </Stack>
       {children}
     </Paper>

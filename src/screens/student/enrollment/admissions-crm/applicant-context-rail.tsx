@@ -7,10 +7,12 @@ import type {
 } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
 import { useState, useEffect } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { AdmissionCrmLeadPriority } from 'src/redux/student/admissions-crm/core-leads-contracts';
+import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
 import {
   Box,
   Alert,
@@ -22,10 +24,6 @@ import {
   Typography,
   Autocomplete,
 } from '@mui/material';
-import { AdmissionCrmRouteType } from 'src/redux/student/admissions-crm/final-admission-contracts';
-
-import { AdmissionCrmLeadPriority } from 'src/redux/student/admissions-crm/core-leads-contracts';
-
 import {
   useGetAdmissionCrmStaffQuery,
   useAssignAdmissionCrmLeadOwnerMutation,
@@ -120,7 +118,6 @@ export function ApplicantContextRail({
     if (selectedOwner) setOwner(selectedOwner);
     else if (!lead.ownerUserId) setOwner(null);
   }, [lead.ownerUserId, ownerStaffQuery.data]);
-
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     try {
@@ -306,20 +303,21 @@ export function ApplicantContextRail({
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 1 }}>
-        <Stack>
-          {hasRegistration && canViewGovernance ? (
+      {hasRegistration && canViewGovernance ? (
+        <Paper data-testid="applicant-additional-checks" variant="outlined" sx={{ p: 1 }}>
+          <Stack>
             <Button
               color="inherit"
+              size="small"
               startIcon={<Iconify icon="solar:shield-check-bold-duotone" />}
               onClick={onOpenGovernance}
-              sx={{ minHeight: 44, justifyContent: 'flex-start' }}
+              sx={{ minHeight: { xs: 44, md: 'unset' }, justifyContent: 'flex-start' }}
             >
               Additional Checks
             </Button>
-          ) : null}
-        </Stack>
-      </Paper>
+          </Stack>
+        </Paper>
+      ) : null}
     </Stack>
   );
 }

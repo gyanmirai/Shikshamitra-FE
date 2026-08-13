@@ -1,11 +1,21 @@
-import type { ReactNode, MouseEvent } from 'react';
+import type { ReactNode } from 'react';
+import type { LabelColor } from 'src/components/label';
 import type { AdmissionCrmLeadDto } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import dayjs from 'dayjs';
-import Link from 'next/link';
 import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Stack, Paper, Button, Skeleton, Typography, Link as MuiLink } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Alert,
+  Stack,
+  Paper,
+  Skeleton,
+  Typography,
+  Link as MuiLink,
+} from '@mui/material';
 
 import { ApplicantTitleTransition } from './enrollment-route-transition';
 import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
@@ -17,15 +27,15 @@ import {
 
 type Props = {
   lead?: AdmissionCrmLeadDto;
-  returnHref: string;
   lifecycleStatusLabel?: string;
   pipelineColumnLabel?: string;
-  journeyStatusLabel: string;
+  nextActionStepLabel: string;
+  nextActionStatusLabel: string;
+  nextActionStatusColor: LabelColor;
   nextAction?: string;
   primaryAction?: ReactNode;
   slaDueAt: dayjs.Dayjs | null;
   isClosed: boolean;
-  onBack: (event: MouseEvent<HTMLAnchorElement>) => void;
 };
 
 function ApplicantFact({
@@ -83,7 +93,6 @@ function ApplicantFact({
 function ApplicantInquiryHeaderSkeleton() {
   return (
     <Stack component="header" spacing={1.25} aria-label="Loading applicant summary">
-      <Skeleton variant="text" width={150} height={32} />
       <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 1.75 }, borderRadius: 2 }}>
         <Stack spacing={1.5}>
           <Skeleton variant="text" width="min(420px, 80%)" height={46} />
@@ -112,6 +121,7 @@ export function ApplicantInquiryLoadingState() {
       aria-label="Loading inquiry workspace"
       sx={{ width: '100%', maxWidth: 'xl', mx: 'auto', px: { xs: 1.5, sm: 2 }, pb: 2 }}
     >
+      <Skeleton variant="rounded" height={84} />
       <ApplicantInquiryHeaderSkeleton />
       <Skeleton variant="rounded" height={116} />
       <Box
@@ -130,15 +140,15 @@ export function ApplicantInquiryLoadingState() {
 
 export function ApplicantInquiryHeader({
   lead,
-  returnHref,
   lifecycleStatusLabel,
   pipelineColumnLabel,
-  journeyStatusLabel,
+  nextActionStepLabel,
+  nextActionStatusLabel,
+  nextActionStatusColor,
   nextAction,
   primaryAction,
   slaDueAt,
   isClosed,
-  onBack,
 }: Props) {
   if (!lead) {
     return <ApplicantInquiryHeaderSkeleton />;
@@ -150,18 +160,6 @@ export function ApplicantInquiryHeader({
 
   return (
     <Stack component="header" spacing={1.25}>
-      <Button
-        component={Link}
-        href={returnHref}
-        onClick={onBack}
-        color="inherit"
-        size="small"
-        startIcon={<Iconify icon="eva:arrow-back-fill" />}
-        sx={{ alignSelf: 'flex-start', color: 'text.secondary', minHeight: 40 }}
-      >
-        Back to Pipeline
-      </Button>
-
       <Paper
         variant="outlined"
         sx={(theme) => ({
@@ -273,13 +271,13 @@ export function ApplicantInquiryHeader({
           </Box>
 
           {!isClosed ? (
-            <Box
-              sx={(theme) => ({
-                px: 1.5,
-                py: 1,
-                borderRadius: 1.5,
-                bgcolor: alpha(theme.palette.primary.main, 0.06),
-              })}
+            <Alert
+              severity="info"
+              variant="outlined"
+              sx={{
+                alignItems: 'center',
+                '& .MuiAlert-message': { width: '100%', minWidth: 0 },
+              }}
             >
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
@@ -288,11 +286,16 @@ export function ApplicantInquiryHeader({
                 gap={1.25}
               >
                 <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="caption" color="primary.main" fontWeight={700}>
-                    Next best action
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ textWrap: 'balance' }}>
-                    {journeyStatusLabel}
+                  <Stack direction="row" alignItems="center" gap={0.75} flexWrap="wrap">
+                    <Typography variant="caption" color="info.dark" fontWeight={700}>
+                      Next Best Action
+                    </Typography>
+                    <Label color={nextActionStatusColor} variant="soft">
+                      {nextActionStatusLabel}
+                    </Label>
+                  </Stack>
+                  <Typography variant="subtitle2" sx={{ mt: 0.25, textWrap: 'balance' }}>
+                    {nextActionStepLabel}
                   </Typography>
                   <Typography
                     variant="body2"
@@ -303,18 +306,9 @@ export function ApplicantInquiryHeader({
                       'Review the inquiry record and confirm the next admissions step.'}
                   </Typography>
                 </Box>
-                {primaryAction ? (
-                  <Box
-                    sx={{
-                      flexShrink: 0,
-                      '& .MuiButton-root': { minHeight: 36, px: 1.5 },
-                    }}
-                  >
-                    {primaryAction}
-                  </Box>
-                ) : null}
+                {primaryAction ? <Box sx={{ flexShrink: 0 }}>{primaryAction}</Box> : null}
               </Stack>
-            </Box>
+            </Alert>
           ) : null}
         </Stack>
       </Paper>
