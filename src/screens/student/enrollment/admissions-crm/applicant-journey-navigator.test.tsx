@@ -1,5 +1,5 @@
-import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { AdmissionCrmApplicantStepKey } from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { ApplicantJourneyNavigator } from './applicant-journey-navigator';
@@ -53,12 +53,15 @@ const steps: ApplicantJourneyStep[] = [
   },
 ];
 
-const setCompact = (compact: boolean) => {
+const onBack = vi.fn();
+const scrollIntoView = vi.fn();
+
+const setMedia = (compact: boolean, reducedMotion = false) => {
   vi.stubGlobal(
     'matchMedia',
-    vi.fn().mockImplementation(() => ({
-      matches: compact,
-      media: '',
+    vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('prefers-reduced-motion') ? reducedMotion : compact,
+      media: query,
       onchange: null,
       addListener: vi.fn(),
       removeListener: vi.fn(),
@@ -69,50 +72,83 @@ const setCompact = (compact: boolean) => {
   );
 };
 
+const renderJourney = (
+  selectedTab: 'inquiry' | 'registration' = 'registration',
+  onSelect = vi.fn()
+) =>
+  render(
+    <ApplicantJourneyNavigator
+      steps={steps}
+      currentStep={steps[2]}
+      selectedTab={selectedTab}
+      returnHref="/student/enrollment/pipeline"
+      onBack={onBack}
+      onSelect={onSelect}
+    />
+  );
+
 describe('Applicant journey navigator', () => {
-  beforeEach(() => setCompact(false));
+  beforeEach(() => {
+    setMedia(false);
+    scrollIntoView.mockReset();
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+  });
 
-  it('renders distinct text and keeps blocked, skipped, and future steps non-interactive', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('uses a horizontal stepper and keeps blocked, skipped, and future steps non-interactive', () => {
     const onSelect = vi.fn();
-    render(
-      <ApplicantJourneyNavigator
-        steps={steps}
-        currentStep={steps[2]}
-        selectedTab="registration"
-        onSelect={onSelect}
-      />
-    );
+    const { container } = renderJourney('registration', onSelect);
 
+    expect(container.querySelector('.MuiStepper-horizontal')).toBeInTheDocument();
+    expect(container.querySelectorAll('.MuiStepIcon-root')).toHaveLength(steps.length);
     expect(screen.getByText('Not required')).toBeVisible();
-    expect(screen.queryByText('Registration must be verified first.')).not.toBeInTheDocument();
-    expect(screen.getByText(/Needs review/)).toBeVisible();
-    expect(screen.getByText('6')).toBeVisible();
+    expect(screen.getByText('Current')).toBeVisible();
     expect(screen.getAllByRole('button')).toHaveLength(2);
 
-    fireEvent.click(screen.getByRole('button', { name: /Registration.*Needs review/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Registration.*Current/i }));
     expect(onSelect).toHaveBeenCalledWith('registration');
   });
 
-  it('uses a vertical keyboard-operable stepper and exposes blocked reasons on hover', async () => {
-    setCompact(true);
-    render(
-      <ApplicantJourneyNavigator
-        steps={steps}
-        currentStep={steps[2]}
-        selectedTab="registration"
-        onSelect={vi.fn()}
-      />
-    );
+  it('distinguishes the backend current step from the viewed URL section', () => {
+    renderJourney('inquiry');
 
-    expect(screen.getByRole('navigation', { name: 'Admission journey' })).toBeVisible();
-    expect(screen.getByRole('button', { name: /Inquiry.*Complete/i })).toBeVisible();
-    expect(screen.getByRole('button', { name: /Registration.*Needs review/i })).toBeVisible();
+    const currentStep = screen.getByText('Registration').closest('.MuiStep-root');
+    const viewedStep = screen.getByText('Inquiry').closest('.MuiStep-root');
+    expect(currentStep).toHaveAttribute('aria-current', 'step');
+    expect(currentStep).not.toHaveAttribute('data-viewed');
+    expect(viewedStep).toHaveAttribute('data-viewed', 'true');
+    expect(screen.getByRole('button', { name: /Inquiry.*Complete/i })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
+
+  it('centers the viewed step in the phone rail and disables motion when requested', () => {
+    setMedia(true, true);
+    renderJourney('registration');
+
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      block: 'nearest',
+      inline: 'center',
+      behavior: 'auto',
+    });
+  });
+
+  it('exposes blocked reasons without making the step a button', async () => {
+    renderJourney();
+
     const blockedStep = screen.getByRole('group', { name: /Finance, Blocked/ });
     expect(blockedStep).toHaveAttribute('tabindex', '0');
     fireEvent.mouseOver(blockedStep);
     expect(await screen.findByText('Registration must be verified first.')).toBeVisible();
-    expect(
-      screen.queryByText('Entrance exam is optional for this admission year.')
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Finance/i })).not.toBeInTheDocument();
   });
 });

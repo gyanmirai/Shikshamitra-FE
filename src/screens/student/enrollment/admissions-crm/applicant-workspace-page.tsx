@@ -2,6 +2,7 @@
 
 import type { MouseEvent } from 'react';
 import type { RootState } from 'src/redux/store';
+import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import Link from 'next/link';
@@ -20,11 +21,6 @@ import {
   useGetAdmissionCrmApplicantProgressQuery,
 } from 'src/redux/student/admissions-crm/core-leads-api';
 import {
-  AdmissionInquiryStage,
-  AdmissionCrmClosedOutcome,
-  AdmissionCrmPipelineColumnKey,
-} from 'src/redux/student/admissions-crm/core-leads-contracts';
-import {
   Box,
   Stack,
   Alert,
@@ -35,22 +31,31 @@ import {
   AccordionDetails,
   AccordionSummary,
 } from '@mui/material';
+import {
+  AdmissionInquiryStage,
+  AdmissionCrmClosedOutcome,
+  AdmissionCrmPipelineColumnKey,
+} from 'src/redux/student/admissions-crm/core-leads-contracts';
 
 import { formatEnumLabel } from './enrollment-display';
 import { ApplicantWorkContext } from './applicant-work-context';
 import { ApplicantContextRail } from './applicant-context-rail';
 import { ApplicantInquiryHeader } from './applicant-inquiry-header';
+import { ApplicantSection } from './applicant-workspace-primitives';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantJourneyNavigator } from './applicant-journey-navigator';
 import { ApplicantWorkspaceOverview } from './applicant-workspace-overview';
-import { ApplicantSection } from './applicant-workspace-primitives';
 import { admissionCrmActionPermissions } from './admission-action-permissions';
 import { ApplicantExamSchedulingDialog } from './applicant-exam-scheduling-dialog';
-import { buildApplicantJourney, getApplicantNextJourneyStep } from './applicant-journey-model';
 import {
   ApplicantWorkspaceDirtyProvider,
   useApplicantWorkspaceTransition,
 } from './applicant-workspace-dirty-context';
+import {
+  buildApplicantJourney,
+  getApplicantNextJourneyStep,
+  type ApplicantJourneyStepState,
+} from './applicant-journey-model';
 import {
   getJourneyTab,
   canOpenJourneyStep,
@@ -125,6 +130,15 @@ const activationDocumentTypes = [
   AdmissionCrmGeneratedDocumentType.AdmissionLetter,
   AdmissionCrmGeneratedDocumentType.CancellationLetter,
 ] as const;
+
+const journeyStateColors: Record<ApplicantJourneyStepState, LabelColor> = {
+  'not-started': 'default',
+  'in-progress': 'primary',
+  complete: 'success',
+  skipped: 'default',
+  blocked: 'error',
+  'needs-review': 'warning',
+};
 
 function ApplicantDocumentDisclosure({
   title,
@@ -383,9 +397,11 @@ function ApplicantWorkspaceContent({
           component={Link}
           href={examHandoffHref}
           size="small"
+          color="primary"
           variant="contained"
           onClick={navigateThroughGuard(examHandoffHref)}
           endIcon={<Iconify icon="eva:arrow-forward-fill" />}
+          sx={{ minHeight: { xs: 44, md: 'unset' } }}
         >
           {primaryAction.label}
         </Button>
@@ -394,9 +410,11 @@ function ApplicantWorkspaceContent({
     return (
       <Button
         size="small"
+        color="primary"
         variant="contained"
         onClick={handlePrimaryAction}
         endIcon={<Iconify icon="eva:arrow-forward-fill" />}
+        sx={{ minHeight: { xs: 44, md: 'unset' } }}
       >
         {primaryAction.label}
       </Button>
@@ -406,6 +424,9 @@ function ApplicantWorkspaceContent({
   const currentStatusLabel = currentJourneyStep
     ? getJourneyStateLabel(currentJourneyStep)
     : 'Loading progress';
+  const currentStatusColor = currentJourneyStep
+    ? journeyStateColors[currentJourneyStep.state]
+    : 'default';
   const closedOutcome = progressQuery.data?.closedOutcome;
   const isClosed = closedOutcome != null;
   const lifecycleStatusLabel = lead
@@ -438,33 +459,34 @@ function ApplicantWorkspaceContent({
             pb: 2,
           }}
         >
+          <ApplicantJourneyNavigator
+            steps={journeySteps}
+            currentStep={currentJourneyStep}
+            selectedTab={selectedTab}
+            returnHref={returnHref}
+            isLoading={!lead || progressQuery.isLoading}
+            onBack={handleBackToPipeline}
+            onSelect={changeTab}
+          />
+
           <ApplicantInquiryHeader
             lead={lead}
-            returnHref={returnHref}
             lifecycleStatusLabel={
               isClosed
                 ? `Closed · ${closedOutcomeLabel || 'Outcome recorded'}`
                 : lifecycleStatusLabel
             }
             pipelineColumnLabel={pipelineColumnLabel}
-            journeyStatusLabel={`${currentJourneyStep?.label || 'Inquiry review'} · ${currentStatusLabel}`}
+            nextActionStepLabel={currentJourneyStep?.label || 'Inquiry Review'}
+            nextActionStatusLabel={currentStatusLabel}
+            nextActionStatusColor={currentStatusColor}
             nextAction={progressQuery.data?.nextAction || currentJourneyStep?.reason}
             primaryAction={primaryActionControl}
             slaDueAt={slaDueAt}
             isClosed={isClosed}
-            onBack={handleBackToPipeline}
           />
 
           {currentWorkItem ? <ApplicantWorkContext workItem={currentWorkItem} /> : null}
-
-          {lead && journeySteps.length ? (
-            <ApplicantJourneyNavigator
-              steps={journeySteps}
-              currentStep={currentJourneyStep}
-              selectedTab={selectedTab}
-              onSelect={changeTab}
-            />
-          ) : null}
 
           {progressQuery.isError ? (
             <Alert

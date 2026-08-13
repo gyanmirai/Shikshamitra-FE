@@ -1,4 +1,5 @@
 import { it, expect, describe } from 'vitest';
+
 import { readEnrollmentSource } from '../enrollment-source-contract';
 
 const read = (file: string) =>
@@ -13,14 +14,17 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(page).toContain('component="article"');
     expect(page).toContain('<ApplicantInquiryHeader');
     expect(page).not.toContain('<CustomBreadcrumbs');
-    expect(header).toContain('Back to Pipeline');
-    expect(header).toContain('Next best action');
+    expect(journey).toContain('Back to Pipeline');
+    expect(header).toContain('Next Best Action');
     expect(header).toContain('label="Target Grade"');
     expect(header).toContain('label="Inquiry Source"');
     expect(header).toContain('label="Guardian"');
     expect(header).toContain('label="Contact"');
     expect(header).toContain("lead.desiredClassName || 'Not captured'");
     expect(page).toContain('<ApplicantJourneyNavigator');
+    expect(page.indexOf('<ApplicantJourneyNavigator')).toBeLessThan(
+      page.indexOf('<ApplicantInquiryHeader')
+    );
     expect(page).toContain('<ApplicantContextRail');
     expect(page).toContain("maxWidth: 'xl'");
     expect(page).toContain("overflowX: 'hidden'");
@@ -31,13 +35,18 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(journey).toContain('<Stepper');
     expect(journey).toContain('<StepButton');
     expect(journey).toContain('<Tooltip');
-    expect(journey).toContain("useMediaQuery(theme.breakpoints.down('md'))");
-    expect(journey).not.toContain("overflowX: 'auto'");
+    expect(journey).toContain('alternativeLabel');
+    expect(journey).toContain("overflowX: 'auto'");
+    expect(journey).toContain("scrollSnapType: { xs: 'x proximity', sm: 'none' }");
+    expect(journey).toContain('aria-pressed={viewed}');
+    expect(journey).toContain("aria-current={current ? 'step' : undefined}");
+    expect(journey).not.toContain("orientation={vertical ? 'vertical' : 'horizontal'}");
     expect(page).not.toContain("role: 'dialog'");
   });
 
   it('keeps inquiry work focused and moves compact facts and audit to their owning surfaces', () => {
     const overview = read('applicant-workspace-overview.tsx');
+    const header = read('applicant-inquiry-header.tsx');
     const contextRail = read('applicant-context-rail.tsx');
     const activity = read('applicant-activity-timeline.tsx');
 
@@ -58,6 +67,11 @@ describe('Student Enrollment applicant workspace page contracts', () => {
     expect(activity).toContain('Activity & Audit');
     expect(overview).not.toContain('Save Owner');
     expect(overview).not.toContain('Save Priority');
+    expect(overview).toContain('Schedule Follow-Up');
+    expect(overview).toContain('Add Note');
+    expect(overview).toContain("minHeight: { xs: 44, md: 'unset' }");
+    expect(header).toContain('severity="info"');
+    expect(header).toContain('<Label color={nextActionStatusColor}');
   });
 
   it('autosaves ownership controls and keeps staff searches independent and lazy', () => {

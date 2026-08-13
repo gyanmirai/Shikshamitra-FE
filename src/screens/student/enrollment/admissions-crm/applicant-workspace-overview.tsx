@@ -71,7 +71,6 @@ const permissionsByAction = {
 
 const getStaffLabel = (staff: AdmissionCrmStaffLookupDto) =>
   joinEnrollmentMetadata(staff.displayName, staff.employeeCode, staff.email || undefined);
-
 type GovernedAction = 'archive' | 'merge' | 'stage' | null;
 
 type Props = {
@@ -279,31 +278,32 @@ export function ApplicantWorkspaceOverview({
         title="Follow-up"
         description={`${openTasks.length} open task${openTasks.length === 1 ? '' : 's'}`}
         action={
-          <Stack direction="row" gap={0.75}>
+          <Stack direction="row" gap={0.75} flexWrap="wrap">
             <Button
               size="small"
               variant="outlined"
               startIcon={<Iconify icon="solar:notes-bold-duotone" />}
-              sx={{ minHeight: 44 }}
+              sx={{ minHeight: { xs: 44, md: 'unset' } }}
               onClick={() => {
                 setTaskFormOpen(false);
                 setNoteFormOpen((open) => !open);
               }}
             >
-              Add note
+              Add Note
             </Button>
             {can(permissionsByAction.manageTasks) ? (
               <Button
                 size="small"
+                color="primary"
                 variant="contained"
                 startIcon={<Iconify icon="solar:checklist-minimalistic-bold-duotone" />}
-                sx={{ minHeight: 44 }}
+                sx={{ minHeight: { xs: 44, md: 'unset' } }}
                 onClick={() => {
                   setNoteFormOpen(false);
                   setTaskFormOpen((open) => !open);
                 }}
               >
-                Schedule follow-up
+                Schedule Follow-Up
               </Button>
             ) : null}
           </Stack>
@@ -346,7 +346,7 @@ export function ApplicantWorkspaceOverview({
                     }
                   }}
                 >
-                  Add note
+                  Add Note
                 </LoadingButton>
               </Stack>
             </Stack>

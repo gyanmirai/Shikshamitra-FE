@@ -1,12 +1,25 @@
 'use client';
 
-import LockOutlined from '@mui/icons-material/LockOutlined';
-import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
-import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import RemoveCircleOutlineOutlined from '@mui/icons-material/RemoveCircleOutlineOutlined';
-import { alpha, useTheme } from '@mui/material/styles';
+import type { MouseEvent } from 'react';
+import type { LabelColor } from 'src/components/label';
+
+import Link from 'next/link';
+import { useRef, useEffect } from 'react';
+import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { Box, Paper, Step, Stepper, Tooltip, StepLabel, StepButton, Typography } from '@mui/material';
+import {
+  Box,
+  Step,
+  Paper,
+  Button,
+  Stepper,
+  Tooltip,
+  StepLabel,
+  StepButton,
+  Typography,
+} from '@mui/material';
 
 import {
   getJourneyTab,
@@ -21,139 +34,210 @@ type Props = {
   steps: ApplicantJourneyStep[];
   currentStep?: ApplicantJourneyStep;
   selectedTab: ApplicantCommandTab;
+  returnHref: string;
+  isLoading?: boolean;
+  onBack: (event: MouseEvent<HTMLAnchorElement>) => void;
   onSelect: (tab: ApplicantCommandTab) => void;
 };
 
-function JourneyStateIcon({
-  step,
-  selected,
-  index,
-}: {
-  step: ApplicantJourneyStep;
-  selected: boolean;
-  index: number;
-}) {
-  const common = {
-    width: 28,
-    height: 28,
-    borderRadius: '50%',
-    display: 'grid',
-    placeItems: 'center',
-    border: 1,
-    borderColor: selected ? 'primary.main' : 'divider',
-  } as const;
+const stateColors: Record<ApplicantJourneyStep['state'], LabelColor> = {
+  'not-started': 'default',
+  'in-progress': 'primary',
+  complete: 'success',
+  skipped: 'default',
+  blocked: 'error',
+  'needs-review': 'warning',
+};
 
-  if (step.state === 'complete') {
-    return <TaskAltOutlined color="success" sx={{ fontSize: 28 }} />;
-  }
-  if (step.state === 'blocked') {
-    return (
-      <Box sx={{ ...common, color: 'error.main', bgcolor: 'error.lighter' }}>
-        <LockOutlined sx={{ fontSize: 16 }} />
-      </Box>
-    );
-  }
-  if (step.state === 'needs-review') {
-    return <WarningAmberOutlined color="warning" sx={{ fontSize: 28 }} />;
-  }
-  if (step.state === 'skipped') {
-    return <RemoveCircleOutlineOutlined color="disabled" sx={{ fontSize: 28 }} />;
-  }
-  return (
-    <Box
-      sx={(theme) => ({
-        ...common,
-        color: selected ? 'primary.contrastText' : 'text.secondary',
-        bgcolor: selected ? 'primary.main' : alpha(theme.palette.text.primary, 0.08),
-        fontSize: 12,
-        fontWeight: 700,
-      })}
-    >
-      {index + 1}
-    </Box>
-  );
+function getPresentedState(step: ApplicantJourneyStep, current: boolean) {
+  return current ? 'Current' : getJourneyStateLabel(step);
 }
 
-export function ApplicantJourneyNavigator({ steps, currentStep, selectedTab, onSelect }: Props) {
-  const theme = useTheme();
-  const vertical = useMediaQuery(theme.breakpoints.down('md'));
-  const selectedIndex = Math.max(
-    0,
-    steps.findIndex((step) => getJourneyTab(step) === selectedTab)
-  );
+function getPresentedColor(step: ApplicantJourneyStep, current: boolean): LabelColor {
+  return current ? 'primary' : stateColors[step.state];
+}
 
-  if (!steps.length) return null;
+export function ApplicantJourneyNavigator({
+  steps,
+  currentStep,
+  selectedTab,
+  returnHref,
+  isLoading = false,
+  onBack,
+  onSelect,
+}: Props) {
+  const muiTheme = useTheme();
+  const compact = useMediaQuery(muiTheme.breakpoints.down('sm'));
+  const viewedStepRef = useRef<HTMLDivElement>(null);
+  const currentIndex = steps.findIndex((step) => step.id === currentStep?.id);
+
+  useEffect(() => {
+    const viewedStep = viewedStepRef.current;
+    if (!compact || !viewedStep || typeof viewedStep.scrollIntoView !== 'function') return;
+    viewedStep.scrollIntoView({
+      block: 'nearest',
+      inline: 'center',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    });
+  }, [compact, selectedTab, steps.length]);
 
   return (
     <Paper
       component="nav"
-      aria-label="Admission journey"
+      aria-label="Applicant navigation"
       variant="outlined"
-      sx={{ px: { xs: 1, sm: 1.5 }, py: 1.25, overflow: 'hidden' }}
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'auto minmax(0, 1fr)' },
+        alignItems: { lg: 'center' },
+        gap: { xs: 0.5, lg: 1.5 },
+        px: { xs: 1, sm: 1.25 },
+        py: 0.75,
+        overflow: 'hidden',
+      }}
     >
-      <Stepper
-        activeStep={selectedIndex}
-        orientation={vertical ? 'vertical' : 'horizontal'}
-        alternativeLabel={!vertical}
+      <Button
+        component={Link}
+        href={returnHref}
+        onClick={onBack}
+        color="inherit"
+        size="small"
+        startIcon={<Iconify icon="eva:arrow-back-fill" />}
         sx={{
-          '& .MuiStepConnector-line': { borderColor: 'divider' },
-          '& .MuiStepLabel-labelContainer': { minWidth: 0 },
-          '& .MuiStepButton-root': { borderRadius: 1, minHeight: 44 },
+          justifySelf: 'start',
+          color: 'text.secondary',
+          minHeight: { xs: 44, md: 'unset' },
+          whiteSpace: 'nowrap',
         }}
       >
-        {steps.map((step, index) => {
-          const tab = getJourneyTab(step);
-          const selected = tab === selectedTab;
-          const current = step.id === currentStep?.id;
-          const openable = canOpenJourneyStep(step);
-          const reason = step.reason || `${step.label} is not available yet.`;
-          const icon = <JourneyStateIcon step={step} selected={selected} index={index} />;
-          const optional = (
-            <Typography variant="caption" color="text.secondary">
-              {current ? 'Current · ' : ''}
-              {getJourneyStateLabel(step)}
-            </Typography>
-          );
-          const title = (
-            <Typography variant="subtitle2" color={selected ? 'primary.main' : 'text.primary'}>
-              {step.label}
-            </Typography>
-          );
+        Back to Pipeline
+      </Button>
 
-          return (
-            <Step
-              key={step.id}
-              completed={step.state === 'complete'}
-              active={selected}
-              aria-current={current ? 'step' : undefined}
-            >
-              {openable ? (
-                <StepButton
-                  icon={icon}
-                  optional={optional}
-                  aria-controls="applicant-stage-panel"
-                  onClick={() => onSelect(tab)}
+      <Box
+        role="group"
+        aria-label="Admission journey"
+        sx={{
+          minWidth: 0,
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          overscrollBehaviorX: 'contain',
+          scrollSnapType: { xs: 'x proximity', sm: 'none' },
+          scrollbarWidth: 'thin',
+        }}
+      >
+        {isLoading && !steps.length ? (
+          <Box
+            role="status"
+            aria-label="Loading admission journey"
+            sx={{ height: 70, bgcolor: 'action.hover', borderRadius: 1 }}
+          />
+        ) : (
+          <Stepper
+            activeStep={currentIndex}
+            alternativeLabel
+            sx={{
+              minWidth: { xs: Math.max(steps.length * 144, 576), sm: 720, lg: 0 },
+              '& .MuiStep-root': {
+                minWidth: { xs: 144, sm: 120, lg: 0 },
+                px: 0.25,
+                scrollSnapAlign: 'center',
+              },
+              '& .MuiStepConnector-line': { borderColor: 'divider' },
+              '& .MuiStepLabel-labelContainer': { minWidth: 0 },
+              '& .MuiStepButton-root': {
+                borderRadius: 1,
+                py: 0.5,
+                transition: (theme) =>
+                  theme.transitions.create(['background-color', 'box-shadow'], {
+                    duration: theme.transitions.duration.shorter,
+                  }),
+                '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+              },
+            }}
+          >
+            {steps.map((step) => {
+              const tab = getJourneyTab(step);
+              const viewed = tab === selectedTab;
+              const current = step.id === currentStep?.id;
+              const openable =
+                canOpenJourneyStep(step) &&
+                step.state !== 'blocked' &&
+                step.state !== 'skipped' &&
+                (step.state !== 'not-started' || current);
+              const stateLabel = getPresentedState(step, current);
+              const reason = step.reason || `${step.label} is not available yet.`;
+              const optional = (
+                <Label color={getPresentedColor(step, current)} variant="soft" sx={{ mt: 0.5 }}>
+                  {stateLabel}
+                </Label>
+              );
+              const title = (
+                <Typography
+                  variant="subtitle2"
+                  color={current ? 'primary.main' : 'text.primary'}
+                  sx={{ overflowWrap: 'anywhere' }}
                 >
-                  {title}
-                </StepButton>
-              ) : (
-                <Tooltip title={reason} arrow describeChild>
-                  <Box
-                    tabIndex={0}
-                    role="group"
-                    aria-label={`${step.label}, ${getJourneyStateLabel(step)}. ${reason}`}
-                    sx={{ borderRadius: 1, cursor: 'help', '&:focus-visible': { outline: 2, outlineColor: 'primary.main' } }}
-                  >
-                    <StepLabel icon={icon} optional={optional}>
+                  {step.label}
+                </Typography>
+              );
+
+              return (
+                <Step
+                  key={step.id}
+                  ref={viewed ? viewedStepRef : undefined}
+                  completed={step.state === 'complete'}
+                  active={current}
+                  aria-current={current ? 'step' : undefined}
+                  data-viewed={viewed ? 'true' : undefined}
+                >
+                  {openable ? (
+                    <StepButton
+                      optional={optional}
+                      aria-controls="applicant-stage-panel"
+                      aria-pressed={viewed}
+                      onClick={() => onSelect(tab)}
+                      sx={
+                        viewed
+                          ? {
+                              bgcolor: 'action.selected',
+                              boxShadow: (theme) => `inset 0 0 0 1px ${theme.palette.primary.main}`,
+                            }
+                          : undefined
+                      }
+                    >
                       {title}
-                    </StepLabel>
-                  </Box>
-                </Tooltip>
-              )}
-            </Step>
-          );
-        })}
-      </Stepper>
+                    </StepButton>
+                  ) : (
+                    <Tooltip title={reason} arrow describeChild>
+                      <Box
+                        tabIndex={0}
+                        role="group"
+                        aria-label={`${step.label}, ${stateLabel}. ${reason}`}
+                        sx={{
+                          borderRadius: 1,
+                          py: 0.5,
+                          cursor: 'help',
+                          ...(viewed && {
+                            bgcolor: 'action.selected',
+                            boxShadow: (theme) => `inset 0 0 0 1px ${theme.palette.primary.main}`,
+                          }),
+                          '&:focus-visible': {
+                            outline: '2px solid',
+                            outlineColor: 'primary.main',
+                            outlineOffset: 2,
+                          },
+                        }}
+                      >
+                        <StepLabel optional={optional}>{title}</StepLabel>
+                      </Box>
+                    </Tooltip>
+                  )}
+                </Step>
+              );
+            })}
+          </Stepper>
+        )}
+      </Box>
     </Paper>
   );
 }

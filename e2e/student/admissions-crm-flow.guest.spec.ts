@@ -2203,7 +2203,7 @@ test.describe('Student admissions CRM E2E', () => {
     expect(decodeURIComponent(page.url())).not.toContain(taskTitle);
     expect(decodeURIComponent(page.url())).not.toContain(lead.primaryContactNo);
 
-    await applicantWorkspace.getByRole('button', { name: 'Add note' }).click();
+    await applicantWorkspace.getByRole('button', { name: 'Add Note' }).click();
     const note = applicantWorkspace.getByLabel('Note');
     await note.fill('Unsaved My Work follow-up note');
     await applicantWorkspace.getByRole('button', { name: 'Activity & Audit' }).click();
