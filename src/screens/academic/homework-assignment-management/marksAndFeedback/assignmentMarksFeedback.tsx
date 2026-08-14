@@ -12,14 +12,12 @@ import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   AssignmentStatus,
-  isEvaluationEnabled,
-  AssignmentSubmissionType,
   AssignmentEvaluationMethod,
   ASSIGNMENT_SUBMISSION_TYPE_LABELS,
 } from 'src/enums/assignment';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
@@ -106,15 +104,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
 
   const assignmentOptions =
     (assignmentData?.items || [])
-      .filter(
-        (assignment: AssignmentV2Dto) =>
-          assignment.status === AssignmentStatus.Published &&
-          assignment.submissionType !== AssignmentSubmissionType.NoSubmissionRequired &&
-          isEvaluationEnabled(
-            assignment.evaluationRequired,
-            assignment.evaluationMethod ?? assignment.defaultEvaluationMethod
-          )
-      )
+      .filter((assignment: AssignmentV2Dto) => assignment.status === AssignmentStatus.Published)
       .map((assignment: AssignmentV2Dto) => ({
         ...assignment,
         label: `${assignment.title} - ${ASSIGNMENT_SUBMISSION_TYPE_LABELS[assignment.submissionType]}`,

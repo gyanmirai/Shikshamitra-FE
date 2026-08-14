@@ -73,7 +73,7 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
 
   const homeworkOptions =
     (homeworkData?.items || [])
-      .filter((hw: any) => isPublishedTask(hw) && isEvaluationEnabledTask(hw))
+      .filter((hw: any) => isPublishedTask(hw))
       .map((hw: any) => ({
         id: hw.id,
         label: `${hw.title} · ${submissionTypeLabels[Number(hw.submissionType)] || 'Submission'}`,
@@ -233,8 +233,3 @@ const submissionTypeLabels: Record<number, string> = {
 
 const isPublishedTask = (task: any) =>
   Number(task?.status) === 1 || String(task?.status || '').toLowerCase() === 'published';
-
-const isEvaluationEnabledTask = (task: any) =>
-  Number(task?.submissionType) !== 3 &&
-  task?.evaluationRequired !== false &&
-  Number(task?.defaultEvaluationMethod) !== 5;
