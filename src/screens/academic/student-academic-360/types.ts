@@ -219,8 +219,10 @@ export const readOptionalText = (value: unknown): string => {
   return '';
 };
 
-export const getStudentId = (student: Academic360StudentRow): string =>
-  readOptionalText(student.studentId ?? student.id);
+export const getStudentId = (student: Academic360StudentRow): string => {
+  const studentId = readOptionalText(student.studentId).trim();
+  return studentId || readOptionalText(student.id).trim();
+};
 
 export const getStudentName = (student: Academic360StudentRow): string => {
   const directName = readOptionalText(student.studentName);

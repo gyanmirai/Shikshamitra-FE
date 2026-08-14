@@ -253,6 +253,7 @@ export type AssignSubstitutePayload = {
 };
 
 export type CreateTeacherAvailabilityPayload = {
+  academicYearId?: string;
   teacherId?: string;
   teacherName: string;
   departmentName?: string;

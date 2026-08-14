@@ -37,6 +37,7 @@ import { todayIso, lessonPlanTemplates, teachingMethodOptions } from '../lessonP
 
 import type { LessonSource, LessonPlanRow } from '../lessonPlanData';
 import { GlobalIcons } from 'src/utils/icons';
+import { resolvePreviousProgress } from '../lessonPlanProgress';
 
 export type LessonFormState = {
   id?: string;
@@ -253,30 +254,6 @@ const hasDuplicateLessonTopic = (form: LessonFormState, lessonPlans: LessonPlanR
   });
 };
 
-const resolvePreviousProgress = (
-  lessonPlans: LessonPlanRow[],
-  chapterId?: string,
-  topic?: string
-) => {
-  if (!chapterId) return 0;
-
-  const normalizedTopic = normalizeText(topic);
-  const matchingPlans = lessonPlans.filter((plan) => plan.chapterId === chapterId);
-  const topicMatches = normalizedTopic
-    ? matchingPlans.filter((plan) => normalizeText(plan.topic) === normalizedTopic)
-    : [];
-  const candidates = topicMatches.length > 0 ? topicMatches : matchingPlans;
-
-  return candidates.reduce((progress, plan) => {
-    const completedProgress =
-      plan.actualCompletionPercentage ||
-      plan.existingChapterProgress ||
-      plan.plannedCompletionPercentage ||
-      0;
-    return Math.max(progress, completedProgress);
-  }, 0);
-};
-
 const AddLessonPlanModal = ({
   open,
   editData,
@@ -451,7 +428,12 @@ const AddLessonPlanModal = ({
 
   const handleChapterChange = (chapterName: string) => {
     const selectedCh = chapterOptions.find((opt) => opt.value === chapterName);
-    const previousProgress = resolvePreviousProgress(lessonPlans, selectedCh?.id, form.topic);
+    const previousProgress = resolvePreviousProgress(
+      lessonPlans,
+      selectedCh?.id,
+      form.divisionId,
+      form.topic
+    );
     setForm((prev) => ({
       ...prev,
       chapterName,
@@ -461,7 +443,12 @@ const AddLessonPlanModal = ({
   };
 
   const handleTopicBlur = () => {
-    const previousProgress = resolvePreviousProgress(lessonPlans, form.chapterId, form.topic);
+    const previousProgress = resolvePreviousProgress(
+      lessonPlans,
+      form.chapterId,
+      form.divisionId,
+      form.topic
+    );
     if (previousProgress > 0) {
       setForm((prev) => ({
         ...prev,
