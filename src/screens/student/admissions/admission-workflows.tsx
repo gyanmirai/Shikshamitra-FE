@@ -24,8 +24,8 @@ import {
   useValidateAdmissionWorkflowMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { AdmissionWorkflowDialog } from './admission-workflow-dialog';
 import { AdmissionQueryError } from './admission-query-error';
+import { AdmissionWorkflowDialog } from './admission-workflow-dialog';
 
 const status = ['Draft', 'Published', 'Archived'];
 export default function AdmissionWorkflowsScreen() {
@@ -156,7 +156,13 @@ export default function AdmissionWorkflowsScreen() {
           ) : undefined
         }
       />
-      {isError && <AdmissionQueryError onRetry={() => void refetch()} />}
+      {isError && (
+        <AdmissionQueryError
+          onRetry={() => {
+            refetch();
+          }}
+        />
+      )}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-workflows"

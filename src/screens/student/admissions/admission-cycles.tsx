@@ -26,8 +26,8 @@ import {
   usePublishAdmissionCycleMutation,
 } from 'src/redux/student/admissions/admission-cycles-api';
 
-import { AdmissionCycleDialog } from './admission-cycle-dialog';
 import { AdmissionQueryError } from './admission-query-error';
+import { AdmissionCycleDialog } from './admission-cycle-dialog';
 
 const statusLabels: Record<AdmissionCycleStatus, string> = {
   0: 'Draft',
@@ -202,7 +202,13 @@ export default function AdmissionCyclesScreen() {
           </Button>
         }
       />
-      {isError && <AdmissionQueryError onRetry={() => void refetch()} />}
+      {isError && (
+        <AdmissionQueryError
+          onRetry={() => {
+            refetch();
+          }}
+        />
+      )}
       {!currentYear?.id && (
         <Typography color="text.secondary">
           Select an academic year before creating an admission cycle.

@@ -27,8 +27,8 @@ import {
   useSetAdmissionOfferingActiveMutation,
 } from 'src/redux/student/admissions/admission-cycles-api';
 
-import { AdmissionOfferingDialog } from './admission-offering-dialog';
 import { AdmissionQueryError } from './admission-query-error';
+import { AdmissionOfferingDialog } from './admission-offering-dialog';
 
 export default function AdmissionOfferingsScreen() {
   const dialog = useBoolean();
@@ -188,7 +188,13 @@ export default function AdmissionOfferingsScreen() {
           </Button>
         }
       />
-      {isError && <AdmissionQueryError onRetry={() => void refetch()} />}
+      {isError && (
+        <AdmissionQueryError
+          onRetry={() => {
+            refetch();
+          }}
+        />
+      )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         <CustomSelect
           options={cycles as AdmissionCycle[]}

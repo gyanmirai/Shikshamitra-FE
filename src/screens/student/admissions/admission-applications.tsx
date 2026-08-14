@@ -11,6 +11,7 @@ import {
   type AdmissionApplication,
   useGetAdmissionApplicationsQuery,
 } from 'src/redux/student/admissions/admission-applications-api';
+
 import { AdmissionQueryError } from './admission-query-error';
 
 export default function AdmissionApplicationsScreen() {
@@ -69,7 +70,13 @@ export default function AdmissionApplicationsScreen() {
         ]}
         sx={{ mb: 3 }}
       />
-      {isError && <AdmissionQueryError onRetry={() => void refetch()} />}
+      {isError && (
+        <AdmissionQueryError
+          onRetry={() => {
+            refetch();
+          }}
+        />
+      )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1 }}>
         <TextField
           size="small"

@@ -167,7 +167,13 @@ export default function AdmissionFormsScreen() {
           ) : undefined
         }
       />
-      {isError && <AdmissionQueryError onRetry={() => void refetch()} />}
+      {isError && (
+        <AdmissionQueryError
+          onRetry={() => {
+            refetch();
+          }}
+        />
+      )}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-forms"

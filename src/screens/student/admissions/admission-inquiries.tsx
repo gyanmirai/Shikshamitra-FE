@@ -24,8 +24,8 @@ import {
   useMarkAdmissionInquiryContactedMutation,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import AdmissionInquiryDialog from './admission-inquiry-dialog';
 import { AdmissionQueryError } from './admission-query-error';
+import AdmissionInquiryDialog from './admission-inquiry-dialog';
 
 export default function AdmissionInquiriesScreen() {
   const [search, setSearch] = useState('');
@@ -154,7 +154,13 @@ export default function AdmissionInquiriesScreen() {
         }
       />
       <AdmissionInquiryDialog open={createDialog.value} onClose={createDialog.onFalse} />
-      {isError && <AdmissionQueryError onRetry={() => void refetch()} />}
+      {isError && (
+        <AdmissionQueryError
+          onRetry={() => {
+            refetch();
+          }}
+        />
+      )}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
         <TextField
           label="Search applicant or phone"
