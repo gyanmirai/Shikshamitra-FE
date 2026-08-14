@@ -390,7 +390,7 @@ const mapApiTeacherAvailability = (item: ApiTeacherAvailabilityRow) => ({
   reason: item.reason,
   isFullDay: item.isFullDay,
   affectedLectureCount: item.affectedLectureCount,
-  canCreateSubstitution: item.canCreateSubstitution,
+  canCreateSubstitution: item.canCreateSubstitution === true,
   autoCreateSubstitutions: item.autoCreateSubstitutions,
   notifyLeadership: item.notifyLeadership,
   activeSubstitutionStatuses: (item.activeSubstitutionStatuses ?? [])
@@ -459,7 +459,6 @@ const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
 
 const getAvailabilityActionLabel = (availability: TeacherAvailabilityRow) => {
   if (availability.affectedLectureCount <= 0) return 'No affected lectures';
-  if (availability.canCreateSubstitution !== false) return 'Create substitution';
 
   const statuses = availability.activeSubstitutionStatuses ?? [];
   if (statuses.includes('Pending')) return 'Pending assignment';
@@ -470,6 +469,7 @@ const getAvailabilityActionLabel = (availability: TeacherAvailabilityRow) => {
   if (statuses.includes('Completed')) return 'Completed';
   if (statuses.includes('Rejected')) return 'Rejected';
   if (statuses.includes('Cancelled')) return 'Cancelled';
+  if (availability.canCreateSubstitution === true) return 'Create substitution';
   return 'Already created';
 };
 
@@ -1752,7 +1752,11 @@ const SubstitutionManagementScreen = () => {
 
 
   const handleCreateSubstitutionFromAvailability = async (row: TeacherAvailabilityRow) => {
-    if (row.affectedLectureCount <= 0 || row.canCreateSubstitution === false) {
+    if (
+      row.affectedLectureCount <= 0 ||
+      row.canCreateSubstitution !== true ||
+      (row.activeSubstitutionStatuses?.length ?? 0) > 0
+    ) {
       shikshaMitraToast.error({
         message: 'Substitution is already created or no affected lecture is available.',
       });
@@ -1848,18 +1852,23 @@ const SubstitutionManagementScreen = () => {
     const payloadDate = toDateTimeOffset(availabilityForm.availabilityDate.startOf('day'));
     const overlapsExisting = teacherAvailability.some(
       (item) =>
-        item.teacherName === availabilityForm.teacherName &&
+        (item.teacherId && availabilityForm.teacherId
+          ? item.teacherId === availabilityForm.teacherId
+          : item.teacherName === availabilityForm.teacherName) &&
         item.availabilityDate === date &&
         isOverlap(startTime, endTime, item.startTime, item.endTime)
     );
 
     if (overlapsExisting) {
-      setAvailabilityError('This teacher already has an overlapping unavailable record.');
+      setAvailabilityError(
+        'Teacher is already marked unavailable for the selected date and time. Please choose a different time slot.'
+      );
       return;
     }
 
     try {
       const created = await createTeacherAvailability({
+        academicYearId: currentYear?.id || undefined,
         teacherId: availabilityForm.teacherId || undefined,
         teacherName: availabilityForm.teacherName,
         departmentName: availabilityForm.departmentName || 'Academic',
@@ -1913,8 +1922,7 @@ const SubstitutionManagementScreen = () => {
         }
       }
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unable to save teacher availability.';
+      const message = resolveDutyActionErrorMessage(error, 'Unable to save teacher availability.');
       setAvailabilityError(message);
     }
   }, [
@@ -1925,6 +1933,7 @@ const SubstitutionManagementScreen = () => {
     createTeacherAvailability,
     getAffectedLectures,
     teacherAvailability,
+    currentYear?.id,
   ]);
 
   const handleCloseCreateDialog = useCallback(() => {
@@ -2487,23 +2496,25 @@ const SubstitutionManagementScreen = () => {
       sticky: true,
       stickyPosition: 'right' as const,
       render: (_value: any, row: any) => {
-        const isDisabled =
-          row.affectedLectureCount <= 0 || row.canCreateSubstitution === false;
+        const actionLabel = getAvailabilityActionLabel(row);
+        const hasExistingSubstitution = (row.activeSubstitutionStatuses?.length ?? 0) > 0;
+
+        if (actionLabel !== 'Create substitution') {
+          return (
+            <Label color={hasExistingSubstitution ? 'success' : 'default'} variant="soft">
+              {actionLabel}
+            </Label>
+          );
+        }
 
         return (
           <LoadingButton
             size="small"
             variant="outlined"
-            disabled={isDisabled}
-            startIcon={
-              <Iconify
-                icon={isDisabled ? 'mdi:check' : 'mdi:plus-circle-outline'}
-                width={16}
-              />
-            }
+            startIcon={<Iconify icon="mdi:plus-circle-outline" width={16} />}
             onClick={() => handleCreateSubstitutionFromAvailability(row)}
           >
-            {isDisabled ? 'Already created' : 'Create Substitution'}
+            Create Substitution
           </LoadingButton>
         );
       },
