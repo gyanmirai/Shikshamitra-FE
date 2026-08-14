@@ -326,7 +326,7 @@ const RubricConfigScreen = () => {
                 }
               >
                 {selectedData?.appliesToWorkType !== undefined &&
-                selectedData?.appliesToWorkType !== null
+                  selectedData?.appliesToWorkType !== null
                   ? RUBRIC_WORK_TYPE_LABELS[selectedData.appliesToWorkType]
                   : 'Homework & Assignment'}
               </Label>
@@ -338,7 +338,7 @@ const RubricConfigScreen = () => {
               >
                 {selectedData
                   ? RUBRIC_SCORING_MODEL_LABELS[selectedData.scoringModel] ||
-                    selectedData.scoringModel
+                  selectedData.scoringModel
                   : 'Points-Based'}
               </Label>
               <Label
@@ -474,44 +474,44 @@ const RubricConfigScreen = () => {
 
                         {(previewCriterion.studentDescription ||
                           previewCriterion.teacherGuidance) && (
-                          <Stack
-                            spacing={1}
-                            sx={{
-                              mt: 1.5,
-                              pt: 1.5,
-                              borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
-                            }}
-                          >
-                            {previewCriterion.studentDescription && (
-                              <Stack direction="row" gap={1} alignItems="flex-start">
-                                <Iconify
-                                  icon="solar:user-speak-bold-duotone"
-                                  sx={{ color: 'text.disabled', mt: 0.25 }}
-                                  width={16}
-                                  height={16}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  <strong>Student Guidance:</strong>{' '}
-                                  {previewCriterion.studentDescription}
-                                </Typography>
-                              </Stack>
-                            )}
-                            {previewCriterion.teacherGuidance && (
-                              <Stack direction="row" gap={1} alignItems="flex-start">
-                                <Iconify
-                                  icon="solar:key-bold-duotone"
-                                  sx={{ color: 'text.disabled', mt: 0.25 }}
-                                  width={16}
-                                  height={16}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  <strong>Teacher Guidance:</strong>{' '}
-                                  {previewCriterion.teacherGuidance}
-                                </Typography>
-                              </Stack>
-                            )}
-                          </Stack>
-                        )}
+                            <Stack
+                              spacing={1}
+                              sx={{
+                                mt: 1.5,
+                                pt: 1.5,
+                                borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
+                              }}
+                            >
+                              {previewCriterion.studentDescription && (
+                                <Stack direction="row" gap={1} alignItems="flex-start">
+                                  <Iconify
+                                    icon="solar:user-speak-bold-duotone"
+                                    sx={{ color: 'text.disabled', mt: 0.25 }}
+                                    width={16}
+                                    height={16}
+                                  />
+                                  <Typography variant="caption" color="text.secondary">
+                                    <strong>Student Guidance:</strong>{' '}
+                                    {previewCriterion.studentDescription}
+                                  </Typography>
+                                </Stack>
+                              )}
+                              {previewCriterion.teacherGuidance && (
+                                <Stack direction="row" gap={1} alignItems="flex-start">
+                                  <Iconify
+                                    icon="solar:key-bold-duotone"
+                                    sx={{ color: 'text.disabled', mt: 0.25 }}
+                                    width={16}
+                                    height={16}
+                                  />
+                                  <Typography variant="caption" color="text.secondary">
+                                    <strong>Teacher Guidance:</strong>{' '}
+                                    {previewCriterion.teacherGuidance}
+                                  </Typography>
+                                </Stack>
+                              )}
+                            </Stack>
+                          )}
                       </Stack>
                     </Stack>
 

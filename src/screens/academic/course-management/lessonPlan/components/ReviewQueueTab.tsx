@@ -194,19 +194,10 @@ export const ReviewQueueTab = ({
       let success = false;
       if (review.action === 'approve') {
         success = await onApprove(review.target, review.comment, review.updateProgress);
-        if (success) {
-          shikshaMitraToast.success({ message: 'Lesson plan approved successfully.' });
-        }
       } else if (review.action === 'reject') {
         success = await onReject(review.target, review.comment);
-        if (success) {
-          shikshaMitraToast.success({ message: 'Lesson plan rejected.' });
-        }
       } else {
         success = await onRequestChanges(review.target, review.comment);
-        if (success) {
-          shikshaMitraToast.warning({ message: 'Changes requested from teacher.' });
-        }
       }
       if (success) {
         closeReview();
@@ -859,7 +850,6 @@ export const ReviewQueueTab = ({
               onClick={submitReview}
             />
           </DialogActions>
-
         </BackPopUpChecked>
       </CustomDialog>
 

@@ -765,23 +765,28 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                     />
                   </Grid>
                   <Grid size={{ xs: 8, md: 2 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      type="number"
+                    <CustomSelect
                       label={
                         formik.values.scoringModel === RubricScoringModel.WeightedPercentage
                           ? 'Weight % *'
                           : 'Max Score *'
                       }
-                      name={`criteria[${index}].maxMarks`}
+                      options={formik.values.performanceLevels
+                        .filter((level: RubricPerformanceLevelFormValue) => level.score !== '')
+                        .map((level: RubricPerformanceLevelFormValue) => ({
+                          label: level.label ? `${level.label} (${level.score})` : level.score,
+                          value: level.score,
+                        }))}
+                      labelKey="label"
+                      valueKey="value"
                       value={criterion.maxMarks}
-                      onBlur={formik.handleBlur}
-                      onChange={(event) =>
-                        updateCriterion(formik, index, 'maxMarks', event.target.value)
+                      onBlur={() => formik.setFieldTouched(`criteria[${index}].maxMarks`, true)}
+                      onChange={(value) =>
+                        updateCriterion(formik, index, 'maxMarks', String(value))
                       }
                       error={hasFormikError(formik, `criteria[${index}].maxMarks`)}
                       helperText={getFormikError(formik, `criteria[${index}].maxMarks`)}
+                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     />
                   </Grid>
                   <Grid size={{ xs: 4, md: 2 }}>

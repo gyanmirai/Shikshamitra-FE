@@ -7,7 +7,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, IconButton } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -381,29 +381,29 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
             ...(requiresMarks
               ? [
-                  {
-                    id: 'totalMarks',
-                    label: 'Total Marks',
-                    align: 'left' as const,
-                    minWidth: 130,
-                    filterType: 'number' as const,
-                  },
-                  {
-                    id: 'marks',
-                    label: 'Obtained Marks',
-                    filterType: 'number' as const,
-                    minWidth: 150,
-                    align: 'left' as const,
-                    render: (value: unknown) =>
-                      value !== null && value !== undefined ? (
-                        <Typography variant="caption" fontSize="13px">
-                          {String(value)}
-                        </Typography>
-                      ) : (
-                        <Typography variant="caption">-</Typography>
-                      ),
-                  },
-                ]
+                {
+                  id: 'totalMarks',
+                  label: 'Total Marks',
+                  align: 'left' as const,
+                  minWidth: 130,
+                  filterType: 'number' as const,
+                },
+                {
+                  id: 'marks',
+                  label: 'Obtained Marks',
+                  filterType: 'number' as const,
+                  minWidth: 150,
+                  align: 'left' as const,
+                  render: (value: unknown) =>
+                    value !== null && value !== undefined ? (
+                      <Typography variant="caption" fontSize="13px">
+                        {String(value)}
+                      </Typography>
+                    ) : (
+                      <Typography variant="caption">-</Typography>
+                    ),
+                },
+              ]
               : []),
             {
               id: 'feedback',
@@ -532,28 +532,56 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           }, 300);
         }}
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {usesRubric
-                ? 'Rubric Evaluation'
-                : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${
-                    requiresMarks ? 'Feedback & Marks' : 'Feedback'
-                  }`}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                usesRubric
-                  ? "Evaluate the student's submission with the configured rubric."
-                  : requiresMarks
-                    ? "Provide feedback and marks for the student's assignment submission."
-                    : "Provide feedback for the student's assignment submission."
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+          <Box display="flex" flexDirection="row" alignItems="center" justifyContent="space-between" sx={{ width: 1, gap: 2 }}>
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">
+                {usesRubric
+                  ? 'Rubric Evaluation'
+                  : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${
+                      requiresMarks ? 'Feedback & Marks' : 'Feedback'
+                    }`}
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title={
+                  usesRubric
+                    ? "Evaluate the student's submission with the configured rubric."
+                    : requiresMarks
+                      ? "Provide feedback and marks for the student's assignment submission."
+                      : "Provide feedback for the student's assignment submission."
+                }
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+            <Stack direction="row" spacing={1} sx={{ mr: 1, flexShrink: 0 }}>
+              <CustomTooltip title="Previous Student" arrow>
+                <span>
+                  <IconButton
+                    size="small"
+                    onClick={() => moveStudent(-1)}
+                    disabled={!(selectedIndex > 0)}
+                    sx={{ border: (theme) => `1px solid ${theme.palette.divider}` }}
+                  >
+                    <Iconify icon="solar:alt-arrow-left-bold" width={18} />
+                  </IconButton>
+                </span>
+              </CustomTooltip>
+              <CustomTooltip title="Next Student" arrow>
+                <span>
+                  <IconButton
+                    size="small"
+                    onClick={() => moveStudent(1)}
+                    disabled={!(selectedIndex >= 0 && selectedIndex < filteredData.length - 1)}
+                    sx={{ border: (theme) => `1px solid ${theme.palette.divider}` }}
+                  >
+                    <Iconify icon="solar:alt-arrow-right-bold" width={18} />
+                  </IconButton>
+                </span>
+              </CustomTooltip>
+            </Stack>
           </Box>
         }
         maxWidth="sm"

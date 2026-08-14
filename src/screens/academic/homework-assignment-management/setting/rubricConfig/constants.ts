@@ -15,6 +15,7 @@ export const RUBRIC_STATUS_LABELS: Record<RubricStatus, string> = {
 export const RUBRIC_WORK_TYPE_LABELS: Record<RubricWorkType, string> = {
   [RubricWorkType.Homework]: 'Homework',
   [RubricWorkType.Assignment]: 'Assignment',
+  [RubricWorkType.Both]: 'Both',
 };
 
 export const RUBRIC_SCORING_MODEL_LABELS: Record<RubricScoringModel, string> = {
@@ -45,6 +46,7 @@ export const RUBRIC_WORK_TYPE_OPTIONS = [
     value: RubricWorkType.Assignment,
     label: RUBRIC_WORK_TYPE_LABELS[RubricWorkType.Assignment],
   },
+  { value: RubricWorkType.Both, label: RUBRIC_WORK_TYPE_LABELS[RubricWorkType.Both] },
 ];
 
 export const RUBRIC_SCORING_MODEL_OPTIONS = [
