@@ -8,12 +8,14 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
 import { GlobalIcons } from 'src/utils/icons';
+import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -26,21 +28,24 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
-  Box,
-  Stack,
-  Button,
-  TextField,
-  Typography,
-  DialogActions,
-  InputAdornment,
-} from '@mui/material';
-import {
   pfApi,
   useGetPFQuery,
   useAddPFMutation,
   useUpdatePFMutation,
   useDeletePFMutation,
 } from 'src/redux/PF/PFApi';
+import {
+  Box,
+  Stack,
+  Button,
+  Switch,
+  MenuItem,
+  TextField,
+  Typography,
+  DialogActions,
+  InputAdornment,
+  FormControlLabel,
+} from '@mui/material';
 
 interface IPF {
   id: string;
@@ -53,6 +58,12 @@ interface IPF {
   name: string;
   employeePercentage: number;
   employerPercentage: number;
+  contributionBasis: number;
+  wageCeiling?: number | null;
+  effectiveFrom: string;
+  effectiveTo?: string | null;
+  isActive: boolean;
+  version: number;
 }
 const PF = () => {
   const [showConfirm, ChangesConfirmDialog] = useConfirmDialog();
@@ -209,6 +220,37 @@ const PF = () => {
           { id: 'employeePercentage', label: 'Employee Percentage', filterType: 'number' },
           { id: 'employerPercentage', label: 'Employer Percentage', filterType: 'number' },
           {
+            id: 'contributionBasis',
+            label: 'Contribution basis',
+            render(value) {
+              return value === 1 ? 'Basic + DA' : 'Basic';
+            },
+          },
+          {
+            id: 'wageCeiling',
+            label: 'Wage ceiling',
+            render(value) {
+              const numericValue = Number(value);
+              return value == null || value === '' || !Number.isFinite(numericValue)
+                ? 'No ceiling'
+                : formatCurrency(numericValue);
+            },
+          },
+          {
+            id: 'effectiveFrom',
+            label: 'Effective from',
+            render(value) {
+              return value ? fDate(value) : '-';
+            },
+          },
+          {
+            id: 'isActive',
+            label: 'Status',
+            render(value) {
+              return value ? 'Active' : 'Inactive';
+            },
+          },
+          {
             id: 'action',
             label: 'Action',
             isSort: false,
@@ -286,6 +328,11 @@ const PFForm = ({
       name: editData?.name || '',
       employeePercentage: editData?.employeePercentage || '',
       employerPercentage: editData?.employerPercentage || '',
+      contributionBasis: editData?.contributionBasis ?? 0,
+      wageCeiling: editData?.wageCeiling ?? '',
+      effectiveFrom: editData?.effectiveFrom?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+      effectiveTo: editData?.effectiveTo?.slice(0, 10) || '',
+      isActive: editData?.isActive ?? true,
     },
     validationSchema: Yup.object().shape({
       code: Yup.string().required('Code is required'),
@@ -300,13 +347,32 @@ const PFForm = ({
         .required('Employer Percentage is required')
         .min(0, 'Employer Percentage cannot be less than 0')
         .max(100, 'Employer Percentage cannot be more than 100'),
+      contributionBasis: Yup.number().oneOf([0, 1]).required('Contribution basis is required'),
+      wageCeiling: Yup.number()
+        .nullable()
+        .transform((value, originalValue) => (originalValue === '' ? null : value))
+        .min(0, 'Wage ceiling cannot be negative'),
+      effectiveFrom: Yup.string().required('Effective from is required'),
+      effectiveTo: Yup.string()
+        .nullable()
+        .test(
+          'after-effective-from',
+          'Effective to must be on or after effective from',
+          (value, context) =>
+            !value || !context.parent.effectiveFrom || value >= context.parent.effectiveFrom
+        ),
     }),
     onSubmit: async (values) => {
       try {
+        const body = {
+          ...values,
+          wageCeiling: values.wageCeiling === '' ? null : Number(values.wageCeiling),
+          effectiveTo: values.effectiveTo || null,
+        };
         if (editData) {
           await updatePF({
             body: {
-              ...values,
+              ...body,
               academicYearId: currentYear?.id,
             },
             id: editData.id,
@@ -315,7 +381,7 @@ const PFForm = ({
             message: `PF rule "${values.name}" updated successfully`,
           });
         } else {
-          await addPF({ body: values, academicYearId: currentYear?.id }).unwrap();
+          await addPF({ body, academicYearId: currentYear?.id }).unwrap();
           shikshaMitraToast.success({
             message: `PF rule "${values.name}" created successfully`,
           });
@@ -445,6 +511,75 @@ const PFForm = ({
                 }
               />
             </ShakingTextField>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Contribution basis"
+              name="contributionBasis"
+              value={formik.values.contributionBasis}
+              onChange={formik.handleChange}
+            >
+              <MenuItem value={0}>Basic</MenuItem>
+              <MenuItem value={1}>Basic + Dearness Allowance</MenuItem>
+            </TextField>
+            <TextField
+              size="small"
+              fullWidth
+              label="Wage ceiling"
+              name="wageCeiling"
+              type="number"
+              value={formik.values.wageCeiling}
+              onChange={formik.handleChange}
+              error={formik.touched.wageCeiling && Boolean(formik.errors.wageCeiling)}
+              helperText={
+                formik.touched.wageCeiling && formik.errors.wageCeiling
+                  ? String(formik.errors.wageCeiling)
+                  : 'Leave blank for no ceiling'
+              }
+              inputProps={{ min: 0, step: 0.01 }}
+            />
+            <TextField
+              size="small"
+              fullWidth
+              type="date"
+              label="Effective from"
+              name="effectiveFrom"
+              value={formik.values.effectiveFrom}
+              onChange={formik.handleChange}
+              InputLabelProps={{ shrink: true }}
+              error={formik.touched.effectiveFrom && Boolean(formik.errors.effectiveFrom)}
+              helperText={
+                formik.touched.effectiveFrom && formik.errors.effectiveFrom
+                  ? String(formik.errors.effectiveFrom)
+                  : ''
+              }
+            />
+            <TextField
+              size="small"
+              fullWidth
+              type="date"
+              label="Effective to"
+              name="effectiveTo"
+              value={formik.values.effectiveTo}
+              onChange={formik.handleChange}
+              InputLabelProps={{ shrink: true }}
+              error={formik.touched.effectiveTo && Boolean(formik.errors.effectiveTo)}
+              helperText={
+                formik.touched.effectiveTo && formik.errors.effectiveTo
+                  ? String(formik.errors.effectiveTo)
+                  : 'Optional'
+              }
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formik.values.isActive}
+                  onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
+                />
+              }
+              label="Active rule"
+            />
           </Stack>
         </DialogScrollContent>
       </BackPopUpChecked>

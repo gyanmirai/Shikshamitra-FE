@@ -19,11 +19,6 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Grid, Card, Paper, Button, Typography, DialogActions } from '@mui/material';
 import { RenderComponents } from 'src/screens/hr/employee/employee-form-fields/PayrollFields';
 import {
-  isSalaryComponentFixed,
-  toApplicableMonthPayload,
-  getSalaryComponentPayloadAmount,
-} from 'src/screens/hr/employee/salary-utils';
-import {
   type EmployeeOption,
   buildEmployeeSelectOptions,
 } from 'src/screens/hr/leave-request/leave-request.utils';
@@ -31,6 +26,13 @@ import {
   useGetEmployeeSalaryStructureQuery,
   useUpdateEmployeeSalaryStructureMutation,
 } from 'src/redux/hr/employee-salary-structure-api';
+import {
+  isSalaryComponentFixed,
+  toApplicableMonthPayload,
+  getSalaryComponentPayloadAmount,
+} from 'src/screens/hr/employee/salary-utils';
+
+import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 
 const EmployeeSalaryStructureScreen = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(null);
@@ -258,6 +260,14 @@ const SalaryStructureEdit = ({
     initialValues: {
       earningComponents: [] as any[],
       deductionComponents: [] as any[],
+      pfRule: '',
+      quotedSalaryBasis: '',
+      quotedMonthlyAmount: null as number | null,
+      sourceSalaryTemplateId: null as string | null,
+      sourceSalaryTemplateVersionId: null as string | null,
+      sourceSalaryTemplateVersion: null as number | null,
+      salaryGeneratedAt: null as string | null,
+      wasModifiedAfterGeneration: false,
     },
     validationSchema: Yup.object({
       earningComponents: Yup.array().of(
@@ -294,7 +304,10 @@ const SalaryStructureEdit = ({
           amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
+          usesMasterValue: item?.usesMasterValue,
           applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
+          semanticType: item?.semanticType || 'Ordinary',
+          statutoryRuleId: item?.statutoryRuleId || null,
         })),
         deductionComponents: values.deductionComponents.map((item: any) => ({
           id: item?.id && item?.id !== item?.componentId ? item.id : null,
@@ -303,8 +316,19 @@ const SalaryStructureEdit = ({
           amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
+          usesMasterValue: item?.usesMasterValue,
           applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
+          semanticType: item?.semanticType || 'Ordinary',
+          statutoryRuleId: item?.statutoryRuleId || null,
         })),
+        pfRuleId: values.pfRule || null,
+        quotedSalaryBasis: values.quotedSalaryBasis || null,
+        quotedMonthlyAmount: values.quotedMonthlyAmount,
+        sourceSalaryTemplateId: values.sourceSalaryTemplateId,
+        sourceSalaryTemplateVersionId: values.sourceSalaryTemplateVersionId,
+        sourceSalaryTemplateVersion: values.sourceSalaryTemplateVersion,
+        salaryGeneratedAt: values.salaryGeneratedAt,
+        wasModifiedAfterGeneration: values.wasModifiedAfterGeneration,
       };
 
       try {
@@ -321,6 +345,14 @@ const SalaryStructureEdit = ({
       formik.setValues({
         earningComponents: salaryStructure?.earningComponents ?? [],
         deductionComponents: salaryStructure?.deductionComponents ?? [],
+        pfRule: salaryStructure?.pfRuleId ?? '',
+        quotedSalaryBasis: salaryStructure?.quotedSalaryBasis ?? '',
+        quotedMonthlyAmount: salaryStructure?.quotedMonthlyAmount ?? null,
+        sourceSalaryTemplateId: salaryStructure?.sourceSalaryTemplateId ?? null,
+        sourceSalaryTemplateVersionId: salaryStructure?.sourceSalaryTemplateVersionId ?? null,
+        sourceSalaryTemplateVersion: salaryStructure?.sourceSalaryTemplateVersion ?? null,
+        salaryGeneratedAt: salaryStructure?.salaryGeneratedAt ?? null,
+        wasModifiedAfterGeneration: salaryStructure?.wasModifiedAfterGeneration ?? false,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -334,6 +366,7 @@ const SalaryStructureEdit = ({
         ) : (
           <Paper elevation={2} sx={{ p: 1 }}>
             <Grid container spacing={3}>
+              <SalaryStructureBuilder formik={formik} />
               <Grid size={{ xs: 12, md: 6 }}>
                 <RenderComponents
                   formik={formik}

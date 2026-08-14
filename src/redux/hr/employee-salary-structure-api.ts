@@ -13,16 +13,34 @@ export interface EmployeeSalaryComponent {
   componentType?: number;
   dependOn?: number;
   applicableMonth?: string;
+  semanticType?: string;
+  statutoryRuleId?: string | null;
 }
 
 export interface EmployeeSalaryStructureResponse {
   earningComponents: EmployeeSalaryComponent[];
   deductionComponents: EmployeeSalaryComponent[];
+  pfRuleId?: string | null;
+  quotedSalaryBasis?: string | null;
+  quotedMonthlyAmount?: number | null;
+  sourceSalaryTemplateId?: string | null;
+  sourceSalaryTemplateVersionId?: string | null;
+  sourceSalaryTemplateVersion?: number | null;
+  salaryGeneratedAt?: string | null;
+  wasModifiedAfterGeneration?: boolean;
 }
 
 export interface UpdateEmployeeSalaryStructureRequest {
   earningComponents: EmployeeSalaryComponent[];
   deductionComponents: EmployeeSalaryComponent[];
+  pfRuleId?: string | null;
+  quotedSalaryBasis?: string | null;
+  quotedMonthlyAmount?: number | null;
+  sourceSalaryTemplateId?: string | null;
+  sourceSalaryTemplateVersionId?: string | null;
+  sourceSalaryTemplateVersion?: number | null;
+  salaryGeneratedAt?: string | null;
+  wasModifiedAfterGeneration?: boolean;
 }
 
 export const employeeSalaryStructureApi = employeeApi.injectEndpoints({
@@ -38,7 +56,7 @@ export const employeeSalaryStructureApi = employeeApi.injectEndpoints({
       query: ({ employeeId, data }) => ({
         url: `/payroll/employees/${employeeId}/salary-structure`,
         method: 'PUT',
-        data,
+        body: data,
       }),
       invalidatesTags: [employeeType.salaryStructure],
     }),

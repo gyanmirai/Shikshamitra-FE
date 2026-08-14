@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-07-26
+updated_on: 2026-08-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -92,3 +92,4 @@ Each frontend HR change should satisfy these gates:
 | Backend contract | Backend [api.md](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) is still accurate |
 | Test             | Focused test or documented residual risk exists                                     |
 | Docs             | `npm run docs:hr:check` passes                                                      |
+Payroll salary-builder tests should cover default template selection, Gross and Take-home requests, PF applicability, calculation summaries, formula trace disclosure, temporary-component preservation, provenance, rule-controlled statutory rows, and template reapplication warnings.

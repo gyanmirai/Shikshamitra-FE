@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-08-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -50,3 +50,5 @@ Use these expectations when reviewing client behavior:
 
 Do not infer backend behavior from a client helper alone.
 Confirm request and response behavior in `../../../Shikshamitra-BE/docs/modules/hr/api.md` and backend `Application.Contracts/HR/**`.
+The salary-template RTK Query client is `src/redux/hr/salary-template-api.ts`.
+It owns template listing, calculation, version creation, publishing, default selection, cloning, and archiving through the shared authenticated API service.

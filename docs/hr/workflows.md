@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-07-26
+updated_on: 2026-08-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -119,3 +119,7 @@ Frontend workflows must respect backend data ownership:
 
 Do not add a route to docs as active navigation until `src/constants/hr-menus.ts` exposes it.
 If a page exists but menu access is commented or unclear, mark the workflow as partial.
+The Payroll onboarding step and dedicated Payroll Structure screen reuse the same salary builder.
+Users select a template, choose Gross or Take-home, enter the quoted monthly amount, select PF applicability and rule, calculate, review the formula trace, and apply the generated lines.
+Applying preserves temporary components, replaces recurring lines, stores provenance, and distinguishes editable ordinary lines from rule-controlled PF and professional-tax lines.
+Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
