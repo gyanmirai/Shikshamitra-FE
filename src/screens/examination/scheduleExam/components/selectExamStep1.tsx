@@ -638,7 +638,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
                         formik.setFieldValue('examName', value);
-                        formik.setFieldTouched('examName', true);
+                        formik.setFieldTouched('examName', false);
                       }}
                       onBlur={formik.handleBlur}
                       error={Boolean(formik.touched.examName && formik.errors.examName)}

@@ -19,6 +19,7 @@ export enum RubricEvaluationStatus {
 export enum RubricWorkType {
   Homework = 0,
   Assignment = 1,
+  Both = 2,
 }
 
 export enum RubricScoringModel {
