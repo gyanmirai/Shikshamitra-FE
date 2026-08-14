@@ -197,6 +197,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     submitModeRef.current = mode;
   };
 
+  useEffect(() => {
+    // A reopened form must never inherit a previous Publish Now selection.
+    submitModeRef.current = 'draft';
+  }, [editData?.id]);
+
   const [addHomework, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHomeworkMutation,
@@ -1238,6 +1243,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           }}
         >
           <Button
+            type="button"
             variant="outlined"
             onClick={() => onClose(null, false)}
             color="inherit"
@@ -1247,6 +1253,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             Cancel
           </Button>
           <LoadingButton
+            type="button"
             variant="contained"
             size="small"
             loading={isUpdateLoading || isAddLoading || isRubricCopyLoading}
@@ -1257,25 +1264,25 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 height={18}
               />
             }
-            onClick={(e: any) => {
+            onClick={() => {
               setHomeworkSubmitMode('draft');
-              formik.handleSubmit(e);
+              formik.submitForm();
             }}
-            type="submit"
           >
             {editData ? 'Update Draft' : 'Save Draft'}
           </LoadingButton>
           {!editData && (
             <LoadingButton
+              type="button"
               variant="contained"
               size="small"
               loading={isUpdateLoading || isAddLoading || isPublishLoading || isRubricCopyLoading}
               startIcon={
                 <Iconify icon={shouldSchedule ? 'solar:calendar-mark-bold' : 'solar:upload-bold'} />
               }
-              onClick={(e: any) => {
+              onClick={() => {
                 setHomeworkSubmitMode(shouldSchedule ? 'schedule' : 'publish');
-                formik.handleSubmit(e);
+                formik.submitForm();
               }}
             >
               {shouldSchedule ? 'Schedule Publish' : 'Publish Now'}
