@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
-import type { IInquiryData } from 'src/types/student-enrollment';
+import type { IInquiryData } from 'src/types/student';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { Division, Standards, Organization } from 'src/types/school';
 

@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
-import type { IInquiryData } from 'src/types/student-enrollment';
+import type { IInquiryData } from 'src/types/student';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';

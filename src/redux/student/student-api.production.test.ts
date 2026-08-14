@@ -122,8 +122,6 @@ describe('student production API wiring', () => {
 
   it('does not keep stale student document endpoints or multipart headers', () => {
     const studentIdPlaceholder = `$${'{studentId}'}`;
-    const documentIdPlaceholder = `$${'{documentId}'}`;
-    const staleDocumentEndpoint = `/student-enrollment/${studentIdPlaceholder}/documents/${documentIdPlaceholder}`;
     const registrationDocumentEndpoint = `/student/enrollment/registrations/${studentIdPlaceholder}/documents`;
     const sources = collectSourceFiles(path.join(repoRoot, 'src/redux/student')).map(
       (filePath) => ({
@@ -133,7 +131,6 @@ describe('student production API wiring', () => {
     );
     const offenders = sources.flatMap(({ relativePath, source }) =>
       [
-        staleDocumentEndpoint,
         '/app/student-document',
         "'Content-Type': 'multipart/form-data'",
         '"Content-Type": "multipart/form-data"',

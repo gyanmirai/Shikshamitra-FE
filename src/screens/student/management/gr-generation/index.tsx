@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IInquiryData } from 'src/types/student-enrollment';
+import type { IInquiryData } from 'src/types/student';
 
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';

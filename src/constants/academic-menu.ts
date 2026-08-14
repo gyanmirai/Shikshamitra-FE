@@ -302,7 +302,6 @@ const academicModule = (isDdvs: boolean) => ({
             // {
             //   title: 'Teachers Assignment',
             //   path: '/academic/teacher',
-            //   _action: 'student-enrollment-teacher',
             //   shortcutKey: 'Alt+A+C+2',
             //   shortcutKeyName: 'Alt+A+C+2',
             // },
@@ -344,7 +343,6 @@ const academicModule = (isDdvs: boolean) => ({
             {
               title: 'Reports',
               path: academicPaths.curriculum.reports,
-              _action: 'student-enrollment-reports',
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
               permissionName: academicPermissions.curriculum.reports,

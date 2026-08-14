@@ -22,13 +22,7 @@ Apply these priorities in order.
 | Full-height table workspace                  | `src/screens/classManagement/assignElectiveSubject/index.tsx`                       |
 | Persistent tab workspace                     | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                                     |
 | Compact icon tab workspace                   | `src/screens/academic/course-management/lessonPlan/LessonPlanScreen.tsx`            |
-| Compact domain-filter navigator              | `src/screens/student/enrollment/admissions-crm/applicant-worklist-stage-filter.tsx` |
 | Shared table                                 | `src/components/customizabaleTable/index.tsx`                                       |
-| Enrollment page header                       | `src/screens/student/enrollment/admissions-crm/workspace-header.tsx`                |
-| Enrollment filters, empty states, and errors | `src/screens/student/enrollment/admissions-crm/workspace-table-patterns.tsx`        |
-| Enrollment settings task navigation          | `src/screens/student/enrollment/setting/enrollment-settings-page.tsx`               |
-| Guided settings editor drawer                | `src/screens/student/enrollment/setting/enrollment-settings-editor-drawer.tsx`      |
-| Public admissions shell                      | `src/screens/public/admissions-crm/public-admissions-shell.tsx`                     |
 
 These files are reference implementations, not exemptions from this contract.
 When a reference conflicts with this document, follow this document and improve the shared primitive.
@@ -60,6 +54,37 @@ Repeated actions use the same label, icon, order, and placement across related p
 Do not add a second page title inside the primary card.
 Do not place explanatory cards above a primary table when concise helper text or an information action is sufficient.
 Use progressive disclosure for advanced guidance and infrequent settings.
+
+## Strict screen ordering and table height
+
+- Always render `CustomBreadcrumbs` as the first visible content in the screen body, at the top of the page, before filters, tabs, cards, tables, charts, forms, or dialogs.
+- The breadcrumb must provide the page heading, meaningful `description`, real route links, and the appropriate page action or back behavior according to the Breadcrumb rules below.
+- Do not place a filter panel, alert, summary card, tab row, loading state, or table above the breadcrumb.
+- On a table-first screen, the layout must use a vertical flex chain: the breadcrumb/header remains at its natural height, optional context controls follow it, and the table wrapper fills all remaining available screen space.
+- The table wrapper and every flex parent between the screen root and `CustomizableTable` must use `minHeight: 0`; the table region must use `flex: 1` and `overflow: hidden` so the table owns scrolling.
+- `CustomizableTable` must fill the remaining height instead of using a fixed arbitrary height, leaving unused blank space, or pushing the page into document-level scrolling.
+- Do not use `calc(100vh - ...)`, fixed desktop `maxHeight`, or arbitrary minimum heights to imitate the available space. Use the shared shell’s available height and the documented flex-height pattern.
+- Mobile layouts may scroll naturally, but they must preserve the breadcrumb at the top of the content order and must not create horizontal document overflow.
+
+**Required table-screen shape**
+
+```tsx
+<Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
+  <CustomBreadcrumbs
+    heading="Records"
+    description="Review and manage records for this module."
+    links={[{ name: 'Module', href: modulePaths.dashboard }, { name: 'Records' }]}
+  />
+  <FilterPanel />
+  <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+    <CustomizableTable
+      wrapperProps={{ sx: { height: 1 } }}
+      tableContainerProps={{ sx: { height: 1 } }}
+      {...tableProps}
+    />
+  </Box>
+</Box>
+```
 
 ## Common implementation rules
 
@@ -1186,6 +1211,16 @@ Use `ShakingTextField` to provide the shared validation feedback animation aroun
 | Country, state, and city address data                       | Standard address components from `src/components/stardard-address/`                      |
 | General date interval                                       | `CustomDateRangePicker` wrapped in `ShakingTextField` when validation feedback is needed |
 | Academic-calendar-aware date or date-time                   | `AcademicDatePicker` or its academic date-time variant, only inside the academic module  |
+
+**Strict size rule**
+
+- Every form field must use the appropriate MUI field component or the documented shared field wrapper; do not use raw HTML inputs for application forms.
+- Every form field must use `size="small"`, including `TextField`, `Select`, `Autocomplete`, date pickers, numeric fields, search selects, and custom field wrappers.
+- Every form button must use `size="small"`, including `Button`, `LoadingButton`, icon buttons used inside form actions, and custom submit/cancel button wrappers.
+- Pass `size="small"` through the shared wrapper to the underlying MUI control. If a wrapper does not expose the size prop, extend the shared wrapper instead of omitting the rule in a feature.
+- Keep fields `fullWidth` when they occupy a form grid cell, and use the documented `Grid`/`Stack` layout with `spacing={1}`; do not compensate for the small control size with arbitrary margins.
+- Do not override a form field or button to `medium` or `large` for visual emphasis. Use layout, hierarchy, variant, label, or theme color to communicate importance.
+- Review every new form and dialog for missing `size="small"` before handoff; a field or form button without the small size is a contract violation.
 
 **Required form pattern**
 

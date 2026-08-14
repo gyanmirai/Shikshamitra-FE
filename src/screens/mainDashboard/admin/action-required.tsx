@@ -11,7 +11,6 @@ import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import Typography from '@mui/material/Typography';
-import { studentPaths } from 'src/constants/student-menu';
 import { financePaths } from 'src/constants/finance-menu';
 import { libraryPaths } from 'src/constants/library-menus';
 import { transportPaths } from 'src/constants/transport-menu';
@@ -19,14 +18,6 @@ import { transportPaths } from 'src/constants/transport-menu';
 // ----------------------------------------------------------------------
 
 const ACTION_REQUIRED = [
-  {
-    title: 'Pending Admission Approvals',
-    module: 'Student Enrollment',
-    count: 14,
-    icon: 'solar:user-plus-bold',
-    color: 'info' as const,
-    path: studentPaths.enrollment.activation,
-  },
   {
     title: 'Pending Fee Reconciliation',
     module: 'Finance',

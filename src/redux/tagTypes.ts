@@ -504,6 +504,17 @@ export const studentAdmissionType = {
   studentDocument: 'Student-Document',
 } as const;
 
+// ===== Admissions Platform API (reducerPath: api) =====
+export const studentAdmissionsCrmType = {
+  admissionCycle: 'AdmissionCycle',
+  admissionOffering: 'AdmissionOffering',
+  admissionInquiry: 'AdmissionInquiry',
+  admissionWorkflow: 'AdmissionWorkflow',
+  admissionForm: 'AdmissionForm',
+  admissionApplication: 'AdmissionApplication',
+  admissionApplicant: 'AdmissionApplicant',
+} as const;
+
 // ===== Student Attendance Rule API (reducerPath: StudentAttendanceRuleApi) =====
 export const studentAttendanceRuleType = {
   studentAttendanceRule: 'Student-Attendance-Rule',
@@ -532,20 +543,6 @@ export const studentGrNumberType = {
 // ===== Student Group API (reducerPath: studentGroupApi) =====
 export const studentGroupType = {
   studentGroup: 'studentGroup',
-} as const;
-
-// ===== Focused Student Admissions CRM clients (shared Redux API) =====
-export const studentAdmissionsCrmType = {
-  lead: 'Student-Admissions-Crm-Lead',
-  configuration: 'Student-Admissions-Crm-Configuration',
-  task: 'Student-Admissions-Crm-Task',
-  timeline: 'Student-Admissions-Crm-Timeline',
-  exam: 'Student-Admissions-Crm-Exam',
-    event: 'Student-Admissions-Crm-Event',
-	structuredReview: 'Student-Admissions-Crm-Structured-Review',
-  analytics: 'Student-Admissions-Crm-Analytics',
-  publicForm: 'Student-Admissions-Crm-Public-Form',
-  communication: 'Student-Admissions-Crm-Communication',
 } as const;
 
 // ===== Student Invoice API (reducerPath: StudentInvoiceApi) =====
