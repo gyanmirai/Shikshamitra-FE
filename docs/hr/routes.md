@@ -3,7 +3,7 @@ module: hr
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-08-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -28,6 +28,8 @@ The route map is frontend integration truth, not backend product truth:
 | Payslips | `/hr/payroll/payslip-generation` | `HR.PayrollManagement.GenerateSalarySlip` |
 | Payroll structure | `/hr/payroll/structure` | `HR.PayrollManagement.PayrollStructure` |
 | Payroll settings | `/hr/payroll/setting/*` | `HR.PayrollManagement.Settings.*` |
+| Salary templates | `/hr/payroll/setting/salary-templates` | `HR.PayrollManagement.Settings.SalaryTemplates.*` |
+| Professional tax | `/hr/payroll/setting/professional-tax` | `HR.PayrollManagement.Settings.ProfessionalTax.*` |
 | Attendance dashboard | `/hr/attendance-dashboard` | `HR.AttendanceAndLeave.Dashboard` |
 | Device attendance | `/hr/biometric-attendance` | `HR.AttendanceAndLeave.BiometricAttendance` |
 | Attendance register | `/hr/attendance-tracking` | `HR.AttendanceAndLeave.AttendanceTracking` |
@@ -48,7 +50,6 @@ These routes require source verification before product claims:
 |---|---|
 | `/hr/events-holidays` | Page exists, but HR menu visibility may be commented |
 | `/hr/payroll/setting/tds` | Page exists, but menu activation is partial |
-| `/hr/payroll/setting/professional-tax` | Page exists, but backend HTTP controller status is partial |
 | `/hr/training` | Legacy or unconfirmed ownership |
 | `/hr/performance` | Prefer professional-management routes unless menu proves otherwise |
 

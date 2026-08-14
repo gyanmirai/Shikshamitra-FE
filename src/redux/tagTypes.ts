@@ -451,6 +451,7 @@ export const financePolicyType = {
 // ===== Payroll Structure API (reducerPath: payrollStructureApi) =====
 export const payrollStructureType = {
   payrollStructure: 'PayrollStructure',
+  salaryTemplate: 'SalaryTemplate',
 } as const;
 
 // ===== Professional Tax API (reducerPath: ProfessionalApi) =====

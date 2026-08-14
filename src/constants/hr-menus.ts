@@ -51,6 +51,7 @@ export const hrPaths = {
       pfRule: '/hr/payroll/setting/pf',
       // tds: '/hr/payroll/setting/tds',
       professionalTax: '/hr/payroll/setting/professional-tax',
+      salaryTemplates: '/hr/payroll/setting/salary-templates',
     },
   },
   attendance: {
@@ -139,6 +140,14 @@ export const hrPermissions = {
       pfRule: `${defaultHrPermissionName}PayrollManagement.Settings.PfRule`,
       tds: `${defaultHrPermissionName}PayrollManagement.Settings.Tds`,
       professionalTax: `${defaultHrPermissionName}PayrollManagement.Settings.ProfessionalTax`,
+      salaryTemplates: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates`,
+      salaryTemplateActions: {
+        add: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.Add`,
+        edit: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.Edit`,
+        publish: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.Publish`,
+        setDefault: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.SetDefault`,
+        archive: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.Archive`,
+      },
     },
   },
   attendance: {
@@ -338,13 +347,20 @@ const hrModule = (isDdvs: boolean) => ({
                   permissionName: hrPermissions.payroll.settings.pfRule,
                   icon: menuIconView('mdi:bank-outline'),
                 },
-                // {
-                //   title: 'Professional tax',
-                //   path: hrPaths.payroll.settings.professionalTax,
-                //   _action: 'payroll-setting-professional-tax',
-                //   permissionName: hrPermissions.payroll.settings.professionalTax,
-                //   icon: menuIconView('mdi:map-marker-radius-outline'),
-                // },
+                {
+                  title: 'Salary Templates',
+                  path: hrPaths.payroll.settings.salaryTemplates,
+                  _action: 'payroll-setting-salary-templates',
+                  permissionName: hrPermissions.payroll.settings.salaryTemplates,
+                  icon: menuIconView('mdi:file-tree-outline'),
+                },
+                {
+                  title: 'Professional tax',
+                  path: hrPaths.payroll.settings.professionalTax,
+                  _action: 'payroll-setting-professional-tax',
+                  permissionName: hrPermissions.payroll.settings.professionalTax,
+                  icon: menuIconView('mdi:map-marker-radius-outline'),
+                },
                 // {
                 //   title: 'TDS',
                 //   path: hrPaths.payroll.settings.tds,

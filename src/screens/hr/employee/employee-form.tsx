@@ -308,6 +308,13 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
     editData?.salaryDetails?.totalWorkingHourPerMonth != null
       ? editData.salaryDetails.totalWorkingHourPerMonth
       : 0,
+  quotedSalaryBasis: editData?.salaryDetails?.quotedSalaryBasis ?? '',
+  quotedMonthlyAmount: editData?.salaryDetails?.quotedMonthlyAmount ?? null,
+  sourceSalaryTemplateId: editData?.salaryDetails?.sourceSalaryTemplateId ?? null,
+  sourceSalaryTemplateVersionId: editData?.salaryDetails?.sourceSalaryTemplateVersionId ?? null,
+  sourceSalaryTemplateVersion: editData?.salaryDetails?.sourceSalaryTemplateVersion ?? null,
+  salaryGeneratedAt: editData?.salaryDetails?.salaryGeneratedAt ?? null,
+  wasModifiedAfterGeneration: editData?.salaryDetails?.wasModifiedAfterGeneration ?? false,
 
   // ================= COMPONENTS =================
   earningComponents: editData?.earningComponents ?? [],
@@ -840,6 +847,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             uanNumber: values.uanNumber,
             punchId: values.punchId,
             totalWorkingHourPerMonth: toOptionalNumber(values.totalWorkingHourPerMonth),
+            quotedSalaryBasis: values.quotedSalaryBasis || null,
+            quotedMonthlyAmount: toOptionalNumber(values.quotedMonthlyAmount),
+            sourceSalaryTemplateId: toOptionalGuid(values.sourceSalaryTemplateId),
+            sourceSalaryTemplateVersionId: toOptionalGuid(values.sourceSalaryTemplateVersionId),
+            sourceSalaryTemplateVersion: toOptionalNumber(values.sourceSalaryTemplateVersion),
+            salaryGeneratedAt: values.salaryGeneratedAt || null,
+            wasModifiedAfterGeneration: Boolean(values.wasModifiedAfterGeneration),
           },
 
           earningComponents: values.earningComponents.map((item: any) => ({
@@ -847,12 +861,20 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             name: item?.name || item?.earningComponentName || '',
             amount: getSalaryComponentPayloadAmount(item),
             isFixed: isSalaryComponentFixed(item),
+            isTemp: Boolean(item?.isTemp),
+            usesMasterValue: item?.usesMasterValue,
+            semanticType: item?.semanticType || 'Ordinary',
+            statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
           })),
           deductionComponents: values.deductionComponents.map((item: any) => ({
             componentId: getPayrollComponentId(item),
             name: item?.name || item?.deductionComponentName || '',
             amount: getSalaryComponentPayloadAmount(item),
             isFixed: isSalaryComponentFixed(item),
+            isTemp: Boolean(item?.isTemp),
+            usesMasterValue: item?.usesMasterValue,
+            semanticType: item?.semanticType || 'Ordinary',
+            statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
           })),
           ...(policyOverrideAction ? { policyOverrideAction } : {}),
           ...(policyOverride ? { policyOverride } : {}),
