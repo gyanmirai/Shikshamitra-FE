@@ -144,6 +144,10 @@ const Subjects = () => {
     params: {
       academicMediumId: medium?.id,
       standardId: classId,
+      // The endpoint is paginated by elective group. Syllabus needs every
+      // constituent subject in the selected class, not just the first page.
+      page: 0,
+      pageSize: 100,
       status: SubjectAssignmentStatus.Published,
     },
     options: {
@@ -450,7 +454,7 @@ const Subjects = () => {
       />
 
       <CustomDialog
-        maxWidth="md"
+        maxWidth="xs"
         open={viewDocumentDialog.value}
         handleClose={() => {
           viewDocumentDialog.onFalse();

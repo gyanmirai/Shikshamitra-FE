@@ -20,7 +20,8 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Paper, Stack, Avatar, Skeleton, Typography } from '@mui/material';
+import { Box, Tab, Paper, Stack, Avatar, Skeleton, Typography, Button } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { DayType, CalendarStatus, CalendarDayStatus } from 'src/enums/academic-calendar';
 import {
   useGetCalendarsQuery,
@@ -186,6 +187,7 @@ const CalendarManagement = () => {
   // Dialog states
   const addDayDialog = useBoolean(false);
   const createCalendarDialog = useBoolean(false);
+  const publishConfirm = useBoolean(false);
 
   // Local state
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
@@ -441,7 +443,6 @@ const CalendarManagement = () => {
             {/* Selected Calendar Indicator / Skeleton Loader */}
             {isCalendarLoading ? (
               <Stack direction="row" alignItems="center" gap={1.5}>
-                <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: 2 }} />
                 <Stack spacing={0.75}>
                   <Skeleton variant="text" width={100} height={14} />
                   <Stack direction="row" alignItems="center" gap={1}>
@@ -469,9 +470,6 @@ const CalendarManagement = () => {
                   <Iconify icon="mdi:calendar-month-outline" width={18} sx={{ color: '#fff' }} />
                 </Avatar>
                 <Stack spacing={1}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                    Selected Calendar
-                  </Typography>
                   <Box display="flex" gap={1} alignItems="center">
                     <Typography variant="subtitle2" fontWeight={700}>
                       {selectedCalendar.name}
@@ -552,19 +550,24 @@ const CalendarManagement = () => {
             )}
 
             {/* Actions */}
-            {selectedCalendar && canPublish && (
-              <Stack direction="row" gap={1} ml="auto">
-                {selectedCalendar?.status === CalendarStatus.Draft && (
-                  <LoadingButton
+            {selectedCalendar && (
+              <Stack direction="row" gap={1.5} alignItems="center" ml="auto">
+                {canPublish && selectedCalendar?.status === CalendarStatus.Draft && (
+                  <Button
                     size="small"
                     variant="contained"
-                    loading={publishing}
                     startIcon={<Iconify icon="mdi:publish" width={16} />}
-                    onClick={() => handlePublish(selectedCalendar)}
+                    onClick={publishConfirm.onTrue}
                   >
                     Publish
-                  </LoadingButton>
+                  </Button>
                 )}
+                <Label
+                  variant="soft"
+                  color={selectedCalendar?.status === CalendarStatus.Draft ? 'info' : 'success'}
+                >
+                  {CalendarStatus[selectedCalendar?.status]}
+                </Label>
               </Stack>
             )}
           </Stack>
@@ -664,6 +667,30 @@ const CalendarManagement = () => {
           deleting={deletingDay}
           onDelete={handleDeleteDay}
           standards={standards}
+        />
+      )}
+
+      {/* Publish Confirmation Dialog */}
+      {selectedCalendar && (
+        <ConfirmDialog
+          open={publishConfirm.value}
+          onClose={publishConfirm.onFalse}
+          title="Publish Calendar"
+          content="Are you sure you want to publish this academic calendar?"
+          icon="warning"
+          action={
+            <LoadingButton
+              variant="contained"
+              loading={publishing}
+              startIcon={<Iconify icon="mdi:publish" width={16} />}
+              onClick={async () => {
+                await handlePublish(selectedCalendar);
+                publishConfirm.onFalse();
+              }}
+            >
+              Publish
+            </LoadingButton>
+          }
         />
       )}
     </Box>

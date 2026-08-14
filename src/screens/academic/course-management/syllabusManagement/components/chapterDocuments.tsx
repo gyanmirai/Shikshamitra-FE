@@ -37,7 +37,9 @@ const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => {
 
   return (
     <Box p={2}>
-      <Grid container spacing={1}>
+      <Grid container spacing={1} sx={{
+        overflowY: "auto"
+      }}>
         {documents.map((docPath, index: number) => {
           const doc = {
             name: getFileNameFromUrl(docPath),
@@ -45,7 +47,7 @@ const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => {
             size: '',
           };
           return (
-            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
+            <Grid size={{ xs: 12 }} key={index}>
               <DocumentCard file={doc} />
             </Grid>
           );

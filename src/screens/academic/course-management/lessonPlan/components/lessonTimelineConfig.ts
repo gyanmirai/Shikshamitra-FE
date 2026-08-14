@@ -17,7 +17,8 @@ export type LessonVisualStateKey =
   | 'unplanned'
   | 'unknown';
 
-export type LabelColor = 'default' | 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error';
+export type LabelColor =
+  'default' | 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error';
 export type LabelVariant = 'soft' | 'filled' | 'outlined';
 
 export interface SecondaryHodStatus {
@@ -275,7 +276,9 @@ export function getLessonStatusConfig(slot: any): LessonStatusConfigItem {
 
   const plan = slot.lessonPlan;
   const statusStr = normalizePlanStatus(plan.status || plan.planStatus);
-  const completion = Number(plan.plannedCompletionPercentage ?? plan.actualCompletionPercentage ?? 0);
+  const completion = Number(
+    plan.plannedCompletionPercentage ?? plan.actualCompletionPercentage ?? 0
+  );
 
   const normalizedLower = statusStr.toLowerCase();
 
@@ -324,7 +327,11 @@ export function getLessonStatusConfig(slot: any): LessonStatusConfigItem {
     return LESSON_STATUS_CONFIG.scheduled;
   }
 
-  if (normalizedLower === 'draft' || normalizedLower === 'autocreated' || normalizedLower === 'aigenerated') {
+  if (
+    normalizedLower === 'draft' ||
+    normalizedLower === 'autocreated' ||
+    normalizedLower === 'aigenerated'
+  ) {
     if (completion > 0) {
       return LESSON_STATUS_CONFIG.inProgress;
     }

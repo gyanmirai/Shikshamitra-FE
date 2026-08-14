@@ -15,12 +15,10 @@ interface RoomAvailabilityTableProps {
   data: RoomAvailabilityItem[];
   isLoading?: boolean;
   canReserve?: boolean;
-  canMaintenance?: boolean;
   canApprove?: boolean;
   onViewRoom?: (roomId: string) => void;
   onReserveRoom?: (item: RoomAvailabilityItem) => void;
   onViewSchedule?: (roomId: string) => void;
-  onMarkMaintenance?: (item: RoomAvailabilityItem) => void;
   onCancelReservation?: (item: RoomAvailabilityItem) => void;
 }
 
@@ -48,12 +46,10 @@ export const RoomAvailabilityTable = ({
   data,
   isLoading,
   canReserve = true,
-  canMaintenance = false,
   canApprove = false,
   onViewRoom,
   onReserveRoom,
   onViewSchedule,
-  onMarkMaintenance,
   onCancelReservation,
 }: RoomAvailabilityTableProps) => {
   // Row action menu — rendered inside the ThreeDotsActions popover. Each item
@@ -83,18 +79,6 @@ export const RoomAvailabilityTable = ({
               </MenuItem>
             </span>
           </Tooltip>
-        )}
-
-        {canMaintenance && (
-          <MenuItem
-            onClick={() => {
-              close();
-              onMarkMaintenance?.(row);
-            }}
-          >
-            <Iconify icon="mdi:wrench" />
-            Mark Maintenance
-          </MenuItem>
         )}
 
         {canApprove && row.status === 'pendingApproval' && (
@@ -211,7 +195,7 @@ export const RoomAvailabilityTable = ({
               <ThreeDotsActions
                 showViewIcon
                 showThreeDots={Boolean(
-                  canReserve || canMaintenance || canApprove || onViewSchedule
+                  canReserve || canApprove || onViewSchedule
                 )}
                 handleViewClick={() => onViewRoom?.(item.roomId)}
                 actions={(prop) => renderRowActions({ ...prop, row: item })}
