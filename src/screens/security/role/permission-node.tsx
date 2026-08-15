@@ -9,15 +9,15 @@ import Typography from '@mui/material/Typography';
 import { Checkbox, IconButton } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { PERMISSIONS } from './utils';
+import { formatPermissionAction, getPermissionActions } from './utils';
 
-import type { PermissionType } from './utils';
+import type { PermissionGrant, PermissionType } from './utils';
 
 interface PermissionNodeProps {
   node: any;
   moduleTitle: string;
   submoduleTitle: string;
-  permissions: { name: string; isGranted: boolean }[];
+  permissions: PermissionGrant[];
   onToggle: (key: string, type: PermissionType, currentValue: boolean) => void;
   onSelectAll: (node: any, value: boolean, hasChildren: boolean) => void;
   depth?: number;
@@ -39,11 +39,16 @@ export default function PermissionNode({
   );
   const nodeKey = node.permissionName;
   const hasChildren = node.children && node.children.length > 0;
+  const permissionActions = getPermissionActions(permissions, nodeKey);
 
   // Check if all permissions for this node are active
-  const isNodeFullySelected = PERMISSIONS.every(
-    (perm) => !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)?.isGranted
-  );
+  const isNodeFullySelected =
+    permissionActions.length > 0 &&
+    permissionActions.every(
+      (permissionAction) =>
+        !!permissions.find((permission) => permission.name === `${nodeKey}.${permissionAction}`)
+          ?.isGranted
+    );
 
   const handleToggleExpand = (n: any) => {
     setPermission(
@@ -65,7 +70,7 @@ export default function PermissionNode({
           bgcolor: isNodeFullySelected
             ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04)
             : 'background.paper',
-          transition: 'all 0.2s',
+          transition: 'border-color 0.2s, background-color 0.2s, box-shadow 0.2s',
           '&:hover': {
             borderColor: 'primary.main',
             boxShadow: (theme) => theme.customShadows.z1,
@@ -117,13 +122,18 @@ export default function PermissionNode({
               }}
             >
               {!hasChildren &&
-                PERMISSIONS.map((perm) => {
-                  const isChecked = !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)
-                    ?.isGranted;
+                permissionActions.map((permissionAction) => {
+                  const isChecked = !!permissions.find(
+                    (permission) => permission.name === `${nodeKey}.${permissionAction}`
+                  )?.isGranted;
                   return (
-                    <motion.div key={perm} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <motion.div
+                      key={permissionAction}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
                       <Box
-                        onClick={() => onToggle(nodeKey, perm, isChecked)}
+                        onClick={() => onToggle(nodeKey, permissionAction, isChecked)}
                         sx={{
                           p: 1,
                           borderRadius: 1,
@@ -136,7 +146,7 @@ export default function PermissionNode({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          transition: 'all 0.2s',
+                          transition: 'border-color 0.2s, background-color 0.2s',
                         }}
                       >
                         <Typography
@@ -146,12 +156,14 @@ export default function PermissionNode({
                             color: isChecked ? 'primary.main' : 'text.secondary',
                           }}
                         >
-                          {perm}
+                          {formatPermissionAction(permissionAction)}
                         </Typography>
                         <Switch
                           size="small"
                           checked={isChecked}
-                          inputProps={{ 'aria-label': perm }}
+                          inputProps={{
+                            'aria-label': `${formatPermissionAction(permissionAction)} ${node.title}`,
+                          }}
                         />
                       </Box>
                     </motion.div>
