@@ -71,6 +71,8 @@ type DraftEditor = {
   rules: SalaryTemplateRule[];
 };
 
+type CloneIntent = 'create' | 'clone';
+
 export default function SalaryTemplateSettings() {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canAdd = hasGrantedPermission(
@@ -102,6 +104,7 @@ export default function SalaryTemplateSettings() {
   const [updateDraft, updateState] = useUpdateSalaryTemplateDraftMutation();
   const [cloneSourceId, setCloneSourceId] = useState<string | null>(null);
   const [cloneName, setCloneName] = useState('');
+  const [cloneIntent, setCloneIntent] = useState<CloneIntent>('clone');
   const [draftEditor, setDraftEditor] = useState<DraftEditor | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<SalaryTemplate | null>(null);
   const busy =
@@ -120,6 +123,18 @@ export default function SalaryTemplateSettings() {
       description: template.description || '',
       rules: template.latest.rules.map((rule) => ({ ...rule })),
     });
+  };
+
+  const openCloneDialog = (template: SalaryTemplate, intent: CloneIntent) => {
+    setCloneSourceId(template.id);
+    setCloneName(intent === 'create' ? '' : `${template.name} Copy`);
+    setCloneIntent(intent);
+  };
+
+  const closeCloneDialog = () => {
+    setCloneSourceId(null);
+    setCloneName('');
+    setCloneIntent('clone');
   };
 
   const updateRule = (index: number, patch: Partial<SalaryTemplateRule>) => {
@@ -148,14 +163,28 @@ export default function SalaryTemplateSettings() {
     return <Alert severity="error" action={<Button onClick={() => refetch()}>Retry</Button>}>Unable to load salary templates.</Alert>;
   }
 
+  const templateItems = data?.items || [];
+  const creationSource = templateItems.find((template) => template.isDefault) || templateItems[0];
+  const cloneSource = templateItems.find((template) => template.id === cloneSourceId);
+
   return (
     <>
-      <Alert severity="info" sx={{ mb: 2 }}>
-        Published versions are immutable. Start a new draft version before changing rules. Existing
-        employee salary components never change automatically.
-      </Alert>
+      <Box display="flex" alignItems={{ xs: 'stretch', md: 'flex-start' }} gap={2} mb={2} flexDirection={{ xs: 'column', md: 'row' }}>
+        <Alert severity="info" sx={{ flex: 1 }}>
+          Published versions are immutable. Start a new draft version before changing rules. Existing
+          employee salary components never change automatically.
+        </Alert>
+        {canAdd && creationSource ? (
+          <Button variant="contained" startIcon={<Add />} disabled={busy} onClick={() => openCloneDialog(creationSource, 'create')}>
+            Create template
+          </Button>
+        ) : null}
+      </Box>
+      {!templateItems.length ? (
+        <Alert severity="warning">No salary templates are available. Ask an administrator to run the tenant payroll defaults.</Alert>
+      ) : null}
       <Grid container spacing={2}>
-        {(data?.items || []).map((template) => (
+        {templateItems.map((template) => (
           <Grid key={template.id} size={{ xs: 12, md: 6, xl: 4 }}>
             <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent sx={{ flex: 1 }}>
@@ -184,7 +213,7 @@ export default function SalaryTemplateSettings() {
                 {canSetDefault && template.status === 'PUBLISHED' && !template.isDefault && (
                   <Button size="small" startIcon={<Star />} disabled={busy} onClick={() => run(() => setDefault(template.id).unwrap(), 'Default template updated.')}>Set default</Button>
                 )}
-                {canAdd && <Button size="small" startIcon={<ContentCopy />} disabled={busy || template.status === 'ARCHIVED'} onClick={() => { setCloneSourceId(template.id); setCloneName(`${template.name} Copy`); }}>Clone</Button>}
+                {canAdd && <Button size="small" startIcon={<ContentCopy />} disabled={busy || template.status === 'ARCHIVED'} onClick={() => openCloneDialog(template, 'clone')}>Clone</Button>}
                 {canArchive && <Button size="small" color="error" startIcon={<Archive />} disabled={busy || template.status === 'ARCHIVED'} onClick={() => setArchiveTarget(template)}>Archive</Button>}
               </CardActions>
             </Card>
@@ -192,18 +221,24 @@ export default function SalaryTemplateSettings() {
         ))}
       </Grid>
 
-      <Dialog open={Boolean(cloneSourceId)} onClose={() => setCloneSourceId(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>Clone salary template</DialogTitle>
+      <Dialog open={Boolean(cloneSourceId)} onClose={closeCloneDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>{cloneIntent === 'create' ? 'Create salary template' : 'Clone salary template'}</DialogTitle>
         <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Start with the current rules from {cloneSource?.name}. The new template is an independent draft.
+          </Typography>
           <TextField autoFocus fullWidth label="New template name" value={cloneName} onChange={(event) => setCloneName(event.target.value)} sx={{ mt: 1 }} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCloneSourceId(null)}>Cancel</Button>
+          <Button onClick={closeCloneDialog}>Cancel</Button>
           <Button variant="contained" disabled={!cloneSourceId || !cloneName.trim() || cloneState.isLoading} onClick={async () => {
             if (!cloneSourceId) return;
-            const succeeded = await run(() => clone({ id: cloneSourceId, name: cloneName.trim() }).unwrap(), 'Template cloned as a new draft.');
-            if (succeeded) setCloneSourceId(null);
-          }}>Clone</Button>
+            const succeeded = await run(
+              () => clone({ id: cloneSourceId, name: cloneName.trim() }).unwrap(),
+              cloneIntent === 'create' ? 'Salary template created.' : 'Template cloned as a new draft.'
+            );
+            if (succeeded) closeCloneDialog();
+          }}>{cloneIntent === 'create' ? 'Create' : 'Clone'}</Button>
         </DialogActions>
       </Dialog>
 
