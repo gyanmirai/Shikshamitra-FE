@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-08-13
+updated_on: 2026-08-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -123,3 +123,7 @@ The Payroll onboarding step and dedicated Payroll Structure screen reuse the sam
 Users select a template, choose Gross or Take-home, enter the quoted monthly amount, select PF applicability and rule, calculate, review the formula trace, and apply the generated lines.
 Applying preserves temporary components, replaces recurring lines, stores provenance, and distinguishes editable ordinary lines from rule-controlled PF and professional-tax lines.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
+Salary Template settings creates a blank draft and then opens the dedicated editor route.
+The editor adds, removes, configures, and reorders active earning and deduction components in separate sections.
+Incomplete drafts can be saved, while publishing requires one Basic earning and one remainder earning and shows an actionable validation summary.
+Template formulas override component-master formulas only when the template generates an employee salary structure.
