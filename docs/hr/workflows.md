@@ -124,6 +124,9 @@ Users select a template, choose Gross or Take-home, enter the quoted monthly amo
 Applying preserves temporary components, replaces recurring lines, stores provenance, and distinguishes editable ordinary lines from rule-controlled PF and professional-tax lines.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings creates a blank draft and then opens the dedicated editor route.
+The Salary Template list opens in the standard table view, with an optional URL-backed Card view.
+Selecting a table row, template-name link, View action, or card opens the latest template version.
+Drafts remain editable only with Edit permission, while published and archived versions open read-only.
 The editor adds, removes, configures, and reorders active earning and deduction components in separate sections.
 Incomplete drafts can be saved, while publishing requires one Basic earning and one remainder earning and shows an actionable validation summary.
 Template formulas override component-master formulas only when the template generates an employee salary structure.

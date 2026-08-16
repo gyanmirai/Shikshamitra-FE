@@ -6,7 +6,7 @@ import SalaryTemplateSettings from 'src/screens/hr/payroll/setting/salary-templa
 
 export default function SalaryTemplatesPage() {
   return (
-    <Box>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Salary Templates"
         description="Create versioned salary structure templates for employee payroll onboarding."
@@ -17,7 +17,9 @@ export default function SalaryTemplatesPage() {
           { name: 'Salary Templates' },
         ]}
       />
-      <SalaryTemplateSettings />
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <SalaryTemplateSettings />
+      </Box>
     </Box>
   );
 }
