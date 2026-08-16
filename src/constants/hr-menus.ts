@@ -52,6 +52,8 @@ export const hrPaths = {
       // tds: '/hr/payroll/setting/tds',
       professionalTax: '/hr/payroll/setting/professional-tax',
       salaryTemplates: '/hr/payroll/setting/salary-templates',
+      salaryTemplateEditor: (templateId: string, versionId: string) =>
+        `/hr/payroll/setting/salary-templates/${templateId}/${versionId}`,
     },
   },
   attendance: {

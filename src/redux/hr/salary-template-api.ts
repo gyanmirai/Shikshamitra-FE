@@ -11,7 +11,15 @@ export type SalaryTemplateRule = {
   semanticType: string;
   value?: number | null;
   basisCode?: string | null;
+  basisComponentId?: string | null;
   displayOrder: number;
+};
+
+export type SalaryTemplateComponentCatalogItem = {
+  componentId: string;
+  name: string;
+  description?: string | null;
+  lineKind: 'EARNING' | 'DEDUCTION';
 };
 
 export type SalaryTemplate = {
@@ -27,11 +35,11 @@ export type SalaryTemplate = {
 };
 
 export type SalaryTemplateVersion = {
-    id: string;
-    versionNumber: number;
-    status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-    publishedAt?: string | null;
-    rules: SalaryTemplateRule[];
+  id: string;
+  versionNumber: number;
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  publishedAt?: string | null;
+  rules: SalaryTemplateRule[];
 };
 
 export type CalculatedSalaryLine = {
@@ -68,6 +76,16 @@ export type SalaryTemplateCalculation = {
 };
 
 export const salaryTemplateEndpoint = '/payroll/salary-templates';
+export const salaryTemplateComponentCatalogEndpoint = `${salaryTemplateEndpoint}/component-catalog`;
+
+export const buildCreateSalaryTemplateRequest = (body: {
+  name: string;
+  description?: string | null;
+}) => ({
+  url: salaryTemplateEndpoint,
+  method: 'POST' as const,
+  body,
+});
 
 export const buildSalaryTemplateCalculationRequest = ({
   templateVersionId,
@@ -91,6 +109,17 @@ export const salaryTemplateApi = api.injectEndpoints({
       query: () => salaryTemplateEndpoint,
       providesTags: [payrollStructureType.salaryTemplate],
     }),
+    getSalaryTemplate: builder.query<SalaryTemplate, string>({
+      query: (id) => `${salaryTemplateEndpoint}/${id}`,
+      providesTags: [payrollStructureType.salaryTemplate],
+    }),
+    getSalaryTemplateComponentCatalog: builder.query<
+      { items: SalaryTemplateComponentCatalogItem[] },
+      void
+    >({
+      query: () => salaryTemplateComponentCatalogEndpoint,
+      providesTags: [payrollStructureType.salaryTemplate],
+    }),
     getPublishedSalaryTemplates: builder.query<{ items: SalaryTemplate[] }, void>({
       query: () => `${salaryTemplateEndpoint}/published`,
       providesTags: [payrollStructureType.salaryTemplate],
@@ -105,6 +134,13 @@ export const salaryTemplateApi = api.injectEndpoints({
       }
     >({
       query: buildSalaryTemplateCalculationRequest,
+    }),
+    createSalaryTemplate: builder.mutation<
+      SalaryTemplate,
+      { name: string; description?: string | null }
+    >({
+      query: buildCreateSalaryTemplateRequest,
+      invalidatesTags: [payrollStructureType.salaryTemplate],
     }),
     setDefaultSalaryTemplate: builder.mutation<SalaryTemplate, string>({
       query: (id) => ({
@@ -165,7 +201,10 @@ export const salaryTemplateApi = api.injectEndpoints({
 
 export const {
   useGetSalaryTemplatesQuery,
+  useGetSalaryTemplateQuery,
+  useGetSalaryTemplateComponentCatalogQuery,
   useGetPublishedSalaryTemplatesQuery,
+  useCreateSalaryTemplateMutation,
   useCalculateSalaryTemplateMutation,
   useSetDefaultSalaryTemplateMutation,
   usePublishSalaryTemplateMutation,
