@@ -521,12 +521,6 @@ const CalendarManagement = () => {
                       {dayjs(calendarStartDate).format('DD MMM YYYY')} –{' '}
                       {dayjs(calendarEndDate).format('DD MMM YYYY')}
                     </Typography>
-                    <Label
-                      variant="soft"
-                      color={selectedCalendar?.status === CalendarStatus.Draft ? 'info' : 'success'}
-                    >
-                      {CalendarStatus[selectedCalendar?.status]}
-                    </Label>
                   </Stack>
                 </Stack>
               </Stack>

@@ -2,10 +2,11 @@
 
 import { Iconify } from 'src/components/iconify';
 import { Label } from 'src/components/label';
-import { Box, Card, Grid, Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Card, Grid, Stack, Typography, LinearProgress } from '@mui/material';
 
 import { HealthScoreGauge } from './HealthScoreGauge';
 import { Academic360EmptyState } from './Academic360EmptyState';
+import { SubjectPerformanceCard } from './SubjectPerformanceCard';
 
 import type { Academic360Response } from '../types';
 
@@ -164,16 +165,14 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                     <Typography variant="body2" color="text.secondary">{alert.message}</Typography>
                     <Typography variant="caption" color="text.secondary">{alert.evidence}</Typography>
                   </Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Button size="small" variant="outlined">View Details</Button>
-                    <Button size="small" variant="contained">Create Intervention</Button>
-                  </Stack>
                 </Stack>
               </Box>
             ))}
           </Stack>
         )}
       </Card>
+
+      <SubjectPerformanceCard subjectPerformance={data?.subjectPerformance} />
 
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
