@@ -34,13 +34,6 @@ const timelineDotColor = (type?: string) => {
   return 'primary';
 };
 
-const interventionStatusColor = (status?: string) => {
-  const normalized = (status || '').toLowerCase();
-  if (normalized.includes('complete') || normalized.includes('resolved')) return 'success';
-  if (normalized.includes('progress') || normalized.includes('active')) return 'info';
-  if (normalized.includes('overdue') || normalized.includes('risk')) return 'error';
-  return 'default';
-};
 
 export function SuccessDetailTabs({ data, activeTab, isLoading }: SuccessDetailTabsProps) {
   if (activeTab === 'attendance') {
@@ -86,11 +79,11 @@ export function SuccessDetailTabs({ data, activeTab, isLoading }: SuccessDetailT
   }
 
   if (activeTab === 'learning') {
-    return <AcademicInsightSections learningTasks={data?.learningTasks} subjectPerformance={data?.subjectPerformance} />;
+    return <AcademicInsightSections learningTasks={data?.learningTasks} showExams={false} />;
   }
 
   if (activeTab === 'exams') {
-    return <AcademicInsightSections exams={data?.exams} subjectPerformance={data?.subjectPerformance} />;
+    return <AcademicInsightSections exams={data?.exams} showHomework={false} />;
   }
 
   if (activeTab === 'timeline') {
@@ -137,69 +130,12 @@ export function SuccessDetailTabs({ data, activeTab, isLoading }: SuccessDetailT
     );
   }
 
-  if (activeTab === 'interventions') {
-    const interventions = data?.interventions || [];
-    return (
-      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Typography variant="subtitle1" sx={{ mb: 1.5 }}>Interventions & Support Plans</Typography>
-        {interventions.length > 0 ? (
-          <Stack spacing={1}>
-            {interventions.map((item) => (
-              <Box key={item.id || item.concern} sx={{ p: 1.75, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1} flexWrap="wrap">
-                  <Box>
-                    <Typography variant="subtitle2">{item.concern}</Typography>
-                    <Typography variant="body2" color="text.secondary">{item.goal}</Typography>
-                  </Box>
-                  <Chip size="small" variant="soft" color={interventionStatusColor(item.status)} label={item.status || 'Not Started'} />
-                </Stack>
-                {typeof item.progress === 'number' && (
-                  <Box sx={{ mt: 1.25 }}>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="caption" color="text.secondary">Progress</Typography>
-                      <Typography variant="caption" color="text.secondary">{item.progress}%</Typography>
-                    </Stack>
-                    <LinearProgress variant="determinate" value={item.progress} sx={{ mt: 0.5, height: 6, borderRadius: 1 }} />
-                  </Box>
-                )}
-                {(item.owner || item.reviewDate) && (
-                  <Stack direction="row" spacing={1} sx={{ mt: 1.25 }} flexWrap="wrap">
-                    {item.owner && (
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Iconify icon="mdi:account-outline" width={14} sx={{ color: 'text.secondary' }} />
-                        <Typography variant="caption" color="text.secondary">{item.owner}</Typography>
-                      </Stack>
-                    )}
-                    {item.reviewDate && (
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Iconify icon="mdi:calendar-clock-outline" width={14} sx={{ color: 'text.secondary' }} />
-                        <Typography variant="caption" color="text.secondary">Next review: {item.reviewDate}</Typography>
-                      </Stack>
-                    )}
-                  </Stack>
-                )}
-              </Box>
-            ))}
-          </Stack>
-        ) : (
-          <Academic360EmptyState
-            icon="mdi:hand-heart-outline"
-            color="success"
-            title="No active intervention plan"
-            description="Create an intervention when repeated evidence — like falling attendance or exam scores — shows the student needs structured academic support."
-          />
-        )}
-      </Card>
-    );
-  }
-
   return (
     <Stack spacing={1}>
       <TimetableSnapshot timetable={data?.timetable} isLoading={isLoading} />
       <AcademicInsightSections
         learningTasks={data?.learningTasks}
         exams={data?.exams}
-        subjectPerformance={data?.subjectPerformance}
         alerts={data?.alerts}
       />
     </Stack>

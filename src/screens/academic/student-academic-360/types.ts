@@ -70,6 +70,10 @@ export type Academic360LearningTask = {
   marks?: number | null;
   totalMarks?: number | null;
   feedback?: string | null;
+  resubmissionRequired?: boolean;
+  submittedAt?: string | null;
+  evaluatedAt?: string | null;
+  isOverdue?: boolean;
 };
 
 export type Academic360LearningTasks = {
@@ -79,6 +83,8 @@ export type Academic360LearningTasks = {
   late?: number;
   reviewed?: number;
   pendingEvaluation?: number;
+  resubmissionRequired?: number;
+  submittedOnTime?: number;
   recentTasks?: Academic360LearningTask[];
 };
 

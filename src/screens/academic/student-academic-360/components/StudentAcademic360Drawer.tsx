@@ -29,7 +29,6 @@ const tabs = [
   { value: 'learning', label: 'Learning', icon: 'mdi:clipboard-text-outline' },
   { value: 'exams', label: 'Exams', icon: 'mdi:trophy-outline' },
   { value: 'timeline', label: 'Timeline', icon: 'mdi:timeline-clock-outline' },
-  { value: 'interventions', label: 'Interventions', icon: 'mdi:hand-heart-outline' },
 ];
 
 export function StudentAcademic360Drawer({
@@ -271,22 +270,6 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
               <Skeleton variant="circular" width={16} height={16} />
               <Skeleton variant="text" width="200px" />
             </Stack>
-          ))}
-        </Stack>
-      </Card>
-    );
-  }
-  if (activeTab === 'interventions') {
-    return (
-      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Skeleton variant="text" width="220px" height={24} sx={{ mb: 1.5 }} />
-        <Stack spacing={1}>
-          {[1, 2].map((i) => (
-            <Box key={i} sx={{ p: 1.75, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
-              <Skeleton variant="text" width="150px" height={20} />
-              <Skeleton variant="text" width="250px" sx={{ mt: 1 }} />
-              <Skeleton variant="rectangular" height={10} sx={{ mt: 2, borderRadius: 1 }} />
-            </Box>
           ))}
         </Stack>
       </Card>
