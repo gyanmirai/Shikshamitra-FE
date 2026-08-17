@@ -18,5 +18,15 @@ describe('HR policy route links', () => {
     files.forEach((file) => {
       expect(readFileSync(join(process.cwd(), file), 'utf8')).not.toContain('/hr/policies?tab=');
     });
+
+    const payrollSettingsLayout = readFileSync(
+      join(
+        process.cwd(),
+        'src/app/(auth-route)/hr/(Payroll-Management)/payroll/setting/layout.tsx'
+      ),
+      'utf8'
+    );
+    expect(payrollSettingsLayout).not.toContain('Policy rules are managed in Policies & Rules.');
+    expect(payrollSettingsLayout).not.toContain('Open Payroll Policies');
   });
 });

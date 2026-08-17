@@ -104,33 +104,27 @@ vi.mock('src/components/three-dots-actions', () => ({
   ),
 }));
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ tableId, tableTitle, columns, data, handleRowClick, isLoading }: any) => (
+  default: ({ tableId, tableTitle, columns, data, rowProps, isLoading }: any) => (
     <section data-testid={tableId} aria-label={tableTitle} data-loading={String(isLoading)}>
       <div data-testid="salary-template-columns">
         {columns.map((column: any) => (
           <span key={column.id}>{column.label}</span>
         ))}
       </div>
-      {data.map((row: SalaryTemplate, index: number) => (
-        <div
-          role="row"
-          tabIndex={0}
-          key={row.id}
-          data-testid={`salary-template-row-${row.id}`}
-          onClick={() => handleRowClick(row, index)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') handleRowClick(row, index);
-          }}
-        >
-          {columns.map((column: any) => (
-            <div key={column.id}>
-              {column.render
-                ? column.render((row as any)[column.id], row)
-                : (row as any)[column.id]}
-            </div>
-          ))}
-        </div>
-      ))}
+      {data.map((row: SalaryTemplate, index: number) => {
+        const configuredRowProps = rowProps?.(row, index) || {};
+        return (
+          <div key={row.id} data-testid={`salary-template-row-${row.id}`} {...configuredRowProps}>
+            {columns.map((column: any) => (
+              <div key={column.id}>
+                {column.render
+                  ? column.render((row as any)[column.id], row)
+                  : (row as any)[column.id]}
+              </div>
+            ))}
+          </div>
+        );
+      })}
     </section>
   ),
 }));
@@ -169,6 +163,8 @@ describe('SalaryTemplateSettings', () => {
   it('defaults invalid or missing view state to the standard table', () => {
     render(<SalaryTemplateSettings />);
 
+    expect(screen.queryByText(/Build templates from your active earning/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Template' })).toBeVisible();
     expect(screen.getByTestId('salary-template-table')).toBeVisible();
     expect(screen.getByTestId('salary-template-columns')).toHaveTextContent(
       'TemplateDescriptionLatest VersionComponentsStatusActions'
@@ -209,6 +205,12 @@ describe('SalaryTemplateSettings', () => {
     render(<SalaryTemplateSettings />);
 
     await user.click(screen.getByTestId('salary-template-row-template-1'));
+    expect(mocks.push).toHaveBeenCalledTimes(1);
+    expect(mocks.push).toHaveBeenCalledWith(editorPath());
+
+    mocks.push.mockClear();
+    screen.getByTestId('salary-template-row-template-1').focus();
+    await user.keyboard('{Enter}');
     expect(mocks.push).toHaveBeenCalledTimes(1);
     expect(mocks.push).toHaveBeenCalledWith(editorPath());
 
@@ -265,7 +267,7 @@ describe('SalaryTemplateSettings', () => {
     render(<SalaryTemplateSettings />);
 
     expect(screen.getByRole('link', { name: 'Open Flexible Salary' })).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Create template' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create Template' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit draft' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Review draft' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Clone' })).not.toBeInTheDocument();
@@ -282,6 +284,6 @@ describe('SalaryTemplateSettings', () => {
 
     expect(screen.getByRole('button', { name: 'Review draft' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Edit draft' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Create template' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create Template' })).not.toBeInTheDocument();
   });
 });

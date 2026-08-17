@@ -62,6 +62,8 @@ describe('SalaryTemplateEditor', () => {
     vi.clearAllMocks();
     mocks.canEdit = true;
     mocks.canPublish = true;
+    mocks.template.status = 'DRAFT';
+    mocks.template.latest.status = 'DRAFT';
     mocks.template.latest.rules = [];
     mocks.updateDraft.mockReturnValue({ unwrap: vi.fn().mockResolvedValue(mocks.template) });
     mocks.publish.mockReturnValue({ unwrap: vi.fn().mockResolvedValue(mocks.template) });
@@ -75,6 +77,7 @@ describe('SalaryTemplateEditor', () => {
 
     expect(screen.getByText('Earnings')).toBeVisible();
     expect(screen.getByText('Deductions')).toBeVisible();
+    expect(screen.queryByText(/Formulas configured here override/i)).not.toBeInTheDocument();
     expect(screen.getByText('Add exactly one Basic earning.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Add earning' })).toBeEnabled();
@@ -121,6 +124,8 @@ describe('SalaryTemplateEditor', () => {
     expect(screen.queryByRole('button', { name: 'Add earning' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+    expect(screen.getByText('This draft is ready to publish.')).toBeVisible();
+    expect(screen.queryByText(/Formulas configured here override/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Publish' }));
 
@@ -131,5 +136,16 @@ describe('SalaryTemplateEditor', () => {
       })
     );
     expect(mocks.updateDraft).not.toHaveBeenCalled();
+  });
+
+  it.each(['PUBLISHED', 'ARCHIVED'])('hides publish guidance for %s templates', (status) => {
+    mocks.template.status = status;
+    mocks.template.latest.status = 'PUBLISHED';
+
+    render(<SalaryTemplateEditor templateId="template-1" versionId="version-1" />);
+
+    expect(screen.queryByText(/Formulas configured here override/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Complete these items before publishing:')).not.toBeInTheDocument();
+    expect(screen.queryByText('This draft is ready to publish.')).not.toBeInTheDocument();
   });
 });
