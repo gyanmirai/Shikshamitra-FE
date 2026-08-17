@@ -499,13 +499,8 @@ export default function SalaryTemplateEditor({
         </Box>
       </Box>
 
-      <Alert severity="info">
-        Formulas configured here override component-master calculations when this template fills an
-        employee salary structure. Exactly one Basic and one auto-balancing earning are required to
-        publish.
-      </Alert>
       {serverError ? <Alert severity="error">{serverError}</Alert> : null}
-      {publishIssues.length ? (
+      {isDraft && publishIssues.length ? (
         <Alert severity="warning">
           <Typography variant="subtitle2" mb={0.5}>
             Complete these items before publishing:
@@ -516,9 +511,9 @@ export default function SalaryTemplateEditor({
             ))}
           </Box>
         </Alert>
-      ) : (
+      ) : isDraft ? (
         <Alert severity="success">This draft is ready to publish.</Alert>
-      )}
+      ) : null}
 
       <Card variant="outlined">
         <CardContent>

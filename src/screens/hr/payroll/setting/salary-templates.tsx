@@ -1,7 +1,12 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { MouseEvent, KeyboardEvent } from 'react';
+import type {
+  IData,
+  IColumn,
+  CustomizableTableRowProps,
+} from 'src/components/customizabaleTable/types';
 import type { SalaryTemplate } from 'src/redux/hr/salary-template-api';
 
 import * as Yup from 'yup';
@@ -9,6 +14,7 @@ import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { useMemo, useState, useCallback } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -17,16 +23,6 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Add,
-  Edit,
-  Star,
-  Archive,
-  Preview,
-  ViewList,
-  ViewModule,
-  ContentCopy,
-} from '@mui/icons-material';
 import {
   useGetSalaryTemplatesQuery,
   useCloneSalaryTemplateMutation,
@@ -99,7 +95,10 @@ function TemplateStatus({ template }: { template: SalaryTemplate }) {
     <Box display="flex" alignItems="center" gap={0.75} flexWrap="wrap">
       <Label color={statusColor[template.status]}>{template.status}</Label>
       {template.isDefault ? (
-        <Label color="primary" startIcon={<Star aria-hidden="true" />}>
+        <Label
+          color="primary"
+          startIcon={<Iconify icon="mdi:star" width={16} aria-hidden="true" />}
+        >
           Default
         </Label>
       ) : null}
@@ -149,7 +148,7 @@ function TemplateTableActions({
               }}
             >
               <ListItemIcon>
-                <Add fontSize="small" aria-hidden="true" />
+                <Iconify icon="mdi:plus" width={18} aria-hidden="true" />
               </ListItemIcon>
               <ListItemText>New draft</ListItemText>
             </MenuItem>
@@ -163,7 +162,7 @@ function TemplateTableActions({
               }}
             >
               <ListItemIcon>
-                <Star fontSize="small" aria-hidden="true" />
+                <Iconify icon="mdi:star" width={18} aria-hidden="true" />
               </ListItemIcon>
               <ListItemText>Set default</ListItemText>
             </MenuItem>
@@ -177,7 +176,7 @@ function TemplateTableActions({
               }}
             >
               <ListItemIcon>
-                <ContentCopy fontSize="small" aria-hidden="true" />
+                <Iconify icon="mdi:content-copy" width={18} aria-hidden="true" />
               </ListItemIcon>
               <ListItemText>Clone</ListItemText>
             </MenuItem>
@@ -192,7 +191,7 @@ function TemplateTableActions({
               sx={{ color: 'error.main' }}
             >
               <ListItemIcon sx={{ color: 'inherit' }}>
-                <Archive fontSize="small" aria-hidden="true" />
+                <Iconify icon="mdi:archive" width={18} aria-hidden="true" />
               </ListItemIcon>
               <ListItemText>Archive</ListItemText>
             </MenuItem>
@@ -308,6 +307,32 @@ export default function SalaryTemplateSettings() {
     [router]
   );
 
+  const getTemplateRowProps = useCallback(
+    (row: IData): CustomizableTableRowProps => {
+      const template = row as SalaryTemplateTableRow;
+      return {
+        role: 'link',
+        tabIndex: 0,
+        'aria-label': `Open ${template.name}`,
+        onClick: () => openTemplate(template),
+        onKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          openTemplate(template);
+        },
+        sx: {
+          cursor: 'pointer',
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: -2,
+          },
+        },
+      };
+    },
+    [openTemplate]
+  );
+
   const run = useCallback(async (action: () => Promise<unknown>, message: string) => {
     try {
       await action();
@@ -368,7 +393,7 @@ export default function SalaryTemplateSettings() {
               underline="hover"
               color="text.primary"
               fontWeight={600}
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event: MouseEvent<HTMLAnchorElement>) => event.stopPropagation()}
               sx={{ display: 'inline-block', maxWidth: 280, overflowWrap: 'anywhere' }}
             >
               {value}
@@ -473,44 +498,39 @@ export default function SalaryTemplateSettings() {
       <Box display="flex" flexDirection="column" flex={1} minHeight={0}>
         <Box
           display="flex"
-          alignItems={{ xs: 'stretch', md: 'flex-start' }}
-          gap={2}
+          alignItems="center"
+          justifyContent="flex-end"
+          gap={1}
           mb={2}
-          flexDirection={{ xs: 'column', md: 'row' }}
+          flexWrap="wrap"
         >
-          <Alert severity="info" sx={{ flex: 1 }}>
-            Build templates from your active earning and deduction components. Published versions
-            are immutable, and existing employee salary components never change automatically.
-          </Alert>
-          <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-            <ToggleButtonGroup
-              exclusive
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={view}
+            onChange={handleViewChange}
+            aria-label="Salary template view"
+          >
+            <ToggleButton value="table" aria-label="Table view" sx={{ gap: 0.75 }}>
+              <Iconify icon="mdi:table" width={18} aria-hidden="true" />
+              Table
+            </ToggleButton>
+            <ToggleButton value="cards" aria-label="Card view" sx={{ gap: 0.75 }}>
+              <Iconify icon="mdi:view-grid" width={18} aria-hidden="true" />
+              Cards
+            </ToggleButton>
+          </ToggleButtonGroup>
+          {canAdd ? (
+            <Button
               size="small"
-              value={view}
-              onChange={handleViewChange}
-              aria-label="Salary template view"
+              variant="contained"
+              startIcon={<Iconify icon="mdi:plus" width={18} aria-hidden="true" />}
+              disabled={busy}
+              onClick={openCreateDialog}
             >
-              <ToggleButton value="table" aria-label="Table view" sx={{ minHeight: 44, gap: 0.75 }}>
-                <ViewList fontSize="small" aria-hidden="true" />
-                Table
-              </ToggleButton>
-              <ToggleButton value="cards" aria-label="Card view" sx={{ minHeight: 44, gap: 0.75 }}>
-                <ViewModule fontSize="small" aria-hidden="true" />
-                Cards
-              </ToggleButton>
-            </ToggleButtonGroup>
-            {canAdd ? (
-              <Button
-                variant="contained"
-                startIcon={<Add aria-hidden="true" />}
-                disabled={busy}
-                onClick={openCreateDialog}
-                sx={{ minHeight: 44 }}
-              >
-                Create template
-              </Button>
-            ) : null}
-          </Box>
+              Create Template
+            </Button>
+          ) : null}
         </Box>
 
         {isError ? (
@@ -526,8 +546,7 @@ export default function SalaryTemplateSettings() {
             columns={tableColumns}
             data={tableRows}
             isLoading={isLoading}
-            handleRowClick={(row) => openTemplate(row as SalaryTemplateTableRow)}
-            rowProps={() => ({ sx: { cursor: 'pointer' } })}
+            rowProps={getTemplateRowProps}
             noDataText="No salary templates are available. Create a blank template to begin."
             wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
             tableContainerProps={{ sx: { height: '100%' } }}
@@ -596,7 +615,7 @@ export default function SalaryTemplateSettings() {
                         template.status !== 'ARCHIVED' ? (
                           <Button
                             size="small"
-                            startIcon={<Add aria-hidden="true" />}
+                            startIcon={<Iconify icon="mdi:plus" width={18} aria-hidden="true" />}
                             disabled={busy}
                             onClick={() => createDraftVersion(template)}
                           >
@@ -607,7 +626,11 @@ export default function SalaryTemplateSettings() {
                           <Button
                             size="small"
                             startIcon={
-                              canEdit ? <Edit aria-hidden="true" /> : <Preview aria-hidden="true" />
+                              <Iconify
+                                icon={canEdit ? 'mdi:pencil' : 'mdi:eye'}
+                                width={18}
+                                aria-hidden="true"
+                              />
                             }
                             disabled={busy}
                             onClick={() => openTemplate(template)}
@@ -618,7 +641,7 @@ export default function SalaryTemplateSettings() {
                         {canSetDefault && template.status === 'PUBLISHED' && !template.isDefault ? (
                           <Button
                             size="small"
-                            startIcon={<Star aria-hidden="true" />}
+                            startIcon={<Iconify icon="mdi:star" width={18} aria-hidden="true" />}
                             disabled={busy}
                             onClick={() => setDefaultTemplate(template)}
                           >
@@ -628,7 +651,9 @@ export default function SalaryTemplateSettings() {
                         {canAdd ? (
                           <Button
                             size="small"
-                            startIcon={<ContentCopy aria-hidden="true" />}
+                            startIcon={
+                              <Iconify icon="mdi:content-copy" width={18} aria-hidden="true" />
+                            }
                             disabled={busy || template.status === 'ARCHIVED'}
                             onClick={() => openCloneDialog(template)}
                           >
@@ -639,7 +664,7 @@ export default function SalaryTemplateSettings() {
                           <Button
                             size="small"
                             color="error"
-                            startIcon={<Archive aria-hidden="true" />}
+                            startIcon={<Iconify icon="mdi:archive" width={18} aria-hidden="true" />}
                             disabled={busy || template.status === 'ARCHIVED'}
                             onClick={() => setArchiveTarget(template)}
                           >
@@ -673,7 +698,6 @@ export default function SalaryTemplateSettings() {
               autoFocus
               fullWidth
               label="Template name"
-              name="name"
               autoComplete="off"
               {...formik.getFieldProps('name')}
               error={formik.touched.name && Boolean(formik.errors.name)}
@@ -685,7 +709,6 @@ export default function SalaryTemplateSettings() {
                 multiline
                 minRows={3}
                 label="Description"
-                name="description"
                 autoComplete="off"
                 {...formik.getFieldProps('description')}
                 error={formik.touched.description && Boolean(formik.errors.description)}
