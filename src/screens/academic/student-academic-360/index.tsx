@@ -143,8 +143,7 @@ const StudentAcademic360Screen = () => {
   }, [fetchStudentRecords]);
 
   const academicItems = students.map(normalizeAcademicStudent);
-  const searchedItems = academicItems;
-  const filteredItems = searchedItems.filter((item) => matchesAcademicFilter(item, activeFilter));
+  const filteredItems = academicItems.filter((item) => matchesAcademicFilter(item, activeFilter));
   const filteredStudents = filteredItems.map((item) => item.student);
 
   const activeFilterLabel = activeFilter.replace(/([A-Z])/g, ' $1').toLowerCase();
@@ -195,7 +194,7 @@ const StudentAcademic360Screen = () => {
       </Card>
 
       <StudentAcademicSummaryCards
-        items={searchedItems}
+        items={academicItems}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
       />

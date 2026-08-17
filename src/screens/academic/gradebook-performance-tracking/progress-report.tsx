@@ -34,7 +34,7 @@ const ProgressReport = (props: TabComponentType) => (
           { value: 'class2', label: 'Class 2' },
           { value: 'class3', label: 'Class 3' },
         ]}
-        onChange={() => {}}
+        onChange={() => { }}
         value=""
         formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
@@ -46,7 +46,7 @@ const ProgressReport = (props: TabComponentType) => (
           { value: 'quiz', label: 'Quiz' },
           { value: 'exam', label: 'Exam' },
         ]}
-        onChange={() => {}}
+        onChange={() => { }}
         value=""
         formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
@@ -58,7 +58,7 @@ const ProgressReport = (props: TabComponentType) => (
           { value: 'date', label: 'Date' },
         ]}
         value=""
-        onChange={() => {}}
+        onChange={() => { }}
         formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
       <DatePicker
@@ -107,7 +107,7 @@ const ProgressReport = (props: TabComponentType) => (
                 { value: 'Science', label: 'Science' },
                 { value: 'ENG', label: 'ENG' },
               ]}
-              onChange={() => {}}
+              onChange={() => { }}
               value=""
               formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
             />
@@ -137,7 +137,7 @@ const ProgressReport = (props: TabComponentType) => (
                 { value: 'Monthly', label: 'Monthly' },
                 { value: 'Weekly', label: 'Weekly' },
               ]}
-              onChange={() => {}}
+              onChange={() => { }}
               value=""
               formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
             />
@@ -216,7 +216,7 @@ const ProgressReport = (props: TabComponentType) => (
                 { value: 'Quiz', label: 'Quiz' },
                 { value: 'Exam', label: 'Exam' },
               ]}
-              onChange={() => {}}
+              onChange={() => { }}
               value=""
               formControlProps={{
                 sx: {
@@ -306,7 +306,7 @@ const ProgressReport = (props: TabComponentType) => (
                 { value: 'Monthly', label: 'Monthly' },
                 { value: 'Weekly', label: 'Weekly' },
               ]}
-              onChange={() => {}}
+              onChange={() => { }}
               value=""
               formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
             />

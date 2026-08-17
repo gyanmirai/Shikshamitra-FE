@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Card,
   Chip,
+  Stack,
   Avatar,
   Button,
   Tooltip,
@@ -19,6 +20,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { readText } from '../types';
 import { getMetricPercentage, normalizeAcademicStudent } from '../listUtils';
+import { NotifyParentDialog } from './NotifyParentDialog';
 
 import type { Academic360Metric, Academic360StudentRow } from '../types';
 import type { StudentAcademicListItem } from '../listUtils';
@@ -91,6 +93,7 @@ export function StudentAcademic360Table({
   onRetry,
 }: StudentAcademic360TableProps) {
   const items = students.map(normalizeAcademicStudent);
+  const [notifyStudent, setNotifyStudent] = useState<Academic360StudentRow | null>(null);
 
   const columns: IColumn[] = [
     {
@@ -157,13 +160,19 @@ export function StudentAcademic360Table({
     {
       id: 'trend',
       label: 'Trend',
-      render: (value: any, row: any) => {
+      render: (_value: any, row: any) => {
         const item = row as StudentAcademicListItem;
+        const normalized = (item.trend || '').toLowerCase();
+        const isUp = normalized.includes('improv') || normalized.includes('up');
+        const isDown = normalized.includes('declin') || normalized.includes('down') || normalized.includes('drop');
+        const trendIcon = isUp ? 'mdi:trending-up' : isDown ? 'mdi:trending-down' : 'mdi:trending-neutral';
+        const trendCol = isUp ? 'success' : isDown ? 'error' : 'default';
         return (
           <Chip
             size="small"
             variant="soft"
-            icon={<Iconify icon="mdi:trending-up" />}
+            color={trendCol as any}
+            icon={<Iconify icon={trendIcon} />}
             label={item.trend}
           />
         );
@@ -216,25 +225,37 @@ export function StudentAcademic360Table({
     },
     {
       id: 'action',
-      label: 'Action',
+      label: 'Actions',
       align: 'left' as const,
       isSort: false,
       sticky: true,
-      // stickyPosition: 'left' as const,
+      stickyPosition: 'right' as const,
       isFilter: false,
       excludeFromExport: true,
-      render: (value: any, row: any) => {
+      render: (_value: any, row: any) => {
         const item = row as StudentAcademicListItem;
         return (
-          <Tooltip title="Open Academic 360">
-            <IconButton
-              size="small"
-              onClick={() => onOpenStudent(item.student)}
-              disabled={!item.studentId}
-            >
-              <Iconify icon="mdi:eye" />
-            </IconButton>
-          </Tooltip>
+          <Stack direction="row" spacing={0.5}>
+            <Tooltip title="Notify Parent">
+              <IconButton
+                size="small"
+                color="warning"
+                onClick={() => setNotifyStudent(item.student)}
+                disabled={!item.studentId}
+              >
+                <Iconify icon="mdi:bell-outline" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Open Academic 360">
+              <IconButton
+                size="small"
+                onClick={() => onOpenStudent(item.student)}
+                disabled={!item.studentId}
+              >
+                <Iconify icon="mdi:eye" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         );
       },
     },
@@ -294,14 +315,20 @@ export function StudentAcademic360Table({
   }
 
   return (
-    <CustomizableTable
-      tableId="student-academic-360-table"
-      columns={columns}
-      data={items}
-      isLoading={isLoading}
-
-      isShowedDense
-      defaultRowsPerPage={10}
-    />
+    <>
+      <CustomizableTable
+        tableId="student-academic-360-table"
+        columns={columns}
+        data={items}
+        isLoading={isLoading}
+        isShowedDense
+        defaultRowsPerPage={10}
+      />
+      <NotifyParentDialog
+        open={!!notifyStudent}
+        student={notifyStudent}
+        onClose={() => setNotifyStudent(null)}
+      />
+    </>
   );
 }

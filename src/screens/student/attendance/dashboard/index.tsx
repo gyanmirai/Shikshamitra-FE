@@ -201,13 +201,13 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
     () =>
       selectedStudent?.studentId
         ? buildAttendanceHistoryQuery({
-            studentId: selectedStudent.studentId,
-            startDate,
-            endDate,
-            skipCount: historyQuery.skipCount,
-            maxResultCount: historyQuery.maxResultCount,
-            sorting: historyQuery.sorting,
-          })
+          studentId: selectedStudent.studentId,
+          startDate,
+          endDate,
+          skipCount: historyQuery.skipCount,
+          maxResultCount: historyQuery.maxResultCount,
+          sorting: historyQuery.sorting,
+        })
         : undefined,
     [
       selectedStudent?.studentId,
