@@ -89,16 +89,6 @@ export function StudentAcademicSummaryCards({
       icon: 'mdi:chart-line',
       color: 'success',
     },
-    {
-      key: 'activeIntervention',
-      label: 'Active Interventions',
-      value: String(
-        items.filter((item) => matchesAcademicFilter(item, 'activeIntervention')).length
-      ),
-      helper: 'Students with support plan',
-      icon: 'mdi:hand-heart-outline',
-      color: 'info',
-    },
   ];
 
   return (
@@ -107,7 +97,7 @@ export function StudentAcademicSummaryCards({
         const active = activeFilter === card.key;
 
         return (
-          <Grid key={card.key} size={{ xs: 6, sm: 4, md: 2 }}>
+          <Grid key={card.key} size={{ xs: 6, sm: 4, md: 'auto' }} sx={{ flex: { md: 1 } }}>
             <Tooltip title={card.helper}>
               <Card
                 role="button"

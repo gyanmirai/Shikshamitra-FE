@@ -18,7 +18,6 @@ const filters: { key: AcademicSmartFilter; label: string; icon: string }[] = [
   { key: 'overdueHomework', label: 'Overdue Homework', icon: 'mdi:clipboard-alert-outline' },
   { key: 'performanceDecline', label: 'Performance Decline', icon: 'mdi:trending-down' },
   { key: 'noData', label: 'No Academic Data', icon: 'mdi:database-alert-outline' },
-  { key: 'activeIntervention', label: 'Active Intervention', icon: 'mdi:hand-heart-outline' },
 ];
 
 export function AcademicSmartFilters({

@@ -3,13 +3,7 @@ import { getStudentId, getStudentName, readOptionalText, readText } from './type
 import type { Academic360Metric, Academic360StudentRow } from './types';
 
 export type AcademicSmartFilter =
-  | 'all'
-  | 'needsAttention'
-  | 'lowAttendance'
-  | 'overdueHomework'
-  | 'performanceDecline'
-  | 'noData'
-  | 'activeIntervention';
+  'all' | 'needsAttention' | 'lowAttendance' | 'overdueHomework' | 'performanceDecline' | 'noData';
 
 export type AcademicSortKey =
   | 'priority'
@@ -36,12 +30,13 @@ export type StudentAcademicListItem = {
   academicHealth: string;
   academicHealthReasons: string[];
   alertCount?: number;
-  activeInterventionCount?: number;
   dataCompleteness: string;
   lastUpdatedAt?: string;
 };
 
-const metricFromUnknown = (value: Academic360StudentRow['attendance']): Academic360Metric | undefined => {
+const metricFromUnknown = (
+  value: Academic360StudentRow['attendance']
+): Academic360Metric | undefined => {
   if (typeof value === 'number') return { percentage: value, value };
   if (!value || typeof value !== 'object') return undefined;
   return value;
@@ -55,11 +50,10 @@ const percentageOf = (metric?: Academic360Metric): number | undefined => {
 const hasAcademicData = (item: StudentAcademicListItem): boolean =>
   Boolean(
     item.attendance ||
-      item.homework ||
-      item.examAverage ||
-      item.alertCount !== undefined ||
-      item.activeInterventionCount !== undefined ||
-      item.lastUpdatedAt
+    item.homework ||
+    item.examAverage ||
+    item.alertCount !== undefined ||
+    item.lastUpdatedAt
   );
 
 const healthRank: Record<string, number> = {
@@ -72,7 +66,9 @@ const healthRank: Record<string, number> = {
   ontrack: 6,
 };
 
-export const normalizeAcademicStudent = (student: Academic360StudentRow): StudentAcademicListItem => {
+export const normalizeAcademicStudent = (
+  student: Academic360StudentRow
+): StudentAcademicListItem => {
   const attendance = metricFromUnknown(student.attendance);
   const homework = metricFromUnknown(student.homework);
   const examAverage = metricFromUnknown(student.examAverage);
@@ -92,11 +88,12 @@ export const normalizeAcademicStudent = (student: Academic360StudentRow): Studen
     homework,
     examAverage,
     trend: readText(student.trend, 'Insufficient Data'),
-    academicHealth: readText(student.academicHealth, attendance || homework || examAverage ? 'On Track' : 'Insufficient Data'),
+    academicHealth: readText(
+      student.academicHealth,
+      attendance || homework || examAverage ? 'On Track' : 'Insufficient Data'
+    ),
     academicHealthReasons: student.academicHealthReasons || [],
     alertCount: typeof student.alertCount === 'number' ? student.alertCount : undefined,
-    activeInterventionCount:
-      typeof student.activeInterventionCount === 'number' ? student.activeInterventionCount : undefined,
     dataCompleteness,
     lastUpdatedAt: readOptionalText(student.lastUpdatedAt ?? student.updatedAt),
   };
@@ -111,19 +108,21 @@ export const matchesAcademicFilter = (
   const health = item.academicHealth.toLowerCase().replace(/\s/g, '');
 
   if (filter === 'all') return true;
-  if (filter === 'needsAttention') return ['needsattention', 'supportrecommended', 'urgent'].includes(health);
+  if (filter === 'needsAttention')
+    return ['needsattention', 'supportrecommended', 'urgent'].includes(health);
   if (filter === 'lowAttendance') return typeof attendance === 'number' && attendance < 75;
   if (filter === 'overdueHomework') return homeworkPending > 0;
   if (filter === 'performanceDecline') return item.trend.toLowerCase() === 'declining';
   if (filter === 'noData') return !hasAcademicData(item) || health === 'insufficientdata';
-  return (item.activeInterventionCount ?? 0) > 0;
+  return false;
 };
 
 export const getAcademicPriority = (item: StudentAcademicListItem): number => {
   const health = item.academicHealth.toLowerCase().replace(/\s/g, '');
   const attendance = percentageOf(item.attendance);
   if (typeof attendance === 'number' && attendance < 75) return 1;
-  if ((item.alertCount ?? 0) > 0 && ['supportrecommended', 'needsattention'].includes(health)) return 1;
+  if ((item.alertCount ?? 0) > 0 && ['supportrecommended', 'needsattention'].includes(health))
+    return 1;
   return healthRank[health] ?? 4;
 };
 
@@ -158,7 +157,10 @@ export const sortAcademicStudents = (
     return (numberValue(first) - numberValue(second)) * modifier;
   });
 
-export const studentMatchesSearch = (item: StudentAcademicListItem, searchTerm: string): boolean => {
+export const studentMatchesSearch = (
+  item: StudentAcademicListItem,
+  searchTerm: string
+): boolean => {
   const query = searchTerm.trim().toLowerCase();
   if (!query) return true;
   return [
@@ -171,4 +173,3 @@ export const studentMatchesSearch = (item: StudentAcademicListItem, searchTerm: 
     item.student.division,
   ].some((value) => value && value.toString().toLowerCase().includes(query));
 };
-
