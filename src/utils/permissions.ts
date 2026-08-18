@@ -8,6 +8,10 @@ export type PermissionName = string | string[];
 const FEE_ADJUSTMENT_PERMISSION = 'Finance.Fees.Adjustment';
 const FEE_ADJUSTMENT_LEGACY_PREFIX = 'Finance.Adjustment';
 
+// TODO: Remove this development-only bypass after Admissions permissions are seeded for dev roles.
+const isDevelopmentAdmissionsPermission = (permissionName: string) =>
+  process.env.NODE_ENV === 'development' && permissionName.startsWith('Students.Admission');
+
 export const hasGrantedPermission = (
   permissions: GrantedPermission[] | undefined,
   permissionName?: PermissionName
@@ -15,6 +19,10 @@ export const hasGrantedPermission = (
   if (!permissionName || !permissions?.length) return false;
   if (Array.isArray(permissionName)) {
     return permissionName.some((name) => hasGrantedPermission(permissions, name));
+  }
+
+  if (isDevelopmentAdmissionsPermission(permissionName)) {
+    return true;
   }
 
   const matches = (name: string) =>

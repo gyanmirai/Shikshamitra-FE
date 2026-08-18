@@ -14,14 +14,15 @@ TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query c
 
 ## Client map
 
-| Client | Responsibilities | Main screens |
-|---|---|---|
-| `admission-cycles-api.ts` | Cycles and offerings configuration | Cycles, offerings, inquiry filters, Applicant 360 |
-| `admission-workflows-api.ts` | Workflow definitions, stages, transitions, clone, publish, validation | Workflow builder |
-| `admission-forms-api.ts` | Form definitions, sections, fields, clone, publish, validation, preview | Form builder and preview |
-| `admission-inquiries-api.ts` | Inquiry list, create, duplicate check, contacted action | Inquiry CRM and inquiry dialog |
-| `admission-applicants-api.ts` | Applicant 360, notes, activities | Applicant 360 |
-| `admission-applications-api.ts` | Start application, list, workflow, form values, draft save, submit | Application list and detail |
+| Client                          | Responsibilities                                                                                                 | Main screens                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `admission-cycles-api.ts`       | Admission cycle list and lifecycle commands                                                                      | Cycles and cycle selectors                  |
+| `admission-offerings-api.ts`    | Offering list, detail, CRUD, explicit state commands, clone, readiness, availability, and bulk preview or commit | Offerings, inquiry selection, Applicant 360 |
+| `admission-workflows-api.ts`    | Workflow definitions, stages, transitions, clone, publish, validation                                            | Workflow builder                            |
+| `admission-forms-api.ts`        | Form definitions, sections, fields, clone, publish, validation, preview                                          | Form builder and preview                    |
+| `admission-inquiries-api.ts`    | Inquiry list, create, duplicate check, contacted action                                                          | Inquiry CRM and inquiry dialog              |
+| `admission-applicants-api.ts`   | Applicant 360, notes, activities                                                                                 | Applicant 360                               |
+| `admission-applications-api.ts` | Start application, list, workflow, form values, draft save, submit                                               | Application list and detail                 |
 
 ## Endpoint ownership
 
@@ -32,6 +33,7 @@ Product rules and persistence are owned by `../../../Shikshamitra-BE/src/Shiksha
 ## Cache behavior
 
 Admissions mutations invalidate the relevant `studentAdmissionsCrmType` tag so lists and detail screens reload configuration or runtime state after a successful change.
+Bulk preview is read-like and does not invalidate the offering cache; successful bulk commit does.
 Application form-value saves invalidate the application tag so the concurrency stamp and saved values remain current.
 Inquiry creation invalidates inquiry and applicant tags because it creates the CRM record and its linked applicant context together.
 

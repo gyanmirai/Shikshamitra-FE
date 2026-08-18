@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-cycles-api';
+import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 import { useStartAdmissionApplicationMutation } from 'src/redux/student/admissions/admission-applications-api';
 import {
@@ -27,7 +27,7 @@ export default function AdmissionApplicant360Screen() {
   const router = useRouter();
   const { data, isLoading, isError } = useGetAdmissionApplicant360Query(id);
   const { data: offerings } = useGetAdmissionOfferingsQuery({
-    isActive: true,
+    availabilityStatus: 2,
     maxResultCount: 100,
     skipCount: 0,
   });

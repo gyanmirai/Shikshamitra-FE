@@ -16,7 +16,6 @@ export type AdmissionFormField = {
   placeholder?: string;
   helpText?: string;
   defaultValue?: string;
-  bindingKey?: string;
   required: boolean;
   readOnly: boolean;
   displayOrder: number;

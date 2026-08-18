@@ -15,18 +15,23 @@ TL;DR: the Enrollment Admissions CRM project connects configurable setup screens
 ## Configuration workflow
 
 1. An administrator creates or selects an admission cycle.
-2. The administrator configures an offering and associates published workflow, inquiry form, and application form definitions.
+2. The administrator configures an offering through scoped Board, Medium, Stage, and Standard selectors and associates published workflow, inquiry form, and application form versions.
 3. The administrator builds workflow stages and transitions, then previews, validates, and publishes the workflow.
 4. The administrator builds form sections and fields, configures bindings, rules, defaults, required state, and read-only state, then previews, validates, and publishes the form.
 
 The setup screens are `admission-cycles.tsx`, `admission-offerings.tsx`, `admission-workflows.tsx`, `admission-forms.tsx`, and `admission-form-preview.tsx`.
+
+The Offering screen uses server-side search, paging, sorting, URL-backed filters, inherited or overridden cycle dates, readiness feedback, optimistic concurrency, and `ThreeDotsActions` row commands.
+Archived cycles are excluded from the setup selector.
+Clone copies source operational configuration while requiring a new valid identity.
+Bulk create performs an all-or-nothing server preview before commit.
 
 ## CRM runtime workflow
 
 1. A counselor creates an inquiry from the inquiry dialog.
 2. The inquiry flow checks duplicate phone, email, applicant name, and date-of-birth signals before creating or reusing family context.
 3. The inquiry list supports search and cycle, offering, status, and source filters.
-4. The counselor marks contact, reviews Applicant 360, adds notes, and starts an application for an active offering.
+4. The counselor marks contact, reviews Applicant 360, adds notes, and starts an application only for an offering whose computed availability is `Open`.
 
 The runtime screens are `admission-inquiries.tsx`, `admission-applicant-360.tsx`, and `admission-applicant-notes.tsx`.
 

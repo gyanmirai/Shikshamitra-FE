@@ -12,10 +12,8 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Stack, Button, MenuItem, TextField } from '@mui/material';
-import {
-  useGetAdmissionCyclesQuery,
-  useGetAdmissionOfferingsQuery,
-} from 'src/redux/student/admissions/admission-cycles-api';
+import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
+import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import {
   type AdmissionInquiry,
   type AdmissionInquirySource,

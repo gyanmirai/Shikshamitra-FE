@@ -3,10 +3,11 @@
 import { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
+import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import {
-  useGetAdmissionCyclesQuery,
+  useGetAdmissionOfferingQuery,
   useGetAdmissionOfferingsQuery,
-} from 'src/redux/student/admissions/admission-cycles-api';
+} from 'src/redux/student/admissions/admission-offerings-api';
 import {
   Alert,
   Stack,
@@ -20,6 +21,7 @@ import {
 } from '@mui/material';
 import {
   type DuplicateMatch,
+  type AdmissionInquirySource,
   type CreateAdmissionInquiry,
   useCreateAdmissionInquiryMutation,
   useCheckAdmissionInquiryDuplicatesMutation,
@@ -42,7 +44,7 @@ const jsonValue = (value: string) => JSON.stringify(value);
 export default function AdmissionInquiryDialog({ open, onClose }: Props) {
   const [cycleId, setCycleId] = useState('');
   const [offeringId, setOfferingId] = useState('');
-  const [source, setSource] = useState(0);
+  const [source, setSource] = useState<AdmissionInquirySource>(0);
   const [values, setValues] = useState<Record<string, string>>({});
   const [matches, setMatches] = useState<DuplicateMatch[]>([]);
   const { data: cycles } = useGetAdmissionCyclesQuery({
@@ -51,12 +53,15 @@ export default function AdmissionInquiryDialog({ open, onClose }: Props) {
     skipCount: 0,
   });
   const { data: offerings } = useGetAdmissionOfferingsQuery(
-    { admissionCycleId: cycleId, isActive: true, maxResultCount: 100, skipCount: 0 },
+    { admissionCycleId: cycleId, availabilityStatus: 2, maxResultCount: 100, skipCount: 0 },
     { skip: !cycleId }
   );
   const selectedOffering = offerings?.items.find((item) => item.id === offeringId);
-  const { data: form } = useGetAdmissionFormQuery(selectedOffering?.inquiryFormDefinitionId ?? '', {
-    skip: !selectedOffering?.inquiryFormDefinitionId,
+  const { data: offeringDetail } = useGetAdmissionOfferingQuery(selectedOffering?.id ?? '', {
+    skip: !selectedOffering?.id,
+  });
+  const { data: form } = useGetAdmissionFormQuery(offeringDetail?.inquiryFormDefinitionId ?? '', {
+    skip: !offeringDetail?.inquiryFormDefinitionId,
   });
   const [checkDuplicates, duplicateState] = useCheckAdmissionInquiryDuplicatesMutation();
   const [create, createState] = useCreateAdmissionInquiryMutation();
@@ -119,7 +124,7 @@ export default function AdmissionInquiryDialog({ open, onClose }: Props) {
           .filter(Boolean)
           .join(' '),
         applicantDateOfBirth: getBinding('Applicant.DateOfBirth') || values.applicantDateOfBirth,
-      });
+      }).unwrap();
       setMatches(result);
       if (!result.length) await submit();
     } catch {
@@ -164,7 +169,7 @@ export default function AdmissionInquiryDialog({ open, onClose }: Props) {
             select
             label="Source"
             value={source}
-            onChange={(event) => setSource(Number(event.target.value))}
+            onChange={(event) => setSource(Number(event.target.value) as AdmissionInquirySource)}
           >
             {sourceOptions.map((label, index) => (
               <MenuItem key={label} value={index}>

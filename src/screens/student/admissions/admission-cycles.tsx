@@ -1,19 +1,23 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { AcademicYear } from 'src/types/school';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Box, Stack, Button, Typography } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
   type AdmissionCycle,
   type AdmissionCycleStatus,
@@ -42,6 +46,16 @@ const statusColors: Record<AdmissionCycleStatus, 'default' | 'success' | 'warnin
   3: 'error',
 };
 
+const getAcademicYearSortValue = (year: AcademicYear): number => {
+  if (year.startDate) {
+    const startDate = dayjs(year.startDate);
+    if (startDate.isValid()) return startDate.valueOf();
+  }
+
+  const firstYear = year.name.match(/\d{4}/)?.[0];
+  return firstYear ? Number(firstYear) : Number.MIN_SAFE_INTEGER;
+};
+
 export default function AdmissionCyclesScreen() {
   const dialog = useBoolean();
   const [editingCycle, setEditingCycle] = useState<AdmissionCycle | null>(null);
@@ -52,6 +66,11 @@ export default function AdmissionCyclesScreen() {
   const canPublish = hasGrantedPermission(permissions, 'Students.Admissions.Publish');
   const canClose = hasGrantedPermission(permissions, 'Students.Admissions.Close');
   const canArchive = hasGrantedPermission(permissions, 'Students.Admissions.Archive');
+  const {
+    data: academicYearsData,
+    isLoading: academicYearsLoading,
+    isError: academicYearsError,
+  } = useGetYearQuery(undefined, { skip: !dialog.value });
   const { data, isLoading, isError, refetch } = useGetAdmissionCyclesQuery({
     maxResultCount: 100,
     skipCount: 0,
@@ -61,6 +80,21 @@ export default function AdmissionCyclesScreen() {
   const [publishCycle] = usePublishAdmissionCycleMutation();
   const [closeCycle] = useCloseAdmissionCycleMutation();
   const [archiveCycle] = useArchiveAdmissionCycleMutation();
+
+  const recentAcademicYears = useMemo(() => {
+    const years = (academicYearsData?.items ?? []) as AcademicYear[];
+    const sortedYears = [...years].sort(
+      (left, right) => getAcademicYearSortValue(right) - getAcademicYearSortValue(left)
+    );
+    const selectedYear = sortedYears.find((year) => year.id === currentYear?.id) ?? sortedYears[0];
+
+    if (!selectedYear) return [];
+
+    const selectedYearSortValue = getAcademicYearSortValue(selectedYear);
+    return sortedYears
+      .filter((year) => getAcademicYearSortValue(year) <= selectedYearSortValue)
+      .slice(0, 2);
+  }, [academicYearsData?.items, currentYear?.id]);
 
   const saveCycle = async (values: CreateUpdateAdmissionCycle) => {
     if (editingCycle) await updateCycle({ id: editingCycle.id, body: values }).unwrap();
@@ -110,6 +144,7 @@ export default function AdmissionCyclesScreen() {
       label: 'Status',
       filterType: 'enum',
       sticky: true,
+      stickyPosition: 'right',
       enumOptions: Object.entries(statusLabels).map(([value, label]) => ({
         value: Number(value),
         label,
@@ -124,55 +159,66 @@ export default function AdmissionCyclesScreen() {
       id: 'actions',
       label: 'Actions',
       sticky: true,
+      stickyPosition: 'right',
       isSort: false,
       isFilter: false,
       excludeFromExport: true,
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
         return (
-          <Stack direction="row" spacing={0.5}>
-            {canEdit && cycle.status === 0 && (
-              <Button
-                size="small"
-                onClick={() => {
-                  setEditingCycle(cycle);
-                  dialog.onTrue();
-                }}
-              >
-                Edit
-              </Button>
+          <ThreeDotsActions
+            placement="right-top"
+            moreLabel={`More actions for ${cycle.name}`}
+            actions={({ popover }) => (
+              <MenuList>
+                {canEdit && cycle.status === 0 && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      setEditingCycle(cycle);
+                      dialog.onTrue();
+                    }}
+                  >
+                    <Iconify icon={GlobalIcons.edit} />
+                    Edit
+                  </MenuItem>
+                )}
+                {canPublish && cycle.status === 0 && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      runAction(() => publishCycle(cycle.id).unwrap(), 'Admission cycle published');
+                    }}
+                  >
+                    <Iconify icon={GlobalIcons.publish} />
+                    Publish
+                  </MenuItem>
+                )}
+                {canClose && cycle.status === 1 && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      runAction(() => closeCycle(cycle.id).unwrap(), 'Admission cycle closed');
+                    }}
+                  >
+                    <Iconify icon={GlobalIcons.lockIcon} />
+                    Close
+                  </MenuItem>
+                )}
+                {canArchive && (cycle.status === 0 || cycle.status === 2) && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      runAction(() => archiveCycle(cycle.id).unwrap(), 'Admission cycle archived');
+                    }}
+                  >
+                    <Iconify icon={GlobalIcons.archive} />
+                    Archive
+                  </MenuItem>
+                )}
+              </MenuList>
             )}
-            {canPublish && cycle.status === 0 && (
-              <Button
-                size="small"
-                onClick={() =>
-                  runAction(() => publishCycle(cycle.id).unwrap(), 'Admission cycle published')
-                }
-              >
-                Publish
-              </Button>
-            )}
-            {canClose && cycle.status === 1 && (
-              <Button
-                size="small"
-                onClick={() =>
-                  runAction(() => closeCycle(cycle.id).unwrap(), 'Admission cycle closed')
-                }
-              >
-                Close
-              </Button>
-            )}
-            {canArchive && (cycle.status === 0 || cycle.status === 2) && (
-              <Button
-                size="small"
-                onClick={() =>
-                  runAction(() => archiveCycle(cycle.id).unwrap(), 'Admission cycle archived')
-                }
-              >
-                Archive
-              </Button>
-            )}
-          </Stack>
+          />
         );
       },
     },
@@ -191,7 +237,7 @@ export default function AdmissionCyclesScreen() {
         action={
           <Button
             variant="contained"
-            disabled={!canCreate || !currentYear?.id}
+            disabled={!canCreate}
             startIcon={<Iconify icon="mdi:plus" />}
             onClick={() => {
               setEditingCycle(null);
@@ -208,11 +254,6 @@ export default function AdmissionCyclesScreen() {
             refetch();
           }}
         />
-      )}
-      {!currentYear?.id && (
-        <Typography color="text.secondary">
-          Select an academic year before creating an admission cycle.
-        </Typography>
       )}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
@@ -232,7 +273,10 @@ export default function AdmissionCyclesScreen() {
       <AdmissionCycleDialog
         open={dialog.value}
         onClose={dialog.onFalse}
-        academicYearId={currentYear?.id ?? ''}
+        academicYearId={currentYear?.id ?? recentAcademicYears[0]?.id ?? ''}
+        academicYears={recentAcademicYears}
+        academicYearsLoading={academicYearsLoading}
+        academicYearsError={academicYearsError}
         editingCycle={editingCycle}
         saving={creating || updating}
         onSave={saveCycle}

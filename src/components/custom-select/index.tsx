@@ -61,8 +61,12 @@ const CustomSelect = <T extends string, J extends boolean>({
   addOtherItemOnClick,
   disabledValues = [],
   disabledLabel = 'Already configured',
+  inputProps,
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
+  const generatedLabelId = React.useId();
+  const labelId = props.labelId ?? generatedLabelId;
+
   const handleChange = (event: any) => {
     const selectedValue: J extends true ? string[] | number[] : string | number =
       event.target.value;
@@ -98,13 +102,20 @@ const CustomSelect = <T extends string, J extends boolean>({
         <Skeleton variant="rectangular" height={40} />
       ) : (
         <>
-          <InputLabel size="small">{label}</InputLabel>
+          <InputLabel id={labelId} size="small">
+            {label}
+          </InputLabel>
           <Select
+            labelId={labelId}
             multiple={multiple}
             value={value}
             onChange={handleChange}
             size="small"
             label={label}
+            inputProps={{
+              ...inputProps,
+              'aria-label': inputProps?.['aria-label'] ?? label,
+            }}
             disabled={disabled}
             renderValue={
               multiple

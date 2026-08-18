@@ -7,6 +7,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import * as Yup from 'yup';
+import { useMemo } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
@@ -44,14 +45,24 @@ const newStage = (order: number) => ({
 });
 
 export function AdmissionWorkflowDialog({ open, onClose, editing, saving, onSave }: Props) {
-  const formik = useFormik<CreateUpdateAdmissionWorkflow>({
-    enableReinitialize: true,
-    initialValues: {
+  /**
+   * Memoization Justification:
+   * - Formik uses enableReinitialize and compares initialValues on each render.
+   * - Stable values prevent resetForm from dispatching on every render.
+   * - The values are rebuilt only when the edited workflow changes.
+   */
+  const initialValues = useMemo(
+    () => ({
       name: editing?.name ?? '',
       code: editing?.code ?? '',
       stages: editing?.stages ?? [newStage(0), newStage(1)],
       transitions: editing?.transitions ?? [],
-    },
+    }),
+    [editing?.code, editing?.name, editing?.stages, editing?.transitions]
+  );
+  const formik = useFormik<CreateUpdateAdmissionWorkflow>({
+    enableReinitialize: true,
+    initialValues,
     validationSchema: schema,
     onSubmit: async (values, helpers) => {
       try {

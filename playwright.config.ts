@@ -141,6 +141,9 @@ export default defineConfig({
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
+      use: {
+        launchOptions: browserLaunchOptions,
+      },
     },
     ...authenticatedProjects,
     {

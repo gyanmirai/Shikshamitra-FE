@@ -35,6 +35,8 @@ const CustomDialog = ({
   ...props
 }: CustomDialogProps) => {
   const theme = useTheme();
+  const generatedTitleId = React.useId();
+  const titleId = props['aria-labelledby'] ?? generatedTitleId;
   const { sx, ...paper } = paperProps || {};
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
@@ -53,6 +55,7 @@ const CustomDialog = ({
   const FormComponent = hasForm ? 'form' : Box;
   return (
     <Dialog
+      aria-labelledby={titleId}
       open={open}
       onClose={handleCloseDialog}
       fullWidth
@@ -102,7 +105,7 @@ const CustomDialog = ({
             boxShadow: 'var(--shadows-3)',
           }} // Increased padding for header
         >
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Typography id={titleId} variant="h6" sx={{ fontWeight: 700 }}>
             {title}
           </Typography>
           <IconButton

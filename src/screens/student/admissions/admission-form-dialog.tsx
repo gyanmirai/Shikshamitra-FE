@@ -6,6 +6,7 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import * as Yup from 'yup';
+import { useMemo } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
@@ -47,10 +48,15 @@ const newField = (sectionId: string, order: number) => ({
   displayOrder: order,
 });
 export function AdmissionFormDialog({ open, onClose, editing, saving, onSave }: Props) {
-  const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
-  const formik = useFormik<CreateUpdateAdmissionForm>({
-    enableReinitialize: true,
-    initialValues: {
+  /**
+   * Memoization Justification:
+   * - Formik uses enableReinitialize and compares initialValues on each render.
+   * - Stable values prevent resetForm from dispatching on every render.
+   * - The generated default section and field are created only for a new form state.
+   */
+  const initialValues = useMemo(() => {
+    const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
+    return {
       name: editing?.name ?? '',
       code: editing?.code ?? '',
       layoutType: editing?.layoutType ?? 1,
@@ -63,7 +69,11 @@ export function AdmissionFormDialog({ open, onClose, editing, saving, onSave }: 
           fields: [newField(sectionId, 0)],
         },
       ],
-    },
+    };
+  }, [editing?.code, editing?.layoutType, editing?.name, editing?.sections]);
+  const formik = useFormik<CreateUpdateAdmissionForm>({
+    enableReinitialize: true,
+    initialValues,
     validationSchema: schema,
     onSubmit: async (values, helpers) => {
       try {

@@ -16,33 +16,34 @@ Open the editable [Enrollment Admissions flow design](./enrollment-admissions-fl
 
 ## Project scope implemented
 
-| Capability | Implemented surface |
-|---|---|
-| Admission cycles and offerings | Cycle and offering setup screens with active configuration references |
-| Workflow configuration | Versioned workflow definitions with stages, transitions, validation, clone, and publish |
-| Form configuration | Versioned sections and fields with system bindings, defaults, validation, visibility rules, preview, and publish |
-| Inquiry CRM | Inquiry creation, duplicate check, family and applicant linking, search, filters, contacted state, and source tracking |
-| Applicant 360 | Applicant context, application progress, activity timeline, and notes |
-| Application runtime | Start, prefill, draft save, concurrency handling, runtime field rendering, authoritative submit validation, and progress |
+| Capability                     | Implemented surface                                                                                                                                         |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admission cycles and offerings | Cycle setup plus scoped offering CRUD, inherited or override dates, readiness, availability, concurrency, clone, state commands, and bulk preview or commit |
+| Workflow configuration         | Versioned workflow definitions with stages, transitions, validation, clone, and publish                                                                     |
+| Form configuration             | Versioned sections and fields with system bindings, defaults, validation, visibility rules, preview, and publish                                            |
+| Inquiry CRM                    | Inquiry creation, duplicate check, family and applicant linking, search, filters, contacted state, and source tracking                                      |
+| Applicant 360                  | Applicant context, application progress, activity timeline, and notes                                                                                       |
+| Application runtime            | Start, prefill, draft save, concurrency handling, runtime field rendering, authoritative submit validation, and progress                                    |
 
 ## Demo path
 
 1. Open `/student/admissions/settings/cycles` and create an admission cycle.
 2. Open `/student/admissions/settings/workflows` and publish a workflow with stages and transitions.
 3. Open `/student/admissions/settings/forms` and publish an inquiry or application form.
-4. Associate the published definitions with an offering under `/student/admissions/settings/offerings`.
-5. Create an inquiry under `/student/admissions/inquiries` and use duplicate detection when matching contact data exists.
-6. Open the linked Applicant 360 page, review the timeline, and add a note.
-7. Start an application, edit the prefilled form, save a draft, and submit it to see field validation and workflow progress.
+4. Open `/student/admissions/settings/offerings`, select scoped academic hierarchy, choose inherited or override dates, associate the published definitions, and save or activate the offering.
+5. Use Bulk create when several Standards share one workflow, forms, and admission window; commit only after every preview row is ready.
+6. Create an inquiry under `/student/admissions/inquiries` and use duplicate detection when matching contact data exists.
+7. Open the linked Applicant 360 page, review the timeline, and add a note.
+8. Start an application, edit the prefilled form, save a draft, and submit it to see field validation and workflow progress.
 
 ## Frontend source map
 
-| Concern | Source |
-|---|---|
-| Routes | `src/app/(auth-route)/student/admissions/**/page.tsx` |
-| Screens | `src/screens/student/admissions/**` |
-| RTK Query clients | `src/redux/student/admissions/**` |
-| Navigation and permission names | `src/constants/student-menu.ts` |
+| Concern                         | Source                                                |
+| ------------------------------- | ----------------------------------------------------- |
+| Routes                          | `src/app/(auth-route)/student/admissions/**/page.tsx` |
+| Screens                         | `src/screens/student/admissions/**`                   |
+| RTK Query clients               | `src/redux/student/admissions/**`                     |
+| Navigation and permission names | `src/constants/student-menu.ts`                       |
 
 ## Backend ownership
 
