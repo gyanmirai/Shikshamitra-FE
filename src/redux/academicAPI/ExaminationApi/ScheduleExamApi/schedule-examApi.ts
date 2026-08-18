@@ -146,6 +146,7 @@ export const {
   useUpdateExamBasicDetailsMutation,
   useGetExamBasicDetailsQuery,
   useGetExamScheduleQuery,
+  useLazyGetExamScheduleQuery,
   useUpdateExamScheduleMutation,
   useGetExamRoomAssignmentsQuery,
   useUpdateExamRoomAssignmentMutation,

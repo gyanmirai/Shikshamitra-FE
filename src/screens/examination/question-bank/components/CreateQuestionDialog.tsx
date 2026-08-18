@@ -541,10 +541,10 @@ function QuestionFormFields({
                           p: 1.5,
                           borderRadius: 1.5,
                           border: '1px solid',
-                          borderColor: option.isCorrect ? 'success.light' : 'divider',
+                          borderColor: option.isCorrect ? 'success.main' : 'divider',
                           bgcolor: option.isCorrect
-                            ? alpha(theme.palette.success.main, 0.04)
-                            : 'transparent',
+                            ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08)
+                            : (t) => varAlpha(t.vars.palette.background.paperChannel, 0.4),
                           transition: 'all 0.2s',
                         }}
                       >

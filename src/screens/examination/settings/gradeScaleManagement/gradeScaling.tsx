@@ -3,11 +3,11 @@
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
-import React, { useState, useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useState, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -17,13 +17,14 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { academicPermissions, academicPaths } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { academicPermissions, academicPaths } from 'src/constants/academic-menu';
 import { Box, Paper, Stack, Button, Typography, IconButton } from '@mui/material';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   gradeScalingApi,
   useGetGradeScalingsQuery,
@@ -31,9 +32,9 @@ import {
   useArchiveGradeScalingMutation,
   useRestoreGradeScalingMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import GradeForm from './gradeScaleForm';
+import GradeScaleDetailsDrawer from './gradeScaleDetailsDrawer';
 
 import type { IGrade } from './type';
 
@@ -223,7 +224,13 @@ const GradingScale = () => {
         tableId="gradesTable"
         isLoading={isLoading || isFetching}
         noDataText={
-          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={1}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            gap={1}
+          >
             No Grade Scaling Data Found
             {canAdd && (
               <Box
@@ -415,31 +422,25 @@ const GradingScale = () => {
           </Box>
         }
       >
-        <GradeForm onSubmit={() => { }} onClose={handleClose} data={selectedGrade} />
+        <GradeForm onSubmit={() => {}} onClose={handleClose} data={selectedGrade} />
       </CustomDialog>
 
       {/* ------------------------------------------------------------------- */}
-      {/* View dialog                                                          */}
+      {/* View Details Drawer                                                 */}
       {/* ------------------------------------------------------------------- */}
-      <CustomDialog
+      <GradeScaleDetailsDrawer
         open={viewDialog.value}
-        maxWidth="lg"
-        handleClose={() => handleClose(null, false)}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Grade Scale</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="View grade scales, ranges, total marks, and grading criteria in one place."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <GradeForm onSubmit={() => { }} onClose={handleClose} data={selectedGrade} viewOnly />
-      </CustomDialog>
+        onClose={() => {
+          viewDialog.onFalse();
+          setTimeout(() => setSelectedGrade(null), 200);
+        }}
+        gradeScale={selectedGrade}
+        canEdit={canAdd}
+        onEdit={() => {
+          viewDialog.onFalse();
+          addGradeScalingDialog.onTrue();
+        }}
+      />
 
       {/* ------------------------------------------------------------------- */}
       {/* Delete confirmation                                                  */}

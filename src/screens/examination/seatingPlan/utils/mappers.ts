@@ -141,6 +141,16 @@ export function toSeatingRoomLayout(room: {
   };
 }
 
+export function upsertSeatingRoomLayout(
+  rooms: SeatingRoomLayout[],
+  layout: SeatingRoomLayout
+): SeatingRoomLayout[] {
+  const existingIndex = rooms.findIndex((room) => room.roomId === layout.roomId);
+  if (existingIndex === -1) return [...rooms, layout];
+
+  return rooms.map((room, index) => (index === existingIndex ? layout : room));
+}
+
 export function toSeatingStudents(items: IStudentRoomAssignment[] = []): SeatingStudent[] {
   return items.map((s) => ({
     studentId: s.studentId,

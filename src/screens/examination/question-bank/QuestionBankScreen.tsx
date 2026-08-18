@@ -369,8 +369,8 @@ function StatCard({
             borderRadius: 1,
             display: 'grid',
             placeItems: 'center',
-            bgcolor: alpha(palette.main, 0.12),
-            color: palette.main,
+            bgcolor: (t) => varAlpha(t.vars.palette[color].mainChannel, 0.12),
+            color: `${color}.main`,
             flexShrink: 0,
           }}
         >
@@ -409,9 +409,8 @@ const SectionPaper = ({
     sx={{
       p: { xs: 1.5, md: 2 },
       borderRadius: 1.5,
-      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
-      borderColor: (theme) => alpha(theme.palette.divider, 0.9),
-      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.4)}`,
+      bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+      borderColor: 'divider',
     }}
   >
     <Stack spacing={1.5}>
@@ -431,13 +430,13 @@ const SectionPaper = ({
               alignItems: 'center',
               justifyContent: 'center',
               color: 'primary.main',
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+              bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
             }}
           >
             <Iconify icon={icon} width={18} height={18} />
           </Box>
           <Stack spacing={0.2}>
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography variant="subtitle2" fontWeight={700} color="text.primary">
               {title}
             </Typography>
             {caption && (
@@ -689,10 +688,10 @@ function QuestionFormFields({
                       p: 1.5,
                       borderRadius: 1.5,
                       border: '1px solid',
-                      borderColor: option.isCorrect ? 'success.light' : 'divider',
+                      borderColor: option.isCorrect ? 'success.main' : 'divider',
                       bgcolor: option.isCorrect
-                        ? alpha(theme.palette.success.main, 0.04)
-                        : 'transparent',
+                        ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08)
+                        : (t) => varAlpha(t.vars.palette.background.paperChannel, 0.4),
                       transition: 'all 0.2s',
                     }}
                   >

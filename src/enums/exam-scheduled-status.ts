@@ -2,12 +2,15 @@ export enum examScheduledStatus {
   Pending,
   Published,
   Completed,
+  /** Frontend-derived view state; never persisted through the exam status API. */
+  Ongoing,
 }
 
 export const examScheduledStatusColor = {
   [examScheduledStatus.Pending]: 'warning',
   [examScheduledStatus.Published]: 'info',
   [examScheduledStatus.Completed]: 'success',
+  [examScheduledStatus.Ongoing]: 'primary',
 };
 
 export const examScheduledStatusOptions = [

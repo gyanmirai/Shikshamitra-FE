@@ -1,5 +1,7 @@
 import { Box, Alert, Skeleton, Stack, Typography } from '@mui/material';
 
+import { getValidationIssueLabel } from '../../utils/validationIssueLabels';
+
 import type { SeatingValidationIssue } from '../../types';
 
 export default function AllocationConflictPanel({
@@ -36,7 +38,7 @@ export default function AllocationConflictPanel({
         // eslint-disable-next-line react/no-array-index-key
         <Alert key={`b-${idx}`} severity="error" variant="outlined" sx={{ fontSize: '0.78rem' }}>
           <Typography variant="caption" fontWeight={700} display="block">
-            {issue.code}
+            {getValidationIssueLabel(issue.code)}
           </Typography>
           {issue.message}
         </Alert>
@@ -45,7 +47,7 @@ export default function AllocationConflictPanel({
         // eslint-disable-next-line react/no-array-index-key
         <Alert key={`w-${idx}`} severity="warning" variant="outlined" sx={{ fontSize: '0.78rem' }}>
           <Typography variant="caption" fontWeight={700} display="block">
-            {issue.code}
+            {getValidationIssueLabel(issue.code)}
           </Typography>
           {issue.message}
         </Alert>

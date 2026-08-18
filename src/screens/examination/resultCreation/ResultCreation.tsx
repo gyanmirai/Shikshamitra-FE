@@ -7,6 +7,7 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { useReactToPrint } from 'react-to-print';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { useSession } from 'next-auth/react';
@@ -21,7 +22,7 @@ import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { ExamReportTitle, ExamReportApiTypeMap } from 'src/enums/examination-reports';
 import { usePreviewAcademicReportMutation } from 'src/redux/academicAPI/AcademicReportApi';
@@ -59,6 +60,11 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
+
+import StudentResultPrintReport, {
+  STUDENT_RESULT_PRINT_PAGE_STYLE,
+} from './StudentResultPrintReport';
+import { buildStudentResultDocumentTitle } from './resultPrintUtils';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -404,12 +410,22 @@ export function StudentDetailsDialog({
   examName: propExamName,
   schoolName = '',
 }: StudentDialogProps) {
-  const studentId = row?.StudentId || row?.studentId || row?.id || '';
+  const studentId = row?.StudentId || row?.studentId || '';
+  const printRef = useRef<HTMLDivElement>(null);
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentResultDetailsQuery,
     params: { examId, studentId },
     options: { skip: !open || !examId || !studentId },
+  });
+  const printDocumentTitle = buildStudentResultDocumentTitle(
+    data?.studentName,
+    data?.examName || propExamName
+  );
+  const handlePrintResult = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: printDocumentTitle,
+    pageStyle: STUDENT_RESULT_PRINT_PAGE_STYLE,
   });
 
   const subjectColumns = useMemo(
@@ -1166,7 +1182,7 @@ export function StudentDetailsDialog({
       <DialogActions>
         <CancelButton buttonText="Close" onClick={onClose} />
         <Button
-          onClick={() => window.print()}
+          onClick={() => handlePrintResult()}
           variant="outlined"
           color="inherit"
           size="small"
@@ -1176,7 +1192,7 @@ export function StudentDetailsDialog({
           Print Result
         </Button>
         <Button
-          onClick={() => window.print()}
+          onClick={() => handlePrintResult()}
           variant="contained"
           color="primary"
           size="small"
@@ -1186,6 +1202,32 @@ export function StudentDetailsDialog({
           Save PDF
         </Button>
       </DialogActions>
+
+      <Box
+        aria-hidden="true"
+        sx={{ position: 'fixed', left: '-10000px', top: 0, width: '210mm', pointerEvents: 'none' }}
+      >
+        <StudentResultPrintReport
+          ref={printRef}
+          schoolName={cleanSchoolName}
+          examName={examName}
+          studentName={studentName}
+          grNo={grNo}
+          rollNo={rollNo}
+          className={className}
+          divisionName={divisionName}
+          dateOfBirth={dob}
+          obtainedMarks={totalValueStr}
+          totalMarks={totalMaxMarksStr}
+          percentage={pctRaw}
+          attendancePercentage={attendancePercentage}
+          grade={gradeValue}
+          status={status}
+          rank={rank}
+          totalStudentsInClass={totalStudentsInClass}
+          subjects={subjects}
+        />
+      </Box>
     </CustomDialog>
   );
 }

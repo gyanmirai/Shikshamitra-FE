@@ -597,12 +597,13 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             justifyContent: 'center',
             gap: 1.5,
             color: 'text.primary',
-            bgcolor: (theme) => alpha(theme.palette.background.paper, 0.88),
+            bgcolor: (theme) => varAlpha(theme.vars.palette.background.paperChannel, 0.9),
+            backdropFilter: 'blur(4px)',
             cursor: 'wait',
           }}
         >
-          <CircularProgress size={40} />
-          <Box component="span" sx={{ typography: 'body2', fontWeight: 500 }}>
+          <CircularProgress size={40} color="primary" />
+          <Box component="span" sx={{ typography: 'body2', fontWeight: 600 }}>
             Saving...
           </Box>
         </Box>

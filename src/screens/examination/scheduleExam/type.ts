@@ -68,6 +68,10 @@ export interface IExamFormValues {
   status?: number;
   startDate?: string;
   endDate?: string;
+  startDateTime?: string;
+  endDateTime?: string;
+  startTime?: string;
+  endTime?: string;
   creatorName?: string;
   standardName?: string;
   issueCount?: number;

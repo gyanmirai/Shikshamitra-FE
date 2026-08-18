@@ -71,6 +71,7 @@ import {
   toSeatingStudents,
   toSeatingRoomLayout,
   toSeatingAssignments,
+  upsertSeatingRoomLayout,
   toSaveSeatingPlanPayload,
 } from '../utils/mappers';
 
@@ -433,7 +434,7 @@ export default function SeatingAllocationPage({
     const loadedAssignments = toSeatingAssignments(seatLayoutData.items, activeRoomId);
 
     setDraft((d) => {
-      const rooms = [...d.rooms.filter((r) => r.roomId !== activeRoomId), layout];
+      const rooms = upsertSeatingRoomLayout(d.rooms, layout);
       const assignments = [
         ...d.assignments.filter((a) => a.roomId !== activeRoomId),
         ...loadedAssignments,

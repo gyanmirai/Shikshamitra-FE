@@ -73,7 +73,7 @@ export default function AIAssistantDrawer({
               placeItems: 'center',
             }}
           >
-            <Iconify icon="solar:stars-minimalistic-bold-duotone" width={18} />
+            <Iconify icon="mdi:star-shooting-outline" width={18} />
           </Box>
           <Box>
             <Typography variant="subtitle1" fontWeight={700}>
@@ -86,7 +86,7 @@ export default function AIAssistantDrawer({
         </Stack>
 
         <IconButton size="small" onClick={onClose}>
-          <Iconify icon="mingcute:close-line" width={20} />
+          <Iconify icon="mdi:close" width={20} />
         </IconButton>
       </Box>
 
@@ -117,7 +117,7 @@ export default function AIAssistantDrawer({
                 mb: 1.5,
               }}
             >
-              <Iconify icon="mingcute:check-circle-line" width={22} />
+              <Iconify icon="mdi:check-circle-outline" width={22} />
             </Box>
             <Typography variant="subtitle2" fontWeight={700}>
               Blueprint Balanced
@@ -150,7 +150,7 @@ export default function AIAssistantDrawer({
                       sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
                     />
                     <IconButton size="small" color="default" onClick={() => onIgnoreSuggestion(item.id)}>
-                      <Iconify icon="mingcute:close-line" width={14} />
+                      <Iconify icon="mdi:close" width={14} />
                     </IconButton>
                   </Stack>
 
@@ -173,7 +173,7 @@ export default function AIAssistantDrawer({
                       variant="contained"
                       color="primary"
                       onClick={() => onAcceptSuggestion(item)}
-                      startIcon={<Iconify icon="solar:stars-minimalistic-bold-duotone" width={14} />}
+                      startIcon={<Iconify icon="mdi:star-shooting-outline" width={14} />}
                     >
                       {item.actionText || 'Accept Suggestion'}
                     </Button>
