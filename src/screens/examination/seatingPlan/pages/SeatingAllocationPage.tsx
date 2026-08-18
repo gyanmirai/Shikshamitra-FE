@@ -90,6 +90,8 @@ interface Props {
     roomIds: string[];
     seatingPlanId?: string;
   }) => void;
+  /** Notifies the host (e.g. workspace drawer) whenever unsaved changes exist. */
+  onDirtyStateChange?: (isDirty: boolean) => void;
 }
 
 const shakeAnimation = keyframes`
@@ -98,7 +100,12 @@ const shakeAnimation = keyframes`
   20%, 40%, 60%, 80% { transform: translateX(5px); }
 `;
 
-export default function SeatingAllocationPage({ examId, onClose, onOpenReview }: Props) {
+export default function SeatingAllocationPage({
+  examId,
+  onClose,
+  onOpenReview,
+  onDirtyStateChange,
+}: Props) {
   const router = useRouter();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
@@ -296,6 +303,12 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
   const { draft, setDraft, counters, roomUtilization, actions, canUndo, canRedo } = useSeatingDraft(
     buildEmptyDraft(examId)
   );
+
+  // Keep the host (workspace drawer) in sync so close actions can be intercepted
+  // with an unsaved-changes confirmation instead of silently discarding the draft.
+  useEffect(() => {
+    onDirtyStateChange?.(!!draft.isDirty);
+  }, [draft.isDirty, onDirtyStateChange]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),

@@ -7,7 +7,6 @@ import { Box, Stack, Paper, Avatar, Tooltip, Typography } from '@mui/material';
 
 import AuditRiskBadge from './badges/AuditRiskBadge';
 import AuditActionBadge from './badges/AuditActionBadge';
-import AuditSourceBadge from './badges/AuditSourceBadge';
 import { groupLogsByDate, getUserInitials } from '../utils/auditFormatters';
 
 import type { AuditLog } from '../types/auditLogs.types';
@@ -184,7 +183,6 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
                           </Typography>
                         </Tooltip>
                         <AuditRiskBadge level={log.riskLevel} showTooltip={false} />
-                        <AuditSourceBadge source={log.source} />
                       </Stack>
                     </Stack>
 
