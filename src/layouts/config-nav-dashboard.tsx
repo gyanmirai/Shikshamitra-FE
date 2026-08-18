@@ -10,14 +10,12 @@ import securityModule from 'src/constants/security-menu';
 import calendarModule from 'src/constants/calendar-menu';
 import transportModule from 'src/constants/transport-menu';
 import resourceManagement from 'src/constants/resource-menu';
-import classManagementModule from 'src/constants/class-management';
 import communicationModule from 'src/constants/comminication-menu';
 import securityGuardModule from 'src/constants/security-gaurd-menu';
 import studentModule, { defaultModulePermissionName } from 'src/constants/student-menu';
 import instituteSetupModule, { instituteSetupPaths } from 'src/constants/institute-setup';
 import {
   hrPath,
-  classPath,
   hostelPath,
   financePath,
   studentPath,
@@ -135,17 +133,6 @@ export const navData = (visibility: boolean[]) => [
         visibility: visibility[2],
         submodule: academicModule(true)[academicPath].flatMap((list) => list.items),
         permissionName: `${defaultModulePermissionName}Academics`,
-      },
-      {
-        title: 'Class Management',
-        path: '/classManagement/dashboard',
-        icon: ICONS.class,
-        _action: 'classManagement',
-        shortcutKey: 'Alt+A',
-        shortcutKeyName: 'Alt+A',
-        visibility: visibility[3],
-        submodule: classManagementModule[classPath].flatMap((list) => list.items),
-        permissionName: `${defaultModulePermissionName}ClassManagement`,
       },
       {
         title: 'HR/Staff',
@@ -278,7 +265,6 @@ export const navSubData = (isDdvs: boolean = true) => ({
   ...hrModule(isDdvs),
   ...academicModule(isDdvs),
   ...financeModule,
-  ...classManagementModule,
   ...securityModule,
   ...instituteSetupModule,
   ...hostelModule,

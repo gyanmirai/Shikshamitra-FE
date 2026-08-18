@@ -32,9 +32,9 @@ export const DayHeaderNavigator: React.FC<Props> = ({
 }) => {
   const theme = useTheme();
 
-  const handlePrevDay = () => onChangeDate(selectedDate.subtract(1, 'day'));
-  const handleNextDay = () => onChangeDate(selectedDate.add(1, 'day'));
-  const handleToday = () => onChangeDate(dayjs());
+  const handlePrevDay = () => onChangeDate(selectedDate.subtract(1, 'day').startOf('day'));
+  const handleNextDay = () => onChangeDate(selectedDate.add(1, 'day').startOf('day'));
+  const handleToday = () => onChangeDate(dayjs().startOf('day'));
 
   const isToday = selectedDate.isSame(dayjs(), 'day');
 
@@ -72,7 +72,7 @@ export const DayHeaderNavigator: React.FC<Props> = ({
         <DatePicker
           label="Selected Date"
           value={selectedDate}
-          onChange={(newVal) => newVal && onChangeDate(newVal)}
+          onChange={(newVal) => newVal && onChangeDate(newVal.startOf('day'))}
           format="DD/MM/YYYY"
           slotProps={{
             textField: {

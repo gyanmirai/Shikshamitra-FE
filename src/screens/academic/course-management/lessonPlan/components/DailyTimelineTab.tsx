@@ -55,6 +55,17 @@ const DailyTimelineTab = ({
 
   // Compute daily KPI stats
   const dailyStats = useMemo(() => {
+    if (isLoading) {
+      return {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        needsAttention: 0,
+        upcoming: 0,
+        planned: 0,
+      };
+    }
+
     let completedCount = 0;
     let inProgressCount = 0;
     let needsAttnCount = 0;
@@ -84,7 +95,7 @@ const DailyTimelineTab = ({
       upcoming: upcomingCount,
       planned: plannedCount,
     };
-  }, [slots, selectedDate]);
+  }, [slots, selectedDate, isLoading]);
 
   return (
     <Card
@@ -109,7 +120,7 @@ const DailyTimelineTab = ({
       />
 
       {/* ── 2. Subtle, Single-Line Daily Summary Row ── */}
-      <DailySummaryRow stats={dailyStats} />
+      <DailySummaryRow stats={dailyStats} isLoading={isLoading} />
 
       {/* ── 3. Main Timeline Area (Cards with Direct Actions, No Attention Banner) ── */}
       {isLoading ? (

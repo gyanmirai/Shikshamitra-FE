@@ -3,7 +3,7 @@
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Skeleton, Typography } from '@mui/material';
 
 type DailySummaryStats = {
   total: number;
@@ -15,11 +15,32 @@ type DailySummaryStats = {
 
 type Props = {
   stats: DailySummaryStats;
+  isLoading?: boolean;
   onOpenSummaryDrawer?: () => void;
 };
 
-export const DailySummaryRow: React.FC<Props> = ({ stats, onOpenSummaryDrawer }) => {
+export const DailySummaryRow: React.FC<Props> = ({ stats, isLoading, onOpenSummaryDrawer }) => {
   const theme = useTheme();
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          py: 0.75,
+          px: 1.5,
+          mb: 1.5,
+          borderRadius: 1.5,
+          bgcolor: 'background.neutral',
+          border: (t) => `1px solid ${t.palette.divider}`,
+          minHeight: 38,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <Skeleton variant="rounded" width={320} height={18} sx={{ borderRadius: 1 }} />
+      </Box>
+    );
+  }
 
   return (
     <Box

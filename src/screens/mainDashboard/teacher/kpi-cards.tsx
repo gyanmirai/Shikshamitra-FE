@@ -2,7 +2,6 @@
 
 import { Grid } from '@mui/material';
 import { academicPaths } from 'src/constants/academic-menu';
-import { classManagementPaths } from 'src/constants/class-management';
 import CompactKPICard from 'src/screens/student/dashboard/principal/kpi-card-item';
 
 // ----------------------------------------------------------------------
@@ -46,7 +45,7 @@ const kpiData = [
     value: '5',
     status: 'secondary' as const,
     tooltip: '5 chapters pending updates',
-    path: classManagementPaths.chapters,
+    path: academicPaths.curriculum.chaptersManagement,
   },
 ];
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import CourseProgressComponent from 'src/screens/classManagement/courseProgress/courseProgress';
+import CourseProgressComponent from 'src/screens/academic/courseProgress/courseProgress';
 
 const SubjectPerformance = () => (
   <Box>

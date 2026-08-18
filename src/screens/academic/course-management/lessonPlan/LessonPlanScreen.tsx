@@ -449,18 +449,34 @@ const LessonPlanScreen = () => {
   );
 
   // ─── Queries & Mutations via useQueryAndMutation ─────────────────────────────
-  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs().startOf('day'));
+
+  const timelineDateParam = useMemo(
+    () =>
+      selectedDate?.isValid()
+        ? dateConvertor(selectedDate.startOf('day').format(dateFormat))
+        : '',
+    [selectedDate]
+  );
 
   const {
     data: timelineData,
     isLoading: isTimelineLoading,
     isFetching: isTimelineFetching,
     refetch: refetchTimeline,
-  } = useGetLessonPlanTimelineQuery({
-    date: dateConvertor(selectedDate.format(dateFormat)),
-    academicMediumId: currentMedium?.id,
-    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-  });
+  } = useGetLessonPlanTimelineQuery(
+    {
+      date: timelineDateParam,
+      academicMediumId: currentMedium?.id,
+      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+    },
+    {
+      skip: !timelineDateParam,
+      refetchOnMountOrArgChange: true,
+    }
+  );
+
+  const isTimelineBusy = isTimelineLoading || isTimelineFetching;
 
   const isTimelineOwner = useMemo(
     () => !timelineData?.teacherId || timelineData.teacherId === currentTeacherId,
@@ -1840,9 +1856,13 @@ const LessonPlanScreen = () => {
           {activeTab === 'dailyTimeline' && (
             <DailyTimelineTab
               selectedDate={selectedDate}
-              onChangeDate={setSelectedDate}
-              slots={timelineData?.slots || []}
-              isLoading={isTimelineLoading || isTimelineFetching}
+              onChangeDate={(newDate) => {
+                if (newDate?.isValid()) {
+                  setSelectedDate(newDate.startOf('day'));
+                }
+              }}
+              slots={isTimelineBusy ? [] : timelineData?.slots || []}
+              isLoading={isTimelineBusy}
               onAddLesson={(date, prefill) => {
                 setEditPlan(null);
                 setPrefillDate(date ?? null);

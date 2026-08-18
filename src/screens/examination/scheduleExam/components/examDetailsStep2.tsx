@@ -128,13 +128,13 @@ const ScheduleTableHead = memo(() => (
             borderColor: 'divider',
             ...(col.sticky
               ? {
-                  position: 'sticky',
-                  left: 0,
-                  zIndex: 3,
-                  // Opaque background required so scrolling columns don't bleed through.
-                  // background.paper adapts correctly to both light and dark mode.
-                  bgcolor: 'background.paper',
-                }
+                position: 'sticky',
+                left: 0,
+                zIndex: 3,
+                // Opaque background required so scrolling columns don't bleed through.
+                // background.paper adapts correctly to both light and dark mode.
+                bgcolor: 'background.paper',
+              }
               : {}),
           }}
         >
@@ -236,9 +236,8 @@ const SubjectScheduleRow = memo(
                 label={
                   values.assignedStudentCount === 0
                     ? 'No students'
-                    : `${values.assignedStudentCount} student${
-                        values.assignedStudentCount === 1 ? '' : 's'
-                      }`
+                    : `${values.assignedStudentCount} student${values.assignedStudentCount === 1 ? '' : 's'
+                    }`
                 }
                 size="small"
                 color={values.assignedStudentCount === 0 ? 'default' : 'warning'}
@@ -367,6 +366,10 @@ const SubjectScheduleRow = memo(
                 if (selectedOption?.totalMarks !== undefined) {
                   await onFieldChange('totalMarks', selectedOption.totalMarks ?? '');
                   onFieldBlur('totalMarks');
+                }
+                if (selectedOption?.passMarks !== undefined) {
+                  await onFieldChange('passingMarks', selectedOption.passMarks ?? '');
+                  onFieldBlur('passingMarks');
                 }
               }}
               renderInput={(params) => (

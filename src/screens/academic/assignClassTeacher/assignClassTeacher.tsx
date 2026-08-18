@@ -718,7 +718,7 @@ const ClassTeacherAssignment = () => {
       <CustomBreadcrumbs
         heading="Class Teacher Assignment"
         links={[
-          { name: 'Class Management', href: '/classManagement/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Class Teacher Assignment' },
         ]}
         description="Assign and manage class teachers while checking workload, availability, conflicts, and continuity."

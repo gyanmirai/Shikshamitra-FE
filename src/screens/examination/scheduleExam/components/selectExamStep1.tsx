@@ -220,8 +220,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   const handleSubjectsChange = useCallback(
     async (value: any[]) => {
       const selectedType = examTypeOptions.find((item: any) => item.id === formik.values.examType);
-      const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
-      const defaultGradeScaleId = selectedType?.defaultGradeScaleId ?? null;
+      const defaultGradeScaleId =
+        formik.values.gradingScaleId || selectedType?.defaultGradeScaleId || null;
+      const selectedGradeScale = gradeScalingOptions.find(
+        (item: any) => String(item.id) === String(defaultGradeScaleId)
+      );
+      const defaultTotalMarks =
+        selectedGradeScale?.totalMarks ?? selectedType?.defaultTotalMarks ?? '';
+      const defaultPassingMarks = selectedGradeScale?.passMarks ?? '';
       const nextReadiness = { ...electiveReadiness };
       const normalizedResults = await Promise.all(
         value.map(async (sub) => {
@@ -258,7 +264,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   startTime: subjectItem.startTime || null,
                   endTime: subjectItem.endTime || null,
                   totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                  passingMarks: subjectItem.passingMarks ?? '',
+                  passingMarks: subjectItem.passingMarks || defaultPassingMarks,
                   notes: subjectItem.notes || '',
                   gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
                 };
@@ -274,7 +280,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             startTime: sub?.startTime || null,
             endTime: sub?.endTime || null,
             totalMarks: sub?.totalMarks || defaultTotalMarks,
-            passingMarks: sub?.passingMarks ?? '',
+            passingMarks: sub?.passingMarks || defaultPassingMarks,
             notes: sub?.notes || '',
             gradeScalingId: sub?.gradeScalingId || defaultGradeScaleId,
             subjectCode: isElective ? '' : sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
@@ -289,7 +295,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
       formik.setFieldValue('subjects', normalizedResults.filter(Boolean));
       formik.setFieldTouched('subjects', false);
     },
-    [electiveReadiness, examTypeOptions, formik, getElectiveReadiness]
+    [electiveReadiness, examTypeOptions, formik, getElectiveReadiness, gradeScalingOptions]
   );
 
   return (
@@ -675,6 +681,30 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       onChange={(val) => {
                         formik.setFieldValue('gradingScaleId', val);
                         formik.setFieldTouched('gradingScaleId', false);
+
+                        const selectedGradeScale = gradeScalingOptions.find(
+                          (item: any) => String(item.id) === String(val)
+                        );
+                        const normalizeScheduleFields = (subject: any) => ({
+                          ...subject,
+                          gradeScalingId: val || null,
+                          totalMarks: selectedGradeScale?.totalMarks ?? '',
+                          passingMarks: selectedGradeScale?.passMarks ?? '',
+                        });
+
+                        formik.setFieldValue(
+                          'subjects',
+                          formik.values.subjects.map((subject: any) => {
+                            const normalized = normalizeScheduleFields(subject);
+                            if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
+                              return {
+                                ...normalized,
+                                subjects: subject.subjects.map(normalizeScheduleFields),
+                              };
+                            }
+                            return normalized;
+                          })
+                        );
                       }}
                       labelKey="name"
                       valueKey="id"

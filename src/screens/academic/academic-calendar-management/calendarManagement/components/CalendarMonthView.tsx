@@ -230,7 +230,9 @@ const DayCell = ({
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+import { CalendarMonthSkeleton } from './CalendarSkeleton';
+
+// ─── Main Month View Component ───────────────────────────────────────────────
 
 const CalendarMonthView = ({
   calendarDays,
@@ -242,11 +244,7 @@ const CalendarMonthView = ({
   const theme = useTheme();
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <CalendarMonthSkeleton />;
   }
 
   const days = calendarDays;

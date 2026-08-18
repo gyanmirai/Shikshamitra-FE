@@ -317,6 +317,8 @@ const MonthCard = (props: {
 
 // DualMonthCard removed — year view uses individual MonthCard per responsive grid (Bug #5408 fix)
 
+import { CalendarYearSkeleton } from './CalendarSkeleton';
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const CalendarYearView = ({
@@ -331,11 +333,7 @@ const CalendarYearView = ({
   const theme = useTheme();
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <CalendarYearSkeleton />;
   }
 
   const days = calendarDays;
