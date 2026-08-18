@@ -8,6 +8,7 @@ import { fDate } from 'src/utils/format-time';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { Calculate, ExpandMore, AutoAwesome } from '@mui/icons-material';
+import { useGetEsiEstablishmentQuery } from 'src/redux/hr/statutory-scheme-api';
 import {
   useCalculateSalaryTemplateMutation,
   useGetPublishedSalaryTemplatesQuery,
@@ -60,6 +61,7 @@ export function SalaryStructureBuilder({ formik }: Props) {
     isError: templatesError,
   } = useGetPublishedSalaryTemplatesQuery();
   const { data: pfData, isError: pfRulesError } = useGetPFQuery({});
+  const { data: esiEstablishment } = useGetEsiEstablishmentQuery();
   const [calculate, calculationState] = useCalculateSalaryTemplateMutation();
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [salaryBasis, setSalaryBasis] = useState<SalaryBasis>('GROSS');
@@ -155,11 +157,12 @@ export function SalaryStructureBuilder({ formik }: Props) {
         </Typography>
 
         {formik.values.sourceSalaryTemplateVersion && (
-          <Alert severity={formik.values.wasModifiedAfterGeneration ? 'warning' : 'info'} sx={{ mb: 2 }}>
+          <Alert
+            severity={formik.values.wasModifiedAfterGeneration ? 'warning' : 'info'}
+            sx={{ mb: 2 }}
+          >
             Generated from template version {formik.values.sourceSalaryTemplateVersion}
-            {formik.values.salaryGeneratedAt
-              ? ` on ${fDate(formik.values.salaryGeneratedAt)}`
-              : ''}
+            {formik.values.salaryGeneratedAt ? ` on ${fDate(formik.values.salaryGeneratedAt)}` : ''}
             {formik.values.wasModifiedAfterGeneration ? '. Components were edited afterward.' : '.'}
           </Alert>
         )}
@@ -210,7 +213,9 @@ export function SalaryStructureBuilder({ formik }: Props) {
             <Button
               fullWidth
               variant="contained"
-              startIcon={calculationState.isLoading ? <CircularProgress size={16} /> : <Calculate />}
+              startIcon={
+                calculationState.isLoading ? <CircularProgress size={16} /> : <Calculate />
+              }
               disabled={
                 !selectedTemplate ||
                 monthlyAmount <= 0 ||
@@ -272,6 +277,18 @@ export function SalaryStructureBuilder({ formik }: Props) {
           </Alert>
         )}
 
+        {esiEstablishment?.status === 'Active' ? (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            ESI is system-managed. Payroll will evaluate coverage and calculate both employee and
+            employer contributions from statutory wages, even when this template has no ESI row.
+          </Alert>
+        ) : esiEstablishment?.status === 'Ready' ? (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            ESI setup is ready but not active. Complete the impact review in Payroll settings before
+            relying on ESI calculations.
+          </Alert>
+        ) : null}
+
         {calculationState.isError && attemptedInputKey === currentInputKey && (
           <Alert severity="error" sx={{ mt: 2 }}>
             Unable to calculate this salary structure. Review the amount, template, and statutory
@@ -283,17 +300,35 @@ export function SalaryStructureBuilder({ formik }: Props) {
           <Box mt={2}>
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={1.25}>
-              <Grid size={{ xs: 6, md: 2 }}><Summary label="Gross" value={result.grossSalary} /></Grid>
-              <Grid size={{ xs: 6, md: 2 }}><Summary label="Basic" value={result.basicSalary} /></Grid>
-              <Grid size={{ xs: 6, md: 2 }}><Summary label="Deductions" value={result.totalDeductions} /></Grid>
-              <Grid size={{ xs: 6, md: 2 }}><Summary label="Net salary" value={result.netSalary} /></Grid>
-              <Grid size={{ xs: 6, md: 2 }}><Summary label="Employer contributions" value={result.employerContributionTotal} /></Grid>
-              <Grid size={{ xs: 6, md: 2 }}><Summary label="Employer cost" value={result.employerCost} /></Grid>
+              <Grid size={{ xs: 6, md: 2 }}>
+                <Summary label="Gross" value={result.grossSalary} />
+              </Grid>
+              <Grid size={{ xs: 6, md: 2 }}>
+                <Summary label="Basic" value={result.basicSalary} />
+              </Grid>
+              <Grid size={{ xs: 6, md: 2 }}>
+                <Summary label="Deductions" value={result.totalDeductions} />
+              </Grid>
+              <Grid size={{ xs: 6, md: 2 }}>
+                <Summary label="Net salary" value={result.netSalary} />
+              </Grid>
+              <Grid size={{ xs: 6, md: 2 }}>
+                <Summary label="Employer contributions" value={result.employerContributionTotal} />
+              </Grid>
+              <Grid size={{ xs: 6, md: 2 }}>
+                <Summary label="Employer cost" value={result.employerCost} />
+              </Grid>
             </Grid>
             {result.warnings.map((warning) => (
-              <Alert key={warning} severity="warning" sx={{ mt: 1.5 }}>{warning}</Alert>
+              <Alert key={warning} severity="warning" sx={{ mt: 1.5 }}>
+                {warning}
+              </Alert>
             ))}
-            <Accordion disableGutters elevation={0} sx={{ mt: 1.5, border: 1, borderColor: 'divider' }}>
+            <Accordion
+              disableGutters
+              elevation={0}
+              sx={{ mt: 1.5, border: 1, borderColor: 'divider' }}
+            >
               <AccordionSummary expandIcon={<ExpandMore />}>
                 <Typography variant="subtitle2">Formula breakdown</Typography>
               </AccordionSummary>

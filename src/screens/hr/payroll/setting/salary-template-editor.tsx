@@ -8,6 +8,7 @@ import type {
 } from 'src/redux/hr/salary-template-api';
 
 import * as Yup from 'yup';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
@@ -33,6 +34,7 @@ import {
 } from 'src/redux/hr/salary-template-api';
 import {
   Box,
+  Chip,
   Grid,
   Card,
   Alert,
@@ -565,6 +567,37 @@ export default function SalaryTemplateEditor({
         onMove={moveRule}
         onRemove={removeRule}
       />
+
+      <Card variant="outlined">
+        <CardContent>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            gap={2}
+            flexWrap="wrap"
+          >
+            <Box>
+              <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                <Typography variant="h6">System-Managed Statutory Components</Typography>
+                <Chip size="small" color="info" label="Automatic" />
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 760 }}>
+                ESI is evaluated during payroll from statutory wages, employee coverage, and the
+                effective rule. It does not need to be copied into this template and cannot be
+                bypassed by removing a template row.
+              </Typography>
+            </Box>
+            <Button
+              component={Link}
+              href={hrPaths.payroll.settings.statutorySchemes}
+              variant="outlined"
+            >
+              Review ESI Setup
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
 
       <Divider />
       <Box display="flex" justifyContent="flex-end" gap={1} pb={2}>

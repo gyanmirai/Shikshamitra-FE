@@ -25,6 +25,7 @@ Use this map to find the first screen and client:
 | Employee documents         | Employee profile documents tab                                              | `employeeApi.ts`                             |
 | I-card generation          | `/hr/i-card`                                                                | `employee-icard-template-api.ts`             |
 | Payroll component setup    | `/hr/payroll/setting/*`                                                     | `employee-payroll-api.ts`                    |
+| ESI statutory setup        | `/hr/payroll/setting/statutory-schemes`                                     | `statutory-scheme-api.ts`                    |
 | Salary structure           | `/hr/payroll/structure`                                                     | `employee-salary-structure-api.ts`           |
 | Payroll run                | `/hr/payroll/run-payroll`                                                   | `runPayrollApi.ts`                           |
 | Payslips                   | `/hr/payroll/payslip-generation`                                            | `runPayrollApi.ts`                           |
@@ -120,6 +121,10 @@ Frontend workflows must respect backend data ownership:
 Do not add a route to docs as active navigation until `src/constants/hr-menus.ts` exposes it.
 If a page exists but menu access is commented or unclear, mark the workflow as partial.
 The Payroll onboarding step and dedicated Payroll Structure screen reuse the same salary builder.
+Salary templates explain that ESI is system-managed and link to the statutory setup workflow.
+The ESI workflow keeps establishment, wage mapping, employee readiness, and impact approval in a four-step URL-addressable workspace.
+Authorized users can add dated, reasoned ESI exceptions from an employee impact row and review the immutable exception history before approval.
+Run Payroll shows ESI wages, coverage decision, rule version, insurance number, contribution period, employee deduction, and employer contribution.
 Users select a template, choose Gross or Take-home, enter the quoted monthly amount, select PF applicability and rule, calculate, review the formula trace, and apply the generated lines.
 Applying preserves temporary components, replaces recurring lines, stores provenance, and distinguishes editable ordinary lines from rule-controlled PF and professional-tax lines.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.

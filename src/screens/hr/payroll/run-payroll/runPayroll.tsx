@@ -95,9 +95,18 @@ type PayrollRow = {
   issueFilter: 'CLEAN' | 'HAS_ISSUES' | 'CRITICAL';
   earningComponents: any[];
   deductionComponents: any[];
+  employerContributions: any[];
+  employerContributionTotal: number;
   payrollAdjustments: any[];
   prorationFactor: number;
   dayCalculationMode: string;
+  employeeStateInsuranceRuleId?: string | null;
+  employeeStateInsuranceRuleVersion?: number | null;
+  employeeStateInsuranceWages: number;
+  employeeStateInsuranceCoverageDecision?: string | null;
+  employeeStateInsuranceNumber?: string | null;
+  employeeStateInsuranceContributionPeriodStart?: string | null;
+  employeeStateInsuranceContributionPeriodEnd?: string | null;
 };
 
 type PayrollReadiness = {
@@ -143,6 +152,26 @@ const ISSUE_LABELS: Record<
   },
   PAYROLL_POLICY_CONFIGURATION: {
     label: 'Payroll policy needs setup',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_ESTABLISHMENT_INACTIVE: {
+    label: 'ESI establishment setup is inactive',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_WAGE_CLASSIFICATION_REQUIRED: {
+    label: 'ESI wage classification required',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_ENROLLMENT_REVIEW_REQUIRED: {
+    label: 'ESI enrollment review required',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_INSURANCE_NUMBER_REQUIRED: {
+    label: 'ESI insurance number required',
     severity: 'CRITICAL',
     color: 'error',
   },
@@ -350,9 +379,20 @@ const RunPayroll = () => {
                 : 'HAS_ISSUES',
           earningComponents: item.earningComponents || [],
           deductionComponents: item.deductionComponents || [],
+          employerContributions: item.employerContributions || [],
+          employerContributionTotal: Number(item.employerContributionTotal || 0),
           payrollAdjustments: item.payrollAdjustments || [],
           prorationFactor: Number(item.prorationFactor || 0),
           dayCalculationMode: item.dayCalculationMode || '-',
+          employeeStateInsuranceRuleId: item.employeeStateInsuranceRuleId,
+          employeeStateInsuranceRuleVersion: item.employeeStateInsuranceRuleVersion,
+          employeeStateInsuranceWages: Number(item.employeeStateInsuranceWages || 0),
+          employeeStateInsuranceCoverageDecision: item.employeeStateInsuranceCoverageDecision,
+          employeeStateInsuranceNumber: item.employeeStateInsuranceNumber,
+          employeeStateInsuranceContributionPeriodStart:
+            item.employeeStateInsuranceContributionPeriodStart,
+          employeeStateInsuranceContributionPeriodEnd:
+            item.employeeStateInsuranceContributionPeriodEnd,
         };
       }),
     [sourceRows]
@@ -1628,6 +1668,85 @@ const RunPayroll = () => {
                         </Stack>
                       )}
                     </Card>
+                    {activeRow.employeeStateInsuranceRuleId ? (
+                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                          gap={1}
+                        >
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight={700}>
+                              Employee State Insurance
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              System-calculated statutory component
+                            </Typography>
+                          </Box>
+                          <Chip
+                            size="small"
+                            color={
+                              activeRow.employeeStateInsuranceCoverageDecision ===
+                              'ABOVE_WAGE_CEILING'
+                                ? 'default'
+                                : 'info'
+                            }
+                            label={
+                              activeRow.employeeStateInsuranceCoverageDecision
+                                ?.replaceAll('_', ' ')
+                                .toLowerCase() || 'Evaluated'
+                            }
+                            sx={{ textTransform: 'capitalize' }}
+                          />
+                        </Stack>
+                        <Grid container spacing={1.25} sx={{ mt: 0.75 }}>
+                          <Grid size={{ xs: 6 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Statutory Wages
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={700}
+                              sx={{ fontVariantNumeric: 'tabular-nums' }}
+                            >
+                              {formatCurrency(activeRow.employeeStateInsuranceWages)}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Rule Version
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              v{activeRow.employeeStateInsuranceRuleVersion}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Insurance Number
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={700}
+                              sx={{ overflowWrap: 'anywhere' }}
+                            >
+                              {activeRow.employeeStateInsuranceNumber || 'Registration pending'}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Contribution Period
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              {activeRow.employeeStateInsuranceContributionPeriodStart &&
+                              activeRow.employeeStateInsuranceContributionPeriodEnd
+                                ? `${dayjs(activeRow.employeeStateInsuranceContributionPeriodStart).format('MMM YYYY')} - ${dayjs(activeRow.employeeStateInsuranceContributionPeriodEnd).format('MMM YYYY')}`
+                                : 'Not applicable'}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                      </Card>
+                    ) : null}
                     <Card variant="outlined" sx={{ p: { xs: 1, sm: 1.25 } }}>
                       <Stack spacing={{ xs: 1, sm: 1.25 }}>
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -1882,6 +2001,18 @@ const RunPayroll = () => {
                       nameColumnLabel="Deduction"
                       noDataText="No deductions found"
                     />
+                    {activeRow.employerContributions.length ? (
+                      <SalaryDetailsTableCard
+                        title="Employer Contributions"
+                        subheader={`Additional employer cost: ${formatCurrency(activeRow.employerContributionTotal)}`}
+                        icon="solar:buildings-2-linear"
+                        iconColor={{ bg: 'info.lighter', color: 'info.main' }}
+                        data={activeRow.employerContributions}
+                        tableId="payroll-workbench-employer-contributions"
+                        nameColumnLabel="Contribution"
+                        noDataText="No employer contributions found"
+                      />
+                    ) : null}
                   </Stack>
                 </Box>
               </Stack>

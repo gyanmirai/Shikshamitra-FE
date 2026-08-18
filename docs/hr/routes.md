@@ -30,6 +30,7 @@ The route map is frontend integration truth, not backend product truth:
 | Payroll settings          | `/hr/payroll/setting/*`                                                                                 | `HR.PayrollManagement.Settings.*`                                          |
 | Salary templates          | `/hr/payroll/setting/salary-templates`, `/hr/payroll/setting/salary-templates/{templateId}/{versionId}` | `HR.PayrollManagement.Settings.SalaryTemplates.*`                          |
 | Professional tax          | `/hr/payroll/setting/professional-tax`                                                                  | `HR.PayrollManagement.Settings.ProfessionalTax.*`                          |
+| Statutory schemes         | `/hr/payroll/setting/statutory-schemes`                                                                 | `HR.PayrollManagement.Settings.StatutorySchemes.*`                         |
 | Attendance dashboard      | `/hr/attendance-dashboard`                                                                              | `HR.AttendanceAndLeave.Dashboard`                                          |
 | Device attendance         | `/hr/biometric-attendance`                                                                              | `HR.AttendanceAndLeave.BiometricAttendance`                                |
 | Attendance register       | `/hr/attendance-tracking`                                                                               | `HR.AttendanceAndLeave.AttendanceTracking`                                 |

@@ -501,6 +501,13 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
     ['IFSC', slip?.ifscCode || '-'],
     ['UAN', slip?.uanNumber || '-'],
     ['EPF No.', slip?.epfNumber || '-'],
+    ['ESI No.', slip?.employeeStateInsuranceNumber || '-'],
+    [
+      'ESI Wages',
+      slip?.employeeStateInsuranceRuleId
+        ? formatCurrency(slip?.employeeStateInsuranceWages || 0)
+        : '-',
+    ],
   ];
 
   return (
@@ -616,6 +623,15 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
           </DashboardPanel>
         </Grid>
       </Grid>
+
+      {slip?.employerContributions?.length ? (
+        <DashboardBreakdownCard
+          title="Employer Contributions"
+          rows={slip.employerContributions}
+          total={slip.employerContributionTotal || 0}
+          emptyText="No employer contributions"
+        />
+      ) : null}
 
       <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, md: 6 }}>
@@ -1036,6 +1052,13 @@ const PayslipDocumentPreview = ({ employee, monthYear, slip }: PayslipDocumentPr
     ['IFSC', slip?.ifscCode || '-'],
     ['UAN', slip?.uanNumber || '-'],
     ['EPF No.', slip?.epfNumber || '-'],
+    ['ESI No.', slip?.employeeStateInsuranceNumber || '-'],
+    [
+      'ESI Wages',
+      slip?.employeeStateInsuranceRuleId
+        ? formatCurrency(slip?.employeeStateInsuranceWages || 0)
+        : '-',
+    ],
   ];
   const payBasisRows: Array<[string, string]> = [
     ['Payroll Basis Days', formatDays(slip?.payrollBasisDays)],

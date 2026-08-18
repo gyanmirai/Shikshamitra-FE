@@ -51,6 +51,7 @@ export const hrPaths = {
       pfRule: '/hr/payroll/setting/pf',
       // tds: '/hr/payroll/setting/tds',
       professionalTax: '/hr/payroll/setting/professional-tax',
+      statutorySchemes: '/hr/payroll/setting/statutory-schemes',
       salaryTemplates: '/hr/payroll/setting/salary-templates',
       salaryTemplateEditor: (templateId: string, versionId: string) =>
         `/hr/payroll/setting/salary-templates/${templateId}/${versionId}`,
@@ -142,6 +143,13 @@ export const hrPermissions = {
       pfRule: `${defaultHrPermissionName}PayrollManagement.Settings.PfRule`,
       tds: `${defaultHrPermissionName}PayrollManagement.Settings.Tds`,
       professionalTax: `${defaultHrPermissionName}PayrollManagement.Settings.ProfessionalTax`,
+      statutorySchemes: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.View`,
+      statutorySchemeActions: {
+        edit: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.Edit`,
+        activate: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.Activate`,
+        manageEnrollment: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.ManageEnrollment`,
+        approveOverride: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.ApproveOverride`,
+      },
       salaryTemplates: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates`,
       salaryTemplateActions: {
         add: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.Add`,
@@ -362,6 +370,13 @@ const hrModule = (isDdvs: boolean) => ({
                   _action: 'payroll-setting-professional-tax',
                   permissionName: hrPermissions.payroll.settings.professionalTax,
                   icon: menuIconView('mdi:map-marker-radius-outline'),
+                },
+                {
+                  title: 'Statutory Schemes',
+                  path: hrPaths.payroll.settings.statutorySchemes,
+                  _action: 'payroll-setting-statutory-schemes',
+                  permissionName: hrPermissions.payroll.settings.statutorySchemes,
+                  icon: menuIconView('mdi:shield-check-outline'),
                 },
                 // {
                 //   title: 'TDS',

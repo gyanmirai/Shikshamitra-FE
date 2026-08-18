@@ -25,6 +25,7 @@ Use this table before searching `src/redux`:
 | `employee-payroll-api.ts`          | Earning components, deduction components, provident fund, professional tax, pay elements      | HR payroll settings             |
 | `employee-salary-structure-api.ts` | Employee salary structure get and update                                                      | HR payroll salary structure     |
 | `runPayrollApi.ts`                 | Payroll run, readiness, reviews, adjustments, salary slips, PDFs                              | HR payroll operations           |
+| `statutory-scheme-api.ts`          | ESI rule, establishment, wage mapping, enrollment, audited exceptions, preview, and activation | HR payroll statutory settings   |
 | `attendanceApi.ts`                 | Attendance tracking, employee attendance, import preview, confirm, template, register, adjust | HR attendance and leaves        |
 | `attendanceImportApi.ts`           | Automated attendance runs, rows, lock, unlock, save rows                                      | HR attendance imports           |
 | `leaveApi.ts`                      | Leave policies, leave requests, actions, balances                                             | HR attendance and leaves        |
