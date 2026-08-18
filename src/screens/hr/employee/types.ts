@@ -112,6 +112,13 @@ export interface ISalaryDetails {
   basicSalary?: number;
   punchId: string;
   totalWorkingHourPerMonth: number;
+  quotedSalaryBasis?: string | null;
+  quotedMonthlyAmount?: number | null;
+  sourceSalaryTemplateId?: string | null;
+  sourceSalaryTemplateVersionId?: string | null;
+  sourceSalaryTemplateVersion?: number | null;
+  salaryGeneratedAt?: string | null;
+  wasModifiedAfterGeneration?: boolean;
 }
 
 export interface ISalaryComponent {
@@ -122,6 +129,8 @@ export interface ISalaryComponent {
   isTemp: boolean;
   componentType: string;
   dependOn: string;
+  semanticType?: string;
+  statutoryRuleId?: string | null;
 }
 
 export interface IPayrollInformation {

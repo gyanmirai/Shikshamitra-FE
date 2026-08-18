@@ -7,16 +7,14 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
+import { Box, Stack, Button, Switch, TextField, Typography, DialogActions, FormControlLabel } from '@mui/material';
 import {
   useGetProfessionalTaxQuery,
   useAddProfessionalTaxMutation,
@@ -31,10 +29,14 @@ interface IProfessionalTaxRange {
   lastModificationTime: string;
   lastModifierId: string;
   tenantId: string;
-  genderType: number;
+  jurisdictionCode: string;
+  effectiveFrom: string;
+  effectiveTo?: string | null;
   fromSalary: number;
-  toSalary: number;
+  toSalary?: number | null;
   taxAmount: number;
+  isActive: boolean;
+  deductInCessationMonth: boolean;
 }
 const ProfessionalTax = () => {
   const dialog = useBoolean();
@@ -55,10 +57,7 @@ const ProfessionalTax = () => {
     dialog.onFalse();
   };
 
-  const tableData = PFData?.items?.map((item: IProfessionalTaxRange) => ({
-    ...item,
-    genderValue: item.genderType === 3 ? 'All' : GenderType[item.genderType],
-  }));
+  const tableData = PFData?.items || [];
   return (
     <Box>
       <ConfirmDialog
@@ -114,13 +113,14 @@ const ProfessionalTax = () => {
         tableId="professional-table"
         isLoading={isLoading}
         columns={[
-          { id: 'genderValue', label: 'Gender' },
+          { id: 'jurisdictionCode', label: 'Jurisdiction' },
+          { id: 'effectiveFrom', label: 'Effective from' },
           {
             id: 'fromSalary',
             label: 'From salary',
             filterType: 'number',
             render(value, row) {
-              return formatCurrency(value);
+              return value == null ? 'No upper limit' : formatCurrency(value);
             },
           },
           {
@@ -137,6 +137,13 @@ const ProfessionalTax = () => {
             filterType: 'number',
             render(value, row) {
               return formatCurrency(value);
+            },
+          },
+          {
+            id: 'deductInCessationMonth',
+            label: 'Cessation month',
+            render(value) {
+              return value ? 'Deduct' : 'Do not deduct';
             },
           },
           {
@@ -228,17 +235,20 @@ const ProfessionalTaxForm = ({
   });
   const formik = useFormik({
     initialValues: {
-      gender: editData?.genderType || 0,
+      jurisdictionCode: editData?.jurisdictionCode || 'IN-GJ',
+      effectiveFrom: editData?.effectiveFrom?.slice(0, 10) || '2022-04-01',
+      effectiveTo: editData?.effectiveTo?.slice(0, 10) || '',
       fromSalary: editData?.fromSalary || '',
       toSalary: editData?.toSalary || '',
       taxAmount: editData?.taxAmount || '',
+      isActive: editData?.isActive ?? true,
+      deductInCessationMonth: editData?.deductInCessationMonth ?? true,
     },
     validationSchema: Yup.object().shape({
-      gender: Yup.number()
-        .oneOf([0, 1, 2, 3], 'Invalid gender selected')
-        .required('Gender is required'),
+      jurisdictionCode: Yup.string().oneOf(['IN-GJ']).required('Jurisdiction is required'),
+      effectiveFrom: Yup.string().required('Effective date is required'),
       fromSalary: Yup.string().required('From salary is required'),
-      toSalary: Yup.string().required('To salary is required'),
+      toSalary: Yup.string().nullable(),
       taxAmount: Yup.string().required('Tax amount is required'),
     }),
     onSubmit: async (values) => {
@@ -247,18 +257,26 @@ const ProfessionalTaxForm = ({
           await updatePF({
             id: editData.id,
             body: {
-              genderType: values.gender,
+              jurisdictionCode: values.jurisdictionCode,
+              effectiveFrom: values.effectiveFrom,
+              effectiveTo: values.effectiveTo || null,
               fromSalary: numberConvertor(values.fromSalary),
-              toSalary: numberConvertor(values.toSalary),
+              toSalary: values.toSalary ? numberConvertor(values.toSalary) : null,
               taxAmount: numberConvertor(values.taxAmount),
+              isActive: values.isActive,
+              deductInCessationMonth: values.deductInCessationMonth,
             },
           });
         } else {
           await addPf({
-            genderType: values.gender,
+            jurisdictionCode: values.jurisdictionCode,
+            effectiveFrom: values.effectiveFrom,
+            effectiveTo: values.effectiveTo || null,
             fromSalary: numberConvertor(values.fromSalary),
-            toSalary: numberConvertor(values.toSalary),
+            toSalary: values.toSalary ? numberConvertor(values.toSalary) : null,
             taxAmount: numberConvertor(values.taxAmount),
+            isActive: values.isActive,
+            deductInCessationMonth: values.deductInCessationMonth,
           });
         }
         handleClose();
@@ -272,20 +290,27 @@ const ProfessionalTaxForm = ({
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Stack spacing={2} sx={{ p: 2 }}>
-          <CustomSelect
-            options={[
-              { label: 'All', value: 3 },
-              ...GenderTypeArray.map((item, index) => ({
-                label: GenderType[index],
-                value: index,
-              })),
-            ]}
-            label="Gender"
-            value={formik.values.gender}
-            onChange={(val) => formik.setFieldValue('gender', val)}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-            error={formik.touched.gender && Boolean(formik.errors.gender)}
-            helperText={(formik.touched.gender && formik.errors.gender) || ''}
+          <TextField fullWidth size="small" label="Jurisdiction" value={formik.values.jurisdictionCode} disabled />
+          <TextField
+            fullWidth
+            size="small"
+            type="date"
+            label="Effective from"
+            name="effectiveFrom"
+            value={formik.values.effectiveFrom}
+            onChange={formik.handleChange}
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            fullWidth
+            size="small"
+            type="date"
+            label="Effective to"
+            name="effectiveTo"
+            value={formik.values.effectiveTo}
+            onChange={formik.handleChange}
+            InputLabelProps={{ shrink: true }}
+            helperText="Optional"
           />
 
           <NumericFormatCustom
@@ -296,6 +321,19 @@ const ProfessionalTaxForm = ({
             onChange={formik.handleChange}
             error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
             helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+          />
+          <FormControlLabel
+            control={<Switch checked={formik.values.isActive} onChange={(_, checked) => formik.setFieldValue('isActive', checked)} />}
+            label="Active rule"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formik.values.deductInCessationMonth}
+                onChange={(_, checked) => formik.setFieldValue('deductInCessationMonth', checked)}
+              />
+            }
+            label="Deduct in employment cessation month"
           />
           <NumericFormatCustom
             size="small"

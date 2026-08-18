@@ -3,10 +3,10 @@
 import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Chip, Stack, Button, Avatar, Tooltip, IconButton, Typography } from '@mui/material';
+import { Box, Chip, Stack, Avatar, Tooltip, IconButton, Typography, Divider } from '@mui/material';
 
 import { RegistrationStatusType, RegistrationStatusTypeColor } from 'src/enums/registration-status-type';
-import { readText, getStudentName } from '../types';
+import { readText, getStudentName, readOptionalText } from '../types';
 import { HealthScoreGauge } from './HealthScoreGauge';
 
 import type { Academic360Kpi, Academic360Health, Academic360StudentRow } from '../types';
@@ -30,12 +30,12 @@ const findKpi = (kpis: Academic360Kpi[] | undefined, key: string) =>
 const trendMeta = (trend?: string) => {
   const normalized = (trend || '').toLowerCase();
   if (normalized.includes('improv') || normalized.includes('up')) {
-    return { icon: 'mdi:trending-up', color: 'success.main' as const };
+    return { icon: 'mdi:trending-up', color: 'success.main' as const, label: 'Improving' };
   }
   if (normalized.includes('declin') || normalized.includes('down') || normalized.includes('drop')) {
-    return { icon: 'mdi:trending-down', color: 'error.main' as const };
+    return { icon: 'mdi:trending-down', color: 'error.main' as const, label: 'Declining' };
   }
-  return { icon: 'mdi:trending-neutral', color: 'text.secondary' as const };
+  return { icon: 'mdi:trending-neutral', color: 'text.secondary' as const, label: trend || 'Monitoring' };
 };
 
 export function StudentSuccessHeader({
@@ -52,140 +52,277 @@ export function StudentSuccessHeader({
 }: StudentSuccessHeaderProps) {
   const name = getStudentName(student);
   const trend = trendMeta(health?.trend);
+  const photoUrl = readOptionalText(student.profileImageUrl ?? student.photoUrl);
+
+  const rawStatus = student.operationalStatus ?? student.status;
+  let statusLabel = 'Active';
+  let statusColor: 'success' | 'warning' | 'error' | 'info' | 'default' = 'success';
+
+  if (rawStatus !== undefined && rawStatus !== null) {
+    if (typeof rawStatus === 'number') {
+      statusLabel = RegistrationStatusType[rawStatus] || 'Active';
+      statusColor = (RegistrationStatusTypeColor[rawStatus as RegistrationStatusType] as any) || 'success';
+    } else if (typeof rawStatus === 'string') {
+      const parsed = Number(rawStatus);
+      if (!Number.isNaN(parsed)) {
+        statusLabel = RegistrationStatusType[parsed] || 'Active';
+        statusColor = (RegistrationStatusTypeColor[parsed as RegistrationStatusType] as any) || 'success';
+      } else {
+        statusLabel = rawStatus;
+        const found = Object.values(RegistrationStatusType).indexOf(rawStatus);
+        if (found !== -1) {
+          statusColor = (RegistrationStatusTypeColor[found as RegistrationStatusType] as any) || 'success';
+        }
+      }
+    }
+  }
+
+  const standardName = readText(student.standardName ?? student.standard, 'Class');
+  const divisionName = readText(student.divisionName ?? student.division, '');
+  const classDivisionLabel = divisionName ? `${standardName} - ${divisionName}` : standardName;
+  const attendanceValue = findKpi(kpis, 'attendance');
 
   return (
     <Box
       sx={{
-        p: 2.5,
+        px: { xs: 2, md: 3 },
+        py: 2,
         bgcolor: 'background.paper',
         borderBottom: 1,
         borderColor: 'divider',
-        backgroundImage: (theme) =>
-          `linear-gradient(180deg, ${theme.palette.primary.lighter ?? theme.palette.primary.light}14, transparent)`,
       }}
     >
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={2}
+        alignItems={{ xs: 'flex-start', md: 'center' }}
+        justifyContent="space-between"
+      >
+        {/* Left: Avatar & Identity Details */}
+        <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
           <Avatar
+            src={photoUrl || undefined}
+            alt={name}
             sx={{
-              width: 60,
-              height: 60,
-              fontSize: 24,
-              fontWeight: 600,
+              width: { xs: 52, md: 60 },
+              height: { xs: 52, md: 60 },
+              fontSize: { xs: 20, md: 24 },
+              fontWeight: 700,
               bgcolor: 'primary.main',
-              boxShadow: (theme) => `0 0 0 3px ${theme.palette.background.paper}, 0 0 0 5px ${theme.palette.primary.main}33`,
+              color: 'primary.contrastText',
+              border: (theme) => `2px solid ${theme.palette.background.paper}`,
+              boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}30`,
+              flexShrink: 0,
             }}
           >
             {name.charAt(0).toUpperCase() || 'S'}
           </Avatar>
+
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <Typography variant="h6" noWrap>
+            {/* Primary line: Name + Info + Status */}
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 0.5 }}>
+              <Typography variant="h6" fontWeight={700} noWrap sx={{ maxWidth: { xs: 200, sm: 340, md: 450 } }}>
                 {name || 'Student'}
               </Typography>
-              <CustomTooltip title="360° academic performance overview, attendance metrics & intervention history" placement="right" arrow>
-                <Iconify
-                  icon={GlobalIcons.info}
-                  color="info.main"
-                  width={16}
-                  height={16}
-                  sx={{ cursor: 'pointer' }}
-                />
+
+              <CustomTooltip
+                title="Comprehensive 360° student academic dossier: health diagnosis, attendance, assignments, and exam analytics"
+                placement="top"
+                arrow
+              >
+                <IconButton size="small" sx={{ p: 0.25, color: 'text.secondary' }}>
+                  <Iconify icon={GlobalIcons.info} width={16} />
+                </IconButton>
               </CustomTooltip>
-              {(() => {
-                const rawStatus = student.operationalStatus ?? student.status;
-                let statusLabel = 'Active';
-                let statusColor: 'success' | 'warning' | 'error' | 'info' | 'default' = 'success';
 
-                if (rawStatus !== undefined && rawStatus !== null) {
-                  if (typeof rawStatus === 'number') {
-                    statusLabel = RegistrationStatusType[rawStatus] || 'Active';
-                    statusColor = (RegistrationStatusTypeColor[rawStatus as RegistrationStatusType] as any) || 'success';
-                  } else if (typeof rawStatus === 'string') {
-                    const parsed = Number(rawStatus);
-                    if (!Number.isNaN(parsed)) {
-                      statusLabel = RegistrationStatusType[parsed] || 'Active';
-                      statusColor = (RegistrationStatusTypeColor[parsed as RegistrationStatusType] as any) || 'success';
-                    } else {
-                      statusLabel = rawStatus;
-                      const found = Object.values(RegistrationStatusType).indexOf(rawStatus);
-                      if (found !== -1) {
-                        statusColor = (RegistrationStatusTypeColor[found as RegistrationStatusType] as any) || 'success';
-                      }
-                    }
-                  }
-                }
-
-                return (
-                  <Chip
-                    size="small"
-                    color={statusColor}
-                    variant="soft"
-                    label={statusLabel}
-                  />
-                );
-              })()}
+              <Chip
+                size="small"
+                color={statusColor}
+                variant="soft"
+                label={statusLabel}
+                sx={{ height: 22, fontWeight: 600, fontSize: 11 }}
+              />
             </Stack>
-            <Typography variant="body2" color="text.secondary" noWrap>
-              {readText(student.standardName ?? student.standard, 'Class')}{' '}
-              {readText(student.divisionName ?? student.division, '')}
-              {' · '}Roll No. {readText(student.rollNo)}
-              {' · '}GR No. {readText(student.grNo)}
-              {' · '}{readText(student.academicMediumName, 'Medium')}
-            </Typography>
-            <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 1 }}>
+
+            {/* Secondary line: Academic metadata */}
+            <Stack direction="row" alignItems="center" flexWrap="wrap" gap={0.75} sx={{ color: 'text.secondary', fontSize: 13 }}>
+              <Typography variant="body2" color="text.secondary" fontWeight={500} noWrap>
+                {classDivisionLabel}
+              </Typography>
+              {student.rollNo && (
+                <>
+                  <Typography variant="caption" color="text.disabled">•</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Roll No. <strong>{readText(student.rollNo)}</strong>
+                  </Typography>
+                </>
+              )}
+              {student.grNo && (
+                <>
+                  <Typography variant="caption" color="text.disabled">•</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    GR No. <strong>{readText(student.grNo)}</strong>
+                  </Typography>
+                </>
+              )}
+              {student.academicMediumName && (
+                <>
+                  <Typography variant="caption" color="text.disabled">•</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {student.academicMediumName}
+                  </Typography>
+                </>
+              )}
+              {student.academicYearName && (
+                <>
+                  <Typography variant="caption" color="text.disabled">•</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {student.academicYearName}
+                  </Typography>
+                </>
+              )}
+            </Stack>
+
+            {/* Tertiary line: Status badges */}
+            <Stack direction="row" flexWrap="wrap" gap={0.75} sx={{ mt: 1 }}>
               <Chip
                 size="small"
-                variant="soft"
+                variant="outlined"
                 icon={<Iconify icon="mdi:calendar-check-outline" width={14} />}
-                label={`Attendance: ${findKpi(kpis, 'attendance')}`}
+                label={`Attendance: ${attendanceValue}`}
+                sx={{ height: 24, fontSize: 12, borderRadius: 1 }}
               />
               <Chip
                 size="small"
-                variant="soft"
+                variant="outlined"
                 icon={<Iconify icon={trend.icon} width={14} sx={{ color: trend.color }} />}
-                label={`Trend: ${health?.trend || 'No data'}`}
+                label={`Trend: ${health?.trend || trend.label}`}
+                sx={{ height: 24, fontSize: 12, borderRadius: 1 }}
               />
-              <Chip
-                size="small"
-                variant="soft"
-                color={health?.score ? 'success' : 'default'}
-                label={health?.status || 'Insufficient Data'}
-              />
+              {health?.status && (
+                <Chip
+                  size="small"
+                  variant="soft"
+                  color={
+                    health.status.toLowerCase().includes('support') || health.status.toLowerCase().includes('urgent')
+                      ? 'warning'
+                      : health.score && health.score >= 75
+                        ? 'success'
+                        : 'info'
+                  }
+                  icon={<Iconify icon="mdi:heart-pulse" width={14} />}
+                  label={health.status}
+                  sx={{ height: 24, fontSize: 12, fontWeight: 600, borderRadius: 1 }}
+                />
+              )}
             </Stack>
           </Box>
         </Stack>
 
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ pl: { md: 1 } }}>
-          <HealthScoreGauge score={health?.score} size={72} thickness={4} />
-          <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 90, display: { xs: 'none', lg: 'block' } }}>
-            Academic Health
-          </Typography>
-        </Stack>
+        {/* Right: Academic Health Gauge & Navigation Controls */}
+        <Stack
+          direction="row"
+          spacing={{ xs: 1.5, sm: 2 }}
+          alignItems="center"
+          sx={{
+            alignSelf: { xs: 'flex-end', md: 'center' },
+            flexShrink: 0,
+          }}
+        >
+          {/* Health Gauge */}
+          <Stack
+            direction="row"
+            spacing={1.25}
+            alignItems="center"
+            sx={{
+              p: 0.75,
+              pr: 1.5,
+              borderRadius: 1.5,
+              bgcolor: (theme) => `${theme.palette.primary.main}08`,
+              border: 1,
+              borderColor: (theme) => `${theme.palette.primary.main}1A`,
+            }}
+          >
+            <HealthScoreGauge score={health?.score} size={48} thickness={4.5} showSubtext={false} />
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600, fontSize: 11 }}>
+                Academic Health
+              </Typography>
+              <Typography variant="caption" color="text.disabled" sx={{ fontSize: 10 }}>
+                {health?.score !== null && health?.score !== undefined ? `${health.score} / 100` : 'No score'}
+              </Typography>
+            </Box>
+          </Stack>
 
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Tooltip title="Previous student">
-            <span>
-              <IconButton aria-label="Previous student" disabled={!canGoPrevious} onClick={onPrevious}>
-                <Iconify icon="mdi:chevron-left" />
-              </IconButton>
-            </span>
+          <Divider orientation="vertical" flexItem sx={{ height: 32, my: 'auto', display: { xs: 'none', sm: 'block' } }} />
+
+          {/* Student Pagination / Quick Switch */}
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Tooltip title="Previous student (Left arrow)">
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label="Previous student"
+                  disabled={!canGoPrevious}
+                  onClick={onPrevious}
+                  sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    p: 0.75,
+                  }}
+                >
+                  <Iconify icon="mdi:chevron-left" width={18} />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ px: 1, minWidth: 50, textAlign: 'center' }}>
+              {totalStudents > 0 ? `${currentIndex + 1} of ${totalStudents}` : '-'}
+            </Typography>
+
+            <Tooltip title="Next student (Right arrow)">
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label="Next student"
+                  disabled={!canGoNext}
+                  onClick={onNext}
+                  sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    p: 0.75,
+                  }}
+                >
+                  <Iconify icon="mdi:chevron-right" width={18} />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
+
+          {/* Close Button */}
+          <Tooltip title="Close (Esc)">
+            <IconButton
+              size="small"
+              aria-label="Close Student Academic 360"
+              onClick={onClose}
+              sx={{
+                bgcolor: (theme) => `${theme.palette.grey[500]}10`,
+                borderRadius: 1,
+                p: 0.75,
+                '&:hover': {
+                  bgcolor: (theme) => `${theme.palette.error.main}14`,
+                  color: 'error.main',
+                },
+              }}
+            >
+              <Iconify icon="mdi:close" width={18} />
+            </IconButton>
           </Tooltip>
-          <Typography variant="caption" color="text.secondary" sx={{ minWidth: 56, textAlign: 'center' }}>
-            {totalStudents > 0 ? `${currentIndex + 1} of ${totalStudents}` : '-'}
-          </Typography>
-          <Tooltip title="Next student">
-            <span>
-              <IconButton aria-label="Next student" disabled={!canGoNext} onClick={onNext}>
-                <Iconify icon="mdi:chevron-right" />
-              </IconButton>
-            </span>
-          </Tooltip>
-          <IconButton aria-label="Close Student Academic 360" onClick={onClose}>
-            <Iconify icon="mdi:close" />
-          </IconButton>
         </Stack>
       </Stack>
     </Box>
   );
 }
+

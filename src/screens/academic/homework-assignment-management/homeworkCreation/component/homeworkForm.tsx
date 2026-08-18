@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -72,8 +73,6 @@ export const cardStyle = {
   boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
   border: '1px solid rgba(145, 158, 171, 0.08)',
 };
-
-const formatHomeworkDateTime = (value: any) => dayjs(value).format('YYYY-MM-DDTHH:mm:ss');
 
 const SubmissionTypeCard = ({
   value,
@@ -316,8 +315,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           attachment: values.attachments,
           divisionSchedules: values.divisions.map((division: any) => ({
             divisionId: division.divisionId,
-            publishAt: formatHomeworkDateTime(division.publishDate),
-            dueAt: formatHomeworkDateTime(division.dueDate),
+            publishAt: division.publishDate ? dateConvertor(dayjs(division.publishDate).format(dateFormat), false) : '',
+            dueAt: division.dueDate ? dateConvertor(dayjs(division.dueDate).format(dateFormat), false) : '',
           })),
         };
 
@@ -351,11 +350,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             updateFormData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
             updateFormData.append(
               `DivisionSchedules[${index}].PublishAt`,
-              formatHomeworkDateTime(division.publishDate)
+              division.publishDate ? dateConvertor(dayjs(division.publishDate).format(dateFormat), false) : ''
             );
             updateFormData.append(
               `DivisionSchedules[${index}].DueAt`,
-              formatHomeworkDateTime(division.dueDate)
+              division.dueDate ? dateConvertor(dayjs(division.dueDate).format(dateFormat), false) : ''
             );
           });
 
@@ -396,11 +395,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             formData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
             formData.append(
               `DivisionSchedules[${index}].PublishAt`,
-              formatHomeworkDateTime(division.publishDate)
+              division.publishDate ? dateConvertor(dayjs(division.publishDate).format(dateFormat), false) : ''
             );
             formData.append(
               `DivisionSchedules[${index}].DueAt`,
-              formatHomeworkDateTime(division.dueDate)
+              division.dueDate ? dateConvertor(dayjs(division.dueDate).format(dateFormat), false) : ''
             );
           });
 

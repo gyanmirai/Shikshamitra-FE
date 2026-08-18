@@ -668,26 +668,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           <Divider />
 
           <DialogActions sx={{ bgcolor: 'background.paper', p: 2 }}>
-            <Button
-              variant="outlined"
-              color="inherit"
-              onClick={onPrevious}
-              disabled={!hasPrevious}
-              size="small"
-              startIcon={<Iconify icon="solar:alt-arrow-left-bold" />}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outlined"
-              color="inherit"
-              onClick={onNext}
-              disabled={!hasNext}
-              size="small"
-              endIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
-            >
-              Next
-            </Button>
+
             <Button
               variant="outlined"
               color="inherit"

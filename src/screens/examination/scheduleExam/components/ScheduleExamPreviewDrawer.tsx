@@ -77,32 +77,56 @@ const ScheduleExamPreviewDrawer = ({
     params: { academicMediumId: (medium as any)?.id },
     options: { skip: !open || !(medium as any)?.id },
   });
-  const { data: basicDetails, isLoading: basicLoading, isFetching: basicFetching } = useQueryAndMutation({
+  const {
+    data: basicDetails,
+    isLoading: basicLoading,
+    isFetching: basicFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamBasicDetailsQuery,
     params: { examId },
     options: { skip: !open || !examId },
   });
-  const { data: scheduleDetails, isLoading: scheduleLoading, isFetching: scheduleFetching } = useQueryAndMutation({
+  const {
+    data: scheduleDetails,
+    isLoading: scheduleLoading,
+    isFetching: scheduleFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamScheduleQuery,
     params: { examId },
     options: { skip: !open || !examId },
   });
-  const { data: roomAssignmentData, isLoading: roomLoading, isFetching: roomFetching } = useQueryAndMutation({
+  const {
+    data: roomAssignmentData,
+    isLoading: roomLoading,
+    isFetching: roomFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamRoomAssignmentsQuery,
     params: { examId },
     options: { skip: !open || !examId },
   });
-  const { data: examSubjectsData, isLoading: subjectsLoading, isFetching: subjectsFetching } = useQueryAndMutation({
+  const {
+    data: examSubjectsData,
+    isLoading: subjectsLoading,
+    isFetching: subjectsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamSubjectsQuery,
     params: { examId },
     options: { skip: !open || !examId },
   });
 
-  const isDetailsLoading = basicLoading || scheduleLoading || roomLoading || subjectsLoading || basicFetching || scheduleFetching || roomFetching || subjectsFetching;
+  const isDetailsLoading =
+    basicLoading ||
+    scheduleLoading ||
+    roomLoading ||
+    subjectsLoading ||
+    basicFetching ||
+    scheduleFetching ||
+    roomFetching ||
+    subjectsFetching;
   const hydratedExam = basicDetails
     ? mapBackendToFormik(
         basicDetails,
@@ -390,6 +414,88 @@ const ScheduleExamPreviewDrawer = ({
                 />
               </Grid>
             </Grid>
+
+            {readiness && (readiness.blocking.length > 0 || readiness.warnings.length > 0) && (
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 1.5,
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.warning.main, 0.24),
+                  bgcolor: alpha(theme.palette.warning.main, 0.04),
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
+                  <Iconify icon={GlobalIcons.bell} color="warning.main" width={20} height={20} />
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Warnings &amp; Issues
+                  </Typography>
+                  <Chip
+                    size="small"
+                    color="warning"
+                    variant="soft"
+                    label={`${readiness.blocking.length + readiness.warnings.length} item${readiness.blocking.length + readiness.warnings.length === 1 ? '' : 's'}`}
+                  />
+                </Stack>
+                <Stack spacing={1} component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
+                  {[...readiness.blocking, ...readiness.warnings].map((issue) => {
+                    const stepLabels = ['Basic Details', 'Subject Schedule', 'Room Allocation'];
+                    const isBlocking = issue.severity === 'blocking';
+
+                    return (
+                      <Box
+                        component="li"
+                        key={issue.id}
+                        sx={{
+                          p: 1.25,
+                          borderRadius: 1,
+                          bgcolor: 'background.paper',
+                          border: '1px solid',
+                          borderColor: isBlocking
+                            ? alpha(theme.palette.error.main, 0.2)
+                            : alpha(theme.palette.warning.main, 0.2),
+                        }}
+                      >
+                        <Stack
+                          direction={{ xs: 'column', sm: 'row' }}
+                          justifyContent="space-between"
+                          alignItems={{ xs: 'flex-start', sm: 'center' }}
+                          gap={0.75}
+                        >
+                          <Typography variant="body2" fontWeight={700}>
+                            {issue.title}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            color={isBlocking ? 'error' : 'warning'}
+                            variant="soft"
+                            label={isBlocking ? 'Issue' : 'Warning'}
+                          />
+                        </Stack>
+                        {issue.description && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                            sx={{ mt: 0.5 }}
+                          >
+                            {issue.description}
+                          </Typography>
+                        )}
+                        <Typography
+                          variant="caption"
+                          color="text.disabled"
+                          display="block"
+                          sx={{ mt: 0.5 }}
+                        >
+                          Step: {stepLabels[issue.step] || 'Exam setup'}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+            )}
 
             {/* Missing Room Assignment Banner */}
             {previewExam?.missingRoomAssignmentCount > 0 && (

@@ -354,13 +354,13 @@ function ResultWorkflowPanel({
   );
 }
 
-interface StudentDialogProps {
+export interface StudentDialogProps {
   open: boolean;
   onClose: () => void;
-  row: PreviewRow | null;
+  row: PreviewRow | any | null;
   examId: string;
   examName?: string;
-  schoolName: string;
+  schoolName?: string;
 }
 
 const getSubjectTheme = (subjectName: string) => {
@@ -396,15 +396,15 @@ const getSubjectTheme = (subjectName: string) => {
   return { color: '#607d8b', icon: 'mdi:book-outline', bg: 'rgba(96, 125, 139, 0.1)' };
 };
 
-function StudentDetailsDialog({
+export function StudentDetailsDialog({
   open,
   onClose,
   row,
   examId,
   examName: propExamName,
-  schoolName,
+  schoolName = '',
 }: StudentDialogProps) {
-  const studentId = row?.StudentId || row?.studentId || '';
+  const studentId = row?.StudentId || row?.studentId || row?.id || '';
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentResultDetailsQuery,

@@ -310,16 +310,16 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
       },
       ...(!isSelfMode
         ? [
-            {
-              label: 'Submitted By',
-              id: 'submittedBy',
-              align: 'left' as const,
-              minWidth: '12vw',
-              render(value: any) {
-                return value || '-';
-              },
+          {
+            label: 'Submitted By',
+            id: 'submittedBy',
+            align: 'left' as const,
+            minWidth: '12vw',
+            render(value: any) {
+              return value || '-';
             },
-          ]
+          },
+        ]
         : []),
       {
         label: 'Start Date',
@@ -428,10 +428,10 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
                 isSelfMode
                   ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave' }]
                   : [
-                      { name: 'HR/Staff', href: '/hr/dashboard/' },
-                      { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
-                      { name: 'Apply Leave' },
-                    ]
+                    { name: 'HR/Staff', href: '/hr/dashboard/' },
+                    { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
+                    { name: 'Apply Leave' },
+                  ]
               }
               description={
                 isSelfMode

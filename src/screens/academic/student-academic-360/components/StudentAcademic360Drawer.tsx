@@ -2,7 +2,21 @@
 
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-import { Box, Tab, Tabs, Alert, Stack, Button, Drawer, Divider, Skeleton, Grid, Card } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Tabs,
+  Alert,
+  Stack,
+  Badge,
+  Button,
+  Drawer,
+  Divider,
+  Skeleton,
+  Grid,
+  Card,
+  Tooltip,
+} from '@mui/material';
 import { useGetStudentAcademic360Query } from 'src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api';
 
 import { getStudentId } from '../types';
@@ -28,8 +42,8 @@ const tabs = [
   { value: 'attendance', label: 'Attendance', icon: 'mdi:calendar-check-outline' },
   { value: 'learning', label: 'Learning', icon: 'mdi:clipboard-text-outline' },
   { value: 'exams', label: 'Exams', icon: 'mdi:trophy-outline' },
+  { value: 'timetable', label: 'Timetable', icon: 'mdi:timetable' },
   { value: 'timeline', label: 'Timeline', icon: 'mdi:timeline-clock-outline' },
-  { value: 'interventions', label: 'Interventions', icon: 'mdi:hand-heart-outline' },
 ];
 
 export function StudentAcademic360Drawer({
@@ -49,11 +63,14 @@ export function StudentAcademic360Drawer({
   const canGoNext = currentIndex >= 0 && currentIndex < students.length - 1;
 
   const { data, isFetching, isError } = useGetStudentAcademic360Query(
-    { studentId, recentTaskCount: 10, recentExamCount: 5 },
+    { studentId, recentTaskCount: 20, recentExamCount: 50 },
     { skip: !open || !studentId }
   );
   const academic360 = data as Academic360Response | undefined;
   const drawerStudent = academic360?.student || student;
+
+  // Pending homework count for badge
+  const pendingHomeworkCount = academic360?.learningTasks?.pending ?? 0;
 
   useEffect(() => {
     if (!open) return undefined;
@@ -84,6 +101,10 @@ export function StudentAcademic360Drawer({
 
   const handleNext = () => {
     if (canGoNext) onStudentChange(students[currentIndex + 1]);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
@@ -128,24 +149,56 @@ export function StudentAcademic360Drawer({
             variant="scrollable"
             sx={{ minHeight: 48, '& .MuiTab-root': { minHeight: 48, textTransform: 'none', fontWeight: 600 } }}
           >
-            {tabs.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                label={tab.label}
-                iconPosition="start"
-                icon={<Iconify icon={tab.icon} width={18} />}
-              />
-            ))}
+            {tabs.map((tab) => {
+              const isLearningTab = tab.value === 'learning';
+              const showBadge = isLearningTab && pendingHomeworkCount > 0 && !isFetching;
+
+              return (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  label={
+                    showBadge ? (
+                      <Badge
+                        badgeContent={pendingHomeworkCount}
+                        color="error"
+                        max={99}
+                        sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
+                      >
+                        {tab.label}
+                      </Badge>
+                    ) : (
+                      tab.label
+                    )
+                  }
+                  iconPosition="start"
+                  icon={<Iconify icon={tab.icon} width={18} />}
+                />
+              );
+            })}
           </Tabs>
-          <Button
-            size="small"
-            variant="text"
-            startIcon={<Iconify icon={isExpanded ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'} />}
-            onClick={() => setIsExpanded((value) => !value)}
-          >
-            {isExpanded ? 'Exit Fullscreen' : 'Expand'}
-          </Button>
+
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Tooltip title="Print / Save as PDF">
+              <Button
+                size="small"
+                variant="text"
+                startIcon={<Iconify icon="mdi:printer" />}
+                onClick={handlePrint}
+                sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+              >
+                Print
+              </Button>
+            </Tooltip>
+            <Button
+              size="small"
+              variant="text"
+              startIcon={<Iconify icon={isExpanded ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'} />}
+              onClick={() => setIsExpanded((value) => !value)}
+            >
+              {isExpanded ? 'Exit Fullscreen' : 'Expand'}
+            </Button>
+          </Stack>
         </Stack>
         <Divider />
 
@@ -162,7 +215,12 @@ export function StudentAcademic360Drawer({
               ) : activeTab === 'overview' ? (
                 <SuccessOverview data={academic360} />
               ) : (
-                <SuccessDetailTabs data={academic360} activeTab={activeTab} isLoading={isFetching} />
+                <SuccessDetailTabs
+                  data={academic360}
+                  activeTab={activeTab}
+                  isLoading={isFetching}
+                  student={drawerStudent}
+                />
               )}
             </Stack>
           ) : (
@@ -186,48 +244,74 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
   if (activeTab === 'overview') {
     return (
       <Stack spacing={1}>
+        {/* KPI snapshot grid skeleton */}
         <Grid container spacing={1}>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card variant="outlined" sx={{ p: 2.5, height: 180, borderRadius: 2 }}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Skeleton variant="circular" width={72} height={72} />
-                <Box sx={{ flex: 1 }}>
-                  <Skeleton variant="text" width="60%" height={24} />
-                  <Skeleton variant="text" width="40%" height={20} />
-                </Box>
-              </Stack>
-              <Skeleton variant="text" width="90%" sx={{ mt: 2 }} />
-              <Skeleton variant="text" width="80%" />
-            </Card>
-          </Grid>
-          {[1, 2, 3, 4].map((i) => (
-            <Grid key={i} size={{ xs: 12, sm: 6, md: 2 }}>
-              <Card variant="outlined" sx={{ p: 2, height: 180, borderRadius: 2 }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Grid key={i} size={{ xs: 12, sm: 6, md: 2.4 }}>
+              <Card variant="outlined" sx={{ p: 2, height: 110, borderRadius: 2 }}>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Skeleton variant="rectangular" width={32} height={32} sx={{ borderRadius: 1 }} />
-                  <Skeleton variant="text" width="50%" />
+                  <Skeleton variant="text" width="60%" />
                 </Stack>
-                <Skeleton variant="text" width="70%" height={40} sx={{ mt: 2 }} />
-                <Skeleton variant="text" width="40%" sx={{ mt: 1 }} />
+                <Skeleton variant="text" width="50%" height={32} sx={{ mt: 1 }} />
+                <Skeleton variant="text" width="70%" height={16} />
               </Card>
             </Grid>
           ))}
         </Grid>
-        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-          <Skeleton variant="text" width="150px" height={24} sx={{ mb: 1.5 }} />
-          <Stack spacing={1}>
-            {[1, 2].map((i) => (
-              <Box key={i} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
-                <Stack direction="row" justifyContent="space-between">
-                  <Box sx={{ flex: 1 }}>
-                    <Skeleton variant="text" width="100px" />
-                    <Skeleton variant="text" width="80%" sx={{ mt: 1 }} />
-                  </Box>
+
+        {/* 2-Column main dashboard skeleton */}
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 12, md: 7.5, lg: 8 }}>
+            <Stack spacing={1}>
+              <Card variant="outlined" sx={{ p: 2, height: 220, borderRadius: 2 }}>
+                <Skeleton variant="text" width="40%" height={28} />
+                <Skeleton variant="text" width="80%" height={20} sx={{ mb: 2 }} />
+                <Grid container spacing={1.5}>
+                  {[1, 2, 3, 4].map((i) => (
+                    <Grid key={i} size={{ xs: 12, sm: 6 }}>
+                      <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 1.5 }} />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Card>
+              <Card variant="outlined" sx={{ p: 2, height: 260, borderRadius: 2 }}>
+                <Skeleton variant="text" width="35%" height={28} />
+                <Stack spacing={1.5} sx={{ mt: 1.5 }}>
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 1.5 }} />
+                  ))}
                 </Stack>
-              </Box>
-            ))}
-          </Stack>
-        </Card>
+              </Card>
+            </Stack>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 4.5, lg: 4 }}>
+            <Stack spacing={1}>
+              <Card variant="outlined" sx={{ p: 2, height: 220, borderRadius: 2 }}>
+                <Skeleton variant="text" width="45%" height={28} />
+                <Stack spacing={1} sx={{ mt: 1.5 }}>
+                  {[1, 2].map((i) => (
+                    <Skeleton key={i} variant="rectangular" height={55} sx={{ borderRadius: 1.5 }} />
+                  ))}
+                </Stack>
+              </Card>
+              <Card variant="outlined" sx={{ p: 2, height: 240, borderRadius: 2 }}>
+                <Skeleton variant="text" width="50%" height={28} />
+                <Stack spacing={1} sx={{ mt: 1.5 }}>
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} variant="rectangular" height={42} sx={{ borderRadius: 1.5 }} />
+                  ))}
+                </Stack>
+              </Card>
+              <Card variant="outlined" sx={{ p: 2, height: 160, borderRadius: 2 }}>
+                <Skeleton variant="text" width="40%" height={28} />
+                <Skeleton variant="rectangular" height={8} sx={{ my: 1.5, borderRadius: 1 }} />
+                <Skeleton variant="text" width="90%" />
+              </Card>
+            </Stack>
+          </Grid>
+        </Grid>
       </Stack>
     );
   }
@@ -238,6 +322,10 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
           <Skeleton variant="text" width="100px" height={24} />
           <Skeleton variant="text" width="60%" height={20} />
           <Skeleton variant="rectangular" height={100} sx={{ mt: 2, borderRadius: 1 }} />
+        </Card>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+          <Skeleton variant="text" width="200px" height={24} sx={{ mb: 1.5 }} />
+          <Skeleton variant="rectangular" height={220} sx={{ borderRadius: 1 }} />
         </Card>
         <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
           <Skeleton variant="text" width="200px" height={24} sx={{ mb: 1.5 }} />
@@ -260,6 +348,14 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
       </Stack>
     );
   }
+  if (activeTab === 'timetable') {
+    return (
+      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+        <Skeleton variant="text" width="150px" height={24} sx={{ mb: 1.5 }} />
+        <Skeleton variant="rectangular" height={280} sx={{ borderRadius: 1 }} />
+      </Card>
+    );
+  }
   if (activeTab === 'timeline') {
     return (
       <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
@@ -271,22 +367,6 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
               <Skeleton variant="circular" width={16} height={16} />
               <Skeleton variant="text" width="200px" />
             </Stack>
-          ))}
-        </Stack>
-      </Card>
-    );
-  }
-  if (activeTab === 'interventions') {
-    return (
-      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Skeleton variant="text" width="220px" height={24} sx={{ mb: 1.5 }} />
-        <Stack spacing={1}>
-          {[1, 2].map((i) => (
-            <Box key={i} sx={{ p: 1.75, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
-              <Skeleton variant="text" width="150px" height={20} />
-              <Skeleton variant="text" width="250px" sx={{ mt: 1 }} />
-              <Skeleton variant="rectangular" height={10} sx={{ mt: 2, borderRadius: 1 }} />
-            </Box>
           ))}
         </Stack>
       </Card>

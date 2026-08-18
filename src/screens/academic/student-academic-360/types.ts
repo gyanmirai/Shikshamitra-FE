@@ -27,7 +27,7 @@ export type Academic360StudentRow = {
   academicHealth?: string | null;
   academicHealthReasons?: string[];
   alertCount?: number | null;
-  activeInterventionCount?: number | null;
+
   dataCompleteness?: string | Academic360DataCompleteness | null;
   lastUpdatedAt?: string | null;
   updatedAt?: string | null;
@@ -70,6 +70,10 @@ export type Academic360LearningTask = {
   marks?: number | null;
   totalMarks?: number | null;
   feedback?: string | null;
+  resubmissionRequired?: boolean;
+  submittedAt?: string | null;
+  evaluatedAt?: string | null;
+  isOverdue?: boolean;
 };
 
 export type Academic360LearningTasks = {
@@ -79,6 +83,8 @@ export type Academic360LearningTasks = {
   late?: number;
   reviewed?: number;
   pendingEvaluation?: number;
+  resubmissionRequired?: number;
+  submittedOnTime?: number;
   recentTasks?: Academic360LearningTask[];
 };
 
@@ -162,18 +168,6 @@ export type Academic360Achievement = {
   source?: string;
 };
 
-export type Academic360Intervention = {
-  id?: string | null;
-  concern?: string;
-  goal?: string;
-  owner?: string;
-  startDate?: string | null;
-  reviewDate?: string | null;
-  status?: string;
-  progress?: number;
-  outcome?: string;
-};
-
 export type Academic360DataCompleteness = {
   percentage?: number;
   status?: string;
@@ -184,8 +178,6 @@ export type Academic360DataCompleteness = {
 export type Academic360Permissions = {
   canViewRank?: boolean;
   canViewParentContact?: boolean;
-  canCreateIntervention?: boolean;
-  canAddObservation?: boolean;
   canDownloadReport?: boolean;
 };
 
@@ -202,7 +194,6 @@ export type Academic360Response = {
   upcomingItems?: Academic360UpcomingItem[];
   timeline?: Academic360TimelineEvent[];
   achievements?: Academic360Achievement[];
-  interventions?: Academic360Intervention[];
   dataCompleteness?: Academic360DataCompleteness;
   permissions?: Academic360Permissions;
 };

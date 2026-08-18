@@ -110,7 +110,7 @@ const ClassManagementNotificationScreen = () => {
               }
               setSearchParams('tab', value);
             }}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: 2 }}
             role="tablist"
           >
             {TABS.map((tab) => (

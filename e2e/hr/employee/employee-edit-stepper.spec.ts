@@ -740,4 +740,89 @@ test.describe('HR Employee edit stepper', () => {
     await expect(saveButton).toBeEnabled();
     await saveButton.click({ trial: true });
   });
+
+  test('builds a payroll salary structure from the default template', async ({ page }) => {
+    await page.route('**/payroll/salary-templates**', async (route) => {
+      const request = route.request();
+      if (request.method() === 'POST' && request.url().includes('/calculate')) {
+        await route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify({
+            templateId: 'template-1',
+            templateVersionId: 'version-1',
+            templateVersion: 1,
+            salaryBasis: 'GROSS',
+            quotedMonthlyAmount: 30000,
+            grossSalary: 30000,
+            basicSalary: 18000,
+            totalDeductions: 2000,
+            netSalary: 28000,
+            employerContributionTotal: 1800,
+            employerCost: 31800,
+            earnings: [
+              { componentId: 'basic-1', code: 'BASIC', name: 'Basic Salary', amount: 18000, semanticType: 'BASIC', formulaType: 'PERCENTAGE_OF_GROSS', isStatutory: false },
+              { componentId: 'allowance-1', code: 'SPECIAL_ALLOWANCE', name: 'Special Allowance', amount: 12000, semanticType: 'BALANCING_EARNING', formulaType: 'REMAINDER_OF_GROSS', isStatutory: false },
+            ],
+            deductions: [
+              { componentId: 'pf-1', code: 'EMPLOYEE_PF', name: 'Provident Fund', amount: 1800, semanticType: 'EMPLOYEE_PROVIDENT_FUND', formulaType: 'EMPLOYEE_PROVIDENT_FUND', isStatutory: true },
+              { componentId: 'pt-1', code: 'PROFESSIONAL_TAX', name: 'Professional Tax', amount: 200, semanticType: 'PROFESSIONAL_TAX', formulaType: 'PROFESSIONAL_TAX', isStatutory: true },
+            ],
+            employerContributions: [],
+            formulaTrace: [
+              'Basic Salary = gross x 60% = 18000.00',
+              'Special Allowance = gross remainder = 12000.00',
+            ],
+            warnings: [],
+            pfRuleId: null,
+            pfRuleVersion: null,
+            professionalTaxProfile: 'IN-GJ',
+            generatedAt: '2026-08-13T10:00:00Z',
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          items: [
+            {
+              id: 'template-1',
+              name: 'Gujarat Standard Salary',
+              description: 'Default Gujarat salary structure',
+              status: 'PUBLISHED',
+              isDefault: true,
+              latestVersion: 1,
+              publishedVersion: 1,
+              latest: { id: 'version-1', versionNumber: 1, status: 'PUBLISHED', rules: [] },
+              published: { id: 'version-1', versionNumber: 1, status: 'PUBLISHED', rules: [] },
+            },
+          ],
+        }),
+      });
+    });
+
+    await gotoEmployeeList(page);
+    await openFirstRowEdit(page);
+    await clickWizardStep(page, 'Payroll');
+
+    await expect(page.getByText('Build salary structure', { exact: true })).toBeVisible();
+    await page.getByLabel('Quoted monthly salary').fill('30000');
+    const calculateButton = page.getByRole('button', { name: /^Calculate$/ });
+    await expect(calculateButton).toBeEnabled();
+    await calculateButton.click();
+
+    await expect(page.getByText('Formula breakdown', { exact: true })).toBeVisible();
+    await expect(page.getByText('Employer cost', { exact: true })).toBeVisible();
+    await page.getByText('Formula breakdown', { exact: true }).click();
+    await expect(page.getByText(/Basic Salary = gross x 60%/i)).toBeVisible();
+
+    await page.getByLabel('Quoted monthly salary').fill('31000');
+    await expect(page.getByRole('button', { name: /Apply to earnings and deductions/i })).toBeHidden();
+    await page.getByLabel('Quoted monthly salary').fill('30000');
+    await calculateButton.click();
+
+    await page.getByRole('button', { name: /Apply to earnings and deductions/i }).click();
+    await expect(page.getByText(/Rule controlled/i).first()).toBeVisible();
+  });
 });

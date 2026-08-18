@@ -1,10 +1,10 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers';
 import { useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { setNestedObjectValues } from 'formik';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
@@ -41,6 +41,7 @@ import { RenderPfRules } from './RenderPfRules';
 import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
 import PayrollTempComponentDialog from './PayrollTempComponentDialog';
+import { SalaryStructureBuilder } from '../../payroll/structure/SalaryStructureBuilder';
 import {
   isSalaryComponentFixed,
   formatApplicableMonthLabel,
@@ -125,6 +126,11 @@ export const RenderComponents = ({
   const components = values[name] || [];
   const isDialogOpen = useBoolean();
   const isAddingTemp = useBoolean(false);
+  const markGeneratedModified = () => {
+    if (values.sourceSalaryTemplateVersionId) {
+      formik.setFieldValue('wasModifiedAfterGeneration', true, false);
+    }
+  };
 
   const handleAdd = (selectedComponents: any[]) => {
     // Preserve existing temp components so they are not lost when adding from dropdown
@@ -141,6 +147,7 @@ export const RenderComponents = ({
       };
     });
     formik.setFieldValue(name, [...tempComponents, ...normalized]);
+    markGeneratedModified();
     if (isAddingTemp.value) {
       isAddingTemp.onFalse();
     }
@@ -149,12 +156,14 @@ export const RenderComponents = ({
   const handleAddTemp = (selectedValues: any) => {
     const updatedComponents = [...components, selectedValues];
     formik.setFieldValue(name, updatedComponents);
+    markGeneratedModified();
     isAddingTemp.onFalse();
   };
 
   const handleRemove = (index: number) => {
     const updatedComponents = components.filter((_: any, i: number) => i !== index);
     formik.setFieldValue(name, updatedComponents);
+    markGeneratedModified();
   };
 
   // Build table rows and attach original index for edit/delete.
@@ -167,7 +176,11 @@ export const RenderComponents = ({
     isFixed: isSalaryComponentFixed(c),
     isPercentage: isPercentageSalaryComponent(c),
     isTemp: !!c?.isTemp,
+    isGeneratedOverride: c?.usesMasterValue === false && !c?.isTemp,
     applicableMonth: c?.applicableMonth,
+    isStatutory: ['EMPLOYEEPROVIDENTFUND', 'PROFESSIONALTAX'].includes(
+      String(c?.semanticType || '').replaceAll('_', '').toUpperCase()
+    ),
   }));
 
   const componentAccentColor = type === 'earning' ? 'primary' : 'error';
@@ -340,6 +353,15 @@ export const RenderComponents = ({
                           sx={{ height: 18, fontSize: '10px', fontWeight: 600 }}
                         />
                       )}
+                      {row.isStatutory && (
+                        <Chip
+                          label="Rule controlled"
+                          size="small"
+                          color="secondary"
+                          variant="soft"
+                          sx={{ height: 18, fontSize: '10px', fontWeight: 700 }}
+                        />
+                      )}
                     </Box>
                     {row.applicableMonth && (
                       <Typography
@@ -380,7 +402,7 @@ export const RenderComponents = ({
                     />
                   );
                 }
-                if (row.isFixed) {
+                if ((row.isFixed && !row.isGeneratedOverride) || row.isStatutory) {
                   return (
                     <Typography variant="body2" fontWeight={600} color="text.primary">
                       {formatCurrency(value)}
@@ -403,6 +425,7 @@ export const RenderComponents = ({
                         val !== '' ? Number(val) : 0
                       );
                       formik.setFieldTouched(`${name}.${row._idx}.amount`, true, false);
+                      markGeneratedModified();
                     }}
                     sx={{
                       width: 120,
@@ -423,7 +446,7 @@ export const RenderComponents = ({
                 return (
                   <ThreeDotsActions
                     showThreeDots={false}
-                    showDeleteIcon
+                    showDeleteIcon={!row.isStatutory}
                     handleDeleteClick={() => handleRemove(row._idx)}
                   />
                 );
@@ -1166,6 +1189,7 @@ const RenderPayrollFields = (props: any) => {
         </Grid>
       </SectionCard>
       <SectionCard title="Compensation Structure">
+        <SalaryStructureBuilder formik={formik} />
         <SalarySummaryCard label="Gross Earnings" value={grossEarnings} />
         <SalarySummaryCard label="Total Deductions" value={totalDeductions} />
         <SalarySummaryCard label="Net Salary" value={netSalary} emphasis />

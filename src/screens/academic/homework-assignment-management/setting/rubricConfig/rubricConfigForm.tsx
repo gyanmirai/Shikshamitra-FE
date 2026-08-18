@@ -61,7 +61,7 @@ const blankCriterion: RubricCriterionFormValue = {
   isRequired: true,
 };
 
-const builderSteps = ['Basic Information', 'Scoring Model', 'Criteria', 'Preview'];
+const builderSteps = ['Basic Information', 'Criteria & Scoring', 'Preview'];
 
 const basicInformationSchema = Yup.object({
   title: Yup.string()
@@ -132,10 +132,10 @@ const criteriaSchema = Yup.object({
 const fullValidationSchema = basicInformationSchema
   .concat(scoringModelSchema)
   .concat(criteriaSchema);
+const criteriaAndScoringSchema = scoringModelSchema.concat(criteriaSchema);
 const stepValidationSchemas = [
   basicInformationSchema,
-  scoringModelSchema,
-  criteriaSchema,
+  criteriaAndScoringSchema,
   fullValidationSchema,
 ];
 
@@ -534,7 +534,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
               <Alert severity="info" sx={{ py: 0.5 }}>
                 {formik.values.scoringModel === RubricScoringModel.WeightedPercentage
                   ? `Current total weight is ${totalScore}%. Publish is allowed only at 100%.`
-                  : `Current maximum score is ${totalScore}. Criteria scores are configured in the next step.`}
+                  : `Current maximum score is ${totalScore}.`}
               </Alert>
             </Grid>
           </Grid>
@@ -765,23 +765,28 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                     />
                   </Grid>
                   <Grid size={{ xs: 8, md: 2 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      type="number"
+                    <CustomSelect
                       label={
                         formik.values.scoringModel === RubricScoringModel.WeightedPercentage
                           ? 'Weight % *'
                           : 'Max Score *'
                       }
-                      name={`criteria[${index}].maxMarks`}
+                      options={formik.values.performanceLevels
+                        .filter((level: RubricPerformanceLevelFormValue) => level.score !== '')
+                        .map((level: RubricPerformanceLevelFormValue) => ({
+                          label: level.label ? `${level.label} (${level.score})` : level.score,
+                          value: level.score,
+                        }))}
+                      labelKey="label"
+                      valueKey="value"
                       value={criterion.maxMarks}
-                      onBlur={formik.handleBlur}
-                      onChange={(event) =>
-                        updateCriterion(formik, index, 'maxMarks', event.target.value)
+                      onBlur={() => formik.setFieldTouched(`criteria[${index}].maxMarks`, true)}
+                      onChange={(value) =>
+                        updateCriterion(formik, index, 'maxMarks', String(value))
                       }
                       error={hasFormikError(formik, `criteria[${index}].maxMarks`)}
                       helperText={getFormikError(formik, `criteria[${index}].maxMarks`)}
+                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     />
                   </Grid>
                   <Grid size={{ xs: 4, md: 2 }}>
@@ -882,8 +887,6 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
             />
             <Chip variant="outlined" size='small'
               label={`Criteria: ${formik.values.criteria.length}`} />
-            <Chip variant="outlined" size='small'
-              label={`Maximum Score: ${totalScore}`} />
             <Chip
               size='small'
               color={publishErrors.length ? 'warning' : 'success'}
@@ -983,9 +986,13 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
           {/* Step content */}
           <Box sx={{ p: { xs: 1.5, md: 2 } }}>
             {step === 0 ? renderBasicInformation(formik) : null}
-            {step === 1 ? renderScoringModel(formik) : null}
-            {step === 2 ? renderCriteria(formik) : null}
-            {step === 3 ? renderPreview(formik) : null}
+            {step === 1 ? (
+              <Stack spacing={1.5}>
+                {renderScoringModel(formik)}
+                {renderCriteria(formik)}
+              </Stack>
+            ) : null}
+            {step === 2 ? renderPreview(formik) : null}
           </Box>
         </Box>
       )}

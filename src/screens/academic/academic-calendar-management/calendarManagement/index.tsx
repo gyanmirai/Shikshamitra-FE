@@ -396,8 +396,15 @@ const CalendarManagement = () => {
     if (markers.length === 0) return undefined;
     const first = markers[0];
     const group = markers.filter((m) => m.title === first.title && m.dayType === first.dayType);
+    const rangeStartDate = group.reduce(
+      (earliest, marker) =>
+        dayjs(marker.date).isBefore(dayjs(earliest), 'day') ? marker.date : earliest,
+      first.date
+    );
     return {
       ...first,
+      date: rangeStartDate,
+      endDate: first.endDate ?? first.rangeEndDate ?? rangeStartDate,
       standardIds: group.map((m) => m.standardId).filter(Boolean),
       deleteIds: group.map((m) => m.id).filter(Boolean),
     };
@@ -521,12 +528,6 @@ const CalendarManagement = () => {
                       {dayjs(calendarStartDate).format('DD MMM YYYY')} –{' '}
                       {dayjs(calendarEndDate).format('DD MMM YYYY')}
                     </Typography>
-                    <Label
-                      variant="soft"
-                      color={selectedCalendar?.status === CalendarStatus.Draft ? 'info' : 'success'}
-                    >
-                      {CalendarStatus[selectedCalendar?.status]}
-                    </Label>
                   </Stack>
                 </Stack>
               </Stack>

@@ -19,6 +19,7 @@ export enum RubricEvaluationStatus {
 export enum RubricWorkType {
   Homework = 0,
   Assignment = 1,
+  Both = 2,
 }
 
 export enum RubricScoringModel {
@@ -166,6 +167,11 @@ export type RubricEvaluationDto = {
   scores: RubricCriterionScoreDto[];
 };
 
+export type StudentAssignmentEvaluationParams = {
+  studentId: string;
+  assignmentId: string;
+};
+
 export const rubricAssessmentApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getRubrics: builder.query<AssessmentRubricDto[], GetRubricsParams | void>({
@@ -267,6 +273,17 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
       providesTags: [academicType.rubricEvaluation],
     }),
 
+    getStudentAssignmentEvaluation: builder.query<
+      RubricEvaluationDto,
+      StudentAssignmentEvaluationParams
+    >({
+      query: ({ studentId, assignmentId }) => ({
+        url: `/academic/rubrics/evaluations/student/${studentId}/assignment/${assignmentId}`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.rubricEvaluation],
+    }),
+
     submitRubricEvaluation: builder.mutation<void, string>({
       query: (evaluationId) => ({
         url: `/academic/rubrics/evaluations/${evaluationId}/submit`,
@@ -300,6 +317,7 @@ export const {
   useArchiveRubricMutation,
   useUpsertRubricEvaluationMutation,
   useGetRubricEvaluationsQuery,
+  useGetStudentAssignmentEvaluationQuery,
   useSubmitRubricEvaluationMutation,
   useApproveRubricEvaluationMutation,
 } = rubricAssessmentApi;
