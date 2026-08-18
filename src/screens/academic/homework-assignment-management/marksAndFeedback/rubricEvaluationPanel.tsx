@@ -6,13 +6,14 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Box, Card, Stack, Divider, TextField, Typography } from '@mui/material';
+import { Alert, Box, Card, Stack, Divider, TextField, Typography } from '@mui/material';
 import {
   RubricStatus,
   useGetRubricsQuery,
   useAddRubricMutation,
   usePublishRubricMutation,
   useGetRubricEvaluationsQuery,
+  useGetStudentAssignmentEvaluationQuery,
   useUpsertRubricEvaluationMutation,
   useSubmitRubricEvaluationMutation,
   useApproveRubricEvaluationMutation,
@@ -53,14 +54,23 @@ export default function RubricEvaluationPanel({
   });
   const activeRubric =
     rubrics.find((rubric) => rubric.status === RubricStatus.Published) ?? rubrics[0];
+  const studentId = studentRow?.studentId as string | undefined;
+  const assignmentEvaluationQuery = useGetStudentAssignmentEvaluationQuery(
+    { studentId: studentId ?? '', assignmentId: taskId },
+    { skip: mode !== 'assignment' || !studentId || !taskId }
+  );
   const { data: evaluations = [] } = useGetRubricEvaluationsQuery(activeRubric?.id ?? '', {
-    skip: !activeRubric?.id,
+    skip: mode !== 'homework' || !activeRubric?.id,
   });
   const [resolvedSubmissionId, setResolvedSubmissionId] = React.useState<string | null>(null);
   const studentSubmissionId = resolvedSubmissionId || studentRow?.id;
-  const currentEvaluation = evaluations.find(
-    (evaluation) => evaluation.studentSubmissionId === studentSubmissionId
-  );
+  const currentEvaluation =
+    mode === 'assignment'
+      ? assignmentEvaluationQuery.data
+      : evaluations.find((evaluation) => evaluation.studentSubmissionId === studentSubmissionId);
+  const isEvaluationLoading =
+    isFetching || assignmentEvaluationQuery.isLoading || assignmentEvaluationQuery.isFetching;
+  const hasEvaluationError = mode === 'assignment' && assignmentEvaluationQuery.isError;
   const [scores, setScores] = React.useState<Record<string, string>>({});
   const [remarks, setRemarks] = React.useState('');
 
@@ -173,7 +183,7 @@ export default function RubricEvaluationPanel({
           <LoadingButton
             size="small"
             variant="outlined"
-            loading={isCreating || isPublishing || isFetching}
+            loading={isCreating || isPublishing || isEvaluationLoading}
             startIcon={<Iconify icon="material-symbols-light:rubric-rounded" />}
             onClick={handleCreateRubric}
           >
@@ -182,6 +192,18 @@ export default function RubricEvaluationPanel({
         </Stack>
       ) : (
         <Stack spacing={1}>
+          {hasEvaluationError && assignmentEvaluationQuery.error &&
+          'status' in assignmentEvaluationQuery.error &&
+          assignmentEvaluationQuery.error.status !== 404 ? (
+            <Alert severity="error">
+              Unable to load this student&apos;s existing evaluation. Please try again.
+            </Alert>
+          ) : null}
+          {isEvaluationLoading ? (
+            <Typography variant="body2" color="text.secondary">
+              Loading scoring model...
+            </Typography>
+          ) : null}
           {activeRubric.criteria.map((criterion) => (
             <Stack
               key={criterion.id}

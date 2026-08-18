@@ -44,7 +44,15 @@ type ElectiveReadiness = {
 
 type StudentElectiveAssignmentsResponse = {
   records?: Array<{ selectedSubjectId?: string | null }>;
+  data?: {
+    records?: Array<{ selectedSubjectId?: string | null }>;
+  };
 };
+
+const normalizeSubjectId = (value?: string | null) => value?.trim().toLowerCase() ?? '';
+
+const getStudentElectiveRecords = (response: StudentElectiveAssignmentsResponse) =>
+  response.records ?? response.data?.records ?? [];
 
 const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
 
@@ -187,17 +195,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           )
         );
 
-        const assignedCounts = assignments.reduce<Record<string, number>>(
-          (counts, assignment) => {
-            (assignment.records ?? []).forEach(({ selectedSubjectId }) => {
-              if (selectedSubjectId) {
-                counts[selectedSubjectId] = (counts[selectedSubjectId] ?? 0) + 1;
-              }
-            });
-            return counts;
-          },
-          {}
-        );
+        const assignedCounts = assignments.reduce<Record<string, number>>((counts, assignment) => {
+          getStudentElectiveRecords(assignment).forEach(({ selectedSubjectId }) => {
+            const normalizedSubjectId = normalizeSubjectId(selectedSubjectId);
+            if (normalizedSubjectId) {
+              counts[normalizedSubjectId] = (counts[normalizedSubjectId] ?? 0) + 1;
+            }
+          });
+          return counts;
+        }, {});
 
         return { isReady: true, assignedCounts };
       } catch {
@@ -237,14 +243,12 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           const assignedElectiveSubjects = isElective
             ? (sub.subjects ?? [])
               .filter((subjectItem: any) => {
-                const subjectId = subjectItem.subjectId ?? subjectItem.id;
+                const subjectId = normalizeSubjectId(subjectItem.subjectId ?? subjectItem.id);
                 return (readiness?.assignedCounts?.[subjectId] ?? 0) > 0;
               })
               .map((subjectItem: any) => {
-                const assignedStudentCount =
-                  readiness?.assignedCounts?.[subjectItem.subjectId] ??
-                  readiness?.assignedCounts?.[subjectItem.id] ??
-                  0;
+                const subjectId = normalizeSubjectId(subjectItem.subjectId ?? subjectItem.id);
+                const assignedStudentCount = readiness?.assignedCounts?.[subjectId] ?? 0;
                 return {
                   ...subjectItem,
                   assignedStudentCount,

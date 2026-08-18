@@ -5,7 +5,7 @@ export const calendarInitialValues = (data?: any): CalendarFormValues => ({
   name: data?.name ?? '',
   description: data?.description ?? '',
   startDate: data?.startDate ?? null,
-  endDate: data?.endDate ?? null,
+  endDate: data?.endDate ?? data?.rangeEndDate ?? null,
   isDefault: data?.isDefault ?? false,
 });
 
@@ -20,7 +20,7 @@ const sanitizeDescription = (desc?: string, id?: string): string => {
 
 export const calendarDayInitialValues = (data?: any): CalendarDayFormValues => ({
   date: data?.date ?? null,
-  endDate: data?.endDate ?? null,
+  endDate: data?.endDate ?? data?.rangeEndDate ?? null,
   dayType: data?.dayType ?? '',
   holidayCategory: data?.holidayCategory ?? '',
   title: data?.title ?? '',

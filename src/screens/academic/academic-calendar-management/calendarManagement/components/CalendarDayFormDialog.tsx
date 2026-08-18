@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { RootState } from 'src/redux/store';
@@ -228,7 +228,7 @@ const CalendarDayFormDialog = ({
     formik.setFieldValue('appliesToAll', false);
     formik.setFieldValue('standardIds', [selectedExam.standardId]);
     formik.setFieldValue('divisionId', '');
-  }, [selectedExam, formik.values.linkedExamId, isExam]);
+  }, [formik, selectedExam, formik.values.linkedExamId, isExam]);
 
   useEffect(() => {
     if (!isExam || !formik.values.linkedExamId) return;
@@ -255,7 +255,7 @@ const CalendarDayFormDialog = ({
     formik.setFieldValue('date', dayjs(examDate));
     formik.setFieldValue('examStartTime', startTime ? dayjs(startTime).format('HH:mm:ss') : '');
     formik.setFieldValue('examEndTime', endTime ? dayjs(endTime).format('HH:mm:ss') : '');
-  }, [examScheduleResponse, formik.values.linkedExamId, isExam]);
+  }, [formik, examScheduleResponse, formik.values.linkedExamId, isExam]);
 
   const handleDayTypeChange = (value: DayType | '') => {
     formik.setFieldValue('dayType', value);
