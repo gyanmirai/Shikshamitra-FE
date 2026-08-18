@@ -11,6 +11,10 @@ export interface QuestionItem {
   learningOutcome?: string;
   source?: string;
   tags?: string[];
+  usageCount?: number;
+  approvalStatus?: string | number;
+  isActive?: boolean;
+  hasAnswer?: boolean;
   isLocked?: boolean;
   questionBankItemId?: string;
 }
@@ -22,6 +26,17 @@ export interface PaperSection {
   marks: number;
   sortOrder: number;
   questions: QuestionItem[];
+}
+
+/**
+ * User-facing "Paper Pattern" section definition.
+ * Extends the persisted PaperSection with pattern metadata used to guide
+ * question selection (question type, planned count and marks per question).
+ */
+export interface SectionPattern extends PaperSection {
+  questionType?: number;
+  questionCount?: number;
+  marksPerQuestion?: number;
 }
 
 export interface BlueprintRule {
@@ -71,6 +86,7 @@ export interface QuestionPaperMetadata {
   id: string;
   paperTitle: string;
   paperCode?: string;
+  academicYearId?: string;
   standardId: string;
   standardName?: string;
   subjectId: string;
@@ -84,6 +100,7 @@ export interface QuestionPaperMetadata {
   creationMode: 'Manual' | 'Auto' | 'Hybrid';
   generalInstructions?: string;
   status: number; // 1: Draft, 2: Generated, 3: Submitted, 4: Approved, 5: Rejected, 6: Published, 7: Locked, 8: Archived
+  createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
   questions?: QuestionItem[];
@@ -96,3 +113,8 @@ export interface QuestionLibraryFilters {
   difficultyLevel: number | '';
   bloomLevel: number | '';
 }
+
+export type CreationMode = 'Manual' | 'Auto' | 'Hybrid';
+
+/** Wizard mode: create a new paper, continue editing / view an existing one, or review a submitted one. */
+export type WizardMode = 'create' | 'edit' | 'review';

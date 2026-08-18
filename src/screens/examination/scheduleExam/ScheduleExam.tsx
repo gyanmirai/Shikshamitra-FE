@@ -37,6 +37,10 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   const [selectedExam, setSelectedExam] = useState<IExamFormValues | null>(null);
   // Active status tab driving the API query
   const [activeStatus, setActiveStatus] = useState<number>(examScheduledStatus.Pending);
+  const apiStatus =
+    activeStatus === examScheduledStatus.Ongoing
+      ? examScheduledStatus.Published
+      : activeStatus;
 
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -55,7 +59,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     currentQueryAndMutation: useGetExamsQuery,
     params: {
       AcademicMediumId: medium?.id,
-      Status: activeStatus,
+      Status: apiStatus,
     },
   });
 
@@ -73,7 +77,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
         dispatchFn(
           scheduleExamApi.util.updateQueryData(
             'getExams',
-            { AcademicMediumId: medium?.id, Status: activeStatus },
+            { AcademicMediumId: medium?.id, Status: apiStatus },
             (draft: any) => {
               const index = draft?.items?.findIndex(
                 (item: any) => item.examId === selectedExam?.examId
@@ -128,7 +132,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       </Typography>
       <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.25 } }}>
         <Typography component="li" variant="caption" color="text.secondary">
-          Use <strong>status tabs</strong> (Pending / Scheduled / Completed) to filter exams.
+          Use <strong>status tabs</strong> (Pending / Published / Ongoing / Completed) to filter exams.
         </Typography>
         <Typography component="li" variant="caption" color="text.secondary">
           Click <strong>+ Create Exam</strong> to open the multi-step exam wizard.

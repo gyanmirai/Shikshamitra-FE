@@ -44,6 +44,10 @@ interface QuestionLibraryRightPanelProps {
   availableCount: number;
   addedQuestionIds: string[];
   chapters: Array<{ id: string; chapterNumber: number; chapterName: string }>;
+  sectionName: string;
+  questionTypeLabel: string;
+  requiredCount: number;
+  requiredMarks: number;
   onAddQuestion: (question: QuestionItem) => void;
   onFiltersChange: (filters: QuestionLibraryFilters) => void;
   isLoading?: boolean;
@@ -55,6 +59,10 @@ export default function QuestionLibraryRightPanel({
   availableCount,
   addedQuestionIds,
   chapters,
+  sectionName,
+  questionTypeLabel,
+  requiredCount,
+  requiredMarks,
   onAddQuestion,
   onFiltersChange,
   isLoading = false,
@@ -73,6 +81,7 @@ export default function QuestionLibraryRightPanel({
   ];
 
   const hasAdditionalFilters = Boolean(searchQuery.trim() || selectedDifficulty || selectedBloom);
+  const hasEnoughQuestions = requiredCount === 0 || availableCount >= requiredCount;
   const emptyMessage = isError
     ? 'Unable to load questions from the Question Bank.'
     : selectedChapterId && !hasAdditionalFilters
@@ -129,40 +138,57 @@ export default function QuestionLibraryRightPanel({
           bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
         }}
       >
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Box
-              sx={{
-                width: 26,
-                height: 26,
-                borderRadius: 1,
-                bgcolor: 'action.hover',
-                color: 'text.primary',
-                display: 'grid',
-                placeItems: 'center',
-              }}
-            >
-              <Iconify icon="solar:library-bold-duotone" width={15} />
-            </Box>
-            <Typography variant="subtitle2" fontWeight={700}>
-              Question Library
-            </Typography>
+        <Stack spacing={0.75}>
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+            <Stack direction="row" spacing={1} alignItems="center" minWidth={0}>
+              <Box
+                sx={{
+                  width: 26,
+                  height: 26,
+                  flexShrink: 0,
+                  borderRadius: 1,
+                  bgcolor: 'action.hover',
+                  color: 'text.primary',
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
+                <Iconify icon="mdi:library" width={15} />
+              </Box>
+              <Typography variant="subtitle2" fontWeight={700} noWrap>
+                Question Library
+              </Typography>
+            </Stack>
+            <Label variant="soft" color="default" sx={{ fontWeight: 700, flexShrink: 0 }}>
+              {availableCount} Available
+            </Label>
           </Stack>
-          <Label variant="soft" color="default" sx={{ fontWeight: 700 }}>
-            {availableCount} Available
-          </Label>
+
+          <Typography variant="caption" color="text.secondary" noWrap>
+            For {sectionName}: {questionTypeLabel} · {requiredMarks} Marks
+          </Typography>
+          <Typography
+            variant="caption"
+            color={hasEnoughQuestions ? 'success.main' : 'warning.main'}
+            fontWeight={700}
+            display="block"
+          >
+            {hasEnoughQuestions
+              ? `✓ ${availableCount} matching questions · ${requiredCount} required`
+              : `⚠ ${availableCount} approved questions · ${requiredCount} required`}
+          </Typography>
         </Stack>
 
         <TextField
           fullWidth
           size="small"
-          placeholder="Search question bank..."
+          placeholder="Search by question, chapter, topic, or keyword..."
           value={searchQuery}
           onChange={(e) => handleSearchChange(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Iconify icon="mingcute:search-line" width={15} color="text.secondary" />
+                <Iconify icon="mdi:magnify" width={15} color="text.secondary" />
               </InputAdornment>
             ),
           }}
@@ -197,6 +223,26 @@ export default function QuestionLibraryRightPanel({
 
       {/* Scrollable Questions List using Scrollbar */}
       <Scrollbar sx={{ flex: 1, p: 1.25 }}>
+        {!isLoading && !hasEnoughQuestions && (
+          <Box
+            sx={{
+              p: 1.25,
+              mb: 1.25,
+              borderRadius: 1.5,
+              border: '1px solid',
+              borderColor: 'warning.light',
+              bgcolor: (t) => alpha(t.palette.warning.main, 0.06),
+            }}
+          >
+            <Typography variant="caption" color="warning.main" fontWeight={700} display="block">
+              ⚠ Not enough approved questions
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+              {sectionName} needs {requiredCount} questions worth {requiredMarks} marks. Adjust the
+              paper pattern or add approved questions to the Question Bank.
+            </Typography>
+          </Box>
+        )}
         {isLoading ? (
           <Box
             sx={{
@@ -224,7 +270,7 @@ export default function QuestionLibraryRightPanel({
               borderColor: 'divider',
             }}
           >
-            <Iconify icon="solar:magnifer-bold-duotone" width={24} color="text.disabled" />
+            <Iconify icon="mdi:magnify-duotone" width={24} color="text.disabled" />
             <Typography variant="caption" color="text.secondary" display="block" mt={1}>
               {emptyMessage}
             </Typography>
@@ -267,7 +313,7 @@ export default function QuestionLibraryRightPanel({
                           onClick={() => onAddQuestion(question)}
                         >
                           <Iconify
-                            icon={isAdded ? 'mingcute:check-circle-line' : 'mingcute:add-circle-line'}
+                            icon={isAdded ? 'mdi:check-circle-outline' : 'mdi:plus-circle-outline'}
                             width={17}
                           />
                         </IconButton>
@@ -298,6 +344,12 @@ export default function QuestionLibraryRightPanel({
                         sx={{ height: 18, fontSize: '0.65rem', maxWidth: 130 }}
                       />
                     )}
+                    <Chip
+                      size="small"
+                      label={`Used ${question.usageCount ?? 0} times`}
+                      variant="outlined"
+                      sx={{ height: 18, fontSize: '0.65rem' }}
+                    />
                   </Stack>
                 </Box>
               );

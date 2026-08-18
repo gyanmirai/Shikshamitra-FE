@@ -175,6 +175,9 @@ const TEMPLATES = [
 const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [activeStep, setActiveStep] = useState(0);
+  const [maxReachedStep, setMaxReachedStep] = useState(
+    data || viewOnly ? GRADE_SCALE_STEPS.length - 1 : 0
+  );
   const [simMarks, setSimMarks] = useState<string>('');
 
   const [addGradeScaling, { isLoading: isAddLoading }] = useQueryAndMutation({
@@ -272,7 +275,11 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
     }
 
     if (!isLastStep) {
-      setActiveStep((step) => Math.min(step + 1, GRADE_SCALE_STEPS.length - 1));
+      setActiveStep((step) => {
+        const nextStep = Math.min(step + 1, GRADE_SCALE_STEPS.length - 1);
+        setMaxReachedStep((reachedStep) => Math.max(reachedStep, nextStep));
+        return nextStep;
+      });
       return;
     }
 
@@ -842,6 +849,12 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
         finalButtonLabel={viewOnly ? 'Close' : data ? 'Update' : 'Submit'}
         saveAndNextButtonProps={{
           loading: isAddLoading || isUpdateLoading,
+        }}
+        isStepClickable={(stepIndex) => stepIndex <= maxReachedStep}
+        onStepClick={(stepIndex) => {
+          if (stepIndex !== activeStep && stepIndex <= maxReachedStep) {
+            setActiveStep(stepIndex);
+          }
         }}
         handleBack={handleBack}
         handleNext={handleNext}

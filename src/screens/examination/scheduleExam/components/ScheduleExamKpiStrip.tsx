@@ -6,6 +6,7 @@ import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 type ScheduleExamKpiStripProps = {
   summary?: any;
   rows?: any[];
+  publishedCount?: number;
 };
 
 const kpiCardSx = {
@@ -34,7 +35,7 @@ const parseDate = (dateStr: any) => {
   return parsed.isValid() ? parsed : null;
 };
 
-const ScheduleExamKpiStrip = ({ summary, rows = [] }: ScheduleExamKpiStripProps) => {
+const ScheduleExamKpiStrip = ({ summary, rows = [], publishedCount }: ScheduleExamKpiStripProps) => {
   const todayStart = dayjs().startOf('day');
   const nextSevenDays = dayjs().add(7, 'day').endOf('day');
 
@@ -72,7 +73,7 @@ const ScheduleExamKpiStrip = ({ summary, rows = [] }: ScheduleExamKpiStripProps)
     {
       label: 'Published',
       value: getMetricValue(
-        summary?.publishedCount,
+        publishedCount ?? summary?.publishedCount,
         rows.filter((row) => row.status === examScheduledStatus.Published).length
       ),
       icon: 'solar:cloud-upload-bold-duotone',

@@ -22,6 +22,7 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import { mapBackendToFormik } from './initialValues';
+import { getExamStatusMeta } from '../scheduleExamStatus';
 import { getReadinessSummary, buildExamPlanningIssues } from './scheduleExamPlanningUtils';
 
 type ScheduleExamPreviewDrawerProps = {
@@ -32,12 +33,6 @@ type ScheduleExamPreviewDrawerProps = {
   onEdit: (exam: any) => void;
   onViewTimetable: (exam: any) => void;
   onPublish: (exam: any) => void;
-};
-
-const statusMeta: Record<number, { label: string; color: 'warning' | 'info' | 'success' }> = {
-  [examScheduledStatus.Pending]: { label: 'Draft', color: 'warning' },
-  [examScheduledStatus.Published]: { label: 'Published', color: 'info' },
-  [examScheduledStatus.Completed]: { label: 'Completed', color: 'success' },
 };
 
 const getSubjectRows = (subjects: any[] = []) =>
@@ -64,7 +59,7 @@ const ScheduleExamPreviewDrawer = ({
   const theme = useTheme();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const examId = exam?.examId;
-  const meta = statusMeta[Number(exam?.status)] || statusMeta[examScheduledStatus.Pending];
+  const meta = getExamStatusMeta(exam || {});
   const { data: examTypeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExaminationTypesQuery,
