@@ -1,5 +1,5 @@
 import React from 'react';
-import Teacher from 'src/screens/classManagement/teacherAssignment';
+import AssignTeacher from 'src/screens/academic/assignClassTeacher/assignClassTeacher';
 
-const TeacherScreen = () => <Teacher />;
+const TeacherScreen = () => <AssignTeacher />;
 export default TeacherScreen;

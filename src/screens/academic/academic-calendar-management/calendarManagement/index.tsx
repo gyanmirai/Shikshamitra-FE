@@ -35,6 +35,7 @@ import {
 import CalendarYearView from './components/CalendarYearView';
 import CalendarMonthView from './components/CalendarMonthView';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
+import { CalendarYearSkeleton, CalendarMonthSkeleton } from './components/CalendarSkeleton';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -199,32 +200,37 @@ const CalendarManagement = () => {
   // Auto-creation lock ref
   const autoCreatingRef = React.useRef(false);
 
+  // Memoized query params
+  const calendarsParams = useMemo(() => ({ academicMediumId: medium?.id }), [medium?.id]);
+  const calendarDaysParams = useMemo(
+    () => (selectedCalendarId ? { calendarId: selectedCalendarId } : null),
+    [selectedCalendarId]
+  );
+
   // Queries
   const {
     data: calendarsData,
     isLoading: calendarsLoading,
-    isFetching: calendarsFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarsQuery,
-    params: { academicMediumId: medium?.id },
-    options: { skip: !medium?.id },
+    params: calendarsParams,
+    options: { skip: !medium?.id, refetchOnFocus: false, refetchOnMountOrArgChange: false },
     popupConfig: { error: true },
   });
 
   const {
     data: calendarDaysData,
     isLoading: daysLoading,
-    isFetching: daysFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarDaysQuery,
-    params: selectedCalendarId ? { calendarId: selectedCalendarId } : null,
-    options: { skip: !selectedCalendarId },
+    params: calendarDaysParams,
+    options: { skip: !selectedCalendarId, refetchOnFocus: false, refetchOnMountOrArgChange: false },
     popupConfig: { error: false },
   });
 
-  const isCalendarLoading = calendarsLoading || daysLoading || calendarsFetching || daysFetching;
+  const isCalendarLoading = (calendarsLoading || daysLoading) && (!calendarsData || calendarsData?.items?.length === 0);
 
   // Mutations
   const [createCalendar, { isLoading: creatingCal }] = useCreateCalendarMutation();
@@ -449,19 +455,27 @@ const CalendarManagement = () => {
           >
             {/* Selected Calendar Indicator / Skeleton Loader */}
             {isCalendarLoading ? (
-              <Stack direction="row" alignItems="center" gap={1.5}>
-                <Stack spacing={0.75}>
-                  <Skeleton variant="text" width={100} height={14} />
-                  <Stack direction="row" alignItems="center" gap={1}>
-                    <Skeleton variant="text" width={160} height={22} />
+              <Stack direction="row" alignItems="center" gap={1.5} width="100%">
+                <Skeleton
+                  variant="rounded"
+                  width={36}
+                  height={36}
+                  sx={{ borderRadius: 2, flexShrink: 0 }}
+                />
+                <Stack spacing={0.75} flex={1}>
+                  <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+                    <Skeleton variant="text" width={180} height={22} sx={{ borderRadius: 1 }} />
                     <Skeleton variant="rounded" width={115} height={24} sx={{ borderRadius: 2 }} />
                     <Skeleton variant="rounded" width={90} height={24} sx={{ borderRadius: 2 }} />
                   </Stack>
                   <Stack direction="row" alignItems="center" gap={1}>
-                    <Skeleton variant="text" width={170} height={14} />
-                    <Skeleton variant="rounded" width={65} height={20} sx={{ borderRadius: 1 }} />
+                    <Skeleton variant="circular" width={14} height={14} />
+                    <Skeleton variant="text" width={170} height={16} sx={{ borderRadius: 1 }} />
                   </Stack>
                 </Stack>
+                <Box sx={{ ml: 'auto' }}>
+                  <Skeleton variant="rounded" width={75} height={24} sx={{ borderRadius: 1 }} />
+                </Box>
               </Stack>
             ) : selectedCalendar ? (
               <Stack direction="row" alignItems="center" gap={1}>
@@ -610,8 +624,10 @@ const CalendarManagement = () => {
         {/* YEAR VIEW TAB */}
         {searchParams.tab === 'yearView' && (
           <>
-            {!selectedCalendarId ? (
-              <Paper sx={{ p: 1, textAlign: 'center', borderRadius: 2 }}>
+            {calendarsLoading ? (
+              <CalendarYearSkeleton />
+            ) : !selectedCalendarId ? (
+              <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2 }}>
                 <Typography color="text.secondary">Select a calendar to view</Typography>
               </Paper>
             ) : (
@@ -619,7 +635,7 @@ const CalendarManagement = () => {
                 calendarDays={visibleCalendarDays}
                 calendarStartDate={calendarStartDate}
                 calendarEndDate={calendarEndDate}
-                isLoading={daysLoading}
+                isLoading={daysLoading && calendarDays.length === 0}
                 onDayClick={handleDayClick}
                 activeDayType={activeDayType}
                 onToggleDayType={(type) =>
@@ -633,7 +649,9 @@ const CalendarManagement = () => {
         {/* MONTH VIEW TAB */}
         {searchParams.tab === 'monthView' && (
           <>
-            {!selectedCalendarId ? (
+            {calendarsLoading ? (
+              <CalendarMonthSkeleton />
+            ) : !selectedCalendarId ? (
               <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
                 <Typography color="text.secondary">Select a calendar to view</Typography>
               </Paper>
@@ -643,7 +661,7 @@ const CalendarManagement = () => {
                 currentMonth={currentMonth}
                 onMonthChange={setCurrentMonth}
                 onDayClick={handleDayClick}
-                isLoading={daysLoading}
+                isLoading={daysLoading && calendarDays.length === 0}
               />
             )}
           </>

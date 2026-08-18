@@ -82,7 +82,6 @@ const matchesFilters = (log: AuditLog, filters: AuditFilterState): boolean => {
     if (!haystack.includes(q)) return false;
   }
   if (filters.action && String(log.action) !== filters.action) return false;
-  if (filters.source && String(log.source) !== filters.source) return false;
   if (filters.entityType && log.entityType !== filters.entityType) return false;
   if (filters.changedByRole && log.changedByRole !== filters.changedByRole) return false;
   if (filters.hasDiff === 'true' && !log.hasDiff) return false;

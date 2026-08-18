@@ -4,15 +4,21 @@ import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { formatDateOnly } from 'src/utils/date-only';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Card, Chip, Stack, Avatar, IconButton, Typography } from '@mui/material';
+import { Box, Chip, Stack, Avatar, IconButton, Typography } from '@mui/material';
 import { useGetElectiveGroupsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
+import {
+  TimetableSettingsSummaryCards,
+  type ITimetableSummaryCard,
+} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import type { IElectiveSubject, IElectiveSubjectTableProps } from '../type';
 
@@ -29,6 +35,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   canView = true,
   canDelete = true,
 }) => {
+  const theme = useTheme();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const {
     data: electiveGroupData,
@@ -60,13 +67,49 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
     [groups]
   );
 
+  const summaryCards: ITimetableSummaryCard[] = useMemo(
+    () => [
+      {
+        label: 'Total Groups',
+        value: summary.total,
+        icon: 'solar:layers-bold-duotone',
+        color: 'primary',
+      },
+      {
+        label: 'Active Groups',
+        value: summary.active,
+        icon: 'solar:check-circle-bold-duotone',
+        color: 'success',
+      },
+      {
+        label: 'Archived Groups',
+        value: summary.archived,
+        icon: 'solar:archive-bold-duotone',
+        color: 'warning',
+      },
+      {
+        label: 'Used In Classes',
+        value: summary.usedInClasses,
+        icon: 'solar:buildings-3-bold-duotone',
+        color: 'info',
+      },
+      {
+        label: 'Unused Groups',
+        value: summary.unused,
+        icon: 'solar:close-circle-bold-duotone',
+        color: 'error',
+      },
+    ],
+    [summary]
+  );
+
   const columns: IColumn[] = useMemo(
     () => [
       {
         id: 'name',
         label: 'Elective Group',
         align: 'left',
-        minWidth: 240,
+        minWidth: 260,
         sticky: true,
         stickyPosition: 'left',
         headerSx: {
@@ -75,33 +118,52 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         cellSx: {
           boxShadow: '2px 0 5px -2px rgba(0, 0, 0, 0.12)',
         },
-        render: (value, row) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Avatar sx={{ width: 34, height: 34, bgcolor: row.color || 'primary.main' }}>
-              <Iconify icon="solar:layers-bold" width={18} height={18} />
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle2" fontSize="13px">
-                {value}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {row.description || `${row.subjects?.length || 0} subjects`}
-              </Typography>
+        render: (value, row) => {
+          const groupColor = row.color || theme.palette.primary.main;
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+              <Avatar
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 1.5,
+                  bgcolor: alpha(groupColor, 0.14),
+                  color: groupColor,
+                  border: `1px solid ${alpha(groupColor, 0.28)}`,
+                }}
+              >
+                <Iconify icon="solar:layers-bold" width={18} height={18} />
+              </Avatar>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '13px' }} noWrap>
+                  {value}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+                  {row.description || `${row.subjects?.length || 0} subjects`}
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        ),
+          );
+        },
       },
       {
         id: 'groupType',
         label: 'Group Type',
         align: 'left',
-        render: (value) => <Chip size="small" label={value || 'Custom'} variant="soft" />,
+        minWidth: 130,
+        render: (value) => (
+          <Label color="info" variant="soft">
+            {value || 'Custom'}
+          </Label>
+        ),
       },
       {
         id: 'subjects',
         label: 'Subjects',
         align: 'left',
         minWidth: 260,
+        isFilter: false,
+        isSort: false,
         render: (value) => {
           const subjects = (value || []) as IElectiveSubject['subjects'];
           const visibleSubjects = subjects.slice(0, 3);
@@ -112,27 +174,43 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
               placement="top"
               title={subjects.map((subject) => subject.name).join(', ')}
             >
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {visibleSubjects.map((subject) => (
+              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
+                {visibleSubjects.map((subject) => {
+                  const sColor = subject.color || subject.subjectColor || theme.palette.primary.main;
+                  return (
+                    <Chip
+                      key={subject.id || subject.name}
+                      size="small"
+                      label={subject.name}
+                      variant="outlined"
+                      sx={{
+                        height: 24,
+                        fontSize: '11.5px',
+                        bgcolor: alpha(sColor, 0.08),
+                        borderColor: alpha(sColor, 0.24),
+                        fontWeight: 500,
+                      }}
+                      avatar={
+                        <Box
+                          component="span"
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            bgcolor: sColor,
+                          }}
+                        />
+                      }
+                    />
+                  );
+                })}
+                {hiddenCount > 0 && (
                   <Chip
-                    key={subject.id || subject.name}
                     size="small"
-                    label={subject.name}
-                    variant="soft"
-                    avatar={
-                      <Box
-                        component="span"
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          bgcolor: subject.color || subject.subjectColor || 'primary.main',
-                        }}
-                      />
-                    }
+                    label={`+${hiddenCount} more`}
+                    sx={{ height: 24, fontSize: '11.5px', fontWeight: 600 }}
                   />
-                ))}
-                {hiddenCount > 0 && <Chip size="small" label={`+${hiddenCount} more`} />}
+                )}
               </Stack>
             </CustomTooltip>
           );
@@ -142,6 +220,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         id: 'usedInClassesCount',
         label: 'Used In Classes',
         align: 'center',
+        minWidth: 160,
+        filterType: 'number',
         render: (value, row) => (
           <Box
             component="button"
@@ -155,7 +235,14 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
               font: 'inherit',
             }}
           >
-            <Typography variant="body2" color={value ? 'primary.main' : 'text.secondary'}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: value ? 'primary.main' : 'text.secondary',
+                fontWeight: value ? 600 : 400,
+                '&:hover': value ? { textDecoration: 'underline' } : {},
+              }}
+            >
               {value ? `Used in ${value} classes` : 'Unused'}
             </Typography>
           </Box>
@@ -165,33 +252,39 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         id: 'lastUpdatedAt',
         label: 'Last Updated',
         align: 'left',
-        render: (value) => formatDateOnly(value),
+        minWidth: 140,
+        filterType: 'date',
+        render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
       },
       {
         id: 'status',
         label: 'Status',
-        align: 'center',
-        width: 150,
-        minWidth: 150,
+        width: 130,
+        minWidth: 130,
         sticky: true,
-        stickyPosition: 'right',
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Active', value: 'Active' },
+          { label: 'Inactive', value: 'Inactive' },
+          { label: 'Archived', value: 'Archived' },
+        ],
         render: (value) => {
           const label = getStatusLabel(value);
           return (
-            <Chip
-              size="small"
-              label={label}
-              color={label === 'Active' ? 'success' : label === 'Archived' ? 'default' : 'warning'}
+            <Label
+              color={label === 'Active' ? 'success' : label === 'Archived' ? 'warning' : 'default'}
               variant="soft"
-            />
+            >
+              {label}
+            </Label>
           );
         },
       },
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 176,
-        width: 176,
+        minWidth: 140,
+        width: 140,
         align: 'center',
         isSort: false,
         sticky: true,
@@ -201,7 +294,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           const group = row as IElectiveSubject;
           const isArchived = getStatusLabel(group.status) === 'Archived';
           return (
-            <Stack direction="row" spacing={1} justifyContent="center">
+            <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
               {canView && (
                 <GroupActionButton
                   title="View usage"
@@ -253,34 +346,12 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         },
       },
     ],
-    [canAdd, canDelete, canView, onArchive, onDelete, onEdit, onRestore, onViewUsage]
+    [canAdd, canDelete, canView, onArchive, onDelete, onEdit, onRestore, onViewUsage, theme.palette.primary.main]
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minHeight: 0 }}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' },
-          gap: 1,
-          flexShrink: 0,
-        }}
-      >
-        {[
-          ['Total Groups', summary.total],
-          ['Active Groups', summary.active],
-          ['Archived Groups', summary.archived],
-          ['Used In Classes', summary.usedInClasses],
-          ['Unused Groups', summary.unused],
-        ].map(([label, count]) => (
-          <Card key={label} sx={{ p: 1.5, borderRadius: 1 }}>
-            <Typography variant="caption" color="text.secondary">
-              {label}
-            </Typography>
-            <Typography variant="h5">{count}</Typography>
-          </Card>
-        ))}
-      </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <TimetableSettingsSummaryCards cards={summaryCards} />
 
       <CustomizableTable
         isLoading={isLoading || isFetching}
@@ -345,9 +416,15 @@ const GroupActionButton = ({
         disabled={disabled}
         aria-label={title}
         onClick={onClick}
-        sx={{ width: 34, height: 34 }}
+        sx={{
+          width: 28,
+          height: 28,
+          '&:hover': {
+            bgcolor: 'action.hover',
+          },
+        }}
       >
-        <Iconify icon={icon} width={18} height={18} />
+        <Iconify icon={icon} width={17} height={17} />
       </IconButton>
     </span>
   </CustomTooltip>

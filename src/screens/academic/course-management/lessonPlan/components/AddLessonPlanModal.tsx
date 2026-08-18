@@ -280,14 +280,16 @@ const AddLessonPlanModal = ({
   }, [currentTeacher]);
 
   const selectedTeacherId = form.teacherId;
-  const plannedDateStr = form.plannedDate ? dateConvertor(form.plannedDate.format(dateFormat)) : '';
+  const plannedDateStr = form.plannedDate
+    ? dateConvertor(form.plannedDate.startOf('day').format(dateFormat))
+    : '';
 
   const { data: timelineData } = useGetLessonPlanTimelineQuery(
     {
-      date: plannedDateStr || dateConvertor(dayjs(todayIso).format(dateFormat)),
+      date: plannedDateStr || dateConvertor(dayjs(todayIso).startOf('day').format(dateFormat)),
       teacherId: selectedTeacherId,
     },
-    { skip: isTimelinePrefill || !selectedTeacherId || !plannedDateStr }
+    { skip: isTimelinePrefill || !selectedTeacherId || !plannedDateStr, refetchOnMountOrArgChange: true }
   );
 
   const isLocked = !!editData;

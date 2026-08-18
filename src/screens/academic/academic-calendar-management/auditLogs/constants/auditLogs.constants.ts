@@ -1,7 +1,6 @@
 // ─── Audit Intelligence Constants ──────────────────────────────────────────────
 
 import {
-  AuditSource,
   AuditRiskLevel,
   AuditImpactLevel,
   AuditApprovalStatus,
@@ -15,7 +14,6 @@ export const EMPTY_FILTERS: AuditFilterState = {
   changedByUserId: '',
   changedByRole: '',
   impactLevel: '',
-  source: '',
   entityType: '',
   entityId: '',
   hasDiff: '',
@@ -80,42 +78,6 @@ export const IMPACT_COLOR_KEYS: Record<AuditImpactLevel, 'default' | 'info' | 'w
     [AuditImpactLevel.Academic]: 'warning',
     [AuditImpactLevel.High]: 'error',
   };
-
-// ─── Source metadata ──────────────────────────────────────────────────────────
-
-export const SOURCE_LABELS: Record<AuditSource, string> = {
-  [AuditSource.Web]: 'Web',
-  [AuditSource.Mobile]: 'Mobile',
-  [AuditSource.API]: 'API',
-  [AuditSource.BulkUpload]: 'Bulk Upload',
-  [AuditSource.SystemJob]: 'System',
-};
-
-export const SOURCE_ICONS: Record<AuditSource, string> = {
-  [AuditSource.Web]: 'mdi:web',
-  [AuditSource.Mobile]: 'mdi:cellphone',
-  [AuditSource.API]: 'mdi:api',
-  [AuditSource.BulkUpload]: 'mdi:upload-multiple',
-  [AuditSource.SystemJob]: 'mdi:cog-clockwise-outline',
-};
-
-export const SOURCE_COLOR_KEYS: Record<
-  AuditSource,
-  'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'default'
-> = {
-  [AuditSource.Web]: 'primary',
-  [AuditSource.Mobile]: 'secondary',
-  [AuditSource.API]: 'info',
-  [AuditSource.BulkUpload]: 'warning',
-  [AuditSource.SystemJob]: 'default',
-};
-
-export const SOURCE_OPTIONS = [
-  { label: 'All Sources', value: '' },
-  ...Object.values(AuditSource)
-    .filter((v) => typeof v === 'number')
-    .map((v) => ({ label: SOURCE_LABELS[v as AuditSource], value: String(v) })),
-];
 
 // ─── Approval metadata ────────────────────────────────────────────────────────
 

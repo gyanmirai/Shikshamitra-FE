@@ -358,7 +358,10 @@ const CalendarDayFormDialog = ({
                     }}
                   >
                     {DAY_TYPE_OPTIONS.filter(
-                      (o) => o.value !== DayType.WorkingDay && o.value !== DayType.EmergencyClosure
+                      (o) =>
+                        o.value !== DayType.WorkingDay &&
+                        o.value !== DayType.EmergencyClosure &&
+                        o.value !== DayType.Exam
                     ).map((opt) => {
                       const color = DAY_TYPE_COLORS[opt.value as DayType] ?? '#9e9e9e';
                       const icon = DAY_TYPE_ICONS[opt.value as DayType] ?? 'mdi:calendar-outline';
@@ -382,6 +385,8 @@ const CalendarDayFormDialog = ({
               <Grid size={{ xs: 12, sm: 6 }}>
                 <DatePicker
                   label={isVacation ? 'Start Date *' : 'Date *'}
+                  calendarId={calendarId}
+                  academicMediumId={mediumId}
                   format="DD-MM-YYYY"
                   value={formik.values.date ? dayjs(formik.values.date) : null}
                   blockedDayTypes={[]}
@@ -433,6 +438,8 @@ const CalendarDayFormDialog = ({
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <DatePicker
                     label="End Date *"
+                    calendarId={calendarId}
+                    academicMediumId={mediumId}
                     format="DD-MM-YYYY"
                     value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                     minDate={formik.values.date ? dayjs(formik.values.date) : undefined}

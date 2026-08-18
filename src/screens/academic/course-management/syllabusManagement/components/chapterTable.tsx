@@ -45,9 +45,12 @@ const ChapterTable = ({
         plannedLoad: `${chapter.estimatedTeachingDays || '-'} days / ${chapter.estimatedPeriods || '-'
           } periods`,
         outcomes: chapter.learningOutcomes || chapter.skillsCovered || '-',
-        resources: chapter.documents?.length
-          ? `${chapter.documents.length} file(s)`
-          : chapter.resourceStatus || 'Missing',
+        resources:
+          (chapter.documents?.length ?? 0) > 1
+            ? `${chapter.documents?.length} files`
+            : chapter.documents?.length === 1
+              ? '1 file'
+              : chapter.resourceStatus || 'Missing',
         lessonPlanStatus: chapter.lessonPlanStatus || 'Not Linked',
         homeworkStatus: chapter.homeworkStatus || 'Not Mapped',
         questionCount: chapter.questionCount || 0,

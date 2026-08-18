@@ -21,7 +21,7 @@ const extractSlots = (payload: unknown): Academic360Record[] => {
   if (Array.isArray(record.items)) return record.items as Academic360Record[];
   if (Array.isArray(record.slots)) return record.slots as Academic360Record[];
 
-  const {timetable} = record;
+  const { timetable } = record;
   if (timetable && typeof timetable === 'object') {
     return Object.entries(timetable as Record<string, unknown>).flatMap(([day, value]) =>
       Array.isArray(value)
