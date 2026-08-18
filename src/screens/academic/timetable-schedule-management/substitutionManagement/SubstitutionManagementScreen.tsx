@@ -320,7 +320,7 @@ const toAssignmentSourceFromAvailability = (value: string): SubstitutionRow['sou
   if (normalized === 'HR Leave') return 'HR Leave';
   if (normalized === 'Attendance') return 'Attendance';
   if (normalized === 'Calendar' || normalized === 'Academic Calendar') return 'Calendar';
-  return 'Auto Created';
+  return 'Manual';
 };
 
 const toPriority = (value: string | number): SubstitutionPriority => {
@@ -391,11 +391,12 @@ const mapApiTeacherAvailability = (item: ApiTeacherAvailabilityRow) => ({
   isFullDay: item.isFullDay,
   affectedLectureCount: item.affectedLectureCount,
   canCreateSubstitution: item.canCreateSubstitution === true,
-  autoCreateSubstitutions: item.autoCreateSubstitutions,
   notifyLeadership: item.notifyLeadership,
   activeSubstitutionStatuses: (item.activeSubstitutionStatuses ?? [])
     .map(toSubstitutionStatus)
     .filter((status, index, statuses) => statuses.indexOf(status) === index),
+  activeSubstitutionIds: item.activeSubstitutionIds ?? [],
+  pendingSubstitutionIds: item.pendingSubstitutionIds ?? [],
   attachmentName: item.attachmentName || undefined,
   remarks: item.remarks || undefined,
 });
@@ -449,7 +450,8 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
 });
 
 const formatLectureLabel = (item: ApiSubstitutionLecture) =>
-  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${item.originalTeacherName || 'Teacher not assigned'
+  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${
+    item.originalTeacherName || 'Teacher not assigned'
   }`;
 
 const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
@@ -542,12 +544,9 @@ type AvailabilityFormState = {
   reason: string;
   remarks: string;
   isFullDay: boolean;
-  autoCreateSubstitutions: boolean;
   notifyLeadership: boolean;
   attachmentName: string;
 };
-
-
 
 const defaultSubstitutionForm: SubstitutionFormState = {
   standardId: '',
@@ -594,7 +593,6 @@ const defaultAvailabilityForm: AvailabilityFormState = {
   reason: '',
   remarks: '',
   isFullDay: false,
-  autoCreateSubstitutions: true,
   notifyLeadership: true,
   attachmentName: '',
 };
@@ -628,12 +626,12 @@ const acknowledgementColor: Record<
 };
 
 const conflictColor: Record<ConflictStatus, 'default' | 'success' | 'error' | 'warning' | 'info'> =
-{
-  Clear: 'success',
-  'Hard Block': 'error',
-  Warning: 'warning',
-  Info: 'info',
-};
+  {
+    Clear: 'success',
+    'Hard Block': 'error',
+    Warning: 'warning',
+    Info: 'info',
+  };
 
 const priorityColor: Record<SubstitutionPriority, 'default' | 'primary' | 'error' | 'warning'> = {
   Low: 'default',
@@ -658,7 +656,6 @@ const autoReminderOptions = [
 const sourceCreateOptions = [
   { value: 'Manual', label: 'Manual' },
   { value: 'AI Suggested', label: 'AI Suggested' },
-  { value: 'Auto Created', label: 'Auto Created' },
 ];
 
 const quickFilters = [
@@ -728,7 +725,7 @@ const SubstitutionManagementScreen = () => {
   const [assignRemarks, setAssignRemarks] = useState('');
   const [formError, setFormError] = useState('');
   const [availabilityError, setAvailabilityError] = useState('');
-  const [createSubmitType, setCreateSubmitType] = useState<'draft' | 'assign' | null>(null);
+  const [createSubmitType, setCreateSubmitType] = useState<'assign' | null>(null);
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
@@ -748,6 +745,40 @@ const SubstitutionManagementScreen = () => {
       ? availabilityForm.endTime
       : dayjs(availabilityForm.endTime).format('HH:mm');
   }, [availabilityForm.isFullDay, availabilityForm.endTime]);
+
+  const getTeacherAvailabilityConflict = (option: EmployeeOption) => {
+    if (
+      !availabilityForm.availabilityDate ||
+      !availabilityStartTimeStr ||
+      !availabilityEndTimeStr
+    ) {
+      return undefined;
+    }
+
+    const date = availabilityForm.availabilityDate.format('YYYY-MM-DD');
+    return teacherAvailability.find(
+      (item) =>
+        item.availabilityDate === date &&
+        ((item.teacherId && item.teacherId === option.id) ||
+          (!item.teacherId && item.teacherName === option.label)) &&
+        isOverlap(availabilityStartTimeStr, availabilityEndTimeStr, item.startTime, item.endTime)
+    );
+  };
+
+  const unavailableTeacherCount = teacherAvailability.filter((item) => {
+    if (
+      !availabilityForm.availabilityDate ||
+      !availabilityStartTimeStr ||
+      !availabilityEndTimeStr
+    ) {
+      return false;
+    }
+
+    return (
+      item.availabilityDate === availabilityForm.availabilityDate.format('YYYY-MM-DD') &&
+      isOverlap(availabilityStartTimeStr, availabilityEndTimeStr, item.startTime, item.endTime)
+    );
+  }).length;
 
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
@@ -871,8 +902,7 @@ const SubstitutionManagementScreen = () => {
     },
     {
       skip:
-        !availabilityDialogOpen ||
-        (!availabilityForm.teacherId && !availabilityForm.teacherName),
+        !availabilityDialogOpen || (!availabilityForm.teacherId && !availabilityForm.teacherName),
     }
   );
   const selectedCreateLecture = createLectureResult.find(
@@ -913,17 +943,26 @@ const SubstitutionManagementScreen = () => {
   });
   const [createSubstitution, { isLoading: isCreatingSubstitution }] = useCreateSubstitutionAction();
   const [assignSubstitute, { isLoading: isAssigning }] = useAssignSubstituteAction();
-  const [sendSubstitutionReminder, { isLoading: isSendingReminder }] = useSendSubstitutionReminderAction();
-  const [completeSubstitution, { isLoading: isCompletingSubstitution }] = useCompleteSubstitutionAction();
-  const [cancelSubstitution, { isLoading: isCancellingSubstitution }] = useCancelSubstitutionAction();
-  const [acknowledgeSubstitution, { isLoading: isAcknowledging }] = useAcknowledgeSubstitutionAction();
-  const [requestSubstitutionChange, { isLoading: isRequestingChange }] = useRequestSubstitutionChangeAction();
-  const [rejectSubstitutionDuty, { isLoading: isRejectingDuty }] = useRejectSubstitutionDutyAction();
-  const [createTeacherAvailability, { isLoading: isCreatingAvailability }] = useCreateTeacherAvailabilityAction();
+  const [sendSubstitutionReminder, { isLoading: isSendingReminder }] =
+    useSendSubstitutionReminderAction();
+  const [completeSubstitution, { isLoading: isCompletingSubstitution }] =
+    useCompleteSubstitutionAction();
+  const [cancelSubstitution, { isLoading: isCancellingSubstitution }] =
+    useCancelSubstitutionAction();
+  const [acknowledgeSubstitution, { isLoading: isAcknowledging }] =
+    useAcknowledgeSubstitutionAction();
+  const [requestSubstitutionChange, { isLoading: isRequestingChange }] =
+    useRequestSubstitutionChangeAction();
+  const [rejectSubstitutionDuty, { isLoading: isRejectingDuty }] =
+    useRejectSubstitutionDutyAction();
+  const [createTeacherAvailability, { isLoading: isCreatingAvailability }] =
+    useCreateTeacherAvailabilityAction();
   const [downloadDailyPdf, { isLoading: isDownloadingPdf }] = useDailySheetPdfLazyQuery();
   const [downloadDailyExcel, { isLoading: isDownloadingExcel }] = useDailySheetExcelLazyQuery();
-  const [getAffectedLectures, { isLoading: isFetchingAffectedLectures }] = useAffectedLecturesLazyQuery();
-  const [getEmployeeOptions, { isLoading: isFetchingEmployeeOptions }] = useEmployeeOptionsLazyQuery();
+  const [getAffectedLectures, { isLoading: isFetchingAffectedLectures }] =
+    useAffectedLecturesLazyQuery();
+  const [getEmployeeOptions, { isLoading: isFetchingEmployeeOptions }] =
+    useEmployeeOptionsLazyQuery();
   const seenAvailabilityTeacherIdsRef = useRef<Set<string>>(new Set());
 
   const isCreateDialogLoading =
@@ -998,9 +1037,9 @@ const SubstitutionManagementScreen = () => {
     const options = academicStandards.length
       ? academicStandards.map((item: Standards) => ({ value: item.id, label: item.name }))
       : uniqueLookupOptions(metadataStandards).map((item) => ({
-        value: item.id,
-        label: item.name,
-      }));
+          value: item.id,
+          label: item.name,
+        }));
     const currentVal = substitutionForm.standardId || substitutionForm.className;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
       options.unshift({
@@ -1009,21 +1048,26 @@ const SubstitutionManagementScreen = () => {
       });
     }
     return options;
-  }, [academicStandards, metadataStandards, substitutionForm.standardId, substitutionForm.className]);
+  }, [
+    academicStandards,
+    metadataStandards,
+    substitutionForm.standardId,
+    substitutionForm.className,
+  ]);
 
   const divisionSelectOptions: SelectOption[] = useMemo(() => {
     const options = selectedAcademicStandard?.divisions?.length
       ? selectedAcademicStandard.divisions.map((item: Standards['divisions'][number]) => ({
-        value: item.id,
-        label: item.name,
-      }))
+          value: item.id,
+          label: item.name,
+        }))
       : metadataDivisions.length > 0
         ? uniqueLookupOptions(metadataDivisions)
-          .filter(
-            (item) =>
-              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-          )
-          .map((item) => ({ value: item.id, label: item.name }))
+            .filter(
+              (item) =>
+                !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+            )
+            .map((item) => ({ value: item.id, label: item.name }))
         : [];
     const currentVal = substitutionForm.divisionId || substitutionForm.divisionName;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
@@ -1042,14 +1086,15 @@ const SubstitutionManagementScreen = () => {
   ]);
 
   const subjectSelectOptions: SelectOption[] = useMemo(() => {
-    const options = metadataSubjects.length > 0
-      ? metadataSubjects
-        .filter(
-          (item) =>
-            !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-        )
-        .map((item) => ({ value: item.id, label: item.name }))
-      : subjectOptions;
+    const options =
+      metadataSubjects.length > 0
+        ? metadataSubjects
+            .filter(
+              (item) =>
+                !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+            )
+            .map((item) => ({ value: item.id, label: item.name }))
+        : subjectOptions;
     const currentVal = substitutionForm.subjectId || substitutionForm.subjectName;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
       options.unshift({
@@ -1066,9 +1111,10 @@ const SubstitutionManagementScreen = () => {
   ]);
 
   const teacherSelectOptions: SelectOption[] = useMemo(() => {
-    const options = metadataTeachers.length > 0
-      ? metadataTeachers.map((item: ApiLookupOption) => ({ value: item.id, label: item.name }))
-      : teacherOptions;
+    const options =
+      metadataTeachers.length > 0
+        ? metadataTeachers.map((item: ApiLookupOption) => ({ value: item.id, label: item.name }))
+        : teacherOptions;
     const currentVal = substitutionForm.originalTeacherId || substitutionForm.originalTeacherName;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
       options.unshift({
@@ -1077,16 +1123,13 @@ const SubstitutionManagementScreen = () => {
       });
     }
     return options;
-  }, [
-    metadataTeachers,
-    substitutionForm.originalTeacherId,
-    substitutionForm.originalTeacherName,
-  ]);
+  }, [metadataTeachers, substitutionForm.originalTeacherId, substitutionForm.originalTeacherName]);
 
   const roomSelectOptions: SelectOption[] = useMemo(() => {
-    const options = metadataRooms.length > 0
-      ? metadataRooms.map((item: ApiLookupOption) => ({ value: item.id, label: item.name }))
-      : roomOptions;
+    const options =
+      metadataRooms.length > 0
+        ? metadataRooms.map((item: ApiLookupOption) => ({ value: item.id, label: item.name }))
+        : roomOptions;
     const currentVal = substitutionForm.originalRoomId || substitutionForm.roomName;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
       options.unshift({
@@ -1098,12 +1141,13 @@ const SubstitutionManagementScreen = () => {
   }, [metadataRooms, substitutionForm.originalRoomId, substitutionForm.roomName]);
 
   const lectureSelectOptions: SelectOption[] = useMemo(() => {
-    const options = createLectureResult.length > 0
-      ? createLectureResult.map((item) => ({
-        value: item.slotSubjectId,
-        label: formatLectureLabel(item),
-      }))
-      : lectureSlotOptions;
+    const options =
+      createLectureResult.length > 0
+        ? createLectureResult.map((item) => ({
+            value: item.slotSubjectId,
+            label: formatLectureLabel(item),
+          }))
+        : lectureSlotOptions;
     const currentVal = substitutionForm.timetableSlotSubjectId || substitutionForm.period;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
       const labelText = substitutionForm.period
@@ -1190,8 +1234,7 @@ const SubstitutionManagementScreen = () => {
         filters.statusFilter === 'all' || item.availabilityStatus === filters.statusFilter;
       const matchesSource =
         filters.sourceFilter === 'all' || item.sourceType === filters.sourceFilter;
-      const matchesReason =
-        filters.reasonFilter === 'all' || item.reason === filters.reasonFilter;
+      const matchesReason = filters.reasonFilter === 'all' || item.reason === filters.reasonFilter;
 
       return (
         matchesDate &&
@@ -1226,11 +1269,11 @@ const SubstitutionManagementScreen = () => {
   const availableTeacherSelectOptions =
     suggestedTeacherRows.length > 0
       ? suggestedTeacherRows
-        .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
-        .map((teacher) => ({
-          value: teacher.teacherId,
-          label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
-        }))
+          .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
+          .map((teacher) => ({
+            value: teacher.teacherId,
+            label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
+          }))
       : [];
 
   const affectedLectures = useMemo<AffectedLectureRow[]>(() => {
@@ -1260,8 +1303,6 @@ const SubstitutionManagementScreen = () => {
     availabilityStartTimeStr,
     affectedLectureResult,
   ]);
-
-
 
   const summaryCards = useMemo<ITimetableSummaryCard[]>(() => {
     const pending =
@@ -1452,7 +1493,6 @@ const SubstitutionManagementScreen = () => {
     });
   };
 
-
   const createFieldErrors = useMemo(
     () => ({
       date: (() => {
@@ -1471,8 +1511,7 @@ const SubstitutionManagementScreen = () => {
         }
         return '';
       })(),
-      class:
-        !substitutionForm.standardId && !substitutionForm.className ? 'Class is required' : '',
+      class: !substitutionForm.standardId && !substitutionForm.className ? 'Class is required' : '',
       division:
         !substitutionForm.divisionId && !substitutionForm.divisionName
           ? 'Division is required'
@@ -1482,9 +1521,7 @@ const SubstitutionManagementScreen = () => {
           ? 'Lecture slot is required'
           : '',
       subject:
-        !substitutionForm.subjectId && !substitutionForm.subjectName
-          ? 'Subject is required'
-          : '',
+        !substitutionForm.subjectId && !substitutionForm.subjectName ? 'Subject is required' : '',
       originalTeacher:
         !substitutionForm.originalTeacherId && !substitutionForm.originalTeacherName
           ? 'Original teacher is required'
@@ -1495,159 +1532,143 @@ const SubstitutionManagementScreen = () => {
           : '',
       reason: !substitutionForm.reason.trim() ? 'Reason is required' : '',
       substituteTeacher:
-        substitutionForm.selectedSubstitutes.length === 0
-          ? 'Substitute teacher is required'
-          : '',
+        substitutionForm.selectedSubstitutes.length === 0 ? 'Substitute teacher is required' : '',
     }),
     [substitutionForm, currentYear]
   );
 
-  const handleCreateSubstitution = useCallback(
-    async (assignNow: boolean) => {
-      setCreateSubmitType(assignNow ? 'assign' : 'draft');
-      setCreateSubmitted(true);
+  const handleCreateSubstitution = useCallback(async () => {
+    setCreateSubmitType('assign');
+    setCreateSubmitted(true);
 
-      const hasBasicError =
-        !!createFieldErrors.date ||
-        !!createFieldErrors.class ||
-        !!createFieldErrors.division ||
-        !!createFieldErrors.slot ||
-        !!createFieldErrors.subject ||
-        !!createFieldErrors.originalTeacher ||
-        !!createFieldErrors.originalRoom ||
-        !!createFieldErrors.reason;
+    const hasBasicError =
+      !!createFieldErrors.date ||
+      !!createFieldErrors.class ||
+      !!createFieldErrors.division ||
+      !!createFieldErrors.slot ||
+      !!createFieldErrors.subject ||
+      !!createFieldErrors.originalTeacher ||
+      !!createFieldErrors.originalRoom ||
+      !!createFieldErrors.reason;
 
-      if (hasBasicError) {
-        return;
-      }
+    if (hasBasicError) {
+      return;
+    }
 
-      if (assignNow && createFieldErrors.substituteTeacher) {
-        return;
-      }
+    if (createFieldErrors.substituteTeacher) {
+      return;
+    }
 
-      if (!substitutionForm.date) {
-        return;
-      }
+    if (!substitutionForm.date) {
+      return;
+    }
 
-      const date = substitutionForm.date.format('YYYY-MM-DD');
-      const payloadDate = toDateTimeOffset(substitutionForm.date.startOf('day'));
-      const hasActiveSlot = substitutions.some(
-        (item) =>
-          item.date === date &&
-          item.className === substitutionForm.className &&
-          item.divisionName === substitutionForm.divisionName &&
-          item.period === substitutionForm.period &&
-          isOverlap(
-            item.startTime,
-            item.endTime,
-            selectedCreateLecture?.startTime || substitutionForm.startTime,
-            selectedCreateLecture?.endTime || substitutionForm.endTime
-          ) &&
-          !['Cancelled', 'Rejected'].includes(item.status)
-      );
+    const date = substitutionForm.date.format('YYYY-MM-DD');
+    const payloadDate = toDateTimeOffset(substitutionForm.date.startOf('day'));
+    const hasActiveSlot = substitutions.some(
+      (item) =>
+        item.date === date &&
+        item.className === substitutionForm.className &&
+        item.divisionName === substitutionForm.divisionName &&
+        item.period === substitutionForm.period &&
+        isOverlap(
+          item.startTime,
+          item.endTime,
+          selectedCreateLecture?.startTime || substitutionForm.startTime,
+          selectedCreateLecture?.endTime || substitutionForm.endTime
+        ) &&
+        !['Cancelled', 'Rejected'].includes(item.status)
+    );
 
-      if (hasActiveSlot) {
-        shikshaMitraToast.error({
-          message: 'This slot already has an active substitution assignment.',
-        });
-        return;
-      }
+    if (hasActiveSlot) {
+      shikshaMitraToast.error({
+        message: 'This slot already has an active substitution assignment.',
+      });
+      return;
+    }
 
-      const selectedTeachers = substitutionForm.selectedSubstitutes
-        .map((selection) =>
-          suggestedTeacherRows.find((teacher) => teacher.teacherId === selection.teacherId)
+    const selectedTeachers = substitutionForm.selectedSubstitutes
+      .map((selection) =>
+        suggestedTeacherRows.find((teacher) => teacher.teacherId === selection.teacherId)
+      )
+      .filter(Boolean) as AvailableTeacherRow[];
+
+    if (selectedTeachers.some((teacher) => teacher.hasConflict)) {
+      shikshaMitraToast.error({
+        message: 'One selected teacher has a hard conflict. Remove that teacher first.',
+      });
+      return;
+    }
+
+    try {
+      const assignmentSegments = substitutionForm.selectedSubstitutes;
+      const createdRows = await Promise.all(
+        assignmentSegments.map((segment) =>
+          createSubstitution({
+            academicYearId: currentYear?.id || null,
+            academicMediumId: medium?.id || null,
+            date: payloadDate,
+            standardId: substitutionForm.standardId || null,
+            className: substitutionForm.className,
+            divisionId: substitutionForm.divisionId || null,
+            divisionName: substitutionForm.divisionName,
+            timetableId: substitutionForm.timetableId || null,
+            timetableSlotId: substitutionForm.timetableSlotId || null,
+            timetableSlotSubjectId: substitutionForm.timetableSlotSubjectId || null,
+            subjectId: substitutionForm.subjectId || null,
+            period: substitutionForm.period,
+            startTime: segment.startTime || substitutionForm.startTime,
+            endTime: segment.endTime || substitutionForm.endTime,
+            subjectName: substitutionForm.subjectName,
+            originalTeacherId: substitutionForm.originalTeacherId || null,
+            originalTeacherName: substitutionForm.originalTeacherName,
+            originalRoomId: substitutionForm.originalRoomId || null,
+            roomName: substitutionForm.roomName,
+            reason: substitutionForm.reason,
+            priority: priorityValueMap[substitutionForm.priority],
+            source: sourceValueMap[substitutionForm.assignmentSource],
+            acknowledgementRequired: substitutionForm.acknowledgementRequired,
+            sendNotification: substitutionForm.sendNotification,
+            substituteTeacherId: segment.teacherId,
+            substituteTeacherName: segment.teacherName,
+            assignedRoomId:
+              substitutionForm.assignedRoomId || substitutionForm.originalRoomId || null,
+            assignedRoomName: substitutionForm.assignedRoomName || substitutionForm.roomName,
+            remarks: segment.isPartialCoverage
+              ? `${substitutionForm.remarks || ''} Partial coverage ${segment.startTime}-${segment.endTime}.`.trim()
+              : substitutionForm.remarks,
+          }).unwrap()
         )
-        .filter(Boolean) as AvailableTeacherRow[];
-
-      if (assignNow && selectedTeachers.some((teacher) => teacher.hasConflict)) {
-        shikshaMitraToast.error({
-          message: 'One selected teacher has a hard conflict. Remove that teacher first.',
-        });
-        return;
+      );
+      setSubstitutions((current) => [...createdRows.map(mapApiSubstitution), ...current]);
+      await Promise.all([refetchAvailability?.(), refetchDashboard?.()]);
+      setCreateDialogOpen(false);
+      if (cameFromAvailability) {
+        setAvailabilityDialogOpen(true);
+        setCameFromAvailability(false);
       }
-
-      try {
-        const assignmentSegments = assignNow
-          ? substitutionForm.selectedSubstitutes
-          : [
-            {
-              teacherId: '',
-              teacherName: '',
-              startTime: selectedCreateLecture?.startTime || substitutionForm.startTime,
-              endTime: selectedCreateLecture?.endTime || substitutionForm.endTime,
-              score: 0,
-              isPartialCoverage: false,
-            },
-          ];
-        const createdRows = await Promise.all(
-          assignmentSegments.map((segment) =>
-            createSubstitution({
-              academicYearId: currentYear?.id || null,
-              academicMediumId: medium?.id || null,
-              date: payloadDate,
-              standardId: substitutionForm.standardId || null,
-              className: substitutionForm.className,
-              divisionId: substitutionForm.divisionId || null,
-              divisionName: substitutionForm.divisionName,
-              timetableId: substitutionForm.timetableId || null,
-              timetableSlotId: substitutionForm.timetableSlotId || null,
-              timetableSlotSubjectId: substitutionForm.timetableSlotSubjectId || null,
-              subjectId: substitutionForm.subjectId || null,
-              period: substitutionForm.period,
-              startTime: segment.startTime || substitutionForm.startTime,
-              endTime: segment.endTime || substitutionForm.endTime,
-              subjectName: substitutionForm.subjectName,
-              originalTeacherId: substitutionForm.originalTeacherId || null,
-              originalTeacherName: substitutionForm.originalTeacherName,
-              originalRoomId: substitutionForm.originalRoomId || null,
-              roomName: substitutionForm.roomName,
-              reason: substitutionForm.reason,
-              priority: priorityValueMap[substitutionForm.priority],
-              source: sourceValueMap[substitutionForm.assignmentSource],
-              acknowledgementRequired: substitutionForm.acknowledgementRequired,
-              sendNotification: substitutionForm.sendNotification,
-              substituteTeacherId: assignNow ? segment.teacherId || null : null,
-              substituteTeacherName: assignNow ? segment.teacherName : undefined,
-              assignedRoomId:
-                substitutionForm.assignedRoomId || substitutionForm.originalRoomId || null,
-              assignedRoomName: substitutionForm.assignedRoomName || substitutionForm.roomName,
-              remarks:
-                segment.isPartialCoverage && assignNow
-                  ? `${substitutionForm.remarks || ''} Partial coverage ${segment.startTime}-${segment.endTime}.`.trim()
-                  : substitutionForm.remarks,
-            }).unwrap()
-          )
-        );
-        setSubstitutions((current) => [...createdRows.map(mapApiSubstitution), ...current]);
-        setCreateDialogOpen(false);
-        if (cameFromAvailability) {
-          setAvailabilityDialogOpen(true);
-          setCameFromAvailability(false);
-        }
-        shikshaMitraToast.success({
-          message: assignNow
-            ? 'Substitution coverage assigned and notification queued.'
-            : 'Substitution draft created.',
-        });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unable to create substitution.';
-        shikshaMitraToast.error({ message });
-      } finally {
-        setCreateSubmitType(null);
-      }
-    },
-    [
-      createSubstitution,
-      createFieldErrors,
-      selectedCreateLecture,
-      substitutionForm,
-      substitutions,
-      suggestedTeacherRows,
-      currentYear,
-      medium,
-      cameFromAvailability,
-    ]
-  );
+      shikshaMitraToast.success({
+        message: 'Substitution coverage assigned and notification queued.',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to create substitution.';
+      shikshaMitraToast.error({ message });
+    } finally {
+      setCreateSubmitType(null);
+    }
+  }, [
+    createSubstitution,
+    createFieldErrors,
+    selectedCreateLecture,
+    substitutionForm,
+    substitutions,
+    suggestedTeacherRows,
+    currentYear,
+    medium,
+    cameFromAvailability,
+    refetchAvailability,
+    refetchDashboard,
+  ]);
 
   const handleAssignTeacher = useCallback(async () => {
     const selectedTeacher = suggestedTeacherRows.find(
@@ -1675,6 +1696,7 @@ const SubstitutionManagementScreen = () => {
         sendNotification: true,
       }).unwrap();
       updateSubstitution(selectedSubstitutionId, () => mapApiSubstitution(updated));
+      await Promise.all([refetchAvailability?.(), refetchDashboard?.()]);
       setAssignDialogOpen(false);
       shikshaMitraToast.success({
         message: 'Substitute teacher assigned and notification queued.',
@@ -1692,6 +1714,8 @@ const SubstitutionManagementScreen = () => {
     selectedTeacherId,
     suggestedTeacherRows,
     updateSubstitution,
+    refetchAvailability,
+    refetchDashboard,
   ]);
 
   const openSubstitutionForLecture = (
@@ -1748,8 +1772,6 @@ const SubstitutionManagementScreen = () => {
     }
     setCreateDialogOpen(true);
   };
-
-
 
   const handleCreateSubstitutionFromAvailability = async (row: TeacherAvailabilityRow) => {
     if (
@@ -1829,7 +1851,7 @@ const SubstitutionManagementScreen = () => {
       reason: !availabilityForm.reason.trim() ? 'Reason is required.' : '',
       time:
         !availabilityForm.isFullDay &&
-          toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
+        toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
           ? 'End time must be later than start time.'
           : '',
     }),
@@ -1879,7 +1901,6 @@ const SubstitutionManagementScreen = () => {
         sourceType: sourceTypeValueMap[availabilityForm.sourceType] ?? 0,
         reason: availabilityForm.reason,
         isFullDay: availabilityForm.isFullDay,
-        autoCreateSubstitutions: availabilityForm.autoCreateSubstitutions,
         notifyLeadership: availabilityForm.notifyLeadership,
         attachmentName: availabilityForm.attachmentName,
         remarks: availabilityForm.remarks,
@@ -2005,14 +2026,11 @@ const SubstitutionManagementScreen = () => {
    * - Stable identity avoids rebuilding each card action handler when unrelated state changes.
    * - It also keeps the teacher-response setting guard tied to one dependency.
    */
-  const openDutyConfirmModal = useCallback(
-    (id: string, action: 'accept' | 'reject' | 'change') => {
-      setDutyConfirmPayload({ id, action });
-      setDutyConfirmNote('');
-      setDutyConfirmOpen(true);
-    },
-    []
-  );
+  const openDutyConfirmModal = useCallback((id: string, action: 'accept' | 'reject' | 'change') => {
+    setDutyConfirmPayload({ id, action });
+    setDutyConfirmNote('');
+    setDutyConfirmOpen(true);
+  }, []);
 
   const closeDutyConfirmModal = useCallback(() => {
     setDutyConfirmOpen(false);
@@ -2032,18 +2050,18 @@ const SubstitutionManagementScreen = () => {
         const updated =
           action === 'accept'
             ? await acknowledgeSubstitution({
-              id,
-              reason: reason || undefined,
-            }).unwrap()
+                id,
+                reason: reason || undefined,
+              }).unwrap()
             : action === 'reject'
               ? await rejectSubstitutionDuty({
-                id,
-                reason,
-              }).unwrap()
+                  id,
+                  reason,
+                }).unwrap()
               : await requestSubstitutionChange({
-                id,
-                reason,
-              }).unwrap();
+                  id,
+                  reason,
+                }).unwrap();
         if (updated) {
           updateSubstitution(id, () => mapApiSubstitution(updated));
         }
@@ -2211,8 +2229,7 @@ const SubstitutionManagementScreen = () => {
       filterType: 'enum' as const,
       enumOptions: conflictOptions.filter((o) => o.value !== 'all'),
       minWidth: 140,
-      render: (value: ConflictStatus, row: any) =>
-        renderConflict(value, row.conflictReason),
+      render: (value: ConflictStatus, row: any) => renderConflict(value, row.conflictReason),
     },
     {
       id: 'status',
@@ -2240,7 +2257,9 @@ const SubstitutionManagementScreen = () => {
               disabled={['Completed', 'Cancelled'].includes(row.status)}
               startIcon={
                 <Iconify
-                  icon={row.substituteTeacherName ? 'mdi:swap-horizontal' : 'mdi:account-plus-outline'}
+                  icon={
+                    row.substituteTeacherName ? 'mdi:swap-horizontal' : 'mdi:account-plus-outline'
+                  }
                   width={16}
                 />
               }
@@ -2301,9 +2320,7 @@ const SubstitutionManagementScreen = () => {
                   <ListItemText primary="Mark completed" />
                 </MenuItem>
                 <MenuItem
-                  disabled={
-                    ['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager
-                  }
+                  disabled={['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager}
                   onClick={async () => {
                     popover.onClose();
                     try {
@@ -2324,9 +2341,7 @@ const SubstitutionManagementScreen = () => {
                   <ListItemText primary="Send reminder" />
                 </MenuItem>
                 <MenuItem
-                  disabled={
-                    ['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager
-                  }
+                  disabled={['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager}
                   onClick={() => {
                     popover.onClose();
                     openAssignDialog(row.id);
@@ -2339,9 +2354,7 @@ const SubstitutionManagementScreen = () => {
                   <ListItemText primary="Request change" />
                 </MenuItem>
                 <MenuItem
-                  disabled={
-                    ['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager
-                  }
+                  disabled={['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager}
                   onClick={() => {
                     popover.onClose();
                     updateSubstitutionStatus(row.id, 'Cancelled');
@@ -2409,7 +2422,14 @@ const SubstitutionManagementScreen = () => {
       enumOptions: sourceTypeOptions,
       minWidth: 130,
       align: 'center' as const,
-      render: (value: any) => (value ? <Label color="default" variant="soft">{value}</Label> : '-'),
+      render: (value: any) =>
+        value ? (
+          <Label color="default" variant="soft">
+            {value}
+          </Label>
+        ) : (
+          '-'
+        ),
     },
     {
       id: 'reason',
@@ -2432,22 +2452,6 @@ const SubstitutionManagementScreen = () => {
       ),
     },
     {
-      id: 'autoCreateSubstitutions',
-      label: 'Auto Create',
-      filterType: 'enum' as const,
-      enumOptions: [
-        { label: 'Yes', value: true },
-        { label: 'No', value: false },
-      ],
-      minWidth: 120,
-      align: 'center' as const,
-      render: (value: any) => (
-        <Label color={value ? 'success' : 'default'} variant="soft">
-          {value ? 'Yes' : 'No'}
-        </Label>
-      ),
-    },
-    {
       id: 'attachmentName',
       label: 'Attachment',
       filterType: 'string' as const,
@@ -2456,7 +2460,12 @@ const SubstitutionManagementScreen = () => {
       render: (value: any) =>
         value ? (
           <Stack direction="row" spacing={0.5} alignItems="center">
-            <Iconify icon="solar:paperclip-bold" width={14} height={14} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+            <Iconify
+              icon="solar:paperclip-bold"
+              width={14}
+              height={14}
+              sx={{ color: 'text.secondary', flexShrink: 0 }}
+            />
             <Typography variant="caption" noWrap sx={{ maxWidth: 120 }}>
               {value}
             </Typography>
@@ -2498,6 +2507,20 @@ const SubstitutionManagementScreen = () => {
       render: (_value: any, row: any) => {
         const actionLabel = getAvailabilityActionLabel(row);
         const hasExistingSubstitution = (row.activeSubstitutionStatuses?.length ?? 0) > 0;
+        const pendingSubstitutionId = row.pendingSubstitutionIds?.[0];
+
+        if (actionLabel === 'Pending assignment' && pendingSubstitutionId && isAdminOrManager) {
+          return (
+            <LoadingButton
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon="mdi:account-check-outline" width={16} />}
+              onClick={() => openAssignDialog(pendingSubstitutionId)}
+            >
+              Assign
+            </LoadingButton>
+          );
+        }
 
         if (actionLabel !== 'Create substitution') {
           return (
@@ -2653,8 +2676,6 @@ const SubstitutionManagementScreen = () => {
       },
     },
   ];
-
-
 
   const renderSectionHeader = (icon: string, title: string, trailing?: React.ReactNode) => (
     <Stack
@@ -3031,7 +3052,11 @@ const SubstitutionManagementScreen = () => {
                         variant="outlined"
                         startIcon={
                           <Iconify
-                            icon={item.substituteTeacherName ? 'mdi:swap-horizontal' : 'mdi:account-plus-outline'}
+                            icon={
+                              item.substituteTeacherName
+                                ? 'mdi:swap-horizontal'
+                                : 'mdi:account-plus-outline'
+                            }
                             width={16}
                           />
                         }
@@ -3244,11 +3269,7 @@ const SubstitutionManagementScreen = () => {
               icon={<Iconify icon="mdi:account-off-outline" width={20} />}
               iconPosition="start"
             />
-            <Tab
-              value="myDuties"
-              label="My Duties"
-              icon={<FactCheck />} iconPosition="start"
-            />
+            <Tab value="myDuties" label="My Duties" icon={<FactCheck />} iconPosition="start" />
           </CustomTabs>
 
           {/* Date Picker & Filters Button aligned on the right side of the Tabs row */}
@@ -3656,7 +3677,9 @@ const SubstitutionManagementScreen = () => {
                       const lecture = createLectureResult.find(
                         (item) => item.slotSubjectId === value
                       );
-                      const template = affectedLectureTemplates.find((item) => item.period === value);
+                      const template = affectedLectureTemplates.find(
+                        (item) => item.period === value
+                      );
                       const assignedSubject = createMetadata?.subjects.find(
                         (item) =>
                           item.id === lecture?.subjectId &&
@@ -3731,7 +3754,9 @@ const SubstitutionManagementScreen = () => {
                   <CustomSelect
                     label="Original Teacher"
                     options={teacherSelectOptions}
-                    value={substitutionForm.originalTeacherId || substitutionForm.originalTeacherName}
+                    value={
+                      substitutionForm.originalTeacherId || substitutionForm.originalTeacherName
+                    }
                     error={createSubmitted && !!createFieldErrors.originalTeacher}
                     helperText={createSubmitted ? createFieldErrors.originalTeacher : ''}
                     disabled={!substitutionForm.timetableSlotSubjectId}
@@ -3797,7 +3822,11 @@ const SubstitutionManagementScreen = () => {
                             </InputAdornment>
                           ),
                         }}
-                        sx={{ width: { xs: '100%', sm: 280 }, bgcolor: 'background.paper', borderRadius: 1 }}
+                        sx={{
+                          width: { xs: '100%', sm: 280 },
+                          bgcolor: 'background.paper',
+                          borderRadius: 1,
+                        }}
                       />
                     </Stack>
                     <Scrollbar sx={{ maxHeight: 340, pr: 0.5 }}>
@@ -3809,16 +3838,20 @@ const SubstitutionManagementScreen = () => {
                         )}
                         {selectedCreateLecture &&
                           suggestedTeacherRows.filter((teacher) =>
-                            teacher.teacherName.toLowerCase().includes(employeeSearchTerm.toLowerCase())
+                            teacher.teacherName
+                              .toLowerCase()
+                              .includes(employeeSearchTerm.toLowerCase())
                           ).length === 0 && (
                             <Alert severity="warning">
-                              No employee is free for the selected slot. Try split coverage or review
-                              timetable conflicts.
+                              No employee is free for the selected slot. Try split coverage or
+                              review timetable conflicts.
                             </Alert>
                           )}
                         {suggestedTeacherRows
                           .filter((teacher) =>
-                            teacher.teacherName.toLowerCase().includes(employeeSearchTerm.toLowerCase())
+                            teacher.teacherName
+                              .toLowerCase()
+                              .includes(employeeSearchTerm.toLowerCase())
                           )
                           .map((teacher, index) => {
                             const isSelected = substitutionForm.selectedSubstitutes.some(
@@ -3891,7 +3924,9 @@ const SubstitutionManagementScreen = () => {
                                       </Stack>
                                       <Typography
                                         variant="caption"
-                                        color={teacher.hasConflict ? 'error.main' : 'text.secondary'}
+                                        color={
+                                          teacher.hasConflict ? 'error.main' : 'text.secondary'
+                                        }
                                         sx={{ mt: 0.25, display: 'block' }}
                                       >
                                         {teacher.hasConflict
@@ -3911,7 +3946,9 @@ const SubstitutionManagementScreen = () => {
                                         <Add fontSize="small" />
                                       )
                                     }
-                                    disabled={!isSelected && teacher.conflictSeverity === 'Hard Block'}
+                                    disabled={
+                                      !isSelected && teacher.conflictSeverity === 'Hard Block'
+                                    }
                                     onClick={() => {
                                       setSubstitutionForm((current) => {
                                         const exists = current.selectedSubstitutes.some(
@@ -3975,12 +4012,22 @@ const SubstitutionManagementScreen = () => {
                     value={
                       substitutionForm.substituteTeacherId || substitutionForm.substituteTeacherName
                     }
-                    error={createSubmitted && createSubmitType === 'assign' && !!createFieldErrors.substituteTeacher}
-                    helperText={createSubmitted && createSubmitType === 'assign' ? createFieldErrors.substituteTeacher : ''}
+                    error={
+                      createSubmitted &&
+                      createSubmitType === 'assign' &&
+                      !!createFieldErrors.substituteTeacher
+                    }
+                    helperText={
+                      createSubmitted && createSubmitType === 'assign'
+                        ? createFieldErrors.substituteTeacher
+                        : ''
+                    }
                     disabled={!selectedCreateLecture}
                     noOptionsMessage="No free employees found for this slot"
                     onChange={(value) => {
-                      const selected = suggestedTeacherRows.find((item) => item.teacherId === value);
+                      const selected = suggestedTeacherRows.find(
+                        (item) => item.teacherId === value
+                      );
                       if (selected) addSubstituteCoverage(selected);
                     }}
                   />
@@ -4008,7 +4055,8 @@ const SubstitutionManagementScreen = () => {
                 gridProps={{ spacing: 1 }}
                 headerContent={
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Configure substitution reason, priority, notification rules, and additional notes.
+                    Configure substitution reason, priority, notification rules, and additional
+                    notes.
                   </Typography>
                 }
               >
@@ -4112,10 +4160,10 @@ const SubstitutionManagementScreen = () => {
                   <Alert severity="success">
                     {substitutionForm.selectedSubstitutes.length > 0
                       ? `You are assigning ${substitutionForm.selectedSubstitutes
-                        .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
-                        .join(
-                          ', '
-                        )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
+                          .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
+                          .join(
+                            ', '
+                          )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
                       : 'Select a substitute teacher to preview the final notification.'}
                   </Alert>
                 </Grid>
@@ -4125,7 +4173,10 @@ const SubstitutionManagementScreen = () => {
                     label="Attachment / Note"
                     value={substitutionForm.remarks}
                     onChange={(event) =>
-                      setSubstitutionForm((current) => ({ ...current, remarks: event.target.value }))
+                      setSubstitutionForm((current) => ({
+                        ...current,
+                        remarks: event.target.value,
+                      }))
                     }
                     fullWidth
                     multiline
@@ -4147,26 +4198,13 @@ const SubstitutionManagementScreen = () => {
             </Button>
             <LoadingButton
               size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              loading={isCreatingSubstitution && createSubmitType === 'draft'}
-              disabled={isCreatingSubstitution}
-              onClick={() => {
-                setCreateSubmitType('draft');
-                handleCreateSubstitution(false);
-              }}
-            >
-              Save Draft
-            </LoadingButton>
-            <LoadingButton
-              size="small"
               variant="contained"
               startIcon={<Send />}
               loading={isCreatingSubstitution && createSubmitType === 'assign'}
               disabled={isCreatingSubstitution}
               onClick={() => {
                 setCreateSubmitType('assign');
-                handleCreateSubstitution(true);
+                handleCreateSubstitution();
               }}
             >
               Assign & Notify
@@ -4346,9 +4384,9 @@ const SubstitutionManagementScreen = () => {
                     bgcolor: (theme) =>
                       selected
                         ? alpha(
-                          theme.palette.primary.main,
-                          theme.palette.mode === 'dark' ? 0.18 : 0.04
-                        )
+                            theme.palette.primary.main,
+                            theme.palette.mode === 'dark' ? 0.18 : 0.04
+                          )
                         : 'background.paper',
                     boxShadow: selected
                       ? (theme) => `0 4px 14px ${alpha(theme.palette.primary.main, 0.14)}`
@@ -4357,11 +4395,11 @@ const SubstitutionManagementScreen = () => {
                     opacity: teacher.hasConflict ? 0.6 : 1,
                     '&:hover': !teacher.hasConflict
                       ? {
-                        borderColor: (theme) =>
-                          selected ? theme.palette.primary.main : theme.palette.primary.light,
-                        boxShadow: (theme) =>
-                          `0 3px 10px ${alpha(theme.palette.common.black, 0.08)}`,
-                      }
+                          borderColor: (theme) =>
+                            selected ? theme.palette.primary.main : theme.palette.primary.light,
+                          boxShadow: (theme) =>
+                            `0 3px 10px ${alpha(theme.palette.common.black, 0.08)}`,
+                        }
                       : undefined,
                   }}
                 >
@@ -4574,7 +4612,7 @@ const SubstitutionManagementScreen = () => {
                 arrow
                 placement="right"
                 sx={{ textAlign: 'justify' }}
-                title="Mark a teacher unavailable for a date and time range. Affected lectures are detected automatically and, if enabled, substitutions are auto-created and admins are notified."
+                title="Mark a teacher unavailable for a date and time range. Affected lectures are detected for manual substitution assignment."
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
               </CustomTooltip>
@@ -4602,10 +4640,10 @@ const SubstitutionManagementScreen = () => {
                     value={
                       availabilityForm.teacherId
                         ? {
-                          id: availabilityForm.teacherId,
-                          label: availabilityForm.teacherName,
-                          departmentName: availabilityForm.departmentName,
-                        }
+                            id: availabilityForm.teacherId,
+                            label: availabilityForm.teacherName,
+                            departmentName: availabilityForm.departmentName,
+                          }
                         : null
                     }
                     onChange={(_, value) =>
@@ -4618,12 +4656,43 @@ const SubstitutionManagementScreen = () => {
                     }
                     getOptionLabel={(option) => option?.label || ''}
                     isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                    getOptionDisabled={(option) => Boolean(getTeacherAvailabilityConflict(option))}
+                    renderOption={(optionProps, option) => {
+                      const conflict = getTeacherAvailabilityConflict(option);
+                      return (
+                        <li {...optionProps}>
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            spacing={1}
+                            sx={{ width: '100%' }}
+                          >
+                            <Typography variant="body2">{option.label}</Typography>
+                            {conflict && (
+                              <Chip
+                                size="small"
+                                color="warning"
+                                variant="outlined"
+                                label={`Unavailable ${conflict.startTime}-${conflict.endTime}`}
+                              />
+                            )}
+                          </Stack>
+                        </li>
+                      );
+                    }}
                     minChars={0}
                     debounceMs={1500}
                     size="small"
                     fullWidth
                     error={availabilitySubmitted && !!availabilityFieldErrors.teacherName}
-                    helperText={availabilitySubmitted ? availabilityFieldErrors.teacherName : ''}
+                    helperText={
+                      availabilitySubmitted
+                        ? availabilityFieldErrors.teacherName
+                        : unavailableTeacherCount > 0
+                          ? `${unavailableTeacherCount} employee(s) already unavailable during this time. They are disabled.`
+                          : ''
+                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -4642,7 +4711,9 @@ const SubstitutionManagementScreen = () => {
                         size: 'small',
                         fullWidth: true,
                         error: availabilitySubmitted && !!availabilityFieldErrors.availabilityDate,
-                        helperText: availabilitySubmitted ? availabilityFieldErrors.availabilityDate : '',
+                        helperText: availabilitySubmitted
+                          ? availabilityFieldErrors.availabilityDate
+                          : '',
                       },
                     }}
                   />
@@ -4688,8 +4759,14 @@ const SubstitutionManagementScreen = () => {
                       textField: {
                         size: 'small',
                         fullWidth: true,
-                        error: availabilitySubmitted && !availabilityForm.isFullDay && !!availabilityFieldErrors.time,
-                        helperText: availabilitySubmitted && !availabilityForm.isFullDay ? availabilityFieldErrors.time : '',
+                        error:
+                          availabilitySubmitted &&
+                          !availabilityForm.isFullDay &&
+                          !!availabilityFieldErrors.time,
+                        helperText:
+                          availabilitySubmitted && !availabilityForm.isFullDay
+                            ? availabilityFieldErrors.time
+                            : '',
                       },
                     }}
                   />
@@ -4719,8 +4796,14 @@ const SubstitutionManagementScreen = () => {
                       textField: {
                         size: 'small',
                         fullWidth: true,
-                        error: availabilitySubmitted && !availabilityForm.isFullDay && !!availabilityFieldErrors.time,
-                        helperText: availabilitySubmitted && !availabilityForm.isFullDay ? availabilityFieldErrors.time : '',
+                        error:
+                          availabilitySubmitted &&
+                          !availabilityForm.isFullDay &&
+                          !!availabilityFieldErrors.time,
+                        helperText:
+                          availabilitySubmitted && !availabilityForm.isFullDay
+                            ? availabilityFieldErrors.time
+                            : '',
                       },
                     }}
                   />
@@ -4805,9 +4888,15 @@ const SubstitutionManagementScreen = () => {
                             spacing={1}
                           >
                             <Box>
-                              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                flexWrap="wrap"
+                              >
                                 <Typography variant="subtitle2" fontWeight={700}>
-                                  {lecture.period} ({lecture.time || `${lecture.startTime}-${lecture.endTime}`})
+                                  {lecture.period} (
+                                  {lecture.time || `${lecture.startTime}-${lecture.endTime}`})
                                 </Typography>
                                 <Chip
                                   size="small"
@@ -4822,16 +4911,25 @@ const SubstitutionManagementScreen = () => {
                                   variant="soft"
                                 />
                               </Stack>
-                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                                Room: {lecture.roomName || 'Not assigned'} • Original Teacher: {lecture.teacherName}
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ mt: 0.5, display: 'block' }}
+                              >
+                                Room: {lecture.roomName || 'Not assigned'} • Original Teacher:{' '}
+                                {lecture.teacherName}
                               </Typography>
                             </Box>
                             <Stack direction="row" spacing={1} alignItems="center">
                               <Label
-                                color={lecture.canCreateSubstitution !== false ? 'warning' : 'success'}
+                                color={
+                                  lecture.canCreateSubstitution !== false ? 'warning' : 'success'
+                                }
                                 variant="soft"
                               >
-                                {lecture.canCreateSubstitution !== false ? 'Needs Substitution' : 'Substitution Exists'}
+                                {lecture.canCreateSubstitution !== false
+                                  ? 'Needs Substitution'
+                                  : 'Substitution Exists'}
                               </Label>
                               {lecture.canCreateSubstitution !== false && (
                                 <Button
@@ -4840,7 +4938,8 @@ const SubstitutionManagementScreen = () => {
                                   startIcon={<Add fontSize="small" />}
                                   onClick={() =>
                                     openSubstitutionForLecture(lecture, {
-                                      availabilityDate: availabilityForm.availabilityDate || dayjs(),
+                                      availabilityDate:
+                                        availabilityForm.availabilityDate || dayjs(),
                                       teacherId: availabilityForm.teacherId,
                                       teacherName: availabilityForm.teacherName,
                                       reason: availabilityForm.reason || 'Teacher Unavailable',
@@ -4891,26 +4990,15 @@ const SubstitutionManagementScreen = () => {
                     options={sourceTypeOptions}
                     value={availabilityForm.sourceType}
                     onChange={(value) =>
-                      setAvailabilityForm((current) => ({ ...current, sourceType: value as string }))
+                      setAvailabilityForm((current) => ({
+                        ...current,
+                        sourceType: value as string,
+                      }))
                     }
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={availabilityForm.autoCreateSubstitutions}
-                          onChange={(event) =>
-                            setAvailabilityForm((current) => ({
-                              ...current,
-                              autoCreateSubstitutions: event.target.checked,
-                            }))
-                          }
-                        />
-                      }
-                      label="Auto-create substitutions"
-                    />
                     <FormControlLabel
                       control={
                         <Switch
@@ -4972,7 +5060,10 @@ const SubstitutionManagementScreen = () => {
                     label="Remarks"
                     value={availabilityForm.remarks}
                     onChange={(event) =>
-                      setAvailabilityForm((current) => ({ ...current, remarks: event.target.value }))
+                      setAvailabilityForm((current) => ({
+                        ...current,
+                        remarks: event.target.value,
+                      }))
                     }
                     fullWidth
                     multiline

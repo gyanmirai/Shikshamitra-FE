@@ -64,11 +64,12 @@ export type ApiTeacherAvailabilityRow = {
   isFullDay: boolean;
   affectedLectureCount: number;
   canCreateSubstitution?: boolean;
-  autoCreateSubstitutions: boolean;
   notifyLeadership: boolean;
   attachmentName?: string | null;
   remarks?: string | null;
   activeSubstitutionStatuses?: Array<string | number>;
+  activeSubstitutionIds?: string[];
+  pendingSubstitutionIds?: string[];
 };
 
 export type ApiSuggestedTeacher = {
@@ -264,7 +265,6 @@ export type CreateTeacherAvailabilityPayload = {
   sourceType: number;
   reason: string;
   isFullDay: boolean;
-  autoCreateSubstitutions: boolean;
   notifyLeadership: boolean;
   attachmentName?: string;
   remarks?: string;

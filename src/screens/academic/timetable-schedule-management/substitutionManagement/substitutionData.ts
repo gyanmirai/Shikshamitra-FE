@@ -14,13 +14,7 @@ export type SubstitutionStatus =
 export type SubstitutionPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
 
 export type AcknowledgementStatus =
-  | 'Not Sent'
-  | 'Sent'
-  | 'Seen'
-  | 'Accepted'
-  | 'Rejected'
-  | 'Change Requested'
-  | 'Escalated';
+  'Not Sent' | 'Sent' | 'Seen' | 'Accepted' | 'Rejected' | 'Change Requested' | 'Escalated';
 
 export type ConflictStatus = 'Clear' | 'Hard Block' | 'Warning' | 'Info';
 export type SubstitutionViewType = 'table' | 'kanban' | 'timeline' | 'calendar';
@@ -80,9 +74,10 @@ export type TeacherAvailabilityRow = {
   isFullDay: boolean;
   affectedLectureCount: number;
   canCreateSubstitution?: boolean;
-  autoCreateSubstitutions: boolean;
   notifyLeadership: boolean;
   activeSubstitutionStatuses?: SubstitutionStatus[];
+  activeSubstitutionIds?: string[];
+  pendingSubstitutionIds?: string[];
   attachmentName?: string;
   remarks?: string;
 };
@@ -516,7 +511,6 @@ export const initialTeacherAvailability: TeacherAvailabilityRow[] = [
     reason: 'Medical leave',
     isFullDay: false,
     affectedLectureCount: 2,
-    autoCreateSubstitutions: true,
     notifyLeadership: true,
   },
   {
@@ -531,7 +525,6 @@ export const initialTeacherAvailability: TeacherAvailabilityRow[] = [
     reason: 'Academic review meeting',
     isFullDay: false,
     affectedLectureCount: 1,
-    autoCreateSubstitutions: true,
     notifyLeadership: true,
   },
 ];

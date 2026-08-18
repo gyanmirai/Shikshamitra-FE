@@ -49,7 +49,6 @@ export interface CopySubjectPayload {
   targetClassId: string;
   subjectIds: string[] | null;
   includeTeachers: boolean;
-  includeCurriculumDetails: boolean;
   includeDocuments: boolean;
   conflictStrategy: 'SKIP' | 'OVERWRITE';
   targetStatus: number;
@@ -265,7 +264,6 @@ const SubjectCopyDialog = ({
         targetClassId: sourceClassId,
         subjectIds: selectionMode === 'ALL' ? null : selectedSubjectIds,
         includeTeachers,
-        includeCurriculumDetails: true,
         includeDocuments,
         conflictStrategy,
         targetStatus: 0,
@@ -295,7 +293,13 @@ const SubjectCopyDialog = ({
               placement="right"
               title="Copy subject allocations and settings from another class to the selected target class."
             >
-              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={18} height={18} />
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+                width={18}
+                height={18}
+              />
             </CustomTooltip>
           </Box>
         }
@@ -338,7 +342,11 @@ const SubjectCopyDialog = ({
                         variant="outlined"
                         sx={{ py: 0 }}
                         action={
-                          <Button size="small" startIcon={<Iconify icon={GlobalIcons.refresh} />} onClick={runClassFilter}>
+                          <Button
+                            size="small"
+                            startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                            onClick={runClassFilter}
+                          >
                             Retry
                           </Button>
                         }
@@ -360,7 +368,9 @@ const SubjectCopyDialog = ({
                           setSelectedSubjectIds([]);
                           setSubjectSearch('');
                         }}
-                        renderInput={(params) => <TextField {...params} placeholder="Select class" />}
+                        renderInput={(params) => (
+                          <TextField {...params} placeholder="Select class" />
+                        )}
                         noOptionsText="No eligible classes"
                       />
                     )}
@@ -485,7 +495,9 @@ const SubjectCopyDialog = ({
                   >
                     <FormControlLabel
                       value="SPECIFIC"
-                      control={<Radio size="small" readOnly checked={selectionMode === 'SPECIFIC'} />}
+                      control={
+                        <Radio size="small" readOnly checked={selectionMode === 'SPECIFIC'} />
+                      }
                       label={
                         <Typography variant="body2" fontWeight={600}>
                           Specific Subjects
@@ -558,7 +570,12 @@ const SubjectCopyDialog = ({
                                 : alpha(theme.palette.grey[500], 0.04),
                           }}
                         >
-                          <Iconify icon="solar:magnifer-linear" width={18} height={18} color="text.secondary" />
+                          <Iconify
+                            icon="solar:magnifer-linear"
+                            width={18}
+                            height={18}
+                            color="text.secondary"
+                          />
                           <InputBase
                             placeholder="Search subject by name or code..."
                             value={subjectSearch}
@@ -667,7 +684,11 @@ const SubjectCopyDialog = ({
                                         sx={{ p: 0 }}
                                       />
                                       <Box>
-                                        <Typography variant="body2" fontWeight={600} lineHeight={1.3}>
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight={600}
+                                          lineHeight={1.3}
+                                        >
                                           {s.name}
                                         </Typography>
                                       </Box>
@@ -688,7 +709,12 @@ const SubjectCopyDialog = ({
                                         />
                                       )}
                                       {isSelected && (
-                                        <Iconify icon="solar:check-circle-bold" color="text.primary" width={18} height={18} />
+                                        <Iconify
+                                          icon="solar:check-circle-bold"
+                                          color="text.primary"
+                                          width={18}
+                                          height={18}
+                                        />
                                       )}
                                     </Stack>
                                   </Paper>
@@ -897,7 +923,13 @@ const SubjectCopyDialog = ({
               placement="right"
               title="Confirm that you wish to duplicate subject settings to the selected class."
             >
-              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+                width={16}
+                height={16}
+              />
             </CustomTooltip>
           </Box>
         }
@@ -916,7 +948,12 @@ const SubjectCopyDialog = ({
             >
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Stack spacing={0.25}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} letterSpacing={0.5}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={700}
+                    letterSpacing={0.5}
+                  >
                     FROM (SOURCE)
                   </Typography>
                   <Typography variant="subtitle2" fontWeight={700}>
@@ -940,7 +977,12 @@ const SubjectCopyDialog = ({
                 </Box>
 
                 <Stack spacing={0.25} sx={{ textAlign: 'right' }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} letterSpacing={0.5}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={700}
+                    letterSpacing={0.5}
+                  >
                     TO (TARGET)
                   </Typography>
                   <Typography variant="subtitle2" fontWeight={700}>
@@ -958,11 +1000,18 @@ const SubjectCopyDialog = ({
             {/* Target Subjects Summary */}
             <Box>
               <Stack direction="row" alignItems="center" justifyContent="space-between" mb={0.75}>
-                <Typography variant="caption" color="text.secondary" fontWeight={700} letterSpacing={0.5}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={700}
+                  letterSpacing={0.5}
+                >
                   SELECTED SUBJECTS
                 </Typography>
                 <Label color="info" variant="soft">
-                  {selectionMode === 'ALL' ? 'All Subjects' : `${selectedSubjectIds.length} Selected`}
+                  {selectionMode === 'ALL'
+                    ? 'All Subjects'
+                    : `${selectedSubjectIds.length} Selected`}
                 </Label>
               </Stack>
 
@@ -1005,20 +1054,22 @@ const SubjectCopyDialog = ({
 
         <DialogActions>
           <Button
-            onClick={() => setConfirmOpen(false)} disabled={isLoading}
+            onClick={() => setConfirmOpen(false)}
+            disabled={isLoading}
             startIcon={<Iconify icon="mdi:close" />}
             variant="outlined"
             size="small"
           >
             Cancel
-          </Button>          <SubmitButton
+          </Button>{' '}
+          <SubmitButton
             buttonText="Confirm & Copy"
             loading={isLoading}
             startIcon={<Iconify icon="solar:copy-bold-duotone" />}
             onClick={handleSubmit}
           />
         </DialogActions>
-      </CustomDialog >
+      </CustomDialog>
     </>
   );
 };
