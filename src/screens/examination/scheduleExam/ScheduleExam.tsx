@@ -37,10 +37,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   const [selectedExam, setSelectedExam] = useState<IExamFormValues | null>(null);
   // Active status tab driving the API query
   const [activeStatus, setActiveStatus] = useState<number>(examScheduledStatus.Pending);
-  const apiStatus =
-    activeStatus === examScheduledStatus.Ongoing
-      ? examScheduledStatus.Published
-      : activeStatus;
+  const apiStatus = activeStatus;
 
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -132,7 +129,8 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       </Typography>
       <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.25 } }}>
         <Typography component="li" variant="caption" color="text.secondary">
-          Use <strong>status tabs</strong> (Pending / Published / Ongoing / Completed) to filter exams.
+          Use <strong>status tabs</strong> (Pending / Published / Ongoing / Completed) to filter
+          exams.
         </Typography>
         <Typography component="li" variant="caption" color="text.secondary">
           Click <strong>+ Create Exam</strong> to open the multi-step exam wizard.

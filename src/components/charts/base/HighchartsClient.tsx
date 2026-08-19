@@ -6,7 +6,7 @@ import type { HighchartsReactRefObject } from '@highcharts/react';
 import { forwardRef } from 'react';
 import { Chart, setHighcharts } from '@highcharts/react';
 
-import { ensureHighchartsModules } from './highchartsModules';
+import { ensureHighchartsModules, Highcharts } from './highchartsModules';
 
 // Register the global Highcharts instance (with all extra modules) once on
 // the client. The new @highcharts/react v5 uses an internal singleton that
@@ -14,8 +14,7 @@ import { ensureHighchartsModules } from './highchartsModules';
 // fully-loaded namespace.
 ensureHighchartsModules();
 if (typeof window !== 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
-  setHighcharts(require('highcharts'));
+  setHighcharts(Highcharts as any);
 }
 
 type Props = {

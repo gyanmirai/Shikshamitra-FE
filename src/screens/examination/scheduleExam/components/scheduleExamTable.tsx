@@ -22,7 +22,19 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
-import { Box, Tab, Chip, Tabs, Paper, Stack, Button, MenuList, MenuItem, Typography, Alert } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Chip,
+  Tabs,
+  Paper,
+  Stack,
+  Button,
+  MenuList,
+  MenuItem,
+  Typography,
+  Alert,
+} from '@mui/material';
 import {
   usePublishExamMutation,
   useGetExamsQuery,
@@ -170,7 +182,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     setPrintingExamId(row.examId);
     try {
       const schedule = await getExamSchedule({ examId: row.examId }).unwrap();
-      const apiSubjects = flattenScheduledSubjects(schedule?.subjects ?? schedule?.data?.subjects ?? []);
+      const apiSubjects = flattenScheduledSubjects(
+        schedule?.subjects ?? schedule?.data?.subjects ?? []
+      );
       const fallbackSubjects = flattenScheduledSubjects(row.subjects || []);
       const subjects = apiSubjects.length
         ? mergeTimetableSubjects(apiSubjects, fallbackSubjects)
@@ -196,7 +210,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           { header: 'Passing Marks', dataKey: 'passingMarks' },
           { header: 'Notes', dataKey: 'notes' },
         ],
-        head: [['Subject', 'Date', 'Start Time', 'End Time', 'Total Marks', 'Passing Marks', 'Notes']],
+        head: [
+          ['Subject', 'Date', 'Start Time', 'End Time', 'Total Marks', 'Passing Marks', 'Notes'],
+        ],
         body: subjects.map((subject: any) => [
           `${subject.subjectName || '-'}${subject.subjectCode ? ` (${subject.subjectCode})` : ''}`,
           (subject.examDate ?? subject.date ?? subject.scheduleDate) &&
@@ -225,24 +241,17 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   };
 
   // Define tab configuration with labels, values, counts and colors
-  const publishedRows = useMemo(
-    () => publishedExamsData?.items || [],
-    [publishedExamsData?.items]
-  );
+  const publishedRows = useMemo(() => publishedExamsData?.items || [], [publishedExamsData?.items]);
   const derivedOngoingCount = useMemo(
     () =>
-      filterExamsByEffectiveStatus(
-        publishedRows,
-        examScheduledStatus.Ongoing,
-        currentTime
-      ).length,
+      filterExamsByEffectiveStatus(publishedRows, examScheduledStatus.Ongoing, currentTime).length,
     [currentTime, publishedRows]
   );
   const ongoingCount = Number(publishedExamsData?.ongoingCount ?? derivedOngoingCount);
-  const publishedCount =
-    publishedExamsData?.publishedCount == null
-      ? Math.max(0, publishedRows.length - ongoingCount)
-      : Number(publishedExamsData.publishedCount);
+  const publishedCount = Math.max(
+    0,
+    Number(publishedExamsData?.publishedCount ?? publishedRows.length) - ongoingCount
+  );
 
   const TABS = useMemo(
     () => [
@@ -278,6 +287,21 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(event, newValue);
     onStatusChange?.(newValue as number);
+  };
+
+  const handleKpiClick = (label: string) => {
+    const statusByCard: Record<string, examScheduledStatus> = {
+      'Draft Exams': examScheduledStatus.Pending,
+      Published: examScheduledStatus.Published,
+      'Upcoming 7 Days': examScheduledStatus.Published,
+      'Unassigned Rooms': examScheduledStatus.Pending,
+      'Needs Attention': examScheduledStatus.Pending,
+      Completed: examScheduledStatus.Completed,
+    };
+    const status = statusByCard[label];
+    if (status === undefined) return;
+    tabs.setValue(status);
+    onStatusChange?.(status);
   };
 
   // Ongoing is a derived view over the Published lifecycle status. Keep the raw
@@ -359,6 +383,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           summary={getExams?.data}
           rows={tableData}
           publishedCount={publishedCount}
+          onCardClick={handleKpiClick}
         />
         <Paper
           elevation={0}
@@ -638,10 +663,12 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             {(selectedTimetable?.issueCount ?? 0) > 0 && (
               <Alert severity="warning" sx={{ mt: 1 }}>
                 <Typography variant="subtitle2" fontWeight={700}>
-                  {selectedTimetable?.issueCount} blocking issue{(selectedTimetable?.issueCount ?? 0) > 1 ? 's' : ''} detected
+                  {selectedTimetable?.issueCount} blocking issue
+                  {(selectedTimetable?.issueCount ?? 0) > 1 ? 's' : ''} detected
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Publishing will fail. Open the exam schedule and fill in all required fields first.
+                  Publishing will fail. Open the exam schedule and fill in all required fields
+                  first.
                 </Typography>
               </Alert>
             )}

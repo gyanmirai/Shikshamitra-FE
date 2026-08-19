@@ -1,6 +1,15 @@
-import { alpha } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Stack, Button, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Stack,
+  Button,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import { getReadinessSummary, buildExamPlanningIssues } from './scheduleExamPlanningUtils';
 
@@ -24,7 +33,8 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
         mb: 2,
         borderRadius: 2,
         border: '1px solid',
-        borderColor: readiness.isReady ? 'success.light' : 'warning.light',
+        borderColor: readiness.isReady ? 'success.main' : 'warning.main',
+        bgcolor: 'background.paper',
         boxShadow: 'none',
         overflow: 'hidden',
         '&:before': { display: 'none' },
@@ -32,26 +42,34 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
     >
       <AccordionSummary
         expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
-        sx={{
+        sx={(theme) => ({
           p: 2,
-          bgcolor: (theme) =>
-            alpha(
-              readiness.isReady ? theme.palette.success.main : theme.palette.warning.main,
-              theme.palette.mode === 'dark' ? 0.14 : 0.08
-            ),
-          color: (theme) =>
-            theme.palette.mode === 'dark'
-              ? readiness.isReady
-                ? 'success.light'
-                : 'warning.light'
-              : readiness.isReady
-                ? 'success.darker'
-                : 'warning.darker',
+          bgcolor: varAlpha(
+            readiness.isReady
+              ? theme.vars.palette.success.mainChannel
+              : theme.vars.palette.warning.mainChannel,
+            0.12
+          ),
+          color: readiness.isReady ? 'success.dark' : 'warning.dark',
           '& .MuiAccordionSummary-content': {
             my: 0,
             alignItems: 'center',
           },
-        }}
+          '& .MuiAccordionSummary-expandIconWrapper': {
+            color: 'inherit',
+          },
+          ...theme.applyStyles('dark', {
+            bgcolor: varAlpha(
+              readiness.isReady
+                ? theme.vars.palette.success.mainChannel
+                : theme.vars.palette.warning.mainChannel,
+              0.2
+            ),
+            color: readiness.isReady
+              ? theme.vars.palette.success.light
+              : theme.vars.palette.warning.light,
+          }),
+        })}
       >
         <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
           <Iconify
@@ -77,7 +95,7 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
         </Stack>
       </AccordionSummary>
 
-      <AccordionDetails sx={{ p: issues.length > 0 ? 2 : 1.5 }}>
+      <AccordionDetails sx={{ p: issues.length > 0 ? 2 : 1.5, bgcolor: 'background.paper' }}>
         {issues.length > 0 ? (
           <Stack spacing={1}>
             {issues.map((issue) => (

@@ -4,7 +4,7 @@ import type { FormikErrors, FormikTouched } from 'formik';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -37,10 +37,6 @@ import { getInitialValues } from './initialValues';
 import { stepValidationSchemas } from './validationSchema';
 
 import type { IGrade, IGradingScale, IGradeFormProps } from './type';
-
-const HELPER_TEXT_PROPS = {
-  sx: { margin: 0, position: 'static' as const, whiteSpace: 'normal' as const },
-};
 
 const STATUS_OPTIONS = [
   { value: 0, label: 'Active' },
@@ -198,6 +194,16 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
     validateOnChange: false,
     onSubmit: () => {},
   });
+  const { submitCount, values: formValues, validateField } = formik;
+
+  useEffect(() => {
+    const hasStartedGradeRanges =
+      activeStep === 1 &&
+      (submitCount > 0 || formValues.gradingScale.length > 0);
+    if (hasStartedGradeRanges) {
+      validateField('gradingScale');
+    }
+  }, [activeStep, submitCount, formValues.gradingScale, validateField]);
 
   // -------------------------------------------------------------------------
   // Submit — preserves the existing payload/API logic exactly.
@@ -292,12 +298,14 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
       { minMarks: '', maxMarks: '', grade: '', gradePoint: '', remark: '', resultStatus: 0 },
     ];
     formik.setFieldValue('gradingScale', updatedGradingScale);
+    formik.setFieldError('gradingScale', undefined);
   };
 
   const applyTemplate = (template: (typeof TEMPLATES)[0]) => {
     formik.setFieldValue('totalMarks', template.totalMarks);
     formik.setFieldValue('passMarks', template.passMarks);
     formik.setFieldValue('gradingScale', template.gradingScale);
+    formik.setFieldError('gradingScale', undefined);
     shikshaMitraToast.info({ message: `Prefilled template: "${template.name}"` });
   };
 
@@ -483,44 +491,43 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
       )}
 
       <Box sx={{ overflowX: 'auto', pt: 1, pb: 1 }}>
-        {formik.values.gradingScale?.map((scale: IGradingScale, index: number) => (
-          <Grid
-            container
-            spacing={1}
-            key={index}
-            mb={2.5}
-            alignItems="center"
-            sx={{
-              minWidth: { md: '100%' },
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 2,
-            }}
-          >
-            <Grid size={{ xs: 12, md: 1.9 }}>
-              <ShakingTextField
-                error={
-                  !!(
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                      ?.minMarks &&
-                    (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.minMarks
-                  )
-                }
-              >
-                <TextField
-                  fullWidth
-                  label="Min Marks *"
-                  type="number"
-                  name={`gradingScale.${index}.minMarks`}
-                  size="small"
-                  disabled={viewOnly}
-                  value={formik.values.gradingScale[index].minMarks}
-                  onChange={formik.handleChange}
-                  onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key))
-                      e.preventDefault();
-                  }}
-                  onWheel={(e) => (e.target as HTMLElement).blur()}
+        {formik.values.gradingScale?.map((scale: IGradingScale, index: number) => {
+          const touchedRange = (
+            formik.touched.gradingScale as FormikTouched<IGradingScale>[] | undefined
+          )?.[index];
+          const errorRange = Array.isArray(formik.errors.gradingScale)
+            ? (formik.errors.gradingScale[index] as FormikErrors<IGradingScale> | undefined)
+            : undefined;
+          const visibleErrors = [
+            ['Min Marks', 'minMarks'],
+            ['Max Marks', 'maxMarks'],
+            ['Grade', 'grade'],
+            ['Point', 'gradePoint'],
+            ['Remark', 'remark'],
+          ].flatMap(([label, field]) => {
+            const fieldName = field as keyof IGradingScale;
+            const message = errorRange?.[fieldName];
+            return touchedRange?.[fieldName] && typeof message === 'string'
+              ? [`${label}: ${message}`]
+              : [];
+          });
+
+          return (
+            <Grid
+              container
+              spacing={1}
+              key={index}
+              mb={2.5}
+              alignItems="center"
+              sx={{
+                minWidth: { md: '100%' },
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                pb: 2,
+              }}
+            >
+              <Grid size={{ xs: 12, md: 1.9 }}>
+                <ShakingTextField
                   error={
                     !!(
                       (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
@@ -529,42 +536,35 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
                         ?.minMarks
                     )
                   }
-                  helperText={
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                      ?.minMarks
-                      ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
+                >
+                  <TextField
+                    fullWidth
+                    label="Min Marks *"
+                    type="number"
+                    name={`gradingScale.${index}.minMarks`}
+                    size="small"
+                    disabled={viewOnly}
+                    value={formik.values.gradingScale[index].minMarks}
+                    onChange={formik.handleChange}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key))
+                        e.preventDefault();
+                    }}
+                    onWheel={(e) => (e.target as HTMLElement).blur()}
+                    error={
+                      !!(
+                        (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                          ?.minMarks &&
+                        (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                           ?.minMarks
-                      : undefined
-                  }
-                  FormHelperTextProps={HELPER_TEXT_PROPS}
-                />
-              </ShakingTextField>
-            </Grid>
+                      )
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
 
-            <Grid size={{ xs: 12, md: 1.9 }}>
-              <ShakingTextField
-                error={
-                  !!(
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                      ?.maxMarks &&
-                    (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.maxMarks
-                  )
-                }
-              >
-                <TextField
-                  fullWidth
-                  label="Max Marks *"
-                  type="number"
-                  name={`gradingScale.${index}.maxMarks`}
-                  size="small"
-                  disabled={viewOnly}
-                  value={formik.values.gradingScale[index].maxMarks}
-                  onChange={formik.handleChange}
-                  onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key))
-                      e.preventDefault();
-                  }}
-                  onWheel={(e) => (e.target as HTMLElement).blur()}
+              <Grid size={{ xs: 12, md: 1.9 }}>
+                <ShakingTextField
                   error={
                     !!(
                       (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
@@ -573,36 +573,35 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
                         ?.maxMarks
                     )
                   }
-                  helperText={
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                      ?.maxMarks
-                      ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
+                >
+                  <TextField
+                    fullWidth
+                    label="Max Marks *"
+                    type="number"
+                    name={`gradingScale.${index}.maxMarks`}
+                    size="small"
+                    disabled={viewOnly}
+                    value={formik.values.gradingScale[index].maxMarks}
+                    onChange={formik.handleChange}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key))
+                        e.preventDefault();
+                    }}
+                    onWheel={(e) => (e.target as HTMLElement).blur()}
+                    error={
+                      !!(
+                        (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                          ?.maxMarks &&
+                        (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                           ?.maxMarks
-                      : undefined
-                  }
-                  FormHelperTextProps={HELPER_TEXT_PROPS}
-                />
-              </ShakingTextField>
-            </Grid>
+                      )
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
 
-            <Grid size={{ xs: 12, md: 1.9 }}>
-              <ShakingTextField
-                error={
-                  !!(
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                      ?.grade &&
-                    (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.grade
-                  )
-                }
-              >
-                <TextField
-                  fullWidth
-                  label="Grade *"
-                  name={`gradingScale.${index}.grade`}
-                  size="small"
-                  disabled={viewOnly}
-                  value={formik.values.gradingScale[index].grade}
-                  onChange={formik.handleChange}
+              <Grid size={{ xs: 12, md: 1.9 }}>
+                <ShakingTextField
                   error={
                     !!(
                       (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
@@ -610,37 +609,29 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
                       (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.grade
                     )
                   }
-                  helperText={
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]?.grade
-                      ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
+                >
+                  <TextField
+                    fullWidth
+                    label="Grade *"
+                    name={`gradingScale.${index}.grade`}
+                    size="small"
+                    disabled={viewOnly}
+                    value={formik.values.gradingScale[index].grade}
+                    onChange={formik.handleChange}
+                    error={
+                      !!(
+                        (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                          ?.grade &&
+                        (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                           ?.grade
-                      : undefined
-                  }
-                  FormHelperTextProps={HELPER_TEXT_PROPS}
-                />
-              </ShakingTextField>
-            </Grid>
+                      )
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
 
-            <Grid size={{ xs: 12, md: 1.4 }}>
-              <ShakingTextField
-                error={
-                  !!(
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                      ?.gradePoint &&
-                    (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
-                      ?.gradePoint
-                  )
-                }
-              >
-                <TextField
-                  fullWidth
-                  label="Point"
-                  type="number"
-                  name={`gradingScale.${index}.gradePoint`}
-                  size="small"
-                  disabled={viewOnly}
-                  value={formik.values.gradingScale[index].gradePoint}
-                  onChange={formik.handleChange}
+              <Grid size={{ xs: 12, md: 1.4 }}>
+                <ShakingTextField
                   error={
                     !!(
                       (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
@@ -649,36 +640,30 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
                         ?.gradePoint
                     )
                   }
-                  helperText={
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                      ?.gradePoint
-                      ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
+                >
+                  <TextField
+                    fullWidth
+                    label="Point"
+                    type="number"
+                    name={`gradingScale.${index}.gradePoint`}
+                    size="small"
+                    disabled={viewOnly}
+                    value={formik.values.gradingScale[index].gradePoint}
+                    onChange={formik.handleChange}
+                    error={
+                      !!(
+                        (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                          ?.gradePoint &&
+                        (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                           ?.gradePoint
-                      : undefined
-                  }
-                  FormHelperTextProps={HELPER_TEXT_PROPS}
-                />
-              </ShakingTextField>
-            </Grid>
+                      )
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
 
-            <Grid size={{ xs: 12, md: 2.4 }}>
-              <ShakingTextField
-                error={
-                  !!(
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                      ?.remark &&
-                    (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.remark
-                  )
-                }
-              >
-                <TextField
-                  fullWidth
-                  label="Remark"
-                  name={`gradingScale.${index}.remark`}
-                  size="small"
-                  disabled={viewOnly}
-                  value={formik.values.gradingScale[index].remark}
-                  onChange={formik.handleChange}
+              <Grid size={{ xs: 12, md: 2.4 }}>
+                <ShakingTextField
                   error={
                     !!(
                       (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
@@ -686,46 +671,66 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
                       (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.remark
                     )
                   }
-                  helperText={
-                    (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]?.remark
-                      ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
-                          ?.remark
-                      : undefined
-                  }
-                  FormHelperTextProps={HELPER_TEXT_PROPS}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 1.8 }}>
-              <CustomSelect
-                fullWidth
-                label="Result"
-                options={RESULT_STATUS_OPTIONS}
-                name={`gradingScale.${index}.resultStatus`}
-                size="small"
-                disabled={viewOnly}
-                value={formik.values.gradingScale[index].resultStatus}
-                onChange={(val) => formik.setFieldValue(`gradingScale.${index}.resultStatus`, val)}
-              />
-            </Grid>
-
-            {!viewOnly && (
-              <Grid size={{ xs: 12, md: 0.7 }}>
-                <IconButton
-                  onClick={() => {
-                    const updatedGradingScale = [...formik.values.gradingScale];
-                    updatedGradingScale.splice(index, 1);
-                    formik.setFieldValue('gradingScale', updatedGradingScale);
-                  }}
-                  sx={{ color: 'error.main', width: '30px', height: '30px' }}
                 >
-                  <Iconify icon={GlobalIcons.delete} sx={{ width: '18px', height: '18px' }} />
-                </IconButton>
+                  <TextField
+                    fullWidth
+                    label="Remark"
+                    name={`gradingScale.${index}.remark`}
+                    size="small"
+                    disabled={viewOnly}
+                    value={formik.values.gradingScale[index].remark}
+                    onChange={formik.handleChange}
+                    error={
+                      !!(
+                        (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                          ?.remark &&
+                        (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
+                          ?.remark
+                      )
+                    }
+                  />
+                </ShakingTextField>
               </Grid>
-            )}
-          </Grid>
-        ))}
+
+              <Grid size={{ xs: 12, md: 1.8 }}>
+                <CustomSelect
+                  fullWidth
+                  label="Result"
+                  options={RESULT_STATUS_OPTIONS}
+                  name={`gradingScale.${index}.resultStatus`}
+                  size="small"
+                  disabled={viewOnly}
+                  value={formik.values.gradingScale[index].resultStatus}
+                  onChange={(val) =>
+                    formik.setFieldValue(`gradingScale.${index}.resultStatus`, val)
+                  }
+                />
+              </Grid>
+
+              {!viewOnly && (
+                <Grid size={{ xs: 12, md: 0.7 }}>
+                  <IconButton
+                    onClick={() => {
+                      const updatedGradingScale = [...formik.values.gradingScale];
+                      updatedGradingScale.splice(index, 1);
+                      formik.setFieldValue('gradingScale', updatedGradingScale);
+                    }}
+                    sx={{ color: 'error.main', width: '30px', height: '30px' }}
+                  >
+                    <Iconify icon={GlobalIcons.delete} sx={{ width: '18px', height: '18px' }} />
+                  </IconButton>
+                </Grid>
+              )}
+              {visibleErrors.length > 0 && (
+                <Grid size={{ xs: 12 }}>
+                  <Alert severity="error" role="alert" sx={{ py: 0.25 }}>
+                    {visibleErrors.join(' · ')}
+                  </Alert>
+                </Grid>
+              )}
+            </Grid>
+          );
+        })}
       </Box>
     </Box>
   );

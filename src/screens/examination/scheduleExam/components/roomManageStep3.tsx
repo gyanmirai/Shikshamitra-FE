@@ -291,6 +291,72 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                     groupBy={(option: any) => option.group}
                     getOptionLabel={(option: any) => option.label}
                     isOptionEqualToValue={(option: any, val: any) => option.id === val.id}
+                    renderGroup={(params) => (
+                      <Box component="li" key={params.key} sx={{ mb: 0.5 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            px: 1.25,
+                            py: 0.5,
+                            fontSize: '11px',
+                            color: 'text.secondary',
+                            bgcolor: 'background.neutral',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {params.group}
+                        </Typography>
+                        <Box
+                          component="ul"
+                          sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 0.75,
+                            px: 1.25,
+                            py: 0.75,
+                            m: 0,
+                            listStyle: 'none',
+                          }}
+                        >
+                          {params.children}
+                        </Box>
+                      </Box>
+                    )}
+                    renderOption={(props, option: any, { selected }) => {
+                      const { key, ...restProps } = props as any;
+                      return (
+                        <Box
+                          component="li"
+                          key={key}
+                          {...restProps}
+                          sx={{
+                            px: 1,
+                            py: 0.35,
+                            fontSize: '12px',
+                            borderRadius: 0.75,
+                            border: `1px solid ${selected ? theme.palette.primary.main : theme.palette.divider}`,
+                            bgcolor: selected ? 'primary.lighter' : 'background.paper',
+                            color: selected ? 'primary.main' : 'text.primary',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: selected ? 'primary.lighter' : 'action.hover',
+                              borderColor: 'primary.main',
+                            },
+                            // Overriding MUI's default li styles
+                            width: 'auto !important',
+                            minWidth: 'auto',
+                            m: '0 !important',
+                            display: 'inline-flex',
+                            fontWeight: selected ? 600 : 500,
+                          }}
+                        >
+                          {option.roomName}
+                        </Box>
+                      );
+                    }}
                     value={selectedRooms}
                     onChange={(_e, newVal: any[]) => {
                       const ids = newVal.map((r) => r.id);

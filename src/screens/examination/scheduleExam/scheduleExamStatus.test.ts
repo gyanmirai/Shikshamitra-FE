@@ -45,6 +45,23 @@ describe('scheduleExamStatus', () => {
     expect(isExamOngoing(exam, dayjs('2026-08-18T13:00:00'))).toBe(false);
   });
 
+  it('uses subject schedule times when the exam window is returned per subject', () => {
+    const exam = {
+      status: examScheduledStatus.Published,
+      subjects: [
+        {
+          examDate: '2026-08-18',
+          startTime: '11:00:00',
+          endTime: '11:40:00',
+        },
+      ],
+    };
+
+    expect(isExamOngoing(exam, dayjs('2026-08-18T10:00:00'))).toBe(false);
+    expect(isExamOngoing(exam, dayjs('2026-08-18T11:00:00'))).toBe(true);
+    expect(isExamOngoing(exam, dayjs('2026-08-18T11:40:01'))).toBe(false);
+  });
+
   it('never derives ongoing from a non-published lifecycle status', () => {
     expect(
       getEffectiveExamStatus(

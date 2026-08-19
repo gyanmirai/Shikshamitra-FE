@@ -7,6 +7,7 @@ type ScheduleExamKpiStripProps = {
   summary?: any;
   rows?: any[];
   publishedCount?: number;
+  onCardClick?: (label: string) => void;
 };
 
 const kpiCardSx = {
@@ -27,7 +28,9 @@ const parseDate = (dateStr: any) => {
     const month = Number(parts[1]);
     const year = Number(parts[2]);
     if (year > 1000 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      const parsed = dayjs(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+      const parsed = dayjs(
+        `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      );
       return parsed.isValid() ? parsed : null;
     }
   }
@@ -35,7 +38,12 @@ const parseDate = (dateStr: any) => {
   return parsed.isValid() ? parsed : null;
 };
 
-const ScheduleExamKpiStrip = ({ summary, rows = [], publishedCount }: ScheduleExamKpiStripProps) => {
+const ScheduleExamKpiStrip = ({
+  summary,
+  rows = [],
+  publishedCount,
+  onCardClick,
+}: ScheduleExamKpiStripProps) => {
   const todayStart = dayjs().startOf('day');
   const nextSevenDays = dayjs().add(7, 'day').endOf('day');
 
@@ -111,7 +119,25 @@ const ScheduleExamKpiStrip = ({ summary, rows = [], publishedCount }: ScheduleEx
   return (
     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', pb: 0.5 }}>
       {cards.map((card) => (
-        <Card key={card.label} sx={kpiCardSx}>
+        <Card
+          key={card.label}
+          component={onCardClick ? 'button' : 'div'}
+          type={onCardClick ? 'button' : undefined}
+          onClick={onCardClick ? () => onCardClick(card.label) : undefined}
+          sx={{
+            ...kpiCardSx,
+            textAlign: 'left',
+            cursor: onCardClick ? 'pointer' : 'default',
+            transition: 'border-color 0.2s, background-color 0.2s, transform 0.2s',
+            ...(onCardClick && {
+              '&:hover': {
+                borderColor: 'primary.main',
+                bgcolor: 'action.hover',
+                transform: 'translateY(-1px)',
+              },
+            }),
+          }}
+        >
           <Stack direction="row" alignItems="center" spacing={1}>
             <Box
               sx={{
