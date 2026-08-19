@@ -5,13 +5,12 @@ import type { RootState } from 'src/redux/store';
 import * as Yup from 'yup';
 import { getIn, useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useRef, useState } from 'react';
-import { alpha } from '@mui/material/styles';
-import { varAlpha } from 'src/theme/styles';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import {
   Box,
@@ -21,28 +20,28 @@ import {
   Stack,
   Paper,
   Button,
+  Switch,
   TextField,
   Typography,
   FormHelperText,
   FormControlLabel,
-  Switch,
 } from '@mui/material';
 import {
   RubricStatus,
   RubricVisibility,
   RubricScoringModel,
   useAddRubricMutation,
-  usePublishRubricMutation,
   useUpdateRubricMutation,
+  usePublishRubricMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import {
   CRITERION_BANK,
   RUBRIC_WORK_TYPE_OPTIONS,
-  DEFAULT_PERFORMANCE_LEVELS,
   RUBRIC_VISIBILITY_OPTIONS,
-  RUBRIC_SCORING_MODEL_OPTIONS,
+  DEFAULT_PERFORMANCE_LEVELS,
   RUBRIC_SCORING_MODEL_LABELS,
+  RUBRIC_SCORING_MODEL_OPTIONS,
 } from './constants';
 
 import type {
@@ -170,9 +169,9 @@ const buildInitialValues = (
     title: criterion.title,
     description: criterion.description || '',
     maxMarks: String(criterion.maxMarks),
-    studentDescription: '',
-    teacherGuidance: '',
-    isRequired: true,
+    studentDescription: criterion.studentDescription || '',
+    teacherGuidance: criterion.teacherGuidance || '',
+    isRequired: criterion.isRequired,
   })) || [blankCriterion],
 });
 
@@ -309,6 +308,9 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
         .map((criterion, index) => ({
           title: criterion.title.trim(),
           description: criterion.description.trim() || null,
+          studentDescription: criterion.studentDescription.trim() || null,
+          teacherGuidance: criterion.teacherGuidance.trim() || null,
+          isRequired: criterion.isRequired,
           maxMarks: Number(criterion.maxMarks),
           displayOrder: index + 1,
         }));

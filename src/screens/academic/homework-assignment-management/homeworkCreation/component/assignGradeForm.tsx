@@ -3,8 +3,8 @@
 import type { RootState } from 'src/redux/store';
 import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
-import { useRef, useState } from 'react';
 import { useFormik } from 'formik';
+import { useRef, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -13,18 +13,11 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import RubricEvaluationPanel, {
-  type RubricEvaluationPanelRef,
-} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
-import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
 import {
   Box,
   Grid,
   Card,
-  Stack,
-  Avatar,
   Button,
   Tooltip,
   TextField,
@@ -32,10 +25,15 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
+import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
 import {
-  useUpdateHomeworkSubmissionStatusMutation,
-  useUpdateHomeworkSubmissionFeedbackMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+  StudentFeedbackContext,
+  HomeworkFeedbackContext,
+} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/feedbackContextCards';
+import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+import RubricEvaluationPanel, {
+  type RubricEvaluationPanelRef,
+} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 
 import { assignGradeValidationSchema } from './validationSchema';
 import { document } from '../../assignmentCreation/studentSubmission/assignMarksForm';
@@ -70,10 +68,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
   });
-  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateHomeworkSubmissionStatusMutation,
-  });
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -107,15 +101,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           },
         }).unwrap();
 
-        await updateSubmissionStatus({
-          homeworkId: homeworkId || data?.homeworkId,
-          studentId: data?.studentId,
-          academicMediumId: (medium as any)?.id,
-          body: {
-            status: 4, // Reviewed
-          },
-        }).unwrap();
-
         shikshaMitraToast.success({
           message: `Feedback has been ${
             isUpdate ? 'updated' : 'added'
@@ -146,6 +131,19 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={1}>
+          {/* Student Profile Section */}
+          <Grid size={{ xs: 12 }}>
+            <StudentFeedbackContext studentName={data?.studentName} rollNumber={data?.rollNumber} />
+          </Grid>
+
+          {/* Homework Context Section */}
+          <Grid size={{ xs: 12 }}>
+            <HomeworkFeedbackContext
+              title={selectedHomework?.title}
+              description={selectedHomework?.description}
+            />
+          </Grid>
+
           {/* Rubric Evaluation Panel */}
           {data &&
             selectedClass &&
@@ -159,40 +157,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   standardId={selectedClass}
                   subjectId={selectedSubject}
                   taskId={selectedHomework.id}
-                  taskTitle={selectedHomework.label}
+                  taskTitle={selectedHomework.title}
                   studentRow={data}
                   ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
                 />
               </Grid>
             )}
-
-          {/* Student Profile Section */}
-          <Grid size={{ xs: 12 }}>
-            <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Avatar
-                  alt={data?.studentName || 'Student'}
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    bgcolor: 'primary.lighter',
-                    color: 'primary.main',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {data?.studentName?.charAt(0) || 'S'}
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    {data?.studentName}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Roll No: {data?.rollNumber || '--'}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Card>
-          </Grid>
 
           {/* Student Submission Section */}
           <Grid size={{ xs: 12 }}>
@@ -348,8 +318,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         <LoadingButton
           variant="outlined"
           size="small"
-          disabled={!hasNext || isSubmitting || isUpdateLoading || isStatusLoading || isRubricSaving}
-          loading={isSubmitting || isUpdateLoading || isStatusLoading || isRubricSaving}
+          disabled={!hasNext || isSubmitting || isUpdateLoading || isRubricSaving}
+          loading={isSubmitting || isUpdateLoading || isRubricSaving}
           onClick={(e: any) => {
             submitAndNextRef.current = true;
             formik.handleSubmit(e);
@@ -361,8 +331,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         <LoadingButton
           variant="contained"
           size="small"
-          loading={isSubmitting || isUpdateLoading || isStatusLoading || isRubricSaving}
-          disabled={isSubmitting || isUpdateLoading || isStatusLoading || isRubricSaving}
+          loading={isSubmitting || isUpdateLoading || isRubricSaving}
+          disabled={isSubmitting || isUpdateLoading || isRubricSaving}
           onClick={(e: any) => {
             submitAndNextRef.current = false;
             formik.handleSubmit(e);

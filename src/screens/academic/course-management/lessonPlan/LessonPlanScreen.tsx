@@ -65,6 +65,7 @@ import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
 import LessonDiaryDetailsDrawer from './components/LessonDiaryDetailsDrawer';
+import { reconcileTimelineSlots } from './reconcileTimelineSlots';
 import {
   todayIso,
   weekStartIso,
@@ -618,6 +619,24 @@ const LessonPlanScreen = () => {
       })) || []
     );
   }, [lessonPlanList]);
+
+  /**
+   * Memoization Justification:
+   * - Reconciles two API datasets and prevents repeated O(slots × plans) work during screen renders.
+   * - Keeps the timeline slot objects stable until their source data or selected date changes.
+   */
+  const reconciledTimelineSlots = useMemo(
+    () =>
+      reconcileTimelineSlots(
+        timelineData?.slots || [],
+        lessonPlans,
+        selectedDate.format('YYYY-MM-DD'),
+        timelineData?.teacherId
+      ),
+    [lessonPlans, selectedDate, timelineData]
+  );
+
+  const isReconciledTimelineBusy = isTimelineBusy || isPlansLoading || isPlansFetching;
 
   const diaryEntries = useMemo<TeacherDiaryRow[]>(() => {
     if (!teacherDiaryList) return [];
@@ -1864,8 +1883,8 @@ const LessonPlanScreen = () => {
                   setSelectedDate(newDate.startOf('day'));
                 }
               }}
-              slots={isTimelineBusy ? [] : timelineData?.slots || []}
-              isLoading={isTimelineBusy}
+              slots={isReconciledTimelineBusy ? [] : reconciledTimelineSlots}
+              isLoading={isReconciledTimelineBusy}
               onAddLesson={(date, prefill) => {
                 setEditPlan(null);
                 setPrefillDate(date ?? null);
