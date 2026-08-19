@@ -5,9 +5,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Select, Checkbox, MenuItem, TextField, Typography, FormControl } from '@mui/material';
-import {
-  useGetExamMarksQuery,
-} from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
+import { useGetExamMarksQuery } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 import {
   ExamGradeStatusType,
   ExamGradeStatusColor,
@@ -107,16 +105,19 @@ const GradeEntryTable = ({
    * - Prevents the effect from re-running solely because the helper function was recreated.
    * - The helper is also reused by several table render callbacks in this frequently edited grid.
    */
-  const isRowModified = useCallback((row: IExamMarkItem) => {
-    const savedRow = savedRowsByStudentId.get(row.studentId);
-    if (!savedRow) return false;
+  const isRowModified = useCallback(
+    (row: IExamMarkItem) => {
+      const savedRow = savedRowsByStudentId.get(row.studentId);
+      if (!savedRow) return false;
 
-    return (
-      (row.marks ?? null) !== (savedRow.marks ?? null) ||
-      (row.attendanceStatus ?? null) !== (savedRow.attendanceStatus ?? null) ||
-      (row.feedback ?? '') !== (savedRow.feedback ?? '')
-    );
-  }, [savedRowsByStudentId]);
+      return (
+        (row.marks ?? null) !== (savedRow.marks ?? null) ||
+        (row.attendanceStatus ?? null) !== (savedRow.attendanceStatus ?? null) ||
+        (row.feedback ?? '') !== (savedRow.feedback ?? '')
+      );
+    },
+    [savedRowsByStudentId]
+  );
 
   useEffect(() => {
     if (onRowsChange) {
@@ -138,7 +139,7 @@ const GradeEntryTable = ({
           next.marks = attendanceStatus === 0 ? (row.marks !== null ? row.marks : null) : null;
           next.feedback = '';
           next.grade = attendanceStatus === 0 ? next.grade : '—';
-          next.status = (attendanceStatus !== 0 || next.marks !== null) ? 1 : 0;
+          next.status = attendanceStatus !== 0 || next.marks !== null ? 1 : 0;
         }
 
         if (bulkEditRequest.action === 'marks') {
@@ -152,7 +153,8 @@ const GradeEntryTable = ({
           next.status = 1;
           const total = row.totalMarks || 100;
           const pct = (marks / total) * 100;
-          next.grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
+          next.grade =
+            pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
         }
 
         if (bulkEditRequest.action === 'remark') {
@@ -174,7 +176,11 @@ const GradeEntryTable = ({
   }, [bulkEditRequest, onRowsChange]);
 
   // Handle cell edit
-  const handleCellEdit = (studentId: string, field: 'marks' | 'feedback' | 'attendanceStatus', value: any) => {
+  const handleCellEdit = (
+    studentId: string,
+    field: 'marks' | 'feedback' | 'attendanceStatus',
+    value: any
+  ) => {
     setLocalRows((prev) => {
       const nextRows = prev.map((row) => {
         if (row.studentId !== studentId) return row;
@@ -196,7 +202,8 @@ const GradeEntryTable = ({
           const isPresent = updatedRow.attendanceStatus === 0;
           if (isPresent && updatedRow.marks !== null) {
             const pct = (updatedRow.marks / updatedRow.totalMarks) * 100;
-            updatedRow.grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
+            updatedRow.grade =
+              pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
             updatedRow.status = 1; // Assigned
           } else if (!isPresent) {
             updatedRow.marks = null;
@@ -214,7 +221,11 @@ const GradeEntryTable = ({
   };
 
   // Keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent, studentId: string, colType: 'marks' | 'remarks') => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    studentId: string,
+    colType: 'marks' | 'remarks'
+  ) => {
     const studentIds = localRows.map((r) => r.studentId);
     const currentIndex = studentIds.indexOf(studentId);
 
@@ -239,10 +250,14 @@ const GradeEntryTable = ({
         el?.select();
       }
     } else if (e.key === 'ArrowRight' && colType === 'marks') {
-      const el = document.querySelector(`input[data-student-id="${studentId}"][data-col-type="remarks"]`) as HTMLInputElement;
+      const el = document.querySelector(
+        `input[data-student-id="${studentId}"][data-col-type="remarks"]`
+      ) as HTMLInputElement;
       el?.focus();
     } else if (e.key === 'ArrowLeft' && colType === 'remarks') {
-      const el = document.querySelector(`input[data-student-id="${studentId}"][data-col-type="marks"]`) as HTMLInputElement;
+      const el = document.querySelector(
+        `input[data-student-id="${studentId}"][data-col-type="marks"]`
+      ) as HTMLInputElement;
       el?.focus();
     }
   };
@@ -250,9 +265,7 @@ const GradeEntryTable = ({
   // Notify parent whether all students have marks assigned
   useEffect(() => {
     if (!onAllAssignedChange) return;
-    const allAssigned =
-      localRows.length > 0 &&
-      localRows.every((item) => item.status === 1);
+    const allAssigned = localRows.length > 0 && localRows.every((item) => item.status === 1);
     onAllAssignedChange(allAssigned);
   }, [localRows, onAllAssignedChange]);
 
@@ -339,13 +352,16 @@ const GradeEntryTable = ({
         {
           id: 'select',
           sticky: true,
+          isSort: false,
           stickyPosition: 'left',
           label: (
             <Checkbox
               size="small"
               disabled={isLocked}
               checked={selectedStudents.length === localRows.length && localRows.length > 0}
-              indeterminate={selectedStudents.length > 0 && selectedStudents.length < localRows.length}
+              indeterminate={
+                selectedStudents.length > 0 && selectedStudents.length < localRows.length
+              }
               onChange={(e) => {
                 if (isLocked) {
                   return;
@@ -359,6 +375,7 @@ const GradeEntryTable = ({
                   }
                 });
               }}
+              onClick={(e) => e.stopPropagation()}
             />
           ),
           minWidth: 50,
@@ -367,7 +384,9 @@ const GradeEntryTable = ({
               size="small"
               disabled={isLocked}
               checked={selectedStudents.includes(row.studentId)}
-              onChange={() => {
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => {
+                e.stopPropagation();
                 if (!isLocked) {
                   handleSelectStudent(row.studentId);
                 }
@@ -384,8 +403,12 @@ const GradeEntryTable = ({
           align: 'left',
           render: (value, row) => (
             <Box>
-              <Typography variant="body2" fontWeight={600}>{value}</Typography>
-              <Typography variant="caption" color="text.secondary">({row.grNo})</Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {value}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                ({row.grNo})
+              </Typography>
             </Box>
           ),
         },
@@ -400,7 +423,9 @@ const GradeEntryTable = ({
               <Select
                 value={value ?? 0}
                 disabled={isLocked}
-                onChange={(e) => handleCellEdit(row.studentId, 'attendanceStatus', Number(e.target.value))}
+                onChange={(e) =>
+                  handleCellEdit(row.studentId, 'attendanceStatus', Number(e.target.value))
+                }
                 sx={{ height: 32, fontSize: '13px' }}
               >
                 {AttendanceStatusOptions.map((opt) => (

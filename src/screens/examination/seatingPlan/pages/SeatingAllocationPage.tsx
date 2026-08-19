@@ -852,13 +852,20 @@ export default function SeatingAllocationPage({
                   formControlProps={{ sx: { minWidth: 160 } }}
                   disabled={!division || isRoomsDataLoading}
                 />
-                <Box sx={{ flex: 1, minWidth: 150 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedScope?.subjects
+                <TextField
+                  label="Subject"
+                  size="small"
+                  value={
+                    selectedScope?.subjects
                       ?.map((subject: SeatingPlanSubject) => subject.subjectName)
-                      .join(', ') || 'No subjects selected'}
-                  </Typography>
-                </Box>
+                      .join(', ') || 'No subjects selected'
+                  }
+                  slotProps={{
+                    input: { readOnly: true },
+                    htmlInput: { 'aria-label': 'Allocated subjects' },
+                  }}
+                  sx={{ flex: 1, minWidth: 180 }}
+                />
                 <Button
                   variant="outlined"
                   size="small"

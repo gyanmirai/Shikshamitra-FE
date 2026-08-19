@@ -1402,6 +1402,7 @@ const GradeEntry = (props: TabComponentType) => {
               </CustomTooltip>
             </Box>
           }
+          maxWidth="sm"
         >
           <AssignGrade data={selectedStudent} onClose={handleClose} />
         </CustomDialog>

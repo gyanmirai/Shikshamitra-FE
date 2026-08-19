@@ -11,11 +11,13 @@ import { Scrollbar } from 'src/components/scrollbar';
 import React, { useMemo, useRef, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { GlobalIcons } from 'src/utils/icons';
 import { academicPaths } from 'src/constants/academic-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
@@ -30,6 +32,7 @@ import {
   DialogActions,
   Menu,
   MenuItem,
+  MenuList,
   ListItemIcon,
 } from '@mui/material';
 import {
@@ -83,21 +86,21 @@ function buildRowActions(handlers: {
       {
         key: 'edit',
         label: 'Continue Editing',
-        icon: 'mdi:pencil-outline',
+        icon: GlobalIcons.edit,
         color: 'primary',
         onClick: onContinueEditing,
       },
-      { key: 'view', label: 'View', icon: 'mdi:eye-outline', onClick: onView },
+      { key: 'view', label: 'View', icon: GlobalIcons.eye, onClick: onView },
       {
         key: 'duplicate',
         label: 'Duplicate',
-        icon: 'mdi:content-copy',
+        icon: GlobalIcons.copy,
         onClick: onDuplicate,
       },
       {
         key: 'delete',
         label: 'Delete',
-        icon: 'mdi:delete-outline',
+        icon: GlobalIcons.delete,
         color: 'error',
         onClick: onDelete,
       },
@@ -107,7 +110,7 @@ function buildRowActions(handlers: {
       {
         key: 'edit',
         label: 'Continue Editing',
-        icon: 'mdi:pencil-outline',
+        icon: GlobalIcons.edit,
         color: 'primary',
         onClick: onContinueEditing,
       },
@@ -115,7 +118,7 @@ function buildRowActions(handlers: {
       {
         key: 'duplicate',
         label: 'Duplicate',
-        icon: 'mdi:content-copy',
+        icon: GlobalIcons.copy,
         onClick: onDuplicate,
       },
     ],
@@ -128,45 +131,45 @@ function buildRowActions(handlers: {
         color: 'primary',
         onClick: onReview,
       },
-      { key: 'view', label: 'View', icon: 'mdi:eye-outline', onClick: onView },
+      { key: 'view', label: 'View', icon: GlobalIcons.eye, onClick: onView },
     ],
     // Approved
     4: [
       {
         key: 'publish',
         label: 'Publish',
-        icon: 'mdi:upload',
+        icon: GlobalIcons.publish,
         color: 'success',
         onClick: onPublish,
       },
-      { key: 'preview', label: 'Preview', icon: 'mdi:eye-outline', onClick: onPreview },
-      { key: 'view', label: 'View', icon: 'mdi:file-document-outline', onClick: onView },
+      { key: 'preview', label: 'Preview', icon: GlobalIcons.eye, onClick: onPreview },
+      { key: 'view', label: 'View', icon: GlobalIcons.doc, onClick: onView },
     ],
     // Rejected
     5: [
       {
         key: 'edit',
         label: 'Edit & Resubmit',
-        icon: 'mdi:pencil-outline',
+        icon: GlobalIcons.edit,
         color: 'primary',
         onClick: onContinueEditing,
       },
-      { key: 'view', label: 'View', icon: 'mdi:eye-outline', onClick: onView },
+      { key: 'view', label: 'View', icon: GlobalIcons.eye, onClick: onView },
     ],
     // Published
     6: [
-      { key: 'preview', label: 'Preview', icon: 'mdi:eye-outline', onClick: onPreview },
+      { key: 'preview', label: 'Preview', icon: GlobalIcons.eye, onClick: onPreview },
       {
         key: 'print',
         label: 'Print / Download PDF',
-        icon: 'mdi:printer-outline',
+        icon: GlobalIcons.printer,
         onClick: onPreview,
       },
-      { key: 'view', label: 'View', icon: 'mdi:file-document-outline', onClick: onView },
+      { key: 'view', label: 'View', icon: GlobalIcons.doc, onClick: onView },
       {
         key: 'archive',
         label: 'Archive',
-        icon: 'mdi:archive-outline',
+        icon: GlobalIcons.archive,
         color: 'warning',
         onClick: onArchive,
       },
@@ -176,25 +179,25 @@ function buildRowActions(handlers: {
       {
         key: 'preview',
         label: 'Preview / Download',
-        icon: 'mdi:eye-outline',
+        icon: GlobalIcons.eye,
         onClick: onPreview,
       },
-      { key: 'view', label: 'View', icon: 'mdi:file-document-outline', onClick: onView },
+      { key: 'view', label: 'View', icon: GlobalIcons.doc, onClick: onView },
       {
         key: 'archive',
         label: 'Archive',
-        icon: 'mdi:archive-outline',
+        icon: GlobalIcons.archive,
         color: 'warning',
         onClick: onArchive,
       },
     ],
     // Archived
     8: [
-      { key: 'view', label: 'View', icon: 'mdi:eye-outline', onClick: onView },
+      { key: 'view', label: 'View', icon: GlobalIcons.eye, onClick: onView },
       {
         key: 'delete',
         label: 'Delete',
-        icon: 'mdi:delete-outline',
+        icon: GlobalIcons.delete,
         color: 'error',
         onClick: onDelete,
       },
@@ -221,9 +224,6 @@ export default function QuestionPaperScreen() {
   const [archiveConfirmPaper, setArchiveConfirmPaper] = useState<any | null>(null);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [localPaperSettings, setLocalPaperSettings] = useState<any>(null);
-  const [moreMenuAnchor, setMoreMenuAnchor] = useState<{ anchorEl: HTMLElement; row: any } | null>(
-    null
-  );
 
   // ── Queries ──────────────────────────────────────────────────────────
   const { data: dashboard } = useQueryAndMutation({
@@ -416,33 +416,7 @@ export default function QuestionPaperScreen() {
         align: 'center' as const,
         render: (v: any) => <Typography variant="body2">{v ? `${v} min` : '—'}</Typography>,
       },
-      {
-        id: 'creationMode',
-        label: 'Mode',
-        filterType: 'enum' as const,
-        width: 100,
-        enumOptions: CREATION_MODE_OPTIONS,
-        render: (v: any) => (
-          <Label variant="soft" color="default">
-            {v || 'Manual'}
-          </Label>
-        ),
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        filterType: 'enum' as const,
-        width: 120,
-        enumOptions: Object.entries(STATUS_LABEL).map(([value, label]) => ({
-          value: Number(value),
-          label,
-        })),
-        render: (v: any) => (
-          <Label variant="soft" color={STATUS_COLOR[v] || 'default'} sx={{ fontWeight: 700 }}>
-            {STATUS_LABEL[v] || v || '—'}
-          </Label>
-        ),
-      },
+
       {
         id: 'updatedAt',
         label: 'Updated',
@@ -460,46 +434,68 @@ export default function QuestionPaperScreen() {
         },
       },
       {
+        id: 'status',
+        label: 'Status',
+        sticky: true,
+        filterType: 'enum' as const,
+        width: 120,
+        enumOptions: Object.entries(STATUS_LABEL).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        render: (v: any) => (
+          <Label variant="soft" color={STATUS_COLOR[v] || 'default'} sx={{ fontWeight: 700 }}>
+            {STATUS_LABEL[v] || v || '—'}
+          </Label>
+        ),
+      },
+      {
         id: 'actions',
         label: 'Actions',
         isFilter: false,
         isSort: false,
-        width: 150,
+        width: 80,
+        minWidth: 80,
         align: 'left' as const,
         sticky: true,
         stickyPosition: 'right' as const,
         render: (_: any, row: any) => {
           const actions = rowActions[row.status] || rowActions[1];
-          const [firstAction, ...restActions] = actions;
+          const viewAction = actions.find((a: any) => a.key === 'view' || a.key === 'preview');
+          const editAction = actions.find((a: any) => a.key === 'edit');
+          const deleteAction = actions.find((a: any) => a.key === 'delete');
+          const menuActions = actions.filter(
+            (a: any) => a.key !== 'view' && a.key !== 'preview' && a.key !== 'edit' && a.key !== 'delete'
+          );
 
           return (
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <Tooltip title={firstAction.label}>
-                <IconButton
-                  size="small"
-                  color={firstAction.color || 'default'}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    firstAction.onClick(row);
-                  }}
-                >
-                  <Iconify icon={firstAction.icon} width={17} />
-                </IconButton>
-              </Tooltip>
-              {restActions.length > 0 && (
-                <Tooltip title="More actions">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMoreMenuAnchor({ anchorEl: e.currentTarget, row });
-                    }}
-                  >
-                    <Iconify icon="mdi:dots-horizontal" width={17} />
-                  </IconButton>
-                </Tooltip>
+            <ThreeDotsActions
+              placement="right-top"
+              showViewIcon={!!viewAction}
+              showEditIcon={!!editAction}
+              showDeleteIcon={!!deleteAction}
+              handleViewClick={() => viewAction?.onClick(row)}
+              handleEditClick={() => editAction?.onClick(row)}
+              handleDeleteClick={() => deleteAction?.onClick(row)}
+              showThreeDots={menuActions.length > 0}
+              actions={({ popover }) => (
+                <MenuList>
+                  {menuActions.map((action: any) => (
+                    <MenuItem
+                      key={action.key}
+                      onClick={() => {
+                        action.onClick(row);
+                        popover.onClose();
+                      }}
+                      sx={{ typography: 'body2', gap: 1 }}
+                    >
+                      <Iconify icon={action.icon} width={20} />
+                      {action.label}
+                    </MenuItem>
+                  ))}
+                </MenuList>
               )}
-            </Stack>
+            />
           );
         },
       },
@@ -562,10 +558,6 @@ export default function QuestionPaperScreen() {
     ],
     [dashboard, allPapers.length, statusCounts]
   );
-
-  const moreMenuActions = moreMenuAnchor
-    ? rowActions[moreMenuAnchor.row.status] || rowActions[1]
-    : [];
 
   return (
     <Box height="100%" display="flex" flexDirection="column" gap={1.5}>
@@ -643,13 +635,6 @@ export default function QuestionPaperScreen() {
         isLoading={isFetching}
         rowProps={(row) => ({
           selected: row.id === wizardPaper?.id,
-          onClick: () =>
-            openWizard(
-              row.status === 3 || row.status === 4 ? 'review' : 'edit',
-              row as unknown as QuestionPaperMetadata,
-              0
-            ),
-          sx: { cursor: 'pointer' },
         })}
       />
 
@@ -669,30 +654,6 @@ export default function QuestionPaperScreen() {
           setWizardMode('edit');
         }}
       />
-
-      {/* ── More actions menu ──────────────────────────────────────── */}
-      <Menu
-        open={Boolean(moreMenuAnchor)}
-        anchorEl={moreMenuAnchor?.anchorEl}
-        onClose={() => setMoreMenuAnchor(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-      >
-        {moreMenuActions.map((action) => (
-          <MenuItem
-            key={action.key}
-            onClick={() => {
-              action.onClick(moreMenuAnchor?.row);
-              setMoreMenuAnchor(null);
-            }}
-          >
-            <ListItemIcon>
-              <Iconify icon={action.icon} width={16} />
-            </ListItemIcon>
-            {action.label}
-          </MenuItem>
-        ))}
-      </Menu>
 
       {/* ── Preview / print dialog ─────────────────────────────────── */}
       <CustomDialog

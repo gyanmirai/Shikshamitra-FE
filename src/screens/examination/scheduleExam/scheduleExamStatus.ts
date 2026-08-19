@@ -13,6 +13,9 @@ export interface ExamStatusSource {
   endDateTime?: string | null;
   startTime?: string | null;
   endTime?: string | null;
+  subjects?: unknown[] | null;
+  examSubjects?: unknown[] | null;
+  schedules?: unknown[] | null;
 }
 
 export const EXAM_STATUS_META: Record<
@@ -53,9 +56,44 @@ const resolveBoundary = (
   return isEnd ? date.endOf('day') : date.startOf('day');
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getText = (value: unknown): string | null =>
+  typeof value === 'string' && value.length > 0 ? value : null;
+
+const getScheduleEntries = (exam: ExamStatusSource): Record<string, unknown>[] => {
+  const entries = [exam.subjects, exam.examSubjects, exam.schedules].find(
+    (value): value is unknown[] => Array.isArray(value) && value.length > 0
+  );
+  return (entries ?? []).filter(isRecord);
+};
+
+const getScheduleWindow = (entry: Record<string, unknown>) => {
+  const startDate = getText(entry.examDate) ?? getText(entry.date) ?? getText(entry.scheduleDate);
+  const endDate = getText(entry.endDate) ?? startDate;
+  const startTime = getText(entry.startTime) ?? getText(entry.fromTime) ?? getText(entry.start);
+  const endTime = getText(entry.endTime) ?? getText(entry.toTime) ?? getText(entry.end);
+
+  const start = resolveBoundary(
+    getText(entry.startDateTime),
+    startDate,
+    startTime,
+    false
+  );
+  const end = resolveBoundary(getText(entry.endDateTime), endDate, endTime, true);
+
+  return start && end && !end.isBefore(start) ? { start, end } : null;
+};
+
 export const isExamOngoing = (exam: ExamStatusSource, now: Dayjs = dayjs()): boolean => {
-  if (Number(exam.status) === examScheduledStatus.Ongoing) return true;
-  if (Number(exam.status) !== examScheduledStatus.Published) return false;
+  const lifecycleStatus = Number(exam.status);
+  if (
+    lifecycleStatus !== examScheduledStatus.Published &&
+    lifecycleStatus !== examScheduledStatus.Ongoing
+  ) {
+    return false;
+  }
 
   const start = resolveBoundary(exam.startDateTime, exam.startDate, exam.startTime, false);
   const end = resolveBoundary(
@@ -65,8 +103,14 @@ export const isExamOngoing = (exam: ExamStatusSource, now: Dayjs = dayjs()): boo
     true
   );
 
-  if (!start || !end || end.isBefore(start)) return false;
-  return !now.isBefore(start) && !now.isAfter(end);
+  if (start && end && !end.isBefore(start)) {
+    return !now.isBefore(start) && !now.isAfter(end);
+  }
+
+  return getScheduleEntries(exam).some((entry) => {
+    const window = getScheduleWindow(entry);
+    return Boolean(window && !now.isBefore(window.start) && !now.isAfter(window.end));
+  });
 };
 
 export const getEffectiveExamStatus = (

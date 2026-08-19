@@ -418,8 +418,7 @@ const ScheduleExamPreviewDrawer = ({
               </Grid>
             </Grid>
 
-            {readiness &&
-              (readiness.blocking.length > 0 || warningCount > 0) && (
+            {readiness && (readiness.blocking.length > 0 || warningCount > 0) && (
               <Box
                 sx={{
                   p: 2,
@@ -442,64 +441,63 @@ const ScheduleExamPreviewDrawer = ({
                   />
                 </Stack>
                 <Stack spacing={1} component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
-                  {[
-                    ...readiness.blocking,
-                    ...(warningCount > 0 ? readiness.warnings : []),
-                  ].map((issue) => {
-                    const stepLabels = ['Basic Details', 'Subject Schedule', 'Room Allocation'];
-                    const isBlocking = issue.severity === 'blocking';
+                  {[...readiness.blocking, ...(warningCount > 0 ? readiness.warnings : [])].map(
+                    (issue) => {
+                      const stepLabels = ['Basic Details', 'Subject Schedule', 'Room Allocation'];
+                      const isBlocking = issue.severity === 'blocking';
 
-                    return (
-                      <Box
-                        component="li"
-                        key={issue.id}
-                        sx={{
-                          p: 1.25,
-                          borderRadius: 1,
-                          bgcolor: 'background.paper',
-                          border: '1px solid',
-                          borderColor: isBlocking
-                            ? alpha(theme.palette.error.main, 0.2)
-                            : alpha(theme.palette.warning.main, 0.2),
-                        }}
-                      >
-                        <Stack
-                          direction={{ xs: 'column', sm: 'row' }}
-                          justifyContent="space-between"
-                          alignItems={{ xs: 'flex-start', sm: 'center' }}
-                          gap={0.75}
+                      return (
+                        <Box
+                          component="li"
+                          key={issue.id}
+                          sx={{
+                            p: 1.25,
+                            borderRadius: 1,
+                            bgcolor: 'background.paper',
+                            border: '1px solid',
+                            borderColor: isBlocking
+                              ? alpha(theme.palette.error.main, 0.2)
+                              : alpha(theme.palette.warning.main, 0.2),
+                          }}
                         >
-                          <Typography variant="body2" fontWeight={700}>
-                            {issue.title}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            color={isBlocking ? 'error' : 'warning'}
-                            variant="soft"
-                            label={isBlocking ? 'Issue' : 'Warning'}
-                          />
-                        </Stack>
-                        {issue.description && (
+                          <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            justifyContent="space-between"
+                            alignItems={{ xs: 'flex-start', sm: 'center' }}
+                            gap={0.75}
+                          >
+                            <Typography variant="body2" fontWeight={700}>
+                              {issue.title}
+                            </Typography>
+                            <Chip
+                              size="small"
+                              color={isBlocking ? 'error' : 'warning'}
+                              variant="soft"
+                              label={isBlocking ? 'Issue' : 'Warning'}
+                            />
+                          </Stack>
+                          {issue.description && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                              sx={{ mt: 0.5 }}
+                            >
+                              {issue.description}
+                            </Typography>
+                          )}
                           <Typography
                             variant="caption"
-                            color="text.secondary"
+                            color="text.disabled"
                             display="block"
                             sx={{ mt: 0.5 }}
                           >
-                            {issue.description}
+                            Step: {stepLabels[issue.step] || 'Exam setup'}
                           </Typography>
-                        )}
-                        <Typography
-                          variant="caption"
-                          color="text.disabled"
-                          display="block"
-                          sx={{ mt: 0.5 }}
-                        >
-                          Step: {stepLabels[issue.step] || 'Exam setup'}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
+                        </Box>
+                      );
+                    }
+                  )}
                 </Stack>
               </Box>
             )}

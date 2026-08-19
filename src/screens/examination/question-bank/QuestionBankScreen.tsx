@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
@@ -55,7 +54,6 @@ import {
 } from '@mui/material';
 import {
   useGetQuestionsQuery,
-  useCreateQuestionMutation,
   useUpdateQuestionMutation,
   useSubmitQuestionMutation,
   useRejectQuestionMutation,
@@ -68,8 +66,15 @@ import {
   useBulkApproveQuestionsMutation,
   useGetQuestionBankDashboardQuery,
   useSaveQuestionBankSettingsMutation,
-  useLazyDownloadQuestionBulkTemplateQuery,
 } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
+
+import CreateQuestionDialog from './components/CreateQuestionDialog';
+import {
+  buildQuestionValidationSchema,
+  createInitialQuestionValues,
+  normalizeSingleCorrectOptions,
+  toQuestionBody,
+} from './components/questionFormModel';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -138,54 +143,6 @@ const DIFFICULTY_COLOR: Record<number, 'success' | 'warning' | 'error'> = {
 /** Builds a dynamic Yup schema that honours Question Bank Settings toggles.
  *  Call inside useMemo whenever `settings` changes.
  */
-function buildQuestionValidationSchema(settings?: any) {
-  return Yup.object({
-    standardId: Yup.string().required('Class is required'),
-    subjectId: Yup.string().required('Subject is required'),
-    questionText: Yup.string().required('Question text is required').min(5, 'Too short'),
-    questionType: Yup.number().required(),
-    marks: Yup.number()
-      .typeError('Enter a valid number')
-      .required('Marks are required')
-      .min(0.5, 'Minimum 0.5')
-      .max(100, 'Maximum 100'),
-    difficultyLevel: Yup.number().required('Difficulty level is required'),
-    chapterId: settings?.requireChapter
-      ? Yup.string().required('Chapter is required')
-      : Yup.string().nullable(),
-    topicName: settings?.requireTopic
-      ? Yup.string().required('Topic is required')
-      : Yup.string().nullable(),
-    bloomLevel: settings?.requireBloomLevel
-      ? Yup.number().required("Bloom's level is required")
-      : Yup.number().nullable(),
-    answerKey: settings?.requireAnswerKey
-      ? Yup.string().when('questionType', {
-          is: (type: number) => [4, 5, 6].includes(Number(type)),
-          then: (schema) => schema.trim().required('Answer key is required'),
-          otherwise: (schema) => schema.notRequired(),
-        })
-      : Yup.string().nullable(),
-    options: Yup.array().when('questionType', {
-      is: (type: number) => [1, 2, 3].includes(Number(type)),
-      then: (schema) =>
-        schema
-          .test(
-            'has-two-options',
-            'Enter at least two answer options',
-            (opts: any) =>
-              Array.isArray(opts) &&
-              opts.filter((option: any) => String(option?.optionText || '').trim()).length >= 2
-          )
-          .test(
-            'has-correct-option',
-            'Mark at least one option as the correct answer',
-            (opts: any) => Array.isArray(opts) && opts.some((option: any) => option.isCorrect)
-          ),
-    }),
-  });
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildSubjectOptions(data: any) {
@@ -207,114 +164,6 @@ function buildSubjectOptions(data: any) {
   });
   return options;
 }
-
-const OBJECTIVE_QUESTION_TYPES = [1, 2, 3];
-
-const getObjectiveAnswerKey = (questionType: number, options: any[] = []) => {
-  if (!OBJECTIVE_QUESTION_TYPES.includes(questionType)) {
-    return '';
-  }
-
-  return options
-    .filter((option) => option.isCorrect)
-    .map((option) => String(option.optionText || '').trim())
-    .filter(Boolean)
-    .join(', ');
-};
-
-const normalizeSingleCorrectOptions = (options: any[]) => {
-  let correctSeen = false;
-  return options.map((option) => {
-    if (!option.isCorrect) {
-      return option;
-    }
-
-    if (correctSeen) {
-      return { ...option, isCorrect: false };
-    }
-
-    correctSeen = true;
-    return option;
-  });
-};
-
-const toQuestionBody = (values: any) => {
-  const options = (values.options || [])
-    .map((o: any, index: number) => ({
-      ...o,
-      optionText: String(o.optionText || '').trim(),
-      sortOrder: index + 1,
-    }))
-    .filter((o: any) => o.optionText);
-  const answerKey =
-    String(values.answerKey || '').trim() ||
-    getObjectiveAnswerKey(Number(values.questionType), options);
-
-  const { tagsText, ...rest } = values;
-  return {
-    ...rest,
-    answerKey,
-    chapterId: values.chapterId || null,
-    topicName: String(values.topicName || '').trim() || null,
-    bloomLevel: values.bloomLevel || null,
-    visibility: 2, // default Internal / School
-    marks: Number(values.marks),
-    negativeMarks:
-      values.negativeMarks === '' || values.negativeMarks == null
-        ? null
-        : Number(values.negativeMarks),
-    tags: String(values.tagsText || '')
-      .split(',')
-      .map((t: string) => t.trim())
-      .filter(Boolean),
-    options,
-  };
-};
-
-const initialFormValues = (academicYearId?: string) => ({
-  academicYearId: academicYearId || '',
-  standardId: '',
-  subjectId: '',
-  chapterId: '',
-  topicName: '',
-  questionText: '',
-  questionType: 1,
-  difficultyLevel: 1,
-  bloomLevel: 1,
-  marks: 1,
-  negativeMarks: '',
-  answerKey: '',
-  learningOutcome: '',
-  explanation: '',
-  markingScheme: '',
-  tagsText: '',
-  options: [
-    { optionText: '', isCorrect: true, sortOrder: 1 },
-    { optionText: '', isCorrect: false, sortOrder: 2 },
-  ],
-  file: null,
-});
-
-const buildQuestionTemplateFileName = (chapterName?: string) => {
-  const safeChapter = String(chapterName || 'questions')
-    .trim()
-    .replace(/[^a-z0-9]+/gi, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase();
-
-  return `question-bank-${safeChapter || 'questions'}-template.xlsx`;
-};
-
-const triggerTemplateDownload = (blob: Blob, fileName: string) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
 
 // ─── Stat Card Component ──────────────────────────────────────────────────────
 
@@ -922,8 +771,6 @@ export default function QuestionBankScreen() {
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectCommentText, setRejectCommentText] = useState('');
   const [reviewComment, setReviewComment] = useState('');
-  const [creationMode, setCreationMode] = useState<'manual' | 'upload'>('manual');
-  const [downloadTemplate, downloadTemplateState] = useLazyDownloadQuestionBulkTemplateQuery();
 
   // Classes from medium
   const allClass = useMemo(
@@ -1017,10 +864,6 @@ export default function QuestionBankScreen() {
     type: 'mutation',
     currentQueryAndMutation: useSaveQuestionBankSettingsMutation,
   });
-  const [createQuestion, { isLoading: isCreateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCreateQuestionMutation,
-  });
   const [updateQuestion, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateQuestionMutation,
@@ -1056,67 +899,9 @@ export default function QuestionBankScreen() {
     [settings]
   );
 
-  const createValidationSchema = useMemo(() => {
-    if (creationMode === 'upload') {
-      return Yup.object({
-        standardId: Yup.string().required('Class is required'),
-        subjectId: Yup.string().required('Subject is required'),
-      });
-    }
-    return questionValidationSchema;
-  }, [creationMode, questionValidationSchema]);
-
-  // Formik for create question dialog
-  const formik = useFormik({
-    initialValues: initialFormValues(academicYearId),
-    validationSchema: createValidationSchema,
-    enableReinitialize: true,
-    onSubmit: async (values, helpers) => {
-      try {
-        if (creationMode === 'upload') {
-          if (!values.file) {
-            shikshaMitraToast.error({ message: 'Please upload a template file.' });
-            return;
-          }
-          shikshaMitraToast.success({ message: 'Question file uploaded successfully!' });
-          helpers.resetForm({ values: initialFormValues(academicYearId) });
-          setDialogOpen(false);
-          return;
-        }
-        await createQuestion(toQuestionBody(values)).unwrap();
-        shikshaMitraToast.success({ message: 'Question created successfully.' });
-        helpers.resetForm({ values: initialFormValues(academicYearId) });
-        setDialogOpen(false);
-      } catch (err: any) {
-        console.error('Failed to create question:', err);
-        shikshaMitraToast.error({
-          message: err?.data?.detail || err?.data?.error?.message || 'Failed to create question.',
-        });
-      }
-    },
-  });
-
-  const handleDownloadTemplate = async () => {
-    try {
-      const template = await downloadTemplate(undefined, false).unwrap();
-      const chapterName = formChapterOptions.find(
-        (c: any) => c.value === formik.values.chapterId
-      )?.label;
-      triggerTemplateDownload(template, buildQuestionTemplateFileName(chapterName));
-      shikshaMitraToast.success({
-        message: 'Excel template downloaded successfully.',
-      });
-    } catch (error) {
-      console.error('Failed to download question template:', error);
-      shikshaMitraToast.error({
-        message: 'Failed to download Excel template. Please try again.',
-      });
-    }
-  };
-
   // Formik for edit question dialog
   const editFormik = useFormik({
-    initialValues: initialFormValues(academicYearId),
+    initialValues: createInitialQuestionValues(academicYearId),
     validationSchema: questionValidationSchema,
     onSubmit: async (values, helpers) => {
       if (!selectedQuestion) return;
@@ -1134,38 +919,6 @@ export default function QuestionBankScreen() {
       }
     },
   });
-
-  // Form cascade queries (driven by formik values)
-  const {
-    data: formSubjectData,
-    isFetching: isFormSubjectFetching,
-    isLoading: isFormSubjectLoading,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { standardId: formik.values.standardId },
-    options: { skip: !formik.values.standardId },
-  });
-  const formSubjectOptions = useMemo(() => buildSubjectOptions(formSubjectData), [formSubjectData]);
-
-  const {
-    data: formChapters,
-    isFetching: isFormChapterFetching,
-    isLoading: isFormChapterLoading,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetChaptersByStandardQuery,
-    params: { standardId: formik.values.standardId, subjectId: formik.values.subjectId },
-    options: { skip: !formik.values.standardId || !formik.values.subjectId },
-  });
-  const formChapterOptions = useMemo(
-    () =>
-      (formChapters || []).map((c: any) => ({
-        value: c.id,
-        label: `${c.chapterNumber}. ${c.chapterName}`,
-      })),
-    [formChapters]
-  );
 
   // Edit form cascade queries (driven by editFormik values)
   const {
@@ -1202,9 +955,7 @@ export default function QuestionBankScreen() {
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const handleOpenCreate = () => {
-    formik.resetForm({ values: initialFormValues(academicYearId) });
-    setDialogOpen(false);
-    setTimeout(() => setDialogOpen(true), 0);
+    setDialogOpen(true);
   };
 
   const handleOpenEdit = (question: any) => {
@@ -1226,6 +977,7 @@ export default function QuestionBankScreen() {
         learningOutcome: question.learningOutcome || '',
         explanation: question.explanation || '',
         markingScheme: question.markingScheme || '',
+        visibility: question.visibility || 2,
         tagsText: (question.tags || []).join(', '),
         options: question.options?.length
           ? question.options.map((o: any) => ({
@@ -1327,44 +1079,6 @@ export default function QuestionBankScreen() {
         message: err?.data?.detail || err?.data?.message || 'Failed to reject question.',
       });
     }
-  };
-
-  const handleOptionChange = (index: number, field: string, value: any) => {
-    const newOptions = formik.values.options.map((opt: any, i: number) => {
-      if (i !== index) {
-        if (
-          field === 'isCorrect' &&
-          value &&
-          (formik.values.questionType === 1 || formik.values.questionType === 3)
-        ) {
-          return { ...opt, isCorrect: false };
-        }
-        return opt;
-      }
-      return { ...opt, [field]: value };
-    });
-    formik.setFieldValue('options', newOptions);
-  };
-
-  const handleQuestionTypeChange = (type: number) => {
-    let newOptions = formik.values.options;
-    if (type === 3) {
-      newOptions = [
-        { optionText: 'True', isCorrect: true, sortOrder: 1 },
-        { optionText: 'False', isCorrect: false, sortOrder: 2 },
-      ];
-    } else if ((type === 1 || type === 2) && formik.values.questionType === 3) {
-      newOptions = [
-        { optionText: '', isCorrect: true, sortOrder: 1 },
-        { optionText: '', isCorrect: false, sortOrder: 2 },
-      ];
-    } else if (type === 1) {
-      newOptions = normalizeSingleCorrectOptions(newOptions);
-    } else if (![1, 2, 3].includes(type)) {
-      newOptions = [];
-    }
-    formik.setFieldValue('questionType', type);
-    formik.setFieldValue('options', newOptions);
   };
 
   const handleEditOptionChange = (index: number, field: string, value: any) => {
@@ -2159,86 +1873,13 @@ export default function QuestionBankScreen() {
       </Popover>
 
       {/* ── Create Question Dialog ─────────────────────────────────────────── */}
-      <CustomDialog
+      <CreateQuestionDialog
         open={dialogOpen}
-        handleClose={() => {
-          setCreationMode('manual');
-          setDialogOpen(false);
-        }}
-        title={
-          <Box
-            display="flex"
-            flexDirection="row"
-            gap={1}
-            alignItems="center"
-            component="span"
-            sx={{ fontWeight: 'normal' }}
-          >
-            <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
-              Create New Question
-            </Box>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="Add a new assessment question with classification, scoring rules, choices, and marking schemes."
-            >
-              <Iconify
-                icon={GlobalIcons.info}
-                sx={{ cursor: 'pointer' }}
-                color="info.main"
-                width={16}
-                height={16}
-              />
-            </CustomTooltip>
-          </Box>
-        }
-        maxWidth="md"
-        hasForm={false}
-      >
-        <form
-          onSubmit={formik.handleSubmit}
-          style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
-        >
-          <DialogScrollContent>
-            <QuestionFormFields
-              formik={formik}
-              classOptions={classOptions}
-              subjectOptions={formSubjectOptions}
-              chapterOptions={formChapterOptions}
-              isSubjectLoading={isFormSubjectLoading || isFormSubjectFetching}
-              isChapterLoading={isFormChapterLoading || isFormChapterFetching}
-              onTypeChange={handleQuestionTypeChange}
-              onOptionChange={handleOptionChange}
-              theme={theme}
-              settings={settings}
-              creationMode={creationMode}
-              setCreationMode={setCreationMode}
-              onDownloadTemplate={handleDownloadTemplate}
-              isTemplateDownloading={downloadTemplateState.isFetching}
-            />
-          </DialogScrollContent>
-
-          <DialogActions
-            sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider', gap: 1 }}
-          >
-            <CancelButton
-              onClick={() => {
-                setCreationMode('manual');
-                setDialogOpen(false);
-              }}
-            />
-            <SubmitButton
-              loading={isCreateLoading}
-              buttonText={creationMode === 'upload' ? 'Upload Questions' : 'Save Draft'}
-              startIcon={
-                <Iconify
-                  icon={creationMode === 'upload' ? 'solar:upload-bold' : 'mingcute:save-line'}
-                />
-              }
-            />
-          </DialogActions>
-        </form>
-      </CustomDialog>
+        onClose={() => setDialogOpen(false)}
+        initialStandardId={filters.standardId || ''}
+        initialSubjectId={filters.subjectId || ''}
+        initialChapterId={filters.chapterId || ''}
+      />
 
       {/* ── Edit Question Dialog ───────────────────────────────────────────── */}
       <CustomDialog
