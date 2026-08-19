@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -15,7 +15,9 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
+import RubricEvaluationPanel, {
+  type RubricEvaluationPanelRef,
+} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
 import {
   Box,
@@ -60,6 +62,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   ensureInPersonSubmissionId,
 }: IAssignGradeProps) => {
   const submitAndNextRef = useRef(false);
+  const submissionInFlightRef = useRef(false);
+  const rubricEvaluationRef = useRef<RubricEvaluationPanelRef | null>(null);
+  const [isRubricSaving, setIsRubricSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
@@ -78,8 +84,19 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     },
     validationSchema: assignGradeValidationSchema,
     async onSubmit(values) {
+      if (submissionInFlightRef.current) return;
+
+      submissionInFlightRef.current = true;
+      setIsSubmitting(true);
       const isUpdate = Boolean(data?.feedback);
       try {
+        if (hasRubricAssessment && rubricEvaluationRef.current) {
+          setIsRubricSaving(true);
+          const rubricSaved = await rubricEvaluationRef.current.save();
+          setIsRubricSaving(false);
+          if (!rubricSaved) return;
+        }
+
         await updateSubmissionFeedback({
           homeworkId: homeworkId || data?.homeworkId,
           studentId: data?.studentId,
@@ -113,6 +130,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         }
       } catch (error) {
         console.error('Failed to submit feedback', error);
+      } finally {
+        submissionInFlightRef.current = false;
+        setIsRubricSaving(false);
+        setIsSubmitting(false);
       }
     },
   });
@@ -133,6 +154,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             hasRubricAssessment && (
               <Grid size={{ xs: 12 }}>
                 <RubricEvaluationPanel
+                  ref={rubricEvaluationRef}
                   mode="homework"
                   standardId={selectedClass}
                   subjectId={selectedSubject}
@@ -326,8 +348,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         <LoadingButton
           variant="outlined"
           size="small"
-          disabled={!hasNext}
-          loading={isUpdateLoading || isStatusLoading}
+          disabled={!hasNext || isSubmitting || isUpdateLoading || isStatusLoading || isRubricSaving}
+          loading={isSubmitting || isUpdateLoading || isStatusLoading || isRubricSaving}
           onClick={(e: any) => {
             submitAndNextRef.current = true;
             formik.handleSubmit(e);
@@ -339,7 +361,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         <LoadingButton
           variant="contained"
           size="small"
-          loading={isUpdateLoading || isStatusLoading}
+          loading={isSubmitting || isUpdateLoading || isStatusLoading || isRubricSaving}
+          disabled={isSubmitting || isUpdateLoading || isStatusLoading || isRubricSaving}
           onClick={(e: any) => {
             submitAndNextRef.current = false;
             formik.handleSubmit(e);

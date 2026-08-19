@@ -77,6 +77,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   requiresMarks = true,
 }: IAssignGradeProps) => {
   const submitAndNextRef = useRef(false);
+  const submissionInFlightRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const resolveTotalMarks = (value: unknown): number => {
     const parsed = Number(value);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
@@ -110,6 +112,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         : Yup.number().nullable().optional(),
     }),
     async onSubmit(values) {
+      if (submissionInFlightRef.current) return;
+
+      submissionInFlightRef.current = true;
+      setIsSubmitting(true);
       const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
       try {
         await updateSubmissionFeedback({
@@ -138,6 +144,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         }
       } catch (error) {
         console.error('Failed to submit feedback and marks', error);
+      } finally {
+        submissionInFlightRef.current = false;
+        setIsSubmitting(false);
       }
     },
   });
@@ -680,8 +689,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             </Button>
             <LoadingButton
               variant="outlined"
-              loading={isUpdateLoading}
-              disabled={!hasNext}
+              loading={isSubmitting || isUpdateLoading}
+              disabled={!hasNext || isSubmitting || isUpdateLoading}
               size="small"
               onClick={(e: any) => {
                 submitAndNextRef.current = true;
@@ -693,7 +702,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             </LoadingButton>
             <LoadingButton
               variant="contained"
-              loading={isUpdateLoading}
+              loading={isSubmitting || isUpdateLoading}
+              disabled={isSubmitting || isUpdateLoading}
               size="small"
               onClick={(e: any) => {
                 submitAndNextRef.current = false;

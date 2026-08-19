@@ -421,6 +421,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
   const { data: rubricTemplates = [], isFetching: isRubricTemplateFetching } = useGetRubricsQuery(
     {
       academicMediumId: medium?.id,
+      assignmentTypeId: formik.values.assignmentTypeId || undefined,
       isTemplate: true,
       appliesToWorkType: RubricWorkType.Assignment,
       status: RubricStatus.Published,

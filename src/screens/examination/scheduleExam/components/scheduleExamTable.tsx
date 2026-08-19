@@ -239,10 +239,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     [currentTime, publishedRows]
   );
   const ongoingCount = Number(publishedExamsData?.ongoingCount ?? derivedOngoingCount);
-  const publishedCount = Math.max(
-    0,
-    Number(publishedExamsData?.publishedCount ?? publishedRows.length) - ongoingCount
-  );
+  const publishedCount =
+    publishedExamsData?.publishedCount == null
+      ? Math.max(0, publishedRows.length - ongoingCount)
+      : Number(publishedExamsData.publishedCount);
 
   const TABS = useMemo(
     () => [
