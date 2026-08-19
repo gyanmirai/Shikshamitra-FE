@@ -2,7 +2,7 @@ export enum examScheduledStatus {
   Pending,
   Published,
   Completed,
-  /** Frontend-derived view state; never persisted through the exam status API. */
+  /** Computed schedule view state; never persisted through the exam status API. */
   Ongoing,
 }
 

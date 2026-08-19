@@ -239,17 +239,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   // Composite key for subject dropdown display (handles elective groups: "assignmentId::subjectId")
   const [subjectSelectValue, setSubjectSelectValue] = useState<string>('');
 
-  const { data: rubricTemplates = [], isFetching: isRubricTemplateFetching } = useGetRubricsQuery(
-    {
-      academicMediumId: medium?.id,
-      isTemplate: true,
-      appliesToWorkType: RubricWorkType.Homework,
-      status: RubricStatus.Published,
-    },
-    {
-      skip: !medium?.id,
-    }
-  );
   // Update classes when organization changes
   useEffect(() => {
     // Flatten the list of standards from all stages
@@ -440,6 +429,19 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       }
     },
   });
+
+  const { data: rubricTemplates = [], isFetching: isRubricTemplateFetching } = useGetRubricsQuery(
+    {
+      academicMediumId: medium?.id,
+      homeworkTypeId: formik.values.homeworkTypeId || undefined,
+      isTemplate: true,
+      appliesToWorkType: RubricWorkType.Homework,
+      status: RubricStatus.Published,
+    },
+    {
+      skip: !medium?.id,
+    }
+  );
 
   // Update divisions when class changes
   useEffect(() => {

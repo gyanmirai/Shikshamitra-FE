@@ -137,7 +137,15 @@ const ScheduleExamPreviewDrawer = ({
     ? getReadinessSummary(buildExamPlanningIssues(hydratedExam))
     : null;
   const issueCount = readiness ? readiness.blocking.length : (exam?.issueCount ?? 0);
-  const warningCount = readiness ? readiness.warnings.length : (exam?.warningCount ?? 0);
+  const hasListWarningCount =
+    exam?.warningCount !== null &&
+    exam?.warningCount !== undefined &&
+    Number.isFinite(Number(exam.warningCount));
+  const warningCount = hasListWarningCount
+    ? Number(exam.warningCount)
+    : readiness
+      ? readiness.warnings.length
+      : 0;
   const previewExam = hydratedExam
     ? {
         ...exam,
@@ -410,7 +418,8 @@ const ScheduleExamPreviewDrawer = ({
               </Grid>
             </Grid>
 
-            {readiness && (readiness.blocking.length > 0 || readiness.warnings.length > 0) && (
+            {readiness &&
+              (readiness.blocking.length > 0 || warningCount > 0) && (
               <Box
                 sx={{
                   p: 2,
@@ -429,11 +438,14 @@ const ScheduleExamPreviewDrawer = ({
                     size="small"
                     color="warning"
                     variant="soft"
-                    label={`${readiness.blocking.length + readiness.warnings.length} item${readiness.blocking.length + readiness.warnings.length === 1 ? '' : 's'}`}
+                    label={`${readiness.blocking.length + warningCount} item${readiness.blocking.length + warningCount === 1 ? '' : 's'}`}
                   />
                 </Stack>
                 <Stack spacing={1} component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
-                  {[...readiness.blocking, ...readiness.warnings].map((issue) => {
+                  {[
+                    ...readiness.blocking,
+                    ...(warningCount > 0 ? readiness.warnings : []),
+                  ].map((issue) => {
                     const stepLabels = ['Basic Details', 'Subject Schedule', 'Room Allocation'];
                     const isBlocking = issue.severity === 'blocking';
 

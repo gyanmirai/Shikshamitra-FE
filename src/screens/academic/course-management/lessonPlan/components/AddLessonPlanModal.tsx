@@ -254,6 +254,20 @@ const hasDuplicateLessonTopic = (form: LessonFormState, lessonPlans: LessonPlanR
   });
 };
 
+const hasDuplicateLessonSlot = (form: LessonFormState, lessonPlans: LessonPlanRow[]) => {
+  const plannedDate = form.plannedDate?.format('YYYY-MM-DD');
+  if (!plannedDate || !form.timetableSlotId) return false;
+
+  return lessonPlans.some((plan) => {
+    const sameRecord = form.id && plan.id === form.id;
+    const sameTeacher = !form.teacherId || !plan.teacherId || plan.teacherId === form.teacherId;
+    const sameDate = dayjs(plan.plannedDate).format('YYYY-MM-DD') === plannedDate;
+    const sameSlot = plan.timetableSlotId === form.timetableSlotId;
+
+    return !sameRecord && sameTeacher && sameDate && sameSlot;
+  });
+};
+
 const AddLessonPlanModal = ({
   open,
   editData,
@@ -530,6 +544,8 @@ const AddLessonPlanModal = ({
       return 'Please select a valid timetable period with subject details.';
     if (!form.chapterId || !form.chapterName) return 'Chapter is required.';
     if (!form.topic.trim()) return 'Topic is required.';
+    if (hasDuplicateLessonSlot(form, lessonPlans))
+      return 'A lesson plan already exists for this teacher and timetable period on this date.';
     if (hasDuplicateLessonTopic(form, lessonPlans))
       return 'A lesson plan with the same topic already exists for this teacher on this date.';
     if (form.plannedCompletionPercentage < 0 || form.plannedCompletionPercentage > 100)

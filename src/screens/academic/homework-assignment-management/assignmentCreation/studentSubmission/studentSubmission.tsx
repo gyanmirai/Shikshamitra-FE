@@ -3,11 +3,12 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Stack, Typography, IconButton } from '@mui/material';
+import { Box, Stack, Typography, IconButton, Button, DialogActions } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -18,7 +19,9 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { AssignmentSubmissionStatusOptions } from 'src/enums/assignment-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
+import RubricEvaluationPanel, {
+  type RubricEvaluationPanelRef,
+} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import { SUBMISSION_TYPE_LABELS } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/learningTaskUi';
 import {
   evaluationUsesMarks,
@@ -109,6 +112,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   });
   // State to track the currently selected student for individual grading
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>(null);
+  const rubricEvaluationRef = React.useRef<RubricEvaluationPanelRef | null>(null);
+  const [isRubricSaving, setIsRubricSaving] = useState(false);
 
   // Dialog control for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
@@ -249,6 +254,20 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     },
     [resolveTotalMarks, viewSubmissionDialog]
   );
+
+  const handleRubricSubmit = async () => {
+    if (!rubricEvaluationRef.current) return;
+
+    setIsRubricSaving(true);
+    try {
+      if (await rubricEvaluationRef.current.save()) {
+        shikshaMitraToast.success({ message: 'Rubric evaluation submitted successfully.' });
+        handleClose(null, true);
+      }
+    } finally {
+      setIsRubricSaving(false);
+    }
+  };
 
   if (
     selectedAssignment?.status !== AssignmentStatus.Published ||
@@ -594,6 +613,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           selectedAssignment?.id && (
             <Box sx={{ p: 2 }}>
               <RubricEvaluationPanel
+                ref={rubricEvaluationRef}
                 mode="assignment"
                 standardId={selectedClass}
                 subjectId={selectedSubject}
@@ -616,6 +636,22 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             onPrevious={() => moveStudent(-1)}
             onNext={() => moveStudent(1)}
           />
+        )}
+        {usesRubric && (
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+            <Button variant="outlined" size="small" onClick={() => handleClose(null, false)}>
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="contained"
+              size="small"
+              loading={isRubricSaving}
+              onClick={handleRubricSubmit}
+              startIcon={<Iconify icon="solar:check-circle-bold" />}
+            >
+              Submit
+            </LoadingButton>
+          </DialogActions>
         )}
       </CustomDialog>
     </>

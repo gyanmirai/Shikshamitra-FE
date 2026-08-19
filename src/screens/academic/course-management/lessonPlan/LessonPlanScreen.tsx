@@ -517,14 +517,17 @@ const LessonPlanScreen = () => {
   const [createLessonPlan, { isLoading: isCreatingLesson }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateLessonPlanMutation,
+    popupConfig: { error: false },
   });
   const [updateLessonPlan, { isLoading: isUpdatingLesson }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateLessonPlanMutation,
+    popupConfig: { error: false },
   });
   const [submitLessonPlan, { isLoading: isSubmittingLesson }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useSubmitLessonPlanMutation,
+    popupConfig: { error: false },
   });
   const isSavingLesson = isCreatingLesson || isUpdatingLesson || isSubmittingLesson;
   const [approveLessonPlan, { isLoading: isApproving }] = useQueryAndMutation({
