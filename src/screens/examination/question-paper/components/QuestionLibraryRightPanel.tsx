@@ -9,8 +9,10 @@ import { varAlpha } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
 import {
   Box,
+  Button,
   Card,
   Chip,
+  Checkbox,
   Stack,
   Tooltip,
   TextField,
@@ -22,15 +24,17 @@ import {
 
 import type { QuestionItem, QuestionLibraryFilters } from '../types';
 
+const ALL_FILTER_VALUE = '__all__';
+
 const DIFFICULTY_OPTIONS = [
-  { value: '', label: 'All Difficulties' },
+  { value: ALL_FILTER_VALUE, label: 'All Difficulties' },
   { value: 1, label: 'Easy' },
   { value: 2, label: 'Medium' },
   { value: 3, label: 'Hard' },
 ];
 
 const BLOOM_OPTIONS = [
-  { value: '', label: 'All Bloom Levels' },
+  { value: ALL_FILTER_VALUE, label: 'All Bloom Levels' },
   { value: 1, label: 'Remembering' },
   { value: 2, label: 'Understanding' },
   { value: 3, label: 'Applying' },
@@ -49,9 +53,11 @@ interface QuestionLibraryRightPanelProps {
   requiredCount: number;
   requiredMarks: number;
   onAddQuestion: (question: QuestionItem) => void;
+  onAddQuestions: (questions: QuestionItem[]) => Promise<void>;
   onFiltersChange: (filters: QuestionLibraryFilters) => void;
   isLoading?: boolean;
   isError?: boolean;
+  isAdding?: boolean;
 }
 
 export default function QuestionLibraryRightPanel({
@@ -64,27 +70,34 @@ export default function QuestionLibraryRightPanel({
   requiredCount,
   requiredMarks,
   onAddQuestion,
+  onAddQuestions,
   onFiltersChange,
   isLoading = false,
   isError = false,
+  isAdding = false,
 }: QuestionLibraryRightPanelProps) {
   const theme = useTheme();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedChapterId, setSelectedChapterId] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<number | ''>('');
-  const [selectedBloom, setSelectedBloom] = useState<number | ''>('');
+  const [selectedChapterId, setSelectedChapterId] = useState(ALL_FILTER_VALUE);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<number | string>(ALL_FILTER_VALUE);
+  const [selectedBloom, setSelectedBloom] = useState<number | string>(ALL_FILTER_VALUE);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
 
   const chapterSelectOptions = [
-    { value: '', label: 'All Chapters' },
+    { value: ALL_FILTER_VALUE, label: 'All Chapters' },
     ...chapters.map((c) => ({ value: c.id, label: `${c.chapterNumber}. ${c.chapterName}` })),
   ];
 
-  const hasAdditionalFilters = Boolean(searchQuery.trim() || selectedDifficulty || selectedBloom);
+  const hasAdditionalFilters = Boolean(
+    searchQuery.trim() ||
+      selectedDifficulty !== ALL_FILTER_VALUE ||
+      selectedBloom !== ALL_FILTER_VALUE
+  );
   const hasEnoughQuestions = requiredCount === 0 || availableCount >= requiredCount;
   const emptyMessage = isError
     ? 'Unable to load questions from the Question Bank.'
-    : selectedChapterId && !hasAdditionalFilters
+    : selectedChapterId !== ALL_FILTER_VALUE && !hasAdditionalFilters
       ? 'No questions exist for this chapter.'
       : hasAdditionalFilters
         ? 'No questions match applied filters.'
@@ -94,24 +107,44 @@ export default function QuestionLibraryRightPanel({
     onFiltersChange(filters);
   };
 
+  const apiDifficulty = selectedDifficulty === ALL_FILTER_VALUE ? '' : Number(selectedDifficulty);
+  const apiBloom = selectedBloom === ALL_FILTER_VALUE ? '' : Number(selectedBloom);
+
+  const toggleQuestionSelection = (questionId: string) => {
+    setSelectedQuestionIds((current) =>
+      current.includes(questionId)
+        ? current.filter((id) => id !== questionId)
+        : [...current, questionId]
+    );
+  };
+
+  const handleAddSelected = async () => {
+    const selectedQuestions = bankQuestions.filter((question) =>
+      selectedQuestionIds.includes(question.id)
+    );
+    if (selectedQuestions.length === 0) return;
+    await onAddQuestions(selectedQuestions);
+    setSelectedQuestionIds([]);
+  };
+
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    emitFilters({ keyword: value, chapterId: selectedChapterId, difficultyLevel: selectedDifficulty, bloomLevel: selectedBloom });
+    emitFilters({ keyword: value, chapterId: selectedChapterId === ALL_FILTER_VALUE ? '' : selectedChapterId, difficultyLevel: apiDifficulty, bloomLevel: apiBloom });
   };
 
   const handleChapterChange = (value: string) => {
     setSelectedChapterId(value);
-    emitFilters({ keyword: searchQuery, chapterId: value, difficultyLevel: selectedDifficulty, bloomLevel: selectedBloom });
+    emitFilters({ keyword: searchQuery, chapterId: value === ALL_FILTER_VALUE ? '' : value, difficultyLevel: apiDifficulty, bloomLevel: apiBloom });
   };
 
-  const handleDifficultyChange = (value: number | '') => {
+  const handleDifficultyChange = (value: number | string) => {
     setSelectedDifficulty(value);
-    emitFilters({ keyword: searchQuery, chapterId: selectedChapterId, difficultyLevel: value, bloomLevel: selectedBloom });
+    emitFilters({ keyword: searchQuery, chapterId: selectedChapterId === ALL_FILTER_VALUE ? '' : selectedChapterId, difficultyLevel: value === ALL_FILTER_VALUE ? '' : Number(value), bloomLevel: apiBloom });
   };
 
-  const handleBloomChange = (value: number | '') => {
+  const handleBloomChange = (value: number | string) => {
     setSelectedBloom(value);
-    emitFilters({ keyword: searchQuery, chapterId: selectedChapterId, difficultyLevel: selectedDifficulty, bloomLevel: value });
+    emitFilters({ keyword: searchQuery, chapterId: selectedChapterId === ALL_FILTER_VALUE ? '' : selectedChapterId, difficultyLevel: apiDifficulty, bloomLevel: value === ALL_FILTER_VALUE ? '' : Number(value) });
   };
 
   return (
@@ -209,13 +242,13 @@ export default function QuestionLibraryRightPanel({
               label="Difficulty"
               options={DIFFICULTY_OPTIONS}
               value={selectedDifficulty}
-              onChange={(val) => handleDifficultyChange(val as number | '')}
+              onChange={(val) => handleDifficultyChange(val as number | string)}
             />
             <CustomSelect
               label="Bloom"
               options={BLOOM_OPTIONS}
               value={selectedBloom}
-              onChange={(val) => handleBloomChange(val as number | '')}
+              onChange={(val) => handleBloomChange(val as number | string)}
             />
           </Stack>
         </Stack>
@@ -279,6 +312,7 @@ export default function QuestionLibraryRightPanel({
           <Stack spacing={1}>
             {bankQuestions.map((question) => {
               const isAdded = addedQuestionIds.includes(question.id) || addedQuestionIds.includes(question.questionBankItemId || '');
+              const isSelected = selectedQuestionIds.includes(question.id);
 
               return (
                 <Box
@@ -287,8 +321,12 @@ export default function QuestionLibraryRightPanel({
                     p: 1.25,
                     borderRadius: 1.25,
                     border: '1px solid',
-                    borderColor: isAdded ? 'success.light' : 'divider',
-                    bgcolor: isAdded ? alpha(theme.palette.success.main, 0.03) : 'background.paper',
+                    borderColor: isAdded ? 'success.light' : isSelected ? 'primary.main' : 'divider',
+                    bgcolor: isAdded
+                      ? alpha(theme.palette.success.main, 0.03)
+                      : isSelected
+                        ? alpha(theme.palette.primary.main, 0.04)
+                        : 'background.paper',
                     opacity: isAdded ? 0.75 : 1,
                     transition: 'all 0.15s ease',
                     display: 'flex',
@@ -300,6 +338,14 @@ export default function QuestionLibraryRightPanel({
                   }}
                 >
                   <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+                    <Checkbox
+                      size="small"
+                      checked={isSelected}
+                      disabled={isAdded || isAdding}
+                      onChange={() => toggleQuestionSelection(question.id)}
+                      inputProps={{ 'aria-label': `Select question: ${question.questionText}` }}
+                      sx={{ p: 0.25, mt: -0.25 }}
+                    />
                     <Typography variant="body2" sx={{ fontSize: '0.8rem', lineHeight: 1.5, flex: 1, color: 'text.primary' }}>
                       {question.questionText}
                     </Typography>
@@ -309,11 +355,15 @@ export default function QuestionLibraryRightPanel({
                         <IconButton
                           size="small"
                           color={isAdded ? 'success' : 'primary'}
-                          disabled={isAdded}
+                          disabled={isAdded || isAdding}
                           onClick={() => onAddQuestion(question)}
                         >
                           <Iconify
-                            icon={isAdded ? 'mdi:check-circle-outline' : 'mdi:plus-circle-outline'}
+                            icon={
+                              isAdded
+                                ? 'mdi:check-circle-outline'
+                                : 'mdi:plus-circle-outline'
+                            }
                             width={17}
                           />
                         </IconButton>
@@ -357,6 +407,28 @@ export default function QuestionLibraryRightPanel({
           </Stack>
         )}
       </Scrollbar>
+      <Box
+        sx={{
+          px: 1.25,
+          py: 1,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Button
+          fullWidth
+          size="small"
+          variant="contained"
+          disabled={selectedQuestionIds.length === 0 || isAdding}
+          onClick={handleAddSelected}
+          startIcon={<Iconify icon="mdi:playlist-plus" width={16} />}
+        >
+          {isAdding
+            ? 'Adding selected questions...'
+            : `Add selected${selectedQuestionIds.length ? ` (${selectedQuestionIds.length})` : ''}`}
+        </Button>
+      </Box>
     </Card>
   );
 }

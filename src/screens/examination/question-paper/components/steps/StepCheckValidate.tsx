@@ -37,7 +37,6 @@ export default function StepCheckValidate({ results, onGoToStep }: StepCheckVali
     (n, cat) => n + cat.items.filter((i) => i.severity === 'warning').length,
     0
   );
-  const passedCount = allItems.filter((item) => item.severity === 'success').length;
   const groupedResults = [
     {
       title: 'Must Fix',
@@ -50,12 +49,6 @@ export default function StepCheckValidate({ results, onGoToStep }: StepCheckVali
       subtitle: 'These improvements are optional, but worth reviewing.',
       severity: 'warning' as const,
       items: allItems.filter((item) => item.severity === 'warning'),
-    },
-    {
-      title: 'Passed',
-      subtitle: 'These checks are complete.',
-      severity: 'success' as const,
-      items: allItems.filter((item) => item.severity === 'success'),
     },
   ];
   const readiness =
@@ -124,9 +117,24 @@ export default function StepCheckValidate({ results, onGoToStep }: StepCheckVali
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1.5 }}>
           <SummaryBadge label="Must fix" value={blockingCount} color="error" />
           <SummaryBadge label="Recommendations" value={warningCount} color="warning" />
-          <SummaryBadge label="Checks passed" value={passedCount} color="success" />
         </Stack>
       </Paper>
+
+      {groupedResults.every((group) => group.items.length === 0) ? (
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            borderColor: 'success.light',
+            bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.04),
+          }}
+        >
+          <Typography variant="body2" color="success.main" fontWeight={700}>
+            No blocking issues or recommendations. Your paper is ready to submit.
+          </Typography>
+        </Paper>
+      ) : null}
 
       {groupedResults.map(
         (group) =>

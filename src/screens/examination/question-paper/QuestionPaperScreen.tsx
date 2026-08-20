@@ -3,8 +3,8 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { useReactToPrint } from 'react-to-print';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -37,6 +37,7 @@ import {
 } from '@mui/material';
 import {
   useGetPaperPreviewQuery,
+  useGetQuestionPaperByIdQuery,
   useGetQuestionPapersQuery,
   useDeleteQuestionPaperMutation,
   useArchiveQuestionPaperMutation,
@@ -46,9 +47,10 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/QuestionPaperApi/question-paper-api';
 
 import CreatePaperWizard from './components/CreatePaperWizard';
+import QuestionPaperPreviewDrawer from './components/QuestionPaperPreviewDrawer';
 import { STATUS_LABEL, STATUS_COLOR, CREATION_MODE_OPTIONS } from './constants';
 
-import type { WizardMode, QuestionPaperMetadata } from './types';
+import type { SectionPattern, WizardMode, QuestionPaperMetadata } from './types';
 
 interface RowAction {
   key: string;
@@ -220,6 +222,7 @@ export default function QuestionPaperScreen() {
 
   // ── Dialog state ─────────────────────────────────────────────────────
   const [previewPaperId, setPreviewPaperId] = useState<string | null>(null);
+  const [previewDrawerOpen, setPreviewDrawerOpen] = useState(false);
   const [deleteConfirmPaper, setDeleteConfirmPaper] = useState<any | null>(null);
   const [archiveConfirmPaper, setArchiveConfirmPaper] = useState<any | null>(null);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -254,6 +257,13 @@ export default function QuestionPaperScreen() {
     options: { skip: !previewPaperId },
   });
 
+  const { data: previewDetails } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetQuestionPaperByIdQuery,
+    params: { id: previewPaperId },
+    options: { skip: !previewPaperId },
+  });
+
   const [deletePaper] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteQuestionPaperMutation,
@@ -269,6 +279,30 @@ export default function QuestionPaperScreen() {
 
   const allPapers: any[] = useMemo(() => papers?.items || [], [papers]);
   const previewPaper = allPapers.find((p) => p.id === previewPaperId);
+  const previewPaperData: any = previewDetails || previewPaper;
+  const previewSections: SectionPattern[] = useMemo(() => {
+    const sections = previewPaperData?.sections || [];
+    const questions = previewPaperData?.questions || [];
+    return sections.map((section: any, index: number) => ({
+      id: section.id || `preview-section-${index + 1}`,
+      sectionName: section.sectionName || `Section ${String.fromCharCode(65 + index)}`,
+      instructions: section.instructions || '',
+      marks: section.marks || 0,
+      sortOrder: section.sortOrder || index + 1,
+      questionType: section.questionType,
+      questionCount: section.questionCount,
+      marksPerQuestion: section.marksPerQuestion,
+      questions: section.questions || questions.filter((question: any) =>
+        question.questionPaperSectionId === section.id || question.sectionId === section.id
+      ),
+    }));
+  }, [previewPaperData]);
+
+  const printRef = useRef<HTMLDivElement | null>(null);
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: previewPaper?.paperTitle || 'Question_Paper',
+  });
 
   // Status counts computed from the list (consistent with what the table shows).
   const statusCounts = useMemo(() => {
@@ -285,12 +319,6 @@ export default function QuestionPaperScreen() {
   );
 
   // ── Print ────────────────────────────────────────────────────────────
-  const printRef = useRef<HTMLDivElement | null>(null);
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: previewPaper?.paperTitle || 'Question_Paper',
-  });
-
   // ── Wizard handlers ──────────────────────────────────────────────────
   const openWizard = (mode: WizardMode, paper: QuestionPaperMetadata | null, initialStep = 0) => {
     setWizardMode(mode);
@@ -302,7 +330,10 @@ export default function QuestionPaperScreen() {
   const rowActions = useMemo(() => {
     const handlers = {
       onContinueEditing: (row: any) => openWizard('edit', row as QuestionPaperMetadata, 0),
-      onView: (row: any) => openWizard('edit', row as QuestionPaperMetadata, 2),
+      onView: (row: any) => {
+        setPreviewPaperId(row.id);
+        setPreviewDrawerOpen(true);
+      },
       onReview: (row: any) =>
         openWizard(
           row.status === 3 ? 'review' : 'edit',
@@ -311,7 +342,10 @@ export default function QuestionPaperScreen() {
         ),
       onDuplicate: (row: any) => openWizard('create', row as QuestionPaperMetadata, 0),
       onDelete: (row: any) => setDeleteConfirmPaper(row),
-      onPreview: (row: any) => setPreviewPaperId(row.id),
+      onPreview: (row: any) => {
+        setPreviewDrawerOpen(false);
+        setPreviewPaperId(row.id);
+      },
       onPublish: (row: any) => openWizard('review', row as QuestionPaperMetadata, 0),
       onArchive: (row: any) => setArchiveConfirmPaper(row),
     };
@@ -322,8 +356,14 @@ export default function QuestionPaperScreen() {
   // ── Delete / archive / settings ──────────────────────────────────────
   const handleDeletePaperConfirm = async () => {
     if (!deleteConfirmPaper) return;
+    const paperId = deleteConfirmPaper.id;
+    if (!paperId) {
+      shikshaMitraToast.error({ message: 'Unable to delete paper: paper ID is missing.' });
+      return;
+    }
+
     try {
-      await deletePaper({ paperId: deleteConfirmPaper.id }).unwrap();
+      await deletePaper({ id: paperId }).unwrap();
       shikshaMitraToast.success({
         message: `Paper "${deleteConfirmPaper.paperTitle}" deleted successfully.`,
       });
@@ -656,8 +696,20 @@ export default function QuestionPaperScreen() {
       />
 
       {/* ── Preview / print dialog ─────────────────────────────────── */}
+      <QuestionPaperPreviewDrawer
+        open={previewDrawerOpen}
+        paper={previewPaperData || null}
+        printHtml={preview?.printHtml}
+        sections={previewSections}
+        isLoading={previewLoading}
+        onClose={() => {
+          setPreviewDrawerOpen(false);
+          setPreviewPaperId(null);
+        }}
+      />
+
       <CustomDialog
-        open={Boolean(previewPaperId)}
+        open={Boolean(previewPaperId) && !previewDrawerOpen}
         handleClose={() => setPreviewPaperId(null)}
         title={
           <Stack direction="row" spacing={1} alignItems="center">

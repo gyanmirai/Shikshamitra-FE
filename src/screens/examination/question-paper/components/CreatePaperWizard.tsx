@@ -33,6 +33,7 @@ import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumM
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   useGetBlueprintQuery,
+  useGetQuestionPaperByIdQuery,
   useGetPaperPreviewQuery,
   useSaveBlueprintMutation,
   useAddQuestionToPaperMutation,
@@ -118,6 +119,33 @@ function buildSubjectOptions(data: any) {
     }
   });
   return options;
+}
+
+function getPaperSections(response: any): any[] {
+  return response?.sections || response?.data?.sections || [];
+}
+
+function getQuestionSectionId(question: any): string | undefined {
+  return (
+    question?.questionPaperSectionId ||
+    question?.paperSectionId ||
+    question?.sectionId ||
+    question?.section?.id
+  );
+}
+
+function getApiErrorMessage(error: any, fallback: string): string {
+  const data = error?.data;
+  if (typeof data?.detail === 'string' && data.detail.trim()) return data.detail;
+  if (typeof data?.title === 'string' && data.title.trim()) return data.title;
+  if (typeof data === 'string' && data.trim()) return data;
+  if (data?.errors && typeof data.errors === 'object') {
+    const messages = Object.values(data.errors).flatMap((value: any) =>
+      Array.isArray(value) ? value : [value]
+    );
+    if (messages.length > 0) return messages.join(' ');
+  }
+  return fallback;
 }
 
 const initialDetailsValues = (academicYearId?: string): PaperDetailsFormValues => ({
@@ -221,6 +249,13 @@ export default function CreatePaperWizard({
     mode !== 'create' && Boolean(paper && READONLY_STATUSES.includes(paper.status));
   const isReviewMode = mode === 'review' || (mode !== 'create' && paper?.status === 3);
 
+  const { data: paperDetails, refetch: refetchPaperDetails } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetQuestionPaperByIdQuery,
+    params: { id: selectedPaperId },
+    options: { skip: !selectedPaperId || !open },
+  });
+
   // Reset step position and pattern state on each fresh open of the wizard.
   // A create → edit transition after the first save must NOT reset the step.
   const wasOpenRef = useRef(false);
@@ -276,10 +311,11 @@ export default function CreatePaperWizard({
   // Populate sections from the paper when it loads
   useEffect(() => {
     if (!open || mode === 'create') return;
-    if (paper?.sections?.length) {
+    const persistedPaper = paperDetails || paper;
+    if (persistedPaper?.sections?.length) {
       const questionsBySection = new Map<string, QuestionItem[]>();
-      (paper.questions || []).forEach((q, i) => {
-        const key = (q as any).questionPaperSectionId || '__default__';
+      (persistedPaper.questions || []).forEach((q: any, i: number) => {
+        const key = getQuestionSectionId(q) || '__default__';
         const mapped: QuestionItem = {
           id: q.id || `pq-${i}`,
           questionNumber: q.questionNumber || i + 1,
@@ -300,7 +336,7 @@ export default function CreatePaperWizard({
       });
 
       setSections(
-        paper.sections.map((sec: any, idx: number) => ({
+        persistedPaper.sections.map((sec: any, idx: number) => ({
           id: sec.id || `sec-${idx + 1}`,
           sectionName: sec.sectionName || `Section ${String.fromCharCode(65 + idx)}`,
           instructions: sec.instructions || '',
@@ -309,20 +345,20 @@ export default function CreatePaperWizard({
           questions:
             questionsBySection.get(sec.id) ||
             (idx === 0 ? questionsBySection.get('__default__') || [] : []),
-          questionType: undefined,
-          questionCount: undefined,
-          marksPerQuestion: undefined,
+          questionType: sec.questionType ?? undefined,
+          questionCount: sec.questionCount ?? undefined,
+          marksPerQuestion: sec.marksPerQuestion ?? undefined,
         }))
       );
-    } else if (paper?.questions?.length) {
+    } else if (persistedPaper?.questions?.length) {
       setSections([
         {
           id: 'sec-1',
           sectionName: 'Section A',
-          instructions: paper.generalInstructions || '',
-          marks: paper.totalMarks,
+          instructions: persistedPaper.generalInstructions || '',
+          marks: persistedPaper.totalMarks,
           sortOrder: 1,
-          questions: paper.questions.map((q: any, i: number) => ({
+          questions: persistedPaper.questions.map((q: any, i: number) => ({
             id: q.id || `pq-${i}`,
             questionNumber: q.questionNumber || i + 1,
             questionText: q.questionText || 'Question Item',
@@ -338,8 +374,7 @@ export default function CreatePaperWizard({
         },
       ]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, paper]);
+  }, [open, paper, paperDetails, mode]);
 
   // Classes, subjects, chapters, exams
   const allClass = useMemo(
@@ -371,11 +406,21 @@ export default function CreatePaperWizard({
   });
   const chapters = useMemo(() => chaptersData || [], [chaptersData]);
 
+  const examLookupParams = useMemo(
+    () => ({
+      academicYearId,
+      standardId: formik.values.standardId,
+      subjectId: formik.values.subjectId,
+    }),
+    [academicYearId, formik.values.standardId, formik.values.subjectId]
+  );
   const { data: examLookupData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetQuestionPaperExamLookupQuery,
-    params: { academicYearId },
-    options: { skip: !academicYearId || !open },
+    params: examLookupParams,
+    options: {
+      skip: !academicYearId || !formik.values.standardId || !formik.values.subjectId || !open,
+    },
   });
   const examOptions = useMemo(() => {
     const raw: any[] =
@@ -463,7 +508,7 @@ export default function CreatePaperWizard({
     type: 'mutation',
     currentQueryAndMutation: useSaveBlueprintMutation,
   });
-  const [addQuestionToPaper] = useQueryAndMutation({
+  const [addQuestionToPaper, addQuestionState] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddQuestionToPaperMutation,
   });
@@ -492,11 +537,13 @@ export default function CreatePaperWizard({
 
   // ── Derived validation ───────────────────────────────────────────────
   const totalMarks =
-    mode === 'create'
-      ? Number(formik.values.totalMarks) || 0
-      : paper?.totalMarks || Number(formik.values.totalMarks) || 0;
+    isReadOnly
+      ? paper?.totalMarks || Number(formik.values.totalMarks) || 0
+      : Number(formik.values.totalMarks) || paper?.totalMarks || 0;
   const durationMinutes =
-    mode === 'create' ? Number(formik.values.durationMinutes) || 0 : paper?.durationMinutes || 0;
+    isReadOnly
+      ? paper?.durationMinutes || Number(formik.values.durationMinutes) || 0
+      : Number(formik.values.durationMinutes) || paper?.durationMinutes || 0;
 
   const chapterMarksSum = Object.values(blueprintRules).reduce((sum, r) => sum + (r.marks || 0), 0);
   const difficultySum = Object.values(difficultyDist).reduce((s, v) => s + v, 0);
@@ -667,6 +714,9 @@ export default function CreatePaperWizard({
         instructions: sec.instructions || '',
         marks: Number(sec.marks) || 0,
         sortOrder: idx + 1,
+        questionType: sec.questionType || null,
+        questionCount: sec.questionCount ?? null,
+        marksPerQuestion: sec.marksPerQuestion ?? null,
       }));
       const saveResults = await Promise.allSettled([
         // Send the full known body so a replace-style PUT does not drop fields.
@@ -704,16 +754,27 @@ export default function CreatePaperWizard({
         }).unwrap(),
       ]);
 
-      const failedSaveCount = saveResults.filter((result) => result.status === 'rejected').length;
-      if (failedSaveCount === 0) {
-        markSaved();
-      } else {
-        // Keep the local pattern available so the remaining wizard steps can be tested even
-        // when the backend save endpoint is temporarily unavailable (for example, HTTP 500).
-        shikshaMitraToast.warning({
-          message: 'Pattern save failed. Continuing with the current values for testing.',
-        });
+      const updateResult = saveResults[0];
+      if (updateResult.status === 'fulfilled') {
+        const savedSections = getPaperSections(updateResult.value);
+        if (savedSections.length === sections.length) {
+          setSections((current) =>
+            current.map((section, index) => ({
+              ...section,
+              id: savedSections[index].id || section.id,
+            }))
+          );
+        }
       }
+
+      const failedSaveCount = saveResults.filter((result) => result.status === 'rejected').length;
+      if (failedSaveCount > 0) {
+        shikshaMitraToast.error({
+          message: 'Pattern could not be saved. Fix the error and try again.',
+        });
+        return;
+      }
+      markSaved();
     }
 
     goToStep(2);
@@ -724,31 +785,133 @@ export default function CreatePaperWizard({
   const handleStep3Continue = () => goToStep(4);
 
   const handleSubmit = async () => {
-    if (!selectedPaperId) return;
+    if (!selectedPaperId || isReadOnly) return;
+    if (blockingCount > 0) {
+      shikshaMitraToast.error({
+        message: 'Fix all blocking validation issues before submitting the paper.',
+      });
+      return;
+    }
     try {
+      await refetchPaperDetails().unwrap();
       await submitPaper({ id: selectedPaperId }).unwrap();
       shikshaMitraToast.success({ message: 'Paper submitted for review.' });
       dispatch(setIsChanges(false));
       onClose();
     } catch (err: any) {
-      shikshaMitraToast.error({ message: err?.data?.detail || 'Failed to submit paper.' });
+      shikshaMitraToast.error({
+        message: getApiErrorMessage(err, 'Failed to submit paper.'),
+      });
     }
   };
 
   // ── Question handlers (Step 3) ───────────────────────────────────────
   const currentTotalQuestions = sections.reduce((s, sec) => s + (sec.questions?.length || 0), 0);
 
+  const handleAddQuestions = async (bankQuestionsToAdd: QuestionItem[], sectionId: string) => {
+    if (!selectedPaperId) return;
+    const targetSection = sections.find((section) => section.id === sectionId) || sections[0];
+    if (!targetSection) return;
+
+    const existingIds = new Set(
+      sections.flatMap((section) =>
+        (section.questions || []).map((question) => question.questionBankItemId || question.id)
+      )
+    );
+    const questionsToAdd = bankQuestionsToAdd.filter(
+      (question) => !existingIds.has(question.questionBankItemId || question.id)
+    );
+    if (questionsToAdd.length === 0) return;
+
+    const optimisticQuestions = questionsToAdd.map((question, index) => ({
+      ...question,
+      id: `q-batch-${Date.now()}-${index}`,
+      questionNumber: (targetSection.questions?.length || 0) + index + 1,
+    }));
+    setSections((previous) =>
+      previous.map((section) =>
+        section.id === targetSection.id
+          ? { ...section, questions: [...(section.questions || []), ...optimisticQuestions] }
+          : section
+      )
+    );
+    dispatch(setIsChanges(true));
+
+    const results: PromiseSettledResult<unknown>[] = [];
+    for (let index = 0; index < questionsToAdd.length; index += 1) {
+      const question = questionsToAdd[index];
+      try {
+        const response = await addQuestionToPaper({
+          paperId: selectedPaperId,
+          body: {
+            questionPaperSectionId: targetSection.id,
+            questionBankItemId: question.questionBankItemId || question.id,
+            questionNumber: currentTotalQuestions + index + 1,
+            marks: question.marks,
+            sortOrder: currentTotalQuestions + index + 1,
+          },
+        }).unwrap();
+        results.push({ status: 'fulfilled', value: response });
+      } catch (reason) {
+        results.push({ status: 'rejected', reason });
+      }
+    }
+    const failedIndexes = new Set(
+      results.flatMap((result, index) => (result.status === 'rejected' ? [index] : []))
+    );
+    const failedOptimisticIds = new Set(
+      optimisticQuestions
+        .filter((_, index) => failedIndexes.has(index))
+        .map((question) => question.id)
+    );
+
+    setSections((previous) =>
+      previous.map((section) => {
+        if (section.id !== targetSection.id) return section;
+        return {
+          ...section,
+          questions: (section.questions || [])
+            .filter((question) => !failedOptimisticIds.has(question.id))
+            .map((question) => {
+              const optimisticIndex = optimisticQuestions.findIndex((item) => item.id === question.id);
+              if (optimisticIndex < 0 || failedIndexes.has(optimisticIndex)) return question;
+              const result = results[optimisticIndex];
+              if (result.status !== 'fulfilled') return question;
+              const response = result.value as any;
+              const savedId = response?.id || response?.paperQuestionId || response?.data?.id || response?.data?.paperQuestionId;
+              return savedId ? { ...question, id: savedId } : question;
+            }),
+        };
+      })
+    );
+
+    if (failedIndexes.size > 0) {
+      shikshaMitraToast.warning({
+        message: `${questionsToAdd.length - failedIndexes.size} question(s) added; ${failedIndexes.size} failed.`,
+      });
+    } else {
+      shikshaMitraToast.success({
+        message: `${questionsToAdd.length} question(s) added to ${targetSection.sectionName}.`,
+      });
+      dispatch(setIsChanges(false));
+      markSaved();
+    }
+  };
+
   const handleAddQuestion = async (bankQuestion: QuestionItem, sectionId: string) => {
     if (!selectedPaperId) return;
     const targetSection = sections.find((s) => s.id === sectionId) || sections[0];
     if (!targetSection) return;
+
+    const previousSections = sections;
+    const optimisticQuestionId = `q-${Date.now()}`;
 
     setSections((prev) =>
       prev.map((sec) => {
         if (sec.id !== targetSection.id) return sec;
         const newQuestion: QuestionItem = {
           ...bankQuestion,
-          id: `q-${Date.now()}`,
+          id: optimisticQuestionId,
           questionNumber: (sec.questions?.length || 0) + 1,
         };
         return { ...sec, questions: [...(sec.questions || []), newQuestion] };
@@ -757,38 +920,62 @@ export default function CreatePaperWizard({
     dispatch(setIsChanges(true));
 
     try {
-      await addQuestionToPaper({
+      const savedQuestion = (await addQuestionToPaper({
         paperId: selectedPaperId,
         body: {
           questionPaperSectionId: targetSection.id,
-          questionBankItemId: bankQuestion.id,
+          questionBankItemId: bankQuestion.questionBankItemId || bankQuestion.id,
           questionNumber: currentTotalQuestions + 1,
           marks: bankQuestion.marks,
           sortOrder: currentTotalQuestions + 1,
         },
-      }).unwrap();
+      }).unwrap()) as any;
+      const savedQuestionId =
+        savedQuestion?.id ||
+        savedQuestion?.paperQuestionId ||
+        savedQuestion?.data?.id ||
+        savedQuestion?.data?.paperQuestionId;
+      if (savedQuestionId) {
+        setSections((prev) =>
+          prev.map((section) => ({
+            ...section,
+            questions: (section.questions || []).map((question) =>
+              question.id === optimisticQuestionId
+                ? { ...question, id: savedQuestionId }
+                : question
+            ),
+          }))
+        );
+      }
       shikshaMitraToast.success({ message: `✓ Question added to ${targetSection.sectionName}` });
       dispatch(setIsChanges(false));
       markSaved();
-    } catch {
-      // Keep the optimistic local state; server sync will reconcile on next open.
+    } catch (err: any) {
+      setSections(previousSections);
+      shikshaMitraToast.error({
+        message: err?.data?.detail || 'Failed to add question to the paper.',
+      });
     }
   };
 
   const handleRemoveQuestion = async (paperQuestionId: string) => {
+    const previousSections = sections;
     setSections((prev) =>
       prev.map((sec) => ({
         ...sec,
         questions: (sec.questions || []).filter((q) => q.id !== paperQuestionId),
       }))
     );
-    if (selectedPaperId) {
+    const isTemporaryQuestionId = /^(q-|pq-)/.test(paperQuestionId);
+    if (selectedPaperId && !isTemporaryQuestionId) {
       try {
         await removeQuestionFromPaper({ paperId: selectedPaperId, paperQuestionId }).unwrap();
         shikshaMitraToast.success({ message: 'Question removed from paper.' });
       } catch {
         // Fallback silently — matches existing behavior.
       }
+    } else if (isTemporaryQuestionId) {
+      shikshaMitraToast.success({ message: 'Question removed from paper.' });
     }
   };
 
@@ -965,6 +1152,7 @@ export default function CreatePaperWizard({
             libraryFilters={questionLibraryFilters}
             onLibraryFiltersChange={setQuestionLibraryFilters}
             onAddQuestion={handleAddQuestion}
+            onAddQuestions={(questions, sectionId) => handleAddQuestions(questions, sectionId)}
             onRemoveQuestion={handleRemoveQuestion}
             onMoveQuestion={handleMoveQuestion}
             onMoveQuestionToSection={handleMoveQuestionToSection}
@@ -972,6 +1160,7 @@ export default function CreatePaperWizard({
             onReplaceQuestion={handleReplaceQuestion}
             onSaveDraft={handleStep1Continue}
             isSavingDraft={updateState.isLoading || blueprintState.isLoading}
+            isAddingQuestions={addQuestionState.isLoading}
             readOnly={isReadOnly}
           />
         );
@@ -1077,7 +1266,29 @@ export default function CreatePaperWizard({
           </Button>
         );
       case 4:
-        return null;
+        if (isReadOnly) return null;
+        return (
+          <Stack direction="row" spacing={1.25} alignItems="center">
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => goToStep(3)}
+              startIcon={<Iconify icon="mdi:eye-outline" width={17} />}
+            >
+              Preview Paper
+            </Button>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              disabled={blockingCount > 0}
+              loading={submitState.isLoading}
+              onClick={handleSubmit}
+              startIcon={<Iconify icon="mdi:send-outline" width={17} />}
+            >
+              Submit for Review
+            </LoadingButton>
+          </Stack>
+        );
       default:
         return null;
     }
