@@ -24,6 +24,7 @@ import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
+import { useUpdateHomeworkStatusMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 import {
   Box,
   Tab,
@@ -548,6 +549,11 @@ const LessonPlanScreen = () => {
       type: 'mutation',
       currentQueryAndMutation: useCreateHomeworkFromLessonPlanMutation,
     });
+  const [updateHomeworkStatus, { isLoading: isPublishingHomeworkFromPlan }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useUpdateHomeworkStatusMutation,
+    });
   const [createTeacherDiary, { isLoading: isCreatingDiary }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateTeacherDiaryMutation,
@@ -1018,7 +1024,7 @@ const LessonPlanScreen = () => {
     setHomeworkTouched(false);
   };
 
-  const saveHomeworkFromPlan = async () => {
+  const saveHomeworkFromPlan = async (mode: 'draft' | 'publish' | 'schedule') => {
     if (!homeworkPlan) return;
     setHomeworkTouched(true);
 
@@ -1032,7 +1038,7 @@ const LessonPlanScreen = () => {
     }
 
     try {
-      await createHomeworkFromLessonPlan({
+      const response = await createHomeworkFromLessonPlan({
         id: homeworkPlan.id,
         body: {
           academicMediumId: currentMedium.id,
@@ -1045,14 +1051,35 @@ const LessonPlanScreen = () => {
         },
       }).unwrap();
 
+      const createdHomeworkId = response?.data?.id || response?.id;
+      if (mode === 'publish') {
+        if (!createdHomeworkId) {
+          throw new Error('The created homework ID was not returned.');
+        }
+        await updateHomeworkStatus({ homeworkId: createdHomeworkId, status: 1 }).unwrap();
+      }
+
       closeHomeworkFromPlan();
-      shikshaMitraToast.success({ message: 'Homework created from lesson plan successfully.' });
+      shikshaMitraToast.success({
+        message:
+          mode === 'publish'
+            ? 'Homework created and published successfully.'
+            : mode === 'schedule'
+              ? 'Homework created and scheduled successfully.'
+              : 'Homework saved as draft successfully.',
+      });
     } catch (err: any) {
       shikshaMitraToast.error({
         message: err?.data?.error?.message || 'Failed to create homework from lesson plan.',
       });
     }
   };
+
+  const shouldScheduleHomework = Boolean(
+    homeworkForm.publishAt && homeworkForm.publishAt.isAfter(dayjs())
+  );
+  const isSavingHomeworkFromPlan =
+    isCreatingHomeworkFromPlan || isPublishingHomeworkFromPlan;
 
   const handleSaveLesson = useCallback(
     async (form: LessonFormState, submitAfterSave: boolean) => {
@@ -2253,18 +2280,26 @@ const LessonPlanScreen = () => {
           <LoadingButton
             size="small"
             variant="contained"
-            loading={isCreatingHomeworkFromPlan}
-            startIcon={<Iconify icon="mdi:book-plus-outline" />}
-            onClick={saveHomeworkFromPlan}
-            sx={{
-              bgcolor: 'text.primary',
-              color: 'background.paper',
-              borderRadius: 1,
-              px: 2,
-              '&:hover': { bgcolor: 'text.secondary' },
-            }}
+            loading={isSavingHomeworkFromPlan}
+            startIcon={<Iconify icon={GlobalIcons.submit} width={18} height={18} />}
+            onClick={() => saveHomeworkFromPlan('draft')}
           >
-            Create Homework
+            Save Draft
+          </LoadingButton>
+          <LoadingButton
+            size="small"
+            variant="contained"
+            loading={isSavingHomeworkFromPlan}
+            startIcon={
+              <Iconify
+                icon={shouldScheduleHomework ? 'solar:calendar-mark-bold' : GlobalIcons.publish}
+              />
+            }
+            onClick={() =>
+              saveHomeworkFromPlan(shouldScheduleHomework ? 'schedule' : 'publish')
+            }
+          >
+            {shouldScheduleHomework ? 'Schedule Publish' : 'Publish Now'}
           </LoadingButton>
         </Stack>
       </CustomDialog>

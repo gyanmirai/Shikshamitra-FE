@@ -1,10 +1,11 @@
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, TextField, ButtonBase, Typography } from '@mui/material';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { RubricCriterionScoringProps } from './rubricEvaluationTypes';
 
 const RubricPerformanceMatrix = ({
@@ -12,6 +13,7 @@ const RubricPerformanceMatrix = ({
   values,
   onMarksChange,
   onCommentsChange,
+  readOnly,
 }: RubricCriterionScoringProps) => {
   const levels = React.useMemo(
     () => [...rubric.performanceLevels].sort((left, right) => right.level - left.level),
@@ -80,6 +82,7 @@ const RubricPerformanceMatrix = ({
 
           return (
             <ButtonBase
+              disabled={readOnly}
               aria-label={`${criterion.title}: ${level.label}, ${level.score} points`}
               aria-pressed={selected}
               onClick={() => onMarksChange(criterion.id, String(level.score))}
@@ -90,7 +93,8 @@ const RubricPerformanceMatrix = ({
                 borderColor: selected ? 'primary.main' : 'divider',
                 borderRadius: 1,
                 bgcolor: selected ? 'primary.lighter' : 'background.paper',
-                '&:hover': { bgcolor: selected ? 'primary.lighter' : 'action.hover' },
+                cursor: readOnly ? 'default' : 'pointer',
+                '&:hover': { bgcolor: selected ? 'primary.lighter' : readOnly ? 'background.paper' : 'action.hover' },
               }}
             >
               <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -116,6 +120,7 @@ const RubricPerformanceMatrix = ({
           <TextField
             fullWidth
             size="small"
+            disabled={readOnly}
             label={`${criterion.title} feedback`}
             value={values[criterion.id]?.comments ?? ''}
             onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
@@ -127,7 +132,7 @@ const RubricPerformanceMatrix = ({
         ),
       },
     ],
-    [levels, onCommentsChange, onMarksChange, values]
+    [levels, onCommentsChange, onMarksChange, readOnly, values]
   );
 
   return (

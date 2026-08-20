@@ -3,11 +3,12 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { Box, Stack, Typography } from '@mui/material';
+import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -16,10 +17,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import {
   useGetHomeworkSubmissionsQuery,
   useUpdateHomeworkSubmissionFeedbackMutation,
@@ -81,6 +80,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   });
   // State to track the currently selected student for individual grading
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>();
+  const [isEditMode, setIsEditMode] = useState(true);
 
   // Dialog control for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
@@ -228,8 +228,18 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     }
   };
 
-  const openStudent = React.useCallback(
+  const openStudentForEdit = React.useCallback(
     (row: any) => {
+      setIsEditMode(true);
+      setSelectedStudent(getSubmissionStudent(row));
+      viewSubmissionDialog.onTrue();
+    },
+    [getSubmissionStudent, viewSubmissionDialog]
+  );
+
+  const openStudentForView = React.useCallback(
+    (row: any) => {
+      setIsEditMode(false);
       setSelectedStudent(getSubmissionStudent(row));
       viewSubmissionDialog.onTrue();
     },
@@ -261,52 +271,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           tableId="student-submissions"
           noDataText="Homework Submission Data Not Found"
           columns={[
-            // {
-            //   id: 'checkBox',
-            //   align: 'center',
-            //   minWidth: '60px',
-            //   isSort: false,
-            //   sticky: true,
-            //   isFilter: false,
-            //   label: '',
-            //   renderColumn() {
-            //     return (
-            //       <Checkbox
-            //         checked={
-            //           studentData?.length > 0 && selectedStudents?.length === studentData?.length
-            //         }
-            //         indeterminate={
-            //           selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
-            //         }
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents(studentData || []);
-            //           } else {
-            //             setSelectedStudents([]);
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            //   render(value, row) {
-            //     const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
-
-            //     return (
-            //       <Checkbox
-            //         checked={isChecked}
-            //         onChange={(e) => {
-            //           e.stopPropagation();
-
-            //           if (e.target.checked) {
-            //             setSelectedStudents([...selectedStudents, row]);
-            //           } else {
-            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            // },
             {
               id: 'studentName',
               label: 'Student Name/Gr No.',
@@ -371,8 +335,11 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 return (
                   <Box
                     onClick={() => {
-                      setSelectedStudent(getSubmissionStudent(row));
-                      viewSubmissionDialog.onTrue();
+                      if (canAdd) {
+                        openStudentForEdit(row);
+                      } else {
+                        openStudentForView(row);
+                      }
                     }}
                     sx={{
                       cursor: 'pointer',
@@ -384,7 +351,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                     }}
                   >
                     <CustomTooltip
-                      title={text || 'Click to add feedback'}
+                      title={text || (canAdd ? 'Click to add feedback' : 'View feedback')}
                       arrow
                       sx={{ textAlign: 'justify' }}
                     >
@@ -403,42 +370,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                           fontStyle: text ? 'normal' : 'italic',
                         }}
                       >
-                        {text || 'Add feedback'}
+                        {text || (canAdd ? 'Add feedback' : '-')}
                       </Typography>
                     </CustomTooltip>
                   </Box>
                 );
               },
             },
-            // {
-            //   id: 'remarks',
-            //   label: 'Remarks',
-            //   align: 'left',
-            //   minWidth: 150,
-            //   render: (value, row) => {
-            //     const text = value && value !== '-' ? value : null;
-            //     return (
-            //       <CustomTooltip title={text || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
-            //         <Typography
-            //           variant="caption"
-            //           fontSize="13px"
-            //           noWrap
-            //           sx={{
-            //             maxWidth: 150,
-            //             overflow: 'hidden',
-            //             textOverflow: 'ellipsis',
-            //             whiteSpace: 'nowrap',
-            //             display: 'block',
-            //             color: text ? 'text.primary' : 'text.secondary',
-            //             fontStyle: text ? 'normal' : 'italic',
-            //           }}
-            //         >
-            //           {text || 'No remarks'}
-            //         </Typography>
-            //       </CustomTooltip>
-            //     );
-            //   },
-            // },
             {
               id: 'submissionStatusLabel',
               label: 'Submission Status',
@@ -463,7 +401,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             {
               id: 'actions',
               label: 'Actions',
-              minWidth: 90,
+              minWidth: 100,
               isSort: false,
               isFilter: false,
               align: 'center',
@@ -474,7 +412,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                     row={row}
                     canAdd={canAdd}
                     taskSubmissionType={selectedHomework?.submissionType}
-                    onOpen={openStudent}
+                    onView={openStudentForView}
+                    onEdit={openStudentForEdit}
                   />
                 );
               },
@@ -499,16 +438,22 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedStudent?.feedback ? 'Edit Feedback' : 'Add Feedback'}
+              {!isEditMode
+                ? 'View Homework Submission & Feedback'
+                : selectedStudent?.feedback
+                  ? 'Edit Feedback'
+                  : 'Add Feedback'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
               title={
-                selectedStudent?.feedback
-                  ? 'You can modify the feedback given to the student for their homework submission.'
-                  : "You can provide feedback for the student's homework submission."
+                !isEditMode
+                  ? 'View student submission details and feedback in read-only mode.'
+                  : selectedStudent?.feedback
+                    ? 'You can modify the feedback given to the student for their homework submission.'
+                    : "You can provide feedback for the student's homework submission."
               }
             >
               <Iconify
@@ -526,13 +471,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       >
         <AssignGrade
           data={selectedStudent}
-          onClose={() => {
-            viewSubmissionDialog.onFalse();
-            setTimeout(() => {
-              setSelectedStudent(null);
-            }, 300);
-          }}
-          isEdit
+          onClose={handleClose}
+          isEdit={isEditMode}
           homeworkId={selectedHomework?.id}
           hasPrevious={selectedIndex > 0}
           hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}

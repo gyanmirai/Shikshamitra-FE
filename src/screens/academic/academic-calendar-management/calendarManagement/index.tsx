@@ -330,13 +330,39 @@ const CalendarManagement = () => {
     }
   }, [calendars]);
 
-  // Sync Month View's active month to calendar start date
+  // Sync Month View's active month to the current ongoing month (or calendar start/end date if out of range)
   React.useEffect(() => {
     const startD = selectedCalendar?.startDate || currentBoard?.startDate;
-    if (startD) {
-      setCurrentMonth(dayjs(startD));
+    const endD = selectedCalendar?.endDate || currentBoard?.endDate;
+    const now = dayjs();
+
+    if (startD && endD) {
+      const start = dayjs(startD);
+      const end = dayjs(endD);
+      if (now.isSameOrAfter(start, 'month') && now.isSameOrBefore(end, 'month')) {
+        setCurrentMonth(now);
+      } else if (now.isBefore(start, 'month')) {
+        setCurrentMonth(start);
+      } else {
+        setCurrentMonth(end);
+      }
+    } else if (startD) {
+      const start = dayjs(startD);
+      if (now.isSameOrAfter(start, 'month')) {
+        setCurrentMonth(now);
+      } else {
+        setCurrentMonth(start);
+      }
+    } else {
+      setCurrentMonth(now);
     }
-  }, [selectedCalendarId, selectedCalendar?.startDate, currentBoard?.startDate]);
+  }, [
+    selectedCalendarId,
+    selectedCalendar?.startDate,
+    selectedCalendar?.endDate,
+    currentBoard?.startDate,
+    currentBoard?.endDate,
+  ]);
 
   // Handlers
 

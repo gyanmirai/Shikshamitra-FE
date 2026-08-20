@@ -153,12 +153,14 @@ export const buildExamPlanningIssues = (values: any): ExamPlanningIssue[] => {
         const a = activeAssignments[i];
         const b = activeAssignments[j];
 
-        const isSameSlot = a.subjectId === b.subjectId;
+        // Divisions taking the same subject can share the same room
+        if (a.subjectId === b.subjectId) continue;
+
         const isSameDay =
           a.examDate && b.examDate && dayjs(a.examDate).isSame(dayjs(b.examDate), 'day');
 
-        let isOverlapping = isSameSlot;
-        if (!isOverlapping && isSameDay && a.startTime && a.endTime && b.startTime && b.endTime) {
+        let isOverlapping = false;
+        if (isSameDay && a.startTime && a.endTime && b.startTime && b.endTime) {
           const tStartA = dayjs(a.startTime);
           const tEndA = dayjs(a.endTime);
           const tStartB = dayjs(b.startTime);
@@ -183,9 +185,7 @@ export const buildExamPlanningIssues = (values: any): ExamPlanningIssue[] => {
                 step: 2,
                 severity: 'blocking',
                 title: `Room conflict in ${a.subjectName}`,
-                description: isSameSlot
-                  ? `Same room is assigned to multiple divisions simultaneously for ${a.subjectName}.`
-                  : `Room conflict between ${a.subjectName} and ${b.subjectName} during overlapping exam hours.`,
+                description: `Room conflict between ${a.subjectName} and ${b.subjectName} during overlapping exam hours.`,
               });
             }
           }

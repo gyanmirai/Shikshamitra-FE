@@ -549,10 +549,7 @@ const AuditAnalyticsView = ({ logs }: Props) => {
                     sx={{
                       p: 1.25,
                       borderRadius: 2,
-                      bgcolor: alpha(
-                        theme.palette.background.neutral || theme.palette.action.hover,
-                        0.5
-                      ),
+                      bgcolor: 'background.paper',
                       border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
                     }}
                   >

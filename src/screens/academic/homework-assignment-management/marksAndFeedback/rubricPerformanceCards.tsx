@@ -15,6 +15,7 @@ const RubricPerformanceCards = ({
   values,
   onMarksChange,
   onCommentsChange,
+  readOnly,
 }: RubricCriterionScoringProps) => (
   <Stack spacing={1} sx={{ display: { xs: 'flex', sm: 'none' } }}>
     {rubric.criteria.map((criterion) => {
@@ -47,6 +48,7 @@ const RubricPerformanceCards = ({
             <ToggleButtonGroup
               fullWidth
               exclusive
+              disabled={readOnly}
               orientation="vertical"
               value={value.marks}
               onChange={(_event, marks: string | null) => {
@@ -58,6 +60,7 @@ const RubricPerformanceCards = ({
                 <ToggleButton
                   key={`${level.level}-${level.label}`}
                   value={String(level.score)}
+                  disabled={readOnly}
                   aria-label={`${level.label}, ${level.score} points`}
                   sx={{ minHeight: 48, justifyContent: 'space-between', px: 1.5 }}
                 >
@@ -72,6 +75,7 @@ const RubricPerformanceCards = ({
             <TextField
               fullWidth
               size="small"
+              disabled={readOnly}
               label={`${criterion.title} Feedback`}
               value={value.comments}
               onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
