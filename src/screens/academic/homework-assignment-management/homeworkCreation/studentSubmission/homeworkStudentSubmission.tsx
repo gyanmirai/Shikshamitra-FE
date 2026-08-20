@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { Box, Stack, Typography } from '@mui/material';
@@ -510,11 +511,18 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                   : "You can provide feedback for the student's homework submission."
               }
             >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              <Iconify
+                icon={GlobalIcons.info}
+                width={16}
+                height={16}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+              />
             </CustomTooltip>
           </Box>
         }
-        maxWidth="sm"
+        maxWidth="md"
+        paperProps={{ sx: { height: { sm: 'min(90vh, 900px)' } } }}
       >
         <AssignGrade
           data={selectedStudent}
@@ -537,7 +545,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           isSelectedInPerson={isSelectedInPerson}
           ensureInPersonSubmissionId={ensureInPersonSubmissionId}
         />
-
       </CustomDialog>
     </Box>
   );

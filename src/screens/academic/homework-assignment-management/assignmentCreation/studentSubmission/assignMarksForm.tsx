@@ -221,12 +221,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
           onSubmit={formik.handleSubmit}
         >
-          <Scrollbar sx={{ height: '500px', p: 2 }}>
-            <Grid container spacing={1}>
+          <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
+            <Grid container spacing={1.5}>
               {/* Student Profile Section */}
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
                 <Card
                   sx={{
+                    width: 1,
                     p: 0,
                     overflow: 'hidden',
                     boxShadow: 'none',
@@ -288,9 +289,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               </Grid>
 
               {/* ── Student Submission (File) ── */}
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
                 <Card
                   sx={{
+                    width: 1,
                     p: 0,
                     overflow: 'hidden',
                     boxShadow: 'none',
@@ -404,151 +406,155 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               </Grid>
 
               {/* Evaluation & Marks Section */}
-              {requiresMarks && <Grid size={{ xs: 12 }}>
-                <Card
-                  sx={{
-                    p: 0,
-                    overflow: 'hidden',
-                    boxShadow: 'none',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <Box
+              {requiresMarks && (
+                <Grid size={{ xs: 12, md: 5 }} sx={{ display: 'flex' }}>
+                  <Card
                     sx={{
-                      px: 2,
-                      py: 1.25,
-                      bgcolor: 'background.neutral',
-                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                      width: 1,
+                      p: 0,
+                      overflow: 'hidden',
+                      boxShadow: 'none',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <Typography
-                      variant="overline"
+                    <Box
                       sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.75,
-                        color: 'text.secondary',
-                        letterSpacing: 0.8,
+                        px: 2,
+                        py: 1.25,
+                        bgcolor: 'background.neutral',
+                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                       }}
                     >
-                      <Iconify icon="solar:star-bold" width={16} sx={{ color: 'warning.main' }} />
-                      Evaluation & Marks
-                    </Typography>
-                  </Box>
+                      <Typography
+                        variant="overline"
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.75,
+                          color: 'text.secondary',
+                          letterSpacing: 0.8,
+                        }}
+                      >
+                        <Iconify icon="solar:star-bold" width={16} sx={{ color: 'warning.main' }} />
+                        Evaluation & Marks
+                      </Typography>
+                    </Box>
 
-                  <Box sx={{ p: 2 }}>
-                    <Grid container spacing={1}>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <ShakingTextField
-                          error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}
-                        >
-                          <TextField
-                            label="Total Marks"
-                            fullWidth
-                            name="totalMarks"
-                            disabled
-                            size="small"
-                            value={formik.values.totalMarks}
-                            onChange={formik.handleChange}
-                            error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                            helperText={formik.touched.totalMarks && formik.errors.totalMarks}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks)}>
-                          <TextField
-                            label="Obtained Marks *"
-                            fullWidth
-                            type="number"
-                            name="marks"
-                            inputRef={marksInputRef}
-                            disabled={!isEdit}
-                            placeholder={`0-${totalMarks}`}
-                            inputProps={{ min: 0, max: formik.values.totalMarks }}
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <Typography
-                                    variant="caption"
-                                    sx={{ color: 'text.disabled', whiteSpace: 'nowrap' }}
-                                  >
-                                    / {totalMarks}
-                                  </Typography>
-                                </InputAdornment>
-                              ),
-                            }}
-                            onKeyDown={(e) => {
-                              if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
-                            }}
-                            onChange={(e) => {
-                              const { value } = e.target;
-                              setActiveQuickScore(null);
-                              if (value === '') {
-                                formik.setFieldValue('marks', '');
-                                return;
-                              }
-                              const numericValue = parseInt(value, 10);
-                              if (
-                                !Number.isNaN(numericValue) &&
-                                numericValue <= Number(formik.values.totalMarks)
-                              ) {
-                                formik.setFieldValue('marks', numericValue);
-                              }
-                            }}
-                            size="small"
-                            value={formik.values.marks}
-                            error={formik.touched.marks && Boolean(formik.errors.marks)}
-                            helperText={formik.touched.marks && formik.errors.marks}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-
-                      {/* Quick Score Shortcuts */}
-                      <Grid size={{ xs: 12 }}>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {quickScores.map((qs) => (
-                            <Chip
-                              key={qs.key}
-                              label={qs.label}
+                    <Box sx={{ p: 2 }}>
+                      <Grid container spacing={1}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <ShakingTextField
+                            error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}
+                          >
+                            <TextField
+                              label="Total Marks"
+                              fullWidth
+                              name="totalMarks"
+                              disabled
                               size="small"
-                              variant={activeQuickScore === qs.key ? 'filled' : 'outlined'}
-                              color={activeQuickScore === qs.key ? 'primary' : 'default'}
-                              onClick={() => handleQuickScore(qs.key, qs.value)}
-                              disabled={!isEdit}
-                              sx={{
-                                cursor: isEdit ? 'pointer' : 'not-allowed',
-                                fontWeight: activeQuickScore === qs.key ? 600 : 400,
-                                transition: (theme) =>
-                                  theme.transitions.create([
-                                    'background-color',
-                                    'color',
-                                    'border-color',
-                                  ]),
-                                ...(activeQuickScore !== qs.key && {
-                                  borderColor: (theme) =>
-                                    varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
-                                  '&:hover': {
-                                    borderColor: 'text.primary',
-                                    bgcolor: (theme) =>
-                                      varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-                                  },
-                                }),
-                              }}
+                              value={formik.values.totalMarks}
+                              onChange={formik.handleChange}
+                              error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                              helperText={formik.touched.totalMarks && formik.errors.totalMarks}
                             />
-                          ))}
-                        </Stack>
+                          </ShakingTextField>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks)}>
+                            <TextField
+                              label="Obtained Marks *"
+                              fullWidth
+                              type="number"
+                              name="marks"
+                              inputRef={marksInputRef}
+                              disabled={!isEdit}
+                              placeholder={`0-${totalMarks}`}
+                              inputProps={{ min: 0, max: formik.values.totalMarks }}
+                              InputProps={{
+                                endAdornment: (
+                                  <InputAdornment position="end">
+                                    <Typography
+                                      variant="caption"
+                                      sx={{ color: 'text.disabled', whiteSpace: 'nowrap' }}
+                                    >
+                                      / {totalMarks}
+                                    </Typography>
+                                  </InputAdornment>
+                                ),
+                              }}
+                              onKeyDown={(e) => {
+                                if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
+                              }}
+                              onChange={(e) => {
+                                const { value } = e.target;
+                                setActiveQuickScore(null);
+                                if (value === '') {
+                                  formik.setFieldValue('marks', '');
+                                  return;
+                                }
+                                const numericValue = parseInt(value, 10);
+                                if (
+                                  !Number.isNaN(numericValue) &&
+                                  numericValue <= Number(formik.values.totalMarks)
+                                ) {
+                                  formik.setFieldValue('marks', numericValue);
+                                }
+                              }}
+                              size="small"
+                              value={formik.values.marks}
+                              error={formik.touched.marks && Boolean(formik.errors.marks)}
+                              helperText={formik.touched.marks && formik.errors.marks}
+                            />
+                          </ShakingTextField>
+                        </Grid>
+
+                        {/* Quick Score Shortcuts */}
+                        <Grid size={{ xs: 12 }}>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            {quickScores.map((qs) => (
+                              <Chip
+                                key={qs.key}
+                                label={qs.label}
+                                size="small"
+                                variant={activeQuickScore === qs.key ? 'filled' : 'outlined'}
+                                color={activeQuickScore === qs.key ? 'primary' : 'default'}
+                                onClick={() => handleQuickScore(qs.key, qs.value)}
+                                disabled={!isEdit}
+                                sx={{
+                                  cursor: isEdit ? 'pointer' : 'not-allowed',
+                                  fontWeight: activeQuickScore === qs.key ? 600 : 400,
+                                  transition: (theme) =>
+                                    theme.transitions.create([
+                                      'background-color',
+                                      'color',
+                                      'border-color',
+                                    ]),
+                                  ...(activeQuickScore !== qs.key && {
+                                    borderColor: (theme) =>
+                                      varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
+                                    '&:hover': {
+                                      borderColor: 'text.primary',
+                                      bgcolor: (theme) =>
+                                        varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                                    },
+                                  }),
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </Box>
-                </Card>
-              </Grid>}
+                    </Box>
+                  </Card>
+                </Grid>
+              )}
 
               {/* Feedback Section */}
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 12, md: requiresMarks ? 7 : 12 }} sx={{ display: 'flex' }}>
                 <Card
                   sx={{
+                    width: 1,
                     p: 0,
                     overflow: 'hidden',
                     boxShadow: 'none',
@@ -677,7 +683,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           <Divider />
 
           <DialogActions sx={{ bgcolor: 'background.paper', p: 2 }}>
-
             <Button
               variant="outlined"
               color="inherit"

@@ -1888,38 +1888,6 @@ const SubstitutionManagementScreen = () => {
       shikshaMitraToast.success({
         message: `Teacher unavailability saved. ${created.affectedLectureCount} affected lecture(s) detected.`,
       });
-
-      if (created.affectedLectureCount > 0) {
-        try {
-          const affectedRes = await getAffectedLectures({
-            teacherId: availabilityForm.teacherId || undefined,
-            teacherName: availabilityForm.teacherName,
-            availabilityDate: payloadDate,
-            startTime,
-            endTime,
-            isFullDay: availabilityForm.isFullDay,
-            reason: availabilityForm.reason || 'Teacher Unavailable',
-            maxResultCount: 100,
-          }).unwrap();
-          const firstAffected = affectedRes.items
-            .map(mapApiAffectedLecture)
-            .find((item) => item.canCreateSubstitution !== false);
-
-          if (firstAffected) {
-            openSubstitutionForLecture(firstAffected, {
-              availabilityDate: availabilityForm.availabilityDate || dayjs(),
-              teacherId: availabilityForm.teacherId,
-              teacherName: availabilityForm.teacherName,
-              reason: availabilityForm.reason || 'Teacher Unavailable',
-              remarks: availabilityForm.remarks,
-              sourceType: availabilityForm.sourceType,
-              closeAvailabilityDialog: true,
-            });
-          }
-        } catch {
-          // If auto-fetch fails, user can manually open substitution from affected lectures
-        }
-      }
     } catch (error) {
       const message = resolveDutyActionErrorMessage(error, 'Unable to save teacher availability.');
       setAvailabilityError(message);
@@ -1930,7 +1898,6 @@ const SubstitutionManagementScreen = () => {
     availabilityEndTime,
     hasAvailabilityFieldErrors,
     createTeacherAvailability,
-    getAffectedLectures,
     teacherAvailability,
     currentYear?.id,
   ]);

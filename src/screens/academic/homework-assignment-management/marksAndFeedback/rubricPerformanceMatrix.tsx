@@ -1,16 +1,10 @@
-import {
-  Paper,
-  Table,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  Typography,
-  TableContainer,
-} from '@mui/material';
+import React from 'react';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, TextField, ButtonBase, Typography } from '@mui/material';
 
-import RubricPerformanceMatrixRow from './rubricPerformanceMatrixRow';
-
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { RubricCriterionScoringProps } from './rubricEvaluationTypes';
 
 const RubricPerformanceMatrix = ({
@@ -19,57 +13,138 @@ const RubricPerformanceMatrix = ({
   onMarksChange,
   onCommentsChange,
 }: RubricCriterionScoringProps) => {
-  const levels = [...rubric.performanceLevels].sort((left, right) => right.level - left.level);
+  const levels = React.useMemo(
+    () => [...rubric.performanceLevels].sort((left, right) => right.level - left.level),
+    [rubric.performanceLevels]
+  );
+
+  const columns = React.useMemo<IColumn[]>(
+    () => [
+      {
+        id: 'title',
+        label: 'Criterion',
+        minWidth: 190,
+        width: '26%',
+        isSort: false,
+        isFilter: false,
+        render: (_value, criterion) => (
+          <Stack spacing={0.5}>
+            <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap">
+              <Typography variant="body2" fontWeight={600}>
+                {criterion.title}
+              </Typography>
+              <Label color={criterion.isRequired ? 'primary' : 'default'}>
+                {criterion.isRequired ? 'Required' : 'Optional'}
+              </Label>
+            </Stack>
+            {criterion.description ? (
+              <Typography variant="caption" color="text.secondary">
+                {criterion.description}
+              </Typography>
+            ) : null}
+            {criterion.teacherGuidance ? (
+              <Typography variant="caption" color="info.main">
+                Guidance: {criterion.teacherGuidance}
+              </Typography>
+            ) : null}
+          </Stack>
+        ),
+      },
+      ...levels.map((level): IColumn => ({
+        id: `level-${level.level}`,
+        label: (
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" fontWeight={700} color="text.primary">
+              {level.label}
+            </Typography>
+            <Typography variant="caption" display="block" color="text.secondary">
+              {level.score} {level.score === 1 ? 'point' : 'points'}
+            </Typography>
+          </Box>
+        ),
+        align: 'center',
+        minWidth: 90,
+        isSort: false,
+        isFilter: false,
+        render: (_value, criterion) => {
+          const available = level.score <= criterion.maxMarks;
+          const selected = values[criterion.id]?.marks === String(level.score);
+
+          if (!available) {
+            return (
+              <Typography variant="body2" color="text.disabled" aria-label="Not available">
+                —
+              </Typography>
+            );
+          }
+
+          return (
+            <ButtonBase
+              aria-label={`${criterion.title}: ${level.label}, ${level.score} points`}
+              aria-pressed={selected}
+              onClick={() => onMarksChange(criterion.id, String(level.score))}
+              sx={{
+                width: '100%',
+                minHeight: 44,
+                border: 1,
+                borderColor: selected ? 'primary.main' : 'divider',
+                borderRadius: 1,
+                bgcolor: selected ? 'primary.lighter' : 'background.paper',
+                '&:hover': { bgcolor: selected ? 'primary.lighter' : 'action.hover' },
+              }}
+            >
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                {selected ? (
+                  <Iconify icon="solar:check-circle-bold" color="primary.main" width={18} />
+                ) : null}
+                <Typography variant="body2" fontWeight={selected ? 700 : 500}>
+                  {level.score}
+                </Typography>
+              </Stack>
+            </ButtonBase>
+          );
+        },
+      })),
+      {
+        id: 'comments',
+        label: 'Criterion Feedback',
+        minWidth: 230,
+        width: '30%',
+        isSort: false,
+        isFilter: false,
+        render: (_value, criterion) => (
+          <TextField
+            fullWidth
+            size="small"
+            label={`${criterion.title} feedback`}
+            value={values[criterion.id]?.comments ?? ''}
+            onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
+            placeholder="Add focused feedback"
+            multiline
+            minRows={1}
+            maxRows={3}
+          />
+        ),
+      },
+    ],
+    [levels, onCommentsChange, onMarksChange, values]
+  );
 
   return (
-    <TableContainer
-      component={Paper}
-      variant="outlined"
-      sx={{ display: { xs: 'none', sm: 'block' }, borderRadius: 1 }}
-    >
-      <Table
-        size="small"
-        aria-label="Rubric performance scoring matrix"
-        sx={{ tableLayout: 'fixed' }}
-      >
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ width: '28%', fontWeight: 700 }}>Criterion</TableCell>
-            {levels.map((level) => (
-              <TableCell
-                key={`${level.level}-${level.label}`}
-                align="center"
-                sx={{ fontWeight: 700 }}
-              >
-                <Typography variant="caption" fontWeight={700} color="text.primary">
-                  {level.label}
-                </Typography>
-                <Typography variant="caption" display="block" color="text.secondary">
-                  {level.score} {level.score === 1 ? 'point' : 'points'}
-                </Typography>
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-
-        <TableBody>
-          {rubric.criteria.map((criterion) => {
-            const value = values[criterion.id] ?? { marks: '', comments: '' };
-
-            return (
-              <RubricPerformanceMatrixRow
-                key={criterion.id}
-                criterion={criterion}
-                levels={levels}
-                value={value}
-                onMarksChange={onMarksChange}
-                onCommentsChange={onCommentsChange}
-              />
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+      <CustomizableTable
+        tableId="rubric-performance-scoring"
+        tableTitle="Rubric performance scoring"
+        columns={columns}
+        data={rubric.criteria}
+        isSearch={false}
+        isFilter={false}
+        isPagination={false}
+        isShowedDense={false}
+        wrapperProps={{ sx: { minHeight: 'auto' } }}
+        tableContainerProps={{ sx: { maxHeight: 420 } }}
+      />
+    </Box>
   );
 };
 
