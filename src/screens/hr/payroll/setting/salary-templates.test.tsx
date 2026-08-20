@@ -55,6 +55,9 @@ vi.mock('next/navigation', () => ({
 vi.mock('src/routes/components', () => ({
   RouterLink: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a>,
 }));
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
 vi.mock('src/utils/permissions', () => ({
   hasGrantedPermission: (_permissions: unknown, permission: string) =>
     [...mocks.permissions].some((action) => permission.endsWith(`.${action}`)),
