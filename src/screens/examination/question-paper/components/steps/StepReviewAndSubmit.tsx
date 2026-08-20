@@ -34,27 +34,22 @@ export default function StepReviewAndSubmit({
   return (
     <Box
       sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: 'minmax(0, 1fr)',
-          xl: 'minmax(0, 1.65fr) minmax(380px, 0.85fr)',
-        },
+        display: 'flex',
+        flexDirection: 'column',
         alignItems: 'start',
-        gap: { xs: 3, xl: 4 },
+        gap: 3,
         width: '100%',
-        maxWidth: 1600,
+        maxWidth: 1200,
         mx: 'auto',
       }}
     >
-      <Box sx={{ minWidth: 0 }}>
+      <Box sx={{ minWidth: 0, width: '100%' }}>
         <StepCheckValidate results={results} onGoToStep={onGoToStep} />
       </Box>
       <Box
         sx={{
           minWidth: 0,
-          position: { xl: 'sticky' },
-          top: { xl: 0 },
-          alignSelf: 'start',
+          width: '100%',
         }}
       >
         <StepSubmit
@@ -68,6 +63,7 @@ export default function StepReviewAndSubmit({
           isSubmitting={isSubmitting}
           readOnly={readOnly}
           showIssueLink={false}
+          hideActions
         />
       </Box>
     </Box>

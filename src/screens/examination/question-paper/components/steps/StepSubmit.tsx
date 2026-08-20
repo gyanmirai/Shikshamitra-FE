@@ -21,6 +21,7 @@ interface StepSubmitProps {
   isSubmitting?: boolean;
   readOnly?: boolean;
   showIssueLink?: boolean;
+  hideActions?: boolean;
 }
 
 export default function StepSubmit({
@@ -34,6 +35,7 @@ export default function StepSubmit({
   isSubmitting = false,
   readOnly = false,
   showIssueLink = true,
+  hideActions = false,
 }: StepSubmitProps) {
   const canSubmit = blockingCount === 0 && !readOnly;
 
@@ -162,7 +164,7 @@ export default function StepSubmit({
         )}
       </Paper>
 
-      {canSubmit && (
+      {!hideActions && canSubmit && (
         <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap>
           {onPreview && (
             <LoadingButton
@@ -186,7 +188,7 @@ export default function StepSubmit({
           </LoadingButton>
         </Stack>
       )}
-      {!canSubmit && onPreview && (
+      {!hideActions && !canSubmit && onPreview && (
         <LoadingButton
           variant="outlined"
           size="large"

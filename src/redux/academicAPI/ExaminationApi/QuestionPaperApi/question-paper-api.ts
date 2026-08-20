@@ -58,7 +58,9 @@ export const questionPaperApi = academicApi.injectEndpoints({
     }),
     publishQuestionPaper: builder.mutation({
       query: ({ id }) => ({ url: `/academics/question-papers/${id}/publish`, method: 'POST' }),
-      invalidatesTags: [academicType.questionPaper, academicType.questionBank, academicType.chapter],
+      // The builder already updates its local question list. Do not refetch the active
+      // question-bank query after every add; that causes the library to flash a loader.
+      invalidatesTags: [academicType.questionPaper],
     }),
     lockQuestionPaper: builder.mutation({
       query: ({ id }) => ({ url: `/academics/question-papers/${id}/lock`, method: 'POST' }),
@@ -102,7 +104,9 @@ export const questionPaperApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.questionPaper, academicType.questionBank, academicType.chapter],
+      // The builder updates its local question list. Refresh the paper when the wizard saves;
+      // refetching during each add causes stale-state conflicts in a multi-add flow.
+      invalidatesTags: [],
     }),
     removeQuestionFromPaper: builder.mutation({
       query: ({ paperId, paperQuestionId }) => ({
@@ -110,7 +114,8 @@ export const questionPaperApi = academicApi.injectEndpoints({
         method: 'POST',
         body: paperQuestionId,
       }),
-      invalidatesTags: [academicType.questionPaper, academicType.questionBank, academicType.chapter],
+      // The builder updates its local question list. Refresh the paper when the wizard saves.
+      invalidatesTags: [],
     }),
     reorderPaperQuestions: builder.mutation({
       query: ({ paperId, body }) => ({

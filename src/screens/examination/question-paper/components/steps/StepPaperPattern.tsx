@@ -78,7 +78,14 @@ export default function StepPaperPattern({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<SectionDraftValues | null>(null);
 
-  const marksAllocated = sections.reduce((sum, sec) => sum + (sec.marks || 0), 0);
+  const marksAllocated = sections.reduce((sum, sec) => {
+    const isConfigured =
+      sec.questionType != null ||
+      sec.questionCount != null ||
+      sec.marksPerQuestion != null ||
+      (sec.questions?.length || 0) > 0;
+    return sum + (isConfigured ? sec.marks || 0 : 0);
+  }, 0);
   const remaining = totalMarks - marksAllocated;
   const patternComplete = sections.length > 0 && Math.abs(remaining) < 0.01;
   const totalQuestions = sections.reduce(

@@ -248,10 +248,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     [currentTime, publishedRows]
   );
   const ongoingCount = Number(publishedExamsData?.ongoingCount ?? derivedOngoingCount);
-  const publishedCount = Math.max(
-    0,
-    Number(publishedExamsData?.publishedCount ?? publishedRows.length) - ongoingCount
-  );
+  // `publishedCount` is the API lifecycle count. Ongoing is a derived view over
+  // published exams, so do not subtract it here or the tab count will disagree
+  // with the rows returned by the Published endpoint.
+  const publishedCount = Number(publishedExamsData?.publishedCount ?? publishedRows.length);
 
   const TABS = useMemo(
     () => [
@@ -305,17 +305,24 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   };
 
   // Ongoing is a derived view over the Published lifecycle status. Keep the raw
-  // status for actions/API calls and expose a view-ready status for the table.
+  // lifecycle status authoritative for the normal tabs so a valid API row (for
+  // example, "Question Paper") cannot disappear because the summary endpoint's
+  // date range differs from its detailed subject schedule. Only the Ongoing tab
+  // applies the client-side time window.
   const tableData = useMemo(
-    () =>
-      filterExamsByEffectiveStatus(
-        getExams?.data?.items || [],
-        Number(activeStatus ?? examScheduledStatus.Pending) as examScheduledStatus,
-        currentTime
-      ).map((row) => ({
+    () => {
+      const rows = getExams?.data?.items || [];
+      const requestedStatus = Number(activeStatus ?? examScheduledStatus.Pending) as examScheduledStatus;
+      const visibleRows =
+        requestedStatus === examScheduledStatus.Ongoing
+          ? filterExamsByEffectiveStatus(rows, requestedStatus, currentTime)
+          : rows.filter((row: any) => Number(row.status) === requestedStatus);
+
+      return visibleRows.map((row: any) => ({
         ...row,
         effectiveStatus: getEffectiveExamStatus(row, currentTime),
-      })),
+      }));
+    },
     [activeStatus, currentTime, getExams?.data?.items]
   );
 

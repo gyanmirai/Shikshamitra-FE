@@ -42,6 +42,7 @@ interface StepAddQuestionsProps {
   libraryFilters: QuestionLibraryFilters;
   onLibraryFiltersChange: (filters: QuestionLibraryFilters) => void;
   onAddQuestion: (question: QuestionItem, sectionId: string) => void;
+  onAddQuestions: (questions: QuestionItem[], sectionId: string) => Promise<void>;
   onRemoveQuestion: (questionId: string) => void;
   onMoveQuestion: (questionId: string, direction: 'up' | 'down') => void;
   onMoveQuestionToSection: (questionId: string, targetSectionId: string) => void;
@@ -49,6 +50,7 @@ interface StepAddQuestionsProps {
   onReplaceQuestion: (oldQuestionId: string, newQuestion: QuestionItem) => void;
   onSaveDraft: () => void;
   isSavingDraft?: boolean;
+  isAddingQuestions?: boolean;
   readOnly?: boolean;
 }
 
@@ -63,6 +65,7 @@ export default function StepAddQuestions({
   libraryFilters,
   onLibraryFiltersChange,
   onAddQuestion,
+  onAddQuestions,
   onRemoveQuestion,
   onMoveQuestion,
   onMoveQuestionToSection,
@@ -70,6 +73,7 @@ export default function StepAddQuestions({
   onReplaceQuestion,
   onSaveDraft,
   isSavingDraft = false,
+  isAddingQuestions = false,
   readOnly = false,
 }: StepAddQuestionsProps) {
   const theme = useTheme();
@@ -356,9 +360,13 @@ export default function StepAddQuestions({
       requiredCount={activeSection?.questionCount ?? activeSection?.questions?.length ?? 0}
       requiredMarks={activeSection?.marks ?? 0}
       onAddQuestion={(q) => onAddQuestion(q, activeSectionId || sections[0]?.id || '')}
+      onAddQuestions={(questions) =>
+        onAddQuestions(questions, activeSectionId || sections[0]?.id || '')
+      }
       onFiltersChange={onLibraryFiltersChange}
       isLoading={bankLoading}
       isError={bankError}
+      isAdding={isAddingQuestions}
     />
   );
 
