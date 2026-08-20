@@ -150,6 +150,7 @@ const AssignElectiveSubject = () => {
     assignSubject,
     bulkAssignSubject,
     clearSelections,
+    resetSelections,
     searchTerm,
     setSearchTerm,
     statusFilter,
@@ -225,7 +226,7 @@ const AssignElectiveSubject = () => {
   // DISCARD (RESET)
   // --------------------------------------------
   const handleReset = () => {
-    clearSelections();
+    resetSelections();
     resetDialog.onFalse();
     shikshaMitraToast.success({ message: 'Changes discarded.' });
   };
@@ -261,8 +262,8 @@ const AssignElectiveSubject = () => {
 
   const getLockTooltip = () => {
     if (isLocked) return 'These elective assignments are locked and cannot be modified.';
-    if (!allStudentsAssigned) return 'Assign elective subjects to all students before locking.';
     if (hasUnsavedChanges) return 'Save your changes before locking.';
+    if (!allStudentsAssigned) return 'Assign elective subjects to all students before locking.';
     return 'Review the allocation and lock it.';
   };
 
@@ -292,9 +293,11 @@ const AssignElectiveSubject = () => {
         ]}
         action={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Label color={statusInfo.color} variant="soft">
-              {statusInfo.label}
-            </Label>
+            {!isLocked && electiveGroupId && (
+              <Label color={statusInfo.color} variant="soft">
+                {statusInfo.label}
+              </Label>
+            )}
 
             {electiveGroupId && (
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -305,7 +308,7 @@ const AssignElectiveSubject = () => {
                       color="inherit"
                       size="small"
                       startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-                      disabled={!hasSelections}
+                      disabled={!hasUnsavedChanges}
                       onClick={resetDialog.onTrue}
                     >
                       Discard
@@ -329,9 +332,9 @@ const AssignElectiveSubject = () => {
                     <Button
                       variant="contained"
                       size="small"
-                      color={isLocked ? 'success' : 'error'}
+                      color={isLocked ? 'inherit' : 'error'}
                       startIcon={<Iconify icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon} />}
-                      disabled={isLocked}
+                      disabled={!canLock}
                       onClick={reviewDrawer.onTrue}
                     >
                       {isLocked ? 'Locked' : 'Review & Lock'}

@@ -352,13 +352,15 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.substitutionManagement],
     }),
+    // Teacher duty mutations are invalidated deliberately by the owning dialog after it
+    // closes. Endpoint-level invalidation would refetch subscribed tables while the dialog
+    // is still showing its submit loader, producing two competing loading states.
     acknowledgeSubstitution: builder.mutation<ApiSubstitutionRow, { id: string; reason?: string }>({
       query: ({ id, reason }) => ({
         url: `academics/timetable/substitutions/${id}/acknowledge`,
         method: 'POST',
         body: { reason },
       }),
-      invalidatesTags: [academicType.substitutionManagement],
     }),
     requestSubstitutionChange: builder.mutation<ApiSubstitutionRow, { id: string; reason: string }>(
       {
@@ -367,7 +369,6 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
           method: 'POST',
           body: { reason },
         }),
-        invalidatesTags: [academicType.substitutionManagement],
       }
     ),
     rejectSubstitutionDuty: builder.mutation<ApiSubstitutionRow, { id: string; reason: string }>({
@@ -376,7 +377,6 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'POST',
         body: { reason },
       }),
-      invalidatesTags: [academicType.substitutionManagement],
     }),
     getSuggestedTeachers: builder.query<ApiSuggestedTeacher[], string>({
       query: (id) => ({
