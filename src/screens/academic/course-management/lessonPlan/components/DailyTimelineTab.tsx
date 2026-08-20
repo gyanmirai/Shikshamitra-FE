@@ -119,9 +119,6 @@ const DailyTimelineTab = ({
         onOpenSummaryDrawer={() => setSummaryDrawerOpen(true)}
       />
 
-      {/* ── 2. Subtle, Single-Line Daily Summary Row ── */}
-      <DailySummaryRow stats={dailyStats} isLoading={isLoading} />
-
       {/* ── 3. Main Timeline Area (Cards with Direct Actions, No Attention Banner) ── */}
       {isLoading ? (
         <TimelineSkeleton />
@@ -173,17 +170,6 @@ const DailyTimelineTab = ({
           </Typography>
 
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              startIcon={<Iconify icon="solar:add-circle-bold" width={16} />}
-              onClick={() => onAddLesson(selectedDate)}
-              sx={{ fontWeight: 700 }}
-            >
-              Create Lesson Plan
-            </Button>
-
             <Button
               variant="outlined"
               color="inherit"

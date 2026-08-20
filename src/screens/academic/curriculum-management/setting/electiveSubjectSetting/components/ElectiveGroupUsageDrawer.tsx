@@ -5,22 +5,21 @@ import { useRouter } from 'src/routes/hooks';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
-import { Scrollbar } from 'src/components/scrollbar';
+import CancelButton from 'src/components/cancel-button';
 import CustomTooltip from 'src/components/custom-tooltip';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { academicPaths } from 'src/constants/academic-menu';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
   Card,
   Chip,
-  Alert,
   Stack,
-  Drawer,
   Button,
   Avatar,
   Skeleton,
   Typography,
-  IconButton,
+  DialogActions,
 } from '@mui/material';
 
 import type { IElectiveSubject } from '../type';
@@ -45,6 +44,8 @@ interface ElectiveGroupUsageDrawerProps {
   selectedGroup: IElectiveSubject | null;
   usageData?: ElectiveGroupUsageData | null;
   isLoading?: boolean;
+  onArchive?: (group: IElectiveSubject) => void;
+  canArchive?: boolean;
 }
 
 // ----------------------------------------------------------------------
@@ -69,71 +70,82 @@ const getStatusColor = (status: string): 'success' | 'default' | 'warning' | 'er
   }
 };
 
-interface StatCardItem {
+interface DependencyMetricItem {
   label: string;
-  value: number | string;
+  value: number;
   icon: string;
-  color: 'primary' | 'info' | 'success' | 'warning' | 'error' | 'secondary';
+  color: string;
+  path?: string;
 }
 
-function StatCard({ item }: { item: StatCardItem }) {
-  const theme = useTheme();
-  const paletteColor = (theme.palette as any)[item.color] || theme.palette.primary;
+function DependencyItemRow({
+  item,
+  isEven,
+  isLastRow,
+}: {
+  item: DependencyMetricItem;
+  isEven: boolean;
+  isLastRow: boolean;
+}) {
+  const isZero = item.value === 0;
 
   return (
-    <Card
+    <Box
       sx={{
-        p: 1.75,
+        py: 1.25,
+        px: 1.75,
         display: 'flex',
         alignItems: 'center',
-        gap: 1.5,
-        boxShadow: 'var(--shadows-3)',
-        borderRadius: 2,
+        minHeight: 44,
+        borderBottom: {
+          xs: isLastRow ? 'none' : '1px solid',
+          sm: isLastRow ? 'none' : '1px solid',
+        },
+        borderRight: {
+          xs: 'none',
+          sm: isEven ? '1px solid' : 'none',
+        },
+        borderColor: (t) => alpha(t.palette.grey[500], 0.08),
         bgcolor: 'background.paper',
-        minHeight: 74,
       }}
     >
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 1.75,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          bgcolor: alpha(paletteColor.main, 0.14),
-          color: paletteColor.main,
-        }}
-      >
-        <Iconify icon={item.icon} width={22} height={22} />
-      </Box>
+      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
+        <Iconify
+          icon={item.icon}
+          width={19}
+          height={19}
+          sx={{
+            color: isZero ? 'text.disabled' : item.color,
+            flexShrink: 0,
+          }}
+        />
 
-      <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
-          variant="h6"
-          fontWeight={700}
-          sx={{ lineHeight: 1.15, fontSize: '1.2rem' }}
-          noWrap
+          variant="body2"
+          sx={{
+            fontWeight: 800,
+            fontSize: '14.5px',
+            color: isZero ? 'text.disabled' : 'text.primary',
+            minWidth: 20,
+            lineHeight: 1,
+          }}
         >
           {item.value}
         </Typography>
+
         <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{
-            display: 'block',
-            fontWeight: 500,
-            fontSize: '11.5px',
-            mt: 0.25,
-            lineHeight: 1.2,
-          }}
+          variant="body2"
           noWrap
+          sx={{
+            fontWeight: isZero ? 400 : 500,
+            fontSize: '12.5px',
+            color: isZero ? 'text.secondary' : 'text.primary',
+          }}
         >
           {item.label}
         </Typography>
-      </Box>
-    </Card>
+      </Stack>
+    </Box>
   );
 }
 
@@ -145,6 +157,8 @@ export default function ElectiveGroupUsageDrawer({
   selectedGroup,
   usageData,
   isLoading = false,
+  onArchive,
+  canArchive = false,
 }: ElectiveGroupUsageDrawerProps) {
   const theme = useTheme();
   const router = useRouter();
@@ -207,49 +221,47 @@ export default function ElectiveGroupUsageDrawer({
     ? subjectDistribution
     : subjectDistribution.slice(0, 5);
 
-  const displayedSubjects = showAllSubjects
-    ? normalizedSubjects
-    : normalizedSubjects.slice(0, 6);
+  const displayedSubjects = showAllSubjects ? normalizedSubjects : normalizedSubjects.slice(0, 6);
 
   const hiddenSubjectsCount = normalizedSubjects.length - displayedSubjects.length;
 
-  const statCards: StatCardItem[] = useMemo(
+  const dependencyMetrics: DependencyMetricItem[] = useMemo(
     () => [
       {
-        label: 'Subjects',
+        label: 'Subjects Mapped',
         value: normalizedSubjects.length,
         icon: 'solar:book-bookmark-bold-duotone',
-        color: 'primary',
+        color: theme.palette.primary.main,
       },
       {
         label: 'Class Allocations',
         value: classAllocations,
         icon: 'solar:buildings-3-bold-duotone',
-        color: 'info',
+        color: theme.palette.info.main,
       },
       {
         label: 'Student Selections',
         value: studentSelections,
         icon: 'solar:users-group-two-rounded-bold-duotone',
-        color: 'success',
+        color: theme.palette.success.main,
       },
       {
         label: 'Timetable Periods',
         value: timetablePeriods,
         icon: 'solar:calendar-date-bold-duotone',
-        color: 'warning',
+        color: theme.palette.warning.main,
       },
       {
         label: 'Exam Schedules',
         value: examSchedules,
         icon: 'solar:diploma-verified-bold-duotone',
-        color: 'error',
+        color: theme.palette.error.main,
       },
       {
         label: 'Total Students',
         value: totalStudents,
         icon: 'solar:user-bold-duotone',
-        color: 'primary',
+        color: theme.palette.primary.main,
       },
     ],
     [
@@ -259,52 +271,24 @@ export default function ElectiveGroupUsageDrawer({
       timetablePeriods,
       examSchedules,
       totalStudents,
+      theme.palette,
     ]
   );
 
   return (
-    <Drawer
-      anchor="right"
+    <CustomDialog
       open={open}
-      onClose={onClose}
-      slotProps={{
-        backdrop: {
-          sx: {
-            bgcolor: 'rgba(15, 23, 42, 0.44)',
-            backdropFilter: 'blur(3px)',
-          },
-        },
-      }}
-      PaperProps={{
-        sx: {
-          width: { xs: '100%', sm: 480, md: 520 },
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          boxShadow: '-8px 0 28px -4px rgba(0, 0, 0, 0.12)',
-        },
-      }}
-    >
-      {/* 1. Header (Skill Pattern: Title + CustomTooltip info icon + Status Label + Close) */}
-      <Box
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 1.5,
-          borderBottom: (t) => `1px solid ${t.palette.divider}`,
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
-        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+      handleClose={onClose}
+      hasForm={false}
+      maxWidth="md"
+      title={
+        <Stack direction="row" spacing={1.75} alignItems="center" sx={{ minWidth: 0 }}>
           <Avatar
             sx={{
-              width: 42,
-              height: 42,
+              width: 44,
+              height: 44,
               borderRadius: 1.5,
-              bgcolor: alpha(groupColor, 0.14),
+              bgcolor: alpha(groupColor, 0.12),
               color: groupColor,
               border: `1px solid ${alpha(groupColor, 0.28)}`,
               fontWeight: 700,
@@ -312,147 +296,179 @@ export default function ElectiveGroupUsageDrawer({
           >
             <Iconify icon="solar:layers-bold" width={22} height={22} />
           </Avatar>
-
-          <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Typography
                 variant="subtitle1"
-                sx={{
-                  fontWeight: 700,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  maxWidth: { xs: 200, sm: 240 },
-                }}
+                component="span"
+                sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}
               >
-                {selectedGroup?.name || 'Elective Group'}
+                {selectedGroup?.name || 'Elective Group Details'}
               </Typography>
               <Label color={getStatusColor(statusLabel)} variant="soft" sx={{ height: 20 }}>
                 {statusLabel}
               </Label>
               <CustomTooltip
-                title="Elective Group Dependencies & Usage Across Modules"
+                title="Elective Group Dependencies & System Usage Across Modules"
                 placement="right"
                 arrow
               >
-                <Box component="span" sx={{ display: 'inline-flex', cursor: 'pointer' }}>
+                <Box
+                  component="span"
+                  sx={{ display: 'inline-flex', cursor: 'pointer', verticalAlign: 'middle' }}
+                >
                   <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} />
                 </Box>
               </CustomTooltip>
             </Stack>
-
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
-              {normalizedSubjects.length} {normalizedSubjects.length === 1 ? 'Subject' : 'Subjects'} ·{' '}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'block', mt: 0.35, fontWeight: 500 }}
+            >
+              {normalizedSubjects.length} {normalizedSubjects.length === 1 ? 'Subject' : 'Subjects'}{' '}
+              ·{' '}
               {dependentModuleCount > 0
                 ? `Used across ${dependentModuleCount} module${dependentModuleCount > 1 ? 's' : ''}`
                 : 'No active dependencies'}
             </Typography>
           </Box>
         </Stack>
-
-        <IconButton
-          onClick={onClose}
-          size="small"
-          sx={{
-            p: 0.5,
-            color: 'text.secondary',
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
-        >
-          <Iconify icon="mdi:close" width={20} height={20} />
-        </IconButton>
-      </Box>
-
-      {/* 2. Scrollable Body with Standard Scrollbar */}
-      <Scrollbar
+      }
+      paperProps={{
+        sx: {
+          maxWidth: 640,
+          width: '100%',
+          maxHeight: '90vh',
+          borderRadius: 2,
+        },
+      }}
+    >
+      <DialogScrollContent
         sx={{
-          flex: 1,
-          minHeight: 0,
           bgcolor: 'background.neutral',
-          '& .simplebar-content': {
-            p: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          },
-          p : 2
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          p: 2.5,
         }}
       >
         {isLoading ? (
           <Stack spacing={2}>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 1.25,
-              }}
-            >
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} variant="rounded" height={74} sx={{ borderRadius: 2 }} />
-              ))}
-            </Box>
-            <Skeleton variant="rounded" height={130} sx={{ borderRadius: 2 }} />
-            <Skeleton variant="rounded" height={80} sx={{ borderRadius: 2 }} />
+            <Skeleton variant="rounded" height={140} sx={{ borderRadius: 1.5 }} />
+            <Skeleton variant="rounded" height={100} sx={{ borderRadius: 1.5 }} />
+            <Skeleton variant="rounded" height={120} sx={{ borderRadius: 1.5 }} />
           </Stack>
         ) : (
           <>
-            {/* Usage & Dependencies 2-Column Grid */}
+            {/* 1. Dependencies & Usage (Unified 2-Column Summary List) */}
             <Box>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.25 }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                  Usage & Dependencies
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ mb: 1 }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 700,
+                    color: 'text.secondary',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.6,
+                  }}
+                >
+                  Dependencies & Usage
                 </Typography>
-                <Typography variant="caption" color="text.disabled">
-                  Live Snapshot
+                <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 500 }}>
+                  6 Tracked Metrics
                 </Typography>
               </Stack>
 
               <Box
                 sx={{
+                  border: '1px solid',
+                  borderColor: (t) => alpha(t.palette.grey[500], 0.08),
+                  borderRadius: 1.5,
+                  overflow: 'hidden',
+                  bgcolor: 'background.paper',
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: 1.25,
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
                 }}
               >
-                {statCards.map((card) => (
-                  <StatCard key={card.label} item={card} />
-                ))}
+                {dependencyMetrics.map((metric, idx) => {
+                  const isEven = idx % 2 === 0;
+                  const isLastRow = idx >= dependencyMetrics.length - 2;
+                  return (
+                    <DependencyItemRow
+                      key={metric.label}
+                      item={metric}
+                      isEven={isEven}
+                      isLastRow={isLastRow}
+                    />
+                  );
+                })}
               </Box>
             </Box>
 
-            {/* Mapped Subjects Chip List */}
+            {/* 2. Mapped Subjects Chip List */}
             {normalizedSubjects.length > 0 && (
               <Card
                 sx={{
                   p: 2,
-                  boxShadow: 'var(--shadows-3)',
-                  borderRadius: 2,
+                  borderRadius: 1.5,
+                  border: '1px solid',
+                  borderColor: (t) => alpha(t.palette.grey[500], 0.08),
                   bgcolor: 'background.paper',
+                  boxShadow: 'none',
                 }}
               >
-                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.25 }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontWeight: 700,
-                      color: 'text.secondary',
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    Mapped Subjects ({normalizedSubjects.length})
-                  </Typography>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  sx={{ mb: 1.5 }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box
+                      sx={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                      }}
+                    >
+                      <Iconify icon="solar:book-bookmark-bold-duotone" width={16} height={16} />
+                    </Box>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 700,
+                        color: 'text.secondary',
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      Mapped Subjects ({normalizedSubjects.length})
+                    </Typography>
+                  </Stack>
+
                   {normalizedSubjects.length > 6 && (
                     <Button
                       size="small"
                       variant="text"
                       onClick={() => setShowAllSubjects(!showAllSubjects)}
-                      sx={{ p: 0, minWidth: 0, fontSize: '11.5px' }}
+                      sx={{ p: 0, minWidth: 0, fontSize: '11.5px', fontWeight: 600 }}
                     >
                       {showAllSubjects ? 'Show less' : `View all (${normalizedSubjects.length})`}
                     </Button>
                   )}
                 </Stack>
+
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                   {displayedSubjects.map((subject, idx) => (
                     <Chip
@@ -464,10 +480,14 @@ export default function ElectiveGroupUsageDrawer({
                         height: 28,
                         fontSize: '12px',
                         px: 0.5,
-                        bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
-                        borderColor: (t) => alpha(t.palette.primary.main, 0.24),
+                        bgcolor: alpha(theme.palette.primary.main, 0.06),
+                        borderColor: alpha(theme.palette.primary.main, 0.22),
                         color: 'text.primary',
                         fontWeight: 600,
+                        transition: 'all 0.15s ease',
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.primary.main, 0.12),
+                        },
                       }}
                     />
                   ))}
@@ -481,8 +501,13 @@ export default function ElectiveGroupUsageDrawer({
                         height: 28,
                         fontSize: '12px',
                         cursor: 'pointer',
-                        bgcolor: (t) => alpha(t.palette.grey[500], 0.12),
                         fontWeight: 600,
+                        bgcolor: alpha(theme.palette.grey[500], 0.08),
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.grey[500], 0.16),
+                        },
                       }}
                     />
                   )}
@@ -494,12 +519,19 @@ export default function ElectiveGroupUsageDrawer({
             <Card
               sx={{
                 p: 2,
-                boxShadow: 'var(--shadows-3)',
-                borderRadius: 2,
+                borderRadius: 1.5,
+                border: '1px solid',
+                borderColor: (t) => alpha(t.palette.grey[500], 0.08),
                 bgcolor: 'background.paper',
+                boxShadow: 'none',
               }}
             >
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ mb: 1.5 }}
+              >
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Box
                     sx={{
@@ -515,7 +547,15 @@ export default function ElectiveGroupUsageDrawer({
                   >
                     <Iconify icon="solar:chart-2-bold-duotone" width={16} height={16} />
                   </Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 700,
+                      color: 'text.secondary',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                    }}
+                  >
                     Student Distribution
                   </Typography>
                 </Stack>
@@ -595,7 +635,7 @@ export default function ElectiveGroupUsageDrawer({
                       size="small"
                       variant="text"
                       onClick={() => setShowAllDistribution(!showAllDistribution)}
-                      sx={{ alignSelf: 'flex-start', p: 0, minWidth: 0, fontSize: '12px' }}
+                      sx={{ alignSelf: 'flex-start', p: 0, minWidth: 0, fontSize: '11.5px', fontWeight: 600 }}
                     >
                       {showAllDistribution
                         ? 'Show less'
@@ -619,53 +659,83 @@ export default function ElectiveGroupUsageDrawer({
               )}
             </Card>
 
-            {/* 4. Edit Safety Contextual Alert */}
-            <Alert
-              severity={isInUse ? 'warning' : 'success'}
-              icon={
-                <Iconify
-                  icon={isInUse ? 'solar:shield-warning-bold-duotone' : 'solar:shield-check-bold-duotone'}
-                  width={22}
-                  height={22}
-                />
-              }
+            {/* 4. Dependency / Impact & Restrictions Card */}
+            <Card
               sx={{
-                borderRadius: 2,
+                p: 2,
+                borderRadius: 1.5,
                 border: '1px solid',
-                borderColor: (t) =>
-                  alpha(isInUse ? t.palette.warning.main : t.palette.success.main, 0.35),
-                bgcolor: (t) =>
-                  alpha(isInUse ? t.palette.warning.main : t.palette.success.main, 0.08),
-                '& .MuiAlert-icon': {
-                  color: isInUse ? 'warning.main' : 'success.main',
-                  mr: 1.25,
-                  mt: 0.25,
-                },
-                '& .MuiAlert-message': {
-                  width: '100%',
-                  p: 0,
-                },
+                borderColor: isInUse
+                  ? alpha(theme.palette.warning.main, 0.3)
+                  : alpha(theme.palette.success.main, 0.3),
+                bgcolor: isInUse
+                  ? alpha(theme.palette.warning.main, 0.04)
+                  : alpha(theme.palette.success.main, 0.04),
+                boxShadow: 'none',
               }}
             >
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 700,
-                  mb: 0.5,
-                  color: isInUse ? 'warning.darker' : 'success.darker',
-                }}
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ mb: 1 }}
               >
-                {isInUse
-                  ? 'This elective group is currently in use'
-                  : 'Safe to modify or delete'}
-              </Typography>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: alpha(
+                        isInUse ? theme.palette.warning.main : theme.palette.success.main,
+                        0.12
+                      ),
+                      color: isInUse ? 'warning.main' : 'success.main',
+                    }}
+                  >
+                    <Iconify
+                      icon={
+                        isInUse
+                          ? 'solar:shield-warning-bold-duotone'
+                          : 'solar:shield-check-bold-duotone'
+                      }
+                      width={16}
+                      height={16}
+                    />
+                  </Box>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 700,
+                      color: isInUse ? 'warning.darker' : 'success.darker',
+                    }}
+                  >
+                    {isInUse
+                      ? 'Impact & System Restrictions'
+                      : 'Safe to Modify or Delete'}
+                  </Typography>
+                </Stack>
 
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
+                <Label
+                  color={isInUse ? 'warning' : 'success'}
+                  variant="soft"
+                  sx={{ height: 20, fontSize: '11px' }}
+                >
+                  {isInUse ? 'Restricted Deletion' : 'Fully Modifiable'}
+                </Label>
+              </Stack>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ display: 'block', fontSize: '12.5px', lineHeight: 1.5, mb: isInUse ? 1.5 : 0 }}
+              >
                 {isInUse ? (
                   <>
-                    You can safely edit basic attributes (<strong>Name</strong>,{' '}
-                    <strong>Color</strong>, <strong>Description</strong>). Modifying subjects or
-                    deleting is restricted due to active dependencies.
+                    This elective group is actively referenced by student choices or timetable allocations. Modifying subjects or deletion is restricted while active dependencies exist.
                   </>
                 ) : (
                   'This elective group has no active student or timetable dependencies. You can safely edit structure or delete this group.'
@@ -673,18 +743,18 @@ export default function ElectiveGroupUsageDrawer({
               </Typography>
 
               {isInUse && (
-                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                   <Label color="warning" variant="filled" sx={{ height: 18, fontSize: '10px' }}>
-                    Notice
+                    Recommendation
                   </Label>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    Archive is recommended when no longer required.
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    Archive when this elective group is no longer offered in current academic terms.
                   </Typography>
                 </Box>
               )}
-            </Alert>
+            </Card>
 
-            {/* 5. Dependency Navigation Links */}
+            {/* 5. Quick Dependency Action Navigation Links */}
             {isInUse && (
               <Box>
                 <Typography
@@ -712,7 +782,13 @@ export default function ElectiveGroupUsageDrawer({
                         router.push(academicPaths.curriculum.subjectsAssignment);
                       }}
                       startIcon={<Iconify icon="solar:buildings-3-bold" width={14} />}
-                      sx={{ fontSize: '11.5px', bgcolor: 'background.paper' }}
+                      sx={{
+                        fontSize: '11.5px',
+                        bgcolor: 'background.paper',
+                        borderColor: 'divider',
+                        fontWeight: 600,
+                        '&:hover': { bgcolor: 'background.neutral' },
+                      }}
                     >
                       Class Allocations ({classAllocations})
                     </Button>
@@ -728,7 +804,13 @@ export default function ElectiveGroupUsageDrawer({
                         router.push(academicPaths.timetable.management);
                       }}
                       startIcon={<Iconify icon="solar:calendar-date-bold" width={14} />}
-                      sx={{ fontSize: '11.5px', bgcolor: 'background.paper' }}
+                      sx={{
+                        fontSize: '11.5px',
+                        bgcolor: 'background.paper',
+                        borderColor: 'divider',
+                        fontWeight: 600,
+                        '&:hover': { bgcolor: 'background.neutral' },
+                      }}
                     >
                       Timetable ({timetablePeriods})
                     </Button>
@@ -744,7 +826,13 @@ export default function ElectiveGroupUsageDrawer({
                         router.push(academicPaths.examination.schedule);
                       }}
                       startIcon={<Iconify icon="solar:diploma-verified-bold" width={14} />}
-                      sx={{ fontSize: '11.5px', bgcolor: 'background.paper' }}
+                      sx={{
+                        fontSize: '11.5px',
+                        bgcolor: 'background.paper',
+                        borderColor: 'divider',
+                        fontWeight: 600,
+                        '&:hover': { bgcolor: 'background.neutral' },
+                      }}
                     >
                       Examinations ({examSchedules})
                     </Button>
@@ -754,31 +842,42 @@ export default function ElectiveGroupUsageDrawer({
             )}
           </>
         )}
-      </Scrollbar>
+      </DialogScrollContent>
 
-      {/* 3. Sticky Footer (Skill Pattern: size="small" button, startIcon cancel/close icon, right-aligned) */}
-      <Box
+      {/* Sticky Footer */}
+      <DialogActions
         sx={{
           p: 2,
+          px: 2.5,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end',
-          borderTop: (t) => `1px solid ${t.palette.divider}`,
-          bgcolor: 'background.paper',
-          flexShrink: 0,
+          justifyContent: 'space-between',
         }}
       >
-        <Button
-          variant="outlined"
-          color="inherit"
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-          sx={{ px: 2 }}
-        >
-          Close
-        </Button>
-      </Box>
-    </Drawer>
+        <Box>
+          {canArchive && onArchive && statusLabel !== 'Archived' && selectedGroup && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="warning"
+              startIcon={<Iconify icon="solar:archive-bold" width={15} />}
+              onClick={() => {
+                onClose();
+                onArchive(selectedGroup);
+              }}
+              sx={{ fontWeight: 600, fontSize: '12px' }}
+            >
+              Archive Group
+            </Button>
+          )}
+        </Box>
+
+        <CancelButton buttonText="Close" onClick={onClose} />
+      </DialogActions>
+    </CustomDialog>
   );
 }
+

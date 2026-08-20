@@ -93,54 +93,79 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
       .typeError('minimum 3 character required')
       .min(3, 'minimum 3 character required'),
     startDate: Yup.mixed()
-      .required('Start Date is required')
-      .test('valid-date', 'Start Date must be a valid date', (val) =>
-        val ? dayjs(val as any).isValid() : false
+      .nullable()
+      .test(
+        'is-valid-dayjs',
+        'Expected Start Date for all Division must be a valid date',
+        (val) => !val || dayjs(val as any).isValid()
       )
       .test(
-        'min-start',
+        'min-date',
         () =>
-          `Start Date must be on or after ${dayjs(currentYear?.startDate).format('DD/MM/YYYY')}`,
-        (val) =>
           currentYear?.startDate
-            ? dayjs(val as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-            : true
+            ? `Start Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} (academic year start)`
+            : 'Start Date is before academic year start',
+        (val) =>
+          !val ||
+          !currentYear?.startDate ||
+          !dayjs(val as any).isBefore(dayjs(currentYear.startDate), 'day')
       )
       .test(
-        'max-start',
-        () => `Start Date must be on or before ${dayjs(currentYear?.endDate).format('DD/MM/YYYY')}`,
-        (val) =>
+        'max-date',
+        () =>
           currentYear?.endDate
-            ? dayjs(val as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-            : true
+            ? `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')} (academic year end)`
+            : 'Start Date is after academic year end',
+        (val) =>
+          !val ||
+          !currentYear?.endDate ||
+          !dayjs(val as any).isAfter(dayjs(currentYear.endDate), 'day')
+      )
+      .test(
+        'no-past-date',
+        'Start Date cannot be in the past',
+        (val) => !val || !dayjs(val as any).isBefore(dayjs(), 'day')
       ),
     endDate: Yup.mixed()
-      .required('End Date is required')
-      .test('valid-date', 'End Date must be a valid date', (val) =>
-        val ? dayjs(val as any).isValid() : false
+      .nullable()
+      .test(
+        'is-valid-dayjs',
+        'Expected End Date for all Division must be a valid date',
+        (val) => !val || dayjs(val as any).isValid()
       )
       // eslint-disable-next-line func-names
-      .test('after-start', 'End Date cannot be before Start Date', function (val) {
+      .test('is-after-start-date', 'End Date cannot be before Start Date', function (val) {
         // eslint-disable-next-line react/no-this-in-sfc
         const { startDate } = this.parent;
         if (!val || !startDate) return true;
-        return dayjs(val as any).isSameOrAfter(dayjs(startDate));
+        return !dayjs(val as any).isBefore(dayjs(startDate), 'day');
       })
       .test(
-        'min-end',
-        () => `End Date must be on or after ${dayjs(currentYear?.startDate).format('DD/MM/YYYY')}`,
-        (val) =>
-          currentYear?.startDate
-            ? dayjs(val as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-            : true
+        'no-past-date',
+        'End Date cannot be in the past',
+        (val) => !val || !dayjs(val as any).isBefore(dayjs(), 'day')
       )
       .test(
-        'max-end',
-        () => `End Date must be on or before ${dayjs(currentYear?.endDate).format('DD/MM/YYYY')}`,
+        'min-date',
+        () =>
+          currentYear?.startDate
+            ? `End Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} (academic year start)`
+            : 'End Date is before academic year start',
         (val) =>
+          !val ||
+          !currentYear?.startDate ||
+          !dayjs(val as any).isBefore(dayjs(currentYear.startDate), 'day')
+      )
+      .test(
+        'max-date',
+        () =>
           currentYear?.endDate
-            ? dayjs(val as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-            : true
+            ? `End Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')} (academic year end)`
+            : 'End Date is after academic year end',
+        (val) =>
+          !val ||
+          !currentYear?.endDate ||
+          !dayjs(val as any).isAfter(dayjs(currentYear.endDate), 'day')
       ),
   });
 
@@ -181,14 +206,12 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
 
       try {
         const chaptersList = values.chapters.map((entry) => {
-          const formattedStartDate = dateConvertor(
-            dayjs(entry.startDate as any).format(dateFormat),
-            false
-          );
-          const formattedEndDate = dateConvertor(
-            dayjs(entry.endDate as any).format(dateFormat),
-            false
-          );
+          const formattedStartDate = entry.startDate
+            ? dateConvertor(dayjs(entry.startDate as any).format(dateFormat), false)
+            : null;
+          const formattedEndDate = entry.endDate
+            ? dateConvertor(dayjs(entry.endDate as any).format(dateFormat), false)
+            : null;
           return {
             assignedSubjectId: subjectId,
             chapterNo: Number(entry.chapterNo),

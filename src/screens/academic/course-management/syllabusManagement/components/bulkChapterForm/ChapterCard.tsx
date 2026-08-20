@@ -238,58 +238,112 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
 
           {/* Start Date */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(touched?.startDate && errors?.startDate)}>
-              <DatePicker
-                label="Start Date *"
-                format="DD/MM/YYYY"
-                value={entry.startDate}
-                standardId={classId}
-                onChange={(val) => {
-                  onChange(entry.uid, 'startDate', val);
-                }}
-                minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
-                maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-                sx={{ minWidth: 180, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    placeholder: 'DD/MM/YYYY',
-                    error: !!(touched?.startDate && errors?.startDate),
-                    helperText: getError('startDate'),
-                    onBlur: () => onBlur(entry.uid, 'startDate'),
-                  },
-                }}
-              />
-            </ShakingTextField>
+            {(() => {
+              const startDateError =
+                touched?.startDate || !!entry.startDate ? errors?.startDate : undefined;
+              return (
+                <ShakingTextField error={!!startDateError}>
+                  <DatePicker
+                    label="Expected Start Date for all Division"
+                    format="DD/MM/YYYY"
+                    value={entry.startDate}
+                    standardId={classId}
+                    disablePast
+                    onChange={(val) => {
+                      onChange(entry.uid, 'startDate', val);
+                    }}
+                    minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                    maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    helperText={
+                      startDateError ||
+                      (currentYear?.startDate && currentYear?.endDate
+                        ? `Must be within ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} – ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`
+                        : undefined)
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        placeholder: 'DD/MM/YYYY',
+                        error: !!startDateError,
+                        onBlur: () => onBlur(entry.uid, 'startDate'),
+                        FormHelperTextProps: {
+                          sx: {
+                            position: 'relative',
+                            bgcolor: 'transparent',
+                            border: 'none',
+                            boxShadow: 'none',
+                            px: 0,
+                            py: 0,
+                            mx: 1.75,
+                            mt: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 400,
+                            color: startDateError ? 'error.main' : 'text.secondary',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              );
+            })()}
           </Grid>
 
           {/* End Date */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(touched?.endDate && errors?.endDate)}>
-              <DatePicker
-                label="End Date *"
-                format="DD/MM/YYYY"
-                value={entry.endDate}
-                standardId={classId}
-                onChange={(val) => {
-                  onChange(entry.uid, 'endDate', val);
-                }}
-                minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
-                maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-                sx={{ minWidth: 180, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    placeholder: 'DD/MM/YYYY',
-                    error: !!(touched?.endDate && errors?.endDate),
-                    helperText: getError('endDate'),
-                    onBlur: () => onBlur(entry.uid, 'endDate'),
-                  },
-                }}
-              />
-            </ShakingTextField>
+            {(() => {
+              const endDateError =
+                touched?.endDate || !!entry.endDate ? errors?.endDate : undefined;
+              return (
+                <ShakingTextField error={!!endDateError}>
+                  <DatePicker
+                    label="Expected End Date for all Division"
+                    format="DD/MM/YYYY"
+                    value={entry.endDate}
+                    standardId={classId}
+                    disablePast
+                    onChange={(val) => {
+                      onChange(entry.uid, 'endDate', val);
+                    }}
+                    minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                    maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    helperText={
+                      endDateError ||
+                      (currentYear?.startDate && currentYear?.endDate
+                        ? `Must be within ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} – ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`
+                        : undefined)
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        placeholder: 'DD/MM/YYYY',
+                        error: !!endDateError,
+                        onBlur: () => onBlur(entry.uid, 'endDate'),
+                        FormHelperTextProps: {
+                          sx: {
+                            position: 'relative',
+                            bgcolor: 'transparent',
+                            border: 'none',
+                            boxShadow: 'none',
+                            px: 0,
+                            py: 0,
+                            mx: 1.75,
+                            mt: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 400,
+                            color: endDateError ? 'error.main' : 'text.secondary',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              );
+            })()}
           </Grid>
         </Grid>
 

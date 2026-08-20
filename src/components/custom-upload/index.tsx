@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
@@ -50,6 +51,9 @@ interface FileUploaderProps<T extends boolean = true> {
   showVisibleDocumentCount?: number;
   parentsProps?: BoxProps;
   dragProps?: BoxProps;
+  isLoading?: boolean;
+  loading?: boolean;
+  disabled?: boolean;
 }
 
 const getAbsoluteFileUrl = (url: string) => {
@@ -158,9 +162,14 @@ const FileUploader = <T extends boolean = true>({
   showVisibleDocumentCount = 3,
   parentsProps = {},
   dragProps = {},
+  isLoading = false,
+  loading = false,
+  disabled = false,
 }: FileUploaderProps<T>) => {
   const { sx: parentSx = {}, ...remainingProps } = parentsProps;
   const { sx = {}, ...dragRemainingProps } = dragProps;
+  const isUploading = Boolean(isLoading || loading);
+  const isDisabled = isUploading || disabled;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const viewDialog = useBoolean();
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
@@ -190,6 +199,7 @@ const FileUploader = <T extends boolean = true>({
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    if (isDisabled) return;
     const dropped = Array.from(e.dataTransfer.files);
     handleFiles(multiple ? (dropped as any) : (dropped[0] as File));
   };
@@ -235,6 +245,7 @@ const FileUploader = <T extends boolean = true>({
   };
 
   const handleFileInput = (e: ChangeEvent<HTMLInputElement>) => {
+    if (isDisabled) return;
     if (e.target.files?.length) {
       handleFiles(multiple ? (Array.from(e.target.files) as any) : e.target.files[0]);
     }
@@ -281,6 +292,7 @@ const FileUploader = <T extends boolean = true>({
   };
 
   const removeFile = (index: number) => {
+    if (isDisabled) return;
     if (Array.isArray(value)) {
       const newFiles = value.filter((_, i) => i !== index);
       onChange(newFiles as any);
@@ -343,17 +355,22 @@ const FileUploader = <T extends boolean = true>({
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <CustomTooltip title="Preview">
-            <IconButton size="small" onClick={() => handlePreview(file)}>
+            <IconButton size="small" onClick={() => handlePreview(file)} disabled={isDisabled}>
               <Iconify icon={GlobalIcons.eye} sx={{ width: 16, height: 16 }} />
             </IconButton>
           </CustomTooltip>
           <CustomTooltip title="Download">
-            <IconButton size="small" onClick={() => downloadFile(file)}>
+            <IconButton size="small" onClick={() => downloadFile(file)} disabled={isDisabled}>
               <Iconify icon={GlobalIcons.download} sx={{ width: 16, height: 16 }} />
             </IconButton>
           </CustomTooltip>
           <CustomTooltip title="Remove">
-            <IconButton size="small" onClick={() => removeFile(i)} sx={{ color: 'error.main' }}>
+            <IconButton
+              size="small"
+              onClick={() => removeFile(i)}
+              disabled={isDisabled}
+              sx={{ color: 'error.main' }}
+            >
               <Iconify icon={GlobalIcons.delete} sx={{ width: 16, height: 16 }} />
             </IconButton>
           </CustomTooltip>
@@ -376,50 +393,67 @@ const FileUploader = <T extends boolean = true>({
           padding: value && (Array.isArray(value) ? value.length > 0 : value) ? 1 : 2,
           borderRadius: 2,
           textAlign: value && (Array.isArray(value) ? value.length > 0 : value) ? 'left' : 'center',
-          cursor: 'pointer',
+          cursor: isDisabled ? 'default' : 'pointer',
           backgroundColor: error ? 'error.lighter' : 'transparent',
           transition: 'all 0.3s ease-in-out',
           display: 'flex',
           justifyContent: 'center',
-          // height: '100%',
-          // flexDirection: !value || (Array.isArray(value) && value.length === 0) ? 'row' : 'column',
           alignItems: 'center',
           gap: 2,
+          opacity: isUploading ? 0.75 : 1,
+          pointerEvents: isDisabled ? 'none' : 'auto',
           height: value && (Array.isArray(value) ? value.length > 0 : value) ? 'auto' : '150px',
           ...sx,
         }}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => {
+          if (!isDisabled) {
+            fileInputRef.current?.click();
+          }
+        }}
         {...dragRemainingProps}
       >
-        <Iconify
-          icon="eva:cloud-upload-fill"
-          width={value && (Array.isArray(value) ? value.length > 0 : value) ? 24 : 28}
-          sx={{
-            color: error ? 'error.main' : 'default.main',
-            transition: 'all 0.3s ease-in-out',
-            // p: 2,
-            borderRadius: 1,
-          }}
-        />
-        {(!value || (Array.isArray(value) && value.length === 0)) && (
-          <Stack spacing={1}>
-            <Typography variant="body2">{primaryText}</Typography>
-            {secondaryText && (
-              <Typography color={error ? 'error' : 'text.secondary'} variant="caption">
-                {secondaryText}
-              </Typography>
+        {isUploading ? (
+          <>
+            <CircularProgress
+              size={value && (Array.isArray(value) ? value.length > 0 : value) ? 22 : 28}
+              sx={{ color: 'primary.main' }}
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+              Uploading document...
+            </Typography>
+          </>
+        ) : (
+          <>
+            <Iconify
+              icon="eva:cloud-upload-fill"
+              width={value && (Array.isArray(value) ? value.length > 0 : value) ? 24 : 28}
+              sx={{
+                color: error ? 'error.main' : 'default.main',
+                transition: 'all 0.3s ease-in-out',
+                borderRadius: 1,
+              }}
+            />
+            {(!value || (Array.isArray(value) && value.length === 0)) && (
+              <Stack spacing={1}>
+                <Typography variant="body2">{primaryText}</Typography>
+                {secondaryText && (
+                  <Typography color={error ? 'error' : 'text.secondary'} variant="caption">
+                    {secondaryText}
+                  </Typography>
+                )}
+                {propertyPr && (
+                  <Typography color="text.secondary" variant="caption">
+                    {propertyPr}
+                  </Typography>
+                )}
+                {error && (
+                  <Typography color="error" variant="caption">
+                    {error}
+                  </Typography>
+                )}
+              </Stack>
             )}
-            {propertyPr && (
-              <Typography color="text.secondary" variant="caption">
-                {propertyPr}
-              </Typography>
-            )}
-            {error && (
-              <Typography color="error" variant="caption">
-                {error}
-              </Typography>
-            )}
-          </Stack>
+          </>
         )}
 
         <input
@@ -428,6 +462,7 @@ const FileUploader = <T extends boolean = true>({
           accept={allowedTypes.join(',')}
           multiple={multiple}
           hidden
+          disabled={isDisabled}
           onChange={handleFileInput}
         />
       </Box>

@@ -137,24 +137,6 @@ export const DayHeaderNavigator: React.FC<Props> = ({
             {selectedDate.format('dddd, DD MMMM YYYY')}
           </Typography>
         </Stack>
-
-        {onOpenSummaryDrawer && (
-          <Button
-            variant="outlined"
-            color="inherit"
-            size="small"
-            startIcon={<Iconify icon="solar:chart-square-bold" width={16} />}
-            onClick={onOpenSummaryDrawer}
-            sx={{
-              fontWeight: 600,
-              fontSize: 12,
-              bgcolor: 'background.paper',
-              border: (t) => `1px solid ${t.palette.divider}`,
-            }}
-          >
-            Day Summary
-          </Button>
-        )}
       </Stack>
     </Stack>
   );

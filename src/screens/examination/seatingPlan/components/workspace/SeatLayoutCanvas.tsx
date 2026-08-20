@@ -424,6 +424,10 @@ export default function SeatLayoutCanvas({
                             const student = assignment
                               ? studentsById.get(assignment.studentId)
                               : undefined;
+                            const isExternalExamOccupied =
+                              !!assignment?.isExternalExamOccupied ||
+                              !!student?.isExternalExamOccupied ||
+                              !!seat.isExternalExamOccupied;
 
                             return (
                               <SeatCard
@@ -435,6 +439,7 @@ export default function SeatLayoutCanvas({
                                 rollNo={student?.rollNo}
                                 divisionName={student?.divisionName}
                                 isConflict={conflictSeatIds.has(seat.seatId)}
+                                isExternalExamOccupied={isExternalExamOccupied}
                                 onClick={() => handleSeatClick(seat)}
                                 onRemove={() => assignment && onUnassign(assignment.studentId)}
                                 onReserve={() => onToggleReserve?.(room.roomId, seat)}

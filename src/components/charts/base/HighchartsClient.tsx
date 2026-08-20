@@ -14,7 +14,7 @@ import { ensureHighchartsModules, Highcharts } from './highchartsModules';
 // fully-loaded namespace.
 ensureHighchartsModules();
 if (typeof window !== 'undefined') {
-  setHighcharts(Highcharts as any);
+  setHighcharts(Highcharts);
 }
 
 type Props = {
@@ -26,6 +26,7 @@ export const HighchartsClient = forwardRef<HighchartsReactRefObject, Props>(
   ({ options, containerProps }, ref) => (
     <Chart
       ref={ref as any}
+      highcharts={Highcharts}
       options={options as any}
       containerProps={containerProps ?? { style: { width: '100%', height: '100%' } }}
     />

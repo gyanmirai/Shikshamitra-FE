@@ -620,6 +620,8 @@ const AssignElectiveSubject = () => {
         subjectCapacity={subjectCapacity}
         preferenceMatchPct={summary.preferenceMatchPct}
         canLock={canLock}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isLocked={isLocked}
         isLocking={isLocking}
         onConfirmLock={() => {
           reviewDrawer.onFalse();

@@ -17,7 +17,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -32,6 +32,7 @@ import { serializeAssignmentFormData } from 'src/redux/academicAPI/HomeworkAssig
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   evaluationUsesMarks,
+  AssignmentStatus,
   AssignmentEvaluationMethod,
   ASSIGNMENT_EVALUATION_METHOD_OPTIONS,
 } from 'src/enums/assignment';
@@ -57,6 +58,7 @@ import {
   useAddAssignmentMutation,
   useGetAssignmentByIdQuery,
   useUpdateAssignmentMutation,
+  useUpdateAssignmentStatusMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import {
   RubricStatus,
@@ -196,6 +198,12 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
   const overrideDialog = useBoolean();
   const [pendingAssignmentTypeId, setPendingAssignmentTypeId] = useState<string | null>(null);
   const [pendingSubmitValues, setPendingSubmitValues] = useState<AssignmentFormValues | null>(null);
+  const submitModeRef = useRef<'draft' | 'publish' | 'schedule'>('draft');
+
+  useEffect(() => {
+    // A reopened form must never inherit a previous Publish Now selection.
+    submitModeRef.current = 'draft';
+  }, [editData?.id]);
 
   const [uploadCurriculumFile] = useQueryAndMutation({
     type: 'mutation',
@@ -218,6 +226,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
   const [updateAssignment, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateAssignmentMutation,
+  });
+  const [updateAssignmentStatus, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateAssignmentStatusMutation,
   });
   const [createRubricFromTemplate, { isLoading: isRubricCopyLoading }] =
     useCreateRubricFromTemplateMutation();
@@ -311,9 +323,6 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
 
       const response = await addAssignment({ academicMediumId: medium.id, body }).unwrap();
       const createdAssignmentId = response.data.id;
-      shikshaMitraToast.success({
-        message: `Assignment "${values.title.trim()}" has been created successfully.`,
-      });
 
       if (
         values.evaluationMethod === AssignmentEvaluationMethod.Rubric &&
@@ -335,6 +344,22 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           });
         }
       }
+
+      if (submitModeRef.current === 'publish') {
+        await updateAssignmentStatus({
+          assignmentId: createdAssignmentId,
+          status: AssignmentStatus.Published,
+        }).unwrap();
+      }
+
+      shikshaMitraToast.success({
+        message:
+          submitModeRef.current === 'publish'
+            ? `Assignment "${values.title.trim()}" has been published successfully.`
+            : submitModeRef.current === 'schedule'
+              ? `Assignment "${values.title.trim()}" has been scheduled successfully.`
+              : `Assignment "${values.title.trim()}" has been saved as draft.`,
+      });
 
       onClose(null, true);
     } catch (error: unknown) {
@@ -361,6 +386,9 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
       await saveAssignment(values);
     },
   });
+
+  const firstPublishDate = formik.values.divisions?.[0]?.publishDate;
+  const shouldSchedule = !!firstPublishDate && dayjs(firstPublishDate).isAfter(dayjs());
 
   // Update divisions when class changes in form
   useEffect(() => {
@@ -1214,7 +1242,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           <LoadingButton
             size="small"
             variant="contained"
-            loading={isAddLoading || isUpdateLoading || isRubricCopyLoading}
+            loading={isAddLoading || isUpdateLoading || isPublishLoading || isRubricCopyLoading}
             startIcon={
               <Iconify
                 icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -1223,10 +1251,30 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
               />
             }
             type="button"
-            onClick={formik.submitForm}
+            onClick={() => {
+              submitModeRef.current = 'draft';
+              formik.submitForm();
+            }}
           >
-            {editData ? 'Update' : 'Create'}
+            {editData ? 'Update Draft' : 'Save Draft'}
           </LoadingButton>
+          {!editData && (
+            <LoadingButton
+              type="button"
+              variant="contained"
+              size="small"
+              loading={isAddLoading || isUpdateLoading || isPublishLoading || isRubricCopyLoading}
+              startIcon={
+                <Iconify icon={shouldSchedule ? 'solar:calendar-mark-bold' : GlobalIcons.publish} />
+              }
+              onClick={() => {
+                submitModeRef.current = shouldSchedule ? 'schedule' : 'publish';
+                formik.submitForm();
+              }}
+            >
+              {shouldSchedule ? 'Schedule Publish' : 'Publish Now'}
+            </LoadingButton>
+          )}
         </Box>
         <DocumentPreviewDialog
           open={!!previewDoc}
@@ -1321,7 +1369,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
             <LoadingButton
               type="button"
               size="small"
-              loading={isAddLoading || isUpdateLoading || isRubricCopyLoading}
+              loading={isAddLoading || isUpdateLoading || isPublishLoading || isRubricCopyLoading}
               variant="contained"
               color="warning"
               startIcon={<Iconify icon={GlobalIcons.submit} />}
