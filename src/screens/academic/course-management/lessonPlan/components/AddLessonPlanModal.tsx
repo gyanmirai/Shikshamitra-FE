@@ -482,7 +482,7 @@ const AddLessonPlanModal = ({
           academicYear: editData.academicYear || '2026-27',
           teacherName: editData.teacherName || '',
           teacherId: (editData as any).teacherId || '',
-          className: editData.className || '',
+          className: editData.className || (editData as any).standardName || '',
           divisionName: editData.divisionName || '',
           subjectName: editData.subjectName || '',
           chapterName: editData.chapterName || '',
@@ -498,7 +498,7 @@ const AddLessonPlanModal = ({
           template: '',
           source: editData.source || 'Manual',
           timetableSlotId: (editData as any).timetableSlotId || '',
-          standardId: (editData as any).standardId || '',
+          standardId: (editData as any).standardId || (editData as any).classId || '',
           divisionId: (editData as any).divisionId || '',
           subjectId: (editData as any).subjectId || '',
           chapterId: (editData as any).chapterId || '',
@@ -602,7 +602,6 @@ const AddLessonPlanModal = ({
     }),
     [form]
   );
-
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={currentValues}>
       <CustomDialog

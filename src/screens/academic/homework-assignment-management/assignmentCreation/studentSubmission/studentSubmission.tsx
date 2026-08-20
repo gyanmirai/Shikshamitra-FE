@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -452,7 +453,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                       <Typography
                         variant="caption"
                         fontSize="13px"
-                        sx={{ color: 'text.disabled', fontStyle: 'italic', p: 0.5, display: 'block' }}
+                        sx={{
+                          color: 'text.disabled',
+                          fontStyle: 'italic',
+                          p: 0.5,
+                          display: 'block',
+                        }}
                       >
                         No submission
                       </Typography>
@@ -565,7 +571,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           }, 300);
         }}
         title={
-          <Box display="flex" flexDirection="row" alignItems="center" justifyContent="space-between" sx={{ width: 1, gap: 2 }}>
+          <Box
+            display="flex"
+            flexDirection="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ width: 1, gap: 2 }}
+          >
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">
                 {usesRubric
@@ -585,7 +597,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                       : "Provide feedback for the student's assignment submission."
                 }
               >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                <Iconify
+                  icon={GlobalIcons.info}
+                  width={16}
+                  height={16}
+                  sx={{ cursor: 'pointer' }}
+                  color="info.main"
+                />
               </CustomTooltip>
             </Box>
             <Stack direction="row" spacing={1} sx={{ mr: 1, flexShrink: 0 }}>
@@ -616,7 +634,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             </Stack>
           </Box>
         }
-        maxWidth="sm"
+        maxWidth="md"
+        paperProps={{ sx: { height: { sm: 'min(90vh, 900px)' } } }}
         hasForm={false}
       >
         {usesRubric &&
