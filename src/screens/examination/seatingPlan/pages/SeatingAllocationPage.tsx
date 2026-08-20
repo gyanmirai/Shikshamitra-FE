@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { varAlpha } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
@@ -34,8 +35,10 @@ import {
   TextField,
   Typography,
   DialogActions,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -89,6 +92,7 @@ import type {
 
 interface Props {
   examId: string;
+  initialStandardId?: string;
   onClose?: () => void;
   onOpenReview?: (context: {
     divisionId: string;
@@ -107,6 +111,7 @@ const shakeAnimation = keyframes`
 
 export default function SeatingAllocationPage({
   examId,
+  initialStandardId,
   onClose,
   onOpenReview,
   onDirtyStateChange,
@@ -119,7 +124,7 @@ export default function SeatingAllocationPage({
     `${academicPermissions.examination.seatAllocation}.AutoAllocate`
   );
 
-  const [standardId, setStandardId] = useState('');
+  const [standardId, setStandardId] = useState(initialStandardId ?? '');
   const [division, setDivision] = useState('');
   const [activeRoomId, setActiveRoomId] = useState('');
   const roomNameByIdRef = useRef(new Map<string, string>());
@@ -134,10 +139,14 @@ export default function SeatingAllocationPage({
   const [isSubjectWiseMode, setIsSubjectWiseMode] = useState(false);
 
   useEffect(() => {
+    if (initialStandardId) {
+      setStandardId(initialStandardId);
+      return;
+    }
     const allClasses =
       currentMedium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [];
     if (!standardId) setStandardId(allClasses[0]?.id || '');
-  }, [currentMedium, standardId]);
+  }, [currentMedium, initialStandardId, standardId]);
 
   // ── Queries via useQueryAndMutation (skill § 4.1) ───────────────────────
   const {
@@ -199,6 +208,8 @@ export default function SeatingAllocationPage({
     data: planDraftData,
     isLoading: isPlanDraftLoading,
     isFetching: isPlanDraftFetching,
+    isSuccess: isPlanDraftSuccess,
+    isError: isPlanDraftError,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSeatingPlanDraftQuery,
@@ -210,8 +221,10 @@ export default function SeatingAllocationPage({
   const isScopesDataLoading = (isScopesLoading || isScopesFetching) && !scopesData;
   const isDivisionsDataLoading = (isDivisionsLoading || isDivisionsFetching) && !divisionsData;
   const isRoomsDataLoading = (isRoomsLoading || isRoomsFetching) && !roomsData;
-  // Always show skeleton during any seat-layout or student-data fetch to prevent stale/blank-bench state
-  const isStudentsDataLoading = isStudentsLoading || isStudentsFetching;
+  // Student data stays visible during a same-query background refresh. The seat-layout
+  // skeleton intentionally appears for every layout request, including the refetch caused
+  // by saving a draft, so stale seat assignments are never presented as current.
+  const isStudentsDataLoading = (isStudentsLoading || isStudentsFetching) && !studentsData;
   const isSeatLayoutDataLoading = isSeatLayoutLoading || isSeatLayoutFetching;
   const isPlanDraftDataLoading = (isPlanDraftLoading || isPlanDraftFetching) && !planDraftData;
 
@@ -223,8 +236,14 @@ export default function SeatingAllocationPage({
     isSeatLayoutFetching ||
     isPlanDraftFetching;
 
-  // True only on initial page load when core dropdown data is still missing
-  const isInitialLoading = isScopesDataLoading || isDivisionsDataLoading;
+  // Keep the full workspace skeleton mounted through the dependent bootstrap sequence.
+  // The draft query is skipped until a plan is selected, so checking only its loading flag
+  // creates a brief false/loading/false transition and exposes the empty workspace.
+  const isInitialLoading =
+    isScopesDataLoading ||
+    isDivisionsDataLoading ||
+    !selectedPlanId ||
+    (!isPlanDraftSuccess && !isPlanDraftError);
 
   // Room results are division-scoped. Retain their labels so switching divisions or
   // subject-wise plans cannot let a late layout response expose an internal room UUID.
@@ -315,6 +334,8 @@ export default function SeatingAllocationPage({
     draft.status === 'published';
   const selectedPlanIsLocked = !!selectedScope?.isLocked || isPublished;
   const selectedPlanHasAllocations = (selectedScope?.allocatedStudents ?? 0) > 0;
+  const isSubjectWiseActive =
+    isSubjectWiseMode || (!!selectedScope && selectedScope.scopeType !== 0);
   const subjectWiseSubjectOwners = useMemo(() => {
     const owners = new Map<string, SeatingPlanScope>();
     (scopesData?.items || [])
@@ -834,6 +855,14 @@ export default function SeatingAllocationPage({
   };
 
   const handleCreateIndividualScopes = async () => {
+    if (isSubjectWiseMode) {
+      setIsSubjectWiseMode(false);
+      if (allSubjectScope?.seatingPlanId) {
+        setSelectedPlanId(allSubjectScope.seatingPlanId);
+      }
+      return;
+    }
+
     const subjects = scopesData?.availableSubjects || [];
     const missingSubjects = subjects.filter(
       (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
@@ -872,7 +901,37 @@ export default function SeatingAllocationPage({
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box
+        sx={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}
+        aria-busy={isSaving}
+      >
+        {isSaving && (
+          <Box
+            className="loading-overlay"
+            role="status"
+            aria-live="polite"
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: (theme) => theme.zIndex.modal + 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1.5,
+              color: 'text.primary',
+              bgcolor: (theme) => varAlpha(theme.vars.palette.background.paperChannel, 0.9),
+              backdropFilter: 'blur(4px)',
+              cursor: 'wait',
+            }}
+          >
+            <CircularProgress size={40} color="primary" />
+            <Box component="span" sx={{ typography: 'body2', fontWeight: 600 }}>
+              Saving draft...
+            </Box>
+          </Box>
+        )}
+
         <SeatingWorkspaceHeader
           examName={draft.examName}
           examTypeName={draft.examTypeName}
@@ -1059,6 +1118,18 @@ export default function SeatingAllocationPage({
                   onClick={handleCreateIndividualScopes}
                   disabled={isSavingScope || selectedPlanIsLocked}
                   type="button"
+                  sx={{
+                    ...(isSubjectWiseActive && {
+                      bgcolor: 'primary.lighter',
+                      borderColor: 'primary.main',
+                      color: 'primary.darker',
+                      fontWeight: 600,
+                      '&:hover': {
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
+                        borderColor: 'primary.dark',
+                      },
+                    }),
+                  }}
                 />
               </Stack>
               {(selectedPlanIsLocked ||

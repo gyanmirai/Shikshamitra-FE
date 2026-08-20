@@ -266,12 +266,12 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   handleBack,
   validationSchema,
   renderItem,
-  onStepClick = () => {},
+  onStepClick = () => { },
   completedSteps,
   isStepClickable,
   errors = [],
   validateOnChange = false,
-  onSave = () => {},
+  onSave = () => { },
   isDisabledLabel = false,
   showSaveButton = true,
   disableSubmit = false,
@@ -381,70 +381,70 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       sx={
         isVertical
           ? {
-              minWidth: '250px', // Slightly wider for modern look
-              p: 1,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              borderRight: (theme) => `1px dashed ${theme.palette.divider}`,
-              height: '100%',
-              // '& .MuiStep-root': {
-              //   mb: 2, // Spacing between steps
-              // },
-              '& .MuiStep-root': {
-                padding: 0,
+            minWidth: '250px', // Slightly wider for modern look
+            p: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            borderRight: (theme) => `1px dashed ${theme.palette.divider}`,
+            height: '100%',
+            // '& .MuiStep-root': {
+            //   mb: 2, // Spacing between steps
+            // },
+            '& .MuiStep-root': {
+              padding: 0,
+            },
+
+            // '& .MuiStepLabel-root': {
+            //   px: 1,
+            //   py: 1,
+            //   borderRadius: 1.5,
+            //   transition: 'background-color 0.2s',
+            // },
+
+            // '& .MuiStepLabel-label': {
+            //   ml: 1.5,
+            //   typography: 'subtitle2',
+            // },
+            '& .MuiStepLabel-root': {
+              px: 1,
+              borderRadius: 1.5,
+              transition: 'background-color 0.2s',
+              '&:hover': {
+                bgcolor: (theme) => theme.palette.action.hover,
               },
-
-              // '& .MuiStepLabel-root': {
-              //   px: 1,
-              //   py: 1,
-              //   borderRadius: 1.5,
-              //   transition: 'background-color 0.2s',
-              // },
-
-              // '& .MuiStepLabel-label': {
-              //   ml: 1.5,
-              //   typography: 'subtitle2',
-              // },
-              '& .MuiStepLabel-root': {
-                px: 1,
-                borderRadius: 1.5,
-                transition: 'background-color 0.2s',
+              '&.Mui-active': {
+                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
                 '&:hover': {
-                  bgcolor: (theme) => theme.palette.action.hover,
-                },
-                '&.Mui-active': {
-                  bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
-                  '&:hover': {
-                    bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.12),
-                  },
+                  bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.12),
                 },
               },
-              '& .MuiStepLabel-label': {
-                typography: 'subtitle2',
-                ml: 1.5,
-                '&.Mui-active': {
-                  color: 'primary.main',
-                  fontWeight: 'bold',
-                },
-                '&.Mui-completed': {
-                  color: 'text.primary',
-                },
+            },
+            '& .MuiStepLabel-label': {
+              typography: 'subtitle2',
+              ml: 1.5,
+              '&.Mui-active': {
+                color: 'primary.main',
+                fontWeight: 'bold',
               },
-            }
+              '&.Mui-completed': {
+                color: 'text.primary',
+              },
+            },
+          }
           : {
-              p: isMobile ? 1 : 0,
-              '& .MuiStepLabel-label': {
-                display: 'block',
-                fontSize: isMobile ? '10px' : '12px',
-                mt: '4px !important',
-                textAlign: 'center',
-                lineHeight: 1.2,
-                wordBreak: 'break-word',
-              },
-              '& .MuiStepLabel-labelContainer': {
-                width: '100%',
-              },
-            }
+            p: isMobile ? 1 : 0,
+            '& .MuiStepLabel-label': {
+              display: 'block',
+              fontSize: isMobile ? '10px' : '12px',
+              mt: '4px !important',
+              textAlign: 'center',
+              lineHeight: 1.2,
+              wordBreak: 'break-word',
+            },
+            '& .MuiStepLabel-labelContainer': {
+              width: '100%',
+            },
+          }
       }
     >
       {/* <Scrollbar

@@ -85,6 +85,7 @@ export default function SeatingPlanListPage() {
     () => (seatAllocationData?.items || []).map(toSeatingPlanListRow),
     [seatAllocationData]
   );
+  const isListDataLoading = (isLoading || isFetching) && !seatAllocationData;
 
   const filteredRows = useMemo(() => {
     if (!activeSummaryFilter) return rows;
@@ -238,7 +239,7 @@ export default function SeatingPlanListPage() {
 
       <SeatingPlanSummaryCards
         rows={rows}
-        isLoading={isLoading || isFetching}
+        isLoading={isListDataLoading}
         activeFilter={activeSummaryFilter}
         onFilterClick={(key) => setActiveSummaryFilter((prev) => (prev === key ? null : key))}
       />
@@ -246,7 +247,7 @@ export default function SeatingPlanListPage() {
       <Box sx={{ flex: 1, minHeight: 0 }}>
         <SeatingPlanTable
           rows={filteredRows}
-          isLoading={isLoading || isFetching}
+          isLoading={isListDataLoading}
           canAdd={canAdd}
           onRowClick={(row) => setPreviewRow(row)}
           onPrimaryAction={openPlanWorkspace}
@@ -313,6 +314,7 @@ export default function SeatingPlanListPage() {
             <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <SeatingAllocationPage
                 examId={workspaceDrawer.row.examId}
+                initialStandardId={classes}
                 onClose={requestClosePlanWorkspace}
                 onDirtyStateChange={setIsWorkspaceDirty}
                 onOpenReview={(context) =>

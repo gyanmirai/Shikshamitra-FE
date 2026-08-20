@@ -303,7 +303,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
     return list;
   }, [formik.values.subjects, formik.values.roomDetails, selectedDivisions]);
 
-  // Compute live conflicts for the current subject card
+  // Compute live conflicts for the current subject card (only between different subjects overlapping in time)
   const divisionConflicts = useMemo(() => {
     const conflictMap: Record<string, string> = {};
 
@@ -323,24 +323,18 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
       };
 
       for (const other of allScheduledAssignments) {
-        // Skip comparing division against itself in the same subject
-        if (other.subjectId === subjectId && other.divisionId === currentDiv.id) continue;
+        // Skip comparing against the same subject (divisions of the same exam can share rooms)
+        if (other.subjectId === subjectId) continue;
         if (!other.roomIds.length) continue;
 
-        const isSameSlot = other.subjectId === subjectId;
-        const isOverlapping = isSameSlot || slotsOverlap(currentSlot, other);
+        const isOverlapping = slotsOverlap(currentSlot, other);
 
         if (isOverlapping) {
           const shared = currentRoomIds.filter((id) => other.roomIds.includes(id));
           if (shared.length > 0) {
             const sharedNames = shared.map((id) => roomNameById.get(id) || 'Room').join(', ');
-            if (isSameSlot) {
-              conflictMap[currentDiv.id] =
-                `Room conflict: ${sharedNames} is already assigned to Division ${other.divisionName} for this exam`;
-            } else {
-              conflictMap[currentDiv.id] =
-                `Room conflict: ${sharedNames} is booked for ${other.subjectName} (Div ${other.divisionName}) during overlapping hours`;
-            }
+            conflictMap[currentDiv.id] =
+              `Room conflict: ${sharedNames} is booked for ${other.subjectName} (Div ${other.divisionName}) during overlapping hours`;
             break;
           }
         }
@@ -367,17 +361,14 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
     (room: any) => {
       setBulkAnchorEl(null);
 
-      // Validate conflict if multiple divisions exist
-      if (selectedDivisions.length > 1) {
-        shikshaMitraToast.warning({
-          message: `Cannot assign single room "${room.roomName}" to all divisions at once: Simultaneous divisions require distinct rooms. Please assign individual rooms.`,
-        });
-      }
       selectedDivisions.forEach((div: Division) => {
         formik.setFieldValue(`roomDetails.${subjectId}.${div.id}.roomIds`, [room.id]);
         formik.setFieldValue(`roomDetails.${subjectId}.${div.id}.capacity`, room.capacity || 0);
         formik.setFieldTouched(`roomDetails.${subjectId}.${div.id}.roomIds`, true, false);
         formik.setFieldError(`roomDetails.${subjectId}.${div.id}.roomIds`, undefined);
+      });
+      shikshaMitraToast.success({
+        message: `Applied room "${room.roomName}" to all divisions`,
       });
     },
     [formik, subjectId, selectedDivisions]
@@ -491,8 +482,8 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
               Room Allocation Conflict Detected
             </Typography>
             <Typography variant="caption">
-              One or more rooms are assigned to multiple divisions simultaneously or conflict with
-              another exam slot. Please allocate distinct rooms.
+              One or more rooms conflict with another exam slot during overlapping hours. Please
+              allocate distinct rooms.
             </Typography>
           </Alert>
         )}

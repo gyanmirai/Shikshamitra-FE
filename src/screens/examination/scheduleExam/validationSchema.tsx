@@ -414,9 +414,10 @@ export const validationSchema = [
             const a = assignmentList[i];
             const b = assignmentList[j];
 
-            // Same subject slot or overlapping time slots
-            const isSameSlot = a.subjectId === b.subjectId;
-            const isOverlapping = isSameSlot || slotsOverlap(a, b);
+            // Same subject across divisions can share the same room
+            if (a.subjectId === b.subjectId) continue;
+
+            const isOverlapping = slotsOverlap(a, b);
 
             if (isOverlapping) {
               const sharedRooms = a.roomIds.filter((id) => b.roomIds.includes(id));
@@ -426,17 +427,13 @@ export const validationSchema = [
 
                 if (!conflictingPaths.has(pathA)) {
                   conflictingPaths.add(pathA);
-                  const msg = isSameSlot
-                    ? 'Room conflict: Same room is assigned to multiple divisions simultaneously'
-                    : `Room conflict: Room is already booked for ${b.subjectName} at overlapping hours`;
+                  const msg = `Room conflict: Room is already booked for ${b.subjectName} at overlapping hours`;
                   validationErrors.push(new yup.ValidationError(msg, a.roomIds, pathA));
                 }
 
                 if (!conflictingPaths.has(pathB)) {
                   conflictingPaths.add(pathB);
-                  const msg = isSameSlot
-                    ? 'Room conflict: Same room is assigned to multiple divisions simultaneously'
-                    : `Room conflict: Room is already booked for ${a.subjectName} at overlapping hours`;
+                  const msg = `Room conflict: Room is already booked for ${a.subjectName} at overlapping hours`;
                   validationErrors.push(new yup.ValidationError(msg, b.roomIds, pathB));
                 }
               }

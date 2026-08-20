@@ -13,6 +13,7 @@ export type RubricEvaluationPanelProps = {
   taskTitle?: string;
   studentRow?: RubricStudentRow;
   ensureSubmissionId?: () => Promise<string | null>;
+  readOnly?: boolean;
 };
 
 export type RubricEvaluationPanelRef = {
@@ -31,4 +32,5 @@ export type RubricCriterionScoringProps = {
   values: CriterionEvaluationValues;
   onMarksChange: (criterionId: string, marks: string) => void;
   onCommentsChange: (criterionId: string, comments: string) => void;
+  readOnly?: boolean;
 };

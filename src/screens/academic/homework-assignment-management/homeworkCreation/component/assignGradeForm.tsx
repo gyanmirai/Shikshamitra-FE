@@ -14,17 +14,6 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import {
-  Box,
-  Grid,
-  Card,
-  Button,
-  Tooltip,
-  TextField,
-  Typography,
-  IconButton,
-  DialogActions,
-} from '@mui/material';
 import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
 import {
   StudentFeedbackContext,
@@ -34,17 +23,41 @@ import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicA
 import RubricEvaluationPanel, {
   type RubricEvaluationPanelRef,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
+import {
+  Box,
+  Grid,
+  Card,
+  Menu,
+  Stack,
+  Button,
+  Tooltip,
+  MenuItem,
+  TextField,
+  Typography,
+  IconButton,
+  DialogActions,
+} from '@mui/material';
 
 import { assignGradeValidationSchema } from './validationSchema';
 import { document } from '../../assignmentCreation/studentSubmission/assignMarksForm';
 
 import type { IAssignGradeProps } from '../type';
 
+const FEEDBACK_MAX_LENGTH = 500;
+
+const QUICK_TEMPLATES = [
+  'Well done! Keep up the great work.',
+  'Good effort! Review the highlighted areas for improvement.',
+  'Excellent work! Very detailed and well-organized.',
+  'Needs improvement. Please revisit the core concepts.',
+  'Great start! Focus on structuring your answers better.',
+];
+
 /**
  * Props for the AssignGrade component
  */
 const AssignGrade: React.FC<IAssignGradeProps> = ({
-  isEdit,
+  isEdit = true,
   data,
   homeworkId,
   onClose,
@@ -64,6 +77,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   const rubricEvaluationRef = useRef<RubricEvaluationPanelRef | null>(null);
   const [isRubricSaving, setIsRubricSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+  const templateBtnRef = useRef<HTMLButtonElement>(null);
+
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
@@ -78,7 +94,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     },
     validationSchema: assignGradeValidationSchema,
     async onSubmit(values) {
-      if (submissionInFlightRef.current) return;
+      if (submissionInFlightRef.current || !isEdit) return;
 
       submissionInFlightRef.current = true;
       setIsSubmitting(true);
@@ -127,10 +143,32 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     window.open(doc.url, '_blank');
   };
 
+  const handleTemplateSelect = (template: string) => {
+    if (!isEdit) return;
+    formik.setFieldValue('feedback', template);
+    setTemplateMenuOpen(false);
+  };
+
+  const rawSubmissionType = data?.submissionType ?? selectedHomework?.submissionType;
+  const numSubmissionType = Number(rawSubmissionType);
+  const normalizedSubmissionType = String(rawSubmissionType || '').toLowerCase();
+  const isInPersonSubmission =
+    numSubmissionType === 2 ||
+    isSelectedInPerson ||
+    normalizedSubmissionType.includes('inperson') ||
+    normalizedSubmissionType.includes('in person');
+  const isNoSubmissionRequired =
+    numSubmissionType === 3 ||
+    normalizedSubmissionType.includes('no submission');
+  const isOnlineTextSubmission =
+    numSubmissionType === 0 ||
+    normalizedSubmissionType.includes('text') ||
+    Boolean(data?.submittedContent?.trim() && !data?.submittedDocumentUrl);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={1}>
+        <Grid container spacing={1.5}>
           {/* Student Profile Section */}
           <Grid size={{ xs: 12 }}>
             <StudentFeedbackContext studentName={data?.studentName} rollNumber={data?.rollNumber} />
@@ -160,16 +198,18 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   taskTitle={selectedHomework.title}
                   studentRow={data}
                   ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
+                  readOnly={!isEdit}
                 />
               </Grid>
             )}
 
-          {/* Student Submission Section */}
+          {/* Student Submission Section (Based on Submission Type) */}
           <Grid size={{ xs: 12 }}>
             <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
               <Box
                 sx={{
-                  p: 2,
+                  px: 2,
+                  py: 1.25,
                   bgcolor: 'background.neutral',
                   borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                 }}
@@ -183,9 +223,84 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                 </Typography>
               </Box>
               <Box sx={{ p: 2 }}>
-                {data?.submittedContent?.trim() ? (
+                {isInPersonSubmission ? (
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 1,
+                      bgcolor: 'background.neutral',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 1,
+                        bgcolor: 'success.lighter',
+                        color: 'success.main',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Iconify icon="solar:user-check-rounded-bold" width={24} />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        In-Person / Physical Submission
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        This homework task is reviewed and evaluated physically in class (e.g. notebook inspection, viva, or physical demonstration).
+                      </Typography>
+                    </Box>
+                  </Box>
+                ) : isNoSubmissionRequired ? (
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 1,
+                      bgcolor: 'background.neutral',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 1,
+                        bgcolor: 'info.lighter',
+                        color: 'info.main',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Iconify icon="solar:info-circle-bold" width={24} />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        No Submission Required
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        This homework task was assigned for self-study / practice and does not require online submission.
+                      </Typography>
+                    </Box>
+                  </Box>
+                ) : isOnlineTextSubmission && data?.submittedContent?.trim() ? (
                   <Card variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
+                      Submitted Answer / Text:
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
                       {data.submittedContent}
                     </Typography>
                   </Card>
@@ -203,10 +318,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       },
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {getFileIconByType(data.originalFileName ?? document.type ?? 'txt', 32)}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      {getFileIconByType(data.originalFileName ?? document.type ?? 'txt', 36)}
                       <Box>
-                        <Typography variant="subtitle2" noWrap sx={{ maxWidth: 240 }}>
+                        <Typography variant="subtitle2" noWrap sx={{ maxWidth: 280, fontWeight: 600 }}>
                           {data.originalFileName || 'Submitted document'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -217,21 +332,38 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       </Box>
                     </Box>
 
-                    <Tooltip title="Preview">
-                      <IconButton
-                        size="small"
-                        onClick={() =>
-                          handleDownload({
-                            ...document,
-                            name: data.originalFileName || document.name,
-                            url: data.submittedDocumentUrl!,
-                          })
-                        }
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        <Iconify icon={GlobalIcons.eye} width={20} />
-                      </IconButton>
-                    </Tooltip>
+                    <Stack direction="row" spacing={1} flexShrink={0}>
+                      <Tooltip title="Preview File">
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            handleDownload({
+                              ...document,
+                              name: data.originalFileName || document.name,
+                              url: data.submittedDocumentUrl!,
+                            })
+                          }
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          <Iconify icon={GlobalIcons.eye} width={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Download File">
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            handleDownload({
+                              ...document,
+                              name: data.originalFileName || document.name,
+                              url: data.submittedDocumentUrl!,
+                            })
+                          }
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          <Iconify icon={GlobalIcons.download} width={20} />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
                   </Card>
                 ) : (
                   <Box
@@ -249,7 +381,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       sx={{ color: 'text.disabled', mb: 1 }}
                     />
                     <Typography variant="body2" color="text.secondary">
-                      No file submitted by student
+                      No submission file or text provided by student
                     </Typography>
                   </Box>
                 )}
@@ -259,94 +391,238 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
 
           {/* Feedback Section */}
           <Grid size={{ xs: 12 }}>
-            <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Feedback
-              </Typography>
-              <ShakingTextField error={Boolean(formik.errors.feedback)}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  name="feedback"
-                  label="Feedback *"
-                  value={formik.values.feedback}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                  helperText={formik.touched.feedback && formik.errors.feedback}
-                  disabled={!isEdit}
-                />
-              </ShakingTextField>
+            <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.25,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  bgcolor: 'background.neutral',
+                  borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                  }}
+                >
+                  <Iconify
+                    icon="solar:chat-round-dots-bold"
+                    width={18}
+                    sx={{ color: 'primary.main' }}
+                  />
+                  Teacher Feedback & Remarks
+                </Typography>
+
+                {isEdit && (
+                  <>
+                    <Button
+                      ref={templateBtnRef}
+                      size="small"
+                      variant="outlined"
+                      color="inherit"
+                      endIcon={
+                        <Iconify
+                          icon={
+                            templateMenuOpen
+                              ? 'solar:alt-arrow-up-bold'
+                              : 'solar:alt-arrow-down-bold'
+                          }
+                          width={14}
+                        />
+                      }
+                      startIcon={<Iconify icon={GlobalIcons.edit} width={14} />}
+                      onClick={() => setTemplateMenuOpen(true)}
+                      sx={{ fontSize: 12, py: 0.25 }}
+                    >
+                      Quick Templates
+                    </Button>
+                    <Menu
+                      anchorEl={templateBtnRef.current}
+                      open={templateMenuOpen}
+                      onClose={() => setTemplateMenuOpen(false)}
+                      transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                      anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                      slotProps={{ paper: { sx: { maxWidth: 320, mt: 0.5 } } }}
+                    >
+                      {QUICK_TEMPLATES.map((tpl) => (
+                        <MenuItem
+                          key={tpl}
+                          onClick={() => handleTemplateSelect(tpl)}
+                          sx={{ fontSize: 13, whiteSpace: 'normal', py: 1 }}
+                        >
+                          {tpl}
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </>
+                )}
+              </Box>
+
+              <Box sx={{ p: 2 }}>
+                {isEdit ? (
+                  <>
+                    <ShakingTextField error={Boolean(formik.errors.feedback)}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        name="feedback"
+                        label="Feedback *"
+                        placeholder="Provide qualitative feedback on the student's homework..."
+                        value={formik.values.feedback}
+                        onChange={(e) => {
+                          if (e.target.value.length <= FEEDBACK_MAX_LENGTH) {
+                            formik.handleChange(e);
+                          }
+                        }}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                        helperText={formik.touched.feedback && formik.errors.feedback}
+                        inputProps={{ maxLength: FEEDBACK_MAX_LENGTH }}
+                      />
+                    </ShakingTextField>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        mt: 0.5,
+                        color:
+                          formik.values.feedback.length >= FEEDBACK_MAX_LENGTH
+                            ? 'error.main'
+                            : 'text.disabled',
+                      }}
+                    >
+                      {formik.values.feedback.length} / {FEEDBACK_MAX_LENGTH}
+                    </Typography>
+                  </>
+                ) : (
+                  <Box>
+                    {data?.feedback ? (
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          p: 2,
+                          bgcolor: 'background.paper',
+                          borderLeft: (theme) => `4px solid ${theme.palette.primary.main}`,
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                          {data.feedback}
+                        </Typography>
+                      </Card>
+                    ) : (
+                      <Box
+                        sx={{
+                          p: 2.5,
+                          textAlign: 'center',
+                          borderRadius: 1,
+                          bgcolor: 'background.neutral',
+                          color: 'text.secondary',
+                        }}
+                      >
+                        <Typography variant="body2" fontStyle="italic">
+                          No feedback has been recorded for this student yet.
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                )}
+              </Box>
             </Card>
           </Grid>
         </Grid>
       </DialogScrollContent>
 
-      <DialogActions sx={{ bgcolor: 'background.paper', p: 2.5, flexShrink: 0 }}>
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={onPrevious}
-          disabled={!hasPrevious}
-          size="small"
-          startIcon={<Iconify icon="solar:alt-arrow-left-bold" />}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={onNext}
-          disabled={!hasNext}
-          size="small"
-          endIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
-        >
-          Next
-        </Button>
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={() => {
-            onClose(null, false);
-          }}
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          variant="outlined"
-          size="small"
-          disabled={!hasNext || isSubmitting || isUpdateLoading || isRubricSaving}
-          loading={isSubmitting || isUpdateLoading || isRubricSaving}
-          onClick={(e: any) => {
-            submitAndNextRef.current = true;
-            formik.handleSubmit(e);
-          }}
-          startIcon={<Iconify icon="solar:double-alt-arrow-right-bold" />}
-        >
-          Submit & Next
-        </LoadingButton>
-        <LoadingButton
-          variant="contained"
-          size="small"
-          loading={isSubmitting || isUpdateLoading || isRubricSaving}
-          disabled={isSubmitting || isUpdateLoading || isRubricSaving}
-          onClick={(e: any) => {
-            submitAndNextRef.current = false;
-            formik.handleSubmit(e);
-          }}
-          startIcon={
-            <Iconify
-              icon={data?.feedback ? GlobalIcons.edit : GlobalIcons.submit}
-              width={data?.feedback ? 16 : 20}
-              height={data?.feedback ? 16 : 20}
-            />
-          }
-        >
-          {data?.feedback ? 'Update' : 'Submit'}
-        </LoadingButton>
+      <DialogActions sx={{ bgcolor: 'background.paper', p: 2, flexShrink: 0, boxShadow: 'var(--shadows-10)' }}>
+        <Stack direction="row" spacing={1} sx={{ mr: 'auto' }}>
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={onPrevious}
+            disabled={!hasPrevious}
+            size="small"
+            startIcon={<Iconify icon="solar:alt-arrow-left-bold" />}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={onNext}
+            disabled={!hasNext}
+            size="small"
+            endIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
+          >
+            Next
+          </Button>
+        </Stack>
+
+        {isEdit ? (
+          <>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={() => {
+                onClose(null, false);
+              }}
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="outlined"
+              size="small"
+              disabled={!hasNext || isSubmitting || isUpdateLoading || isRubricSaving}
+              loading={isSubmitting || isUpdateLoading || isRubricSaving}
+              onClick={(e: any) => {
+                submitAndNextRef.current = true;
+                formik.handleSubmit(e);
+              }}
+              startIcon={<Iconify icon="solar:double-alt-arrow-right-bold" />}
+            >
+              Submit & Next
+            </LoadingButton>
+            <LoadingButton
+              variant="contained"
+              size="small"
+              loading={isSubmitting || isUpdateLoading || isRubricSaving}
+              disabled={isSubmitting || isUpdateLoading || isRubricSaving}
+              onClick={(e: any) => {
+                submitAndNextRef.current = false;
+                formik.handleSubmit(e);
+              }}
+              startIcon={
+                <Iconify
+                  icon={data?.feedback ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={data?.feedback ? 16 : 20}
+                  height={data?.feedback ? 16 : 20}
+                />
+              }
+            >
+              {data?.feedback ? 'Update' : 'Submit'}
+            </LoadingButton>
+          </>
+        ) : (
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={() => {
+              onClose(null, false);
+            }}
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Close
+          </Button>
+        )}
       </DialogActions>
     </BackPopUpChecked>
   );

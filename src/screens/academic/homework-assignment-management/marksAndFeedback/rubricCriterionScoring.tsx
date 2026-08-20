@@ -7,7 +7,7 @@ import RubricPerformanceMatrix from './rubricPerformanceMatrix';
 import type { RubricCriterionScoringProps } from './rubricEvaluationTypes';
 
 const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
-  const { rubric, values, onMarksChange, onCommentsChange } = props;
+  const { rubric, values, onMarksChange, onCommentsChange, readOnly } = props;
   if (usesPerformanceLevels(rubric)) {
     return (
       <>
@@ -50,6 +50,7 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
                 onChange={(event) => onMarksChange(criterion.id, event.target.value)}
                 inputProps={{ min: 0, max: criterion.maxMarks, step: 0.5 }}
                 sx={{ width: { xs: '100%', sm: 150 } }}
+                disabled={readOnly}
               />
 
               <TextField
@@ -60,6 +61,7 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
                 placeholder="Add criterion-specific feedback"
                 multiline
                 minRows={1}
+                disabled={readOnly}
               />
             </Stack>
           </Card>

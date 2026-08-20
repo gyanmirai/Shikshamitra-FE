@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Card, Stack, Button, Typography, IconButton } from '@mui/material';
+import { Stack, Button, IconButton } from '@mui/material';
 import {
-  TimetableSettingsSummaryCards,
   type ITimetableSummaryCard,
+  TimetableSettingsSummaryCards,
 } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 type Summary = {
@@ -265,16 +266,18 @@ export function isRowEvaluationDisabled(
 export function EvaluationActionButton({
   row,
   onOpen,
-  canAdd,
+  onView,
+  onEdit,
+  canAdd = true,
   taskSubmissionType,
 }: {
   row: any;
-  canAdd: boolean;
+  canAdd?: boolean;
   taskSubmissionType?: number | string | null;
-  onOpen: (row: any) => void;
+  onOpen?: (row: any) => void;
+  onView?: (row: any) => void;
+  onEdit?: (row: any) => void;
 }) {
-  if (!canAdd) return null;
-
   const isNotSubmitted = isRowEvaluationDisabled(row, taskSubmissionType);
   const rowSubmissionType = row?.submissionType || taskSubmissionType;
   const normalizedSubmissionType = String(rowSubmissionType || '').toLowerCase();
@@ -288,26 +291,59 @@ export function EvaluationActionButton({
 
   const status = Number(row?.status);
   const isReviewed = status === 4;
-  const title = isNotSubmitted
+  const editTitle = isNotSubmitted
     ? 'Send Reminder'
     : isReviewed
       ? 'Edit Feedback'
       : isInPerson && status === 0
         ? 'Add Marks & Feedback'
         : 'Evaluate';
-  const icon = isNotSubmitted
+  const editIcon = isNotSubmitted
     ? 'mdi:bell-outline'
     : isReviewed
       ? 'solar:pen-bold'
       : 'solar:clipboard-check-bold';
 
+  const handleViewClick = () => {
+    if (onView) {
+      onView(row);
+    } else if (onOpen) {
+      onOpen(row);
+    }
+  };
+
+  const handleEditClick = () => {
+    if (onEdit) {
+      onEdit(row);
+    } else if (onOpen) {
+      onOpen(row);
+    }
+  };
+
   return (
-    <CustomTooltip title={title} arrow>
-      <span>
-        <IconButton size="small" disabled={isNotSubmitted} onClick={() => onOpen(row)}>
-          <Iconify icon={icon} width={18} />
-        </IconButton>
-      </span>
-    </CustomTooltip>
+    <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
+      <CustomTooltip title="View Details" arrow>
+        <span>
+          <IconButton size="small" onClick={handleViewClick} color="default">
+            <Iconify icon={GlobalIcons.eye} width={18} />
+          </IconButton>
+        </span>
+      </CustomTooltip>
+
+      {canAdd && (
+        <CustomTooltip title={editTitle} arrow>
+          <span>
+            <IconButton
+              size="small"
+              disabled={isNotSubmitted}
+              onClick={handleEditClick}
+              color="default"
+            >
+              <Iconify icon={editIcon} width={18} />
+            </IconButton>
+          </span>
+        </CustomTooltip>
+      )}
+    </Stack>
   );
 }

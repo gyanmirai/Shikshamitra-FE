@@ -74,6 +74,7 @@ const RubricEvaluationPanel = React.forwardRef<
               values={evaluation.criterionValues}
               onMarksChange={evaluation.setCriterionMarks}
               onCommentsChange={evaluation.setCriterionComments}
+              readOnly={props.readOnly}
             />
           )}
 
@@ -88,6 +89,7 @@ const RubricEvaluationPanel = React.forwardRef<
             onChange={(event) => evaluation.setRemarks(event.target.value)}
             multiline
             rows={2}
+            disabled={props.readOnly}
             helperText="Summarize the student's overall performance across all criteria."
           />
         </Stack>
