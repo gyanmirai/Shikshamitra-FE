@@ -226,6 +226,14 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
 
     const newErrors: Record<string, string> = {};
 
+    // Validate: required room assignment
+    splitSubjects.forEach((sub) => {
+      const roomId = selectedIds[sub.subjectId];
+      if (!roomId) {
+        newErrors[sub.subjectId] = 'Room is required';
+      }
+    });
+
     // Validate: prevent same room assigned to multiple subjects at same time
     // (multiple classes cannot use the same room simultaneously)
     const roomAssignments: Record<string, string[]> = {};
@@ -280,6 +288,20 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
 
       if (issues.length > 0) {
         setConflictIssues(issues);
+        const fieldErrors: Record<string, string> = {};
+        splitSubjects.forEach((sub) => {
+          const matched = issues.find(
+            (iss) =>
+              iss.description?.toLowerCase().includes(sub.name.toLowerCase()) ||
+              iss.title?.toLowerCase().includes(sub.name.toLowerCase())
+          );
+          if (matched) {
+            fieldErrors[sub.subjectId] = matched.description || matched.title;
+          } else {
+            fieldErrors[sub.subjectId] = issues[0]?.description || issues[0]?.title || 'Room conflict detected';
+          }
+        });
+        setErrors(fieldErrors);
         return;
       }
 
@@ -376,7 +398,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
                     <CustomTooltip title="Building-Floor-Room" arrow placement="top-start">
                       <TextField
                         {...params}
-                        label="Select Room"
+                        label="Select Room *"
                         error={!!errors[sub.subjectId]}
                         helperText={errors[sub.subjectId]}
                       />

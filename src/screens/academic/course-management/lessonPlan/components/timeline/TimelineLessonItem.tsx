@@ -304,18 +304,6 @@ export const TimelineLessonItem: React.FC<Props> = ({
                   alignItems: 'center',
                   '& .MuiAlert-message': { fontSize: 11.5, py: 0 },
                 }}
-                action={
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="inherit"
-                    startIcon={<Iconify icon="solar:eye-bold" width={14} />}
-                    onClick={() => onEditLesson(normalizedPlan)}
-                    sx={{ ...actionButtonSx, height: 24, fontSize: 11, px: 1 }}
-                  >
-                    View Feedback
-                  </Button>
-                }
               >
                 <strong>HOD requested:</strong> {plan.reviewRemarks}
               </Alert>

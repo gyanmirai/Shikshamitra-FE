@@ -129,6 +129,10 @@ export default function SeatingPlanListPage() {
 
       <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.5 } }}>
         <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Reset</strong> — Clears all seat allocations, subject-wise scope configurations,
+          and resets the seating plan to its default state.
+        </Typography>
+        <Typography component="li" variant="caption" color="text.secondary">
           <strong>Auto Allocate</strong> — Automatically places unassigned students into available
           room seats following active seating rules.
         </Typography>

@@ -153,6 +153,11 @@ const ElectiveSubjectSetting = () => {
         selectedGroup={selected}
         usageData={usageData}
         isLoading={isUsageFetching}
+        canArchive={canAdd}
+        onArchive={(data) => {
+          setSelected(data);
+          archiveDialog.onTrue();
+        }}
       />
 
       <CustomDialog

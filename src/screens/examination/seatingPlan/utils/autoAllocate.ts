@@ -77,17 +77,23 @@ export function autoAllocate(
   const seatMap = new Map<string, SeatingSeat>();
   rooms.forEach((r) => r.seats.forEach((s) => seatMap.set(s.seatId, s)));
 
-  // Remove any existing assignments on seats that are now disabled or reserved
-  const validExistingAssignments = existingAssignments.filter((a) => {
+  const studentIdSet = new Set(students.map((s) => s.studentId));
+
+  // Preserve assignments belonging to other exams or students from other divisions sharing the room.
+  // Re-allocate students in the current batch so new rules/directions override previous positions.
+  const preservedExistingAssignments = existingAssignments.filter((a) => {
+    if (a.isExternalExamOccupied) return true;
+    if (!studentIdSet.has(a.studentId)) return true;
+    return false;
+  });
+
+  const validPreservedAssignments = preservedExistingAssignments.filter((a) => {
     const seat = seatMap.get(a.seatId);
     return seat && !seat.isDisabled && !seat.isReserved;
   });
 
   const eligible = students.filter((s) => !excludedStudentIds.includes(s.studentId));
-  const alreadyAssigned = new Set(validExistingAssignments.map((a) => a.studentId));
-  const pending = eligible.filter((s) => !alreadyAssigned.has(s.studentId));
-
-  const orderedStudents = orderStudents(pending, rules.strategy);
+  const orderedStudents = orderStudents([...eligible], rules.strategy);
 
   // Special-requirement students get first pick of accessible/front-row seats when priority is set.
   const priorityStudents = rules.specialRequirementPriority
@@ -97,7 +103,7 @@ export function autoAllocate(
     ? orderedStudents.filter((s) => !s.hasSpecialRequirement)
     : orderedStudents;
 
-  const occupiedSeatIds = new Set(validExistingAssignments.map((a) => a.seatId));
+  const occupiedSeatIds = new Set(validPreservedAssignments.map((a) => a.seatId));
   const newAssignments: SeatingAssignment[] = [];
   const unallocatedStudentIds: string[] = [];
 
@@ -154,5 +160,5 @@ export function autoAllocate(
     if (!allocatedIds.has(s.studentId)) unallocatedStudentIds.push(s.studentId);
   });
 
-  return { assignments: [...validExistingAssignments, ...newAssignments], unallocatedStudentIds };
+  return { assignments: [...validPreservedAssignments, ...newAssignments], unallocatedStudentIds };
 }

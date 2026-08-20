@@ -194,6 +194,11 @@ const SubjectCreation = () => {
         selectedSubject={selectedSubject}
         usageData={usageData}
         isLoading={isUsageFetching}
+        canArchive={canAdd}
+        onArchive={(subject) => {
+          setSelectedSubject(subject);
+          archiveDialog.onTrue();
+        }}
       />
 
       <ConfirmDialog

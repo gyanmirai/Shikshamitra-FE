@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 
+import { DEFAULT_ALLOCATION_RULES } from '../types';
 import type {
   SeatingSeat,
   SeatingStudent,
@@ -182,6 +183,18 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
     [pushHistory]
   );
 
+  const resetAll = useCallback(() => {
+    setDraft((d) => ({
+      ...d,
+      assignments: [],
+      allocationRules: DEFAULT_ALLOCATION_RULES,
+      excludedStudentIds: [],
+      isDirty: false,
+    }));
+    setHistory([]);
+    setRedoStack([]);
+  }, []);
+
   const undo = useCallback(() => {
     setHistory((h) => {
       if (h.length === 0) return h;
@@ -221,6 +234,7 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
       moveStudent,
       swapSeats,
       resetRoom,
+      resetAll,
       undo,
       redo,
     },

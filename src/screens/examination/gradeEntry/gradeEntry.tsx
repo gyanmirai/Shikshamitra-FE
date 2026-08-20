@@ -1633,9 +1633,6 @@ const GradeEntry = (props: TabComponentType) => {
           hasForm={false}
         >
           <DialogScrollContent onSubmit={handleRequestChanges}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, pt: 1 }}>
-              Provide reviewer notes indicating why corrections are required:
-            </Typography>
             <TextField
               id="reviewer-note-input"
               name="reviewer-note"

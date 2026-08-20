@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
@@ -33,7 +33,7 @@ interface Props {
   rules: SeatingAllocationRules;
   onClose: () => void;
   onPreview: (rules: SeatingAllocationRules) => PreviewSummary;
-  onApply: () => void;
+  onApply: (rules?: SeatingAllocationRules) => void;
   onCancelPreview: () => void;
 }
 
@@ -86,6 +86,14 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
   const [localRules, setLocalRules] = useState<SeatingAllocationRules>(rules);
   const [preview, setPreview] = useState<PreviewSummary | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setLocalRules(rules);
+      setPreview(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleGenerate = () => {
     setIsGenerating(true);
@@ -489,7 +497,7 @@ export default function AllocationRuleDrawer({ open, rules, onClose, onPreview, 
               size="small"
               color="primary"
               onClick={() => {
-                onApply();
+                onApply(localRules);
                 handleClose();
               }}
               startIcon={<Iconify icon="mdi:check-circle-outline" width={18} />}

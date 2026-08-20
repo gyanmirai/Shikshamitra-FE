@@ -3,16 +3,34 @@ import type { Variants } from 'framer-motion';
 import type { Division } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
-import { useMemo } from 'react';
+import dayjs from 'dayjs';
+import { getIn } from 'formik';
 import { alpha } from '@mui/system';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useCallback } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { Box, Grid, Chip, Paper, Switch, TextField, Typography, Autocomplete } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Chip,
+  Menu,
+  Paper,
+  Stack,
+  Alert,
+  Button,
+  Switch,
+  MenuItem,
+  TextField,
+  Typography,
+  Autocomplete,
+} from '@mui/material';
 
 import type { IExamFormValues } from '../type';
 
@@ -32,15 +50,34 @@ const cardItemVariants: Variants = {
   exit: { opacity: 0, y: -10, transition: { duration: 0.18 } },
 };
 
+const slotsOverlap = (a: any, b: any) => {
+  if (!a.examDate || !b.examDate || !a.startTime || !a.endTime || !b.startTime || !b.endTime) {
+    return false;
+  }
+  const dateA = dayjs(a.examDate).format('YYYY-MM-DD');
+  const dateB = dayjs(b.examDate).format('YYYY-MM-DD');
+  if (dateA !== dateB) return false;
+
+  const tStartA = dayjs(a.startTime);
+  const tEndA = dayjs(a.endTime);
+  const tStartB = dayjs(b.startTime);
+  const tEndB = dayjs(b.endTime);
+
+  const startA = dayjs(a.examDate).hour(tStartA.hour()).minute(tStartA.minute()).second(0);
+  const endA = dayjs(a.examDate).hour(tEndA.hour()).minute(tEndA.minute()).second(0);
+  const startB = dayjs(b.examDate).hour(tStartB.hour()).minute(tStartB.minute()).second(0);
+  const endB = dayjs(b.examDate).hour(tEndB.hour()).minute(tEndB.minute()).second(0);
+
+  return startA.isBefore(endB) && endA.isAfter(startB);
+};
+
 const RoomDetails = (props: FormikProps<IExamFormValues>) => {
-  // Formik instance for form handling and validation
   const formik = props;
-  // Theme for consistent access to design tokens
   const theme = useTheme();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {/* Modernized Switch Section with hover animation */}
+      {/* Modernized Switch Section */}
       <Paper
         role="button"
         tabIndex={0}
@@ -102,7 +139,7 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
         </Box>
       </Paper>
 
-      {/* Render Subject Cards if functionality is enabled — animated with AnimatePresence */}
+      {/* Render Subject Cards if functionality is enabled */}
       <AnimatePresence>
         {formik.values.isRoomAssign && (
           <motion.div
@@ -112,9 +149,8 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
             animate="show"
             exit="exit"
           >
-            <Grid container spacing={1}>
+            <Grid container spacing={1.5}>
               {(formik.values.subjects ?? []).flatMap((subject: any) => {
-                // Elective groups: render a card per individual subject
                 if (subject.electiveGroupId && subject.subjects?.length) {
                   return subject.subjects.map((s: any, sIdx: number) => (
                     <Grid
@@ -128,6 +164,8 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
                             subjectName: s.subjectName || s.name || '',
                             subjectColor: s.subjectColor || s.color || '#9E9E9E',
                             examDate: s.examDate || null,
+                            startTime: s.startTime || null,
+                            endTime: s.endTime || null,
                             electiveGroupName: subject.subjectName,
                             electiveGroupId: subject.electiveGroupId,
                           }}
@@ -137,7 +175,6 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
                     </Grid>
                   ));
                 }
-                // Core subjects: one card as-is
                 return [
                   <Grid size={{ xs: 12 }} key={subject.subjectId}>
                     <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
@@ -156,27 +193,29 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
 export default RoomDetails;
 
 const RoomAssignmentCard = ({ subject, formik }: any) => {
-  const { subjectId, subjectName, examDate, electiveGroupName } = subject;
+  const { subjectId, subjectName, examDate, startTime, endTime, electiveGroupName } = subject;
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
+
+  const [bulkAnchorEl, setBulkAnchorEl] = useState<null | HTMLElement>(null);
 
   const allClass = useMemo(
     () => medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [],
     [medium]
   );
 
-  const divisions = useMemo(
+  const classDivisions = useMemo(
     () => allClass.find((cls: any) => cls.id === formik.values.className)?.divisions || [],
     [allClass, formik.values.className]
   );
 
-  const tableData = divisions
-    ?.filter((div: Division) => formik.values.divisions?.includes(div.id))
-    .map((div: Division) => ({
-      divisionId: div.id,
-      division: div.name,
-      ...(formik.values.roomDetails?.[subjectId]?.[div.id] ?? { roomIds: [], capacity: 0 }),
-    }));
+  const selectedDivisions = useMemo(
+    () =>
+      classDivisions.filter(
+        (div: Division) => formik.values.divisions?.includes(div.id) && div.id !== 'all'
+      ),
+    [classDivisions, formik.values.divisions]
+  );
 
   // Fetch rooms from API
   const {
@@ -199,19 +238,166 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
         buildingName: room.buildingName ?? '',
         floorName: room.floorName ?? '',
         capacity: room.capacity ?? 0,
-        // Label shown in dropdown option
         label: `${room.buildingName ?? ''} › ${room.floorName ?? ''} › ${room.roomName ?? ''}`,
-        // Group header for Autocomplete groupBy
         group: `${room.buildingName ?? 'Unknown Building'} › ${room.floorName ?? 'Unknown Floor'}`,
       })),
     [roomsApiData]
+  );
+
+  const roomNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    roomOptions.forEach((r: any) => map.set(r.id, r.roomName || r.label));
+    return map;
+  }, [roomOptions]);
+
+  // Flatten all active assignments across all subjects and divisions for live conflict checks
+  const allScheduledAssignments = useMemo(() => {
+    const list: Array<{
+      subjectId: string;
+      subjectName: string;
+      divisionId: string;
+      divisionName: string;
+      roomIds: string[];
+      examDate: any;
+      startTime: any;
+      endTime: any;
+    }> = [];
+
+    const rawSubjects = formik.values.subjects ?? [];
+    rawSubjects.forEach((sub: any) => {
+      if (sub.electiveGroupId && Array.isArray(sub.subjects)) {
+        sub.subjects.forEach((nested: any) => {
+          if (!nested.isExamSelectionDisabled && nested.subjectId) {
+            selectedDivisions.forEach((div: Division) => {
+              const rIds = formik.values.roomDetails?.[nested.subjectId]?.[div.id]?.roomIds ?? [];
+              list.push({
+                subjectId: nested.subjectId,
+                subjectName: nested.subjectName || nested.name || 'Elective Subject',
+                divisionId: div.id,
+                divisionName: div.name,
+                roomIds: rIds,
+                examDate: nested.examDate,
+                startTime: nested.startTime,
+                endTime: nested.endTime,
+              });
+            });
+          }
+        });
+      } else if (sub.subjectId) {
+        selectedDivisions.forEach((div: Division) => {
+          const rIds = formik.values.roomDetails?.[sub.subjectId]?.[div.id]?.roomIds ?? [];
+          list.push({
+            subjectId: sub.subjectId,
+            subjectName: sub.subjectName || 'Subject',
+            divisionId: div.id,
+            divisionName: div.name,
+            roomIds: rIds,
+            examDate: sub.examDate,
+            startTime: sub.startTime,
+            endTime: sub.endTime,
+          });
+        });
+      }
+    });
+
+    return list;
+  }, [formik.values.subjects, formik.values.roomDetails, selectedDivisions]);
+
+  // Compute live conflicts for the current subject card
+  const divisionConflicts = useMemo(() => {
+    const conflictMap: Record<string, string> = {};
+
+    selectedDivisions.forEach((currentDiv: Division) => {
+      const currentRoomIds: string[] =
+        formik.values.roomDetails?.[subjectId]?.[currentDiv.id]?.roomIds ?? [];
+      if (!currentRoomIds.length) return;
+
+      const currentSlot = {
+        subjectId,
+        subjectName,
+        divisionId: currentDiv.id,
+        roomIds: currentRoomIds,
+        examDate,
+        startTime,
+        endTime,
+      };
+
+      for (const other of allScheduledAssignments) {
+        // Skip comparing division against itself in the same subject
+        if (other.subjectId === subjectId && other.divisionId === currentDiv.id) continue;
+        if (!other.roomIds.length) continue;
+
+        const isSameSlot = other.subjectId === subjectId;
+        const isOverlapping = isSameSlot || slotsOverlap(currentSlot, other);
+
+        if (isOverlapping) {
+          const shared = currentRoomIds.filter((id) => other.roomIds.includes(id));
+          if (shared.length > 0) {
+            const sharedNames = shared.map((id) => roomNameById.get(id) || 'Room').join(', ');
+            if (isSameSlot) {
+              conflictMap[currentDiv.id] =
+                `Room conflict: ${sharedNames} is already assigned to Division ${other.divisionName} for this exam`;
+            } else {
+              conflictMap[currentDiv.id] =
+                `Room conflict: ${sharedNames} is booked for ${other.subjectName} (Div ${other.divisionName}) during overlapping hours`;
+            }
+            break;
+          }
+        }
+      }
+    });
+
+    return conflictMap;
+  }, [
+    selectedDivisions,
+    formik.values.roomDetails,
+    subjectId,
+    subjectName,
+    examDate,
+    startTime,
+    endTime,
+    allScheduledAssignments,
+    roomNameById,
+  ]);
+
+  const hasAnyCardConflict = Object.keys(divisionConflicts).length > 0;
+
+  // Handle "Apply to All Divisions" action
+  const handleApplyToAllDivisions = useCallback(
+    (room: any) => {
+      setBulkAnchorEl(null);
+
+      // Validate conflict if multiple divisions exist
+      if (selectedDivisions.length > 1) {
+        shikshaMitraToast.warning({
+          message: `Cannot assign single room "${room.roomName}" to all divisions at once: Simultaneous divisions require distinct rooms. Please assign individual rooms.`,
+        });
+      }
+      selectedDivisions.forEach((div: Division) => {
+        formik.setFieldValue(`roomDetails.${subjectId}.${div.id}.roomIds`, [room.id]);
+        formik.setFieldValue(`roomDetails.${subjectId}.${div.id}.capacity`, room.capacity || 0);
+        formik.setFieldTouched(`roomDetails.${subjectId}.${div.id}.roomIds`, true, false);
+        formik.setFieldError(`roomDetails.${subjectId}.${div.id}.roomIds`, undefined);
+      });
+    },
+    [formik, subjectId, selectedDivisions]
+  );
+
+  const tableData = useMemo(
+    () =>
+      selectedDivisions.map((div: Division) => ({
+        divisionId: div.id,
+        division: div.name,
+        ...(formik.values.roomDetails?.[subjectId]?.[div.id] ?? { roomIds: [], capacity: 0 }),
+      })),
+    [selectedDivisions, formik.values.roomDetails, subjectId]
   );
 
   return (
     <SectionCard
       title={subjectName}
       headerContent={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           {electiveGroupName && (
             <Chip
               label={electiveGroupName}
@@ -223,29 +409,94 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           )}
           {examDate && (
             <Chip
-              label={examDate.format('dddd, DD MMM YYYY')}
+              label={dayjs(examDate).format('dddd, DD MMM YYYY')}
               size="small"
               variant="soft"
               color="primary"
               sx={{ fontWeight: 600, borderRadius: 1 }}
             />
           )}
+          {startTime && endTime && (
+            <Chip
+              label={`${dayjs(startTime).format('hh:mm A')} – ${dayjs(endTime).format('hh:mm A')}`}
+              size="small"
+              variant="soft"
+              color="default"
+              sx={{ fontWeight: 600, borderRadius: 1 }}
+            />
+          )}
+          <Button
+            size="small"
+            variant="outlined"
+            color="primary"
+            startIcon={<Iconify icon="mdi:domain" />}
+            onClick={(e) => setBulkAnchorEl(e.currentTarget)}
+            sx={{ fontWeight: 700, borderRadius: 1, textTransform: 'none' }}
+          >
+            Apply Room to All Divisions
+          </Button>
+
+          <Menu
+            anchorEl={bulkAnchorEl}
+            open={Boolean(bulkAnchorEl)}
+            onClose={() => setBulkAnchorEl(null)}
+            PaperProps={{ sx: { minWidth: 260, maxHeight: 320 } }}
+          >
+            <Box sx={{ px: 2, py: 1 }}>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                SELECT ROOM TO APPLY
+              </Typography>
+            </Box>
+            {roomOptions.map((opt: any) => (
+              <MenuItem
+                key={opt.id}
+                onClick={() => handleApplyToAllDivisions(opt)}
+                sx={{ fontSize: '0.82rem', py: 1 }}
+              >
+                <Stack spacing={0.25}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {opt.label}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Capacity: {opt.capacity || 'N/A'} seats
+                  </Typography>
+                </Stack>
+              </MenuItem>
+            ))}
+          </Menu>
         </Box>
       }
       paperProps={{
         sx: {
-          overflow: 'hidden',
-          transition: 'all 0.3s ease',
-          boxShadow: theme.customShadows?.card || '0px 4px 20px rgba(0, 0, 0, 0.05)',
+          mb: 2,
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: hasAnyCardConflict ? 'error.light' : 'divider',
+          transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
           '&:hover': {
-            boxShadow: theme.customShadows?.z8 || '0px 12px 30px rgba(0, 0, 0, 0.08)',
-            transform: 'translateY(-2px)',
+            boxShadow: (theme: any) =>
+              theme.customShadows?.z8 || '0 8px 16px 0 rgba(0,0,0,0.08)',
+            borderColor: hasAnyCardConflict ? 'error.main' : 'primary.light',
+            '& .MuiCardHeader-root': {
+              transform: 'translateY(-2px)',
+            },
           },
         },
       }}
-      // gridProps={{ sx: { mb: 1 } }}
     >
       <Grid size={{ xs: 12 }}>
+        {hasAnyCardConflict && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 1.5 }}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Room Allocation Conflict Detected
+            </Typography>
+            <Typography variant="caption">
+              One or more rooms are assigned to multiple divisions simultaneously or conflict with
+              another exam slot. Please allocate distinct rooms.
+            </Typography>
+          </Alert>
+        )}
+
         <CustomizableTable
           tableId={`room-assignment-${subjectName}`}
           isLoading={isRoomsLoading}
@@ -258,29 +509,52 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
               label: 'Division',
               minWidth: 100,
               align: 'left',
-              render: (value, row) => (
-                <Typography variant="body2" fontWeight={600}>
-                  {value}
-                </Typography>
-              ),
+              render: (value, row) => {
+                const isDivInConflict = Boolean(divisionConflicts[row.divisionId]);
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" fontWeight={700}>
+                      {value}
+                    </Typography>
+                    {isDivInConflict && (
+                      <Chip
+                        label="Conflict"
+                        size="small"
+                        color="error"
+                        variant="soft"
+                        sx={{ height: 20, fontSize: '0.68rem', fontWeight: 700 }}
+                      />
+                    )}
+                  </Box>
+                );
+              },
             },
             {
               id: 'roomIds',
-              label: 'Room Assignment',
+              label: `Room Assignment${formik.values.isRoomAssign ? ' *' : ''}`,
               isFilter: false,
               isSort: false,
-              render: (value, row) => {
+              render: (_value, row) => {
                 const fieldPath = `roomDetails.${subjectId}.${row.divisionId}.roomIds`;
+                const formikError = getIn(formik.errors, fieldPath);
+                const formikTouched = getIn(formik.touched, fieldPath);
+
                 const selectedRoomIds: string[] =
                   formik.values.roomDetails?.[subjectId]?.[row.divisionId]?.roomIds ?? [];
                 const selectedRooms = roomOptions.filter((r: any) =>
                   selectedRoomIds.includes(r.id)
                 );
-                const hasError =
+
+                const conflictError = divisionConflicts[row.divisionId];
+                const isRequiredMissing =
                   formik.values.isRoomAssign &&
-                  formik.submitCount > 0 &&
+                  Boolean(formikTouched || formik.submitCount > 0) &&
                   selectedRoomIds.length === 0;
-                const helperText = hasError ? 'Room is required' : '';
+
+                const errorMessage =
+                  conflictError ||
+                  (isRequiredMissing ? (formikError || 'Room is required') : '');
+                const hasError = Boolean(conflictError || isRequiredMissing);
 
                 return (
                   <Autocomplete
@@ -366,6 +640,10 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                         `roomDetails.${subjectId}.${row.divisionId}.capacity`,
                         totalCapacity
                       );
+                      formik.setFieldTouched(fieldPath, true, false);
+                      if (ids.length > 0) {
+                        formik.setFieldError(fieldPath, undefined);
+                      }
                     }}
                     renderTags={(tagValues, getTagProps) =>
                       tagValues.map((option: any, index) => {
@@ -377,19 +655,28 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                             label={option.label}
                             size="small"
                             variant="soft"
+                            color="default"
                             sx={{ ml: 0.5 }}
                           />
                         );
                       })
                     }
-                    sx={{ minWidth: { xs: 220, md: 380 } }}
+                    sx={{ minWidth: { xs: 240, md: 420 } }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Select Room(s)"
+                        label={`Select Room(s)${formik.values.isRoomAssign ? ' *' : ''}`}
                         size="small"
                         error={hasError}
-                        helperText={helperText}
+                        helperText={errorMessage || ''}
+                        slotProps={{
+                          formHelperText: {
+                            sx: {
+                              fontWeight: 600,
+                              color: hasError ? 'error.main' : 'text.secondary',
+                            },
+                          },
+                        }}
                       />
                     )}
                   />
@@ -402,7 +689,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
               isFilter: false,
               isSort: false,
               render: (_: any, row: any) => (
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                   {formik.values.roomDetails?.[subjectId]?.[row.divisionId]?.capacity || '-'}
                 </Typography>
               ),

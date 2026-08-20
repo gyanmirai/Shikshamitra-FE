@@ -220,39 +220,41 @@ const SeatBox = ({
               </Box>
             </Box>
 
-            <Box className="action-menu">
-              <ThreeDotsActions
-                placement="bottom-center"
-                onClickThreeDots={(e) => {
-                  e.stopPropagation();
-                }}
-                sx={{
-                  position: 'absolute',
-                  top: 4,
-                  right: 4,
-                  zIndex: 1,
-                  width: 24,
-                  height: 24,
-                  '& .MuiSvgIcon-root': { fontSize: 16 },
-                  '&:hover': { bgcolor: 'action.hover' },
-                }}
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeStudentDialog.onTrue();
-                        popover.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
-                      Remove Student
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            </Box>
+            {!seat.isExternalExamOccupied && (
+              <Box className="action-menu">
+                <ThreeDotsActions
+                  placement="bottom-center"
+                  onClickThreeDots={(e) => {
+                    e.stopPropagation();
+                  }}
+                  sx={{
+                    position: 'absolute',
+                    top: 4,
+                    right: 4,
+                    zIndex: 1,
+                    width: 24,
+                    height: 24,
+                    '& .MuiSvgIcon-root': { fontSize: 16 },
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                  actions={({ popover }) => (
+                    <MenuList>
+                      <MenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeStudentDialog.onTrue();
+                          popover.onClose();
+                        }}
+                        sx={{ color: 'error.main' }}
+                      >
+                        <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
+                        Remove Student
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                />
+              </Box>
+            )}
           </Box>
         )}
 

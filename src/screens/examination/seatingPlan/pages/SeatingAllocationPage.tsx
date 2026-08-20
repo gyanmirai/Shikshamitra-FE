@@ -9,7 +9,7 @@ import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -37,6 +37,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
@@ -59,7 +60,7 @@ import {
 import { autoAllocate } from '../utils/autoAllocate';
 import { validateSeatingDraft } from '../utils/validate';
 import RoomSwitcher from '../components/workspace/RoomSwitcher';
-import { seatId, useSeatingDraft } from '../hooks/useSeatingDraft';
+import { useSeatingDraft } from '../hooks/useSeatingDraft';
 import SeatLayoutCanvas from '../components/workspace/SeatLayoutCanvas';
 import StudentQueuePanel from '../components/workspace/StudentQueuePanel';
 import SeatInspectorPanel from '../components/workspace/SeatInspectorPanel';
@@ -71,16 +72,19 @@ import {
   toSeatingStudents,
   toSeatingRoomLayout,
   toSeatingAssignments,
+  toSeatingStudentsFromAllocations,
   upsertSeatingRoomLayout,
   toSaveSeatingPlanPayload,
 } from '../utils/mappers';
 
+import { DEFAULT_ALLOCATION_RULES } from '../types';
 import type {
   SeatingSeat,
   SeatingStudent,
   SeatingPlanScope,
   SeatingAssignment,
   SeatingPlanSubject,
+  SeatingAllocationRules,
 } from '../types';
 
 interface Props {
@@ -118,6 +122,7 @@ export default function SeatingAllocationPage({
   const [standardId, setStandardId] = useState('');
   const [division, setDivision] = useState('');
   const [activeRoomId, setActiveRoomId] = useState('');
+  const roomNameByIdRef = useRef(new Map<string, string>());
 
   const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set());
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -125,6 +130,8 @@ export default function SeatingAllocationPage({
   const [scopeDialogOpen, setScopeDialogOpen] = useState(false);
   const [scopeName, setScopeName] = useState('');
   const [scopeSubjectIds, setScopeSubjectIds] = useState<string[]>([]);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [isSubjectWiseMode, setIsSubjectWiseMode] = useState(false);
 
   useEffect(() => {
     const allClasses =
@@ -219,6 +226,14 @@ export default function SeatingAllocationPage({
   // True only on initial page load when core dropdown data is still missing
   const isInitialLoading = isScopesDataLoading || isDivisionsDataLoading;
 
+  // Room results are division-scoped. Retain their labels so switching divisions or
+  // subject-wise plans cannot let a late layout response expose an internal room UUID.
+  useEffect(() => {
+    (roomsData?.items || []).forEach((room: { id?: string; roomName?: string }) => {
+      if (room.id && room.roomName) roomNameByIdRef.current.set(room.id, room.roomName);
+    });
+  }, [roomsData]);
+
   // ── Mutations via useQueryAndMutation (skill § 4.2) ─────────────────────
   const [saveSeatingPlanScope, { isLoading: isSavingScope }] = useQueryAndMutation({
     type: 'mutation',
@@ -240,13 +255,33 @@ export default function SeatingAllocationPage({
     currentQueryAndMutation: useAutoAllocatePreviewMutation,
   });
 
-  const isSaving = isSavingSeatAllocation || isSavingPlanDraft;
+  const allSubjectScope = useMemo(
+    () => (scopesData?.items || []).find((scope: SeatingPlanScope) => scope.scopeType === 0),
+    [scopesData?.items]
+  );
+
+  const seatingPlanOptions = useMemo(() => {
+    const allItems = scopesData?.items || [];
+    const subjectWiseItems = allItems.filter((scope: SeatingPlanScope) => scope.scopeType !== 0);
+    if (isSubjectWiseMode && subjectWiseItems.length > 0) {
+      return subjectWiseItems;
+    }
+    if (allSubjectScope) {
+      return [allSubjectScope];
+    }
+    return allItems;
+  }, [scopesData?.items, isSubjectWiseMode, allSubjectScope]);
 
   useEffect(() => {
-    if (!selectedPlanId && scopesData?.items?.length) {
-      setSelectedPlanId(scopesData.items[0].seatingPlanId);
+    if (seatingPlanOptions.length) {
+      const exists = seatingPlanOptions.some(
+        (s: SeatingPlanScope) => s.seatingPlanId === selectedPlanId
+      );
+      if (!selectedPlanId || !exists) {
+        setSelectedPlanId(seatingPlanOptions[0].seatingPlanId);
+      }
     }
-  }, [scopesData, selectedPlanId]);
+  }, [seatingPlanOptions, selectedPlanId]);
 
   useEffect(() => {
     if (divisionsData?.items?.length) {
@@ -267,10 +302,18 @@ export default function SeatingAllocationPage({
     }
   }, [roomsData, activeRoomId]);
 
+  const { draft, setDraft, actions, canUndo, canRedo } = useSeatingDraft(buildEmptyDraft(examId));
+
+  const isSaving = isSavingSeatAllocation || isSavingPlanDraft;
+
   const selectedScope = (scopesData?.items || []).find(
     (scope: SeatingPlanScope) => scope.seatingPlanId === selectedPlanId
   );
-  const selectedPlanIsLocked = !!selectedScope?.isLocked;
+  const isPublished =
+    selectedScope?.status === 5 ||
+    planDraftData?.status === 5 ||
+    draft.status === 'published';
+  const selectedPlanIsLocked = !!selectedScope?.isLocked || isPublished;
   const selectedPlanHasAllocations = (selectedScope?.allocatedStudents ?? 0) > 0;
   const subjectWiseSubjectOwners = useMemo(() => {
     const owners = new Map<string, SeatingPlanScope>();
@@ -293,16 +336,12 @@ export default function SeatingAllocationPage({
   const selectedDialogSubjectIds = scopeSubjectIds.length
     ? scopeSubjectIds
     : (scopesData?.availableSubjects || [])
-        .filter(
-          (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
-        )
-        .map((subject: SeatingPlanSubject) => subject.examSubjectId);
+      .filter(
+        (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
+      )
+      .map((subject: SeatingPlanSubject) => subject.examSubjectId);
   const selectedDialogHasOwnedSubject = selectedDialogSubjectIds.some((subjectId: string) =>
     subjectWiseSubjectOwners.has(subjectId)
-  );
-
-  const { draft, setDraft, counters, roomUtilization, actions, canUndo, canRedo } = useSeatingDraft(
-    buildEmptyDraft(examId)
   );
 
   // Keep the host (workspace drawer) in sync so close actions can be intercepted
@@ -429,7 +468,7 @@ export default function SeatingAllocationPage({
     const layout = toSeatingRoomLayout(
       seatLayoutData,
       activeRoomId,
-      roomMeta?.roomName ?? activeRoomId
+      roomMeta?.roomName ?? roomNameByIdRef.current.get(activeRoomId) ?? activeRoomId
     );
     const loadedAssignments = toSeatingAssignments(seatLayoutData.items, activeRoomId);
 
@@ -444,7 +483,62 @@ export default function SeatingAllocationPage({
     });
   }, [activeRoomId, seatLayoutData, isSeatLayoutDataLoading, roomsData, setDraft]);
 
-  const validation = useMemo(() => validateSeatingDraft(draft), [draft]);
+  const currentDivisionRoomIds = useMemo(() => {
+    const roomIds = new Set<string>(
+      (roomsData?.items || []).map((room: { id: string }) => room.id).filter(Boolean)
+    );
+
+    // activeRoomId is cleared whenever the division changes. Until the new division's
+    // first room is selected, hide any cached rooms from the previous division.
+    return activeRoomId && roomIds.has(activeRoomId) ? roomIds : new Set<string>();
+  }, [roomsData, activeRoomId]);
+
+  const workspaceDraft = useMemo(
+    () => ({
+      ...draft,
+      roomIds: draft.roomIds.filter((roomId) => currentDivisionRoomIds.has(roomId)),
+      rooms: draft.rooms.filter((room) => currentDivisionRoomIds.has(room.roomId)),
+      assignments: draft.assignments.filter((assignment) =>
+        currentDivisionRoomIds.has(assignment.roomId)
+      ),
+    }),
+    [draft, currentDivisionRoomIds]
+  );
+
+  const workspaceCounters = useMemo(() => {
+    const eligibleStudents = workspaceDraft.students.filter(
+      (student) => !workspaceDraft.excludedStudentIds.includes(student.studentId)
+    );
+    const assignedStudentIds = new Set(
+      workspaceDraft.assignments.map((assignment) => assignment.studentId)
+    );
+    const allocatedCount = eligibleStudents.filter((student) =>
+      assignedStudentIds.has(student.studentId)
+    ).length;
+    const totalStudents = eligibleStudents.length;
+
+    return {
+      totalStudents,
+      allocatedCount,
+      pendingCount: Math.max(0, totalStudents - allocatedCount),
+      allocationProgress:
+        totalStudents === 0 ? 0 : Math.round((allocatedCount / totalStudents) * 100),
+    };
+  }, [workspaceDraft]);
+
+  const workspaceRoomUtilization = useMemo(
+    () =>
+      workspaceDraft.rooms.map((room) => {
+        const occupied = workspaceDraft.assignments.filter(
+          (assignment) => assignment.roomId === room.roomId
+        ).length;
+        const usable = room.seats.filter((seat) => !seat.isDisabled).length || room.capacity;
+        return { roomId: room.roomId, roomName: room.roomName, occupied, usable };
+      }),
+    [workspaceDraft]
+  );
+
+  const validation = useMemo(() => validateSeatingDraft(workspaceDraft), [workspaceDraft]);
   const conflictStudentIds = useMemo(
     () =>
       new Set(
@@ -465,25 +559,36 @@ export default function SeatingAllocationPage({
   );
 
   const activeRoom = draft.rooms.find((r) => r.roomId === activeRoomId);
-  const studentsById = useMemo(
-    () => new Map(draft.students.map((s) => [s.studentId, s])),
-    [draft.students]
-  );
+  const studentsById = useMemo(() => {
+    const students = new Map(draft.students.map((student) => [student.studentId, student]));
 
-  const emptySeats = draft.rooms.reduce(
+    // Keep the queue scoped to the selected division, while resolving every occupied
+    // seat from the room response (including students from other divisions/exams).
+    toSeatingStudentsFromAllocations(seatLayoutData?.items).forEach((student) => {
+      const existing = students.get(student.studentId);
+      students.set(student.studentId, existing ? { ...student, ...existing } : student);
+    });
+
+    return students;
+  }, [draft.students, seatLayoutData]);
+
+  const emptySeats = workspaceDraft.rooms.reduce(
     (sum, r) =>
       sum +
-      Math.max(0, r.seats.length - draft.assignments.filter((a) => a.roomId === r.roomId).length),
+      Math.max(
+        0,
+        r.seats.length - workspaceDraft.assignments.filter((a) => a.roomId === r.roomId).length
+      ),
     0
   );
   const overallUtilization =
-    draft.rooms.length === 0
+    workspaceDraft.rooms.length === 0
       ? 0
       : Math.round(
-          (draft.assignments.length /
-            draft.rooms.reduce((s, r) => s + (r.seats.length || r.capacity), 0 || 1)) *
-            100
-        );
+        (workspaceDraft.assignments.length /
+          workspaceDraft.rooms.reduce((s, r) => s + (r.seats.length || r.capacity), 0 || 1)) *
+        100
+      );
 
   const handleSaveDraft = useCallback(async () => {
     if (selectedPlanIsLocked) return;
@@ -531,24 +636,70 @@ export default function SeatingAllocationPage({
     selectedPlanIsLocked,
   ]);
 
+  const handleConfirmReset = useCallback(() => {
+    if (selectedPlanIsLocked || isPublished) return;
+
+    // Reset subject-wise mode and return Seating Plan dropdown to All Subjects
+    setIsSubjectWiseMode(false);
+    if (allSubjectScope?.seatingPlanId) {
+      setSelectedPlanId(allSubjectScope.seatingPlanId);
+    } else if (scopesData?.items?.length) {
+      const defaultScope =
+        scopesData.items.find((s: SeatingPlanScope) => s.scopeType === 0) || scopesData.items[0];
+      setSelectedPlanId(defaultScope.seatingPlanId);
+    }
+
+    // Reset local draft state in UI and mark dirty for manual Save Draft
+    setDraft((d) => ({
+      ...d,
+      assignments: [],
+      allocationRules: DEFAULT_ALLOCATION_RULES,
+      excludedStudentIds: [],
+      isDirty: true,
+    }));
+
+    setMultiSelectedIds(new Set());
+    if (divisionsData?.items?.length) {
+      setDivision(divisionsData.items[0].id);
+    }
+    setActiveRoomId('');
+    setResetConfirmOpen(false);
+    shikshaMitraToast.success({
+      message: 'Seating plan has been reset. Click "Save Draft" to save changes.',
+    });
+  }, [
+    selectedPlanIsLocked,
+    isPublished,
+    allSubjectScope,
+    scopesData?.items,
+    setDraft,
+    divisionsData?.items,
+  ]);
+
   const handleAutoAllocatePreview = useCallback(
-    (rules: typeof draft.allocationRules) => {
+    (rules: SeatingAllocationRules) => {
       const result = autoAllocate(
-        draft.students,
-        draft.rooms,
-        draft.assignments,
+        workspaceDraft.students,
+        workspaceDraft.rooms,
+        workspaceDraft.assignments,
         rules,
-        draft.excludedStudentIds
+        workspaceDraft.excludedStudentIds
       );
+      const studentIdSet = new Set(workspaceDraft.students.map((s) => s.studentId));
+      const newlyAllocatedForThisScope = result.assignments.filter((a) =>
+        studentIdSet.has(a.studentId)
+      ).length;
+      const totalEligible = workspaceDraft.students.filter(
+        (s) => !workspaceDraft.excludedStudentIds.includes(s.studentId)
+      ).length;
       const roomsUsed = new Set(result.assignments.map((a) => a.roomId)).size;
-      const usableTotal = draft.rooms.reduce(
+      const usableTotal = workspaceDraft.rooms.reduce(
         (s, r) => s + (r.seats.filter((se) => !se.isDisabled).length || r.capacity),
         0
       );
       return {
-        totalStudents: draft.students.filter((s) => !draft.excludedStudentIds.includes(s.studentId))
-          .length,
-        allocated: result.assignments.length,
+        totalStudents: totalEligible,
+        allocated: newlyAllocatedForThisScope,
         roomsUsed,
         remaining: result.unallocatedStudentIds.length,
         emptySeats: Math.max(0, usableTotal - result.assignments.length),
@@ -556,21 +707,40 @@ export default function SeatingAllocationPage({
           usableTotal === 0 ? 0 : Math.round((result.assignments.length / usableTotal) * 100),
       };
     },
-    [draft]
+    [workspaceDraft]
   );
 
-  const applyAutoAllocate = useCallback(() => {
-    if (selectedPlanIsLocked) return;
-    const result = autoAllocate(
-      draft.students,
-      draft.rooms,
+  const applyAutoAllocate = useCallback(
+    (appliedRules?: SeatingAllocationRules) => {
+      if (selectedPlanIsLocked) return;
+      const rulesToUse = appliedRules || draft.allocationRules;
+      const result = autoAllocate(
+        workspaceDraft.students,
+        workspaceDraft.rooms,
+        workspaceDraft.assignments,
+        rulesToUse,
+        workspaceDraft.excludedStudentIds
+      );
+      const otherDivisionAssignments = draft.assignments.filter(
+        (assignment) => !currentDivisionRoomIds.has(assignment.roomId)
+      );
+      actions.applyAssignments(
+        [...otherDivisionAssignments, ...result.assignments],
+        'auto-allocate'
+      );
+      setDraft((d) => ({ ...d, allocationRules: rulesToUse }));
+      shikshaMitraToast.success({ message: 'Auto-allocation applied.' });
+    },
+    [
       draft.assignments,
       draft.allocationRules,
-      draft.excludedStudentIds
-    );
-    actions.applyAssignments(result.assignments, 'auto-allocate');
-    shikshaMitraToast.success({ message: 'Auto-allocation applied.' });
-  }, [draft, actions, selectedPlanIsLocked]);
+      workspaceDraft,
+      currentDivisionRoomIds,
+      actions,
+      setDraft,
+      selectedPlanIsLocked,
+    ]
+  );
 
   const handleBulkAllocateSequential = useCallback(
     (studentIds: string[]) => {
@@ -611,11 +781,11 @@ export default function SeatingAllocationPage({
         rooms: d.rooms.map((room) =>
           room.roomId === roomId
             ? {
-                ...room,
-                seats: room.seats.map((seat) =>
-                  seat.seatNumber === seatNumber ? { ...seat, isReserved: !seat.isReserved } : seat
-                ),
-              }
+              ...room,
+              seats: room.seats.map((seat) =>
+                seat.seatNumber === seatNumber ? { ...seat, isReserved: !seat.isReserved } : seat
+              ),
+            }
             : room
         ),
         isDirty: true,
@@ -629,10 +799,10 @@ export default function SeatingAllocationPage({
     const chosenIds = scopeSubjectIds.length
       ? scopeSubjectIds
       : subjects
-          .filter(
-            (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
-          )
-          .map((subject: SeatingPlanSubject) => subject.examSubjectId);
+        .filter(
+          (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
+        )
+        .map((subject: SeatingPlanSubject) => subject.examSubjectId);
     if (!chosenIds.length) return;
     const ownedSubject = chosenIds.find((subjectId: string) =>
       subjectWiseSubjectOwners.has(subjectId)
@@ -652,6 +822,7 @@ export default function SeatingAllocationPage({
           examSubjectIds: chosenIds,
         },
       }).unwrap();
+      setIsSubjectWiseMode(true);
       setSelectedPlanId(response.seatingPlanId);
       setScopeDialogOpen(false);
       setScopeName('');
@@ -671,7 +842,10 @@ export default function SeatingAllocationPage({
       const firstExisting = (scopesData?.items || []).find(
         (scope: SeatingPlanScope) => scope.scopeType !== 0
       );
-      if (firstExisting?.seatingPlanId) setSelectedPlanId(firstExisting.seatingPlanId);
+      if (firstExisting?.seatingPlanId) {
+        setIsSubjectWiseMode(true);
+        setSelectedPlanId(firstExisting.seatingPlanId);
+      }
       return;
     }
 
@@ -688,6 +862,7 @@ export default function SeatingAllocationPage({
           }).unwrap()
         )
       );
+      setIsSubjectWiseMode(true);
       if (created[0]?.seatingPlanId) setSelectedPlanId(created[0].seatingPlanId);
       shikshaMitraToast.success({ message: 'Subject-wise plans created successfully.' });
     } catch {
@@ -704,9 +879,11 @@ export default function SeatingAllocationPage({
           standardName={draft.standardName}
           isDirty={draft.isDirty}
           isSaving={isSaving}
-          canAutoAllocate={!!activeRoom && canAutoAllocate && !selectedPlanIsLocked}
-          canFinalize={counters.pendingCount === 0 && validation.blockers.length === 0}
           isReadOnly={selectedPlanIsLocked}
+          isPublished={isPublished}
+          canAutoAllocate={!!activeRoom && canAutoAllocate && !selectedPlanIsLocked}
+          canReset={!selectedPlanIsLocked && !isPublished}
+          canFinalize={workspaceCounters.pendingCount === 0 && validation.blockers.length === 0}
           onBack={() => {
             if (onClose) {
               onClose();
@@ -716,6 +893,7 @@ export default function SeatingAllocationPage({
           }}
           onSaveDraft={handleSaveDraft}
           onAutoAllocate={() => setRulesOpen(true)}
+          onReset={() => setResetConfirmOpen(true)}
           onReview={async () => {
             if (!selectedPlanIsLocked && draft.isDirty) await handleSaveDraft();
             const currentRoomIds =
@@ -797,14 +975,14 @@ export default function SeatingAllocationPage({
               <Skeleton variant="rounded" height={60} sx={{ mx: 2, mt: 1, borderRadius: 1 }} />
             ) : (
               <AllocationProgressSummary
-                totalStudents={counters.totalStudents}
-                allocatedCount={counters.allocatedCount}
-                pendingCount={counters.pendingCount}
+                totalStudents={workspaceCounters.totalStudents}
+                allocatedCount={workspaceCounters.allocatedCount}
+                pendingCount={workspaceCounters.pendingCount}
                 emptySeats={emptySeats}
-                roomsUsed={draft.rooms.length}
+                roomsUsed={workspaceDraft.rooms.length}
                 utilization={overallUtilization}
                 conflicts={validation.blockers.length}
-                progress={counters.allocationProgress}
+                progress={workspaceCounters.allocationProgress}
               />
             )}
 
@@ -817,7 +995,7 @@ export default function SeatingAllocationPage({
               >
                 {/* Seating Plan Select with built-in skeleton */}
                 <CustomSelect
-                  options={scopesData?.items || []}
+                  options={seatingPlanOptions}
                   label="Seating Plan"
                   value={selectedPlanId}
                   onChange={(val) => setSelectedPlanId(val as string)}
@@ -886,35 +1064,35 @@ export default function SeatingAllocationPage({
               {(selectedPlanIsLocked ||
                 selectedPlanHasAllocations ||
                 allSubjectPlanWithAllocations) && (
-                <Stack spacing={1} sx={{ mt: 1 }}>
-                  {selectedPlanIsLocked && (
-                    <Alert severity="warning">
-                      This seating plan is finalized. Unlock it before changing seats, rooms, rules,
-                      or subjects.
-                    </Alert>
-                  )}
-                  {!selectedPlanIsLocked && selectedPlanHasAllocations && (
-                    <Alert severity="info">
-                      This plan already has allocations. Remove allocations before changing its
-                      subject scope.
-                    </Alert>
-                  )}
-                  {!selectedPlanIsLocked &&
-                    selectedScope?.scopeType !== 0 &&
-                    allSubjectPlanWithAllocations &&
-                    allSubjectPlanWithAllocations.seatingPlanId !== selectedPlanId && (
+                  <Stack spacing={1} sx={{ mt: 1 }}>
+                    {selectedPlanIsLocked && (
                       <Alert severity="warning">
-                        The all-subject plan already has allocations. Review validation before
-                        finalizing this subject plan.
+                        This seating plan is finalized. Unlock it before changing seats, rooms, rules,
+                        or subjects.
                       </Alert>
                     )}
-                </Stack>
-              )}
+                    {!selectedPlanIsLocked && selectedPlanHasAllocations && (
+                      <Alert severity="info">
+                        This plan already has allocations. Remove allocations before changing its
+                        subject scope.
+                      </Alert>
+                    )}
+                    {!selectedPlanIsLocked &&
+                      selectedScope?.scopeType !== 0 &&
+                      allSubjectPlanWithAllocations &&
+                      allSubjectPlanWithAllocations.seatingPlanId !== selectedPlanId && (
+                        <Alert severity="warning">
+                          The all-subject plan already has allocations. Review validation before
+                          finalizing this subject plan.
+                        </Alert>
+                      )}
+                  </Stack>
+                )}
             </Paper>
 
-            {draft.rooms.length > 0 && (
+            {workspaceDraft.rooms.length > 0 && (
               <RoomSwitcher
-                rooms={roomUtilization}
+                rooms={workspaceRoomUtilization}
                 activeRoomId={activeRoomId}
                 onSwitch={setActiveRoomId}
               />
@@ -1033,19 +1211,18 @@ export default function SeatingAllocationPage({
           onPreview={(rules) => {
             if (selectedPlanIsLocked) {
               return {
-                totalStudents: counters.totalStudents,
-                allocated: counters.allocatedCount,
-                roomsUsed: draft.rooms.length,
-                remaining: counters.pendingCount,
+                totalStudents: workspaceCounters.totalStudents,
+                allocated: workspaceCounters.allocatedCount,
+                roomsUsed: workspaceDraft.rooms.length,
+                remaining: workspaceCounters.pendingCount,
                 emptySeats,
                 utilization: overallUtilization,
               };
             }
-            setDraft((d) => ({ ...d, allocationRules: rules }));
             return handleAutoAllocatePreview(rules);
           }}
           onApply={applyAutoAllocate}
-          onCancelPreview={() => {}}
+          onCancelPreview={() => { }}
         />
 
         {/* Scope Creation Dialog */}
@@ -1060,11 +1237,11 @@ export default function SeatingAllocationPage({
               const chosenIds = values.subjectIds.length
                 ? values.subjectIds
                 : subjects
-                    .filter(
-                      (subject: SeatingPlanSubject) =>
-                        !subjectWiseSubjectOwners.has(subject.examSubjectId)
-                    )
-                    .map((subject: SeatingPlanSubject) => subject.examSubjectId);
+                  .filter(
+                    (subject: SeatingPlanSubject) =>
+                      !subjectWiseSubjectOwners.has(subject.examSubjectId)
+                  )
+                  .map((subject: SeatingPlanSubject) => subject.examSubjectId);
               if (!chosenIds.length) {
                 setSubmitting(false);
                 return;
@@ -1090,6 +1267,7 @@ export default function SeatingAllocationPage({
                     examSubjectIds: chosenIds,
                   },
                 }).unwrap();
+                setIsSubjectWiseMode(true);
                 setSelectedPlanId(response.seatingPlanId);
                 setScopeDialogOpen(false);
                 setScopeName('');
@@ -1204,8 +1382,8 @@ export default function SeatingAllocationPage({
                                       const nextIds = event.target.checked
                                         ? [...values.subjectIds, subject.examSubjectId]
                                         : values.subjectIds.filter(
-                                            (id) => id !== subject.examSubjectId
-                                          );
+                                          (id) => id !== subject.examSubjectId
+                                        );
                                       setFieldValue('subjectIds', nextIds);
                                       setScopeSubjectIds(nextIds);
                                     }}
@@ -1233,6 +1411,25 @@ export default function SeatingAllocationPage({
             )}
           </Formik>
         )}
+
+        {/* Reset Confirmation Dialog */}
+        <ConfirmDialog
+          open={resetConfirmOpen}
+          onClose={() => setResetConfirmOpen(false)}
+          title="Reset Seating Plan"
+          content="Are you sure you want to reset the seating plan? All assigned seats in the workspace will be cleared and the plan will return to All Subjects. You can click 'Save Draft' to save your changes."
+          icon="warning"
+          action={
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={handleConfirmReset}
+            >
+              Reset
+            </Button>
+          }
+        />
       </Box>
     </DndContext>
   );

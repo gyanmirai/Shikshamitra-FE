@@ -70,9 +70,12 @@ export const useSubjectCard = ({
   }, [formik.errors, formik.touched, index]);
 
   const handleDropzoneChange = async (droppedFiles: any[]) => {
-    // Filter to only new File objects (not already-uploaded strings)
-    const newFiles = droppedFiles.filter((f): f is File => typeof f !== 'string');
-    const existingFiles = droppedFiles.filter((f) => typeof f === 'string');
+    // Filter to only new File objects (not already-uploaded strings/objects)
+    const newFiles = droppedFiles.filter((f): f is File => f instanceof File);
+    const existingFiles = droppedFiles
+      .filter((f) => !(f instanceof File))
+      .map((f) => (typeof f === 'string' ? f : f?.url || f?.filePath || ''))
+      .filter(Boolean);
 
     if (newFiles.length === 0) {
       formik.setFieldValue(`subjects.${index}.documents`, existingFiles);

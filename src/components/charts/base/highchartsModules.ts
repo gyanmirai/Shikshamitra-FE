@@ -6,21 +6,20 @@
 // here keeps every consuming chart fully featured (heatmap, gauge, export,
 // accessibility, etc.) without requiring per-chart wiring.
 //
-// Highcharts v12 modules are UMD bundles that self-register against the
-// global `_Highcharts` reference set by the highcharts entry. Importing
-// them for side-effects is enough.
+// Highcharts v13 with @highcharts/react uses the es-modules master modules.
+// Importing them registers each module on the shared Highcharts instance.
 
-import Highcharts from 'highcharts/esm/highcharts.js';
-import 'highcharts/esm/highcharts-more.js';
-import 'highcharts/esm/modules/solid-gauge.js';
-import 'highcharts/esm/modules/heatmap.js';
-import 'highcharts/esm/modules/treemap.js';
-import 'highcharts/esm/modules/funnel.js';
-import 'highcharts/esm/modules/exporting.js';
-import 'highcharts/esm/modules/export-data.js';
-import 'highcharts/esm/modules/offline-exporting.js';
-import 'highcharts/esm/modules/accessibility.js';
-import 'highcharts/esm/modules/pattern-fill.js';
+import Highcharts from 'highcharts/es-modules/masters/highcharts.src.js';
+import 'highcharts/es-modules/masters/highcharts-more.src.js';
+import 'highcharts/es-modules/masters/modules/solid-gauge.src.js';
+import 'highcharts/es-modules/masters/modules/heatmap.src.js';
+import 'highcharts/es-modules/masters/modules/treemap.src.js';
+import 'highcharts/es-modules/masters/modules/funnel.src.js';
+import 'highcharts/es-modules/masters/modules/exporting.src.js';
+import 'highcharts/es-modules/masters/modules/export-data.src.js';
+import 'highcharts/es-modules/masters/modules/offline-exporting.src.js';
+import 'highcharts/es-modules/masters/modules/accessibility.src.js';
+import 'highcharts/es-modules/masters/modules/pattern-fill.src.js';
 
 export function ensureHighchartsModules(): typeof Highcharts {
   return Highcharts;

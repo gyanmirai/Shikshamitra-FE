@@ -255,8 +255,21 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             <FileUploader
               multiple
               showVisibleDocumentCount={6}
-              value={subject.documents as any[]}
+              value={
+                subject.documents?.map((doc: any) => {
+                  if (typeof doc === 'string') {
+                    return {
+                      url: doc,
+                      filePath: doc,
+                      name: getFileNameFromUrl(doc),
+                      size: undefined,
+                    };
+                  }
+                  return doc;
+                }) as any[]
+              }
               onChange={handleDropzoneChange}
+              isLoading={isUploading}
               onPreview={(file: any) => {
                 const url =
                   file instanceof File

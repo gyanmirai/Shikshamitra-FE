@@ -21,6 +21,8 @@ interface ReviewAndLockDialogProps {
   subjectCapacity: SubjectCapacityRow[];
   preferenceMatchPct: number | null;
   canLock: boolean;
+  hasUnsavedChanges: boolean;
+  isLocked: boolean;
   isLocking: boolean;
   onConfirmLock: () => void;
 }
@@ -34,6 +36,8 @@ export default function ReviewAndLockDialog({
   subjectCapacity,
   preferenceMatchPct,
   canLock,
+  hasUnsavedChanges,
+  isLocked,
   isLocking,
   onConfirmLock,
 }: ReviewAndLockDialogProps) {
@@ -60,12 +64,24 @@ export default function ReviewAndLockDialog({
     >
       <DialogScrollContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-          {!canLock && (
+          {isLocked ? (
+            <Alert severity="info" icon={<Iconify icon="solar:info-circle-bold-duotone" />}>
+              These elective assignments are locked and cannot be modified.
+            </Alert>
+          ) : unassigned > 0 ? (
             <Alert severity="error" icon={<Iconify icon="solar:danger-triangle-bold-duotone" />}>
               {unassigned} student{unassigned === 1 ? '' : 's'} still need an elective assignment.
               Assign and save before locking.
             </Alert>
-          )}
+          ) : hasUnsavedChanges ? (
+            <Alert severity="warning" icon={<Iconify icon="solar:danger-triangle-bold-duotone" />}>
+              You have unsaved changes. Save the draft before locking.
+            </Alert>
+          ) : total === 0 ? (
+            <Alert severity="info" icon={<Iconify icon="solar:info-circle-bold-duotone" />}>
+              No students found for this elective group.
+            </Alert>
+          ) : null}
 
           <Box>
             <Typography variant="overline" color="text.secondary">

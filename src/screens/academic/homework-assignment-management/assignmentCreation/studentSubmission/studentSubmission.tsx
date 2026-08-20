@@ -135,6 +135,18 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     [activeFilter, normalizedData]
   );
 
+  // Unsubmitted rows share the API's empty submission UUID. Give the table a
+  // stable student-specific ID while retaining the real submission ID for actions.
+  const tableData = React.useMemo(
+    () =>
+      filteredData.map((row: any) => ({
+        ...row,
+        submissionId: row.id,
+        id: row.studentId || row.id,
+      })),
+    [filteredData]
+  );
+
   const summary = React.useMemo(
     () => getEvaluationSummary(normalizedData, assignmentSubmissions?.summary),
     [assignmentSubmissions?.summary, normalizedData]
@@ -248,6 +260,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     (row: any) => {
       setSelectedStudent({
         ...(row as TStudentGrade),
+        id: row.submissionId ?? row.id,
         totalMarks: resolveTotalMarks(row),
       });
       viewSubmissionDialog.onTrue();
@@ -452,6 +465,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                     onClick={() => {
                       setSelectedStudent({
                         ...(row as TStudentGrade),
+                        id: row.submissionId ?? row.id,
                         totalMarks: resolveTotalMarks(row),
                       });
                       viewSubmissionDialog.onTrue();
@@ -530,7 +544,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
           ]}
           isLoading={isSubmissionsLoading || isFetching}
-          data={filteredData}
+          data={tableData}
         />
       </Box>
 
