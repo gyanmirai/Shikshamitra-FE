@@ -311,7 +311,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           onFilterChange={setActiveFilter}
         />
       </Stack>
-      <Box sx={{ mt: 1.5 }}>
+      <Box>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents?.length > 0}
@@ -570,9 +570,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               <Typography variant="h5">
                 {usesRubric
                   ? 'Rubric Evaluation'
-                  : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${
-                      requiresMarks ? 'Feedback & Marks' : 'Feedback'
-                    }`}
+                  : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${requiresMarks ? 'Feedback & Marks' : 'Feedback'
+                  }`}
               </Typography>
               <CustomTooltip
                 arrow

@@ -107,6 +107,26 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     [activeFilter, normalizedData]
   );
 
+  // Unsubmitted rows share the API's empty submission UUID. Give the table a
+  // stable student-specific ID while retaining the real submission ID for actions.
+  const tableData = React.useMemo(
+    () =>
+      filteredData.map((row: any) => ({
+        ...row,
+        submissionId: row.id,
+        id: row.studentId || row.id,
+      })),
+    [filteredData]
+  );
+
+  const getSubmissionStudent = React.useCallback(
+    (row: any): TStudentGrade => ({
+      ...(row as TStudentGrade),
+      id: row.submissionId ?? row.id,
+    }),
+    []
+  );
+
   const summary = React.useMemo(
     () => getEvaluationSummary(normalizedData, homeworkSubmissions?.summary),
     [homeworkSubmissions?.summary, normalizedData]
@@ -209,10 +229,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   const openStudent = React.useCallback(
     (row: any) => {
-      setSelectedStudent(row as TStudentGrade);
+      setSelectedStudent(getSubmissionStudent(row));
       viewSubmissionDialog.onTrue();
     },
-    [viewSubmissionDialog]
+    [getSubmissionStudent, viewSubmissionDialog]
   );
 
   return (
@@ -223,7 +243,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         flex: 1,
         minHeight: 0,
         height: '100%',
-        gap: 1.5,
       }}
     >
       <Stack spacing={1}>
@@ -351,7 +370,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 return (
                   <Box
                     onClick={() => {
-                      setSelectedStudent(row as TStudentGrade);
+                      setSelectedStudent(getSubmissionStudent(row));
                       viewSubmissionDialog.onTrue();
                     }}
                     sx={{
@@ -461,7 +480,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
           ]}
           isLoading={isSubmissionsLoading || isFetching}
-          data={filteredData}
+          data={tableData}
         />
       </Box>
 

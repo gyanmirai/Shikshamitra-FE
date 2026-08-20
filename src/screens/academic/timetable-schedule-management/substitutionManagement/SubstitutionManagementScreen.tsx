@@ -15,9 +15,10 @@ import type {
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
+import { useSelector, useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
+import { academicType } from 'src/redux/tagTypes';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -43,6 +44,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { substitutionManagementApi } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
 import {
   Add,
   Save,
@@ -463,15 +465,16 @@ const getAvailabilityActionLabel = (availability: TeacherAvailabilityRow) => {
   if (availability.affectedLectureCount <= 0) return 'No affected lectures';
 
   const statuses = availability.activeSubstitutionStatuses ?? [];
-  if (statuses.includes('Pending')) return 'Pending assignment';
-  if (statuses.includes('Conflict')) return 'Conflict';
-  if (statuses.includes('Waiting Ack')) return 'Awaiting acknowledgement';
-  if (statuses.includes('Assigned')) return 'Assigned';
   if (statuses.includes('Acknowledged')) return 'Covered';
   if (statuses.includes('Completed')) return 'Completed';
+  if (statuses.includes('Waiting Ack')) return 'Awaiting acknowledgement';
+  if (statuses.includes('Assigned')) return 'Assigned';
+  if (statuses.includes('Conflict')) return 'Conflict';
   if (statuses.includes('Rejected')) return 'Rejected';
   if (statuses.includes('Cancelled')) return 'Cancelled';
+  if (statuses.includes('Pending')) return 'Create substitution';
   if (availability.canCreateSubstitution === true) return 'Create substitution';
+  if (availability.affectedLectureCount > 0 && statuses.length === 0) return 'Create substitution';
   return 'Already created';
 };
 
@@ -708,6 +711,7 @@ const uniqueLookupOptions = <T extends ApiLookupOption>(items: T[]): T[] => {
 };
 
 const SubstitutionManagementScreen = () => {
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('board');
   const isViewportTab = ['board', 'availability'].includes(activeTab);
   const [boardView, setBoardView] = useState<SubstitutionViewType>('table');
@@ -729,6 +733,7 @@ const SubstitutionManagementScreen = () => {
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
+  const [creatingFromAvailabilityRowId, setCreatingFromAvailabilityRowId] = useState<string | null>(null);
 
   const availabilityStartTimeStr = useMemo(() => {
     if (availabilityForm.isFullDay) return '09:00';
@@ -788,6 +793,7 @@ const SubstitutionManagementScreen = () => {
     action: 'accept' | 'reject' | 'change';
   } | null>(null);
   const [dutyConfirmNote, setDutyConfirmNote] = useState('');
+  const [shouldRefreshDuties, setShouldRefreshDuties] = useState(false);
   const [createFormDirty, setCreateFormDirty] = useState(false);
   const [createUnsavedConfirmOpen, setCreateUnsavedConfirmOpen] = useState(false);
   const [availabilityFormDirty, setAvailabilityFormDirty] = useState(false);
@@ -810,29 +816,29 @@ const SubstitutionManagementScreen = () => {
     academicYearId: currentYear?.id || undefined,
     academicMediumId: medium?.id || undefined,
   };
+  const selectedFilterDate = filters.filterDate || dayjs(todayIso);
   const {
     data: substitutionResult,
     isLoading: isSubstitutionsLoading,
-    refetch: refetchSubstitutions,
+    isFetching: isSubstitutionsFetching,
   } = useSubstitutionsDataQuery({
     ...academicContextParams,
-    fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
-    toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
+    fromDate: toDateTimeOffset(selectedFilterDate.startOf('day')),
+    toDate: toDateTimeOffset(selectedFilterDate.endOf('day')),
     maxResultCount: 200,
   });
   const {
     data: dashboardResult,
     isLoading: isDashboardLoading,
     isFetching: isDashboardFetching,
-    refetch: refetchDashboard,
   } = useSubstitutionDashboardDataQuery({
     ...academicContextParams,
-    date: toDateTimeOffset(dayjs(todayIso).startOf('day')),
+    date: toDateTimeOffset(selectedFilterDate.startOf('day')),
   });
   const {
     data: myDutiesResult,
     isLoading: isMyDutiesLoading,
-    refetch: refetchMyDuties,
+    isFetching: isMyDutiesFetching,
   } = useMySubstitutionDutiesDataQuery({
     ...academicContextParams,
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
@@ -842,7 +848,7 @@ const SubstitutionManagementScreen = () => {
   const {
     data: availabilityResult,
     isLoading: isAvailabilityLoading,
-    refetch: refetchAvailability,
+    isFetching: isAvailabilityFetching,
   } = useTeacherAvailabilityDataQuery({
     ...academicContextParams,
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
@@ -1218,31 +1224,6 @@ const SubstitutionManagementScreen = () => {
     [filters.filterDate]
   );
 
-  const filteredTeacherAvailability = useMemo(() => {
-    const dateValue = filters.filterDate ? filters.filterDate.format('YYYY-MM-DD') : null;
-
-    return teacherAvailability.filter((item) => {
-      const matchesDate = !dateValue || item.availabilityDate === dateValue;
-      const matchesTeacher =
-        filters.teacherFilter === 'all' || item.teacherName === filters.teacherFilter;
-      const matchesDept =
-        filters.departmentFilter === 'all' || item.departmentName === filters.departmentFilter;
-      const matchesStatus =
-        filters.statusFilter === 'all' || item.availabilityStatus === filters.statusFilter;
-      const matchesSource =
-        filters.sourceFilter === 'all' || item.sourceType === filters.sourceFilter;
-      const matchesReason = filters.reasonFilter === 'all' || item.reason === filters.reasonFilter;
-
-      return (
-        matchesDate &&
-        matchesTeacher &&
-        matchesDept &&
-        matchesStatus &&
-        matchesSource &&
-        matchesReason
-      );
-    });
-  }, [filters, teacherAvailability]);
 
   const todayRows = useMemo(
     () => substitutions.filter((item) => item.date === selectedDateIso),
@@ -1765,17 +1746,14 @@ const SubstitutionManagementScreen = () => {
   };
 
   const handleCreateSubstitutionFromAvailability = async (row: TeacherAvailabilityRow) => {
-    if (
-      row.affectedLectureCount <= 0 ||
-      row.canCreateSubstitution !== true ||
-      (row.activeSubstitutionStatuses?.length ?? 0) > 0
-    ) {
+    if (row.affectedLectureCount <= 0) {
       shikshaMitraToast.error({
-        message: 'Substitution is already created or no affected lecture is available.',
+        message: 'No affected lecture is available for this teacher.',
       });
       return;
     }
 
+    setCreatingFromAvailabilityRowId(row.id);
     try {
       const result = await getAffectedLectures({
         teacherId: row.teacherId || undefined,
@@ -1787,33 +1765,42 @@ const SubstitutionManagementScreen = () => {
         reason: row.reason || 'Teacher Unavailable',
         maxResultCount: 100,
       }).unwrap();
-      const lecture = result.items
-        .map(mapApiAffectedLecture)
-        .find((item) => item.canCreateSubstitution !== false);
+      const lecture =
+        result.items
+          .map(mapApiAffectedLecture)
+          .find((item) => item.canCreateSubstitution !== false) ||
+        (result.items.length > 0 ? mapApiAffectedLecture(result.items[0]) : null);
 
-      if (!lecture) {
-        shikshaMitraToast.error({
-          message: 'Substitution is already created for all affected lectures.',
+      if (lecture) {
+        openSubstitutionForLecture(lecture, {
+          availabilityDate: dayjs(row.availabilityDate),
+          teacherId: row.teacherId,
+          teacherName: row.teacherName,
+          reason: row.reason || 'Teacher Unavailable',
+          remarks: row.remarks,
+          sourceType: row.sourceType,
         });
-        setTeacherAvailability((current) =>
-          current.map((item) =>
-            item.id === row.id ? { ...item, canCreateSubstitution: false } : item
-          )
-        );
-        return;
+      } else {
+        setFormError('');
+        setSubstitutionForm({
+          ...defaultSubstitutionForm,
+          date: dayjs(row.availabilityDate),
+          originalTeacherId: row.teacherId || '',
+          originalTeacherName: row.teacherName,
+          reason: row.reason || 'Teacher Unavailable',
+          startTime: row.startTime,
+          endTime: row.endTime,
+          remarks: row.remarks || '',
+          assignmentSource: toAssignmentSourceFromAvailability(row.sourceType),
+        });
+        setCameFromAvailability(false);
+        setCreateDialogOpen(true);
       }
-
-      openSubstitutionForLecture(lecture, {
-        availabilityDate: dayjs(row.availabilityDate),
-        teacherId: row.teacherId,
-        teacherName: row.teacherName,
-        reason: row.reason || 'Teacher Unavailable',
-        remarks: row.remarks,
-        sourceType: row.sourceType,
-      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to load affected lectures.';
       shikshaMitraToast.error({ message });
+    } finally {
+      setCreatingFromAvailabilityRowId(null);
     }
   };
 
@@ -2024,10 +2011,27 @@ const SubstitutionManagementScreen = () => {
   }, []);
 
   const closeDutyConfirmModal = useCallback(() => {
+    if (isAcknowledging || isRequestingChange || isRejectingDuty) return;
     setDutyConfirmOpen(false);
     setDutyConfirmPayload(null);
     setDutyConfirmNote('');
-  }, []);
+  }, [isAcknowledging, isRejectingDuty, isRequestingChange]);
+
+  useEffect(() => {
+    if (dutyConfirmOpen || !shouldRefreshDuties) return;
+
+    setShouldRefreshDuties(false);
+    // Invalidate only after the confirmation dialog has unmounted. RTK Query then
+    // refetches every active substitution-management query and exposes isFetching
+    // to the owning table instead of showing background loading behind the dialog.
+    dispatch(
+      substitutionManagementApi.util.invalidateTags([academicType.substitutionManagement])
+    );
+  }, [
+    dispatch,
+    dutyConfirmOpen,
+    shouldRefreshDuties,
+  ]);
 
   /**
    * Memoization Justification:
@@ -2038,30 +2042,16 @@ const SubstitutionManagementScreen = () => {
   const handleTeacherDutyAction = useCallback(
     async (id: string, action: 'accept' | 'reject' | 'change', reason: string) => {
       try {
-        const updated =
-          action === 'accept'
-            ? await acknowledgeSubstitution({
-              id,
-              reason: reason || undefined,
-            }).unwrap()
-            : action === 'reject'
-              ? await rejectSubstitutionDuty({
-                id,
-                reason,
-              }).unwrap()
-              : await requestSubstitutionChange({
-                id,
-                reason,
-              }).unwrap();
-        if (updated) {
-          updateSubstitution(id, () => mapApiSubstitution(updated));
+        if (action === 'accept') {
+          await acknowledgeSubstitution({
+            id,
+            reason: reason || undefined,
+          }).unwrap();
+        } else if (action === 'reject') {
+          await rejectSubstitutionDuty({ id, reason }).unwrap();
+        } else {
+          await requestSubstitutionChange({ id, reason }).unwrap();
         }
-        await Promise.all([
-          refetchMyDuties?.(),
-          refetchSubstitutions?.(),
-          refetchDashboard?.(),
-          refetchAvailability?.(),
-        ]);
         shikshaMitraToast.success({
           message:
             action === 'accept'
@@ -2070,6 +2060,7 @@ const SubstitutionManagementScreen = () => {
                 ? 'Substitution duty rejected and admin notified.'
                 : 'Substitution change request sent to admin successfully.',
         });
+        return true;
       } catch (error) {
         const message = resolveDutyActionErrorMessage(
           error,
@@ -2080,29 +2071,30 @@ const SubstitutionManagementScreen = () => {
               : 'Unable to request substitution change.'
         );
         shikshaMitraToast.error({ message });
+        return false;
       }
     },
     [
       acknowledgeSubstitution,
-      refetchAvailability,
-      refetchDashboard,
-      refetchMyDuties,
-      refetchSubstitutions,
       rejectSubstitutionDuty,
       requestSubstitutionChange,
-      updateSubstitution,
     ]
   );
 
   const handleDutyConfirmSubmit = useCallback(async () => {
     if (!dutyConfirmPayload) return;
-    closeDutyConfirmModal();
-    await handleTeacherDutyAction(
+    const succeeded = await handleTeacherDutyAction(
       dutyConfirmPayload.id,
       dutyConfirmPayload.action,
       dutyConfirmNote.trim()
     );
-  }, [dutyConfirmPayload, dutyConfirmNote, closeDutyConfirmModal, handleTeacherDutyAction]);
+    if (succeeded) {
+      setDutyConfirmOpen(false);
+      setDutyConfirmPayload(null);
+      setDutyConfirmNote('');
+      setShouldRefreshDuties(true);
+    }
+  }, [dutyConfirmPayload, dutyConfirmNote, handleTeacherDutyAction]);
 
   const handleDownloadDailySheet = async (format: 'pdf' | 'excel') => {
     const params = {
@@ -2497,39 +2489,42 @@ const SubstitutionManagementScreen = () => {
       stickyPosition: 'right' as const,
       render: (_value: any, row: any) => {
         const actionLabel = getAvailabilityActionLabel(row);
-        const hasExistingSubstitution = (row.activeSubstitutionStatuses?.length ?? 0) > 0;
-        const pendingSubstitutionId = row.pendingSubstitutionIds?.[0];
+        const canCreate =
+          actionLabel === 'Create substitution' ||
+          (row.affectedLectureCount > 0 &&
+            (row.canCreateSubstitution === true ||
+              row.activeSubstitutionStatuses?.includes('Pending') ||
+              (row.activeSubstitutionStatuses?.length ?? 0) === 0));
 
-        if (actionLabel === 'Pending assignment' && pendingSubstitutionId && isAdminOrManager) {
+        if (canCreate && isAdminOrManager) {
           return (
             <LoadingButton
               size="small"
-              variant="contained"
-              startIcon={<Iconify icon="mdi:account-check-outline" width={16} />}
-              onClick={() => openAssignDialog(pendingSubstitutionId)}
+              variant="outlined"
+              loading={creatingFromAvailabilityRowId === row.id}
+              startIcon={<Iconify icon="mdi:plus-circle-outline" width={16} />}
+              onClick={() => handleCreateSubstitutionFromAvailability(row)}
             >
-              Assign
+              Create Substitution
             </LoadingButton>
           );
         }
 
-        if (actionLabel !== 'Create substitution') {
-          return (
-            <Label color={hasExistingSubstitution ? 'success' : 'default'} variant="soft">
-              {actionLabel}
-            </Label>
-          );
-        }
+        const getActionLabelColor = (): 'default' | 'success' | 'warning' | 'error' | 'info' => {
+          if (row.affectedLectureCount <= 0) return 'default';
+          const statuses = row.activeSubstitutionStatuses ?? [];
+          if (statuses.includes('Acknowledged') || statuses.includes('Completed')) return 'success';
+          if (statuses.includes('Waiting Ack')) return 'warning';
+          if (statuses.includes('Pending')) return 'warning';
+          if (statuses.includes('Conflict') || statuses.includes('Rejected')) return 'error';
+          if (statuses.includes('Assigned')) return 'info';
+          return 'default';
+        };
 
         return (
-          <LoadingButton
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:plus-circle-outline" width={16} />}
-            onClick={() => handleCreateSubstitutionFromAvailability(row)}
-          >
-            Create Substitution
-          </LoadingButton>
+          <Label color={getActionLabelColor()} variant="soft">
+            {actionLabel}
+          </Label>
         );
       },
     },
@@ -2610,10 +2605,6 @@ const SubstitutionManagementScreen = () => {
         const isTerminal = ['Completed', 'Cancelled', 'Rejected'].includes(item.status);
         const isAccepted = item.acknowledgementStatus === 'Accepted';
         const isRejected = item.acknowledgementStatus === 'Rejected' || item.status === 'Rejected';
-        const isDutyTarget = dutyConfirmPayload?.id === item.id;
-        const isAccepting = isAcknowledging && isDutyTarget;
-        const isChanging = isRequestingChange && isDutyTarget;
-        const isRejecting = isRejectingDuty && isDutyTarget;
         const isCardBusy = isAcknowledging || isRequestingChange || isRejectingDuty;
         const isChangeRequested = item.acknowledgementStatus === 'Change Requested';
 
@@ -2634,7 +2625,6 @@ const SubstitutionManagementScreen = () => {
               variant="contained"
               color="success"
               disabled={isActionDisabled}
-              loading={isAccepting}
               startIcon={<Iconify icon="mdi:check" width={16} />}
               onClick={() => openDutyConfirmModal(item.id, 'accept')}
             >
@@ -2645,7 +2635,6 @@ const SubstitutionManagementScreen = () => {
               variant="outlined"
               color="warning"
               disabled={isActionDisabled}
-              loading={isChanging}
               startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
               onClick={() => openDutyConfirmModal(item.id, 'change')}
             >
@@ -2656,7 +2645,6 @@ const SubstitutionManagementScreen = () => {
               variant="outlined"
               color="error"
               disabled={isActionDisabled}
-              loading={isRejecting}
               startIcon={<Iconify icon="mdi:close" width={16} />}
               onClick={() => openDutyConfirmModal(item.id, 'reject')}
             >
@@ -3136,7 +3124,7 @@ const SubstitutionManagementScreen = () => {
         tableTitle="Substitution Board"
         data={filteredSubstitutions}
         columns={substitutionColumns}
-        isLoading={isSubstitutionsLoading}
+        isLoading={isSubstitutionsLoading || isSubstitutionsFetching}
       />
     );
   };
@@ -3344,7 +3332,7 @@ const SubstitutionManagementScreen = () => {
           )}
         </Stack>
 
-        {['board', 'availability'].includes(activeTab) && getActiveFilters(filters).length > 0 && (
+        {activeTab === 'board' && getActiveFilters(filters).length > 0 && (
           <Box
             sx={{
               p: 1.5,
@@ -3380,8 +3368,8 @@ const SubstitutionManagementScreen = () => {
             <CustomizableTable
               tableId="teacher-availability-table"
               tableTitle="Teacher Availability"
-              isLoading={isAvailabilityLoading}
-              data={filteredTeacherAvailability}
+              isLoading={isAvailabilityLoading || isAvailabilityFetching}
+              data={teacherAvailability}
               columns={availabilityColumns}
             />
           </Box>
@@ -3393,7 +3381,7 @@ const SubstitutionManagementScreen = () => {
               tableId="my-duties-table"
               tableTitle="My Substitution Duties"
               data={myDutyRows}
-              isLoading={isMyDutiesLoading}
+              isLoading={isMyDutiesLoading || isMyDutiesFetching}
               columns={myDutyColumns}
             />
           </Box>
@@ -5294,6 +5282,7 @@ const SubstitutionManagementScreen = () => {
         <CustomDialog
           open={dutyConfirmOpen}
           handleClose={closeDutyConfirmModal}
+          disableClose={isAcknowledging || isRequestingChange || isRejectingDuty}
           title={
             <Box component="span" display="flex" alignItems="center" gap={1}>
               <Box component="span">

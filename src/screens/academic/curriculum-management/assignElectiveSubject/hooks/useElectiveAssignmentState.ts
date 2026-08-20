@@ -71,6 +71,18 @@ export default function useElectiveAssignmentState({
     });
   }, []);
 
+  const resetSelections = useCallback(() => {
+    if (!serverRecords) {
+      setStudentSelections({});
+      return;
+    }
+    const initial: Record<string, string> = {};
+    serverRecords.forEach((st) => {
+      if (st.selectedSubjectId) initial[st.studentId] = st.selectedSubjectId;
+    });
+    setStudentSelections(initial);
+  }, [serverRecords]);
+
   const toggleRowSelected = useCallback((studentId: string) => {
     setSelectedRowIds((prev) => {
       const next = new Set(prev);
@@ -210,11 +222,10 @@ export default function useElectiveAssignmentState({
   const workflowStatus: AssignmentWorkflowStatus = useMemo(() => {
     if (isLocked) return 'locked';
     if (hasUnsavedChanges) {
-      if (!hasSelections) return 'draft';
-      return allStudentsAssigned ? 'readyToLock' : 'partiallyAssigned';
+      return 'draft';
     }
     if (!hasSelections) return 'draft';
-    return allStudentsAssigned ? 'readyToLock' : 'saved';
+    return allStudentsAssigned ? 'readyToLock' : 'partiallyAssigned';
   }, [isLocked, hasUnsavedChanges, hasSelections, allStudentsAssigned]);
 
   return {
@@ -223,6 +234,7 @@ export default function useElectiveAssignmentState({
     assignSubject,
     bulkAssignSubject,
     clearSelections,
+    resetSelections,
     searchTerm,
     setSearchTerm,
     statusFilter,
