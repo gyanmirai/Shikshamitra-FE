@@ -805,9 +805,40 @@ const AddLessonPlanModal = ({
                     }}
                   >
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                        Planned Completion Target
-                      </Typography>
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                          Target Chapter Completion
+                        </Typography>
+                        <CustomTooltip
+                          placement="top"
+                          arrow
+                          title={
+                            <Box sx={{ p: 1, maxWidth: 280 }}>
+                              <Typography
+                                variant="caption"
+                                sx={{ lineHeight: 1.5, display: 'block' }}
+                              >
+                                <Box component="span" sx={{ fontWeight: 700 }}>
+                                  Chapter Completion Target
+                                </Box>{' '}
+                                indicates the percentage of the selected chapter that is planned to be completed by the end of this lesson. This helps track the intended progress through the chapter.
+                              </Typography>
+                            </Box>
+                          }
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              cursor: 'pointer',
+                              '&:hover': { color: 'text.primary' },
+                            }}
+                          >
+                            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                          </Box>
+                        </CustomTooltip>
+                      </Stack>
                       <Label color="primary" variant="soft">
                         {form.plannedCompletionPercentage}%
                       </Label>
