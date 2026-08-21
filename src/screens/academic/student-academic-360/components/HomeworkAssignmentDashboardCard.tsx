@@ -1,8 +1,17 @@
-'use client';
-
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetHomeworkByIdQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
+import { useGetAssignmentByIdQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
+import ViewHomeworkDetails from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
+import ViewAssignmentDetails from 'src/screens/academic/homework-assignment-management/assignmentCreation/assignmentDetail/assignmentDetail';
+import type { RootState } from 'src/redux/store';
+import type { Medium } from 'src/types/school';
 import {
   Box,
   Card,
@@ -10,14 +19,10 @@ import {
   Grid,
   Stack,
   Button,
-  Dialog,
   Divider,
   Tooltip,
   Skeleton,
   Typography,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   LinearProgress,
 } from '@mui/material';
 
@@ -170,9 +175,62 @@ export function HomeworkAssignmentDashboardCard({
   onViewAll,
 }: HomeworkAssignmentDashboardCardProps) {
   const router = useRouter();
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [selectedFilter, setSelectedFilter] = useState<TaskStatusCategory>('ALL');
   const [selectedSubject, setSelectedSubject] = useState<string>('ALL');
-  const [activeTaskModal, setActiveTaskModal] = useState<Academic360LearningTask | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Academic360LearningTask | null>(null);
+  const [viewHomeworkId, setViewHomeworkId] = useState<string | null>(null);
+  const [viewAssignmentId, setViewAssignmentId] = useState<string | null>(null);
+
+  const viewHomeworkDetailDialog = useBoolean();
+  const viewAssignmentDetailDialog = useBoolean();
+
+  // Fetch full homework details when a specific homework is selected for viewing
+  const {
+    data: homeworkDetailData,
+    isLoading: isHomeworkDetailLoading,
+    isFetching: isHomeworkDetailFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkByIdQuery,
+    params: {
+      homeworkId: viewHomeworkId,
+      academicMediumId: (medium as Medium)?.id,
+    },
+    options: { skip: !viewHomeworkId },
+  });
+
+  // Fetch full assignment details when a specific assignment is selected for viewing
+  const {
+    data: assignmentDetailData,
+    isLoading: isAssignmentDetailLoading,
+    isFetching: isAssignmentDetailFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentByIdQuery,
+    params: {
+      assignmentId: viewAssignmentId,
+      academicMediumId: (medium as Medium)?.id,
+    },
+    options: { skip: !viewAssignmentId },
+  });
+
+  const handleViewTask = (task: Academic360LearningTask) => {
+    const isHw =
+      (task.type || '').toLowerCase().includes('homework') ||
+      (task.type || '').toLowerCase().includes('home_work') ||
+      (Boolean((task as any).homeworkId) && !(task as any).assignmentId);
+    const taskId = task.id || (isHw ? (task as any).homeworkId : (task as any).assignmentId) || '';
+
+    setSelectedTask(task);
+    if (isHw) {
+      setViewHomeworkId(taskId);
+      viewHomeworkDetailDialog.onTrue();
+    } else {
+      setViewAssignmentId(taskId);
+      viewAssignmentDetailDialog.onTrue();
+    }
+  };
 
   const tasks = useMemo(() => learningTasks?.recentTasks || [], [learningTasks]);
 
@@ -550,7 +608,7 @@ export function HomeworkAssignmentDashboardCard({
                   <Grid key={task.id || task.title} size={{ xs: 12, sm: 4 }}>
                     <Card
                       variant="outlined"
-                      onClick={() => setActiveTaskModal(task)}
+                      onClick={() => handleViewTask(task)}
                       sx={{
                         p: 1.5,
                         borderRadius: 1.5,
@@ -598,7 +656,15 @@ export function HomeworkAssignmentDashboardCard({
                           >
                             {dueInfo.text}
                           </Typography>
-                          <Button size="small" variant="outlined" sx={{ py: 0.25, px: 1, minWidth: 0, fontSize: 11 }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewTask(task);
+                            }}
+                            sx={{ py: 0.25, px: 1, minWidth: 0, fontSize: 11 }}
+                          >
                             View
                           </Button>
                         </Stack>
@@ -663,7 +729,7 @@ export function HomeworkAssignmentDashboardCard({
                   return (
                     <Box
                       key={task.id || task.title}
-                      onClick={() => setActiveTaskModal(task)}
+                      onClick={() => handleViewTask(task)}
                       sx={{
                         p: 1.5,
                         borderRadius: 1.5,
@@ -774,7 +840,7 @@ export function HomeworkAssignmentDashboardCard({
                   return (
                     <Grid key={task.id || task.title} size={{ xs: 12, sm: 6 }}>
                       <Box
-                        onClick={() => setActiveTaskModal(task)}
+                        onClick={() => handleViewTask(task)}
                         sx={{
                           p: 1.25,
                           borderRadius: 1.5,
@@ -808,123 +874,67 @@ export function HomeworkAssignmentDashboardCard({
         )}
       </Stack>
 
-      {/* TASK DETAIL & FEEDBACK DIALOG */}
-      <Dialog
-        open={Boolean(activeTaskModal)}
-        onClose={() => setActiveTaskModal(null)}
-        maxWidth="sm"
-        fullWidth
+      {/* VIEW HOMEWORK DETAILS DIALOG */}
+      <CustomDialog
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Homework Details</Typography>
+            <CustomTooltip
+              sx={{ textAlign: 'justify' }}
+              arrow
+              placement="right"
+              title="View homework details — title, description, due date, submission status, and more."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        open={viewHomeworkDetailDialog.value}
+        handleClose={() => {
+          viewHomeworkDetailDialog.onFalse();
+          setTimeout(() => {
+            setSelectedTask(null);
+            setViewHomeworkId(null);
+          }, 200);
+        }}
+        maxWidth="md"
       >
-        {activeTaskModal && (
-          <>
-            <DialogTitle sx={{ pb: 1 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    {activeTaskModal.title}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {activeTaskModal.type || 'Assignment'} · {activeTaskModal.subjectName || 'General'}
-                  </Typography>
-                </Box>
-                <Chip
-                  size="small"
-                  color={normalizeStatus(activeTaskModal).color}
-                  variant="soft"
-                  label={normalizeStatus(activeTaskModal).label}
-                  sx={{ fontWeight: 700 }}
-                />
-              </Stack>
-            </DialogTitle>
-            <Divider />
-            <DialogContent sx={{ py: 2 }}>
-              <Stack spacing={2}>
-                <Grid container spacing={1.5}>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Due Date
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatDueInfo(activeTaskModal.dueDate).text}
-                    </Typography>
-                  </Grid>
+        <ViewHomeworkDetails
+          homework={homeworkDetailData?.data ?? (selectedTask as any)}
+          isLoading={isHomeworkDetailLoading || isHomeworkDetailFetching}
+        />
+      </CustomDialog>
 
-                  {typeof activeTaskModal.marks === 'number' && (
-                    <Grid size={{ xs: 6 }}>
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        Marks / Grade
-                      </Typography>
-                      <Typography variant="body2" fontWeight={700} color="success.dark">
-                        {activeTaskModal.marks} / {activeTaskModal.totalMarks || 100}
-                      </Typography>
-                    </Grid>
-                  )}
-                </Grid>
-
-                {activeTaskModal.feedback && (
-                  <Box
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 1.5,
-                      bgcolor: (theme) => `${theme.palette.info.main}10`,
-                      border: '1px solid',
-                      borderColor: 'info.light',
-                    }}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                      <Iconify icon="mdi:comment-text-outline" width={16} sx={{ color: 'info.main' }} />
-                      <Typography variant="caption" fontWeight={700} color="info.dark">
-                        Teacher Feedback
-                      </Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.primary">
-                      {activeTaskModal.feedback}
-                    </Typography>
-                  </Box>
-                )}
-
-                {activeTaskModal.resubmissionRequired && (
-                  <Box
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 1.5,
-                      bgcolor: (theme) => `${theme.palette.error.main}10`,
-                      border: '1px solid',
-                      borderColor: 'error.light',
-                    }}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                      <Iconify icon="mdi:alert-circle-outline" width={16} sx={{ color: 'error.main' }} />
-                      <Typography variant="caption" fontWeight={700} color="error.dark">
-                        Resubmission Requested
-                      </Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.primary">
-                      The teacher has requested corrections for this assignment. Please review and resubmit.
-                    </Typography>
-                  </Box>
-                )}
-              </Stack>
-            </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2 }}>
-              <Button variant="outlined" color="inherit" onClick={() => setActiveTaskModal(null)}>
-                Close
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<Iconify icon="mdi:open-in-new" />}
-                onClick={() => {
-                  setActiveTaskModal(null);
-                  handleNavigateAll();
-                }}
-              >
-                Go to Homework Management
-              </Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
+      {/* VIEW ASSIGNMENT DETAILS DIALOG */}
+      <CustomDialog
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assignment Details</Typography>
+            <CustomTooltip
+              sx={{ textAlign: 'justify' }}
+              arrow
+              placement="right"
+              title="View complete details of the assignment including title, description, due date, submission status and other information"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        open={viewAssignmentDetailDialog.value}
+        handleClose={() => {
+          viewAssignmentDetailDialog.onFalse();
+          setTimeout(() => {
+            setSelectedTask(null);
+            setViewAssignmentId(null);
+          }, 200);
+        }}
+        maxWidth="md"
+      >
+        <ViewAssignmentDetails
+          assignment={assignmentDetailData?.data ?? (selectedTask as any)}
+          isLoading={isAssignmentDetailLoading || isAssignmentDetailFetching}
+        />
+      </CustomDialog>
     </Card>
   );
 }
