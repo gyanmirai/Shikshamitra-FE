@@ -33,6 +33,7 @@ import {
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
+import { pruneRoomDetails } from './initialValues';
 
 import type { IExamFormValues, IDivisionRoomDetail } from '../type';
 
@@ -292,7 +293,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
       );
 
       setElectiveReadiness(nextReadiness);
-      formik.setFieldValue('subjects', normalizedResults.filter(Boolean));
+      const nextSubjects = normalizedResults.filter(Boolean);
+      const nextRoomDetails = pruneRoomDetails(
+        formik.values.roomDetails,
+        nextSubjects,
+        formik.values.divisions
+      );
+      formik.setFieldValue('subjects', nextSubjects);
+      formik.setFieldValue('roomDetails', nextRoomDetails);
       formik.setFieldTouched('subjects', false);
     },
     [electiveReadiness, examTypeOptions, formik, getElectiveReadiness, gradeScalingOptions]
@@ -457,52 +465,28 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         const isAllClicked = value.includes('all');
                         const wasAllPreviouslySelected = formik.values.divisions.includes('all');
 
+                        let nextDivisions: string[] = [];
                         if (isAllClicked && !wasAllPreviouslySelected) {
-                          formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
+                          nextDivisions = ['all', ...allDivisionIds];
                         } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          formik.setFieldValue('divisions', []);
-                        } else if (isAllClicked && wasAllPreviouslySelected) {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          formik.setFieldValue(
-                            'divisions',
-                            selectedWithoutAll.length === allDivisionIds.length
-                              ? ['all', ...allDivisionIds]
-                              : selectedWithoutAll
-                          );
+                          nextDivisions = [];
                         } else {
                           const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          formik.setFieldValue(
-                            'divisions',
+                          nextDivisions =
                             selectedWithoutAll.length === allDivisionIds.length
                               ? ['all', ...allDivisionIds]
-                              : selectedWithoutAll
-                          );
+                              : selectedWithoutAll;
                         }
 
+                        formik.setFieldValue('divisions', nextDivisions);
                         formik.setFieldTouched(`divisions`, false);
 
-                        // Update room details
-                        const updatedRoomDetails = { ...(formik.values.roomDetails || {}) };
-                        formik.values.subjects.forEach((subject: any) => {
-                          const key =
-                            subject.subjectId ||
-                            subject.electiveGroupId ||
-                            subject?.subjects?.[0]?.subjectId;
-                          if (!key) return;
-                          const existing = updatedRoomDetails?.[key] ?? {};
-                          const divisionIds = value.filter((code: string) => code !== 'all');
-                          const divisionsObj = divisionIds.reduce(
-                            (acc: Record<string, IDivisionRoomDetail>, divisionId: string) => {
-                              acc[divisionId] = existing[divisionId] ?? {
-                                roomIds: [],
-                                capacity: 0,
-                              };
-                              return acc;
-                            },
-                            {} as Record<string, IDivisionRoomDetail>
-                          );
-                          updatedRoomDetails[key] = divisionsObj;
-                        });
+                        // Prune room details for deselected divisions and subjects
+                        const updatedRoomDetails = pruneRoomDetails(
+                          formik.values.roomDetails,
+                          formik.values.subjects,
+                          nextDivisions
+                        );
                         formik.setFieldValue('roomDetails', updatedRoomDetails);
                       }}
                       formControlProps={{ fullWidth: true }}

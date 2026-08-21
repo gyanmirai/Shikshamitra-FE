@@ -23,7 +23,6 @@ import {
   Menu,
   Paper,
   Stack,
-  Alert,
   Button,
   Switch,
   MenuItem,
@@ -50,26 +49,7 @@ const cardItemVariants: Variants = {
   exit: { opacity: 0, y: -10, transition: { duration: 0.18 } },
 };
 
-const slotsOverlap = (a: any, b: any) => {
-  if (!a.examDate || !b.examDate || !a.startTime || !a.endTime || !b.startTime || !b.endTime) {
-    return false;
-  }
-  const dateA = dayjs(a.examDate).format('YYYY-MM-DD');
-  const dateB = dayjs(b.examDate).format('YYYY-MM-DD');
-  if (dateA !== dateB) return false;
 
-  const tStartA = dayjs(a.startTime);
-  const tEndA = dayjs(a.endTime);
-  const tStartB = dayjs(b.startTime);
-  const tEndB = dayjs(b.endTime);
-
-  const startA = dayjs(a.examDate).hour(tStartA.hour()).minute(tStartA.minute()).second(0);
-  const endA = dayjs(a.examDate).hour(tEndA.hour()).minute(tEndA.minute()).second(0);
-  const startB = dayjs(b.examDate).hour(tStartB.hour()).minute(tStartB.minute()).second(0);
-  const endB = dayjs(b.examDate).hour(tEndB.hour()).minute(tEndB.minute()).second(0);
-
-  return startA.isBefore(endB) && endA.isAfter(startB);
-};
 
 const RoomDetails = (props: FormikProps<IExamFormValues>) => {
   const formik = props;
@@ -244,117 +224,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
     [roomsApiData]
   );
 
-  const roomNameById = useMemo(() => {
-    const map = new Map<string, string>();
-    roomOptions.forEach((r: any) => map.set(r.id, r.roomName || r.label));
-    return map;
-  }, [roomOptions]);
 
-  // Flatten all active assignments across all subjects and divisions for live conflict checks
-  const allScheduledAssignments = useMemo(() => {
-    const list: Array<{
-      subjectId: string;
-      subjectName: string;
-      divisionId: string;
-      divisionName: string;
-      roomIds: string[];
-      examDate: any;
-      startTime: any;
-      endTime: any;
-    }> = [];
-
-    const rawSubjects = formik.values.subjects ?? [];
-    rawSubjects.forEach((sub: any) => {
-      if (sub.electiveGroupId && Array.isArray(sub.subjects)) {
-        sub.subjects.forEach((nested: any) => {
-          if (!nested.isExamSelectionDisabled && nested.subjectId) {
-            selectedDivisions.forEach((div: Division) => {
-              const rIds = formik.values.roomDetails?.[nested.subjectId]?.[div.id]?.roomIds ?? [];
-              list.push({
-                subjectId: nested.subjectId,
-                subjectName: nested.subjectName || nested.name || 'Elective Subject',
-                divisionId: div.id,
-                divisionName: div.name,
-                roomIds: rIds,
-                examDate: nested.examDate,
-                startTime: nested.startTime,
-                endTime: nested.endTime,
-              });
-            });
-          }
-        });
-      } else if (sub.subjectId) {
-        selectedDivisions.forEach((div: Division) => {
-          const rIds = formik.values.roomDetails?.[sub.subjectId]?.[div.id]?.roomIds ?? [];
-          list.push({
-            subjectId: sub.subjectId,
-            subjectName: sub.subjectName || 'Subject',
-            divisionId: div.id,
-            divisionName: div.name,
-            roomIds: rIds,
-            examDate: sub.examDate,
-            startTime: sub.startTime,
-            endTime: sub.endTime,
-          });
-        });
-      }
-    });
-
-    return list;
-  }, [formik.values.subjects, formik.values.roomDetails, selectedDivisions]);
-
-  // Compute live conflicts for the current subject card (only between different subjects overlapping in time)
-  const divisionConflicts = useMemo(() => {
-    const conflictMap: Record<string, string> = {};
-
-    selectedDivisions.forEach((currentDiv: Division) => {
-      const currentRoomIds: string[] =
-        formik.values.roomDetails?.[subjectId]?.[currentDiv.id]?.roomIds ?? [];
-      if (!currentRoomIds.length) return;
-
-      const currentSlot = {
-        subjectId,
-        subjectName,
-        divisionId: currentDiv.id,
-        roomIds: currentRoomIds,
-        examDate,
-        startTime,
-        endTime,
-      };
-
-      for (const other of allScheduledAssignments) {
-        // Skip comparing against the same subject (divisions of the same exam can share rooms)
-        if (other.subjectId === subjectId) continue;
-        if (!other.roomIds.length) continue;
-
-        const isOverlapping = slotsOverlap(currentSlot, other);
-
-        if (isOverlapping) {
-          const shared = currentRoomIds.filter((id) => other.roomIds.includes(id));
-          if (shared.length > 0) {
-            const sharedNames = shared.map((id) => roomNameById.get(id) || 'Room').join(', ');
-            conflictMap[currentDiv.id] =
-              `Room conflict: ${sharedNames} is booked for ${other.subjectName} (Div ${other.divisionName}) during overlapping hours`;
-            break;
-          }
-        }
-      }
-    });
-
-    return conflictMap;
-  }, [
-    selectedDivisions,
-    formik.values.roomDetails,
-    subjectId,
-    subjectName,
-    examDate,
-    startTime,
-    endTime,
-    allScheduledAssignments,
-    roomNameById,
-  ]);
-
-  const hasAnyCardConflict = Object.keys(divisionConflicts).length > 0;
 
   // Handle "Apply to All Divisions" action
   const handleApplyToAllDivisions = useCallback(
@@ -462,12 +332,12 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           mb: 2,
           borderRadius: 2,
           border: '1px solid',
-          borderColor: hasAnyCardConflict ? 'error.light' : 'divider',
+          borderColor: 'divider',
           transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
           '&:hover': {
             boxShadow: (theme: any) =>
               theme.customShadows?.z8 || '0 8px 16px 0 rgba(0,0,0,0.08)',
-            borderColor: hasAnyCardConflict ? 'error.main' : 'primary.light',
+            borderColor: 'primary.light',
             '& .MuiCardHeader-root': {
               transform: 'translateY(-2px)',
             },
@@ -476,18 +346,6 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
       }}
     >
       <Grid size={{ xs: 12 }}>
-        {hasAnyCardConflict && (
-          <Alert severity="error" sx={{ mb: 2, borderRadius: 1.5 }}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              Room Allocation Conflict Detected
-            </Typography>
-            <Typography variant="caption">
-              One or more rooms conflict with another exam slot during overlapping hours. Please
-              allocate distinct rooms.
-            </Typography>
-          </Alert>
-        )}
-
         <CustomizableTable
           tableId={`room-assignment-${subjectName}`}
           isLoading={isRoomsLoading}
@@ -500,25 +358,11 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
               label: 'Division',
               minWidth: 100,
               align: 'left',
-              render: (value, row) => {
-                const isDivInConflict = Boolean(divisionConflicts[row.divisionId]);
-                return (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" fontWeight={700}>
-                      {value}
-                    </Typography>
-                    {isDivInConflict && (
-                      <Chip
-                        label="Conflict"
-                        size="small"
-                        color="error"
-                        variant="soft"
-                        sx={{ height: 20, fontSize: '0.68rem', fontWeight: 700 }}
-                      />
-                    )}
-                  </Box>
-                );
-              },
+              render: (value) => (
+                <Typography variant="body2" fontWeight={700}>
+                  {value}
+                </Typography>
+              ),
             },
             {
               id: 'roomIds',
@@ -536,16 +380,13 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                   selectedRoomIds.includes(r.id)
                 );
 
-                const conflictError = divisionConflicts[row.divisionId];
                 const isRequiredMissing =
                   formik.values.isRoomAssign &&
                   Boolean(formikTouched || formik.submitCount > 0) &&
                   selectedRoomIds.length === 0;
 
-                const errorMessage =
-                  conflictError ||
-                  (isRequiredMissing ? (formikError || 'Room is required') : '');
-                const hasError = Boolean(conflictError || isRequiredMissing);
+                const errorMessage = isRequiredMissing ? (formikError || 'Room is required') : '';
+                const hasError = Boolean(isRequiredMissing);
 
                 return (
                   <Autocomplete

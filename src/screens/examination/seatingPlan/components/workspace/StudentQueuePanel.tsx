@@ -48,6 +48,7 @@ const SORT_KEY_LABELS: Record<SortKey, string> = {
 interface Props {
   students: SeatingStudent[];
   assignments: SeatingAssignment[];
+  excludedStudentIds?: string[];
   conflictStudentIds: Set<string>;
   multiSelectedIds: Set<string>;
   onToggleMultiSelect: (studentId: string) => void;
@@ -55,6 +56,7 @@ interface Props {
   onDeselectAll?: () => void;
   onBulkAllocateSequential: (studentIds: string[]) => void;
   onBulkExclude: (studentIds: string[]) => void;
+  onBulkInclude?: (studentIds: string[]) => void;
   isReadOnly?: boolean;
   isLoading?: boolean;
 }
@@ -62,6 +64,7 @@ interface Props {
 export default function StudentQueuePanel({
   students,
   assignments,
+  excludedStudentIds = [],
   conflictStudentIds,
   multiSelectedIds,
   onToggleMultiSelect,
@@ -69,6 +72,7 @@ export default function StudentQueuePanel({
   onDeselectAll,
   onBulkAllocateSequential,
   onBulkExclude,
+  onBulkInclude,
   isReadOnly,
   isLoading = false,
 }: Props) {
@@ -77,6 +81,7 @@ export default function StudentQueuePanel({
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
 
   const assignedIds = useMemo(() => new Set(assignments.map((a) => a.studentId)), [assignments]);
+  const excludedIdsSet = useMemo(() => new Set(excludedStudentIds), [excludedStudentIds]);
 
   const searched = useMemo(() => {
     if (!search.trim()) return students;
@@ -99,8 +104,8 @@ export default function StudentQueuePanel({
         return list.sort((a, b) => (a.divisionName ?? '').localeCompare(b.divisionName ?? ''));
       case 'unallocated-first':
         return list.sort((a, b) => {
-          const aAlloc = assignedIds.has(a.studentId) ? 1 : 0;
-          const bAlloc = assignedIds.has(b.studentId) ? 1 : 0;
+          const aAlloc = excludedIdsSet.has(a.studentId) ? 2 : assignedIds.has(a.studentId) ? 1 : 0;
+          const bAlloc = excludedIdsSet.has(b.studentId) ? 2 : assignedIds.has(b.studentId) ? 1 : 0;
           if (aAlloc !== bAlloc) return aAlloc - bAlloc;
           return a.rollNo - b.rollNo;
         });
@@ -117,34 +122,47 @@ export default function StudentQueuePanel({
       default:
         return list.sort((a, b) => a.rollNo - b.rollNo);
     }
-  }, [searched, sortKey, assignedIds]);
+  }, [searched, sortKey, assignedIds, excludedIdsSet]);
 
-  const unallocatedVisibleStudents = useMemo(
-    () => sorted.filter((s) => !assignedIds.has(s.studentId)),
-    [sorted, assignedIds]
+  const unallocatedEligibleVisibleStudents = useMemo(
+    () => sorted.filter((s) => !assignedIds.has(s.studentId) && !excludedIdsSet.has(s.studentId)),
+    [sorted, assignedIds, excludedIdsSet]
   );
-  const unallocatedVisibleIds = useMemo(
-    () => unallocatedVisibleStudents.map((s) => s.studentId),
-    [unallocatedVisibleStudents]
+  const unallocatedEligibleVisibleIds = useMemo(
+    () => unallocatedEligibleVisibleStudents.map((s) => s.studentId),
+    [unallocatedEligibleVisibleStudents]
   );
 
-  const selectedUnallocatedIds = useMemo(
-    () => Array.from(multiSelectedIds).filter((id) => !assignedIds.has(id)),
-    [multiSelectedIds, assignedIds]
+  const selectedAllocatableIds = useMemo(
+    () =>
+      Array.from(multiSelectedIds).filter(
+        (id) => !assignedIds.has(id) && !excludedIdsSet.has(id)
+      ),
+    [multiSelectedIds, assignedIds, excludedIdsSet]
+  );
+
+  const selectedExcludableIds = useMemo(
+    () => Array.from(multiSelectedIds).filter((id) => !excludedIdsSet.has(id)),
+    [multiSelectedIds, excludedIdsSet]
+  );
+
+  const selectedIncludableIds = useMemo(
+    () => Array.from(multiSelectedIds).filter((id) => excludedIdsSet.has(id)),
+    [multiSelectedIds, excludedIdsSet]
   );
 
   const isAllUnallocatedSelected =
-    unallocatedVisibleIds.length > 0 &&
-    unallocatedVisibleIds.every((id) => multiSelectedIds.has(id));
-  const isSomeSelected = unallocatedVisibleIds.some((id) => multiSelectedIds.has(id));
+    unallocatedEligibleVisibleIds.length > 0 &&
+    unallocatedEligibleVisibleIds.every((id) => multiSelectedIds.has(id));
+  const isSomeSelected = unallocatedEligibleVisibleIds.some((id) => multiSelectedIds.has(id));
   const isIndeterminate = isSomeSelected && !isAllUnallocatedSelected;
 
   const handleMasterCheckboxToggle = () => {
-    if (isReadOnly || unallocatedVisibleIds.length === 0) return;
+    if (isReadOnly || unallocatedEligibleVisibleIds.length === 0) return;
     if (isAllUnallocatedSelected) {
       onDeselectAll?.();
     } else {
-      onSelectAll?.(unallocatedVisibleIds);
+      onSelectAll?.(unallocatedEligibleVisibleIds);
     }
   };
 
@@ -187,7 +205,7 @@ export default function StudentQueuePanel({
                 size="small"
                 checked={isAllUnallocatedSelected}
                 indeterminate={isIndeterminate}
-                disabled={unallocatedVisibleIds.length === 0}
+                disabled={unallocatedEligibleVisibleIds.length === 0}
                 onChange={handleMasterCheckboxToggle}
                 sx={{ p: 0.5 }}
               />
@@ -255,22 +273,36 @@ export default function StudentQueuePanel({
             <Button
               size="small"
               variant="contained"
-              disabled={isReadOnly || selectedUnallocatedIds.length === 0}
-              onClick={() => onBulkAllocateSequential(selectedUnallocatedIds)}
+              disabled={isReadOnly || selectedAllocatableIds.length === 0}
+              onClick={() => onBulkAllocateSequential(selectedAllocatableIds)}
               sx={{ fontSize: '0.7rem', px: 1, py: 0.25 }}
             >
-              Allocate ({selectedUnallocatedIds.length})
+              Allocate ({selectedAllocatableIds.length})
             </Button>
-            <Button
-              size="small"
-              color="error"
-              variant="outlined"
-              disabled={isReadOnly}
-              onClick={() => onBulkExclude([...multiSelectedIds])}
-              sx={{ fontSize: '0.7rem', px: 1, py: 0.25 }}
-            >
-              Exclude
-            </Button>
+            {selectedExcludableIds.length > 0 && (
+              <Button
+                size="small"
+                color="error"
+                variant="outlined"
+                disabled={isReadOnly}
+                onClick={() => onBulkExclude(selectedExcludableIds)}
+                sx={{ fontSize: '0.7rem', px: 1, py: 0.25 }}
+              >
+                Exclude
+              </Button>
+            )}
+            {selectedIncludableIds.length > 0 && onBulkInclude && (
+              <Button
+                size="small"
+                color="primary"
+                variant="outlined"
+                disabled={isReadOnly}
+                onClick={() => onBulkInclude(selectedIncludableIds)}
+                sx={{ fontSize: '0.7rem', px: 1, py: 0.25 }}
+              >
+                Include
+              </Button>
+            )}
           </Box>
         </Box>
       )}
@@ -301,6 +333,7 @@ export default function StudentQueuePanel({
                 key={student.studentId}
                 student={student}
                 assignment={assignments.find((a) => a.studentId === student.studentId)}
+                isExcluded={excludedIdsSet.has(student.studentId)}
                 isMultiSelected={multiSelectedIds.has(student.studentId)}
                 showCheckbox={!isReadOnly}
                 onToggleMultiSelect={onToggleMultiSelect}

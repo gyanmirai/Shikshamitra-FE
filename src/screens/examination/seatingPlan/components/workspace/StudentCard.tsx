@@ -7,6 +7,7 @@ import type { SeatingStudent, SeatingAssignment } from '../../types';
 interface Props {
   student: SeatingStudent;
   assignment?: SeatingAssignment;
+  isExcluded?: boolean;
   isMultiSelected?: boolean;
   onToggleMultiSelect?: (studentId: string) => void;
   showCheckbox?: boolean;
@@ -16,6 +17,7 @@ interface Props {
 export default function StudentCard({
   student,
   assignment,
+  isExcluded,
   isMultiSelected,
   onToggleMultiSelect,
   showCheckbox,
@@ -25,14 +27,14 @@ export default function StudentCard({
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `student:${student.studentId}`,
     data: { type: 'student', student },
-    disabled: isAllocated || isReadOnly,
+    disabled: isAllocated || isReadOnly || isExcluded,
   });
 
   return (
     <Box
       ref={setNodeRef}
-      {...(isAllocated || isReadOnly ? {} : listeners)}
-      {...(isAllocated || isReadOnly ? {} : attributes)}
+      {...(isAllocated || isReadOnly || isExcluded ? {} : listeners)}
+      {...(isAllocated || isReadOnly || isExcluded ? {} : attributes)}
       role="button"
       tabIndex={0}
       sx={{
@@ -43,11 +45,11 @@ export default function StudentCard({
         borderRadius: 1,
         border: '1px solid',
         borderColor: 'divider',
-        bgcolor: isAllocated ? 'action.hover' : 'background.paper',
-        cursor: isAllocated || isReadOnly ? 'default' : 'grab',
-        opacity: isDragging ? 0.4 : isAllocated ? 0.75 : 1,
+        bgcolor: isAllocated || isExcluded ? 'action.hover' : 'background.paper',
+        cursor: isAllocated || isReadOnly || isExcluded ? 'default' : 'grab',
+        opacity: isDragging ? 0.4 : isAllocated ? 0.75 : isExcluded ? 0.6 : 1,
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-        '&:hover': { borderColor: isAllocated ? 'divider' : 'primary.main' },
+        '&:hover': { borderColor: isAllocated || isExcluded ? 'divider' : 'primary.main' },
       }}
     >
       {showCheckbox && (
@@ -81,7 +83,16 @@ export default function StudentCard({
           sx={{ height: 20, fontSize: '0.65rem' }}
         />
       )}
-      {assignment && (
+      {isExcluded && (
+        <Chip
+          size="small"
+          color="default"
+          variant="soft"
+          label="Excluded"
+          sx={{ height: 20, fontSize: '0.65rem' }}
+        />
+      )}
+      {assignment && !isExcluded && (
         <Chip
           size="small"
           color="success"

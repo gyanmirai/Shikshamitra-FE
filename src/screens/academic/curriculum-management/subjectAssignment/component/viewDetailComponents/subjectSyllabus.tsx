@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
@@ -6,6 +8,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Box,
   Paper,
+  Stack,
+  Button,
   Divider,
   Accordion,
   Typography,
@@ -18,11 +22,17 @@ import { SubjectSyllabusSkeleton } from './SubjectSyllabusSkeleton';
 
 import type { ISubjectDetail } from '../type';
 
-const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
+interface SubjectSyllabusProps {
+  subject: ISubjectDetail | null;
+}
+
+const SubjectSyllabus: React.FC<SubjectSyllabusProps> = ({ subject }) => {
   const {
     data: chaptersData,
     isLoading,
     isFetching,
+    error,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersByStandardQuery,
@@ -40,90 +50,129 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
     return <SubjectSyllabusSkeleton />;
   }
 
+  if (error) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 4,
+            maxWidth: 420,
+            mx: 'auto',
+            borderRadius: 2,
+            borderStyle: 'dashed',
+            borderColor: 'error.main',
+            bgcolor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.04),
+          }}
+        >
+          <Iconify icon="solar:danger-triangle-bold" width={48} sx={{ color: 'error.main', mb: 1.5 }} />
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
+            Unable to load syllabus
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Something went wrong while fetching syllabus chapters for this subject.
+          </Typography>
+          <Button
+            size="small"
+            variant="contained"
+            color="primary"
+            startIcon={<Iconify icon="mdi:refresh" />}
+            onClick={() => refetch()}
+          >
+            Retry
+          </Button>
+        </Paper>
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ height: '100%' }}>
-      <Scrollbar sx={{ height: '100%', pb: 2 }}>
+    <Box sx={{ height: '100%', p: { xs: 1.5, sm: 2 } }}>
+      <Scrollbar sx={{ height: '100%', pb: 2, pr: 0.5 }}>
         {chapters.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Stack spacing={1.25}>
             {chapters.map((chapter: any) => (
               <Accordion
-                key={chapter.id}
+                key={chapter.id || chapter.chapterNumber}
                 sx={{
-                  borderRadius: 2,
+                  borderRadius: 1.5,
                   boxShadow: 'none',
                   border: (theme) => `1px solid ${theme.palette.divider}`,
                   '&:before': { display: 'none' },
                   '&.Mui-expanded': {
                     margin: 0,
-                    boxShadow: 'var(--shadows-3)',
-                    borderColor: 'transparent',
+                    boxShadow: 'var(--shadows-2)',
+                    borderColor: 'primary.light',
                   },
                 }}
               >
                 <AccordionSummary
                   expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
                   sx={{
-                    minHeight: 64,
-                    '& .MuiAccordionSummary-content': { my: 0 },
+                    minHeight: 56,
+                    px: 2,
+                    '& .MuiAccordionSummary-content': { my: 0.5 },
                     '&.Mui-expanded': {
-                      minHeight: 64,
+                      minHeight: 56,
                       bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
                     },
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
                     <Box
                       sx={{
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                         borderRadius: 1,
                         bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: 'primary.main',
-                        mr: 2,
+                        flexShrink: 0,
                       }}
                     >
-                      <Iconify icon="mdi:book-open-page-variant" width={24} />
+                      <Iconify icon="mdi:book-open-page-variant" width={20} />
                     </Box>
-                    <Box>
-                      <Typography variant="overline" sx={{ color: 'text.disabled' }}>
-                        Chapter NO. {chapter.chapterNumber}
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'text.disabled',
+                          fontWeight: 700,
+                          letterSpacing: 0.5,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        Chapter {chapter.chapterNumber}
                       </Typography>
-                      <Typography variant="subtitle1" sx={{ color: 'text.primary' }}>
+                      <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600, color: 'text.primary' }}>
                         {chapter.chapterName}
                       </Typography>
                     </Box>
-                  </Box>
+                  </Stack>
                 </AccordionSummary>
 
-                <AccordionDetails sx={{ pt: 1, pb: 3, px: 3 }}>
-                  <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
+                <AccordionDetails sx={{ pt: 1, pb: 2.5, px: 2.5 }}>
+                  <Divider sx={{ borderStyle: 'dashed', mb: 1.5 }} />
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     component="div"
                     sx={{
-                      lineHeight: 1.8,
-                      '& p, & ul, & ol': {
-                        margin: 0,
-                      },
-                      '& p:not(:last-child), & ul:not(:last-child), & ol:not(:last-child)': {
-                        marginBottom: 1,
-                      },
-                      '& ul, & ol': {
-                        paddingLeft: 2,
-                      },
+                      lineHeight: 1.7,
+                      '& p, & ul, & ol': { margin: 0, lineHeight: 1.7 },
+                      '& p:not(:last-child)': { marginBottom: 1 },
+                      '& ul, & ol': { paddingLeft: 2 },
                     }}
                     dangerouslySetInnerHTML={{
-                      __html: chapter.description || 'No description provided.',
+                      __html: chapter.description || 'No description provided for this chapter.',
                     }}
                   />
                 </AccordionDetails>
               </Accordion>
             ))}
-          </Box>
+          </Stack>
         ) : (
           <Paper
             variant="outlined"
@@ -131,20 +180,20 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
               p: 5,
               textAlign: 'center',
               borderRadius: 2,
-              bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.04),
+              bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.02),
               borderStyle: 'dashed',
             }}
           >
             <Iconify
               icon="solar:notebook-minimalistic-broken"
-              width={64}
-              sx={{ color: 'text.disabled', mb: 2 }}
+              width={56}
+              sx={{ color: 'text.disabled', mb: 1.5, opacity: 0.6 }}
             />
-            <Typography variant="h6" color="text.secondary">
-              No Syllabus available
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
+              No Syllabus Available
             </Typography>
-            <Typography variant="body2" color="text.disabled">
-              There are no syllabus chapters created for this subject yet.
+            <Typography variant="body2" color="text.secondary">
+              There are no syllabus chapters configured for this subject yet.
             </Typography>
           </Paper>
         )}
@@ -153,4 +202,4 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
   );
 };
 
-export default SubjectSyllabus;
+export default React.memo(SubjectSyllabus);

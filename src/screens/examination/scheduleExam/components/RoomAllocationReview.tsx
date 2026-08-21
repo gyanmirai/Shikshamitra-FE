@@ -11,7 +11,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { Box, Chip, Grid, Button, Divider, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 
-import type { IRoomDetails, IExamFormValues } from '../type';
+import type { IRoomDetails, IExamFormValues, IDivisionRoomDetail } from '../type';
 
 // ----------------------------------------------------------------------
 
@@ -62,25 +62,12 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
 
 // ----------------------------------------------------------------------
 
-/**
- * Resolve a display name for a roomDetails key (subjectId).
- * Core subjects live at the top level of `subjects`, but elective subjects are
- * keyed by their individual subjectId and are nested under their group — so we
- * search both to avoid falling back to the raw GUID key.
- */
-const resolveSubjectName = (subjects: any[], subjectId: string): string | undefined => {
-  // Core subjects live at the top level of `subjects`; elective subjects are keyed by
-  // their individual subjectId and are nested under their group — search both so we
-  // don't fall back to the raw GUID key.
-  const direct = subjects.find((s) => s?.subjectId === subjectId);
-  if (direct) return direct.subjectName || direct.name;
-
-  const group = subjects.find(
-    (s) => s?.electiveGroupId && s?.subjects?.some((n: any) => n.subjectId === subjectId)
-  );
-  const nested = group?.subjects?.find((n: any) => n.subjectId === subjectId);
-  return nested ? nested.subjectName || nested.name || group?.subjectName : undefined;
-};
+interface ReviewSubjectRoomEntry {
+  subjectId: string;
+  subjectName: string;
+  electiveGroupName?: string;
+  divisionMap: Record<string, IDivisionRoomDetail>;
+}
 
 const RoomAllocationReview = ({
   formik,
@@ -97,11 +84,15 @@ const RoomAllocationReview = ({
     currentQueryAndMutation: useGetRoomsQuery,
   });
 
-  const roomLabelById = new Map(
-    (roomsApiData?.items ?? []).map((room: any) => {
-      const labelParts = [room.buildingName, room.floorName, room.roomName].filter(Boolean);
-      return [room.id, labelParts.length ? labelParts.join(' › ') : room.id];
-    })
+  const roomLabelById = useMemo(
+    () =>
+      new Map(
+        (roomsApiData?.items ?? []).map((room: any) => {
+          const labelParts = [room.buildingName, room.floorName, room.roomName].filter(Boolean);
+          return [room.id, labelParts.length ? labelParts.join(' › ') : room.id];
+        })
+      ),
+    [roomsApiData]
   );
 
   // Flatten all standards/classes from education medium stages into a single array
@@ -115,13 +106,63 @@ const RoomAllocationReview = ({
     () => allClass.find((cls: any) => cls.id === formik.values.className)?.divisions || [],
     [allClass, formik.values.className]
   );
-  const hasAnyRoomAssigned = Object.values(formik?.values?.roomDetails ?? {}).some((subject: any) =>
-    Object.values(subject ?? {}).some(
-      (div: any) => Array.isArray(div?.roomIds) && div.roomIds.length > 0
-    )
-  );
 
-  if (!hasAnyRoomAssigned) return null;
+  const activeReviewSubjects = useMemo(() => {
+    const selectedDivIds = new Set(
+      (formik.values.divisions || []).filter((d: string) => d !== 'all')
+    );
+    const entries: ReviewSubjectRoomEntry[] = [];
+
+    (formik.values.subjects || []).forEach((sub: any) => {
+      if (sub?.electiveGroupId && Array.isArray(sub?.subjects) && sub.subjects.length > 0) {
+        sub.subjects.forEach((nested: any) => {
+          if (nested?.isExamSelectionDisabled) return;
+          const subId = nested.subjectId || nested.id;
+          if (!subId) return;
+
+          const rawDivMap = roomDetails?.[subId] ?? {};
+          const divisionMap: Record<string, IDivisionRoomDetail> = {};
+          selectedDivIds.forEach((divId) => {
+            if (rawDivMap[divId]?.roomIds?.length > 0) {
+              divisionMap[divId] = rawDivMap[divId];
+            }
+          });
+
+          if (Object.keys(divisionMap).length > 0) {
+            entries.push({
+              subjectId: subId,
+              subjectName: nested.subjectName || nested.name || sub.subjectName,
+              electiveGroupName: sub.subjectName,
+              divisionMap,
+            });
+          }
+        });
+      } else {
+        const subId = sub?.subjectId || sub?.id;
+        if (!subId) return;
+
+        const rawDivMap = roomDetails?.[subId] ?? {};
+        const divisionMap: Record<string, IDivisionRoomDetail> = {};
+        selectedDivIds.forEach((divId) => {
+          if (rawDivMap[divId]?.roomIds?.length > 0) {
+            divisionMap[divId] = rawDivMap[divId];
+          }
+        });
+
+        if (Object.keys(divisionMap).length > 0) {
+          entries.push({
+            subjectId: subId,
+            subjectName: sub.subjectName || sub.name || '',
+            divisionMap,
+          });
+        }
+      }
+    });
+
+    return entries;
+  }, [formik.values.subjects, formik.values.divisions, roomDetails]);
+
+  if (activeReviewSubjects.length === 0) return null;
 
   return (
     <Accordion
@@ -201,70 +242,71 @@ const RoomAllocationReview = ({
       {/* Body */}
       <AccordionDetails sx={{ p: 3 }}>
         <Grid container spacing={1}>
-          {Object.entries(roomDetails as IRoomDetails).map(
-            ([subjectId, divisionMap], index, arr) => {
-              const subjectName =
-                resolveSubjectName(formik.values.subjects, subjectId) ?? subjectId;
+          {activeReviewSubjects.map((entry, index, arr) => {
+            const { subjectId, subjectName, electiveGroupName, divisionMap } = entry;
 
-              const subjectHasRooms = Object.values(divisionMap).some(
-                (div) => div.roomIds && div.roomIds.length > 0
-              );
-
-              if (!subjectHasRooms) return null;
-
-              return (
-                <React.Fragment key={subjectId}>
-                  <Grid size={{ xs: 12 }}>
+            return (
+              <React.Fragment key={subjectId}>
+                <Grid size={{ xs: 12 }}>
+                  <Box display="flex" alignItems="center" gap={1} mb={2}>
                     <Typography
                       variant="subtitle1"
-                      gutterBottom
-                      sx={{ color: 'primary.dark', mb: 2 }}
+                      sx={{ color: 'primary.dark' }}
                     >
                       {subjectName}
                     </Typography>
+                    {electiveGroupName && (
+                      <Chip
+                        label={electiveGroupName}
+                        size="small"
+                        color="warning"
+                        variant="soft"
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                    )}
+                  </Box>
 
-                    <Grid container spacing={1}>
-                      {Object.entries(divisionMap).map(([divisionName, divisionData]) => {
-                        if (!divisionData.roomIds || divisionData.roomIds.length === 0) return null;
+                  <Grid container spacing={1}>
+                    {Object.entries(divisionMap).map(([divisionName, divisionData]) => {
+                      if (!divisionData.roomIds || divisionData.roomIds.length === 0) return null;
 
-                        const divisionLabel =
-                          divisions?.find((div: Division) => div.id === divisionName)?.name ||
-                          divisionName;
+                      const divisionLabel =
+                        divisions?.find((div: Division) => div.id === divisionName)?.name ||
+                        divisionName;
 
-                        return (
-                          <Grid size={{ xs: 12, md: 6 }} key={`${subjectName}-${divisionName}`}>
-                            <InfoItem
-                              icon={<ClassOutlined />}
-                              label={`Division ${divisionLabel}`}
-                              value={
-                                <Box display="flex" flexWrap="wrap" gap={1}>
-                                  {divisionData.roomIds.map((roomId: string) => (
-                                    <Chip
-                                      key={roomId}
-                                      label={String(roomLabelById.get(roomId) ?? roomId)}
-                                      size="small"
-                                      variant="outlined"
-                                      icon={<MeetingRoom style={{ fontSize: '1rem' }} />}
-                                      sx={{ borderRadius: 1 }}
-                                    />
-                                  ))}
-                                </Box>
-                              }
-                            />
-                          </Grid>
-                        );
-                      })}
-                    </Grid>
+                      return (
+                        <Grid size={{ xs: 12, md: 6 }} key={`${subjectName}-${divisionName}`}>
+                          <InfoItem
+                            icon={<ClassOutlined />}
+                            label={`Division ${divisionLabel}`}
+                            value={
+                              <Box display="flex" flexWrap="wrap" gap={1}>
+                                {divisionData.roomIds.map((roomId: string) => (
+                                  <Chip
+                                    key={roomId}
+                                    label={String(roomLabelById.get(roomId) ?? roomId)}
+                                    size="small"
+                                    variant="outlined"
+                                    icon={<MeetingRoom style={{ fontSize: '1rem' }} />}
+                                    sx={{ borderRadius: 1 }}
+                                  />
+                                ))}
+                              </Box>
+                            }
+                          />
+                        </Grid>
+                      );
+                    })}
                   </Grid>
-                  {index < arr.length - 1 && (
-                    <Grid size={{ xs: 12 }}>
-                      <Divider sx={{ borderStyle: 'dashed' }} />
-                    </Grid>
-                  )}
-                </React.Fragment>
-              );
-            }
-          )}
+                </Grid>
+                {index < arr.length - 1 && (
+                  <Grid size={{ xs: 12 }}>
+                    <Divider sx={{ borderStyle: 'dashed' }} />
+                  </Grid>
+                )}
+              </React.Fragment>
+            );
+          })}
         </Grid>
       </AccordionDetails>
     </Accordion>

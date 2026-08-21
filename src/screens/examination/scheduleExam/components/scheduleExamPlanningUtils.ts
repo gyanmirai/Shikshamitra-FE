@@ -110,16 +110,6 @@ export const buildExamPlanningIssues = (values: any): ExamPlanningIssue[] => {
   });
 
   if (values.isRoomAssign) {
-    const activeAssignments: Array<{
-      subjectId: string;
-      subjectName: string;
-      divisionId: string;
-      roomIds: string[];
-      examDate: any;
-      startTime: any;
-      endTime: any;
-    }> = [];
-
     subjectRows.forEach((subject, subjectIndex) => {
       selectedDivisionIds.forEach((divisionId: string) => {
         const subjectId = subject.subjectId || subject.id;
@@ -132,66 +122,9 @@ export const buildExamPlanningIssues = (values: any): ExamPlanningIssue[] => {
             title: `${subject.subjectName || 'Subject'} is missing room assignment`,
             description: 'Room assignment is required for all divisions when Assign Rooms is enabled.',
           });
-        } else {
-          activeAssignments.push({
-            subjectId,
-            subjectName: subject.subjectName || 'Subject',
-            divisionId,
-            roomIds,
-            examDate: subject.examDate,
-            startTime: subject.startTime,
-            endTime: subject.endTime,
-          });
         }
       });
     });
-
-    // Check room conflicts across overlapping time slots
-    const conflictPairs = new Set<string>();
-    for (let i = 0; i < activeAssignments.length; i += 1) {
-      for (let j = i + 1; j < activeAssignments.length; j += 1) {
-        const a = activeAssignments[i];
-        const b = activeAssignments[j];
-
-        // Divisions taking the same subject can share the same room
-        if (a.subjectId === b.subjectId) continue;
-
-        const isSameDay =
-          a.examDate && b.examDate && dayjs(a.examDate).isSame(dayjs(b.examDate), 'day');
-
-        let isOverlapping = false;
-        if (isSameDay && a.startTime && a.endTime && b.startTime && b.endTime) {
-          const tStartA = dayjs(a.startTime);
-          const tEndA = dayjs(a.endTime);
-          const tStartB = dayjs(b.startTime);
-          const tEndB = dayjs(b.endTime);
-
-          const startA = dayjs(a.examDate).hour(tStartA.hour()).minute(tStartA.minute()).second(0);
-          const endA = dayjs(a.examDate).hour(tEndA.hour()).minute(tEndA.minute()).second(0);
-          const startB = dayjs(b.examDate).hour(tStartB.hour()).minute(tStartB.minute()).second(0);
-          const endB = dayjs(b.examDate).hour(tEndB.hour()).minute(tEndB.minute()).second(0);
-
-          isOverlapping = startA.isBefore(endB) && endA.isAfter(startB);
-        }
-
-        if (isOverlapping) {
-          const sharedRooms = a.roomIds.filter((id) => b.roomIds.includes(id));
-          if (sharedRooms.length > 0) {
-            const conflictKey = `${a.subjectId}-${a.divisionId}-${b.subjectId}-${b.divisionId}`;
-            if (!conflictPairs.has(conflictKey)) {
-              conflictPairs.add(conflictKey);
-              issues.push({
-                id: `room-conflict-${conflictKey}`,
-                step: 2,
-                severity: 'blocking',
-                title: `Room conflict in ${a.subjectName}`,
-                description: `Room conflict between ${a.subjectName} and ${b.subjectName} during overlapping exam hours.`,
-              });
-            }
-          }
-        }
-      }
-    }
   }
 
   return issues;
