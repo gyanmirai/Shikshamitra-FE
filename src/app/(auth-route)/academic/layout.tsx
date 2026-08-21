@@ -21,7 +21,11 @@ const AcademicLayout: React.FC<{ children: React.ReactNode }> = ({
   const hasPermission = hasGrantedPermission(permissions, academicPermissions.root);
 
   if (loading || !permissionsInitialized) return <SplashScreen />;
-  return hasPermission ? children : <View403 />;
+  return hasPermission ? (
+    <AcademicModuleUiProvider>{children}</AcademicModuleUiProvider>
+  ) : (
+    <View403 />
+  );
 };
 
 export default AcademicLayout;

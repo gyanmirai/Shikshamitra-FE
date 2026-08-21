@@ -42,31 +42,64 @@ export default function QuestionPaperPreviewDrawer({
         sx: {
           width: { xs: '100%', sm: '92vw', md: '78vw', lg: '70vw' },
           maxWidth: 1180,
+          height: '100dvh',
+          maxHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
         },
       }}
     >
-      <Box sx={{ px: { xs: 2, md: 3 }, py: 1, display: 'flex', justifyContent: 'flex-end', borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Box
+        sx={{
+          px: { xs: 2, md: 3 },
+          py: 1,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
         <IconButton onClick={onClose} aria-label="Close preview">
           <Iconify icon="mdi:close" />
         </IconButton>
       </Box>
 
-      <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-        <Box ref={printRef} sx={{ p: { xs: 1.5, md: 3 } }}>
+      <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
+        <Box
+          ref={printRef}
+          sx={{
+            p: { xs: 1.5, md: 3 },
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           <StepPreview
             paper={paper}
             sections={sections}
             printHtml={printHtml}
             isLoading={isLoading}
+            fullHeight
             previewActions={<></>}
           />
         </Box>
       </Scrollbar>
 
-      <Box sx={{ px: { xs: 2, md: 3 }, py: 1.5, display: 'flex', justifyContent: 'flex-end', gap: 1, borderTop: '1px solid', borderColor: 'divider' }}>
-        <Button variant="outlined" color="inherit" onClick={onClose}>Close</Button>
+      <Box
+        sx={{
+          px: { xs: 2, md: 3 },
+          py: 1.5,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 1,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Button variant="outlined" color="inherit" onClick={onClose}>
+          Close
+        </Button>
         <Button
           variant="contained"
           disabled={isLoading || !printHtml}

@@ -17,6 +17,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
@@ -275,7 +276,7 @@ function ContextSection({
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField error={formik.touched.topicName && !!formik.errors.topicName}>
-            <TextField
+            <LanguageInputField
               fullWidth
               size="small"
               label={`Topic${settings?.requireTopic ? ' *' : ''}`}
@@ -389,7 +390,7 @@ function ObjectiveAnswerEditor({ formik }: { formik: FormikProps<QuestionFormVal
                 inputProps={{ 'aria-label': `Mark option ${index + 1} as correct` }}
               />
             )}
-            <TextField
+            <LanguageInputField
               fullWidth
               size="small"
               label={`Option ${String.fromCharCode(65 + index)}`}
@@ -465,7 +466,7 @@ function AnswerSection({
 
     return (
       <ShakingTextField error={formik.touched.answerKey && !!formik.errors.answerKey}>
-        <TextField
+        <LanguageInputField
           fullWidth
           multiline={questionType !== 4}
           minRows={questionType === 6 ? 4 : 2}
@@ -887,7 +888,7 @@ export default function CreateQuestionDialog({
                       <ShakingTextField
                         error={formik.touched.questionText && !!formik.errors.questionText}
                       >
-                        <TextField
+                        <LanguageInputField
                           inputRef={questionTextRef}
                           fullWidth
                           multiline
@@ -975,7 +976,7 @@ export default function CreateQuestionDialog({
                         <ShakingTextField
                           error={formik.touched.learningOutcome && !!formik.errors.learningOutcome}
                         >
-                          <TextField
+                          <LanguageInputField
                             fullWidth
                             size="small"
                             label={`Learning Outcome${settings?.requireLearningOutcome ? ' *' : ''}`}
@@ -1014,7 +1015,7 @@ export default function CreateQuestionDialog({
                         />
                       </Grid>
                       <Grid size={12}>
-                        <TextField
+                        <LanguageInputField
                           fullWidth
                           multiline
                           minRows={3}

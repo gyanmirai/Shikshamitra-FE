@@ -192,6 +192,8 @@ export default function CreatePaperWizard({
   const [maxReachedStep, setMaxReachedStep] = useState(initialStep);
   const [lastSavedLabel, setLastSavedLabel] = useState<string | null>(null);
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
+  const [isSavingAndExiting, setIsSavingAndExiting] = useState(false);
+  const [paperTitleValidationAttempted, setPaperTitleValidationAttempted] = useState(false);
 
   // ── Formik for Step 1 ────────────────────────────────────────────────
   const formik = useFormik<PaperDetailsFormValues>({
@@ -203,6 +205,7 @@ export default function CreatePaperWizard({
   // Prefill from existing paper (edit / review / duplicate)
   useEffect(() => {
     if (!open) return;
+    setPaperTitleValidationAttempted(false);
     if (paper) {
       formik.resetForm({
         values: {
@@ -386,7 +389,11 @@ export default function CreatePaperWizard({
     [allClass]
   );
 
-  const { data: formSubjectData } = useQueryAndMutation({
+  const {
+    data: formSubjectData,
+    isLoading: isSubjectLoading,
+    isFetching: isSubjectFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: { standardId: formik.values.standardId },
@@ -414,7 +421,11 @@ export default function CreatePaperWizard({
     }),
     [academicYearId, formik.values.standardId, formik.values.subjectId]
   );
-  const { data: examLookupData } = useQueryAndMutation({
+  const {
+    data: examLookupData,
+    isLoading: isExamLoading,
+    isFetching: isExamFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetQuestionPaperExamLookupQuery,
     params: examLookupParams,
@@ -642,14 +653,15 @@ export default function CreatePaperWizard({
 
   const handleBack = () => goToStep(Math.max(0, activeStep - 1));
 
-  const handleStep0Continue = async () => {
+  const handleStep0Continue = async (exitAfterSave = false): Promise<boolean> => {
+    setPaperTitleValidationAttempted(true);
     const errors = await formik.validateForm();
     if (Object.keys(errors).length > 0) {
       formik.setTouched(
         Object.keys(errors).reduce((acc, key) => ({ ...acc, [key]: true }), {}),
         true
       );
-      return;
+      return false;
     }
 
     if (mode === 'create') {
@@ -670,16 +682,21 @@ export default function CreatePaperWizard({
           ],
         }).unwrap();
         markSaved();
-        goToStep(1);
         shikshaMitraToast.success({ message: 'Paper created. Continue with the paper pattern.' });
         // Switch the wizard into edit mode so later steps sync with the server.
         if (created?.id) {
           onPaperCreated?.(created as QuestionPaperMetadata);
         }
+        if (exitAfterSave) {
+          onClose();
+        } else {
+          goToStep(1);
+        }
       } catch (err: any) {
         shikshaMitraToast.error({ message: err?.data?.detail || 'Failed to create paper.' });
+        return false;
       }
-      return;
+      return true;
     }
 
     // Edit mode — persist details changes
@@ -695,18 +712,28 @@ export default function CreatePaperWizard({
           },
         }).unwrap();
         markSaved();
-        goToStep(1);
+        if (exitAfterSave) {
+          onClose();
+        } else {
+          goToStep(1);
+        }
       } catch (err: any) {
         shikshaMitraToast.error({
           message: err?.data?.detail || 'Failed to update paper details.',
         });
+        return false;
       }
     } else {
-      goToStep(1);
+      if (exitAfterSave) {
+        onClose();
+      } else {
+        goToStep(1);
+      }
     }
+    return true;
   };
 
-  const handleStep1Continue = async () => {
+  const handleStep1Continue = async (exitAfterSave = false): Promise<boolean> => {
     // Persist pattern + advanced rules
     if (selectedPaperId) {
       const sectionsPayload = sections.map((sec, idx) => ({
@@ -772,17 +799,42 @@ export default function CreatePaperWizard({
         shikshaMitraToast.error({
           message: 'Pattern could not be saved. Fix the error and try again.',
         });
-        return;
+        return false;
       }
       markSaved();
     }
 
-    goToStep(2);
+    if (exitAfterSave) {
+      onClose();
+    } else {
+      goToStep(2);
+    }
+    return true;
 
   };
 
   const handleStep2Continue = () => goToStep(3);
   const handleStep3Continue = () => goToStep(4);
+
+  const handleSaveAndExit = async () => {
+    if (isReadOnly) {
+      onClose();
+      return;
+    }
+
+    setIsSavingAndExiting(true);
+    try {
+      if (activeStep === 0) {
+        await handleStep0Continue(true);
+      } else if (activeStep === 1 || activeStep === 2) {
+        await handleStep1Continue(true);
+      } else {
+        onClose();
+      }
+    } finally {
+      setIsSavingAndExiting(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!selectedPaperId || isReadOnly) return;
@@ -1112,8 +1164,11 @@ export default function CreatePaperWizard({
             classOptions={classOptions}
             subjectOptions={subjectOptions}
             examOptions={examOptions}
+            isSubjectLoading={isSubjectLoading || isSubjectFetching}
+            isExamLoading={isExamLoading || isExamFetching}
             academicYearLabel={academicYearLabel}
             readOnly={mode !== 'create' && isReadOnly}
+            paperTitleValidationAttempted={paperTitleValidationAttempted}
           />
         );
       case 1:
@@ -1225,7 +1280,7 @@ export default function CreatePaperWizard({
             size="small"
             variant="contained"
             loading={createState.isLoading || updateState.isLoading}
-            onClick={handleStep0Continue}
+            onClick={() => handleStep0Continue()}
             endIcon={<Iconify icon="mdi:arrow-right" width={18} />}
           >
             Continue to Paper Pattern
@@ -1237,7 +1292,7 @@ export default function CreatePaperWizard({
             size="small"
             variant="contained"
             loading={updateState.isLoading || blueprintState.isLoading}
-            onClick={handleStep1Continue}
+            onClick={() => handleStep1Continue()}
             endIcon={<Iconify icon="mdi:arrow-right" width={18} />}
           >
             Continue to Add Questions
@@ -1430,15 +1485,40 @@ export default function CreatePaperWizard({
                   Back
                 </Button>
               )}
-              <Button
-                size="small"
-                variant="outlined"
-                color="inherit"
-                onClick={onClose}
-                startIcon={<Iconify icon="mdi:close" width={16} />}
-              >
-                {activeStep === 0 ? 'Cancel' : 'Save & Exit'}
-              </Button>
+              {activeStep === 0 && !isReadOnly && (
+                <LoadingButton
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  loading={isSavingAndExiting}
+                  onClick={handleSaveAndExit}
+                  startIcon={<Iconify icon="mdi:content-save-outline" width={16} />}
+                >
+                  Save &amp; Exit
+                </LoadingButton>
+              )}
+              {activeStep > 0 ? (
+                <LoadingButton
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  loading={isSavingAndExiting}
+                  onClick={handleSaveAndExit}
+                  startIcon={<Iconify icon="mdi:content-save-outline" width={16} />}
+                >
+                  Save &amp; Exit
+                </LoadingButton>
+              ) : (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  onClick={onClose}
+                  startIcon={<Iconify icon="mdi:close" width={16} />}
+                >
+                  Cancel
+                </Button>
+              )}
               {primaryAction()}
             </Stack>
           </Stack>

@@ -12,6 +12,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -622,7 +623,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   <ShakingTextField
                     error={Boolean(formik.touched.examName && formik.errors.examName)}
                   >
-                    <TextField
+                    <LanguageInputField
                       fullWidth
                       label="Exam Name *"
                       size="small"
@@ -630,7 +631,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       placeholder="e.g. First Terminal 2024"
                       value={formik.values.examName}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                        const value = e.target.value.replace(/[^\w\s\u0080-\uFFFF]/g, '');
                         formik.setFieldValue('examName', value);
                         formik.setFieldTouched('examName', false);
                       }}

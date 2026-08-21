@@ -11,6 +11,7 @@ import { TimePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { alpha, useTheme } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -804,7 +805,7 @@ const CalendarDayFormDialog = ({
                     sx={{
                       p: { xs: 1.5, md: 2 },
                       borderRadius: 1.5,
-                      bgcolor: (t) => alpha(t.palette.background.paper, 0.92),
+                      bgcolor: (t) => varAlpha(t.vars.palette.background.paperChannel, 0.92),
                       borderColor: (t) => alpha(t.palette.divider, 0.9),
                       boxShadow: (t) => `0 10px 30px -24px ${alpha(t.palette.grey[500], 0.4)}`,
                     }}

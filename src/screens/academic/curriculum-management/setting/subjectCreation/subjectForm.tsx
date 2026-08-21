@@ -6,6 +6,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { DialogScrollContent } from 'src/components/customDialog';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -43,7 +44,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
             <ShakingTextField
               error={!!(formik.touched.subjectName && formik.errors.subjectName) || false}
             >
-              <TextField
+              <LanguageInputField
                 fullWidth
                 label="Subject Name *"
                 name="subjectName"
@@ -65,7 +66,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <TextField
+            <LanguageInputField
               fullWidth
               label="Display Name"
               name="displayName"
@@ -178,7 +179,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <TextField
+            <LanguageInputField
               fullWidth
               multiline
               minRows={2}

@@ -18,6 +18,7 @@ interface StepPreviewProps {
   /** True while the preview document is being fetched. */
   isLoading?: boolean;
   previewActions?: React.ReactNode;
+  fullHeight?: boolean;
 }
 
 export default function StepPreview({
@@ -26,6 +27,7 @@ export default function StepPreview({
   printHtml,
   isLoading = false,
   previewActions,
+  fullHeight = false,
 }: StepPreviewProps) {
   const printRef = useRef<HTMLDivElement | null>(null);
   const handlePrint = useReactToPrint({
@@ -36,7 +38,10 @@ export default function StepPreview({
   const allQuestions = sections.flatMap((sec) => sec.questions || []);
 
   return (
-    <Stack spacing={2} sx={{ width: '100%', flex: 1, minHeight: 0 }}>
+    <Stack
+      spacing={2}
+      sx={{ width: '100%', flex: 1, minHeight: 0, height: fullHeight ? '100%' : undefined }}
+    >
       <Box>
         <Typography variant="h6" fontWeight={700}>
           Preview Question Paper
@@ -46,7 +51,14 @@ export default function StepPreview({
         </Typography>
       </Box>
 
-      <Scrollbar sx={{ height: 'calc(100vh - 340px)', minHeight: 360, pr: 1 }}>
+      <Scrollbar
+        sx={{
+          ...(fullHeight
+            ? { flex: 1, minHeight: 0 }
+            : { height: 'calc(100vh - 340px)', minHeight: 360 }),
+          pr: 1,
+        }}
+      >
         <Box
           ref={printRef}
           sx={{
@@ -56,7 +68,7 @@ export default function StepPreview({
             borderColor: 'divider',
             bgcolor: '#ffffff',
             color: '#1a1a1a',
-            minHeight: 600,
+            minHeight: fullHeight ? 'calc(100dvh - 180px)' : 600,
             boxShadow: (t) => `0 12px 36px -12px ${alpha(t.palette.common.black, 0.1)}`,
           }}
         >
