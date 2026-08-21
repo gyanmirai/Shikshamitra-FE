@@ -432,10 +432,15 @@ export function getLessonStatusConfig(
     return LESSON_STATUS_CONFIG.submitted;
   }
 
-  // 4. Completed (if explicitly completed or completion 100% with diary or approved)
+  // 4. Completed only after the teacher has submitted a diary for the period.
+  //
+  // Lesson-plan approval and lecture delivery are separate workflows. A plan
+  // can be approved before the class happens, and planned completion can be
+  // 100% without any lecture being conducted. Neither is evidence that the
+  // period was completed. The backend's TeacherDiaryStatus.Submitted value is
+  // the delivery signal available to the timeline.
   if (
     normalizedLower === 'completed' ||
-    (normalizedLower === 'approved' && completion >= 100) ||
     plan.diaryStatus === 1 ||
     plan.diaryStatus === 'Submitted'
   ) {
@@ -450,9 +455,6 @@ export function getLessonStatusConfig(
 
   // 6. Approved
   if (normalizedLower === 'approved') {
-    if (completion > 0) {
-      return LESSON_STATUS_CONFIG.inProgress;
-    }
     return LESSON_STATUS_CONFIG.approved;
   }
 

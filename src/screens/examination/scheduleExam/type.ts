@@ -103,6 +103,10 @@ export interface IScheduledExamTableProps {
   getExams: any;
   activeStatus?: number;
   onStatusChange?: (status: number) => void;
+  page?: number;
+  rowsPerPage?: number;
+  totalCount?: number;
+  onServerPagination?: (page: number, rowsPerPage: number) => void;
 }
 
 export interface INewExamFormProps {

@@ -14,7 +14,10 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { useGetAuditLogsQuery } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
+import {
+  useAddAuditLogReviewNoteMutation,
+  useGetAuditLogsQuery,
+} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
   Tab,
@@ -143,6 +146,7 @@ const CalendarAuditLogs = () => {
   const [restoreDialog, setRestoreDialog] = useState<AuditLog | null>(null);
   const [restoreReason, setRestoreReason] = useState('');
   const [restoring, setRestoring] = useState(false);
+  const [addAuditLogReviewNote] = useAddAuditLogReviewNoteMutation();
 
   // Query
   const { data: logsRaw, isLoading } = useQueryAndMutation({
@@ -244,16 +248,14 @@ const CalendarAuditLogs = () => {
   };
 
   const handleAddNote = async (log: AuditLog, note: string) => {
-    // Mock: attach the note locally
-    const newNote = {
-      id: `rn-${Date.now()}`,
+    const persistedNote = await addAuditLogReviewNote({
+      auditLogId: log.id,
       note,
-      createdBy: 'You',
-      createdAt: new Date().toISOString(),
-    };
+    }).unwrap();
+
     setSelectedLog((prev) =>
       prev && prev.id === log.id
-        ? { ...prev, reviewNotes: [...(prev.reviewNotes || []), newNote] }
+        ? { ...prev, reviewNotes: [...(prev.reviewNotes || []), persistedNote] }
         : prev
     );
   };

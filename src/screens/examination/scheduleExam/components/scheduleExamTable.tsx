@@ -108,6 +108,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   getExams,
   activeStatus,
   onStatusChange,
+  page,
+  rowsPerPage,
+  totalCount,
+  onServerPagination,
 }) => {
   const publishExamDialog = useBoolean();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -276,11 +280,25 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       {
         label: 'Completed',
         value: examScheduledStatus.Completed,
-        count: getExams?.data?.completedCount || 0,
+        // The active tab's totalCount comes from the same server-side
+        // status predicate as the rows shown in the grid. Prefer it while
+        // viewing Completed so a stale summary response cannot disagree with
+        // the current list response during a tab change/refetch.
+        count:
+          activeStatus === examScheduledStatus.Completed
+            ? totalCount
+            : getExams?.data?.completedCount || 0,
         color: 'success',
       },
     ],
-    [getExams?.data?.pendingCount, getExams?.data?.completedCount, ongoingCount, publishedCount]
+    [
+      activeStatus,
+      getExams?.data?.pendingCount,
+      getExams?.data?.completedCount,
+      ongoingCount,
+      publishedCount,
+      totalCount,
+    ]
   );
 
   // Handle tab change event — update UI state, notify parent, and refetch with new Status
@@ -304,11 +322,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     onStatusChange?.(status);
   };
 
-  // Ongoing is a derived view over the Published lifecycle status. Keep the raw
-  // lifecycle status authoritative for the normal tabs so a valid API row (for
-  // example, "Question Paper") cannot disappear because the summary endpoint's
-  // date range differs from its detailed subject schedule. Only the Ongoing tab
-  // applies the client-side time window.
+  // The API request already scopes normal tabs by Status. Re-filtering those
+  // rows on the client can hide valid records when the response status is
+  // represented differently from the requested lifecycle status. Only Ongoing
+  // is derived locally from the published schedule time window.
   const tableData = useMemo(
     () => {
       const rows = getExams?.data?.items || [];
@@ -316,7 +333,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       const visibleRows =
         requestedStatus === examScheduledStatus.Ongoing
           ? filterExamsByEffectiveStatus(rows, requestedStatus, currentTime)
-          : rows.filter((row: any) => Number(row.status) === requestedStatus);
+          : rows;
 
       return visibleRows.map((row: any) => ({
         ...row,
@@ -387,7 +404,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
         <ScheduleExamKpiStrip
-          summary={getExams?.data}
+          summary={
+            activeStatus === examScheduledStatus.Completed
+              ? { ...getExams?.data, completedCount: totalCount }
+              : getExams?.data
+          }
           rows={tableData}
           publishedCount={publishedCount}
           onCardClick={handleKpiClick}
@@ -605,6 +626,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             },
           ]}
           data={tableData || []}
+          serverSidePagination
+          page={Math.max(0, (page ?? 1) - 1)}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          onServerPagination={onServerPagination}
         />
       ) : (
         <CustomizableTable
@@ -648,6 +674,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             { id: 'createdBy', label: 'Created By', align: 'left', isFilter: false },
           ]}
           data={tableData || []}
+          serverSidePagination
+          page={Math.max(0, (page ?? 1) - 1)}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          onServerPagination={onServerPagination}
         />
       )}
 
