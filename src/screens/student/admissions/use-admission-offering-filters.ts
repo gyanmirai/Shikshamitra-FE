@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 export type AdmissionOfferingFilters = {
   admissionCycleId: string;
+  campusId: string;
   boardId: string;
   mediumId: string;
   stageId: string;
@@ -24,6 +25,7 @@ export function useAdmissionOfferingFilters() {
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<AdmissionOfferingFilters>(() => ({
     admissionCycleId: searchParams.get('cycle') ?? '',
+    campusId: searchParams.get('campus') ?? '',
     boardId: searchParams.get('board') ?? '',
     mediumId: searchParams.get('medium') ?? '',
     stageId: searchParams.get('stage') ?? '',
@@ -42,6 +44,7 @@ export function useAdmissionOfferingFilters() {
     const params = new URLSearchParams();
     const values: Record<string, string> = {
       cycle: next.admissionCycleId,
+      campus: next.campusId,
       board: next.boardId,
       medium: next.mediumId,
       stage: next.stageId,

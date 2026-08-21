@@ -7,6 +7,7 @@ import { Grid } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
+import { useGetAdmissionCampusesQuery } from 'src/redux/student/admissions/admission-campuses-api';
 
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 
@@ -25,6 +26,7 @@ export function AdmissionOfferingFilters({ cycles, cycle, values, onChange }: Pr
     { skip: !cycle }
   );
   const standardsQuery = useGetClassByMediumQuery(values.mediumId, { skip: !values.mediumId });
+  const campusesQuery = useGetAdmissionCampusesQuery();
   const hierarchy = hierarchyQuery.data?.items ?? [];
   const { boards, mediums, stages } = getAdmissionHierarchyOptions(
     hierarchy,
@@ -47,12 +49,25 @@ export function AdmissionOfferingFilters({ cycles, cycle, values, onChange }: Pr
           onChange={(id) =>
             onChange({
               admissionCycleId: String(id),
+              campusId: '',
               boardId: '',
               mediumId: '',
               stageId: '',
               standardId: '',
             })
           }
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <CustomSelect
+          options={campusesQuery.data?.items ?? []}
+          label="Campus"
+          labelKey="name"
+          valueKey="id"
+          value={values.campusId}
+          isLoading={campusesQuery.isFetching}
+          onChange={(id) => onChange({ campusId: String(id) })}
+          noOptionsMessage="No active campuses configured"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>

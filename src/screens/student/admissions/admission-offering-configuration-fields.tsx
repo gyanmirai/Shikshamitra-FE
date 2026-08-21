@@ -5,7 +5,10 @@ import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-w
 import CustomSelect from 'src/components/custom-select';
 import { Grid, Alert, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
 
-import type { AdmissionOfferingFormValues } from './admission-offering-model';
+import {
+  type AdmissionOfferingFormValues,
+  isAdmissionOfferingConfigurationIncomplete,
+} from './admission-offering-model';
 
 type Props = {
   formik: FormikProps<AdmissionOfferingFormValues>;
@@ -22,7 +25,7 @@ export function AdmissionOfferingConfigurationFields({
   loading,
   statusLocked,
 }: Props) {
-  const missingPublishedConfiguration = workflows.length === 0 || forms.length === 0;
+  const missingPublishedConfiguration = isAdmissionOfferingConfigurationIncomplete(formik.values);
 
   return (
     <Grid container spacing={1.5}>
@@ -32,8 +35,8 @@ export function AdmissionOfferingConfigurationFields({
       {missingPublishedConfiguration && !loading && (
         <Grid size={12}>
           <Alert severity="warning">
-            Publish at least one workflow and form before activating this offering. You may save it
-            as inactive while configuration is incomplete.
+            Select a published workflow, inquiry form, and application form before activating this
+            offering. You may save it as inactive while configuration is incomplete.
           </Alert>
         </Grid>
       )}

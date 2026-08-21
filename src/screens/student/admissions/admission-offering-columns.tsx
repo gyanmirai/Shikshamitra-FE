@@ -18,6 +18,7 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
     render: (value) => <Typography fontWeight={600}>{value}</Typography>,
   },
   { id: 'boardName', label: 'Board', minWidth: 120 },
+  { id: 'campusName', label: 'Campus', minWidth: 130 },
   { id: 'mediumName', label: 'Medium', minWidth: 120 },
   { id: 'stageName', label: 'Stage', minWidth: 120 },
   { id: 'standardName', label: 'Standard', minWidth: 130 },

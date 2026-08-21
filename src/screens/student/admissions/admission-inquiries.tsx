@@ -43,7 +43,14 @@ export default function AdmissionInquiriesScreen() {
     admissionCycleId: cycleId || undefined,
     admissionOfferingId: offeringId || undefined,
   });
-  const { data: cycles } = useGetAdmissionCyclesQuery({ maxResultCount: 100, skipCount: 0 });
+  const {
+    data: cycles,
+    isLoading: cyclesLoading,
+    isError: cyclesError,
+  } = useGetAdmissionCyclesQuery(
+    { maxResultCount: 100, skipCount: 0 },
+    { refetchOnMountOrArgChange: true }
+  );
   const { data: offerings } = useGetAdmissionOfferingsQuery({ maxResultCount: 100, skipCount: 0 });
   const [markContacted, { isLoading: markingContacted }] =
     useMarkAdmissionInquiryContactedMutation();
@@ -151,7 +158,13 @@ export default function AdmissionInquiriesScreen() {
           ) : undefined
         }
       />
-      <AdmissionInquiryDialog open={createDialog.value} onClose={createDialog.onFalse} />
+      <AdmissionInquiryDialog
+        open={createDialog.value}
+        onClose={createDialog.onFalse}
+        cycles={cycles?.items}
+        cyclesLoading={cyclesLoading}
+        cyclesError={cyclesError}
+      />
       {isError && (
         <AdmissionQueryError
           onRetry={() => {

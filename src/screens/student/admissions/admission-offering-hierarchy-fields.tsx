@@ -4,6 +4,7 @@ import type { AcademicOrganizationOption } from 'src/redux/academicOrganizationO
 
 import { Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { useGetAdmissionCampusesQuery } from 'src/redux/student/admissions/admission-campuses-api';
 
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 
@@ -31,6 +32,8 @@ export function AdmissionOfferingHierarchyFields({
   standardsLoading,
   identityLocked,
 }: Props) {
+  const campusesQuery = useGetAdmissionCampusesQuery();
+  const campuses = campusesQuery.data?.items ?? [];
   const { boards, mediums, stages } = getAdmissionHierarchyOptions(
     hierarchy,
     formik.values.boardId,
@@ -44,6 +47,19 @@ export function AdmissionOfferingHierarchyFields({
     <Grid container spacing={1.5}>
       <Grid size={12}>
         <Typography variant="subtitle2">Academic hierarchy</Typography>
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <CustomSelect
+          options={campuses}
+          label="Campus"
+          labelKey="name"
+          valueKey="id"
+          value={formik.values.campusId ?? ''}
+          isLoading={campusesQuery.isFetching}
+          disabled={identityLocked}
+          onChange={(value) => formik.setFieldValue('campusId', value || null)}
+          noOptionsMessage="No active campuses configured"
+        />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
         <CustomSelect

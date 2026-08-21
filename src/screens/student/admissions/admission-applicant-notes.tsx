@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Box, Card, Alert, Stack, Button, TextField, Typography, CardContent } from '@mui/material';
 import {
   useCreateAdmissionApplicantNoteMutation,

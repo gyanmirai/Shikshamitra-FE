@@ -1,0 +1,73 @@
+'use client';
+
+import type { RootState } from 'src/redux/store';
+import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import {
+  useGetAdmissionFormQuery,
+  useCloneAdmissionFormMutation,
+  useCreateAdmissionFormMutation,
+  useUpdateAdmissionFormMutation,
+  usePublishAdmissionFormMutation,
+  useValidateAdmissionFormMutation,
+  useCreateAdmissionFormVersionMutation,
+  useArchiveAdmissionFormMutation,
+} from 'src/redux/student/admissions/admission-forms-api';
+
+export function useFormListActions() {
+  const router = useRouter();
+  const dialog = useBoolean();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const editingQuery = useGetAdmissionFormQuery(editingId ?? '', { skip: !editingId });
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canManage = hasGrantedPermission(permissions, 'Students.Admissions.Forms.Manage');
+  const canPublish = hasGrantedPermission(permissions, 'Students.Admissions.Forms.Publish');
+  const [create, createState] = useCreateAdmissionFormMutation();
+  const [update, updateState] = useUpdateAdmissionFormMutation();
+  const [clone] = useCloneAdmissionFormMutation();
+  const [validate] = useValidateAdmissionFormMutation();
+  const [publish] = usePublishAdmissionFormMutation();
+  const [createVersion] = useCreateAdmissionFormVersionMutation();
+  const [archive] = useArchiveAdmissionFormMutation();
+  const run = async (action: () => Promise<unknown>, message: string) => {
+    try {
+      await action();
+      shikshaMitraToast.success({ message });
+      return true;
+    } catch (error) {
+      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail || 'Unable to complete the form action.' });
+      return false;
+    }
+  };
+  const save = async (values: CreateUpdateAdmissionForm) => {
+    const saved = await run(
+      () => editingId ? update({ id: editingId, body: values }).unwrap() : create(values).unwrap(),
+      'Form draft saved'
+    );
+    if (saved) {
+      dialog.onFalse();
+      setEditingId(null);
+    }
+  };
+  const close = () => { dialog.onFalse(); setEditingId(null); };
+  const edit = (id: string) => { setEditingId(id); dialog.onTrue(); };
+
+  return {
+    dialog, editingId, editing: editingQuery.data, canManage, canPublish,
+    saving: createState.isLoading || updateState.isLoading, save, close, edit,
+    create: () => { setEditingId(null); dialog.onTrue(); },
+    preview: (id: string) => router.push(`/student/admissions/settings/forms/${id}/preview`),
+    clone: (id: string) => run(() => clone({ id, body: { name: '', code: '' } }).unwrap(), 'Form cloned'),
+    validate: (id: string) => run(async () => { const result = await validate(id).unwrap(); if (!result.isValid) throw new Error(result.errors.join(', ')); }, 'Form is valid'),
+    publish: (id: string) => run(() => publish(id).unwrap(), 'Form published'),
+    createVersion: (id: string) => run(() => createVersion(id).unwrap(), 'New form version created'),
+    archive: (id: string) => run(() => archive(id).unwrap(), 'Form archived'),
+  };
+}

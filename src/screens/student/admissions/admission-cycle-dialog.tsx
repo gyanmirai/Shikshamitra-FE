@@ -10,13 +10,13 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useMemo } from 'react';
 import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -207,19 +207,20 @@ export function AdmissionCycleDialog({
                 label="Applications open"
                 format="DD-MM-YYYY"
                 value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
-                onChange={(value) =>
-                  formik.setFieldValue(
+                onChange={async (value) => {
+                  await formik.setFieldTouched('startDate', true, false);
+                  await formik.setFieldValue(
                     'startDate',
-                    value?.isValid() ? value.format('YYYY-MM-DD') : ''
-                  )
-                }
+                    value?.isValid() ? value.format('YYYY-MM-DD') : '',
+                    true
+                  );
+                }}
                 slotProps={{
                   textField: {
                     fullWidth: true,
                     size: 'small',
                     required: true,
                     name: 'startDate',
-                    onBlur: formik.handleBlur,
                     error: Boolean(formik.touched.startDate && formik.errors.startDate),
                     helperText: formik.touched.startDate ? formik.errors.startDate : undefined,
                   },
@@ -233,19 +234,20 @@ export function AdmissionCycleDialog({
                 label="Applications close"
                 format="DD-MM-YYYY"
                 value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
-                onChange={(value) =>
-                  formik.setFieldValue(
+                onChange={async (value) => {
+                  await formik.setFieldTouched('endDate', true, false);
+                  await formik.setFieldValue(
                     'endDate',
-                    value?.isValid() ? value.format('YYYY-MM-DD') : ''
-                  )
-                }
+                    value?.isValid() ? value.format('YYYY-MM-DD') : '',
+                    true
+                  );
+                }}
                 slotProps={{
                   textField: {
                     fullWidth: true,
                     size: 'small',
                     required: true,
                     name: 'endDate',
-                    onBlur: formik.handleBlur,
                     error: Boolean(formik.touched.endDate && formik.errors.endDate),
                     helperText: formik.touched.endDate ? formik.errors.endDate : undefined,
                   },

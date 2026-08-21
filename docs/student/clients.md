@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-08-14
+updated_on: 2026-08-18
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,11 +18,11 @@ TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query c
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 | `admission-cycles-api.ts`       | Admission cycle list and lifecycle commands                                                                      | Cycles and cycle selectors                  |
 | `admission-offerings-api.ts`    | Offering list, detail, CRUD, explicit state commands, clone, readiness, availability, and bulk preview or commit | Offerings, inquiry selection, Applicant 360 |
-| `admission-workflows-api.ts`    | Workflow definitions, stages, transitions, clone, publish, validation                                            | Workflow builder                            |
+| `admission-workflows-api.ts`    | Workflow CRUD, graph save, stage metadata, validation, publish, archive, clone, versions, and usage              | Workflow list and dedicated builder         |
 | `admission-forms-api.ts`        | Form definitions, sections, fields, clone, publish, validation, preview                                          | Form builder and preview                    |
 | `admission-inquiries-api.ts`    | Inquiry list, create, duplicate check, contacted action                                                          | Inquiry CRM and inquiry dialog              |
 | `admission-applicants-api.ts`   | Applicant 360, notes, activities                                                                                 | Applicant 360                               |
-| `admission-applications-api.ts` | Start application, list, workflow, form values, draft save, submit                                               | Application list and detail                 |
+| `admission-applications-api.ts` | Start application, list, frozen workflow, form values, draft save, submit, stage advance, and transition history | Application list and detail                 |
 
 ## Endpoint ownership
 

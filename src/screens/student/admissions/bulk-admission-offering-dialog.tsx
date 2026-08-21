@@ -92,7 +92,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
           startIcon={<Iconify icon={bulk.preview ? GlobalIcons.submit : GlobalIcons.eye} />}
           loading={bulk.loading}
           disabled={Boolean(bulk.preview && !bulk.preview.canCommit)}
-          onClick={() => bulk.formik.handleSubmit()}
+          onClick={bulk.formik.submitForm}
         >
           {bulk.preview ? 'Create all' : 'Preview'}
         </Button>

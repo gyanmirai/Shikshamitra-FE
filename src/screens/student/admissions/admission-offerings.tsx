@@ -25,7 +25,7 @@ export default function AdmissionOfferingsScreen() {
         description="Configure the standards, admission windows, workflows, and forms available in each cycle."
         links={[
           { name: 'Students', href: '/student/dashboard' },
-          { name: 'Enrollment', href: '/student/admissions' },
+          { name: 'Admissions', href: '/student/admissions' },
           { name: 'Admission Offerings' },
         ]}
         action={
@@ -46,7 +46,10 @@ export default function AdmissionOfferingsScreen() {
         }
       />
 
-      {screen.cycles.length === 0 && !screen.offeringsQuery.isLoading && (
+      {screen.cycles.length === 0 &&
+        !screen.cyclesQuery.isLoading &&
+        !screen.cyclesQuery.isFetching &&
+        !screen.cyclesQuery.isError && (
         <Alert severity="info">
           Create a non-archived Admission Cycle before configuring offerings.
         </Alert>
@@ -63,7 +66,12 @@ export default function AdmissionOfferingsScreen() {
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <AdmissionOfferingTable
           rows={screen.offeringsQuery.data?.items ?? []}
-          loading={screen.offeringsQuery.isFetching || screen.loadingDetail}
+          loading={
+            screen.cyclesQuery.isLoading ||
+            screen.cyclesQuery.isFetching ||
+            screen.offeringsQuery.isFetching ||
+            screen.loadingDetail
+          }
           totalCount={screen.offeringsQuery.data?.totalCount ?? 0}
           page={screen.filters.page}
           rowsPerPage={screen.filters.rowsPerPage}

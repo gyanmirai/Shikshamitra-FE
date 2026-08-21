@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
-import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
+import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 import {
   useGetAdmissionOfferingQuery,
   useGetAdmissionOfferingsQuery,
@@ -27,7 +27,13 @@ import {
   useCheckAdmissionInquiryDuplicatesMutation,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
-type Props = { open: boolean; onClose: () => void };
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  cycles?: AdmissionCycle[];
+  cyclesLoading?: boolean;
+  cyclesError?: boolean;
+};
 const sourceOptions = [
   'Website',
   'Walk-in',
@@ -41,17 +47,18 @@ const sourceOptions = [
   'Other',
 ];
 const jsonValue = (value: string) => JSON.stringify(value);
-export default function AdmissionInquiryDialog({ open, onClose }: Props) {
+export default function AdmissionInquiryDialog({
+  open,
+  onClose,
+  cycles = [],
+  cyclesLoading = false,
+  cyclesError = false,
+}: Props) {
   const [cycleId, setCycleId] = useState('');
   const [offeringId, setOfferingId] = useState('');
   const [source, setSource] = useState<AdmissionInquirySource>(0);
   const [values, setValues] = useState<Record<string, string>>({});
   const [matches, setMatches] = useState<DuplicateMatch[]>([]);
-  const { data: cycles } = useGetAdmissionCyclesQuery({
-    status: 1,
-    maxResultCount: 100,
-    skipCount: 0,
-  });
   const { data: offerings } = useGetAdmissionOfferingsQuery(
     { admissionCycleId: cycleId, availabilityStatus: 2, maxResultCount: 100, skipCount: 0 },
     { skip: !cycleId }
@@ -145,12 +152,29 @@ export default function AdmissionInquiryDialog({ open, onClose }: Props) {
               setOfferingId('');
             }}
             required
+            disabled={cyclesLoading || cyclesError}
+            error={cyclesError}
+            helperText={
+              cyclesError
+                ? 'Unable to load admission cycles. Close and reopen this dialog to retry.'
+                : cyclesLoading
+                  ? 'Loading admission cycles…'
+                  : undefined
+            }
           >
-            {cycles?.items.map((cycle) => (
-              <MenuItem key={cycle.id} value={cycle.id}>
-                {cycle.name}
+            {cycles.filter((cycle) => cycle.status !== 3).length ? (
+              cycles
+                .filter((cycle) => cycle.status !== 3)
+                .map((cycle) => (
+                  <MenuItem key={cycle.id} value={cycle.id}>
+                    {cycle.name}
+                  </MenuItem>
+                ))
+            ) : (
+              <MenuItem value="" disabled>
+                No admission cycles available
               </MenuItem>
-            ))}
+            )}
           </TextField>
           <TextField
             select
@@ -159,11 +183,17 @@ export default function AdmissionInquiryDialog({ open, onClose }: Props) {
             onChange={(event) => setOfferingId(event.target.value)}
             disabled={!cycleId}
           >
-            {offerings?.items.map((offering) => (
-              <MenuItem key={offering.id} value={offering.id}>
-                {offering.code}
+            {offerings?.items?.length ? (
+              offerings.items.map((offering) => (
+                <MenuItem key={offering.id} value={offering.id}>
+                  {offering.code}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem value="" disabled>
+                No offerings available for this cycle
               </MenuItem>
-            ))}
+            )}
           </TextField>
           <TextField
             select

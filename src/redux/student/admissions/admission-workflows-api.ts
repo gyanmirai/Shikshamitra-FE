@@ -2,7 +2,7 @@ import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
 export type AdmissionWorkflowStatus = 0 | 1 | 2;
-export type AdmissionWorkflowStageType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+export type AdmissionWorkflowStageType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionWorkflowStage = {
   id: string;
   workflowDefinitionId?: string;
@@ -13,6 +13,8 @@ export type AdmissionWorkflowStage = {
   displayOrder: number;
   isRequired: boolean;
   allowManualSkip: boolean;
+  isEntryStage: boolean;
+  isTerminalStage: boolean;
   configurationJson?: string;
 };
 export type AdmissionWorkflowTransition = {
@@ -21,23 +23,75 @@ export type AdmissionWorkflowTransition = {
   fromStageId: string;
   toStageId: string;
   priority: number;
+  conditionRuleJson?: string;
+  isDefault: boolean;
 };
 export type AdmissionWorkflow = {
   id: string;
   name: string;
   code: string;
+  description?: string;
   version: number;
   status: AdmissionWorkflowStatus;
   parentVersionId?: string | null;
   publishedAt?: string | null;
+  publishedBy?: string | null;
+  offeringCount: number;
+  applicationCount: number;
+  concurrencyStamp: string;
+  creationTime: string;
+  lastModificationTime?: string | null;
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
 };
 export type CreateUpdateAdmissionWorkflow = {
   name: string;
   code: string;
+  description?: string;
+  concurrencyStamp?: string;
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
+};
+export type AdmissionWorkflowValidationIssue = {
+  code: string;
+  message: string;
+  severity: 0 | 1;
+  stageId?: string | null;
+  transitionId?: string | null;
+};
+export type AdmissionWorkflowValidationResult = {
+  isValid: boolean;
+  issues: AdmissionWorkflowValidationIssue[];
+  errors: string[];
+  warnings: string[];
+};
+export type AdmissionWorkflowUsage = {
+  workflowDefinitionId: string;
+  offeringCount: number;
+  applicationCount: number;
+  canDelete: boolean;
+  offerings: {
+    id: string;
+    admissionCycleId: string;
+    admissionCycleName: string;
+    code: string;
+    isActive: boolean;
+  }[];
+};
+export type AdmissionWorkflowStageTypeMetadata = {
+  type: AdmissionWorkflowStageType;
+  displayName: string;
+  description: string;
+  icon: string;
+  defaultColor: string;
+  supportedConfiguration: string[];
+  runtimeHandler: string;
+  nextRequiredAction: string;
+  canBeEntryStage: boolean;
+  canBeTerminalStage: boolean;
+  supportsFormAttachment: boolean;
+  supportsConditions: boolean;
+  isRuntimeReady: boolean;
 };
 type Result<T> = { data?: T };
 const unwrap = <T>(response: Result<T> | T): T => {
@@ -55,13 +109,19 @@ export const admissionWorkflowsApi = api.injectEndpoints({
     getAdmissionWorkflow: builder.query<AdmissionWorkflow, string>({
       query: (id) => ({ url: `/student/enrollment/admissions/workflows/${id}` }),
       transformResponse: (r: Result<AdmissionWorkflow> | AdmissionWorkflow) => unwrap(r),
-      providesTags: [studentAdmissionsCrmType.admissionWorkflow],
+      providesTags: (_result, _error, id) => [
+        { type: studentAdmissionsCrmType.admissionWorkflow, id },
+      ],
     }),
     getAdmissionWorkflows: builder.query<
       { totalCount: number; items: AdmissionWorkflow[] },
       {
         search?: string;
         status?: AdmissionWorkflowStatus;
+        version?: number;
+        isUsed?: boolean;
+        createdFrom?: string;
+        createdTo?: string;
         skipCount?: number;
         maxResultCount?: number;
       }
@@ -72,12 +132,18 @@ export const admissionWorkflowsApi = api.injectEndpoints({
           | Result<{ totalCount: number; items: AdmissionWorkflow[] }>
           | { totalCount: number; items: AdmissionWorkflow[] }
       ) => unwrap(r),
-      providesTags: [studentAdmissionsCrmType.admissionWorkflow],
+      providesTags: (result) => [
+        { type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' },
+        ...(result?.items.map((workflow) => ({
+          type: studentAdmissionsCrmType.admissionWorkflow,
+          id: workflow.id,
+        })) ?? []),
+      ],
     }),
     createAdmissionWorkflow: builder.mutation<AdmissionWorkflow, CreateUpdateAdmissionWorkflow>({
       query: (body) => ({ url: '/student/enrollment/admissions/workflows', method: 'POST', body }),
       transformResponse: (r: Result<AdmissionWorkflow> | AdmissionWorkflow) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionWorkflow],
+      invalidatesTags: [{ type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' }],
     }),
     updateAdmissionWorkflow: builder.mutation<
       AdmissionWorkflow,
@@ -89,32 +155,89 @@ export const admissionWorkflowsApi = api.injectEndpoints({
         body,
       }),
       transformResponse: (r: Result<AdmissionWorkflow> | AdmissionWorkflow) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionWorkflow],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: studentAdmissionsCrmType.admissionWorkflow, id },
+        { type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' },
+      ],
     }),
-    cloneAdmissionWorkflow: builder.mutation<AdmissionWorkflow, string>({
+    deleteAdmissionWorkflow: builder.mutation<void, string>({
       query: (id) => ({
+        url: `/student/enrollment/admissions/workflows/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [{ type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' }],
+    }),
+    cloneAdmissionWorkflow: builder.mutation<
+      AdmissionWorkflow,
+      { id: string; body: { name: string; code: string; description?: string } }
+    >({
+      query: ({ id, body }) => ({
         url: `/student/enrollment/admissions/workflows/${id}/clone`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (r: Result<AdmissionWorkflow> | AdmissionWorkflow) => unwrap(r),
+      invalidatesTags: [{ type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' }],
+    }),
+    createAdmissionWorkflowVersion: builder.mutation<AdmissionWorkflow, string>({
+      query: (id) => ({
+        url: `/student/enrollment/admissions/workflows/${id}/new-version`,
         method: 'POST',
       }),
       transformResponse: (r: Result<AdmissionWorkflow> | AdmissionWorkflow) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionWorkflow],
+      invalidatesTags: [{ type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' }],
     }),
-    validateAdmissionWorkflow: builder.mutation<{ isValid: boolean; errors: string[] }, string>({
+    validateAdmissionWorkflow: builder.mutation<AdmissionWorkflowValidationResult, string>({
       query: (id) => ({
         url: `/student/enrollment/admissions/workflows/${id}/validate`,
         method: 'POST',
       }),
       transformResponse: (
-        r: Result<{ isValid: boolean; errors: string[] }> | { isValid: boolean; errors: string[] }
+        r: Result<AdmissionWorkflowValidationResult> | AdmissionWorkflowValidationResult
       ) => unwrap(r),
     }),
-    publishAdmissionWorkflow: builder.mutation<AdmissionWorkflow, string>({
-      query: (id) => ({
+    publishAdmissionWorkflow: builder.mutation<
+      AdmissionWorkflow,
+      { id: string; concurrencyStamp?: string }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
         url: `/student/enrollment/admissions/workflows/${id}/publish`,
+        method: 'POST',
+        params: concurrencyStamp ? { concurrencyStamp } : undefined,
+      }),
+      transformResponse: (r: Result<AdmissionWorkflow> | AdmissionWorkflow) => unwrap(r),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: studentAdmissionsCrmType.admissionWorkflow, id },
+        { type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' },
+      ],
+    }),
+    archiveAdmissionWorkflow: builder.mutation<AdmissionWorkflow, string>({
+      query: (id) => ({
+        url: `/student/enrollment/admissions/workflows/${id}/archive`,
         method: 'POST',
       }),
       transformResponse: (r: Result<AdmissionWorkflow> | AdmissionWorkflow) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionWorkflow],
+      invalidatesTags: (_result, _error, id) => [
+        { type: studentAdmissionsCrmType.admissionWorkflow, id },
+        { type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' },
+      ],
+    }),
+    getAdmissionWorkflowVersions: builder.query<AdmissionWorkflow[], string>({
+      query: (id) => ({ url: `/student/enrollment/admissions/workflows/${id}/versions` }),
+      transformResponse: (r: Result<AdmissionWorkflow[]> | AdmissionWorkflow[]) => unwrap(r),
+      providesTags: (_result, _error, id) => [
+        { type: studentAdmissionsCrmType.admissionWorkflow, id: `VERSIONS-${id}` },
+      ],
+    }),
+    getAdmissionWorkflowUsage: builder.query<AdmissionWorkflowUsage, string>({
+      query: (id) => ({ url: `/student/enrollment/admissions/workflows/${id}/usage` }),
+      transformResponse: (r: Result<AdmissionWorkflowUsage> | AdmissionWorkflowUsage) => unwrap(r),
+    }),
+    getAdmissionWorkflowStageTypes: builder.query<AdmissionWorkflowStageTypeMetadata[], void>({
+      query: () => ({ url: '/student/enrollment/admissions/workflows/stage-types' }),
+      transformResponse: (
+        r: Result<AdmissionWorkflowStageTypeMetadata[]> | AdmissionWorkflowStageTypeMetadata[]
+      ) => unwrap(r),
     }),
   }),
 });
@@ -123,7 +246,13 @@ export const {
   useGetAdmissionWorkflowQuery,
   useCreateAdmissionWorkflowMutation,
   useUpdateAdmissionWorkflowMutation,
+  useDeleteAdmissionWorkflowMutation,
   useCloneAdmissionWorkflowMutation,
+  useCreateAdmissionWorkflowVersionMutation,
   useValidateAdmissionWorkflowMutation,
   usePublishAdmissionWorkflowMutation,
+  useArchiveAdmissionWorkflowMutation,
+  useGetAdmissionWorkflowVersionsQuery,
+  useGetAdmissionWorkflowUsageQuery,
+  useGetAdmissionWorkflowStageTypesQuery,
 } = admissionWorkflowsApi;

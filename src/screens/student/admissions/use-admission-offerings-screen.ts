@@ -13,6 +13,7 @@ const toListInput = (
   filters: ReturnType<typeof useAdmissionOfferingFilters>['filters']
 ): AdmissionOfferingListInput => ({
   admissionCycleId: cycleId,
+  campusId: filters.campusId || undefined,
   boardId: filters.boardId || undefined,
   mediumId: filters.mediumId || undefined,
   stageId: filters.stageId || undefined,
@@ -41,5 +42,5 @@ export function useAdmissionOfferingsScreen() {
     { skip: !cycle }
   );
   const actions = useAdmissionOfferingActions(cycle);
-  return { ...filterState, cycles, cycle, offeringsQuery, ...actions };
+  return { ...filterState, cyclesQuery, cycles, cycle, offeringsQuery, ...actions };
 }

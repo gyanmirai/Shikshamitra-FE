@@ -14,7 +14,13 @@ import {
 
 import { AdmissionQueryError } from './admission-query-error';
 
-export default function AdmissionApplicationsScreen() {
+type AdmissionApplicationsView = 'applications' | 'pipeline';
+
+export default function AdmissionApplicationsScreen({
+  view = 'applications',
+}: {
+  view?: AdmissionApplicationsView;
+}) {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [stageSearch, setStageSearch] = useState('');
@@ -58,15 +64,21 @@ export default function AdmissionApplicationsScreen() {
     },
     { id: 'lastSavedAt', label: 'Last saved', minWidth: 180 },
   ];
+  const isPipeline = view === 'pipeline';
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Applications"
-        description="Find applications, review their current stage, and continue applicant work."
+        heading={isPipeline ? 'Pipeline' : 'Applications'}
+        description={
+          isPipeline
+            ? 'Track applicants through their current admission stage and continue applicant work.'
+            : 'Find applications, review their current stage, and continue applicant work.'
+        }
         links={[
           { name: 'Students', href: '/student' },
           { name: 'Admissions', href: '/student/admissions' },
-          { name: 'Applications' },
+          { name: isPipeline ? 'Pipeline' : 'Applications' },
         ]}
         sx={{ mb: 3 }}
       />
@@ -108,7 +120,7 @@ export default function AdmissionApplicationsScreen() {
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-applications"
-          tableTitle="Admission applications"
+          tableTitle={isPipeline ? 'Admission pipeline' : 'Admission applications'}
           wrapperProps={{ sx: { height: 1 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}

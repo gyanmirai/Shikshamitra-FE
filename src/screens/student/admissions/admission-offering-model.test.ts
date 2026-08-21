@@ -3,9 +3,30 @@ import { it, expect, describe } from 'vitest';
 
 import { admissionOfferingSchema } from './admission-offering-schema';
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
-import { toOfferingWriteInput, getOfferingInitialValues } from './admission-offering-model';
+import {
+  toOfferingWriteInput,
+  getOfferingInitialValues,
+  isAdmissionOfferingConfigurationIncomplete,
+} from './admission-offering-model';
 
 describe('Admission Offering form rules', () => {
+  it('marks an offering incomplete until all published configuration references are selected', () => {
+    expect(
+      isAdmissionOfferingConfigurationIncomplete({
+        workflowDefinitionId: 'workflow-1',
+        inquiryFormDefinitionId: 'inquiry-1',
+        applicationFormDefinitionId: null,
+      })
+    ).toBe(true);
+    expect(
+      isAdmissionOfferingConfigurationIncomplete({
+        workflowDefinitionId: 'workflow-1',
+        inquiryFormDefinitionId: 'inquiry-1',
+        applicationFormDefinitionId: 'application-1',
+      })
+    ).toBe(false);
+  });
+
   it('inherits cycle dates without sending copied date values', () => {
     const input = toOfferingWriteInput({
       ...getOfferingInitialValues(),

@@ -4,6 +4,7 @@ import type { AcademicOrganizationOption } from 'src/redux/academicOrganizationO
 
 import { Grid, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { useGetAdmissionCampusesQuery } from 'src/redux/student/admissions/admission-campuses-api';
 
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 
@@ -24,6 +25,8 @@ export function BulkAdmissionHierarchyFields({
   loading,
   change,
 }: Props) {
+  const campusesQuery = useGetAdmissionCampusesQuery();
+  const campuses = campusesQuery.data?.items ?? [];
   const { values, errors, touched } = formik;
   const options = getAdmissionHierarchyOptions(hierarchy, values.boardId, values.mediumId);
   const visibleStandards = standards.filter(
@@ -32,6 +35,18 @@ export function BulkAdmissionHierarchyFields({
 
   return (
     <Grid container spacing={1.5}>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <CustomSelect
+          options={campuses}
+          label="Campus"
+          labelKey="name"
+          valueKey="id"
+          value={values.campusId ?? ''}
+          isLoading={campusesQuery.isFetching}
+          onChange={(id) => change('campusId', id || null)}
+          noOptionsMessage="No active campuses configured"
+        />
+      </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
         <CustomSelect
           options={options.boards}

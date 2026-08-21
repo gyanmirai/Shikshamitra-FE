@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 
 export type BulkOfferingValues = {
+  campusId: string | null;
   boardId: string;
   mediumId: string;
   stageId: string;
@@ -21,6 +22,7 @@ export type BulkOfferingValues = {
 };
 
 export const bulkOfferingInitialValues: BulkOfferingValues = {
+  campusId: null,
   boardId: '',
   mediumId: '',
   stageId: '',
@@ -81,7 +83,7 @@ export const toBulkOfferingInput = (
   standards: Standards[],
   previewOnly: boolean
 ): BulkAdmissionOfferingInput => ({
-  campusId: null,
+  campusId: values.campusId,
   boardId: values.boardId,
   mediumId: values.mediumId,
   stageId: values.stageId,

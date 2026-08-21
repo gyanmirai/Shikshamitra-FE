@@ -1,187 +1,134 @@
 'use client';
 
-import type {
-  AdmissionWorkflow,
-  AdmissionWorkflowStageType,
-  CreateUpdateAdmissionWorkflow,
-} from 'src/redux/student/admissions/admission-workflows-api';
+import type { CreateUpdateAdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
 import * as Yup from 'yup';
-import { useMemo } from 'react';
 import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Grid,
-  Stack,
-  Button,
-  TextField,
-  IconButton,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+
+type WorkflowDetails = Pick<CreateUpdateAdmissionWorkflow, 'name' | 'code' | 'description'>;
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  editing?: AdmissionWorkflow | null;
   saving: boolean;
-  onSave: (value: CreateUpdateAdmissionWorkflow) => Promise<void>;
+  title?: string;
+  initialValues?: WorkflowDetails;
+  submitLabel?: string;
+  onSave: (value: WorkflowDetails) => Promise<void>;
 };
+
 const schema = Yup.object({
-  name: Yup.string().trim().required('Workflow name is required'),
-  code: Yup.string().trim().required('Workflow code is required'),
-});
-const newStage = (order: number) => ({
-  id: crypto.randomUUID(),
-  code: `STAGE_${order + 1}`,
-  name: `Stage ${order + 1}`,
-  stageType: 11 as AdmissionWorkflowStageType,
-  displayOrder: order,
-  isRequired: true,
-  allowManualSkip: false,
+  name: Yup.string()
+    .trim()
+    .max(128, 'Use 128 characters or fewer')
+    .required('Workflow name is required'),
+  code: Yup.string()
+    .trim()
+    .uppercase()
+    .matches(/^[A-Z][A-Z0-9_-]*$/, 'Use uppercase letters, numbers, hyphens, or underscores')
+    .max(64, 'Use 64 characters or fewer')
+    .required('Workflow code is required'),
+  description: Yup.string().trim().max(1024, 'Use 1,024 characters or fewer'),
 });
 
-export function AdmissionWorkflowDialog({ open, onClose, editing, saving, onSave }: Props) {
-  /**
-   * Memoization Justification:
-   * - Formik uses enableReinitialize and compares initialValues on each render.
-   * - Stable values prevent resetForm from dispatching on every render.
-   * - The values are rebuilt only when the edited workflow changes.
-   */
-  const initialValues = useMemo(
-    () => ({
-      name: editing?.name ?? '',
-      code: editing?.code ?? '',
-      stages: editing?.stages ?? [newStage(0), newStage(1)],
-      transitions: editing?.transitions ?? [],
-    }),
-    [editing?.code, editing?.name, editing?.stages, editing?.transitions]
-  );
-  const formik = useFormik<CreateUpdateAdmissionWorkflow>({
+const EMPTY_VALUES: WorkflowDetails = { name: '', code: '', description: '' };
+
+export function AdmissionWorkflowDialog({
+  open,
+  onClose,
+  saving,
+  title = 'Create Workflow',
+  submitLabel = 'Create draft',
+  initialValues = EMPTY_VALUES,
+  onSave,
+}: Props) {
+  const formik = useFormik<WorkflowDetails>({
     enableReinitialize: true,
     initialValues,
     validationSchema: schema,
     onSubmit: async (values, helpers) => {
       try {
-        const stages = values.stages.map((stage, index) => ({ ...stage, displayOrder: index }));
         await onSave({
-          ...values,
-          stages,
-          transitions: stages.slice(1).map((stage, index) => ({
-            id: crypto.randomUUID(),
-            fromStageId: stages[index].id,
-            toStageId: stage.id,
-            priority: index,
-          })),
+          name: values.name.trim(),
+          code: values.code.trim().toUpperCase(),
+          description: values.description?.trim() || undefined,
         });
         helpers.resetForm();
         onClose();
-      } catch (error) {
-        shikshaMitraToast.error({
-          message:
-            (error as { data?: { detail?: string } })?.data?.detail || 'Failed to save workflow',
-        });
+      } catch {
+        // The screen owns API problem-detail messaging so the form remains reusable.
       }
     },
   });
+
   return (
-    <CustomDialog
-      open={open}
-      handleClose={onClose}
-      title={editing ? 'Edit Workflow' : 'Create Workflow'}
-      maxWidth="md"
-    >
-      <DialogScrollContent>
-        <Grid container spacing={1.5}>
-          <Grid size={{ xs: 12, sm: 8 }}>
+    <CustomDialog open={open} handleClose={onClose} title={title} maxWidth="sm">
+      <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
+        <Stack spacing={2}>
+          <Typography variant="body2" color="text.secondary">
+            Create the draft first, then add stages and transitions in the workflow builder.
+          </Typography>
+          <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
             <TextField
               fullWidth
+              autoFocus
               size="small"
               label="Workflow name *"
               {...formik.getFieldProps('name')}
-              error={formik.touched.name && Boolean(formik.errors.name)}
+              error={Boolean(formik.touched.name && formik.errors.name)}
               helperText={formik.touched.name && formik.errors.name}
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
+          </ShakingTextField>
+          <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
             <TextField
               fullWidth
               size="small"
-              label="Code *"
+              label="Workflow code *"
               {...formik.getFieldProps('code')}
-              error={formik.touched.code && Boolean(formik.errors.code)}
+              onChange={(event) => formik.setFieldValue('code', event.target.value.toUpperCase())}
+              error={Boolean(formik.touched.code && formik.errors.code)}
               helperText={formik.touched.code && formik.errors.code}
             />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{ mb: 1 }}
-            >
-              <Typography variant="subtitle2">Workflow stages</Typography>
-              <Button
-                size="small"
-                startIcon={<Iconify icon="mdi:plus" />}
-                onClick={() =>
-                  formik.setFieldValue('stages', [
-                    ...formik.values.stages,
-                    newStage(formik.values.stages.length),
-                  ])
-                }
-              >
-                Add stage
-              </Button>
-            </Stack>
-            {formik.values.stages.map((stage, index) => (
-              <Stack key={stage.id} direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{ width: 24 }}>
-                  {index + 1}
-                </Typography>
-                <TextField
-                  size="small"
-                  label="Code"
-                  value={stage.code}
-                  onChange={(e) => formik.setFieldValue(`stages[${index}].code`, e.target.value)}
-                />
-                <TextField
-                  size="small"
-                  fullWidth
-                  label="Stage name"
-                  value={stage.name}
-                  onChange={(e) => formik.setFieldValue(`stages[${index}].name`, e.target.value)}
-                />
-                <IconButton
-                  disabled={formik.values.stages.length < 2}
-                  onClick={() =>
-                    formik.setFieldValue(
-                      'stages',
-                      formik.values.stages.filter((_, i) => i !== index)
-                    )
-                  }
-                >
-                  <Iconify icon="mdi:delete-outline" />
-                </IconButton>
-              </Stack>
-            ))}
-          </Grid>
-        </Grid>
+          </ShakingTextField>
+          <ShakingTextField
+            error={Boolean(formik.touched.description && formik.errors.description)}
+          >
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              size="small"
+              label="Description"
+              {...formik.getFieldProps('description')}
+              error={Boolean(formik.touched.description && formik.errors.description)}
+              helperText={formik.touched.description && formik.errors.description}
+            />
+          </ShakingTextField>
+        </Stack>
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2 }}>
-        <LoadingButton variant="outlined" size="small" onClick={onClose} disabled={saving}>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<Iconify icon="mdi:close" />}
+          onClick={onClose}
+          disabled={saving}
+        >
           Cancel
-        </LoadingButton>
+        </Button>
         <LoadingButton
           variant="contained"
           size="small"
           loading={saving}
+          startIcon={<Iconify icon="mdi:plus" />}
           onClick={() => formik.handleSubmit()}
         >
-          Save draft
+          {submitLabel}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

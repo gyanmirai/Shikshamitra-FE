@@ -1,168 +1,65 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
-
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { Box, Stack, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import {
-  type AdmissionWorkflow,
-  useGetAdmissionWorkflowQuery,
-  useGetAdmissionWorkflowsQuery,
-  useCloneAdmissionWorkflowMutation,
-  useCreateAdmissionWorkflowMutation,
-  useUpdateAdmissionWorkflowMutation,
-  type CreateUpdateAdmissionWorkflow,
-  usePublishAdmissionWorkflowMutation,
-  useValidateAdmissionWorkflowMutation,
-} from 'src/redux/student/admissions/admission-workflows-api';
+import { useGetAdmissionWorkflowsQuery } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { AdmissionQueryError } from './admission-query-error';
-import { AdmissionWorkflowDialog } from './admission-workflow-dialog';
+import { createWorkflowColumns } from './workflow-list/workflow-columns';
+import { useWorkflowFilters } from './workflow-list/use-workflow-filters';
+import { WorkflowListFilters } from './workflow-list/workflow-list-filters';
+import { WorkflowListDialogs } from './workflow-list/workflow-list-dialogs';
+import { useWorkflowListActions } from './workflow-list/use-workflow-list-actions';
 
-const status = ['Draft', 'Published', 'Archived'];
 export default function AdmissionWorkflowsScreen() {
-  const dialog = useBoolean();
-  const [editing, setEditing] = useState<AdmissionWorkflow | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canManage = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Manage');
-  const canPublish = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Publish');
-  const { data, isLoading, isError, refetch } = useGetAdmissionWorkflowsQuery({
-    maxResultCount: 100,
-    skipCount: 0,
+  const filterState = useWorkflowFilters();
+  const actions = useWorkflowListActions();
+  const { filters } = filterState;
+  const query = useGetAdmissionWorkflowsQuery({
+    search: filters.search || undefined,
+    status: filters.status === 'all' ? undefined : filters.status,
+    version: filters.version ? Number(filters.version) : undefined,
+    isUsed: filters.usage === 'all' ? undefined : filters.usage === 'used',
+    createdFrom: filterState.createdFrom
+      ? dateConvertor(filterState.createdFrom.startOf('day').format(dateFormat))
+      : undefined,
+    createdTo: filterState.createdTo
+      ? dateConvertor(filterState.createdTo.endOf('day').format(dateFormat))
+      : undefined,
+    maxResultCount: filters.rowsPerPage,
+    skipCount: filters.page * filters.rowsPerPage,
   });
-  const { data: selected } = useGetAdmissionWorkflowQuery(selectedId ?? '', { skip: !selectedId });
-  const [create, createState] = useCreateAdmissionWorkflowMutation();
-  const [update, updateState] = useUpdateAdmissionWorkflowMutation();
-  const [clone] = useCloneAdmissionWorkflowMutation();
-  const [validate] = useValidateAdmissionWorkflowMutation();
-  const [publish] = usePublishAdmissionWorkflowMutation();
-  const save = async (values: CreateUpdateAdmissionWorkflow) => {
-    if (editing) await update({ id: editing.id, body: values }).unwrap();
-    else await create(values).unwrap();
-    shikshaMitraToast.success({ message: 'Workflow draft saved' });
-  };
-  const action = async (fn: () => Promise<unknown>, success: string) => {
-    try {
-      await fn();
-      shikshaMitraToast.success({ message: success });
-    } catch (error) {
-      shikshaMitraToast.error({
-        message:
-          (error as { data?: { detail?: string } })?.data?.detail || 'Workflow action failed',
-      });
-    }
-  };
-  const columns: IColumn[] = [
-    {
-      id: 'name',
-      label: 'Workflow',
-      minWidth: 220,
-      render: (value) => <Typography fontWeight={600}>{value}</Typography>,
-    },
-    { id: 'code', label: 'Code', minWidth: 120 },
-    { id: 'version', label: 'Version', minWidth: 80 },
-    { id: 'status', label: 'Status', render: (value) => status[Number(value)] },
-    {
-      id: 'actions',
-      label: 'Actions',
-      minWidth: 280,
-      render: (_, row) => {
-        const workflow = row as unknown as AdmissionWorkflow;
-        return (
-          <Stack direction="row" spacing={0.5}>
-            <Button
-              size="small"
-              onClick={() => {
-                setSelectedId(workflow.id);
-                setEditing(null);
-                dialog.onTrue();
-              }}
-            >
-              Edit
-            </Button>
-            {canManage && (
-              <Button
-                size="small"
-                onClick={() => action(() => clone(workflow.id).unwrap(), 'Workflow cloned')}
-              >
-                Clone
-              </Button>
-            )}
-            {canManage && (
-              <Button
-                size="small"
-                onClick={() =>
-                  action(
-                    () =>
-                      validate(workflow.id)
-                        .unwrap()
-                        .then((r) => {
-                          if (!r.isValid) throw new Error(r.errors.join(', '));
-                        }),
-                    'Workflow is valid'
-                  )
-                }
-              >
-                Validate
-              </Button>
-            )}
-            {canPublish && workflow.status === 0 && (
-              <Button
-                size="small"
-                onClick={() => action(() => publish(workflow.id).unwrap(), 'Workflow published')}
-              >
-                Publish
-              </Button>
-            )}
-          </Stack>
-        );
-      },
-    },
-  ];
+  const columns = createWorkflowColumns(actions.allowed, {
+    onView: (workflow) => actions.navigate(workflow),
+    onClone: actions.openClone,
+    onCreateVersion: actions.createVersion,
+    onUsage: (workflow) => actions.navigate(workflow, true),
+    onArchive: (workflow) => actions.setPendingConfirmation({ workflow, action: 'archive' }),
+    onDelete: (workflow) => actions.setPendingConfirmation({ workflow, action: 'delete' }),
+  });
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Workflow Builder"
-        description="Build and publish the stage path used by applications."
+        description="Design, validate, version, and publish the admission journey used by offerings."
         links={[
-          { name: 'Students', href: '/student' },
+          { name: 'Students', href: '/student/dashboard' },
           { name: 'Admissions', href: '/student/admissions' },
           { name: 'Settings' },
           { name: 'Workflow Builder' },
         ]}
-        sx={{ mb: 3 }}
         action={
-          canManage ? (
-            <Button
-              variant="contained"
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={() => {
-                setEditing(null);
-                setSelectedId(null);
-                dialog.onTrue();
-              }}
-            >
-              Create workflow
-            </Button>
-          ) : undefined
+          <Button size="small" variant="contained" disabled={!actions.allowed.canCreate} startIcon={<Iconify icon="mdi:plus" />} onClick={actions.createDialog.onTrue}>
+            Create workflow
+          </Button>
         }
       />
-      {isError && (
-        <AdmissionQueryError
-          onRetry={() => {
-            refetch();
-          }}
-        />
-      )}
+      {query.isError && <AdmissionQueryError onRetry={() => query.refetch()} />}
+      <WorkflowListFilters {...filterState} onUpdate={filterState.update} onClear={filterState.clear} />
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-workflows"
@@ -170,24 +67,23 @@ export default function AdmissionWorkflowsScreen() {
           wrapperProps={{ sx: { height: 1 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
-          data={data?.items ?? []}
-          isLoading={isLoading}
+          data={query.data?.items ?? []}
+          isLoading={query.isLoading}
           isPagination
           isSearch
-          isFilter
-          noDataText="No admission workflows configured yet."
+          serverSide
+          serverSidePagination
+          serverSideSearch
+          page={filters.page}
+          rowsPerPage={filters.rowsPerPage}
+          searchTerm={filters.search}
+          totalCount={query.data?.totalCount ?? 0}
+          onServerSearch={(search) => filterState.update({ search })}
+          onServerPagination={(page, rowsPerPage) => filterState.update({ page: page - 1, rowsPerPage })}
+          noDataText="No admission workflows configured yet. Create a draft to begin."
         />
       </Box>
-      <AdmissionWorkflowDialog
-        open={dialog.value}
-        onClose={() => {
-          dialog.onFalse();
-          setSelectedId(null);
-        }}
-        editing={editing ?? selected}
-        saving={createState.isLoading || updateState.isLoading}
-        onSave={save}
-      />
+      <WorkflowListDialogs actions={actions} />
     </Box>
   );
 }

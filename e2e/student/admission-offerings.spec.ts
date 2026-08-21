@@ -278,4 +278,165 @@ test.describe('Admission Offering setup', { tag: ['@student', '@critical'] }, ()
     ).toBeVisible();
     expect(createAttempts).toBe(2);
   });
+
+  test('previews and commits five standards atomically through bulk creation', async ({ page }) => {
+    const standards = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'].map(
+      (name, index) => ({
+        id: `standard-${index + 1}`,
+        name,
+        educationMediumStageId: hierarchyIds.stage,
+        divisions: [],
+      })
+    );
+    const bulkPayloads: Record<string, unknown>[] = [];
+    await page.route('**/api/student/enrollment/admissions/offerings*', (route) =>
+      route.fulfill({ json: { data: { totalCount: 0, items: [] } } })
+    );
+
+    await page.route('**/api/student/enrollment/admissions/cycles*', (route) =>
+      route.fulfill({ json: { data: { totalCount: 1, items: [cycle] } } })
+    );
+    await page.route('**/api/app/academic-organization-options*', (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              id: hierarchyIds.stage,
+              label: 'Primary',
+              stageName: 'Primary',
+              mediumId: hierarchyIds.medium,
+              mediumName: 'English',
+              boardId: hierarchyIds.board,
+              boardName: 'CBSE',
+              academicYearId: cycle.academicYearId,
+            },
+          ],
+        },
+      })
+    );
+    await page.route(`**/api/education-medium/${hierarchyIds.medium}/standards*`, (route) =>
+      route.fulfill({ json: standards })
+    );
+    await page.route('**/api/student/enrollment/admissions/workflows*', (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            totalCount: 1,
+            items: [
+              {
+                id: configurationIds.workflow,
+                name: 'Grade 5 Admission v1',
+                code: 'GRADE-5-V1',
+                version: 1,
+                status: 1,
+                stages: [],
+                transitions: [],
+              },
+            ],
+          },
+        },
+      })
+    );
+    await page.route('**/api/student/enrollment/admissions/forms*', (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            totalCount: 2,
+            items: [
+              {
+                id: configurationIds.inquiryForm,
+                name: 'Grade 5 Inquiry v1',
+                code: 'GRADE-5-INQUIRY-V1',
+                version: 1,
+                status: 1,
+                layoutType: 0,
+                sections: [],
+              },
+              {
+                id: configurationIds.applicationForm,
+                name: 'Grade 5 Registration v1',
+                code: 'GRADE-5-APPLICATION-V1',
+                version: 1,
+                status: 1,
+                layoutType: 0,
+                sections: [],
+              },
+            ],
+          },
+        },
+      })
+    );
+    await page.route('**/api/student/enrollment/admissions/offerings/**', async (route) => {
+      const request = route.request();
+      const pathname = new URL(request.url()).pathname.replace(/\/$/, '');
+      if (request.method() === 'GET') {
+        await route.fulfill({ json: { data: { totalCount: 0, items: [] } } });
+        return;
+      }
+      if (request.method() === 'POST' && pathname.endsWith(`/cycles/${cycle.id}/bulk`)) {
+        const payload = request.postDataJSON() as Record<string, unknown>;
+        bulkPayloads.push(payload);
+        const previewOnly = payload.previewOnly === true;
+        await route.fulfill({
+          json: {
+            data: {
+              isPreview: previewOnly,
+              canCommit: true,
+              createdCount: previewOnly ? 0 : standards.length,
+              items: standards.map((standard) => ({
+                standardId: standard.id,
+                code: `ADM-${standard.name.replace(' ', '-').toUpperCase()}`,
+                isValid: true,
+                errors: [],
+                offeringId: previewOnly ? null : `offering-${standard.id}`,
+              })),
+            },
+          },
+        });
+        return;
+      }
+      await route.fulfill({ json: { data: { totalCount: 0, items: [] } } });
+    });
+
+    await page.goto('/student/admissions/settings/offerings');
+    await page.getByRole('button', { name: 'Bulk create' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Bulk Create Admission Offerings' });
+    await dialog.getByLabel('Board *').click();
+    await page.getByRole('option', { name: 'CBSE' }).click();
+    await dialog.getByLabel('Medium *').click();
+    await page.getByRole('option', { name: 'English' }).click();
+    await dialog.getByLabel('Stage *').click();
+    await page.getByRole('option', { name: 'Primary' }).click();
+    await dialog.getByLabel('Standards *').click();
+    await standards.reduce(
+      (previous, standard) =>
+        previous.then(() => page.getByRole('option', { name: standard.name }).click()),
+      Promise.resolve()
+    );
+    await page.keyboard.press('Escape');
+    await dialog.getByLabel('Code prefix *').fill('ADM');
+    await dialog.getByLabel('Published workflow *').click();
+    await page.getByRole('option', { name: 'Grade 5 Admission v1' }).click();
+    await dialog.getByLabel('Inquiry form *').click();
+    await page.getByRole('option', { name: 'Grade 5 Inquiry v1' }).click();
+    await dialog.getByLabel('Application form *').click();
+    await page.getByRole('option', { name: 'Grade 5 Registration v1' }).click();
+
+    await dialog.getByRole('button', { name: 'Preview' }).click();
+    await expect.poll(() => bulkPayloads.length).toBe(1);
+    await expect(dialog.getByText('ADM-GRADE-1')).toBeVisible();
+    await expect(dialog.getByText('ADM-GRADE-5')).toBeVisible();
+    await dialog.getByRole('button', { name: 'Create all' }).click();
+
+    await expect(page.getByText('5 offerings created')).toBeVisible();
+    expect(bulkPayloads).toHaveLength(2);
+    expect(bulkPayloads[0]).toMatchObject({
+      previewOnly: true,
+      items: standards.map((item) => ({ standardId: item.id })),
+    });
+    expect(bulkPayloads[1]).toMatchObject({
+      previewOnly: false,
+      items: standards.map((item) => ({ standardId: item.id })),
+    });
+  });
 });

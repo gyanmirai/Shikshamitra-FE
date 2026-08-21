@@ -38,15 +38,15 @@ export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }
   const [validateOffering, { isLoading: validating }] = useValidateAdmissionOfferingMutation();
   const hierarchyQuery = useGetAcademicOrganizationOptionsQuery(
     { academicYearId: cycle.academicYearId },
-    { skip: !open }
+    { skip: !open, refetchOnMountOrArgChange: true }
   );
   const workflowsQuery = useGetAdmissionWorkflowsQuery(
     { status: 1, maxResultCount: 100, skipCount: 0 },
-    { skip: !open }
+    { skip: !open, refetchOnMountOrArgChange: true }
   );
   const formsQuery = useGetAdmissionFormsQuery(
     { status: 1, maxResultCount: 100, skipCount: 0 },
-    { skip: !open }
+    { skip: !open, refetchOnMountOrArgChange: true }
   );
 
   /**
@@ -76,10 +76,7 @@ export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }
       } catch (error) {
         if (!validated)
           shikshaMitraToast.error({
-            message: getAdmissionApiError(
-              error,
-              'Unable to validate the offering configuration.'
-            ),
+            message: getAdmissionApiError(error, 'Unable to validate the offering configuration.'),
           });
       } finally {
         helpers.setSubmitting(false);

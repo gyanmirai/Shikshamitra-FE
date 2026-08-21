@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-08-14
+updated_on: 2026-08-18
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -19,7 +19,11 @@ TL;DR: the Enrollment Admissions CRM project connects configurable setup screens
 3. The administrator builds workflow stages and transitions, then previews, validates, and publishes the workflow.
 4. The administrator builds form sections and fields, configures bindings, rules, defaults, required state, and read-only state, then previews, validates, and publishes the form.
 
-The setup screens are `admission-cycles.tsx`, `admission-offerings.tsx`, `admission-workflows.tsx`, `admission-forms.tsx`, and `admission-form-preview.tsx`.
+The setup screens are `admission-cycles.tsx`, `admission-offerings.tsx`, `admission-workflows.tsx`, `admission-forms.tsx`, and `admission-form-preview.tsx`. The form builder uses a three-panel layout: searchable system/custom field palette, reorderable canvas, and selected-field properties. Its local validation panel catches structural, option, binding, and rule-reference issues before the backend publish validation.
+
+Workflow creation collects only identity and description.
+The dedicated `/student/admissions/settings/workflows/[id]` builder owns stage ordering, explicit entry and terminal flags, controlled transition conditions, validation results, preview, version history, and usage.
+Published and archived versions are read-only.
 
 The Offering screen uses server-side search, paging, sorting, URL-backed filters, inherited or overridden cycle dates, readiness feedback, optimistic concurrency, and `ThreeDotsActions` row commands.
 Archived cycles are excluded from the setup selector.
@@ -41,7 +45,11 @@ The runtime screens are `admission-inquiries.tsx`, `admission-applicant-360.tsx`
 2. The application detail screen renders configured fields by type and shows prefilled approved bindings and defaults.
 3. Save Draft persists editable values with the current concurrency stamp.
 4. Submit performs authoritative validation and displays field-level errors before allowing progress.
-5. The application detail view shows workflow stage progress and the application timeline.
+5. Submit advances the configured Form stage only after authoritative validation succeeds.
+6. Later stages advance through the runtime API, which uses idempotency keys and returns current stage state, the server-derived next required action, and immutable transition history.
+7. The application detail and Applicant 360 views render the frozen journey instead of assuming a fixed list of admission steps.
+
+Journey chips include their text status as well as color, and Applicant 360 shows the current stage, next required action, and stage-entry timestamp.
 
 The runtime screen and field adapter are `admission-application-detail.tsx` and `admission-runtime-field.tsx`.
 

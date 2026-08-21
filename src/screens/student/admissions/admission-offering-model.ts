@@ -12,6 +12,16 @@ export type AdmissionOfferingFormValues = Omit<
   closeDate: Dayjs | null;
 };
 
+export const isAdmissionOfferingConfigurationIncomplete = (
+  values: Pick<
+    AdmissionOfferingFormValues,
+    'workflowDefinitionId' | 'inquiryFormDefinitionId' | 'applicationFormDefinitionId'
+  >
+) =>
+  !values.workflowDefinitionId ||
+  !values.inquiryFormDefinitionId ||
+  !values.applicationFormDefinitionId;
+
 export const availabilityLabels = [
   'Configuration incomplete',
   'Not open yet',
@@ -81,6 +91,8 @@ export const getAdmissionApiError = (error: unknown, fallback: string): string =
       'You do not have access to configure the selected academic hierarchy.',
     'Admissions.Offering.StateCommandRequired':
       'Use the Activate or Deactivate action to change offering status.',
+    'Admissions.Offering.CampusInvalid':
+      'The selected campus is missing or inactive. Choose an active campus or clear the campus selection.',
   };
   return (
     messages[code] ??
