@@ -14,27 +14,20 @@ import {
   Divider,
   Skeleton,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   DialogActions,
   Tabs,
   Tab,
   TextField,
   InputAdornment,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetExamBasicDetailsQuery,
-  useGetExamScheduleQuery,
-} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { StudentDetailsDialog } from 'src/screens/examination/resultCreation/ResultCreation';
+import ScheduleExamPreviewDrawer from 'src/screens/examination/scheduleExam/components/ScheduleExamPreviewDrawer';
 
 import { Academic360EmptyState } from './Academic360EmptyState';
 import { getStudentId, getStudentName } from '../types';
@@ -177,243 +170,6 @@ const getSubjectTheme = (subjectName: string) => {
   return { color: '#607d8b', icon: 'mdi:book-outline', bg: 'rgba(96, 125, 139, 0.1)' };
 };
 
-// ─── Published Exam Details & Schedule Dialog ───────────────────────────────
-
-type PublishedExamDialogProps = {
-  open: boolean;
-  onClose: () => void;
-  exam: ExamItem | null;
-  student?: Academic360StudentRow | null;
-};
-
-function PublishedExamScheduleDialog({ open, onClose, exam, student }: PublishedExamDialogProps) {
-  const theme = useTheme();
-  const examId = exam?.examId || exam?.id;
-
-  const { data: basicDetails, isLoading: isBasicLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExamBasicDetailsQuery,
-    params: { examId },
-    options: { skip: !open || !examId },
-  });
-
-  const { data: scheduleData, isLoading: isScheduleLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExamScheduleQuery,
-    params: { examId },
-    options: { skip: !open || !examId },
-  });
-
-  const examDetails = (basicDetails as any)?.data || basicDetails || exam;
-  const scheduleItems = (scheduleData as any)?.data || scheduleData || exam?.subjects || [];
-
-  const examTitle = examDetails?.examName || exam?.examName || 'Scheduled Exam';
-  const examType = examDetails?.examTypeName || examDetails?.examType || exam?.examType || 'Standard Written';
-  const academicYear = examDetails?.academicYearName || examDetails?.academicYear || student?.academicYearName || 'Current Academic Year';
-  const standardName = examDetails?.standardName || student?.standardName || student?.standard || '-';
-  const divisionName = examDetails?.divisionName || student?.divisionName || student?.division || '-';
-  const dates = examDetails?.examDates || (exam?.examDate ? formatExamDate(exam.examDate) : 'Dates as scheduled');
-
-  return (
-    <CustomDialog
-      open={open}
-      handleClose={onClose}
-      title={
-        <Box display="flex" flexDirection="row" gap={1.5} alignItems="center" component="span">
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              bgcolor: 'info.softBg',
-              color: 'info.main',
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
-            <Iconify icon="mdi:calendar-clock" width={20} />
-          </Box>
-          <Box component="span" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
-            {examTitle}
-          </Box>
-          <Label color="info" variant="soft" sx={{ fontWeight: 700 }}>
-            Published
-          </Label>
-        </Box>
-      }
-      maxWidth="md"
-    >
-      <DialogScrollContent>
-        <Stack spacing={2.5} sx={{ pt: 1, pb: 1 }}>
-          {/* Top Banner / Key Details */}
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 1.5,
-              bgcolor: (themeMode) => alpha(themeMode.palette.info.main, 0.05),
-              border: '1px solid',
-              borderColor: (themeMode) => alpha(themeMode.palette.info.main, 0.2),
-            }}
-          >
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
-                  Academic Year
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>
-                  {academicYear}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
-                  Class & Division
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>
-                  {standardName} {divisionName !== '-' ? `(${divisionName})` : ''}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
-                  Exam Type
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>
-                  {examType}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
-                  Exam Schedule Period
-                </Typography>
-                <Typography variant="body2" fontWeight={700} color="info.dark">
-                  {dates}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
-
-          {/* Exam Schedule Table */}
-          <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
-              <Typography variant="subtitle2" fontWeight={700}>
-                Exam Schedule & Subject Details
-              </Typography>
-              <Chip
-                size="small"
-                variant="outlined"
-                color="info"
-                label={`${Array.isArray(scheduleItems) ? scheduleItems.length : 0} Subjects`}
-              />
-            </Stack>
-
-            {isScheduleLoading || isBasicLoading ? (
-              <Stack spacing={1}>
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} variant="rectangular" height={48} sx={{ borderRadius: 1 }} />
-                ))}
-              </Stack>
-            ) : Array.isArray(scheduleItems) && scheduleItems.length > 0 ? (
-              <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: 'background.neutral' }}>
-                      <TableCell sx={{ fontWeight: 700, py: 1.25 }}>Subject</TableCell>
-                      <TableCell sx={{ fontWeight: 700, py: 1.25 }}>Date</TableCell>
-                      <TableCell sx={{ fontWeight: 700, py: 1.25 }}>Time Slot</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700, py: 1.25 }}>Max Marks</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700, py: 1.25 }}>Pass Marks</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, py: 1.25 }}>Room / Hall</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {scheduleItems.map((sub: any, idx: number) => {
-                      const subjectName = sub.subjectName || sub.name || `Subject ${idx + 1}`;
-                      const themeInfo = getSubjectTheme(subjectName);
-                      const subDate = sub.examDate ? dayjs(sub.examDate).format('DD-MM-YYYY') : sub.date || '-';
-                      const startTime = sub.startTime || sub.fromTime || '';
-                      const endTime = sub.endTime || sub.toTime || '';
-                      const timeStr = startTime && endTime ? `${startTime} - ${endTime}` : startTime || 'As per session';
-                      const maxMarks = sub.maxMarks || sub.totalMarks || '100';
-                      const passMarks = sub.passingMarks || sub.passMarks || Math.round(Number(maxMarks) * 0.35) || '35';
-                      const roomName = sub.roomName || sub.roomNumber || sub.hallNumber || 'Assigned Hall';
-
-                      return (
-                        <TableRow key={idx} hover>
-                          <TableCell>
-                            <Stack direction="row" spacing={1.5} alignItems="center">
-                              <Box
-                                sx={{
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 1,
-                                  display: 'grid',
-                                  placeItems: 'center',
-                                  bgcolor: themeInfo.bg,
-                                  color: themeInfo.color,
-                                  flexShrink: 0,
-                                }}
-                              >
-                                <Iconify icon={themeInfo.icon} width={16} />
-                              </Box>
-                              <Typography variant="body2" fontWeight={600}>
-                                {subjectName}
-                              </Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight={500}>
-                              {subDate}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary">
-                              {timeStr}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight={600}>
-                              {maxMarks}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" color="text.secondary">
-                              {passMarks}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip size="small" variant="soft" label={roomName} sx={{ fontSize: 11 }} />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </Box>
-            ) : (
-              <Box sx={{ p: 3, textAlign: 'center', bgcolor: 'background.neutral', borderRadius: 1.5 }}>
-                <Iconify icon="mdi:calendar-blank-outline" width={32} sx={{ color: 'text.secondary', mb: 1 }} />
-                <Typography variant="subtitle2">Detailed schedule will be published shortly</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Subject time-slots and seating arrangements are currently being finalized.
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        </Stack>
-      </DialogScrollContent>
-      <DialogActions sx={{ px: 3, py: 1.5 }}>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-          variant="outlined"
-          size="small"
-        >
-          Close
-        </Button>
-      </DialogActions>
-    </CustomDialog>
-  );
-}
-
 // ─── Main Exams & Results Component ──────────────────────────────────────────
 
 export function ExamsResultsDashboardCard({
@@ -428,7 +184,12 @@ export function ExamsResultsDashboardCard({
   const [activeStatusTab, setActiveStatusTab] = useState<'all' | 'published' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalExam, setActiveModalExam] = useState<ExamItem | null>(null);
+  const [previewExam, setPreviewExam] = useState<ExamItem | null>(null);
   const [showAllDialog, setShowAllDialog] = useState(false);
+
+  const handleOpenPreviewDrawer = (exam: ExamItem) => {
+    setPreviewExam(exam);
+  };
 
   // Deduplicate and enrich exams
   const deduplicatedExams = useMemo(() => {
@@ -793,7 +554,13 @@ export function ExamsResultsDashboardCard({
                 return (
                   <Box
                     key={exam.id || exam.examId || `${examTitle}-${dateStr}`}
-                    onClick={() => handleOpenExamModal(exam)}
+                    onClick={() => {
+                      if (isCompleted) {
+                        handleOpenExamModal(exam);
+                      } else {
+                        handleOpenPreviewDrawer(exam);
+                      }
+                    }}
                     sx={{
                       p: 1.75,
                       borderRadius: 1.5,
@@ -854,16 +621,16 @@ export function ExamsResultsDashboardCard({
                         </Box>
                       </Stack>
 
-                      {/* Right: Score/Schedule Info, Status Chip, Dynamic Action Button */}
+                      {/* Right: Score/Schedule Info, Status Chip, View Details Icon, Dynamic Action Button */}
                       <Stack
                         direction="row"
-                        spacing={2}
+                        spacing={1.5}
                         alignItems="center"
                         justifyContent={{ xs: 'space-between', sm: 'flex-end' }}
                         sx={{ width: { xs: '100%', sm: 'auto' } }}
                       >
                         {/* Score display for completed, Date for published */}
-                        <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, minWidth: 80 }}>
+                        <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, minWidth: 70 }}>
                           {isCompleted ? (
                             <>
                               <Typography variant="subtitle2" fontWeight={800} color="text.primary">
@@ -896,6 +663,34 @@ export function ExamsResultsDashboardCard({
                           {statusBadge.label}
                         </Label>
 
+                        {/* View Exam Details Icon Button */}
+                        <Tooltip title="View Exam Details" arrow placement="top">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenPreviewDrawer(exam);
+                            }}
+                            sx={{
+                              p: 0.75,
+                              borderRadius: 1,
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              bgcolor: 'background.neutral',
+                              color: 'text.secondary',
+                              transition: 'all 0.15s ease',
+                              '&:hover': {
+                                bgcolor: 'primary.softBg',
+                                borderColor: 'primary.main',
+                                color: 'primary.main',
+                                transform: 'scale(1.05)',
+                              },
+                            }}
+                          >
+                            <Iconify icon={GlobalIcons.eye} width={18} height={18} />
+                          </IconButton>
+                        </Tooltip>
+
                         {/* Dynamic Status-Based Action Button */}
                         <Button
                           size="small"
@@ -910,7 +705,11 @@ export function ExamsResultsDashboardCard({
                           endIcon={<Iconify icon="mdi:chevron-right" width={16} />}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleOpenExamModal(exam);
+                            if (isCompleted) {
+                              handleOpenExamModal(exam);
+                            } else {
+                              handleOpenPreviewDrawer(exam);
+                            }
                           }}
                           sx={{
                             fontWeight: 700,
@@ -979,15 +778,12 @@ export function ExamsResultsDashboardCard({
         </Stack>
       </Card>
 
-      {/* PUBLISHED EXAM DIALOG (Schedule & Exam Details View) */}
-      {activeModalExam && getExamStatusCategory(activeModalExam) === 'PUBLISHED' && (
-        <PublishedExamScheduleDialog
-          open={Boolean(activeModalExam)}
-          onClose={handleCloseExamModal}
-          exam={activeModalExam}
-          student={student}
-        />
-      )}
+      {/* SCHEDULE EXAM PREVIEW DRAWER (Exact view exam details drawer from schedule exam table) */}
+      <ScheduleExamPreviewDrawer
+        open={Boolean(previewExam)}
+        exam={previewExam}
+        onClose={() => setPreviewExam(null)}
+      />
 
       {/* COMPLETED EXAM DIALOG (Exact StudentDetailsDialog from ResultCreation) */}
       {activeModalExam && getExamStatusCategory(activeModalExam) === 'COMPLETED' && (
@@ -1039,7 +835,11 @@ export function ExamsResultsDashboardCard({
                     key={exam.id || exam.examId || `${examTitle}-${dateStr}`}
                     onClick={() => {
                       setShowAllDialog(false);
-                      handleOpenExamModal(exam);
+                      if (isCompleted) {
+                        handleOpenExamModal(exam);
+                      } else {
+                        handleOpenPreviewDrawer(exam);
+                      }
                     }}
                     sx={{
                       p: 1.5,
@@ -1079,11 +879,47 @@ export function ExamsResultsDashboardCard({
                         <Label color={statusBadge.color as any} variant="soft" sx={{ fontWeight: 600 }}>
                           {statusBadge.label}
                         </Label>
+                        <Tooltip title="View Exam Details" arrow placement="top">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowAllDialog(false);
+                              handleOpenPreviewDrawer(exam);
+                            }}
+                            sx={{
+                              p: 0.75,
+                              borderRadius: 1,
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              bgcolor: 'background.neutral',
+                              color: 'text.secondary',
+                              transition: 'all 0.15s ease',
+                              '&:hover': {
+                                bgcolor: 'primary.softBg',
+                                borderColor: 'primary.main',
+                                color: 'primary.main',
+                                transform: 'scale(1.05)',
+                              },
+                            }}
+                          >
+                            <Iconify icon={GlobalIcons.eye} width={18} height={18} />
+                          </IconButton>
+                        </Tooltip>
                         <Button
                           size="small"
                           variant="soft"
                           color={isCompleted ? 'success' : 'info'}
                           endIcon={<Iconify icon="mdi:chevron-right" width={16} />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowAllDialog(false);
+                            if (isCompleted) {
+                              handleOpenExamModal(exam);
+                            } else {
+                              handleOpenPreviewDrawer(exam);
+                            }
+                          }}
                           sx={{ fontWeight: 700, fontSize: 12 }}
                         >
                           {isCompleted ? 'View Result' : 'View Exam'}

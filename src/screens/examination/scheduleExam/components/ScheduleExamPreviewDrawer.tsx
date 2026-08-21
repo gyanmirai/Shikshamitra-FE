@@ -30,9 +30,9 @@ type ScheduleExamPreviewDrawerProps = {
   exam: any;
   canEdit?: boolean;
   onClose: () => void;
-  onEdit: (exam: any) => void;
-  onViewTimetable: (exam: any) => void;
-  onPublish: (exam: any) => void;
+  onEdit?: (exam: any) => void;
+  onViewTimetable?: (exam: any) => void;
+  onPublish?: (exam: any) => void;
 };
 
 const getSubjectRows = (subjects: any[] = []) =>
@@ -58,7 +58,7 @@ const ScheduleExamPreviewDrawer = ({
 }: ScheduleExamPreviewDrawerProps) => {
   const theme = useTheme();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  const examId = exam?.examId;
+  const examId = exam?.examId || exam?.id;
   const meta = getExamStatusMeta(exam || {});
   const { data: examTypeData } = useQueryAndMutation({
     type: 'query',
@@ -124,12 +124,12 @@ const ScheduleExamPreviewDrawer = ({
     subjectsFetching;
   const hydratedExam = basicDetails
     ? mapBackendToFormik(
-        basicDetails,
-        scheduleDetails ?? null,
-        roomAssignmentData ?? null,
-        examSubjectsData ?? null,
-        examTypeData?.items ?? []
-      )
+      basicDetails,
+      scheduleDetails ?? null,
+      roomAssignmentData ?? null,
+      examSubjectsData ?? null,
+      examTypeData?.items ?? []
+    )
     : null;
   const subjectRows = getSubjectRows(hydratedExam?.subjects ?? []);
 
@@ -148,16 +148,16 @@ const ScheduleExamPreviewDrawer = ({
       : 0;
   const previewExam = hydratedExam
     ? {
-        ...exam,
-        ...hydratedExam,
-        examId,
-        examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
-        standardName: exam?.standardName,
-        divisions: exam?.divisions,
-        subjectCount: subjectRows.length,
-        issueCount,
-        warningCount,
-      }
+      ...exam,
+      ...hydratedExam,
+      examId,
+      examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
+      standardName: exam?.standardName,
+      divisions: exam?.divisions,
+      subjectCount: subjectRows.length,
+      issueCount,
+      warningCount,
+    }
     : exam;
   const startDateStr = previewExam?.startDate
     ? dayjs(previewExam.startDate).format('DD-MM-YYYY')
@@ -655,13 +655,24 @@ const ScheduleExamPreviewDrawer = ({
       >
         <Button
           variant="outlined"
-          startIcon={<Iconify icon={GlobalIcons.eye} />}
-          onClick={() => onViewTimetable(previewExam)}
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
           size="small"
         >
-          View Timetable
+          Close
         </Button>
-        {canEdit && Number(previewExam?.status) === examScheduledStatus.Pending && (
+        {onViewTimetable && (
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.eye} />}
+            onClick={() => onViewTimetable(previewExam)}
+            size="small"
+          >
+            View Timetable
+          </Button>
+        )}
+        {canEdit && onEdit && Number(previewExam?.status) === examScheduledStatus.Pending && (
           <Button
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.edit} />}
@@ -671,7 +682,7 @@ const ScheduleExamPreviewDrawer = ({
             Edit
           </Button>
         )}
-        {Number(previewExam?.status) === examScheduledStatus.Pending && (
+        {onPublish && Number(previewExam?.status) === examScheduledStatus.Pending && (
           <Button
             color="primary"
             variant="contained"

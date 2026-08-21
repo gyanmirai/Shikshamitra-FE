@@ -220,7 +220,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         body: subjects.map((subject: any) => [
           `${subject.subjectName || '-'}${subject.subjectCode ? ` (${subject.subjectCode})` : ''}`,
           (subject.examDate ?? subject.date ?? subject.scheduleDate) &&
-          dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
+            dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
             ? dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).format('DD-MM-YYYY')
             : '-',
           formatWallClockTime(subject.startTime ?? subject.fromTime ?? subject.start),
