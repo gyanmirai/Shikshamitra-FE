@@ -22,6 +22,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -1301,7 +1302,7 @@ function QuestionFormFields({
 
           <Grid size={{ xs: 12, sm: 6 }}>
             <ShakingTextField error={formik.touched.topicName && !!formik.errors.topicName}>
-              <TextField
+              <LanguageInputField
                 fullWidth
                 size="small"
                 label={requireTopic ? 'Topic *' : 'Topic (optional)'}
@@ -1327,7 +1328,7 @@ function QuestionFormFields({
             icon="solar:pen-bold-duotone"
           >
             <ShakingTextField error={formik.touched.questionText && !!formik.errors.questionText}>
-              <TextField
+              <LanguageInputField
                 fullWidth
                 size="small"
                 multiline
@@ -1361,7 +1362,7 @@ function QuestionFormFields({
 
               <Grid size={{ xs: 6, sm: 2 }}>
                 <ShakingTextField error={formik.touched.marks && !!formik.errors.marks}>
-                  <TextField
+                <TextField
                     fullWidth
                     size="small"
                     type="number"
@@ -1435,7 +1436,7 @@ function QuestionFormFields({
                       transition: 'all 0.2s',
                     }}
                   >
-                    <TextField
+                    <LanguageInputField
                       fullWidth
                       size="small"
                       label={`Option ${index + 1}`}
@@ -1508,7 +1509,7 @@ function QuestionFormFields({
           >
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
+                <LanguageInputField
                   fullWidth
                   size="small"
                   label="Answer Key"
@@ -1520,7 +1521,7 @@ function QuestionFormFields({
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
+                <LanguageInputField
                   fullWidth
                   size="small"
                   label="Learning Outcome"
@@ -1544,7 +1545,7 @@ function QuestionFormFields({
               </Grid>
 
               <Grid size={12}>
-                <TextField
+                <LanguageInputField
                   fullWidth
                   size="small"
                   multiline
@@ -2311,7 +2312,6 @@ export default function QuestionBankScreen() {
         label: 'Class',
         filterType: 'string' as const,
         width: 120,
-        defaultHidden: true,
         render: (_: any, row: any) => (
           <Typography variant="body2" color="text.primary" noWrap>
             {row.standardName ||

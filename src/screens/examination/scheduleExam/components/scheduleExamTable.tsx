@@ -326,22 +326,21 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   // rows on the client can hide valid records when the response status is
   // represented differently from the requested lifecycle status. Only Ongoing
   // is derived locally from the published schedule time window.
-  const tableData = useMemo(
-    () => {
-      const rows = getExams?.data?.items || [];
-      const requestedStatus = Number(activeStatus ?? examScheduledStatus.Pending) as examScheduledStatus;
-      const visibleRows =
-        requestedStatus === examScheduledStatus.Ongoing
-          ? filterExamsByEffectiveStatus(rows, requestedStatus, currentTime)
-          : rows;
+  const tableData = useMemo(() => {
+    const rows = getExams?.data?.items || [];
+    const requestedStatus = Number(
+      activeStatus ?? examScheduledStatus.Pending
+    ) as examScheduledStatus;
+    const visibleRows =
+      requestedStatus === examScheduledStatus.Ongoing
+        ? filterExamsByEffectiveStatus(rows, requestedStatus, currentTime)
+        : rows;
 
-      return visibleRows.map((row: any) => ({
-        ...row,
-        effectiveStatus: getEffectiveExamStatus(row, currentTime),
-      }));
-    },
-    [activeStatus, currentTime, getExams?.data?.items]
-  );
+    return visibleRows.map((row: any) => ({
+      ...row,
+      effectiveStatus: getEffectiveExamStatus(row, currentTime),
+    }));
+  }, [activeStatus, currentTime, getExams?.data?.items]);
 
   // Actions component for the three dots menu
   // Renders menu items for printing and publishing timetables
@@ -464,6 +463,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           tableId="schedule-exam-table"
           tableTitle="Scheduled Exams"
           isLoading={getExams?.isLoading || getExams?.isFetching}
+          serverSidePagination
+          totalCount={getExams?.data?.totalCount ?? tableData.length}
+          page={Math.max(0, (page ?? 1) - 1)}
+          rowsPerPage={rowsPerPage}
+          onServerPagination={onServerPagination}
           noDataText={
             <Stack alignItems="center" spacing={0.5}>
               <Box component="span">
@@ -626,11 +630,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             },
           ]}
           data={tableData || []}
-          serverSidePagination
-          page={Math.max(0, (page ?? 1) - 1)}
-          rowsPerPage={rowsPerPage}
-          totalCount={totalCount}
-          onServerPagination={onServerPagination}
         />
       ) : (
         <CustomizableTable

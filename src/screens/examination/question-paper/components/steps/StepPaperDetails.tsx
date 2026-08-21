@@ -5,6 +5,7 @@ import type { FormikProps } from 'formik';
 import React from 'react';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { Box, Stack, TextField, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
@@ -27,8 +28,11 @@ interface StepPaperDetailsProps {
   classOptions: { value: string; label: string }[];
   subjectOptions: { value: string; label: string }[];
   examOptions: { value: string; label: string }[];
+  isSubjectLoading?: boolean;
+  isExamLoading?: boolean;
   academicYearLabel?: string;
   readOnly?: boolean;
+  paperTitleValidationAttempted: boolean;
 }
 
 export default function StepPaperDetails({
@@ -36,11 +40,16 @@ export default function StepPaperDetails({
   classOptions,
   subjectOptions,
   examOptions,
+  isSubjectLoading = false,
+  isExamLoading = false,
   academicYearLabel,
   readOnly = false,
+  paperTitleValidationAttempted,
 }: StepPaperDetailsProps) {
   const showError = (field: keyof PaperDetailsFormValues) =>
-    (formik.touched[field] || formik.submitCount > 0) && Boolean(formik.errors[field]);
+    (field === 'paperTitle'
+      ? paperTitleValidationAttempted
+      : formik.touched[field] || formik.submitCount > 0) && Boolean(formik.errors[field]);
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
@@ -67,7 +76,7 @@ export default function StepPaperDetails({
         >
           <Box sx={{ flex: 2, minWidth: 200, width: { xs: '100%', md: 'auto' } }}>
             <ShakingTextField error={showError('paperTitle')}>
-              <TextField
+              <LanguageInputField
                 fullWidth
                 size="small"
                 label="Paper Name *"
@@ -110,7 +119,8 @@ export default function StepPaperDetails({
                 label="Subject *"
                 options={formik.values.standardId ? subjectOptions : []}
                 value={formik.values.subjectId}
-                disabled={readOnly || !formik.values.standardId}
+                disabled={readOnly || !formik.values.standardId || isSubjectLoading}
+                isLoading={isSubjectLoading}
                 onChange={(val) => {
                   formik.setFieldValue('subjectId', val);
                   formik.setFieldValue('examId', '');
@@ -132,7 +142,8 @@ export default function StepPaperDetails({
               label="Exam (optional)"
               options={examOptions}
               value={formik.values.examId}
-              disabled={readOnly}
+              disabled={readOnly || isExamLoading}
+              isLoading={isExamLoading}
               onChange={(val) => formik.setFieldValue('examId', val as string)}
             />
           </Box>
@@ -191,7 +202,7 @@ export default function StepPaperDetails({
 
           <Box sx={{ flex: 1, width: { xs: '100%', md: 'auto' } }}>
             <ShakingTextField error={showError('generalInstructions')}>
-              <TextField
+              <LanguageInputField
                 fullWidth
                 size="small"
                 label="General Instructions (Optional)"

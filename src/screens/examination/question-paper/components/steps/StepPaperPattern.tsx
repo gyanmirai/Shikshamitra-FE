@@ -6,6 +6,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import {
   Box,
   Grid,
@@ -671,7 +672,7 @@ function SectionEditor({
       </Typography>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
+          <LanguageInputField
             fullWidth
             size="small"
             label="Section Name *"
@@ -711,7 +712,7 @@ function SectionEditor({
           />
         </Grid>
         <Grid size={{ xs: 12 }}>
-          <TextField
+          <LanguageInputField
             fullWidth
             size="small"
             label="Section Instructions (optional)"

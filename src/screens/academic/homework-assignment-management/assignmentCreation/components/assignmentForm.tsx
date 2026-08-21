@@ -20,6 +20,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -773,7 +774,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 {/* Assignment Title */}
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
-                    <TextField
+                    <LanguageInputField
                       fullWidth
                       label="Assignment Title *"
                       name="title"

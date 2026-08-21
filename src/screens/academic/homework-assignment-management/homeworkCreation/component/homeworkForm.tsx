@@ -23,6 +23,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
@@ -868,7 +869,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
-                    <TextField
+                    <LanguageInputField
                       fullWidth
                       label="Homework Title *"
                       name="title"
