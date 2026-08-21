@@ -37,6 +37,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   const [selectedExam, setSelectedExam] = useState<IExamFormValues | null>(null);
   // Active status tab driving the API query
   const [activeStatus, setActiveStatus] = useState<number>(examScheduledStatus.Pending);
+  const [examPagination, setExamPagination] = useState({ page: 1, pageSize: 10 });
   const apiStatus = activeStatus;
 
   // Redux selector to track unsaved changes
@@ -57,6 +58,8 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     params: {
       AcademicMediumId: medium?.id,
       Status: apiStatus,
+      SkipCount: (examPagination.page - 1) * examPagination.pageSize,
+      MaxResultCount: examPagination.pageSize,
     },
   });
 
@@ -74,7 +77,12 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
         dispatchFn(
           scheduleExamApi.util.updateQueryData(
             'getExams',
-            { AcademicMediumId: medium?.id, Status: apiStatus },
+            {
+              AcademicMediumId: medium?.id,
+              Status: apiStatus,
+              SkipCount: (examPagination.page - 1) * examPagination.pageSize,
+              MaxResultCount: examPagination.pageSize,
+            },
             (draft: any) => {
               const index = draft?.items?.findIndex(
                 (item: any) => item.examId === selectedExam?.examId
@@ -302,7 +310,16 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               }}
               getExams={getExams}
               activeStatus={activeStatus}
-              onStatusChange={setActiveStatus}
+              onStatusChange={(status) => {
+                setActiveStatus(status);
+                setExamPagination((current) => ({ ...current, page: 1 }));
+              }}
+              page={examPagination.page}
+              rowsPerPage={examPagination.pageSize}
+              totalCount={getExams?.data?.totalCount ?? 0}
+              onServerPagination={(page, pageSize) => {
+                setExamPagination({ page, pageSize });
+              }}
             />
           </Box>
         )}

@@ -443,6 +443,31 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     }
   );
 
+  const { data: homeworkRubrics = [], isFetching: isHomeworkRubricFetching } = useGetRubricsQuery(
+    {
+      homeworkId: editData?.id,
+      isTemplate: false,
+    },
+    {
+      skip: !editData?.id,
+    }
+  );
+
+  useEffect(() => {
+    if (!editData?.id) {
+      setSelectedRubricTemplateId('');
+      return;
+    }
+
+    const assignedRubric = homeworkRubrics.find(
+      (rubric) => rubric.homeworkId === editData.id
+    );
+
+    // The dropdown contains template IDs, while the saved task rubric has its own ID.
+    // Bind the source template that was used to create the task rubric.
+    setSelectedRubricTemplateId(assignedRubric?.sourceTemplateId ?? '');
+  }, [editData?.id, homeworkRubrics]);
+
   // Update divisions when class changes
   useEffect(() => {
     const classId = formik.values.classId || formik.values.class;
@@ -930,7 +955,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     valueKey="id"
                     value={selectedRubricTemplateId}
                     disabled={!!editData?.id}
-                    isLoading={isRubricTemplateFetching}
+                    isLoading={isRubricTemplateFetching || isHomeworkRubricFetching}
                     onChange={(value) => setSelectedRubricTemplateId(String(value))}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />

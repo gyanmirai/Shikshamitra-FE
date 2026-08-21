@@ -66,6 +66,7 @@ const Subjects = () => {
 
   const [classes, setClasses] = useState<string>('');
   const [classId, setClassId] = useState<string>('');
+  const [divisionId, setDivisionId] = useState<string>('');
   const [subjectId, setSubjectId] = useState<string>(''); // plain item.id — used for API
   const [subjectSelectValue, setSubjectSelectValue] = useState<string>(''); // composite key — used for dropdown display
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -163,7 +164,11 @@ const Subjects = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersByStandardQuery,
-    params: { standardId: classId, subjectId },
+    params: {
+      standardId: classId,
+      subjectId,
+      ...(divisionId ? { divisionId } : {}),
+    },
     options: {
       skip: !classId || !subjectId,
     },
@@ -192,6 +197,11 @@ const Subjects = () => {
   };
 
   const filteredChapters = (subjectId ? chapterResponse || [] : []) as IChapter[];
+
+  const divisionOptions = [
+    { id: '', name: 'All Divisions' },
+    ...(allClass.find((standard) => standard.id === classId)?.divisions || []),
+  ];
 
   useEffect(() => {
     const allClasses =
@@ -300,10 +310,22 @@ const Subjects = () => {
                     setClasses(standard?.name || '');
                     setClassId(value as string);
                     // Reset subject selection when class changes
+                    setDivisionId('');
                     setSubjectId('');
                     setSubjectSelectValue('');
                     setSubject('');
                   }}
+                />
+                <CustomSelect
+                  label="Division"
+                  name="division"
+                  options={divisionOptions}
+                  valueKey="id"
+                  labelKey="name"
+                  disabled={!classId}
+                  value={divisionId}
+                  onChange={(value) => setDivisionId(value as string)}
+                  formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
                 />
                 <CustomSelect
                   options={buildSyllabusSubjectOptions(

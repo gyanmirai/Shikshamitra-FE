@@ -1,4 +1,4 @@
-import { academicType } from 'src/redux/tagTypes';
+import { academicCalendarType, academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../../academicApi';
 
@@ -46,7 +46,14 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicType.exam],
+      // Saving a schedule can create or refresh DayType.Exam markers in the
+      // Academic Calendar. Invalidate both module caches so Calendar
+      // Management does not keep showing its pre-save day list.
+      invalidatesTags: [
+        academicType.exam,
+        academicCalendarType.calendarDay,
+        academicCalendarType.calendar,
+      ],
     }),
 
     // Step 3: Room Assignment
