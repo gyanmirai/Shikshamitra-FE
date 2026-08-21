@@ -591,7 +591,7 @@ export function ExamsResultsDashboardCard({
       <Card
         variant="outlined"
         sx={{
-          p: 2.5,
+          p: 2,
           borderRadius: 2,
           borderColor: 'divider',
           bgcolor: 'background.paper',

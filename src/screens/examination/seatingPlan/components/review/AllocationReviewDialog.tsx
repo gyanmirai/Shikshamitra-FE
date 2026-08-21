@@ -414,11 +414,11 @@ export default function AllocationReviewDialog({
         mixDivisions: false,
         specialRequirementPriority: true,
       },
-      excludedStudentIds: [],
+      excludedStudentIds: planDraftData?.excludedStudentIds ?? [],
       validation: { blockers: [], warnings: [] },
       status: 'in-progress' as const,
     }),
-    [examId, divisionId, roomIds, students, rooms, assignments]
+    [examId, divisionId, roomIds, students, rooms, assignments, planDraftData?.excludedStudentIds]
   );
 
   const validation = useMemo(() => validateSeatingDraft(draft), [draft]);
@@ -443,10 +443,18 @@ export default function AllocationReviewDialog({
   );
 
   const assignedIds = useMemo(() => new Set(assignments.map((a) => a.studentId)), [assignments]);
-  const unallocatedStudents = students.filter((s) => !assignedIds.has(s.studentId));
+  const excludedIdsSet = useMemo(
+    () => new Set(planDraftData?.excludedStudentIds ?? []),
+    [planDraftData?.excludedStudentIds]
+  );
+  const unallocatedStudents = students.filter(
+    (s) => !assignedIds.has(s.studentId) && !excludedIdsSet.has(s.studentId)
+  );
   const totalStudents = students.length;
+  const excludedStudents = students.filter((s) => excludedIdsSet.has(s.studentId));
+  const eligibleStudentsCount = totalStudents - excludedStudents.length;
   const allocationProgress =
-    totalStudents === 0 ? 0 : Math.round((assignedIds.size / totalStudents) * 100);
+    eligibleStudentsCount === 0 ? 0 : Math.round((assignedIds.size / eligibleStudentsCount) * 100);
 
   const summaryCards = useMemo(
     () => [
@@ -659,14 +667,14 @@ export default function AllocationReviewDialog({
                   color="text.primary"
                   sx={{ mb: 1, display: 'block' }}
                 >
-                  Student Exceptions ({unallocatedStudents.length})
+                  Student Exceptions ({unallocatedStudents.length + excludedStudents.length})
                 </Typography>
                 {isStudentsDataLoading || isLayoutLoading ? (
                   <SkeletonList />
                 ) : (
                   <StudentExceptionList
                     unallocatedStudents={unallocatedStudents}
-                    excludedStudents={[]}
+                    excludedStudents={excludedStudents}
                     onFix={() => {
                       if (onBackToAllocation) onBackToAllocation();
                     }}

@@ -29,7 +29,7 @@ export interface ISubjectDetail {
   assignedId?: string; // New field
   subjectId: string; // Changed from subjectNo (number) to string ID based on schema
   subjectCode: string;
-  // subjectColor?: string; // Moved to nested subject object
+  color?: string;
   subject?: {
     id: string;
     name: string;
@@ -168,3 +168,24 @@ export type IDocType =
   | 'csv'
   | 'txt'
   | string;
+
+export interface INavigatorSubjectItem {
+  assignmentId: string;
+  assignedSubjectId?: string;
+  subjectId: string;
+  subjectCode: string;
+  subjectName: string;
+  color?: string;
+  status: number;
+  subjectType: number;
+  electiveGroupId?: string;
+  electiveGroupName?: string;
+  primaryTeacher?: { id: string; name: string };
+  weeklyPeriods?: number;
+}
+
+export interface INavigatorElectiveGroup {
+  electiveGroupId: string;
+  electiveGroupName: string;
+  subjects: INavigatorSubjectItem[];
+}

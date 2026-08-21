@@ -372,17 +372,8 @@ export const validationSchema = [
         });
 
         const validationErrors: yup.ValidationError[] = [];
-        const assignmentList: Array<{
-          subjectId: string;
-          subjectName: string;
-          divisionId: string;
-          roomIds: string[];
-          examDate: any;
-          startTime: any;
-          endTime: any;
-        }> = [];
 
-        // 1. Required field validation for all divisions & subjects
+        // Required field validation for all divisions & subjects
         activeSubjects.forEach((sub) => {
           selectedDivisionIds.forEach((divisionId) => {
             const roomIds = roomDetailsMap?.[sub.subjectId]?.[divisionId]?.roomIds;
@@ -392,54 +383,9 @@ export const validationSchema = [
               validationErrors.push(
                 new yup.ValidationError('Room is required', roomIds, path)
               );
-            } else {
-              assignmentList.push({
-                subjectId: sub.subjectId,
-                subjectName: sub.subjectName,
-                divisionId,
-                roomIds,
-                examDate: sub.examDate,
-                startTime: sub.startTime,
-                endTime: sub.endTime,
-              });
             }
           });
         });
-
-        // 2. Conflict validation across overlapping time slots
-        const conflictingPaths = new Set<string>();
-
-        for (let i = 0; i < assignmentList.length; i += 1) {
-          for (let j = i + 1; j < assignmentList.length; j += 1) {
-            const a = assignmentList[i];
-            const b = assignmentList[j];
-
-            // Same subject across divisions can share the same room
-            if (a.subjectId === b.subjectId) continue;
-
-            const isOverlapping = slotsOverlap(a, b);
-
-            if (isOverlapping) {
-              const sharedRooms = a.roomIds.filter((id) => b.roomIds.includes(id));
-              if (sharedRooms.length > 0) {
-                const pathA = `roomDetails.${a.subjectId}.${a.divisionId}.roomIds`;
-                const pathB = `roomDetails.${b.subjectId}.${b.divisionId}.roomIds`;
-
-                if (!conflictingPaths.has(pathA)) {
-                  conflictingPaths.add(pathA);
-                  const msg = `Room conflict: Room is already booked for ${b.subjectName} at overlapping hours`;
-                  validationErrors.push(new yup.ValidationError(msg, a.roomIds, pathA));
-                }
-
-                if (!conflictingPaths.has(pathB)) {
-                  conflictingPaths.add(pathB);
-                  const msg = `Room conflict: Room is already booked for ${a.subjectName} at overlapping hours`;
-                  validationErrors.push(new yup.ValidationError(msg, b.roomIds, pathB));
-                }
-              }
-            }
-          }
-        }
 
         if (validationErrors.length > 0) {
           throw new yup.ValidationError(validationErrors);

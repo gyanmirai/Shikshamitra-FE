@@ -241,11 +241,11 @@ export default function SeatingReviewPage({
         mixDivisions: false,
         specialRequirementPriority: true,
       },
-      excludedStudentIds: [],
+      excludedStudentIds: planDraftData?.excludedStudentIds ?? [],
       validation: { blockers: [], warnings: [] },
       status: 'in-progress' as const,
     }),
-    [examId, divisionId, roomIds, students, rooms, assignments]
+    [examId, divisionId, roomIds, students, rooms, assignments, planDraftData?.excludedStudentIds]
   );
 
   const validation = useMemo(() => validateSeatingDraft(draft), [draft]);
@@ -268,10 +268,17 @@ export default function SeatingReviewPage({
   );
 
   const assignedIds = useMemo(() => new Set(assignments.map((a) => a.studentId)), [assignments]);
-  const unallocatedStudents = students.filter((s) => !assignedIds.has(s.studentId));
-  const totalStudents = students.length;
+  const excludedIdsSet = useMemo(
+    () => new Set(planDraftData?.excludedStudentIds ?? []),
+    [planDraftData?.excludedStudentIds]
+  );
+  const unallocatedStudents = students.filter(
+    (s) => !assignedIds.has(s.studentId) && !excludedIdsSet.has(s.studentId)
+  );
+  const excludedStudents = students.filter((s) => excludedIdsSet.has(s.studentId));
+  const eligibleStudentsCount = students.length - excludedStudents.length;
   const allocationProgress =
-    totalStudents === 0 ? 0 : Math.round((assignedIds.size / totalStudents) * 100);
+    eligibleStudentsCount === 0 ? 0 : Math.round((assignedIds.size / eligibleStudentsCount) * 100);
 
   const handleBack = () => {
     if (onBackToAllocation) {
@@ -399,7 +406,7 @@ export default function SeatingReviewPage({
       ) : (
         <StudentExceptionList
           unallocatedStudents={unallocatedStudents}
-          excludedStudents={[]}
+          excludedStudents={excludedStudents}
           onFix={handleBack}
         />
       )}

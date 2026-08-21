@@ -1176,6 +1176,7 @@ export default function SeatingAllocationPage({
                   <StudentQueuePanel
                     students={draft.students}
                     assignments={draft.assignments}
+                    excludedStudentIds={draft.excludedStudentIds}
                     conflictStudentIds={conflictStudentIds}
                     multiSelectedIds={multiSelectedIds}
                     isLoading={isStudentsDataLoading}
@@ -1199,11 +1200,19 @@ export default function SeatingAllocationPage({
                     onBulkAllocateSequential={handleBulkAllocateSequential}
                     onBulkExclude={(ids) => {
                       if (selectedPlanIsLocked) return;
-                      setDraft((d) => ({
-                        ...d,
-                        excludedStudentIds: [...new Set([...d.excludedStudentIds, ...ids])],
-                      }));
+                      actions.excludeStudents(ids);
                       setMultiSelectedIds(new Set());
+                      shikshaMitraToast.success({
+                        message: `${ids.length} student${ids.length > 1 ? 's' : ''} excluded from seating plan.`,
+                      });
+                    }}
+                    onBulkInclude={(ids) => {
+                      if (selectedPlanIsLocked) return;
+                      actions.includeStudents(ids);
+                      setMultiSelectedIds(new Set());
+                      shikshaMitraToast.success({
+                        message: `${ids.length} student${ids.length > 1 ? 's' : ''} re-included in seating plan.`,
+                      });
                     }}
                     isReadOnly={selectedPlanIsLocked}
                   />
