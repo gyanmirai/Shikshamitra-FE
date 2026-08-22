@@ -123,6 +123,10 @@ export default function SeatingAllocationPage({
     permissions,
     `${academicPermissions.examination.seatAllocation}.AutoAllocate`
   );
+  const canPrint = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.seatAllocation}.Print`
+  );
 
   const [standardId, setStandardId] = useState(initialStandardId ?? '');
   const [division, setDivision] = useState('');
@@ -942,6 +946,7 @@ export default function SeatingAllocationPage({
           isPublished={isPublished}
           canAutoAllocate={!!activeRoom && canAutoAllocate && !selectedPlanIsLocked}
           canReset={!selectedPlanIsLocked && !isPublished}
+          canExport={selectedPlanIsLocked && canPrint}
           canFinalize={workspaceCounters.pendingCount === 0 && validation.blockers.length === 0}
           onBack={() => {
             if (onClose) {
@@ -970,6 +975,23 @@ export default function SeatingAllocationPage({
             const roomIdsParam = currentRoomIds.join(',');
             router.push(
               `/academic/seatallocation/${examId}/review?divisionId=${division}&roomIds=${roomIdsParam}&seatingPlanId=${selectedPlanId}`
+            );
+          }}
+          onExport={() => {
+            const currentRoomIds =
+              draft.roomIds.length > 0
+                ? draft.roomIds
+                : (roomsData?.items || []).map((r: any) => r.id).filter(Boolean);
+            if (onOpenReview) {
+              onOpenReview({
+                divisionId: division,
+                roomIds: currentRoomIds,
+                seatingPlanId: selectedPlanId,
+              });
+              return;
+            }
+            router.push(
+              `/academic/seatallocation/${examId}/review?divisionId=${division}&roomIds=${currentRoomIds.join(',')}&seatingPlanId=${selectedPlanId}`
             );
           }}
           onUndo={actions.undo}

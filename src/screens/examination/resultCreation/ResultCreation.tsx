@@ -495,24 +495,22 @@ export function StudentDetailsDialog({
 
           return (
             <Box display="flex" alignItems="center" gap={1}>
-              <Box
+              <LinearProgress
+                variant="determinate"
+                value={progressPct}
+                aria-label={`${item.subjectName ?? 'Subject'} score progress`}
                 sx={{
                   flex: 1,
                   height: 6,
-                  bgcolor: (theme) => alpha(theme.palette.text.primary, 0.06),
-                  borderRadius: 3,
+                  bgcolor: 'divider',
+                  borderRadius: 999,
                   overflow: 'hidden',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: `${progressPct}%`,
-                    height: '100%',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 999,
                     bgcolor: isSubjectPassed ? 'success.main' : 'error.main',
-                    borderRadius: 3,
-                  }}
-                />
-              </Box>
+                  },
+                }}
+              />
               <Typography
                 variant="body2"
                 fontWeight="bold"

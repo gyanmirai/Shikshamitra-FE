@@ -126,6 +126,8 @@ export interface IGradeEntryTableProps {
   isLocked?: boolean;
   /** Called whenever the table data changes, with true if all students have status === 1 */
   onAllAssignedChange?: (allAssigned: boolean) => void;
+  /** Called whenever the table dirty status changes (true if any row has unsaved modifications) */
+  onDirtyChange?: (isDirty: boolean) => void;
   /** Called with computed analytics whenever table data changes */
   onStatsChange?: (stats: IExamAnalyticsStats) => void;
   /** Called whenever the API response arrives with the current workflow flags */
