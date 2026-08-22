@@ -26,12 +26,14 @@ interface Props {
   isPublished?: boolean;
   canAutoAllocate: boolean;
   canReset?: boolean;
+  canExport?: boolean;
   canFinalize: boolean;
   onBack: () => void;
   onSaveDraft: () => void;
   onAutoAllocate: () => void;
   onReset?: () => void;
   onReview: () => void;
+  onExport: () => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
@@ -49,12 +51,14 @@ export default function SeatingWorkspaceHeader({
   isPublished,
   canAutoAllocate,
   canReset = true,
+  canExport = false,
   canFinalize,
   onBack,
   onSaveDraft,
   onAutoAllocate,
   onReset,
   onReview,
+  onExport,
   onUndo,
   onRedo,
   canUndo,
@@ -170,7 +174,13 @@ export default function SeatingWorkspaceHeader({
           onClose={morePopover.onClose}
         >
           <MenuList sx={{ minWidth: 200 }}>
-            <MenuItem disabled>
+            <MenuItem
+              disabled={!canExport}
+              onClick={() => {
+                morePopover.onClose();
+                onExport();
+              }}
+            >
               <Iconify icon="mdi:file-export-outline" width={16} style={{ marginRight: 8 }} />
               Export
             </MenuItem>

@@ -37,6 +37,7 @@ const GradeEntryTable = ({
   examId,
   isLocked = false,
   onAllAssignedChange,
+  onDirtyChange,
   onStatsChange,
   onWorkflowFlagsChange,
   onRowsChange,
@@ -268,6 +269,13 @@ const GradeEntryTable = ({
     const allAssigned = localRows.length > 0 && localRows.every((item) => item.status === 1);
     onAllAssignedChange(allAssigned);
   }, [localRows, onAllAssignedChange]);
+
+  // Notify parent whether any row has unsaved modifications
+  useEffect(() => {
+    if (!onDirtyChange) return;
+    const hasUnsavedChanges = !isLocked && localRows.some((row) => isRowModified(row));
+    onDirtyChange(hasUnsavedChanges);
+  }, [localRows, isLocked, isRowModified, onDirtyChange]);
 
   // Emit workflow flags to parent
   useEffect(() => {

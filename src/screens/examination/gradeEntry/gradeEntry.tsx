@@ -159,7 +159,15 @@ const GradeEntry = (props: TabComponentType) => {
       setExamId(value);
     }
     setIsDirty(false);
+    setSaveState('idle');
   };
+
+  const handleDirtyChange = useCallback((dirty: boolean) => {
+    setIsDirty(dirty);
+    if (dirty) {
+      setSaveState('idle');
+    }
+  }, []);
 
   const {
     data: subjectData,
@@ -519,6 +527,8 @@ const GradeEntry = (props: TabComponentType) => {
         body: { subjectId: subject, divisionId: division, rows: importedRows },
       }).unwrap();
       importMarksDialog.onFalse();
+      setIsDirty(false);
+      setSaveState('saved');
       shikshaMitraToast.success({
         message: `Successfully imported ${importedRows.length} student records.`,
       });
@@ -559,6 +569,7 @@ const GradeEntry = (props: TabComponentType) => {
       }).unwrap();
       reviewDialog.onFalse();
       setWorkflowStatus(GradeEntryWorkflowStatus.Submitted);
+      setIsDirty(false);
       shikshaMitraToast.success({ message: 'Marks successfully submitted for verification.' });
     } catch (e) {
       console.error(e);
@@ -571,6 +582,7 @@ const GradeEntry = (props: TabComponentType) => {
       await publishExamMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
       publishMarksDialog.onFalse();
       setWorkflowStatus(GradeEntryWorkflowStatus.Published);
+      setIsDirty(false);
       shikshaMitraToast.success({
         message: `Marks published successfully for ${examOptions.find((o) => o.examId === examId)?.examName ?? 'selected exam'}.`,
       });
@@ -660,6 +672,7 @@ const GradeEntry = (props: TabComponentType) => {
       }).unwrap();
       unlockDialog.onFalse();
       setWorkflowStatus(GradeEntryWorkflowStatus.Draft);
+      setIsDirty(false);
       shikshaMitraToast.success({ message: 'Marks successfully unlocked back to Draft.' });
     } catch (e) {
       console.error(e);
@@ -1317,10 +1330,8 @@ const GradeEntry = (props: TabComponentType) => {
               subjectId={subject}
               examId={examId}
               isLocked={isGradeEntryLocked}
-              onAllAssignedChange={(val) => {
-                setAllMarksAssigned(val);
-                setIsDirty(true);
-              }}
+              onAllAssignedChange={setAllMarksAssigned}
+              onDirtyChange={handleDirtyChange}
               onStatsChange={setAnalyticsStats}
               onWorkflowFlagsChange={handleWorkflowFlagsChange}
               onRowsChange={setTableRows}
