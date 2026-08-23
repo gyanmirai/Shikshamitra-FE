@@ -17,7 +17,7 @@ import {
   Card,
   Tooltip,
 } from '@mui/material';
-import { useGetStudentAcademic360Query } from 'src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api';
+import { useGetStudentAcademic360TabQuery } from 'src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api';
 
 import { getStudentId } from '../types';
 import { SuccessOverview } from './SuccessOverview';
@@ -62,8 +62,8 @@ export function StudentAcademic360Drawer({
   const canGoPrevious = currentIndex > 0;
   const canGoNext = currentIndex >= 0 && currentIndex < students.length - 1;
 
-  const { data, isFetching, isError } = useGetStudentAcademic360Query(
-    { studentId, recentTaskCount: 20, recentExamCount: 50 },
+  const { data, isFetching, isError } = useGetStudentAcademic360TabQuery(
+    { studentId, tab: activeTab },
     { skip: !open || !studentId }
   );
   const academic360 = data as Academic360Response | undefined;

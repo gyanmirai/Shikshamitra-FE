@@ -49,8 +49,15 @@ export const studentAcademic360Api = academicApi.injectEndpoints({
       },
       providesTags: [academicType.academic360],
     }),
+    getStudentAcademic360Tab: builder.query({
+      query: ({ studentId, tab }: { studentId: string; tab: string }) => ({
+        url: `academics/student-academic-360/${studentId}/tabs/${tab}`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.academic360],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetStudentAcademic360Query } = studentAcademic360Api;
+export const { useGetStudentAcademic360Query, useGetStudentAcademic360TabQuery } = studentAcademic360Api;

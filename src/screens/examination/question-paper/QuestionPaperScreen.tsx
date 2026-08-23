@@ -48,6 +48,7 @@ import {
 
 import CreatePaperWizard from './components/CreatePaperWizard';
 import QuestionPaperPreviewDrawer from './components/QuestionPaperPreviewDrawer';
+import { useQuestionPaperPermissions } from './hooks/useQuestionPaperPermissions';
 import { STATUS_LABEL, STATUS_COLOR, CREATION_MODE_OPTIONS } from './constants';
 
 import type { SectionPattern, WizardMode, QuestionPaperMetadata } from './types';
@@ -61,16 +62,19 @@ interface RowAction {
 }
 
 /** Status-based row actions (UX spec §5). */
-function buildRowActions(handlers: {
-  onContinueEditing: (row: any) => void;
-  onView: (row: any) => void;
-  onReview: (row: any) => void;
-  onDuplicate: (row: any) => void;
-  onDelete: (row: any) => void;
-  onPreview: (row: any) => void;
-  onPublish: (row: any) => void;
-  onArchive: (row: any) => void;
-}): Record<number, RowAction[]> {
+function buildRowActions(
+  handlers: {
+    onContinueEditing: (row: any) => void;
+    onView: (row: any) => void;
+    onReview: (row: any) => void;
+    onDuplicate: (row: any) => void;
+    onDelete: (row: any) => void;
+    onPreview: (row: any) => void;
+    onPublish: (row: any) => void;
+    onArchive: (row: any) => void;
+  },
+  permissions: { canView: boolean; canAdd: boolean; canDelete: boolean }
+): Record<number, RowAction[]> {
   const {
     onContinueEditing,
     onView,
@@ -82,7 +86,7 @@ function buildRowActions(handlers: {
     onArchive,
   } = handlers;
 
-  return {
+  const actions = {
     // Draft
     1: [
       {
@@ -205,10 +209,23 @@ function buildRowActions(handlers: {
       },
     ],
   };
+
+  return Object.fromEntries(
+    Object.entries(actions).map(([status, rowActions]) => [
+      status,
+      rowActions.filter((action) => {
+        if (action.key === 'delete') return permissions.canDelete;
+        if (action.key === 'view' || action.key === 'preview' || action.key === 'print')
+          return permissions.canView;
+        return permissions.canAdd;
+      }),
+    ])
+  ) as Record<number, RowAction[]>;
 }
 
 export default function QuestionPaperScreen() {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { canView, canAdd, canDelete } = useQuestionPaperPermissions();
   const academicYearId = currentYear?.id;
 
   // ── List state ───────────────────────────────────────────────────────
@@ -292,9 +309,12 @@ export default function QuestionPaperScreen() {
       questionType: section.questionType,
       questionCount: section.questionCount,
       marksPerQuestion: section.marksPerQuestion,
-      questions: section.questions || questions.filter((question: any) =>
-        question.questionPaperSectionId === section.id || question.sectionId === section.id
-      ),
+      questions:
+        section.questions ||
+        questions.filter(
+          (question: any) =>
+            question.questionPaperSectionId === section.id || question.sectionId === section.id
+        ),
     }));
   }, [previewPaperData]);
 
@@ -349,9 +369,8 @@ export default function QuestionPaperScreen() {
       onPublish: (row: any) => openWizard('review', row as QuestionPaperMetadata, 0),
       onArchive: (row: any) => setArchiveConfirmPaper(row),
     };
-    return buildRowActions(handlers);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return buildRowActions(handlers, { canView, canAdd, canDelete });
+  }, [canAdd, canDelete, canView]);
 
   // ── Delete / archive / settings ──────────────────────────────────────
   const handleDeletePaperConfirm = async () => {
@@ -505,7 +524,8 @@ export default function QuestionPaperScreen() {
           const editAction = actions.find((a: any) => a.key === 'edit');
           const deleteAction = actions.find((a: any) => a.key === 'delete');
           const menuActions = actions.filter(
-            (a: any) => a.key !== 'view' && a.key !== 'preview' && a.key !== 'edit' && a.key !== 'delete'
+            (a: any) =>
+              a.key !== 'view' && a.key !== 'preview' && a.key !== 'edit' && a.key !== 'delete'
           );
 
           return (
@@ -613,23 +633,27 @@ export default function QuestionPaperScreen() {
         ]}
         action={
           <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Iconify icon="mdi:cog-outline" />}
-              onClick={handleOpenSettings}
-            >
-              Settings
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              disabled={!academicYearId}
-              onClick={() => openWizard('create', null, 0)}
-              startIcon={<Iconify icon="mdi:add" />}
-            >
-              Create Question Paper
-            </Button>
+            {canAdd && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Iconify icon="mdi:cog-outline" />}
+                onClick={handleOpenSettings}
+              >
+                Settings
+              </Button>
+            )}
+            {canAdd && (
+              <Button
+                variant="contained"
+                size="small"
+                disabled={!academicYearId}
+                onClick={() => openWizard('create', null, 0)}
+                startIcon={<Iconify icon="mdi:add" />}
+              >
+                Create Question Paper
+              </Button>
+            )}
           </Stack>
         }
       />

@@ -16,6 +16,8 @@ type Props = {
   onSubmitDiary: (plan: any) => void;
   onSubmitPlan: (planId: string) => void;
   onCreateHomework?: (plan: any) => void;
+  canView?: boolean;
+  canManage?: boolean;
 };
 
 export const TimelineTrack: React.FC<Props> = ({
@@ -27,6 +29,8 @@ export const TimelineTrack: React.FC<Props> = ({
   onSubmitDiary,
   onSubmitPlan,
   onCreateHomework,
+  canView,
+  canManage,
 }) => {
   if (slots.length === 0) {
     return null;
@@ -37,8 +41,7 @@ export const TimelineTrack: React.FC<Props> = ({
       {slots.map((slot, index) => (
         <TimelineLessonItem
           key={
-            slot.timetableSlotId ??
-            `manual-${slot.lessonPlan?.id ?? slot.lessonPlan?.Id ?? index}`
+            slot.timetableSlotId ?? `manual-${slot.lessonPlan?.id ?? slot.lessonPlan?.Id ?? index}`
           }
           slot={slot}
           selectedDate={selectedDate}
@@ -48,6 +51,8 @@ export const TimelineTrack: React.FC<Props> = ({
           onSubmitDiary={onSubmitDiary}
           onSubmitPlan={onSubmitPlan}
           onCreateHomework={onCreateHomework}
+          canView={canView}
+          canManage={canManage}
         />
       ))}
     </Box>

@@ -30,8 +30,9 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { academicPaths } from 'src/constants/academic-menu';
+import { academicPaths, academicPermissions } from 'src/constants/academic-menu';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -453,7 +454,8 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
 });
 
 const formatLectureLabel = (item: ApiSubstitutionLecture) =>
-  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${item.originalTeacherName || 'Teacher not assigned'
+  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${
+    item.originalTeacherName || 'Teacher not assigned'
   }`;
 
 const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
@@ -629,12 +631,12 @@ const acknowledgementColor: Record<
 };
 
 const conflictColor: Record<ConflictStatus, 'default' | 'success' | 'error' | 'warning' | 'info'> =
-{
-  Clear: 'success',
-  'Hard Block': 'error',
-  Warning: 'warning',
-  Info: 'info',
-};
+  {
+    Clear: 'success',
+    'Hard Block': 'error',
+    Warning: 'warning',
+    Info: 'info',
+  };
 
 const priorityColor: Record<SubstitutionPriority, 'default' | 'primary' | 'error' | 'warning'> = {
   Low: 'default',
@@ -734,7 +736,9 @@ const SubstitutionManagementScreen = () => {
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
-  const [creatingFromAvailabilityRowId, setCreatingFromAvailabilityRowId] = useState<string | null>(null);
+  const [creatingFromAvailabilityRowId, setCreatingFromAvailabilityRowId] = useState<string | null>(
+    null
+  );
 
   const availabilityStartTimeStr = useMemo(() => {
     if (availabilityForm.isFullDay) return '09:00';
@@ -803,12 +807,11 @@ const SubstitutionManagementScreen = () => {
   const [createSubmitted, setCreateSubmitted] = useState(false);
   const createFormSnapshotRef = useRef<string>(JSON.stringify(defaultSubstitutionForm));
   const availabilityFormSnapshotRef = useRef<string>(JSON.stringify(defaultAvailabilityForm));
-  const { user: profile, employee: currentEmployee } = useSelector((state: any) => state.auth);
-  const hasRole = (role: unknown, expectedRoles: string[]) => {
-    const roleArray = Array.isArray(role) ? role : [role];
-    return roleArray.some((item) => expectedRoles.includes(String(item || '').toLowerCase()));
-  };
-  const isAdminOrManager = hasRole(profile?.role, ['admin', 'coordinator', 'manager']);
+  const { employee: currentEmployee, permissions } = useSelector((state: RootState) => state.auth);
+  const canManageSubstitutions = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.substitutionManagement}.Add`
+  );
 
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
@@ -1037,9 +1040,7 @@ const SubstitutionManagementScreen = () => {
   const metadataRooms = useMemo(() => createMetadata?.rooms ?? [], [createMetadata]);
   const academicStandards: Standards[] = useMemo(
     () =>
-      medium?.educationMediumStages?.flatMap(
-        (stage: Organization) => stage?.standards || []
-      ) || [],
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage?.standards || []) || [],
     [medium?.educationMediumStages]
   );
   const selectedAcademicStandard = academicStandards.find(
@@ -1049,9 +1050,9 @@ const SubstitutionManagementScreen = () => {
     const options = academicStandards.length
       ? academicStandards.map((item: Standards) => ({ value: item.id, label: item.name }))
       : uniqueLookupOptions(metadataStandards).map((item) => ({
-        value: item.id,
-        label: item.name,
-      }));
+          value: item.id,
+          label: item.name,
+        }));
     const currentVal = substitutionForm.standardId || substitutionForm.className;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
       options.unshift({
@@ -1070,16 +1071,16 @@ const SubstitutionManagementScreen = () => {
   const divisionSelectOptions: SelectOption[] = useMemo(() => {
     const options = selectedAcademicStandard?.divisions?.length
       ? selectedAcademicStandard.divisions.map((item: Standards['divisions'][number]) => ({
-        value: item.id,
-        label: item.name,
-      }))
+          value: item.id,
+          label: item.name,
+        }))
       : metadataDivisions.length > 0
         ? uniqueLookupOptions(metadataDivisions)
-          .filter(
-            (item) =>
-              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-          )
-          .map((item) => ({ value: item.id, label: item.name }))
+            .filter(
+              (item) =>
+                !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+            )
+            .map((item) => ({ value: item.id, label: item.name }))
         : [];
     const currentVal = substitutionForm.divisionId || substitutionForm.divisionName;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
@@ -1101,11 +1102,11 @@ const SubstitutionManagementScreen = () => {
     const options =
       metadataSubjects.length > 0
         ? metadataSubjects
-          .filter(
-            (item) =>
-              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-          )
-          .map((item) => ({ value: item.id, label: item.name }))
+            .filter(
+              (item) =>
+                !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+            )
+            .map((item) => ({ value: item.id, label: item.name }))
         : subjectOptions;
     const currentVal = substitutionForm.subjectId || substitutionForm.subjectName;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
@@ -1156,9 +1157,9 @@ const SubstitutionManagementScreen = () => {
     const options =
       createLectureResult.length > 0
         ? createLectureResult.map((item) => ({
-          value: item.slotSubjectId,
-          label: formatLectureLabel(item),
-        }))
+            value: item.slotSubjectId,
+            label: formatLectureLabel(item),
+          }))
         : lectureSlotOptions;
     const currentVal = substitutionForm.timetableSlotSubjectId || substitutionForm.period;
     if (currentVal && !options.some((o) => o.value === currentVal)) {
@@ -1233,7 +1234,6 @@ const SubstitutionManagementScreen = () => {
     [filters.filterDate]
   );
 
-
   const todayRows = useMemo(
     () => substitutions.filter((item) => item.date === selectedDateIso),
     [selectedDateIso, substitutions]
@@ -1256,11 +1256,11 @@ const SubstitutionManagementScreen = () => {
   const availableTeacherSelectOptions =
     suggestedTeacherRows.length > 0
       ? suggestedTeacherRows
-        .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
-        .map((teacher) => ({
-          value: teacher.teacherId,
-          label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
-        }))
+          .filter((teacher) => teacher.conflictSeverity !== 'Hard Block')
+          .map((teacher) => ({
+            value: teacher.teacherId,
+            label: `${teacher.teacherName} (${getTeacherCoverageLabel(teacher)})`,
+          }))
       : [];
 
   const affectedLectures = useMemo<AffectedLectureRow[]>(() => {
@@ -1838,7 +1838,7 @@ const SubstitutionManagementScreen = () => {
       reason: !availabilityForm.reason.trim() ? 'Reason is required.' : '',
       time:
         !availabilityForm.isFullDay &&
-          toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
+        toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
           ? 'End time must be later than start time.'
           : '',
     }),
@@ -2000,14 +2000,8 @@ const SubstitutionManagementScreen = () => {
     // Invalidate only after the confirmation dialog has unmounted. RTK Query then
     // refetches every active substitution-management query and exposes isFetching
     // to the owning table instead of showing background loading behind the dialog.
-    dispatch(
-      substitutionManagementApi.util.invalidateTags([academicType.substitutionManagement])
-    );
-  }, [
-    dispatch,
-    dutyConfirmOpen,
-    shouldRefreshDuties,
-  ]);
+    dispatch(substitutionManagementApi.util.invalidateTags([academicType.substitutionManagement]));
+  }, [dispatch, dutyConfirmOpen, shouldRefreshDuties]);
 
   /**
    * Memoization Justification:
@@ -2050,11 +2044,7 @@ const SubstitutionManagementScreen = () => {
         return false;
       }
     },
-    [
-      acknowledgeSubstitution,
-      rejectSubstitutionDuty,
-      requestSubstitutionChange,
-    ]
+    [acknowledgeSubstitution, rejectSubstitutionDuty, requestSubstitutionChange]
   );
 
   const handleDutyConfirmSubmit = useCallback(async () => {
@@ -2209,7 +2199,7 @@ const SubstitutionManagementScreen = () => {
       stickyPosition: 'right' as const,
       render: (_value: any, row: any) => (
         <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
-          {isAdminOrManager && (
+          {canManageSubstitutions && (
             <Button
               size="small"
               variant={row.substituteTeacherName ? 'outlined' : 'contained'}
@@ -2247,7 +2237,7 @@ const SubstitutionManagementScreen = () => {
                 <MenuItem
                   disabled={
                     !['Waiting Ack', 'Assigned'].includes(row.status) ||
-                    (!isAdminOrManager &&
+                    (!canManageSubstitutions &&
                       row.substituteTeacherName !== currentEmployee?.employeeName)
                   }
                   onClick={() => {
@@ -2264,7 +2254,7 @@ const SubstitutionManagementScreen = () => {
                 <MenuItem
                   disabled={
                     !['Assigned', 'Waiting Ack', 'Acknowledged'].includes(row.status) ||
-                    (!isAdminOrManager &&
+                    (!canManageSubstitutions &&
                       row.substituteTeacherName !== currentEmployee?.employeeName)
                   }
                   onClick={() => {
@@ -2279,7 +2269,9 @@ const SubstitutionManagementScreen = () => {
                   <ListItemText primary="Mark completed" />
                 </MenuItem>
                 <MenuItem
-                  disabled={['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager}
+                  disabled={
+                    ['Completed', 'Cancelled'].includes(row.status) || !canManageSubstitutions
+                  }
                   onClick={async () => {
                     popover.onClose();
                     try {
@@ -2300,7 +2292,9 @@ const SubstitutionManagementScreen = () => {
                   <ListItemText primary="Send reminder" />
                 </MenuItem>
                 <MenuItem
-                  disabled={['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager}
+                  disabled={
+                    ['Completed', 'Cancelled'].includes(row.status) || !canManageSubstitutions
+                  }
                   onClick={() => {
                     popover.onClose();
                     openAssignDialog(row.id);
@@ -2313,7 +2307,9 @@ const SubstitutionManagementScreen = () => {
                   <ListItemText primary="Request change" />
                 </MenuItem>
                 <MenuItem
-                  disabled={['Completed', 'Cancelled'].includes(row.status) || !isAdminOrManager}
+                  disabled={
+                    ['Completed', 'Cancelled'].includes(row.status) || !canManageSubstitutions
+                  }
                   onClick={() => {
                     popover.onClose();
                     updateSubstitutionStatus(row.id, 'Cancelled');
@@ -2472,7 +2468,7 @@ const SubstitutionManagementScreen = () => {
               row.activeSubstitutionStatuses?.includes('Pending') ||
               (row.activeSubstitutionStatuses?.length ?? 0) === 0));
 
-        if (canCreate && isAdminOrManager) {
+        if (canCreate && canManageSubstitutions) {
           return (
             <LoadingButton
               size="small"
@@ -3000,7 +2996,7 @@ const SubstitutionManagementScreen = () => {
                       />
                       {renderConflict(item.conflictStatus, item.conflictReason)}
                     </Stack>
-                    {isAdminOrManager && (
+                    {canManageSubstitutions && (
                       <Button
                         size="small"
                         fullWidth
@@ -3126,7 +3122,7 @@ const SubstitutionManagementScreen = () => {
         ]}
         action={
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {isAdminOrManager && (
+            {canManageSubstitutions && (
               <>
                 <Button
                   size="small"
@@ -3238,9 +3234,12 @@ const SubstitutionManagementScreen = () => {
                       onClick={() =>
                         activeTab === 'board'
                           ? setFilters((current) => ({
-                            ...current,
-                            filterDate: (current.filterDate || dayjs(todayIso)).subtract(1, 'day'),
-                          }))
+                              ...current,
+                              filterDate: (current.filterDate || dayjs(todayIso)).subtract(
+                                1,
+                                'day'
+                              ),
+                            }))
                           : setAvailabilityDate((current) => current.subtract(1, 'day'))
                       }
                     >
@@ -3272,9 +3271,9 @@ const SubstitutionManagementScreen = () => {
                       onClick={() =>
                         activeTab === 'board'
                           ? setFilters((current) => ({
-                            ...current,
-                            filterDate: (current.filterDate || dayjs(todayIso)).add(1, 'day'),
-                          }))
+                              ...current,
+                              filterDate: (current.filterDate || dayjs(todayIso)).add(1, 'day'),
+                            }))
                           : setAvailabilityDate((current) => current.add(1, 'day'))
                       }
                     >
@@ -3287,7 +3286,10 @@ const SubstitutionManagementScreen = () => {
                 size="small"
                 variant={
                   (activeTab === 'board' ? filters.filterDate : availabilityDate) &&
-                  dayjs(activeTab === 'board' ? filters.filterDate : availabilityDate).isSame(dayjs(todayIso), 'day')
+                  dayjs(activeTab === 'board' ? filters.filterDate : availabilityDate).isSame(
+                    dayjs(todayIso),
+                    'day'
+                  )
                     ? 'soft'
                     : 'outlined'
                 }
@@ -3399,7 +3401,7 @@ const SubstitutionManagementScreen = () => {
             disabled={
               !actionRow ||
               !['Waiting Ack', 'Assigned'].includes(actionRow.status) ||
-              (!isAdminOrManager &&
+              (!canManageSubstitutions &&
                 actionRow.substituteTeacherName !== currentEmployee?.employeeName)
             }
             onClick={() => {
@@ -3416,7 +3418,7 @@ const SubstitutionManagementScreen = () => {
             disabled={
               !actionRow ||
               !['Assigned', 'Waiting Ack', 'Acknowledged'].includes(actionRow.status) ||
-              (!isAdminOrManager &&
+              (!canManageSubstitutions &&
                 actionRow.substituteTeacherName !== currentEmployee?.employeeName)
             }
             onClick={() => {
@@ -3433,7 +3435,7 @@ const SubstitutionManagementScreen = () => {
             disabled={
               !actionRow ||
               ['Completed', 'Cancelled'].includes(actionRow.status) ||
-              !isAdminOrManager
+              !canManageSubstitutions
             }
             onClick={async () => {
               if (actionRow) {
@@ -3459,7 +3461,7 @@ const SubstitutionManagementScreen = () => {
             disabled={
               !actionRow ||
               ['Completed', 'Cancelled'].includes(actionRow.status) ||
-              !isAdminOrManager
+              !canManageSubstitutions
             }
             onClick={() => {
               if (actionRow) updateSubstitutionStatus(actionRow.id, 'Cancelled');
@@ -4126,10 +4128,10 @@ const SubstitutionManagementScreen = () => {
                   <Alert severity="success">
                     {substitutionForm.selectedSubstitutes.length > 0
                       ? `You are assigning ${substitutionForm.selectedSubstitutes
-                        .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
-                        .join(
-                          ', '
-                        )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
+                          .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
+                          .join(
+                            ', '
+                          )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
                       : 'Select a substitute teacher to preview the final notification.'}
                   </Alert>
                 </Grid>
@@ -4350,9 +4352,9 @@ const SubstitutionManagementScreen = () => {
                     bgcolor: (theme) =>
                       selected
                         ? alpha(
-                          theme.palette.primary.main,
-                          theme.palette.mode === 'dark' ? 0.18 : 0.04
-                        )
+                            theme.palette.primary.main,
+                            theme.palette.mode === 'dark' ? 0.18 : 0.04
+                          )
                         : 'background.paper',
                     boxShadow: selected
                       ? (theme) => `0 4px 14px ${alpha(theme.palette.primary.main, 0.14)}`
@@ -4361,11 +4363,11 @@ const SubstitutionManagementScreen = () => {
                     opacity: teacher.hasConflict ? 0.6 : 1,
                     '&:hover': !teacher.hasConflict
                       ? {
-                        borderColor: (theme) =>
-                          selected ? theme.palette.primary.main : theme.palette.primary.light,
-                        boxShadow: (theme) =>
-                          `0 3px 10px ${alpha(theme.palette.common.black, 0.08)}`,
-                      }
+                          borderColor: (theme) =>
+                            selected ? theme.palette.primary.main : theme.palette.primary.light,
+                          boxShadow: (theme) =>
+                            `0 3px 10px ${alpha(theme.palette.common.black, 0.08)}`,
+                        }
                       : undefined,
                   }}
                 >
@@ -4606,10 +4608,10 @@ const SubstitutionManagementScreen = () => {
                     value={
                       availabilityForm.teacherId
                         ? {
-                          id: availabilityForm.teacherId,
-                          label: availabilityForm.teacherName,
-                          departmentName: availabilityForm.departmentName,
-                        }
+                            id: availabilityForm.teacherId,
+                            label: availabilityForm.teacherName,
+                            departmentName: availabilityForm.departmentName,
+                          }
                         : null
                     }
                     onChange={(_, value) =>

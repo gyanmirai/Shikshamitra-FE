@@ -34,6 +34,8 @@ type Props = {
   onSubmitDiary: (plan: any) => void;
   onSubmitPlan: (planId: string) => void;
   onCreateHomework?: (plan: any) => void;
+  canView?: boolean;
+  canManage?: boolean;
 };
 
 export const TimelineLessonItem: React.FC<Props> = ({
@@ -45,6 +47,8 @@ export const TimelineLessonItem: React.FC<Props> = ({
   onSubmitDiary,
   onSubmitPlan,
   onCreateHomework,
+  canView = true,
+  canManage = true,
 }) => {
   const theme = useTheme();
   const hasPlan = Boolean(slot.lessonPlan);
@@ -57,13 +61,13 @@ export const TimelineLessonItem: React.FC<Props> = ({
 
   const normalizedPlan = hasPlan
     ? {
-      ...plan,
-      status: plan.status || plan.planStatus || statusConfig.label,
-      planStatus: plan.planStatus || plan.status || statusConfig.label,
-      className: plan.className || plan.standardName || slot.standardName,
-      divisionName: plan.divisionName || slot.divisionName,
-      subjectName: plan.subjectName || slot.subjectName,
-    }
+        ...plan,
+        status: plan.status || plan.planStatus || statusConfig.label,
+        planStatus: plan.planStatus || plan.status || statusConfig.label,
+        className: plan.className || plan.standardName || slot.standardName,
+        divisionName: plan.divisionName || slot.divisionName,
+        subjectName: plan.subjectName || slot.subjectName,
+      }
     : null;
 
   const completionPercentage = Number(
@@ -73,8 +77,9 @@ export const TimelineLessonItem: React.FC<Props> = ({
 
   const subjectText = slot.subjectName || plan?.subjectName || 'Subject';
   const chapterText = plan?.chapterName || '';
-  const classText = `Grade ${slot.standardName || ''}${slot.divisionName ? `-${slot.divisionName}` : ''
-    }`;
+  const classText = `Grade ${slot.standardName || ''}${
+    slot.divisionName ? `-${slot.divisionName}` : ''
+  }`;
   const periodText = slot.periodName || (isManualSlot ? 'Manual' : 'Period');
   const timeText = slot.startTime && slot.endTime ? `${slot.startTime} – ${slot.endTime}` : '';
 
@@ -112,9 +117,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
             ? (t) => varAlpha(t.vars.palette.info.mainChannel, 0.04)
             : 'background.paper',
         border: (t) =>
-          isNow
-            ? `1px solid ${t.palette.info.main}`
-            : `1px solid ${t.palette.divider}`,
+          isNow ? `1px solid ${t.palette.info.main}` : `1px solid ${t.palette.divider}`,
         boxShadow: isNow ? 'var(--shadows-2)' : 'none',
         '&:hover': {
           borderColor: isNow ? 'info.main' : 'primary.main',
@@ -275,7 +278,12 @@ export const TimelineLessonItem: React.FC<Props> = ({
           {/* Completion Progress */}
           {shouldShowProgress && (
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.75 }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: 11 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+                sx={{ fontSize: 11 }}
+              >
                 Completion {completionPercentage}%
               </Typography>
               <Box sx={{ width: 100 }}>
@@ -318,7 +326,13 @@ export const TimelineLessonItem: React.FC<Props> = ({
           justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
           flexWrap="wrap"
           useFlexGap
-          sx={{ flexShrink: 0 }}
+          sx={{
+            flexShrink: 0,
+            ...(!canView && { display: 'none' }),
+            ...(!canManage && {
+              '& button:not([data-view-action="true"])': { display: 'none' },
+            }),
+          }}
         >
           {hasPlan ? (
             <>
@@ -326,6 +340,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
               {statusConfig.stateKey === 'completed' && (
                 <>
                   <Button
+                    data-view-action="true"
                     variant="outlined"
                     size="small"
                     color="inherit"
@@ -365,6 +380,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
                     </Button>
                   )}
                   <Button
+                    data-view-action="true"
                     variant="outlined"
                     size="small"
                     color="inherit"
@@ -375,6 +391,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
                     View
                   </Button>
                   <Button
+                    data-view-action="true"
                     variant="outlined"
                     size="small"
                     color="inherit"
@@ -402,6 +419,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
                     </Button>
                   )}
                   <Button
+                    data-view-action="true"
                     variant="outlined"
                     size="small"
                     color="inherit"
@@ -412,6 +430,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
                     View
                   </Button>
                   <Button
+                    data-view-action="true"
                     variant="outlined"
                     size="small"
                     color="inherit"
@@ -439,6 +458,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
               {statusConfig.stateKey === 'needsChanges' && (
                 <>
                   <Button
+                    data-view-action="true"
                     variant="outlined"
                     size="small"
                     color="inherit"
@@ -498,6 +518,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
 
               {statusConfig.stateKey === 'submitted' && (
                 <Button
+                  data-view-action="true"
                   variant="outlined"
                   size="small"
                   color="inherit"
@@ -512,6 +533,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
               {statusConfig.stateKey === 'draft' && (
                 <>
                   <Button
+                    data-view-action="true"
                     variant="outlined"
                     size="small"
                     color="inherit"
@@ -561,26 +583,28 @@ export const TimelineLessonItem: React.FC<Props> = ({
             </>
           ) : (
             /* Unplanned Slot State (NO "No Plan" badge, just clean Create Plan button) */
-            <Button
-              size="small"
-              startIcon={<Iconify icon="mdi:plus" width={15} />}
-              disabled={slot.isPlanCreationBlocked}
-              variant="contained"
-              onClick={() =>
-                onAddLesson(selectedDate, {
-                  timetableSlotId: slot.timetableSlotId,
-                  period: slot.periodName,
-                  className: slot.standardName,
-                  divisionName: slot.divisionName,
-                  subjectName: slot.subjectName,
-                  standardId: slot.standardId,
-                  divisionId: slot.divisionId,
-                  subjectId: slot.subjectId,
-                })
-              }
-            >
-              {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
-            </Button>
+            canManage && (
+              <Button
+                size="small"
+                startIcon={<Iconify icon="mdi:plus" width={15} />}
+                disabled={slot.isPlanCreationBlocked}
+                variant="contained"
+                onClick={() =>
+                  onAddLesson(selectedDate, {
+                    timetableSlotId: slot.timetableSlotId,
+                    period: slot.periodName,
+                    className: slot.standardName,
+                    divisionName: slot.divisionName,
+                    subjectName: slot.subjectName,
+                    standardId: slot.standardId,
+                    divisionId: slot.divisionId,
+                    subjectId: slot.subjectId,
+                  })
+                }
+              >
+                {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
+              </Button>
+            )
           )}
         </Stack>
       </Stack>
