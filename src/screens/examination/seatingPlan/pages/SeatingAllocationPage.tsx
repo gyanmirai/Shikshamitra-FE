@@ -53,10 +53,9 @@ import {
   useGetExamDivisionsQuery,
   useGetSeatingPlanDraftQuery,
   useGetSeatingPlanScopesQuery,
-  useSaveSeatAllocationMutation,
   useAutoAllocatePreviewMutation,
   useSaveSeatingPlanScopeMutation,
-  useSaveSeatingPlanDraftMutation,
+  useSaveSeatingPlanBulkMutation,
   useGetSeatAllocationStudentsQuery,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
@@ -140,7 +139,14 @@ export default function SeatingAllocationPage({
   const [scopeName, setScopeName] = useState('');
   const [scopeSubjectIds, setScopeSubjectIds] = useState<string[]>([]);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
-  const [isSubjectWiseMode, setIsSubjectWiseMode] = useState(false);
+  const scopeModeStorageKey = `seating-plan-scope-mode:${examId}`;
+  const [isSubjectWiseMode, setIsSubjectWiseMode] = useState(() =>
+    typeof window !== 'undefined' &&
+    window.localStorage.getItem(scopeModeStorageKey) === 'subject-wise'
+  );
+  const [scopeModeInitialized, setScopeModeInitialized] = useState(() =>
+    typeof window !== 'undefined' && window.localStorage.getItem(scopeModeStorageKey) !== null
+  );
 
   useEffect(() => {
     if (initialStandardId) {
@@ -263,14 +269,9 @@ export default function SeatingAllocationPage({
     currentQueryAndMutation: useSaveSeatingPlanScopeMutation,
   });
 
-  const [saveSeatAllocation, { isLoading: isSavingSeatAllocation }] = useQueryAndMutation({
+  const [saveSeatingPlanBulk, { isLoading: isSavingBulk }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useSaveSeatAllocationMutation,
-  });
-
-  const [saveSeatingPlanDraft, { isLoading: isSavingPlanDraft }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useSaveSeatingPlanDraftMutation,
+    currentQueryAndMutation: useSaveSeatingPlanBulkMutation,
   });
 
   const [autoAllocatePreview] = useQueryAndMutation({
@@ -282,6 +283,16 @@ export default function SeatingAllocationPage({
     () => (scopesData?.items || []).find((scope: SeatingPlanScope) => scope.scopeType === 0),
     [scopesData?.items]
   );
+
+  useEffect(() => {
+    if (scopeModeInitialized || !scopesData) return;
+    const hasSubjectWisePlans = (scopesData.items || []).some(
+      (scope: SeatingPlanScope) => scope.scopeType !== 0
+    );
+    setIsSubjectWiseMode(hasSubjectWisePlans);
+    window.localStorage.setItem(scopeModeStorageKey, hasSubjectWisePlans ? 'subject-wise' : 'all-subjects');
+    setScopeModeInitialized(true);
+  }, [scopesData, scopeModeInitialized, scopeModeStorageKey]);
 
   const seatingPlanOptions = useMemo(() => {
     const allItems = scopesData?.items || [];
@@ -327,7 +338,7 @@ export default function SeatingAllocationPage({
 
   const { draft, setDraft, actions, canUndo, canRedo } = useSeatingDraft(buildEmptyDraft(examId));
 
-  const isSaving = isSavingSeatAllocation || isSavingPlanDraft;
+  const isSaving = isSavingBulk;
 
   const selectedScope = (scopesData?.items || []).find(
     (scope: SeatingPlanScope) => scope.seatingPlanId === selectedPlanId
@@ -447,17 +458,24 @@ export default function SeatingAllocationPage({
   }, [selectedPlanId, examId, setDraft]);
 
   useEffect(() => {
-    if (planLoaded || !planDraftData) return;
+    // RTK Query can retain the previous plan's data while the new plan request
+    // is in flight. Never hydrate this workspace with a draft for another plan.
+    if (
+      planLoaded ||
+      !planDraftData ||
+      planDraftData.seatingPlanId !== selectedPlanId
+    ) return;
     setDraft((d) => ({
       ...d,
       examName: selectedScope?.name ?? d.examName,
+      roomIds: planDraftData.roomIds ?? d.roomIds,
       allocationRules: planDraftData.allocationRulesJson
         ? JSON.parse(planDraftData.allocationRulesJson)
         : d.allocationRules,
       excludedStudentIds: planDraftData.excludedStudentIds ?? d.excludedStudentIds,
     }));
     setPlanLoaded(true);
-  }, [planDraftData, planLoaded, selectedScope, setDraft]);
+  }, [planDraftData, planLoaded, selectedPlanId, selectedScope, setDraft]);
 
   // Load students into draft once per division
   useEffect(() => {
@@ -617,24 +635,25 @@ export default function SeatingAllocationPage({
 
   const handleSaveDraft = useCallback(async () => {
     if (selectedPlanIsLocked) return;
+    if (!planDraftData || planDraftData.seatingPlanId !== selectedPlanId) {
+      shikshaMitraToast.info({ message: 'The selected seating plan is still loading. Please try again.' });
+      return;
+    }
+    if (validation.blockers.length > 0) {
+      shikshaMitraToast.error({
+        message: `Resolve ${validation.blockers.length} seating issue${validation.blockers.length === 1 ? '' : 's'} before saving.`,
+      });
+      return;
+    }
     try {
-      await Promise.all(
-        draft.roomIds.map((roomId) =>
-          saveSeatAllocation({
-            examId,
-            body: { ...toSaveSeatingPlanPayload(draft, roomId), seatingPlanId: selectedPlanId },
-          })
-        )
-      );
-      await saveSeatingPlanDraft({
+      const scopedRoomIds = new Set(draft.roomIds);
+      await saveSeatingPlanBulk({
         examId,
         body: {
           seatingPlanId: selectedPlanId,
-          name: selectedScope?.name,
-          scopeType: selectedScope?.scopeType,
-          examSubjectIds:
-            selectedScope?.subjects?.map((subject: SeatingPlanSubject) => subject.examSubjectId) ??
-            [],
+          name: planDraftData.name,
+          scopeType: planDraftData.scopeType,
+          examSubjectIds: planDraftData.examSubjectIds,
           roomIds: draft.roomIds,
           allocationRulesJson: JSON.stringify(draft.allocationRules),
           excludedStudentIds: draft.excludedStudentIds,
@@ -642,23 +661,37 @@ export default function SeatingAllocationPage({
             .filter((s) => s.hasSpecialRequirement)
             .map((s) => s.studentId),
           lastKnownModifiedTime: planDraftData?.lastModifiedTime ?? null,
+          // Only submit room layouts that are part of the current plan scope.
+          // Cached room layouts from a previous subject must not be sent.
+          rooms: draft.rooms.filter((room) => scopedRoomIds.has(room.roomId)).map((room) => ({
+            roomId: room.roomId,
+            students: toSaveSeatingPlanPayload(draft, room.roomId).students,
+          })),
         },
       });
       setDraft((d) => ({ ...d, isDirty: false }));
       shikshaMitraToast.success({ message: 'Seating plan saved successfully.' });
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to save seating plan draft.' });
+    } catch (err: unknown) {
+      const error = err as {
+        data?: { error?: { message?: string }; detail?: string; message?: string };
+      };
+      shikshaMitraToast.error({
+        message:
+          error.data?.error?.message ||
+          error.data?.detail ||
+          error.data?.message ||
+          'Failed to save seating plan draft.',
+      });
     }
   }, [
     draft,
     examId,
-    saveSeatAllocation,
-    saveSeatingPlanDraft,
+    saveSeatingPlanBulk,
     planDraftData,
     selectedPlanId,
-    selectedScope,
     setDraft,
     selectedPlanIsLocked,
+    validation.blockers.length,
   ]);
 
   const handleConfirmReset = useCallback(() => {
@@ -666,6 +699,7 @@ export default function SeatingAllocationPage({
 
     // Reset subject-wise mode and return Seating Plan dropdown to All Subjects
     setIsSubjectWiseMode(false);
+    window.localStorage.setItem(scopeModeStorageKey, 'all-subjects');
     if (allSubjectScope?.seatingPlanId) {
       setSelectedPlanId(allSubjectScope.seatingPlanId);
     } else if (scopesData?.items?.length) {
@@ -696,6 +730,7 @@ export default function SeatingAllocationPage({
     selectedPlanIsLocked,
     isPublished,
     allSubjectScope,
+    scopeModeStorageKey,
     scopesData?.items,
     setDraft,
     divisionsData?.items,
@@ -848,6 +883,7 @@ export default function SeatingAllocationPage({
         },
       }).unwrap();
       setIsSubjectWiseMode(true);
+      window.localStorage.setItem(scopeModeStorageKey, 'subject-wise');
       setSelectedPlanId(response.seatingPlanId);
       setScopeDialogOpen(false);
       setScopeName('');
@@ -861,6 +897,7 @@ export default function SeatingAllocationPage({
   const handleCreateIndividualScopes = async () => {
     if (isSubjectWiseMode) {
       setIsSubjectWiseMode(false);
+      window.localStorage.setItem(scopeModeStorageKey, 'all-subjects');
       if (allSubjectScope?.seatingPlanId) {
         setSelectedPlanId(allSubjectScope.seatingPlanId);
       }
@@ -877,6 +914,7 @@ export default function SeatingAllocationPage({
       );
       if (firstExisting?.seatingPlanId) {
         setIsSubjectWiseMode(true);
+        window.localStorage.setItem(scopeModeStorageKey, 'subject-wise');
         setSelectedPlanId(firstExisting.seatingPlanId);
       }
       return;
@@ -896,6 +934,7 @@ export default function SeatingAllocationPage({
         )
       );
       setIsSubjectWiseMode(true);
+      window.localStorage.setItem(scopeModeStorageKey, 'subject-wise');
       if (created[0]?.seatingPlanId) setSelectedPlanId(created[0].seatingPlanId);
       shikshaMitraToast.success({ message: 'Subject-wise plans created successfully.' });
     } catch {
@@ -1370,6 +1409,7 @@ export default function SeatingAllocationPage({
                   },
                 }).unwrap();
                 setIsSubjectWiseMode(true);
+                window.localStorage.setItem(scopeModeStorageKey, 'subject-wise');
                 setSelectedPlanId(response.seatingPlanId);
                 setScopeDialogOpen(false);
                 setScopeName('');

@@ -1110,7 +1110,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
 
           {electiveGroups.map(({ index }) => (
             <ElectiveGroupCard
-              key={formik.values.subjects[index]?.electiveGroupId || index}
+              key={`${formik.values.subjects[index]?.electiveGroupId || 'elective'}-${formik.values.subjects[index]?.subjectId || index}`}
               formik={formik}
               groupIndex={index}
               gradeScalings={gradeScalingsList}

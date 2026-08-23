@@ -165,9 +165,22 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
     () =>
       (subjectTableData || [])
         .filter((item: any) => item.status !== SubjectAssignmentStatus.Draft)
-        .map((item: any) => ({
-          ...item,
-        })),
+        .flatMap((item: any) => {
+          if (item.electiveGroupId && Array.isArray(item.subjects)) {
+            return item.subjects.map((subject: any) => ({
+              ...item,
+              ...subject,
+              id: subject.subjectId || subject.id,
+              subjectId: subject.subjectId || subject.id,
+              subjectName: subject.subjectName || subject.name || item.electiveGroupName,
+              selectedElectiveSubjectId: subject.subjectId || subject.id,
+              subjects: [subject],
+              optionGroup: item.electiveGroupName || 'Elective Group',
+            }));
+          }
+
+          return [{ ...item, optionGroup: 'Subjects' }];
+        }),
     [subjectTableData]
   );
 
@@ -275,9 +288,16 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
           return {
             ...sub,
-            subjectId: sub.electiveGroupId || sub?.subjects?.[0]?.subjectId || sub.subjectId,
+            subjectId:
+              sub.selectedElectiveSubjectId ||
+              sub?.subjects?.[0]?.subjectId ||
+              sub.subjectId ||
+              sub.electiveGroupId,
             subjectName:
-              sub?.electiveGroupName || sub.subjects?.[0]?.subjectName || sub.subjectName || '',
+              sub?.subjects?.[0]?.subjectName ||
+              sub.subjectName ||
+              sub?.electiveGroupName ||
+              '',
             examDate: sub?.examDate || null,
             startTime: sub?.startTime || null,
             endTime: sub?.endTime || null,
@@ -523,20 +543,21 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       disabled={!formik.values.className || selectedDivisionIds.length === 0}
                       loading={isTableLoading || isFetchingSubjects}
                       getOptionLabel={(option: any) =>
-                        option?.electiveGroupName ||
                         option?.subjectName ||
                         option?.subjects?.[0]?.subjectName ||
+                        option?.electiveGroupName ||
                         option?.name ||
                         ''
                       }
+                      groupBy={(option: any) => option.optionGroup || 'Subjects'}
                       getOptionDisabled={(option: any) => !!option.isDisabled}
                       isOptionEqualToValue={(option: any, val: any) => {
-                        const optId =
-                          option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
+                        const optId = option?.selectedElectiveSubjectId || option?.subjectId || option?.id;
                         const valId =
+                          val?.selectedElectiveSubjectId ||
                           val?.subjectId ||
-                          val?.electiveGroupId ||
                           val?.subjects?.[0]?.subjectId ||
+                          val?.electiveGroupId ||
                           val?.id;
                         return !!optId && optId === valId;
                       }}
@@ -545,13 +566,12 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       renderOption={(optionProps, option, { selected }) => {
                         const { key, ...restOptionProps } = optionProps as any;
                         const label =
-                          option?.electiveGroupName ||
                           option?.subjectName ||
                           option?.subjects?.[0]?.subjectName ||
+                          option?.electiveGroupName ||
                           option?.name ||
                           '';
-                        const optionKey =
-                          option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
+                        const optionKey = option?.selectedElectiveSubjectId || option?.subjectId || option?.id;
                         return (
                           <li key={key ?? optionKey} {...restOptionProps}>
                             <Checkbox
@@ -581,6 +601,17 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           </li>
                         );
                       }}
+                      renderGroup={(params) => (
+                        <li key={params.key}>
+                          <Typography
+                            variant="caption"
+                            sx={{ display: 'block', px: 1.5, py: 0.75, fontWeight: 700, color: 'text.secondary' }}
+                          >
+                            {params.group}
+                          </Typography>
+                          <ul style={{ padding: 0 }}>{params.children}</ul>
+                        </li>
+                      )}
                       value={formik.values.subjects}
                       onChange={(_event, value) => {
                         handleSubjectsChange(value);
