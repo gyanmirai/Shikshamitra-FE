@@ -220,7 +220,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         body: subjects.map((subject: any) => [
           `${subject.subjectName || '-'}${subject.subjectCode ? ` (${subject.subjectCode})` : ''}`,
           (subject.examDate ?? subject.date ?? subject.scheduleDate) &&
-            dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
+          dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
             ? dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).format('DD-MM-YYYY')
             : '-',
           formatWallClockTime(subject.startTime ?? subject.fromTime ?? subject.start),
@@ -252,9 +252,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     [currentTime, publishedRows]
   );
   const ongoingCount = Number(publishedExamsData?.ongoingCount ?? derivedOngoingCount);
-  // `publishedCount` is the API lifecycle count. Ongoing is a derived view over
-  // published exams, so do not subtract it here or the tab count will disagree
-  // with the rows returned by the Published endpoint.
+  // Counts come from the API's effective-status calculation, which keeps a
+  // started or completed exam out of the Published total.
   const publishedCount = Number(publishedExamsData?.publishedCount ?? publishedRows.length);
 
   const TABS = useMemo(
@@ -322,19 +321,15 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     onStatusChange?.(status);
   };
 
-  // The API request already scopes normal tabs by Status. Re-filtering those
-  // rows on the client can hide valid records when the response status is
-  // represented differently from the requested lifecycle status. Only Ongoing
-  // is derived locally from the published schedule time window.
+  // Apply the same effective status used by the badge for every tab. This is a
+  // defensive client-side guard while the server response is refreshed at a
+  // schedule boundary, preventing a stale Published row from appearing here.
   const tableData = useMemo(() => {
     const rows = getExams?.data?.items || [];
     const requestedStatus = Number(
       activeStatus ?? examScheduledStatus.Pending
     ) as examScheduledStatus;
-    const visibleRows =
-      requestedStatus === examScheduledStatus.Ongoing
-        ? filterExamsByEffectiveStatus(rows, requestedStatus, currentTime)
-        : rows;
+    const visibleRows = filterExamsByEffectiveStatus(rows, requestedStatus, currentTime);
 
     return visibleRows.map((row: any) => ({
       ...row,
@@ -638,24 +633,26 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           noDataText={
             <Stack alignItems="center" spacing={0.5}>
               <Box component="span">Exam Data Not Found</Box>
-              <Box
-                component="span"
-                onClick={() => {
-                  setOpenDialog?.(true);
-                  setEditData?.(null);
-                }}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': {
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                Create Exam
-              </Box>
+              {canAdd && (
+                <Box
+                  component="span"
+                  onClick={() => {
+                    setOpenDialog?.(true);
+                    setEditData?.(null);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Create Exam
+                </Box>
+              )}
             </Stack>
           }
           columns={[

@@ -7,14 +7,7 @@ import React, { useState, useMemo } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import {
-  Box,
-  Card,
-  Stack,
-  Paper,
-  Button,
-  Typography,
-} from '@mui/material';
+import { Box, Card, Stack, Paper, Button, Typography } from '@mui/material';
 
 import { DayHeaderNavigator } from './timeline/DayHeaderNavigator';
 import { DailySummaryRow } from './timeline/DailySummaryRow';
@@ -34,6 +27,8 @@ type Props = {
   onSubmitDiary: (plan: any) => void;
   onSubmitPlan: (planId: string) => void;
   onCreateHomework?: (plan: any) => void;
+  canView?: boolean;
+  canManage?: boolean;
   onViewTimetable?: () => void;
 };
 
@@ -48,6 +43,8 @@ const DailyTimelineTab = ({
   onSubmitDiary,
   onSubmitPlan,
   onCreateHomework,
+  canView = true,
+  canManage = true,
   onViewTimetable,
 }: Props) => {
   const theme = useTheme();
@@ -74,16 +71,16 @@ const DailyTimelineTab = ({
 
     slots.forEach((slot) => {
       const config = getLessonStatusConfig(slot, selectedDate);
-      if (slot.lessonPlan) plannedCount++;
+      if (slot.lessonPlan) plannedCount += 1;
 
       if (config.stateKey === 'completed') {
-        completedCount++;
+        completedCount += 1;
       } else if (config.stateKey === 'inProgress') {
-        inProgressCount++;
+        inProgressCount += 1;
       } else if (config.stateKey === 'needsChanges' || config.stateKey === 'rejected') {
-        needsAttnCount++;
+        needsAttnCount += 1;
       } else {
-        upcomingCount++;
+        upcomingCount += 1;
       }
     });
 
@@ -160,13 +157,9 @@ const DailyTimelineTab = ({
             No Lessons Scheduled for Today
           </Typography>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ maxWidth: 400, mt: 0.5, mb: 2 }}
-          >
-            No teaching periods are assigned for {selectedDate.format('dddd, DD MMMM YYYY')}.
-            Select another date above or create a lesson plan.
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mt: 0.5, mb: 2 }}>
+            No teaching periods are assigned for {selectedDate.format('dddd, DD MMMM YYYY')}. Select
+            another date above or create a lesson plan.
           </Typography>
 
           <Stack direction="row" spacing={1.5} alignItems="center">
@@ -194,6 +187,8 @@ const DailyTimelineTab = ({
             onSubmitDiary={onSubmitDiary}
             onSubmitPlan={onSubmitPlan}
             onCreateHomework={onCreateHomework}
+            canView={canView}
+            canManage={canManage}
           />
         </Stack>
       )}
@@ -205,16 +200,21 @@ const DailyTimelineTab = ({
         slots={slots}
         selectedDate={selectedDate}
         onAddLesson={onAddLesson}
-        onOpenQuickDiary={() => {
-          const activeOrFirstSlot =
-            slots.find((s) => s.lessonPlan && s.lessonPlan.status === 'Approved') ||
-            slots.find((s) => s.lessonPlan);
-          if (activeOrFirstSlot?.lessonPlan) {
-            onSubmitDiary(activeOrFirstSlot.lessonPlan);
-          } else {
-            onAddLesson(selectedDate);
-          }
-        }}
+        canManage={canManage}
+        onOpenQuickDiary={
+          canManage
+            ? () => {
+                const activeOrFirstSlot =
+                  slots.find((s) => s.lessonPlan && s.lessonPlan.status === 'Approved') ||
+                  slots.find((s) => s.lessonPlan);
+                if (activeOrFirstSlot?.lessonPlan) {
+                  onSubmitDiary(activeOrFirstSlot.lessonPlan);
+                } else {
+                  onAddLesson(selectedDate);
+                }
+              }
+            : undefined
+        }
         onViewTimetable={onViewTimetable}
       />
     </Card>

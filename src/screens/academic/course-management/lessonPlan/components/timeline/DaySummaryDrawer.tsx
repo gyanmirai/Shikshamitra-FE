@@ -19,10 +19,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 
-import {
-  getLessonStatusConfig,
-  parseSlotTime,
-} from '../lessonTimelineConfig';
+import { getLessonStatusConfig, parseSlotTime } from '../lessonTimelineConfig';
 
 type Props = {
   open: boolean;
@@ -32,6 +29,7 @@ type Props = {
   onAddLesson: (date: Dayjs) => void;
   onOpenQuickDiary?: () => void;
   onViewTimetable?: () => void;
+  canManage?: boolean;
 };
 
 export const DaySummaryDrawer: React.FC<Props> = ({
@@ -42,6 +40,7 @@ export const DaySummaryDrawer: React.FC<Props> = ({
   onAddLesson,
   onOpenQuickDiary,
   onViewTimetable,
+  canManage = true,
 }) => {
   const theme = useTheme();
 
@@ -77,15 +76,15 @@ export const DaySummaryDrawer: React.FC<Props> = ({
       }
 
       if (config.stateKey === 'completed') {
-        completedCount++;
+        completedCount += 1;
       } else if (config.stateKey === 'needsChanges' || config.stateKey === 'rejected') {
-        needsAttnCount++;
+        needsAttnCount += 1;
       } else if (
         config.stateKey === 'scheduled' ||
         config.stateKey === 'draft' ||
         config.stateKey === 'unplanned'
       ) {
-        upcomingCount++;
+        upcomingCount += 1;
       }
 
       // Detect Next Up
@@ -99,8 +98,7 @@ export const DaySummaryDrawer: React.FC<Props> = ({
     });
 
     const slotCount = slots.length;
-    const completionRate =
-      slotCount > 0 ? Math.round((completedCount / slotCount) * 100) : 0;
+    const completionRate = slotCount > 0 ? Math.round((completedCount / slotCount) * 100) : 0;
 
     return {
       total: slotCount,
@@ -181,10 +179,20 @@ export const DaySummaryDrawer: React.FC<Props> = ({
                   border: (t) => `1px solid ${t.palette.divider}`,
                 }}
               >
-                <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ lineHeight: 1 }}>
+                <Typography
+                  variant="h5"
+                  fontWeight={800}
+                  color="text.primary"
+                  sx={{ lineHeight: 1 }}
+                >
                   {total}
                 </Typography>
-                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ mt: 0.5, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={600}
+                  sx={{ mt: 0.5, display: 'block' }}
+                >
                   Total Periods
                 </Typography>
               </Box>
@@ -198,10 +206,20 @@ export const DaySummaryDrawer: React.FC<Props> = ({
                   border: (t) => `1px solid ${varAlpha(t.vars.palette.success.mainChannel, 0.2)}`,
                 }}
               >
-                <Typography variant="h5" fontWeight={800} color="success.dark" sx={{ lineHeight: 1 }}>
+                <Typography
+                  variant="h5"
+                  fontWeight={800}
+                  color="success.dark"
+                  sx={{ lineHeight: 1 }}
+                >
                   {completed}
                 </Typography>
-                <Typography variant="caption" color="success.dark" fontWeight={600} sx={{ mt: 0.5, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="success.dark"
+                  fontWeight={600}
+                  sx={{ mt: 0.5, display: 'block' }}
+                >
                   Completed
                 </Typography>
               </Box>
@@ -215,10 +233,20 @@ export const DaySummaryDrawer: React.FC<Props> = ({
                   border: (t) => `1px solid ${varAlpha(t.vars.palette.warning.mainChannel, 0.2)}`,
                 }}
               >
-                <Typography variant="h5" fontWeight={800} color="warning.dark" sx={{ lineHeight: 1 }}>
+                <Typography
+                  variant="h5"
+                  fontWeight={800}
+                  color="warning.dark"
+                  sx={{ lineHeight: 1 }}
+                >
                   {needsAttention}
                 </Typography>
-                <Typography variant="caption" color="warning.dark" fontWeight={600} sx={{ mt: 0.5, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="warning.dark"
+                  fontWeight={600}
+                  sx={{ mt: 0.5, display: 'block' }}
+                >
                   Needs Attention
                 </Typography>
               </Box>
@@ -235,7 +263,12 @@ export const DaySummaryDrawer: React.FC<Props> = ({
                 <Typography variant="h5" fontWeight={800} color="info.dark" sx={{ lineHeight: 1 }}>
                   {upcoming}
                 </Typography>
-                <Typography variant="caption" color="info.dark" fontWeight={600} sx={{ mt: 0.5, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="info.dark"
+                  fontWeight={600}
+                  sx={{ mt: 0.5, display: 'block' }}
+                >
                   Upcoming
                 </Typography>
               </Box>
@@ -253,7 +286,12 @@ export const DaySummaryDrawer: React.FC<Props> = ({
               </Stack>
 
               <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  sx={{ mb: 0.75 }}
+                >
                   <Typography variant="body2" color="text.secondary" fontWeight={700}>
                     Daily Completion
                   </Typography>
@@ -289,7 +327,12 @@ export const DaySummaryDrawer: React.FC<Props> = ({
                 >
                   Next Up
                 </Typography>
-                <Typography variant="subtitle2" fontWeight={800} color="text.primary" sx={{ mt: 0.5 }}>
+                <Typography
+                  variant="subtitle2"
+                  fontWeight={800}
+                  color="text.primary"
+                  sx={{ mt: 0.5 }}
+                >
                   {nextSlot.subjectName || nextSlot.lessonPlan?.subjectName || 'Next Class'}
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
@@ -314,19 +357,21 @@ export const DaySummaryDrawer: React.FC<Props> = ({
                 Quick Actions
               </Typography>
 
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<Iconify icon="solar:add-circle-bold" width={18} />}
-                onClick={() => {
-                  onClose();
-                  onAddLesson(selectedDate);
-                }}
-                fullWidth
-                sx={{ fontWeight: 700, py: 1 }}
-              >
-                Create Lesson Plan
-              </Button>
+              {canManage && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<Iconify icon="solar:add-circle-bold" width={18} />}
+                  onClick={() => {
+                    onClose();
+                    onAddLesson(selectedDate);
+                  }}
+                  fullWidth
+                  sx={{ fontWeight: 700, py: 1 }}
+                >
+                  Create Lesson Plan
+                </Button>
+              )}
 
               {onOpenQuickDiary && (
                 <Button

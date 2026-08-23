@@ -69,7 +69,9 @@ const getScheduleEntries = (exam: ExamStatusSource): Record<string, unknown>[] =
   return (entries ?? []).filter(isRecord);
 };
 
-const getScheduleWindow = (entry: Record<string, unknown>) => {
+type ExamScheduleWindow = { start: Dayjs; end: Dayjs };
+
+const getScheduleWindow = (entry: Record<string, unknown>): ExamScheduleWindow | null => {
   const startDate = getText(entry.examDate) ?? getText(entry.date) ?? getText(entry.scheduleDate);
   const endDate = getText(entry.endDate) ?? startDate;
   const startTime = getText(entry.startTime) ?? getText(entry.fromTime) ?? getText(entry.start);
@@ -113,13 +115,38 @@ export const isExamOngoing = (exam: ExamStatusSource, now: Dayjs = dayjs()): boo
   });
 };
 
+const hasExamEnded = (exam: ExamStatusSource, now: Dayjs): boolean => {
+  const end = resolveBoundary(
+    exam.endDateTime,
+    exam.endDate ?? exam.startDate,
+    exam.endTime,
+    true
+  );
+  if (end) return now.isAfter(end);
+
+  const scheduleWindows = getScheduleEntries(exam)
+    .map(getScheduleWindow)
+    .filter((window): window is ExamScheduleWindow => window !== null);
+
+  return scheduleWindows.length > 0 && scheduleWindows.every((window) => now.isAfter(window.end));
+};
+
 export const getEffectiveExamStatus = (
   exam: ExamStatusSource,
   now: Dayjs = dayjs()
-): examScheduledStatus =>
-  isExamOngoing(exam, now)
-    ? examScheduledStatus.Ongoing
-    : (Number(exam.status) as examScheduledStatus);
+): examScheduledStatus => {
+  const lifecycleStatus = Number(exam.status) as examScheduledStatus;
+  if (
+    lifecycleStatus !== examScheduledStatus.Published &&
+    lifecycleStatus !== examScheduledStatus.Ongoing
+  ) {
+    return lifecycleStatus;
+  }
+
+  if (isExamOngoing(exam, now)) return examScheduledStatus.Ongoing;
+  if (hasExamEnded(exam, now)) return examScheduledStatus.Completed;
+  return examScheduledStatus.Published;
+};
 
 export const filterExamsByEffectiveStatus = <T extends ExamStatusSource>(
   exams: T[],

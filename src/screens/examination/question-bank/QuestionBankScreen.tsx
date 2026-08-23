@@ -8,6 +8,8 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { academicPermissions } from 'src/constants/academic-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { fDate } from 'src/utils/format-time';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -1362,7 +1364,7 @@ function QuestionFormFields({
 
               <Grid size={{ xs: 6, sm: 2 }}>
                 <ShakingTextField error={formik.touched.marks && !!formik.errors.marks}>
-                <TextField
+                  <TextField
                     fullWidth
                     size="small"
                     type="number"
@@ -1650,6 +1652,11 @@ export default function QuestionBankScreen() {
   const { currentYear, currentMedium: medium } = useSelector(
     (state: RootState) => state.globalState
   );
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const questionBankPermission = academicPermissions.examination.questionBank;
+  const canView = hasGrantedPermission(permissions, `${questionBankPermission}.View`);
+  const canAdd = hasGrantedPermission(permissions, `${questionBankPermission}.Add`);
+  const canDelete = hasGrantedPermission(permissions, `${questionBankPermission}.Delete`);
   const academicYearId = currentYear?.id;
 
   const [filters, setFilters] = useState<any>({});
@@ -2489,16 +2496,18 @@ export default function QuestionBankScreen() {
             }}
             actions={({ popover }) => (
               <MenuList>
-                <MenuItem
-                  onClick={() => {
-                    popover.onClose();
-                    setPreviewQuestion(row);
-                  }}
-                >
-                  <Iconify icon="carbon:view-filled" sx={{ mr: 1, height: 16, width: 16 }} />
-                  Preview
-                </MenuItem>
-                {(row.status === 1 || row.status === 4) && (
+                {canView && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      setPreviewQuestion(row);
+                    }}
+                  >
+                    <Iconify icon="carbon:view-filled" sx={{ mr: 1, height: 16, width: 16 }} />
+                    Preview
+                  </MenuItem>
+                )}
+                {canAdd && (row.status === 1 || row.status === 4) && (
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
@@ -2509,7 +2518,7 @@ export default function QuestionBankScreen() {
                     Submit for Review
                   </MenuItem>
                 )}
-                {row.status === 2 && (
+                {canAdd && row.status === 2 && (
                   <>
                     <MenuItem
                       onClick={() => {
@@ -2539,16 +2548,18 @@ export default function QuestionBankScreen() {
                     </MenuItem>
                   </>
                 )}
-                <MenuItem
-                  onClick={() => {
-                    popover.onClose();
-                    handleDuplicateQuestion(row.id);
-                  }}
-                >
-                  <Iconify icon="mingcute:copy-2-line" sx={{ mr: 1, height: 16, width: 16 }} />
-                  Duplicate
-                </MenuItem>
-                {row.status !== 5 && (
+                {canAdd && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      handleDuplicateQuestion(row.id);
+                    }}
+                  >
+                    <Iconify icon="mingcute:copy-2-line" sx={{ mr: 1, height: 16, width: 16 }} />
+                    Duplicate
+                  </MenuItem>
+                )}
+                {canAdd && row.status !== 5 && (
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
@@ -2562,7 +2573,7 @@ export default function QuestionBankScreen() {
                     Archive
                   </MenuItem>
                 )}
-                {row.status === 1 && (
+                {canDelete && row.status === 1 && (
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
@@ -2589,6 +2600,9 @@ export default function QuestionBankScreen() {
       filterChapterOptions,
       filterSubjectOptions,
       selectedQuestionIds,
+      canAdd,
+      canDelete,
+      canView,
     ]
   );
 
@@ -2610,24 +2624,28 @@ export default function QuestionBankScreen() {
         ]}
         action={
           <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Iconify icon="mingcute:settings-3-line" />}
-              disabled={!academicYearId}
-              onClick={handleOpenSettings}
-            >
-              Settings
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon="mingcute:add-line" />}
-              disabled={!academicYearId}
-              onClick={handleOpenCreate}
-            >
-              Create Question
-            </Button>
+            {canAdd && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Iconify icon="mingcute:settings-3-line" />}
+                disabled={!academicYearId}
+                onClick={handleOpenSettings}
+              >
+                Settings
+              </Button>
+            )}
+            {canAdd && (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="mingcute:add-line" />}
+                disabled={!academicYearId}
+                onClick={handleOpenCreate}
+              >
+                Create Question
+              </Button>
+            )}
           </Stack>
         }
       />
@@ -2674,8 +2692,7 @@ export default function QuestionBankScreen() {
           top: 0,
           zIndex: 10,
           bgcolor: 'background.paper',
-          boxShadow: (t) =>
-            `0 4px 16px 0 ${varAlpha(t.vars.palette.grey['500Channel'], 0.08)}`,
+          boxShadow: (t) => `0 4px 16px 0 ${varAlpha(t.vars.palette.grey['500Channel'], 0.08)}`,
           flexShrink: 0,
         }}
       >

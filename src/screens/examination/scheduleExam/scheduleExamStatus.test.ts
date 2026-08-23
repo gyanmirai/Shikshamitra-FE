@@ -93,4 +93,16 @@ describe('scheduleExamStatus', () => {
     expect(filterExamsByEffectiveStatus(exams, examScheduledStatus.Ongoing, now)).toHaveLength(1);
     expect(filterExamsByEffectiveStatus(exams, examScheduledStatus.Published, now)).toHaveLength(1);
   });
+
+  it('moves a published exam to Completed after its final scheduled date', () => {
+    const exam = {
+      status: examScheduledStatus.Published,
+      startDate: '2026-08-18',
+      endDate: '2026-08-18',
+    };
+
+    expect(getEffectiveExamStatus(exam, dayjs('2026-08-19T09:00:00'))).toBe(
+      examScheduledStatus.Completed
+    );
+  });
 });
