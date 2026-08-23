@@ -716,6 +716,7 @@ const SubstitutionManagementScreen = () => {
   const isViewportTab = ['board', 'availability'].includes(activeTab);
   const [boardView, setBoardView] = useState<SubstitutionViewType>('table');
   const [filters, setFilters] = useState(DEFAULT_SUBSTITUTION_FILTERS);
+  const [availabilityDate, setAvailabilityDate] = useState(() => dayjs(todayIso));
   const [substitutions, setSubstitutions] = useState<SubstitutionRow[]>([]);
   const [teacherAvailability, setTeacherAvailability] = useState<TeacherAvailabilityRow[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -851,8 +852,8 @@ const SubstitutionManagementScreen = () => {
     isFetching: isAvailabilityFetching,
   } = useTeacherAvailabilityDataQuery({
     ...academicContextParams,
-    fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
-    toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
+    fromDate: toDateTimeOffset(availabilityDate.startOf('day')),
+    toDate: toDateTimeOffset(availabilityDate.endOf('day')),
     maxResultCount: 200,
   });
   const {
@@ -880,7 +881,10 @@ const SubstitutionManagementScreen = () => {
         !substitutionForm.divisionId,
     }
   );
-  const createLectureResult = (rawCreateLectureResult ?? []) as ApiSubstitutionLecture[];
+  const createLectureResult = useMemo(
+    () => (rawCreateLectureResult ?? []) as ApiSubstitutionLecture[],
+    [rawCreateLectureResult]
+  );
   const {
     data: suggestedTeacherResult,
     isLoading: isSuggestedTeachersLoading,
@@ -1026,13 +1030,18 @@ const SubstitutionManagementScreen = () => {
     }
   }, [availabilityResult]);
 
-  const metadataStandards = createMetadata?.standards ?? [];
-  const metadataDivisions = createMetadata?.divisions ?? [];
-  const metadataSubjects = createMetadata?.subjects ?? [];
-  const metadataTeachers = createMetadata?.teachers ?? [];
-  const metadataRooms = createMetadata?.rooms ?? [];
-  const academicStandards: Standards[] =
-    medium?.educationMediumStages?.flatMap((stage: Organization) => stage?.standards || []) || [];
+  const metadataStandards = useMemo(() => createMetadata?.standards ?? [], [createMetadata]);
+  const metadataDivisions = useMemo(() => createMetadata?.divisions ?? [], [createMetadata]);
+  const metadataSubjects = useMemo(() => createMetadata?.subjects ?? [], [createMetadata]);
+  const metadataTeachers = useMemo(() => createMetadata?.teachers ?? [], [createMetadata]);
+  const metadataRooms = useMemo(() => createMetadata?.rooms ?? [], [createMetadata]);
+  const academicStandards: Standards[] = useMemo(
+    () =>
+      medium?.educationMediumStages?.flatMap(
+        (stage: Organization) => stage?.standards || []
+      ) || [],
+    [medium?.educationMediumStages]
+  );
   const selectedAcademicStandard = academicStandards.find(
     (item: Standards) => item.id === substitutionForm.standardId
   );
@@ -3219,7 +3228,7 @@ const SubstitutionManagementScreen = () => {
           </CustomTabs>
 
           {/* Date Picker & Filters Button aligned on the right side of the Tabs row */}
-          {activeTab === 'board' && (
+          {(activeTab === 'board' || activeTab === 'availability') && (
             <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 2 }}>
               <Stack direction="row" alignItems="center" spacing={0.5}>
                 <Tooltip title="Previous Day">
@@ -3227,10 +3236,12 @@ const SubstitutionManagementScreen = () => {
                     <IconButton
                       size="small"
                       onClick={() =>
-                        setFilters((current) => ({
-                          ...current,
-                          filterDate: (current.filterDate || dayjs(todayIso)).subtract(1, 'day'),
-                        }))
+                        activeTab === 'board'
+                          ? setFilters((current) => ({
+                            ...current,
+                            filterDate: (current.filterDate || dayjs(todayIso)).subtract(1, 'day'),
+                          }))
+                          : setAvailabilityDate((current) => current.subtract(1, 'day'))
                       }
                     >
                       <Iconify icon="solar:alt-arrow-left-bold" width={18} />
@@ -3240,9 +3251,11 @@ const SubstitutionManagementScreen = () => {
                 <DatePicker
                   label=""
                   showCalendarMarkers={false}
-                  value={filters.filterDate}
+                  value={activeTab === 'board' ? filters.filterDate : availabilityDate}
                   onChange={(newValue) =>
-                    setFilters((current) => ({ ...current, filterDate: newValue }))
+                    activeTab === 'board'
+                      ? setFilters((current) => ({ ...current, filterDate: newValue }))
+                      : newValue && setAvailabilityDate(newValue.startOf('day'))
                   }
                   slotProps={{
                     textField: {
@@ -3257,10 +3270,12 @@ const SubstitutionManagementScreen = () => {
                     <IconButton
                       size="small"
                       onClick={() =>
-                        setFilters((current) => ({
-                          ...current,
-                          filterDate: (current.filterDate || dayjs(todayIso)).add(1, 'day'),
-                        }))
+                        activeTab === 'board'
+                          ? setFilters((current) => ({
+                            ...current,
+                            filterDate: (current.filterDate || dayjs(todayIso)).add(1, 'day'),
+                          }))
+                          : setAvailabilityDate((current) => current.add(1, 'day'))
                       }
                     >
                       <Iconify icon="solar:alt-arrow-right-bold" width={18} />
@@ -3271,14 +3286,17 @@ const SubstitutionManagementScreen = () => {
               <Button
                 size="small"
                 variant={
-                  filters.filterDate && dayjs(filters.filterDate).isSame(dayjs(todayIso), 'day')
+                  (activeTab === 'board' ? filters.filterDate : availabilityDate) &&
+                  dayjs(activeTab === 'board' ? filters.filterDate : availabilityDate).isSame(dayjs(todayIso), 'day')
                     ? 'soft'
                     : 'outlined'
                 }
                 color="primary"
                 startIcon={<Iconify icon="mdi:calendar-today" width={16} />}
                 onClick={() =>
-                  setFilters((current) => ({ ...current, filterDate: dayjs(todayIso) }))
+                  activeTab === 'board'
+                    ? setFilters((current) => ({ ...current, filterDate: dayjs(todayIso) }))
+                    : setAvailabilityDate(dayjs(todayIso))
                 }
                 sx={{
                   flexShrink: 0,
@@ -3290,11 +3308,13 @@ const SubstitutionManagementScreen = () => {
               >
                 Today
               </Button>
-              <FiltersBar
-                filters={filters}
-                onChange={(patch) => setFilters((current) => ({ ...current, ...patch }))}
-                onReset={clearFilters}
-              />
+              {activeTab === 'board' && (
+                <FiltersBar
+                  filters={filters}
+                  onChange={(patch) => setFilters((current) => ({ ...current, ...patch }))}
+                  onReset={clearFilters}
+                />
+              )}
             </Stack>
           )}
         </Stack>

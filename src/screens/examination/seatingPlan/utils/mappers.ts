@@ -207,7 +207,12 @@ export function toSaveSeatingPlanPayload(draft: SeatingPlanDraft, roomId: string
       .map((a) => ({
         studentId: a.studentId,
         seatNumber: a.seatNumber,
-        benchId: a.benchId ?? null,
+        // Empty UUIDs can come from legacy seat-layout responses; they mean
+        // "no bench" and must not be sent as a foreign-key identifier.
+        benchId:
+          a.benchId && a.benchId !== '00000000-0000-0000-0000-000000000000'
+            ? a.benchId
+            : null,
         isRoomAssign: true,
       })),
   };
