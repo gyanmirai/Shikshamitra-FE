@@ -27,6 +27,7 @@ const TimeTableCell = ({
   isDraggable = true,
   slotData,
   isBreak,
+  colSpan,
   onDrop,
   rowIndex,
   colIndex,
@@ -112,15 +113,16 @@ const TimeTableCell = ({
    * Displays a non-interactive cell with "Break" text and grey background
    * @returns {JSX.Element} Break cell component
    */
-  if (slotData?.slotType === 'break') {
+  if (slotData?.slotType === 'break' || isBreak) {
     return (
       <TableCell
+        colSpan={isBreak && colSpan ? colSpan : (slotData?.colSpan || 1)}
         sx={{
           bgcolor: 'grey.100',
           backgroundImage:
             'linear-gradient(45deg, #f5f5f5 25%, #eeeeee 25%, #eeeeee 50%, #f5f5f5 50%, #f5f5f5 75%, #eeeeee 75%, #eeeeee 100%)',
           backgroundSize: '20px 20px',
-          width: '14%',
+          width: isBreak ? '100%' : '14%',
           textAlign: 'center',
           padding: '4px',
           cursor: 'not-allowed',
@@ -169,7 +171,7 @@ const TimeTableCell = ({
               p: 1,
               height: '90%',
               boxShadow: 'var(--shadows-10)',
-              borderLeft: `4px solid ${slotData.subjectColor}`, // 👈 Left border
+              borderLeft: `4px solid ${slotData.subjectColor || slotData.electiveGroupColor || slotData.subjects?.[0]?.color || slotData.subjects?.[0]?.subjectColor || '#2563EB'}`, // 👈 Left border
               borderRadius: '8px', // Optional for rounded corners like in image
               // bgcolor: alpha(slotData?.subjectColor, 0.2),
               position: 'relative',
@@ -205,10 +207,10 @@ const TimeTableCell = ({
                 }
               >
                 <Typography variant="subtitle2" fontWeight="medium">
-          {slotData.electiveGroupId && slotData.subjects.length > 1
-            ? slotData.electiveGroupName
-            : slotData.subjects.map((sub: any) => sub.name || sub.subjectName || sub.subject).join(' / ')}
-        </Typography>
+                  {slotData.electiveGroupId && slotData.subjects.length > 1
+                    ? slotData.electiveGroupName
+                    : slotData.subjects.map((sub: any) => sub.name || sub.subjectName || sub.subject).join(' / ')}
+                </Typography>
               </CustomTooltip>
               <Box className="action-menu">
                 {showThreeDots && (
@@ -274,7 +276,7 @@ const TimeTableCell = ({
               {isRoomVisible && (
                 <Typography variant="caption" color="text.secondary">
                   {slotData?.subjects?.length
-                    ? slotData.subjects.map((sub: any) => sub?.room || 'No Room').join('/')
+                    ? slotData.subjects.map((sub: any) => sub?.room || sub?.roomName || 'No Room').join('/')
                     : 'No Room'}
                 </Typography>
               )}
@@ -287,11 +289,11 @@ const TimeTableCell = ({
                       <Box>
                         {slotData?.subjects?.length
                           ? slotData.subjects.map((sub: any, index: number) => (
-                              <Typography key={index} variant="caption">
-                                {sub?.teacher || 'No Teacher'}
-                                {index < slotData.subjects.length - 1 && <br />}
-                              </Typography>
-                            ))
+                            <Typography key={index} variant="caption">
+                              {sub?.teacher || sub?.teacherName || 'No Teacher'}
+                              {index < slotData.subjects.length - 1 && <br />}
+                            </Typography>
+                          ))
                           : 'No Teacher'}
                       </Box>
                     }
@@ -299,14 +301,14 @@ const TimeTableCell = ({
                     <Typography variant="caption" color="text.secondary">
                       {slotData?.subjects?.length
                         ? slotData.subjects.map((sub: any, index: number) => {
-                            const teacherName = sub?.teacher || 'No Teacher';
-                            const nameParts = teacherName.split(' ');
-                            const shortName =
-                              nameParts.length > 1
-                                ? `${nameParts[0]} ${nameParts[1]}`
-                                : teacherName;
-                            return `${shortName}${index < slotData.subjects.length - 1 ? '/' : ''}`;
-                          })
+                          const teacherName = sub?.teacher || sub?.teacherName || 'No Teacher';
+                          const nameParts = teacherName.split(' ');
+                          const shortName =
+                            nameParts.length > 1
+                              ? `${nameParts[0]} ${nameParts[1]}`
+                              : teacherName;
+                          return `${shortName}${index < slotData.subjects.length - 1 ? '/' : ''}`;
+                        })
                         : 'No Teacher'}
                     </Typography>
                   </CustomTooltip>
@@ -316,12 +318,12 @@ const TimeTableCell = ({
                 <Typography variant="caption" color="text.secondary">
                   {slotData?.subjects?.length
                     ? slotData.subjects
-                        .map((sub: any) => {
-                          const className = sub?.class || 'No Class';
-                          const divisionName = sub?.division || 'No Division';
-                          return `${className}-${divisionName}`;
-                        })
-                        .join('/')
+                      .map((sub: any) => {
+                        const className = sub?.class || 'No Class';
+                        const divisionName = sub?.division || 'No Division';
+                        return `${className}-${divisionName}`;
+                      })
+                      .join('/')
                     : 'No Class/Division'}
                 </Typography>
               )}
@@ -407,7 +409,7 @@ const TimeTableCell = ({
                   onDeleteSlot(rowIndex, colIndex);
                   deleteDialog.onFalse();
                 }}
-                // startIcon={<Iconify icon={GlobalIcons.delete} />}
+              // startIcon={<Iconify icon={GlobalIcons.delete} />}
               >
                 Yes
               </Button>

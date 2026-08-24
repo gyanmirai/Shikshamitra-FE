@@ -129,10 +129,16 @@ const RoomAllocationReview = ({
           });
 
           if (Object.keys(divisionMap).length > 0) {
+            const nestedName = nested.subjectName || nested.name || '';
+            const parentGroupName =
+              sub.electiveGroupName ||
+              nested.electiveGroupName ||
+              (sub.subjectName !== nestedName ? sub.subjectName : undefined);
+
             entries.push({
               subjectId: subId,
-              subjectName: nested.subjectName || nested.name || sub.subjectName,
-              electiveGroupName: sub.subjectName,
+              subjectName: nestedName || sub.subjectName,
+              electiveGroupName: parentGroupName,
               divisionMap,
             });
           }
@@ -153,6 +159,7 @@ const RoomAllocationReview = ({
           entries.push({
             subjectId: subId,
             subjectName: sub.subjectName || sub.name || '',
+            electiveGroupName: sub.electiveGroupId ? sub.electiveGroupName : undefined,
             divisionMap,
           });
         }

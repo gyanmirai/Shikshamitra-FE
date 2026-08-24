@@ -132,33 +132,49 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
             <Grid container spacing={1.5}>
               {(formik.values.subjects ?? []).flatMap((subject: any) => {
                 if (subject.electiveGroupId && subject.subjects?.length) {
-                  return subject.subjects.map((s: any, sIdx: number) => (
-                    <Grid
-                      size={{ xs: 12 }}
-                      key={`${subject.electiveGroupId}-${s.subjectId || sIdx}`}
-                    >
-                      <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
-                        <RoomAssignmentCard
-                          subject={{
-                            subjectId: s.subjectId,
-                            subjectName: s.subjectName || s.name || '',
-                            subjectColor: s.subjectColor || s.color || '#9E9E9E',
-                            examDate: s.examDate || null,
-                            startTime: s.startTime || null,
-                            endTime: s.endTime || null,
-                            electiveGroupName: subject.subjectName,
-                            electiveGroupId: subject.electiveGroupId,
-                          }}
-                          formik={formik}
-                        />
-                      </motion.div>
-                    </Grid>
-                  ));
+                  return subject.subjects.map((s: any, sIdx: number) => {
+                    const resolvedElectiveGroupName =
+                      subject.electiveGroupName ||
+                      s.electiveGroupName ||
+                      (subject.subjectName !== (s.subjectName || s.name)
+                        ? subject.subjectName
+                        : undefined);
+                    return (
+                      <Grid
+                        size={{ xs: 12 }}
+                        key={`${subject.electiveGroupId}-${s.subjectId || sIdx}`}
+                      >
+                        <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
+                          <RoomAssignmentCard
+                            subject={{
+                              subjectId: s.subjectId,
+                              subjectName: s.subjectName || s.name || '',
+                              subjectColor: s.subjectColor || s.color || '#9E9E9E',
+                              examDate: s.examDate || null,
+                              startTime: s.startTime || null,
+                              endTime: s.endTime || null,
+                              electiveGroupName: resolvedElectiveGroupName,
+                              electiveGroupId: subject.electiveGroupId,
+                            }}
+                            formik={formik}
+                          />
+                        </motion.div>
+                      </Grid>
+                    );
+                  });
                 }
                 return [
                   <Grid size={{ xs: 12 }} key={subject.subjectId}>
                     <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
-                      <RoomAssignmentCard subject={subject} formik={formik} />
+                      <RoomAssignmentCard
+                        subject={{
+                          ...subject,
+                          electiveGroupName: subject.electiveGroupId
+                            ? subject.electiveGroupName
+                            : undefined,
+                        }}
+                        formik={formik}
+                      />
                     </motion.div>
                   </Grid>,
                 ];

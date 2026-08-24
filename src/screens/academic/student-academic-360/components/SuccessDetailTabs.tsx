@@ -149,7 +149,13 @@ export function SuccessDetailTabs({ data, activeTab, isLoading, student }: Succe
   }
 
   if (activeTab === 'timetable') {
-    return <TimetableSnapshot timetable={data?.timetable} isLoading={isLoading} />;
+    return (
+      <TimetableSnapshot
+        timetable={data?.timetable}
+        isLoading={isLoading}
+        student={student || data?.student}
+      />
+    );
   }
 
   if (activeTab === 'timeline') {
