@@ -2,11 +2,13 @@ import { academicPath } from 'src/routes/paths';
 
 import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
+import { classManagementPermissions } from './class-management';
 
 const defaultAcademicPermissionName = 'Academics.';
 
 export const academicPaths = {
   dashboard: '/academic/dashboard',
+  classTeacherAssignment: '/academic/assignClassTeacher',
   studentAcademic360: '/academic/studentAcademic360',
   academicCalendar: {
     root: '/academic/academic-calendar',
@@ -20,6 +22,7 @@ export const academicPaths = {
   curriculum: {
     root: '',
     subjectsAssignment: '/academic/curriculumSubjects',
+    electiveAssignment: '/academic/assign-elective-subject',
     chaptersManagement: '/academic/courseSubjects',
     lessonPlan: '/academic/lesson-plan',
     resources: '/academic/learningResources',
@@ -99,6 +102,7 @@ export const academicPaths = {
 export const academicPermissions = {
   root: `${defaultModulePermissionName}Academics`,
   dashboard: `${defaultModulePermissionName}${defaultAcademicPermissionName}Dashboard`,
+  classTeacherAssignment: classManagementPermissions.classTeacherAssignment,
   studentAcademic360: `${defaultModulePermissionName}${defaultAcademicPermissionName}Dashboard`,
   academicCalendar: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}AcademicCalendar`,
@@ -112,6 +116,7 @@ export const academicPermissions = {
   curriculum: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Curriculum`,
     subjectsAssignment: `${defaultAcademicPermissionName}CurriculumManagement.SubjectAssignment`,
+    electiveAssignment: `${defaultAcademicPermissionName}CurriculumManagement.ElectiveAssignment`,
     chaptersManagement: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
     lessonPlan: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
     resources: `${defaultAcademicPermissionName}CurriculumManagement.Resources`,
@@ -203,6 +208,15 @@ const academicModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
+          title: 'Class Teacher Assignment',
+          path: academicPaths.classTeacherAssignment,
+          _action: 'assign-teacher',
+          shortcutKey: 'Alt+A+Z',
+          shortcutKeyName: 'Alt+A+Z',
+          permissionName: academicPermissions.classTeacherAssignment,
+          icon: menuIconView('mdi:account-supervisor-outline'),
+        },
+        {
           title: 'Student Academic 360',
           path: academicPaths.studentAcademic360,
           _action: 'student-academic-360',
@@ -285,26 +299,15 @@ const academicModule = (isDdvs: boolean) => ({
               permissionName: academicPermissions.curriculum.subjectsAssignment,
               icon: menuIconView('mdi:book-plus-outline'),
             },
-            // {
-            //   title: 'Student Elective Assignment',
-            //   path: '/academic/assign-elective-subject',
-            //   _action: 'assign-elective-subject',
-            //   shortcutKey: 'Alt+A+C+1',
-            //   shortcutKeyName: 'Alt+A+C+1',
-            // },
-            // {
-            //   title: 'Choose Elective Subjects',
-            //   path: '/academic/choose-elective-subject',
-            //   _action: 'assign-elective-subject',
-            //   shortcutKey: 'Alt+A+C+1',
-            //   shortcutKeyName: 'Alt+A+C+1',
-            // },
-            // {
-            //   title: 'Teachers Assignment',
-            //   path: '/academic/teacher',
-            //   shortcutKey: 'Alt+A+C+2',
-            //   shortcutKeyName: 'Alt+A+C+2',
-            // },
+            {
+              title: 'Elective Assignment',
+              path: academicPaths.curriculum.electiveAssignment,
+              _action: 'assign-elective-subject',
+              shortcutKey: 'Alt+A+C+E',
+              shortcutKeyName: 'Alt+A+C+E',
+              permissionName: academicPermissions.curriculum.electiveAssignment,
+              icon: menuIconView('mdi:book-check-outline'),
+            },
             {
               title: 'Syllabus',
               path: academicPaths.curriculum.chaptersManagement,

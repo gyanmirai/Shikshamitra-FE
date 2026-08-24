@@ -3,27 +3,30 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Stack, Typography, IconButton } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Stack, Button, Typography, IconButton, DialogActions } from '@mui/material';
 import { AssignmentSubmissionStatusOptions } from 'src/enums/assignment-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import { SUBMISSION_TYPE_LABELS } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/learningTaskUi';
+import RubricEvaluationPanel, {
+  type RubricEvaluationPanelRef,
+} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import {
+  AssignmentStatus,
   evaluationUsesMarks,
   isEvaluationEnabled,
-  AssignmentStatus,
   AssignmentSubmissionType,
   AssignmentEvaluationMethod,
 } from 'src/enums/assignment';
@@ -33,7 +36,6 @@ import {
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import {
   FeedbackStatusChip,
-  EvaluationFilterBar,
   EvaluationStatusChip,
   filterEvaluationRows,
   getEvaluationSummary,
@@ -109,6 +111,9 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   });
   // State to track the currently selected student for individual grading
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>(null);
+  const [isEditMode, setIsEditMode] = useState(true);
+  const rubricEvaluationRef = React.useRef<RubricEvaluationPanelRef | null>(null);
+  const [isRubricSaving, setIsRubricSaving] = useState(false);
 
   // Dialog control for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
@@ -128,6 +133,18 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const filteredData = React.useMemo(
     () => filterEvaluationRows(normalizedData, activeFilter),
     [activeFilter, normalizedData]
+  );
+
+  // Unsubmitted rows share the API's empty submission UUID. Give the table a
+  // stable student-specific ID while retaining the real submission ID for actions.
+  const tableData = React.useMemo(
+    () =>
+      filteredData.map((row: any) => ({
+        ...row,
+        submissionId: row.id,
+        id: row.studentId || row.id,
+      })),
+    [filteredData]
   );
 
   const summary = React.useMemo(
@@ -239,16 +256,45 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     }
   };
 
-  const openStudent = React.useCallback(
+  const openStudentForEdit = React.useCallback(
     (row: any) => {
+      setIsEditMode(true);
       setSelectedStudent({
         ...(row as TStudentGrade),
+        id: row.submissionId ?? row.id,
         totalMarks: resolveTotalMarks(row),
       });
       viewSubmissionDialog.onTrue();
     },
     [resolveTotalMarks, viewSubmissionDialog]
   );
+
+  const openStudentForView = React.useCallback(
+    (row: any) => {
+      setIsEditMode(false);
+      setSelectedStudent({
+        ...(row as TStudentGrade),
+        id: row.submissionId ?? row.id,
+        totalMarks: resolveTotalMarks(row),
+      });
+      viewSubmissionDialog.onTrue();
+    },
+    [resolveTotalMarks, viewSubmissionDialog]
+  );
+
+  const handleRubricSubmit = async () => {
+    if (!rubricEvaluationRef.current) return;
+
+    setIsRubricSaving(true);
+    try {
+      if (await rubricEvaluationRef.current.save()) {
+        shikshaMitraToast.success({ message: 'Rubric evaluation submitted successfully.' });
+        handleClose(null, true);
+      }
+    } finally {
+      setIsRubricSaving(false);
+    }
+  };
 
   if (
     selectedAssignment?.status !== AssignmentStatus.Published ||
@@ -279,59 +325,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           onFilterChange={setActiveFilter}
         />
       </Stack>
-      <Box sx={{ mt: 1.5 }}>
+      <Box>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents?.length > 0}
           tableId="student-submissions"
           noDataText="No Submission Data Found"
           columns={[
-            // {
-            //   id: 'checkBox',
-            //   align: 'center',
-            //   minWidth: '60px',
-            //   isSort: false,
-            //   sticky: true,
-            //   isFilter: false,
-            //   label: '',
-            //   renderColumn() {
-            //     return (
-            //       <Checkbox
-            //         checked={
-            //           studentData?.length > 0 && selectedStudents?.length === studentData?.length
-            //         }
-            //         indeterminate={
-            //           selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
-            //         }
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents(studentData || []);
-            //           } else {
-            //             setSelectedStudents([]);
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            //   render(value, row) {
-            //     const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
-
-            //     return (
-            //       <Checkbox
-            //         checked={isChecked}
-            //         onChange={(e) => {
-            //           e.stopPropagation();
-
-            //           if (e.target.checked) {
-            //             setSelectedStudents([...selectedStudents, row]);
-            //           } else {
-            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            // },
             {
               id: 'studentName',
               label: 'Student Name/GR No.',
@@ -420,7 +420,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                       <Typography
                         variant="caption"
                         fontSize="13px"
-                        sx={{ color: 'text.disabled', fontStyle: 'italic', p: 0.5, display: 'block' }}
+                        sx={{
+                          color: 'text.disabled',
+                          fontStyle: 'italic',
+                          p: 0.5,
+                          display: 'block',
+                        }}
                       >
                         No submission
                       </Typography>
@@ -431,11 +436,11 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 return (
                   <Box
                     onClick={() => {
-                      setSelectedStudent({
-                        ...(row as TStudentGrade),
-                        totalMarks: resolveTotalMarks(row),
-                      });
-                      viewSubmissionDialog.onTrue();
+                      if (canAdd) {
+                        openStudentForEdit(row);
+                      } else {
+                        openStudentForView(row);
+                      }
                     }}
                     sx={{
                       cursor: 'pointer',
@@ -446,7 +451,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                       p: 0.5,
                     }}
                   >
-                    <CustomTooltip title={text || 'Click to add feedback'} arrow>
+                    <CustomTooltip title={text || (canAdd ? 'Click to add feedback' : 'View feedback')} arrow>
                       <Typography
                         variant="caption"
                         fontSize="13px"
@@ -461,7 +466,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                           fontStyle: text ? 'normal' : 'italic',
                         }}
                       >
-                        {text || 'Add feedback'}
+                        {text || (canAdd ? 'Add feedback' : '-')}
                       </Typography>
                     </CustomTooltip>
                   </Box>
@@ -496,7 +501,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               isSort: false,
               isFilter: false,
               align: 'center',
-              minWidth: 90,
+              minWidth: 100,
               sticky: true,
               render(value, row) {
                 return (
@@ -504,14 +509,15 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                     row={row}
                     canAdd={canAdd}
                     taskSubmissionType={selectedAssignment?.submissionType}
-                    onOpen={openStudent}
+                    onView={openStudentForView}
+                    onEdit={openStudentForEdit}
                   />
                 );
               },
             },
           ]}
           isLoading={isSubmissionsLoading || isFetching}
-          data={filteredData}
+          data={tableData}
         />
       </Box>
 
@@ -532,59 +538,40 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           }, 300);
         }}
         title={
-          <Box display="flex" flexDirection="row" alignItems="center" justifyContent="space-between" sx={{ width: 1, gap: 2 }}>
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">
-                {usesRubric
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {!isEditMode
+                ? 'View Assignment Submission & Feedback'
+                : usesRubric
                   ? 'Rubric Evaluation'
-                  : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${
-                      requiresMarks ? 'Feedback & Marks' : 'Feedback'
-                    }`}
-              </Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title={
-                  usesRubric
+                  : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${requiresMarks ? 'Feedback & Marks' : 'Feedback'}`}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                !isEditMode
+                  ? 'View student submission details, marks, and feedback in read-only mode.'
+                  : usesRubric
                     ? "Evaluate the student's submission with the configured rubric."
                     : requiresMarks
                       ? "Provide feedback and marks for the student's assignment submission."
                       : "Provide feedback for the student's assignment submission."
-                }
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-            <Stack direction="row" spacing={1} sx={{ mr: 1, flexShrink: 0 }}>
-              <CustomTooltip title="Previous Student" arrow>
-                <span>
-                  <IconButton
-                    size="small"
-                    onClick={() => moveStudent(-1)}
-                    disabled={!(selectedIndex > 0)}
-                    sx={{ border: (theme) => `1px solid ${theme.palette.divider}` }}
-                  >
-                    <Iconify icon="solar:alt-arrow-left-bold" width={18} />
-                  </IconButton>
-                </span>
-              </CustomTooltip>
-              <CustomTooltip title="Next Student" arrow>
-                <span>
-                  <IconButton
-                    size="small"
-                    onClick={() => moveStudent(1)}
-                    disabled={!(selectedIndex >= 0 && selectedIndex < filteredData.length - 1)}
-                    sx={{ border: (theme) => `1px solid ${theme.palette.divider}` }}
-                  >
-                    <Iconify icon="solar:alt-arrow-right-bold" width={18} />
-                  </IconButton>
-                </span>
-              </CustomTooltip>
-            </Stack>
+              }
+            >
+              <Iconify
+                icon={GlobalIcons.info}
+                width={16}
+                height={16}
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+              />
+            </CustomTooltip>
           </Box>
         }
-        maxWidth="sm"
+        maxWidth="md"
+        paperProps={{ sx: { height: { sm: 'min(90vh, 900px)' } } }}
         hasForm={false}
       >
         {usesRubric &&
@@ -594,6 +581,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           selectedAssignment?.id && (
             <Box sx={{ p: 2 }}>
               <RubricEvaluationPanel
+                ref={rubricEvaluationRef}
                 mode="assignment"
                 standardId={selectedClass}
                 subjectId={selectedSubject}
@@ -601,6 +589,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 taskTitle={selectedAssignment.title}
                 studentRow={selectedStudent}
                 ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
+                readOnly={!isEditMode}
               />
             </Box>
           )}
@@ -608,7 +597,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           <AssignGrade
             data={selectedStudent}
             onClose={handleClose}
-            isEdit
+            isEdit={isEditMode}
             assignmentId={selectedAssignment?.id}
             requiresMarks={requiresMarks}
             hasPrevious={selectedIndex > 0}
@@ -616,6 +605,30 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             onPrevious={() => moveStudent(-1)}
             onNext={() => moveStudent(1)}
           />
+        )}
+        {usesRubric && (
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+            {isEditMode ? (
+              <>
+                <Button variant="outlined" size="small" onClick={() => handleClose(null, false)} startIcon={<Iconify icon={GlobalIcons.cancel} />}>
+                  Cancel
+                </Button>
+                <LoadingButton
+                  variant="contained"
+                  size="small"
+                  loading={isRubricSaving}
+                  onClick={handleRubricSubmit}
+                  startIcon={<Iconify icon="solar:check-circle-bold" />}
+                >
+                  Submit
+                </LoadingButton>
+              </>
+            ) : (
+              <Button variant="outlined" size="small" onClick={() => handleClose(null, false)} startIcon={<Iconify icon={GlobalIcons.cancel} />}>
+                Close
+              </Button>
+            )}
+          </DialogActions>
         )}
       </CustomDialog>
     </>

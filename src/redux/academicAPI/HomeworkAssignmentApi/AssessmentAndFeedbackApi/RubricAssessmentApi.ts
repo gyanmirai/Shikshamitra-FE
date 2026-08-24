@@ -40,6 +40,9 @@ export enum RubricVisibility {
 export type RubricCriterionInputDto = {
   title: string;
   description?: string | null;
+  studentDescription?: string | null;
+  teacherGuidance?: string | null;
+  isRequired: boolean;
   maxMarks: number;
   displayOrder: number;
 };
@@ -88,6 +91,9 @@ export type AssessmentRubricCriterionDto = {
   rubricId: string;
   title: string;
   description?: string | null;
+  studentDescription?: string | null;
+  teacherGuidance?: string | null;
+  isRequired: boolean;
   maxMarks: number;
   displayOrder: number;
 };

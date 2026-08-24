@@ -6,6 +6,7 @@ import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import Button from '@mui/material/Button';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -14,6 +15,7 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Paper, Drawer, IconButton, Typography } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useGetSeatAllocationTableDataQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import { toSeatingPlanListRow } from '../utils/mappers';
@@ -56,6 +58,8 @@ export default function SeatingPlanListPage() {
   const [activeSummaryFilter, setActiveSummaryFilter] = useState<string | null>(null);
   const [previewRow, setPreviewRow] = useState<SeatingPlanListRow | null>(null);
   const [workspaceDrawer, setWorkspaceDrawer] = useState<WorkspaceDrawerState>(null);
+  const [isWorkspaceDirty, setIsWorkspaceDirty] = useState(false);
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
   useEffect(() => {
     const allClasses =
@@ -81,6 +85,7 @@ export default function SeatingPlanListPage() {
     () => (seatAllocationData?.items || []).map(toSeatingPlanListRow),
     [seatAllocationData]
   );
+  const isListDataLoading = (isLoading || isFetching) && !seatAllocationData;
 
   const filteredRows = useMemo(() => {
     if (!activeSummaryFilter) return rows;
@@ -96,7 +101,23 @@ export default function SeatingPlanListPage() {
     });
   };
 
-  const closePlanWorkspace = () => setWorkspaceDrawer(null);
+  // Immediate, unguarded close — used once the user has confirmed the discard
+  // (or when there are no unsaved changes). Resets dirty/confirm tracking state.
+  const closePlanWorkspace = () => {
+    setWorkspaceDrawer(null);
+    setIsWorkspaceDirty(false);
+    setConfirmDiscardOpen(false);
+  };
+
+  // Guarded close for the drawer X, backdrop/Esc, and the workspace Back action:
+  // unsaved seating changes must be explicitly confirmed before being discarded.
+  const requestClosePlanWorkspace = () => {
+    if (isWorkspaceDirty) {
+      setConfirmDiscardOpen(true);
+      return;
+    }
+    closePlanWorkspace();
+  };
 
   const workspaceActionsTooltip = (
     <Box sx={{ p: 1.5, maxWidth: 360 }}>
@@ -108,6 +129,10 @@ export default function SeatingPlanListPage() {
       </Typography>
 
       <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.5 } }}>
+        <Typography component="li" variant="caption" color="text.secondary">
+          <strong>Reset</strong> — Clears all seat allocations, subject-wise scope configurations,
+          and resets the seating plan to its default state.
+        </Typography>
         <Typography component="li" variant="caption" color="text.secondary">
           <strong>Auto Allocate</strong> — Automatically places unassigned students into available
           room seats following active seating rules.
@@ -214,7 +239,7 @@ export default function SeatingPlanListPage() {
 
       <SeatingPlanSummaryCards
         rows={rows}
-        isLoading={isLoading || isFetching}
+        isLoading={isListDataLoading}
         activeFilter={activeSummaryFilter}
         onFilterClick={(key) => setActiveSummaryFilter((prev) => (prev === key ? null : key))}
       />
@@ -222,7 +247,7 @@ export default function SeatingPlanListPage() {
       <Box sx={{ flex: 1, minHeight: 0 }}>
         <SeatingPlanTable
           rows={filteredRows}
-          isLoading={isLoading || isFetching}
+          isLoading={isListDataLoading}
           canAdd={canAdd}
           onRowClick={(row) => setPreviewRow(row)}
           onPrimaryAction={openPlanWorkspace}
@@ -238,7 +263,7 @@ export default function SeatingPlanListPage() {
       <Drawer
         anchor="right"
         open={!!workspaceDrawer}
-        onClose={closePlanWorkspace}
+        onClose={requestClosePlanWorkspace}
         PaperProps={{
           sx: {
             width: '100%',
@@ -278,7 +303,10 @@ export default function SeatingPlanListPage() {
                   {workspaceDrawer.row.examName} / {workspaceDrawer.row.standardName}
                 </Typography>
               </Box>
-              <IconButton onClick={closePlanWorkspace}>
+              <IconButton
+                onClick={requestClosePlanWorkspace}
+                aria-label="Close seating plan workspace"
+              >
                 <Iconify icon="mingcute:close-line" />
               </IconButton>
             </Box>
@@ -286,7 +314,9 @@ export default function SeatingPlanListPage() {
             <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <SeatingAllocationPage
                 examId={workspaceDrawer.row.examId}
-                onClose={closePlanWorkspace}
+                initialStandardId={classes}
+                onClose={requestClosePlanWorkspace}
+                onDirtyStateChange={setIsWorkspaceDirty}
                 onOpenReview={(context) =>
                   setWorkspaceDrawer((current) =>
                     current
@@ -327,6 +357,20 @@ export default function SeatingPlanListPage() {
           }
         />
       )}
+
+      {/* Unsaved-changes intercept for the Create Seating Plan workspace */}
+      <ConfirmDialog
+        open={confirmDiscardOpen}
+        onClose={() => setConfirmDiscardOpen(false)}
+        title="Unsaved Changes"
+        content="You have unsaved seating changes. If you exit now, all unsaved allocations will be lost. Are you sure you want to exit without saving?"
+        icon="warning"
+        action={
+          <Button variant="contained" color="error" onClick={closePlanWorkspace}>
+            Discard &amp; Exit
+          </Button>
+        }
+      />
     </Box>
   );
 }

@@ -51,7 +51,11 @@ export function useAcademicDatePickerRules({
     type: 'query',
     currentQueryAndMutation: useGetCalendarsQuery,
     params: { academicMediumId: resolvedAcademicMediumId },
-    options: { skip: Boolean(calendarId) || !resolvedAcademicMediumId },
+    options: {
+      skip: Boolean(calendarId) || !resolvedAcademicMediumId,
+      refetchOnFocus: false,
+      refetchOnMountOrArgChange: false,
+    },
     popupConfig: { error: false },
   });
 
@@ -81,7 +85,7 @@ export function useAcademicDatePickerRules({
           year: visibleMonth.year(),
         }
       : null,
-    options: { skip: !resolvedCalendarId },
+    options: { skip: !resolvedCalendarId, refetchOnFocus: false, refetchOnMountOrArgChange: false },
     popupConfig: { error: false },
   });
 

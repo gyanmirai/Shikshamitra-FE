@@ -141,6 +141,23 @@ export function toSeatingRoomLayout(room: {
   };
 }
 
+export function upsertSeatingRoomLayout(
+  rooms: SeatingRoomLayout[],
+  layout: SeatingRoomLayout
+): SeatingRoomLayout[] {
+  const existingIndex = rooms.findIndex((room) => room.roomId === layout.roomId);
+  if (existingIndex === -1) return [...rooms, layout];
+
+  return rooms.map((room, index) => {
+    if (index !== existingIndex) return room;
+
+    // A division-scoped room query can briefly be out of sync with the seat-layout query.
+    // Do not let the UUID fallback overwrite a human-readable label already in the draft.
+    const roomName = layout.roomName === layout.roomId ? room.roomName : layout.roomName;
+    return { ...layout, roomName };
+  });
+}
+
 export function toSeatingStudents(items: IStudentRoomAssignment[] = []): SeatingStudent[] {
   return items.map((s) => ({
     studentId: s.studentId,
@@ -163,6 +180,22 @@ export function toSeatingAssignments(
       seatNumber: i.seatNumber,
       benchId: i.benchId,
       assignedBy: 'manual' as const,
+      isExternalExamOccupied: !!i.isExternalExamOccupied,
+    }));
+}
+
+/** Builds display data for occupants that may belong to divisions outside the active queue. */
+export function toSeatingStudentsFromAllocations(
+  items: ISeatAllocation[] | undefined
+): SeatingStudent[] {
+  return (items ?? [])
+    .filter((item) => item.studentId !== null)
+    .map((item) => ({
+      studentId: item.studentId as string,
+      studentName: item.studentName ?? 'Student',
+      rollNo: item.rollNo ?? 0,
+      standardName: item.standardName,
+      isExternalExamOccupied: !!item.isExternalExamOccupied,
     }));
 }
 
@@ -174,7 +207,12 @@ export function toSaveSeatingPlanPayload(draft: SeatingPlanDraft, roomId: string
       .map((a) => ({
         studentId: a.studentId,
         seatNumber: a.seatNumber,
-        benchId: a.benchId ?? null,
+        // Empty UUIDs can come from legacy seat-layout responses; they mean
+        // "no bench" and must not be sent as a foreign-key identifier.
+        benchId:
+          a.benchId && a.benchId !== '00000000-0000-0000-0000-000000000000'
+            ? a.benchId
+            : null,
         isRoomAssign: true,
       })),
   };

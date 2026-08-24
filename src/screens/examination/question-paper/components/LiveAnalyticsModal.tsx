@@ -57,7 +57,7 @@ export default function LiveAnalyticsModal({
       handleClose={onClose}
       title={
         <Stack direction="row" spacing={1} alignItems="center">
-          <Iconify icon="solar:chart-2-bold-duotone" color="primary.main" width={22} />
+          <Iconify icon="mdi:chart-bar" color="primary.main" width={22} />
           <Typography variant="h6" fontWeight={700}>
             Live Assessment Analytics
           </Typography>

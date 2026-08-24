@@ -230,6 +230,7 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
 
 const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   const [activeStep, setActiveStep] = useState(0);
+  const [maxReachedStep, setMaxReachedStep] = useState(0);
 
   // Mutations
   const [addExamBasicDetails] = useQueryAndMutation({
@@ -313,7 +314,11 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
           return;
         }
         if (!isLastStep) {
-          setActiveStep((prev) => prev + 1);
+          setActiveStep((prev) => {
+            const nextStep = prev + 1;
+            setMaxReachedStep((reachedStep) => Math.max(reachedStep, nextStep));
+            return nextStep;
+          });
         } else {
           onClose();
         }
@@ -374,13 +379,11 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
           handleSave(isLastStep, values, formik, setIsLoading, true);
         }}
         onStepClick={(index) => {
-          if (editData) {
-            setActiveStep(index);
-          } else if (index < activeStep) {
+          if (editData || index <= maxReachedStep) {
             setActiveStep(index);
           }
         }}
-        isDisabledLabel={!editData}
+        isStepClickable={(index) => Boolean(editData) || index <= maxReachedStep}
         renderItem={({ formik, activeStep: step }) => (
           <NewExamStepForm
             activeStep={step}

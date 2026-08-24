@@ -95,7 +95,7 @@ export default function BlueprintLeftPanel({
             bgcolor: 'background.paper',
           }}
         >
-          <AccordionSummary expandIcon={<Iconify icon="mingcute:down-line" width={18} />}>
+          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" width={18} />}>
             <Stack direction="row" spacing={1.25} alignItems="center" width="100%">
               <Box
                 sx={{
@@ -108,7 +108,7 @@ export default function BlueprintLeftPanel({
                   placeItems: 'center',
                 }}
               >
-                <Iconify icon="solar:bookmark-bold-duotone" width={15} />
+                <Iconify icon="mdi:bookmark" width={15} />
               </Box>
               <Box flex={1}>
                 <Typography variant="subtitle2" fontWeight={700}>
@@ -196,7 +196,7 @@ export default function BlueprintLeftPanel({
             bgcolor: 'background.paper',
           }}
         >
-          <AccordionSummary expandIcon={<Iconify icon="mingcute:down-line" width={18} />}>
+          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" width={18} />}>
             <Stack direction="row" spacing={1.25} alignItems="center" width="100%">
               <Box
                 sx={{
@@ -209,7 +209,7 @@ export default function BlueprintLeftPanel({
                   placeItems: 'center',
                 }}
               >
-                <Iconify icon="solar:tuning-bold-duotone" width={15} />
+                <Iconify icon="mdi:tune" width={15} />
               </Box>
               <Box flex={1}>
                 <Typography variant="subtitle2" fontWeight={700}>
@@ -271,7 +271,7 @@ export default function BlueprintLeftPanel({
             bgcolor: 'background.paper',
           }}
         >
-          <AccordionSummary expandIcon={<Iconify icon="mingcute:down-line" width={18} />}>
+          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" width={18} />}>
             <Stack direction="row" spacing={1.25} alignItems="center" width="100%">
               <Box
                 sx={{
@@ -284,7 +284,7 @@ export default function BlueprintLeftPanel({
                   placeItems: 'center',
                 }}
               >
-                <Iconify icon="solar:graph-up-bold-duotone" width={15} />
+                <Iconify icon="mdi:trending-up" width={15} />
               </Box>
               <Box flex={1}>
                 <Typography variant="subtitle2" fontWeight={700}>

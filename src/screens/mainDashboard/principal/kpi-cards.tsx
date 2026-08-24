@@ -4,7 +4,6 @@ import { Grid } from '@mui/material';
 import { hrPaths } from 'src/constants/hr-menus';
 import { studentPaths } from 'src/constants/student-menu';
 import { academicPaths } from 'src/constants/academic-menu';
-import { classManagementPaths } from 'src/constants/class-management';
 import CompactKPICard from 'src/screens/student/dashboard/principal/kpi-card-item';
 
 // ----------------------------------------------------------------------
@@ -72,7 +71,7 @@ const kpiData = [
     title: 'Curriculum Completion %',
     value: '68.2%',
     status: 'warning' as const,
-    path: classManagementPaths.chapters,
+    path: academicPaths.curriculum.chaptersManagement,
     tooltip: 'Current Term · Completed: 68% · Pending: 32%',
     chart: {
       type: 'bar' as const,

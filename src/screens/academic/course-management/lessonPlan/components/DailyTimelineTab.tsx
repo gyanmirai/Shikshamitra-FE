@@ -3,52 +3,18 @@
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
-import LoadingButton from '@mui/lab/LoadingButton';
-import { GlobalIcons } from 'src/utils/icons';
+import React, { useState, useMemo } from 'react';
 import { varAlpha } from 'src/theme/styles';
-import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
-import { LessonTimelineCard } from './LessonTimelineCard';
-import {
-  Box,
-  Card,
-  Grid,
-  Stack,
-  Alert,
-  Paper,
-  Button,
-  MenuItem,
-  Skeleton,
-  Typography,
-  IconButton,
-  LinearProgress,
-  Chip,
-  Tooltip,
-} from '@mui/material';
+import { Box, Card, Stack, Paper, Button, Typography } from '@mui/material';
 
-const planStatusColor: Record<
-  string,
-  'default' | 'primary' | 'success' | 'error' | 'warning' | 'info'
-> = {
-  Draft: 'default',
-  Submitted: 'warning',
-  Approved: 'success',
-  Rejected: 'error',
-  NeedsChanges: 'warning',
-  Missed: 'error',
-  Rescheduled: 'info',
-};
-
-const PLAN_STATUS_BY_VALUE = ['Draft', 'Submitted', 'Approved', 'Rejected', 'NeedsChanges'];
-
-const toPlanStatusLabel = (status: unknown) =>
-  typeof status === 'number'
-    ? (PLAN_STATUS_BY_VALUE[status] ?? 'Draft')
-    : String(status || 'Draft');
+import { DayHeaderNavigator } from './timeline/DayHeaderNavigator';
+import { DailySummaryRow } from './timeline/DailySummaryRow';
+import { TimelineTrack } from './timeline/TimelineTrack';
+import { DaySummaryDrawer } from './timeline/DaySummaryDrawer';
+import { TimelineSkeleton } from './timeline/TimelineSkeleton';
+import { getLessonStatusConfig } from './lessonTimelineConfig';
 
 type Props = {
   selectedDate: Dayjs;
@@ -61,6 +27,9 @@ type Props = {
   onSubmitDiary: (plan: any) => void;
   onSubmitPlan: (planId: string) => void;
   onCreateHomework?: (plan: any) => void;
+  canView?: boolean;
+  canManage?: boolean;
+  onViewTimetable?: () => void;
 };
 
 const DailyTimelineTab = ({
@@ -74,170 +43,84 @@ const DailyTimelineTab = ({
   onSubmitDiary,
   onSubmitPlan,
   onCreateHomework,
+  canView = true,
+  canManage = true,
+  onViewTimetable,
 }: Props) => {
   const theme = useTheme();
-  const popover = usePopover();
-  const [menuPlan, setMenuPlan] = useState<any | null>(null);
+  const [summaryDrawerOpen, setSummaryDrawerOpen] = useState(false);
 
-  const handlePrevDay = () => onChangeDate(selectedDate.subtract(1, 'day'));
-  const handleNextDay = () => onChangeDate(selectedDate.add(1, 'day'));
-  const handleToday = () => onChangeDate(dayjs());
+  // Compute daily KPI stats
+  const dailyStats = useMemo(() => {
+    if (isLoading) {
+      return {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        needsAttention: 0,
+        upcoming: 0,
+        planned: 0,
+      };
+    }
 
-  const openCardMenu = (event: React.MouseEvent<HTMLElement>, plan: any) => {
-    setMenuPlan(plan);
-    popover.onOpen(event);
-  };
-  const closeCardMenu = () => {
-    popover.onClose();
-    setMenuPlan(null);
-  };
+    let completedCount = 0;
+    let inProgressCount = 0;
+    let needsAttnCount = 0;
+    let upcomingCount = 0;
+    let plannedCount = 0;
 
-  // Compute daily stats
-  const totalSlots = slots.length;
-  const plannedSlots = slots.filter((s) => !!s.lessonPlan).length;
+    slots.forEach((slot) => {
+      const config = getLessonStatusConfig(slot, selectedDate);
+      if (slot.lessonPlan) plannedCount += 1;
+
+      if (config.stateKey === 'completed') {
+        completedCount += 1;
+      } else if (config.stateKey === 'inProgress') {
+        inProgressCount += 1;
+      } else if (config.stateKey === 'needsChanges' || config.stateKey === 'rejected') {
+        needsAttnCount += 1;
+      } else {
+        upcomingCount += 1;
+      }
+    });
+
+    return {
+      total: slots.length,
+      completed: completedCount,
+      inProgress: inProgressCount,
+      needsAttention: needsAttnCount,
+      upcoming: upcomingCount,
+      planned: plannedCount,
+    };
+  }, [slots, selectedDate, isLoading]);
 
   return (
     <Card
       sx={{
-        p: 1,
+        p: { xs: 1.25, sm: 2 },
         flex: '1 0 auto',
         minHeight: '100%',
         display: 'flex',
         flexDirection: 'column',
         bgcolor: 'background.paper',
         borderRadius: 2,
-        boxShadow: 'var(--shadows-4)',
+        boxShadow: 'var(--shadows-2)',
       }}
     >
-      {/* ── Top Header Bar & Controls ── */}
-      <Stack spacing={2} sx={{ mb: 2 }}>
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'stretch', md: 'center' }}
-          spacing={2}
-          sx={{
-            p: 2,
-            borderRadius: 2,
-            bgcolor: 'background.neutral',
-            border: (t) => `1px solid ${t.palette.divider}`,
-          }}
-        >
-          {/* Date Picker Controls */}
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-            <IconButton
-              onClick={handlePrevDay}
-              size="small"
-              sx={{
-                bgcolor: 'background.paper',
-                border: (t) => `1px solid ${t.palette.divider}`,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              <Iconify icon="mdi:chevron-left" width={20} />
-            </IconButton>
+      {/* ── 1. Compact Date Navigation Toolbar ── */}
+      <DayHeaderNavigator
+        selectedDate={selectedDate}
+        onChangeDate={onChangeDate}
+        plannedCount={dailyStats.planned}
+        totalCount={dailyStats.total}
+        onOpenSummaryDrawer={() => setSummaryDrawerOpen(true)}
+      />
 
-            <DatePicker
-              label="Selected Date"
-              value={selectedDate}
-              onChange={(newVal) => newVal && onChangeDate(newVal)}
-              format="DD/MM/YYYY"
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  sx: {
-                    minWidth: 160,
-                    bgcolor: 'background.paper',
-                    borderRadius: 1,
-                  },
-                },
-              }}
-            />
-
-            <IconButton
-              onClick={handleNextDay}
-              size="small"
-              sx={{
-                bgcolor: 'background.paper',
-                border: (t) => `1px solid ${t.palette.divider}`,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              <Iconify icon="mdi:chevron-right" width={20} />
-            </IconButton>
-
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={handleToday}
-              startIcon={<Iconify icon="solar:calendar-bold" width={16} />}
-              sx={{ bgcolor: 'background.paper' }}
-            >
-              Today
-            </Button>
-          </Stack>
-
-          {/* Timeline Date Header & Mini Summary Chips */}
-          <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
-            <Chip
-              icon={<Iconify icon="solar:clock-circle-bold" width={16} />}
-              label={`Timeline: ${selectedDate.format('dddd, DD MMMM YYYY')}`}
-              variant="soft"
-              color="primary"
-              sx={{ fontWeight: 600, py: 2, px: 0.5 }}
-            />
-            {totalSlots > 0 && (
-              <Stack direction="row" spacing={1}>
-                <Tooltip title="Total Scheduled Periods">
-                  <Chip
-                    size="small"
-                    label={`${plannedSlots}/${totalSlots} Planned`}
-                    color={plannedSlots === totalSlots ? 'success' : 'warning'}
-                    variant="soft"
-                    sx={{ fontWeight: 700 }}
-                  />
-                </Tooltip>
-              </Stack>
-            )}
-          </Stack>
-        </Stack>
-      </Stack>
-
-      {/* ── Main Content Area: Loader / Empty / Timeline Slots ── */}
+      {/* ── 3. Main Timeline Area (Cards with Direct Actions, No Attention Banner) ── */}
       {isLoading ? (
-        <Stack spacing={2} sx={{ flex: 1 }}>
-          {[1, 2, 3].map((key) => (
-            <Paper
-              key={key}
-              variant="outlined"
-              sx={{ p: 2.5, borderRadius: 2, bgcolor: 'background.neutral' }}
-            >
-              <Grid container spacing={2} alignItems="center">
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <Skeleton
-                    variant="rectangular"
-                    width={120}
-                    height={42}
-                    sx={{ borderRadius: 1 }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Skeleton variant="text" width="70%" height={24} />
-                  <Skeleton variant="text" width="40%" height={20} />
-                </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <Skeleton
-                    variant="rectangular"
-                    width={110}
-                    height={36}
-                    sx={{ borderRadius: 1, ml: 'auto' }}
-                  />
-                </Grid>
-              </Grid>
-            </Paper>
-          ))}
-        </Stack>
+        <TimelineSkeleton />
       ) : slots.length === 0 ? (
+        /* Empty State */
         <Paper
           variant="outlined"
           sx={{
@@ -246,9 +129,9 @@ const DailyTimelineTab = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            py: 8,
-            px: 2,
-            borderRadius: 2,
+            py: 7,
+            px: 3,
+            borderRadius: 1.5,
             borderStyle: 'dashed',
             bgcolor: 'background.neutral',
             textAlign: 'center',
@@ -256,89 +139,84 @@ const DailyTimelineTab = ({
         >
           <Box
             sx={{
-              width: 64,
-              height: 64,
+              width: 56,
+              height: 56,
               borderRadius: '50%',
               bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
               color: 'primary.main',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              mb: 2,
+              mb: 1.5,
             }}
           >
-            <Iconify icon="solar:calendar-minimalistic-bold" width={36} />
+            <Iconify icon="solar:calendar-minimalistic-bold" width={32} />
           </Box>
-          <Typography variant="h6" fontWeight={700} color="text.primary">
-            No Timetable Slots Scheduled
+
+          <Typography variant="subtitle1" fontWeight={800} color="text.primary">
+            No Lessons Scheduled for Today
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 380, mt: 0.5 }}>
-            There are no teaching periods assigned to your schedule for this date. Select another
-            date using the date picker above.
+
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mt: 0.5, mb: 2 }}>
+            No teaching periods are assigned for {selectedDate.format('dddd, DD MMMM YYYY')}. Select
+            another date above or create a lesson plan.
           </Typography>
+
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              startIcon={<Iconify icon="solar:calendar-bold" width={16} />}
+              onClick={() => onChangeDate(dayjs())}
+              sx={{ fontWeight: 600 }}
+            >
+              Go to Today
+            </Button>
+          </Stack>
         </Paper>
       ) : (
-        /* Timeline slots track */
-        <Stack spacing={2} sx={{ flex: 1, overflow: 'auto', pr: 0.5 }}>
-          {slots.map((slot, index) => (
-            <LessonTimelineCard
-              key={slot.timetableSlotId ?? `manual-${slot.lessonPlan?.id ?? slot.lessonPlan?.Id ?? index}`}
-              slot={slot}
-              selectedDate={selectedDate}
-              onAddLesson={onAddLesson}
-              onEditLesson={onEditLesson}
-              onViewDetails={onViewDetails}
-              onSubmitDiary={onSubmitDiary}
-              onSubmitPlan={onSubmitPlan}
-              openCardMenu={openCardMenu}
-            />
-          ))}
+        /* Full-Width Timeline Layout */
+        <Stack spacing={1.25} sx={{ flex: 1 }}>
+          <TimelineTrack
+            slots={slots}
+            selectedDate={selectedDate}
+            onAddLesson={onAddLesson}
+            onEditLesson={onEditLesson}
+            onViewDetails={onViewDetails}
+            onSubmitDiary={onSubmitDiary}
+            onSubmitPlan={onSubmitPlan}
+            onCreateHomework={onCreateHomework}
+            canView={canView}
+            canManage={canManage}
+          />
         </Stack>
       )}
 
-      {/* Overflow menu */}
-      <CustomPopover
-        open={popover.open}
-        anchorEl={popover.anchorEl}
-        onClose={closeCardMenu}
-        slotProps={{ arrow: { placement: 'right-top' } }}
-      >
-        <MenuItem
-          onClick={() => {
-            if (menuPlan) onViewDetails(menuPlan);
-            closeCardMenu();
-          }}
-        >
-          <Iconify icon={GlobalIcons.eye} width={18} sx={{ mr: 1, color: 'text.secondary' }} />
-          View Details
-        </MenuItem>
-        {['Draft', 'NeedsChanges', 'Rejected'].includes(menuPlan?.status) && (
-          <MenuItem
-            onClick={() => {
-              if (menuPlan) onEditLesson(menuPlan);
-              closeCardMenu();
-            }}
-          >
-            <Iconify icon={GlobalIcons.edit} width={18} sx={{ mr: 1, color: 'primary.main' }} />
-            Edit Plan
-          </MenuItem>
-        )}
-        {menuPlan?.status === 'Approved' && (
-          <MenuItem
-            onClick={() => {
-              if (menuPlan) onCreateHomework?.(menuPlan);
-              closeCardMenu();
-            }}
-          >
-            <Iconify
-              icon="solar:book-bookmark-bold"
-              width={18}
-              sx={{ mr: 1, color: 'success.main' }}
-            />
-            Create Homework
-          </MenuItem>
-        )}
-      </CustomPopover>
+      {/* ── 4. Slide-Out Day Summary Drawer (On-Demand) ── */}
+      <DaySummaryDrawer
+        open={summaryDrawerOpen}
+        onClose={() => setSummaryDrawerOpen(false)}
+        slots={slots}
+        selectedDate={selectedDate}
+        onAddLesson={onAddLesson}
+        canManage={canManage}
+        onOpenQuickDiary={
+          canManage
+            ? () => {
+                const activeOrFirstSlot =
+                  slots.find((s) => s.lessonPlan && s.lessonPlan.status === 'Approved') ||
+                  slots.find((s) => s.lessonPlan);
+                if (activeOrFirstSlot?.lessonPlan) {
+                  onSubmitDiary(activeOrFirstSlot.lessonPlan);
+                } else {
+                  onAddLesson(selectedDate);
+                }
+              }
+            : undefined
+        }
+        onViewTimetable={onViewTimetable}
+      />
     </Card>
   );
 };

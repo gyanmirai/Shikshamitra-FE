@@ -19,9 +19,9 @@ const ExamReviewStep4 = (
   return (
     <Box>
       <ExamBasicReview formik={formik} onEdit={onEditStep ? () => onEditStep(0) : undefined} />
-      <ExamReadinessPanel values={formik.values} onEditStep={onEditStep} />
       <ExamScheduleReview formik={formik} onEdit={onEditStep ? () => onEditStep(1) : undefined} />
       <RoomAllocationReview formik={formik} onEdit={onEditStep ? () => onEditStep(2) : undefined} />
+      <ExamReadinessPanel values={formik.values} onEditStep={onEditStep} />
     </Box>
   );
 };

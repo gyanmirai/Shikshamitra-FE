@@ -34,6 +34,7 @@ import {
   useGetExamDivisionsQuery,
   useGetSeatingPlanScopesQuery,
   useGetSeatingPlanDraftQuery,
+  useValidateSeatingPlanMutation,
   useFinalizeSeatingPlanMutation,
   usePublishSeatingPlanMutation,
   useGetSeatAllocationStudentsQuery,
@@ -235,6 +236,20 @@ interface Props {
   onBackToAllocation?: () => void;
 }
 
+type ValidationIssue = {
+  code?: string;
+  message: string;
+  studentId?: string;
+  roomId?: string;
+  seatId?: string;
+};
+
+type ServerValidation = {
+  isValid: boolean;
+  blockers: ValidationIssue[];
+  warnings: ValidationIssue[];
+};
+
 // ---------------------------------------------------------------------------
 // AllocationReviewDialog
 // ---------------------------------------------------------------------------
@@ -252,11 +267,15 @@ export default function AllocationReviewDialog({
   const { permissions } = useSelector((state: RootState) => state.auth);
   const seatAllocationBase = academicPermissions.examination.seatAllocation;
   const canFinalize = hasGrantedPermission(permissions, `${seatAllocationBase}.Finalize`);
+  const canPublish = hasGrantedPermission(permissions, `${seatAllocationBase}.Publish`);
   const canPrint = hasGrantedPermission(permissions, `${seatAllocationBase}.Print`);
 
   const [rooms, setRooms] = useState<SeatingRoomLayout[]>([]);
   const [assignments, setAssignments] = useState<SeatingAssignment[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [serverValidation, setServerValidation] = useState<ServerValidation | null>(null);
+
+  const [validateSeatingPlan, { isLoading: isValidating }] = useValidateSeatingPlanMutation();
 
   // ── Mutations via useQueryAndMutation (skill § 4.2) ───────────────────
   const [finalizeSeatingPlan, { isLoading: isFinalizing }] = useQueryAndMutation({
@@ -345,6 +364,27 @@ export default function AllocationReviewDialog({
   const isStudentsDataLoading = (isStudentsLoading || isStudentsFetching) && !studentsData;
   const isLayoutLoading = (!loaded && !rooms.length) || (isRoomsDataLoading && !rooms.length);
 
+  useEffect(() => {
+    if (!open || !examId || !seatingPlanId) {
+      setServerValidation(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    validateSeatingPlan({ examId, seatingPlanId })
+      .unwrap()
+      .then((result) => {
+        if (!cancelled) setServerValidation(result as ServerValidation);
+      })
+      .catch(() => {
+        if (!cancelled) setServerValidation(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, examId, seatingPlanId, validateSeatingPlan]);
+
   // ── Stable roomIds array ─────────────────────────────────────────────
   const roomIds = useMemo(
     () =>
@@ -414,14 +454,15 @@ export default function AllocationReviewDialog({
         mixDivisions: false,
         specialRequirementPriority: true,
       },
-      excludedStudentIds: [],
+      excludedStudentIds: planDraftData?.excludedStudentIds ?? [],
       validation: { blockers: [], warnings: [] },
       status: 'in-progress' as const,
     }),
-    [examId, divisionId, roomIds, students, rooms, assignments]
+    [examId, divisionId, roomIds, students, rooms, assignments, planDraftData?.excludedStudentIds]
   );
 
   const validation = useMemo(() => validateSeatingDraft(draft), [draft]);
+  const effectiveBlockers = serverValidation?.blockers ?? validation.blockers;
 
   const roomSummaries = useMemo(
     () =>
@@ -443,10 +484,18 @@ export default function AllocationReviewDialog({
   );
 
   const assignedIds = useMemo(() => new Set(assignments.map((a) => a.studentId)), [assignments]);
-  const unallocatedStudents = students.filter((s) => !assignedIds.has(s.studentId));
+  const excludedIdsSet = useMemo(
+    () => new Set(planDraftData?.excludedStudentIds ?? []),
+    [planDraftData?.excludedStudentIds]
+  );
+  const unallocatedStudents = students.filter(
+    (s) => !assignedIds.has(s.studentId) && !excludedIdsSet.has(s.studentId)
+  );
   const totalStudents = students.length;
+  const excludedStudents = students.filter((s) => excludedIdsSet.has(s.studentId));
+  const eligibleStudentsCount = totalStudents - excludedStudents.length;
   const allocationProgress =
-    totalStudents === 0 ? 0 : Math.round((assignedIds.size / totalStudents) * 100);
+    eligibleStudentsCount === 0 ? 0 : Math.round((assignedIds.size / eligibleStudentsCount) * 100);
 
   const summaryCards = useMemo(
     () => [
@@ -659,20 +708,48 @@ export default function AllocationReviewDialog({
                   color="text.primary"
                   sx={{ mb: 1, display: 'block' }}
                 >
-                  Student Exceptions ({unallocatedStudents.length})
+                  Student Exceptions ({unallocatedStudents.length + excludedStudents.length})
                 </Typography>
                 {isStudentsDataLoading || isLayoutLoading ? (
                   <SkeletonList />
                 ) : (
                   <StudentExceptionList
                     unallocatedStudents={unallocatedStudents}
-                    excludedStudents={[]}
+                    excludedStudents={excludedStudents}
                     onFix={() => {
                       if (onBackToAllocation) onBackToAllocation();
                     }}
                   />
                 )}
               </Box>
+
+              {isValidating ? (
+                <Typography variant="caption" color="text.secondary">
+                  Checking server validation rules…
+                </Typography>
+              ) : serverValidation && serverValidation.blockers.length > 0 ? (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'error.light',
+                    bgcolor: 'error.lighter',
+                  }}
+                >
+                  <Typography variant="subtitle2" color="error.main" fontWeight={700}>
+                    Blocking issues ({serverValidation.blockers.length})
+                  </Typography>
+                  <Stack spacing={0.5} sx={{ mt: 0.75 }}>
+                    {serverValidation.blockers.map((issue, index) => (
+                      <Typography key={`${issue.code ?? 'issue'}-${issue.studentId ?? index}`} variant="body2">
+                        {issue.message}
+                        {issue.code ? ` (${issue.code})` : ''}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </Box>
+              ) : null}
             </Stack>
           </SectionPaper>
         </Stack>
@@ -706,7 +783,12 @@ export default function AllocationReviewDialog({
             <SubmitButton
               buttonText={isFinalizing ? 'Finalizing…' : 'Finalize Plan'}
               loading={isFinalizing}
-              disabled={validation.blockers.length > 0 || allocationProgress < 100 || isFinalizing}
+              disabled={
+                isValidating ||
+                effectiveBlockers.length > 0 ||
+                allocationProgress < 100 ||
+                isFinalizing
+              }
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={handleFinalize}
               type="button"
@@ -721,7 +803,7 @@ export default function AllocationReviewDialog({
                     : 'Publish Plan'
               }
               loading={isPublishing}
-              disabled={isPublishing || planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED}
+              disabled={!canPublish || isPublishing || planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED}
               startIcon={<Iconify icon={GlobalIcons.publish} />}
               onClick={handlePublish}
               type="button"

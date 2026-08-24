@@ -14,7 +14,10 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { useGetAuditLogsQuery } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
+import {
+  useAddAuditLogReviewNoteMutation,
+  useGetAuditLogsQuery,
+} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
   Tab,
@@ -36,6 +39,7 @@ import AuditTimelineView from './components/AuditTimelineView';
 import AuditAnalyticsView from './components/AuditAnalyticsView';
 import AuditAISummaryDrawer from './components/AuditAISummaryDrawer';
 import AuditLogDetailsDrawer from './components/AuditLogDetailsDrawer';
+import { groupLogsByDate } from './utils/auditFormatters';
 import { EMPTY_FILTERS, KEYBOARD_SHORTCUTS } from './constants/auditLogs.constants';
 
 import type { AuditLog, AuditView, AuditFilterState } from './types/auditLogs.types';
@@ -82,7 +86,6 @@ const matchesFilters = (log: AuditLog, filters: AuditFilterState): boolean => {
     if (!haystack.includes(q)) return false;
   }
   if (filters.action && String(log.action) !== filters.action) return false;
-  if (filters.source && String(log.source) !== filters.source) return false;
   if (filters.entityType && log.entityType !== filters.entityType) return false;
   if (filters.changedByRole && log.changedByRole !== filters.changedByRole) return false;
   if (filters.hasDiff === 'true' && !log.hasDiff) return false;
@@ -143,6 +146,7 @@ const CalendarAuditLogs = () => {
   const [restoreDialog, setRestoreDialog] = useState<AuditLog | null>(null);
   const [restoreReason, setRestoreReason] = useState('');
   const [restoring, setRestoring] = useState(false);
+  const [addAuditLogReviewNote] = useAddAuditLogReviewNoteMutation();
 
   // Query
   const { data: logsRaw, isLoading } = useQueryAndMutation({
@@ -170,6 +174,34 @@ const CalendarAuditLogs = () => {
   );
 
   const totalCount = filteredLogs.length;
+
+  // Timeline accordion state
+  const [timelineCollapsedDates, setTimelineCollapsedDates] = useState<Set<string>>(new Set());
+
+  const timelineGroups = useMemo(() => groupLogsByDate(filteredLogs), [filteredLogs]);
+  const allTimelineDates = useMemo(() => timelineGroups.map((g) => g.date), [timelineGroups]);
+  const isAllTimelineCollapsed =
+    allTimelineDates.length > 0 && allTimelineDates.every((d) => timelineCollapsedDates.has(d));
+
+  const handleToggleTimelineDate = (date: string) => {
+    setTimelineCollapsedDates((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) {
+        next.delete(date);
+      } else {
+        next.add(date);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleAllTimeline = () => {
+    if (isAllTimelineCollapsed) {
+      setTimelineCollapsedDates(new Set());
+    } else {
+      setTimelineCollapsedDates(new Set(allTimelineDates));
+    }
+  };
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -216,16 +248,14 @@ const CalendarAuditLogs = () => {
   };
 
   const handleAddNote = async (log: AuditLog, note: string) => {
-    // Mock: attach the note locally
-    const newNote = {
-      id: `rn-${Date.now()}`,
+    const persistedNote = await addAuditLogReviewNote({
+      auditLogId: log.id,
       note,
-      createdBy: 'You',
-      createdAt: new Date().toISOString(),
-    };
+    }).unwrap();
+
     setSelectedLog((prev) =>
       prev && prev.id === log.id
-        ? { ...prev, reviewNotes: [...(prev.reviewNotes || []), newNote] }
+        ? { ...prev, reviewNotes: [...(prev.reviewNotes || []), persistedNote] }
         : prev
     );
   };
@@ -257,16 +287,14 @@ const CalendarAuditLogs = () => {
             { name: 'Audit Logs' },
           ]}
         />
-        <Alert severity="warning" icon={<Iconify icon="mdi:lock-outline" />}>
-          You do not have permission to view audit logs. Contact your administrator.
-        </Alert>
+        <Alert severity="error">You do not have permission to view audit logs.</Alert>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}>
-      {/* Header */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
+      {/* Breadcrumbs */}
       <CustomBreadcrumbs
         heading="Audit Logs"
         description="Track every academic calendar change with full history, impact, and accountability."
@@ -321,7 +349,15 @@ const CalendarAuditLogs = () => {
 
       {/* View switcher */}
       <Stack direction="row" alignItems="center" gap={1}>
-        <Paper sx={{ flex: 1 }}>
+        <Paper
+          sx={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            pr: 1,
+          }}
+        >
           <CustomTabs
             value={view}
             onChange={(_, val) => setView(val as AuditView)}
@@ -339,6 +375,35 @@ const CalendarAuditLogs = () => {
               )
             )}
           </CustomTabs>
+
+          {/* Action buttons on the right side of the tab bar */}
+          {view === 'timeline' && timelineGroups.length > 1 && (
+            <Button
+              size="small"
+              variant="text"
+              onClick={handleToggleAllTimeline}
+              startIcon={
+                <Iconify
+                  icon={
+                    isAllTimelineCollapsed
+                      ? 'solar:maximize-square-3-outline'
+                      : 'solar:minimize-square-3-outline'
+                  }
+                  width={16}
+                />
+              }
+              sx={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'text.secondary',
+                '&:hover': { color: 'primary.main' },
+                textTransform: 'none',
+                mr: 0.5,
+              }}
+            >
+              {isAllTimelineCollapsed ? 'Expand All' : 'Collapse All'}
+            </Button>
+          )}
         </Paper>
         <Tooltip
           title={
@@ -395,6 +460,8 @@ const CalendarAuditLogs = () => {
             logs={filteredLogs}
             onLogClick={handleRowClick}
             hasActiveFilters={hasActiveFilters}
+            collapsedDates={timelineCollapsedDates}
+            onToggleDate={handleToggleTimelineDate}
           />
         )}
         {view === 'analytics' && canViewAnalytics && <AuditAnalyticsView logs={filteredLogs} />}

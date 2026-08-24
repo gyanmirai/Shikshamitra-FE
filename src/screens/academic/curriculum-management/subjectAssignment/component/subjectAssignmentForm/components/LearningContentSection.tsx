@@ -1,7 +1,7 @@
 import React from 'react';
-import { Editor } from 'src/components/editor';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, Typography, FormHelperText } from '@mui/material';
+import { AcademicLanguageEditor } from 'src/screens/academic/components/language-typing';
 
 interface LearningContentSectionProps {
   subject: any;
@@ -51,7 +51,7 @@ export const LearningContentSection: React.FC<LearningContentSectionProps> = ({
             </Typography>
           </Box>
           <ShakingTextField error={!!getError(section.field)}>
-            <Editor
+            <AcademicLanguageEditor
               onChange={(value) => onChange(section.field, value)}
               value={(subject[section.field] as string) || ''}
               placeholder={section.placeholder}

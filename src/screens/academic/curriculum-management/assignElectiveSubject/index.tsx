@@ -1,189 +1,645 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { Box, Button } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { Save, RestartAlt } from '@mui/icons-material';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
 
-import { electiveGroups, useAssignElectiveSubject } from './hooks/useAssignElectiveSubject';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import {
+  Box,
+  Chip,
+  Alert,
+  Button,
+  Tooltip,
+  Checkbox,
+} from '@mui/material';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  useGetStudentElectiveAssignmentsQuery,
+  useLockStudentElectiveAssignmentsMutation,
+  useUpdateStudentElectiveAssignmentsMutation,
+} from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
+
+import { workflowStatusConfig } from './statusConfig';
+import BulkAssignmentBar from './components/BulkAssignmentBar';
+import ElectiveContextBar from './components/ElectiveContextBar';
+import ReviewAndLockDialog from './components/ReviewAndLockDialog';
+import UnsavedChangesDialog from './components/UnsavedChangesDialog';
+import ValidationIssuesDrawer from './components/ValidationIssuesDrawer';
+import SubjectSelectionControl from './components/SubjectSelectionControl';
+import useElectiveAssignmentState from './hooks/useElectiveAssignmentState';
+import AssignmentProgressSummary from './components/AssignmentProgressSummary';
 
 const AssignElectiveSubject = () => {
-  const theme = useTheme();
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
+
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+
+  const [electiveGroupId, setElectiveGroupId] = useState<string>('');
+
+  const [students, setStudents] = useState<any[]>([]);
+
+  const resetDialog = useBoolean();
+  const saveDialog = useBoolean();
+  const lockDialog = useBoolean();
+  const issuesDrawer = useBoolean();
+  const reviewDrawer = useBoolean();
+  const unsavedDialog = useBoolean();
+
+  // Pending context change captured while an unsaved-changes guard is shown.
+  const pendingContextChange = useRef<(() => void) | null>(null);
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  // --------------------------------------------
+  // FETCH ELECTIVE GROUPS (subject-assignments filtered to elective/subjectType=1)
+  // --------------------------------------------
   const {
-    allClass,
-    classes,
-    setClasses,
-    allDivision,
-    division,
-    setDivision,
+    data: subjectAssignmentsData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: classes },
+    options: { skip: !classes },
+  });
+
+  const electiveGroups = useMemo(() => {
+    const seen = new Set<string>();
+    return (subjectAssignmentsData?.data?.items ?? [])
+      .filter(
+        (item: any) => item.subjectType === 1 && item.electiveGroupId && item.electiveGroupName
+      )
+      .reduce((acc: { id: string; name: string }[], item: any) => {
+        if (!seen.has(item.electiveGroupId)) {
+          seen.add(item.electiveGroupId);
+          acc.push({ id: item.electiveGroupId, name: item.electiveGroupName });
+        }
+        return acc;
+      }, []);
+  }, [subjectAssignmentsData]);
+
+  // --------------------------------------------
+  // BUILD CLASS LIST FROM MEDIUM
+  // --------------------------------------------
+  useEffect(() => {
+    const list =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage?.standards || []) || [];
+
+    setAllClass(list);
+    setClasses(list[0]?.id || '');
+  }, [medium]);
+
+  // --------------------------------------------
+  // UPDATE DIVISIONS WHEN CLASS CHANGES
+  // --------------------------------------------
+  useEffect(() => {
+    const selectedClass = allClass.find((c) => c.id === classes);
+    setAllDivision(selectedClass?.divisions || []);
+    setDivision(selectedClass?.divisions?.[0]?.id || '');
+
+    setElectiveGroupId('');
+    setStudents([]);
+  }, [allClass, classes]);
+
+  // --------------------------------------------
+  // GET ELECTIVE ASSIGNMENTS USING useQueryAndMutation
+  // --------------------------------------------
+  const {
+    data: assignmentData,
+    isLoading: isElectiveLoading,
+    refetch: refetchElectives,
+    isFetching: isElectiveFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentElectiveAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      classId: classes,
+      divisionId: division,
+      electiveGroupId,
+    },
+    options: {
+      skip: !medium?.id || !classes || !division || !electiveGroupId,
+    },
+  });
+
+  useEffect(() => {
+    if (assignmentData?.records) {
+      setStudents(assignmentData.records);
+    }
+  }, [assignmentData]);
+
+  const isLocked = !!assignmentData?.isLocked;
+
+  const {
     studentSelections,
+    assignSubject,
+    bulkAssignSubject,
+    clearSelections,
+    resetSelections,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    selectedRowIds,
+    toggleRowSelected,
+    toggleAllRowsSelected,
+    clearRowSelection,
+    filteredStudents,
+    summary,
+    subjectCapacity,
+    validationIssues,
+    preferenceMatch,
+    rowStatus,
+    hasUnsavedChanges,
+    unsavedChangesCount,
+    allStudentsAssigned,
+    hasSelections,
+    workflowStatus,
+  } = useElectiveAssignmentState({
     students,
-    electiveSubject,
-    setElectiveSubject,
-    selectedElectiveSubject,
-    handleSelectElectiveForStudent,
-    handleApplyElectiveToAll,
-  } = useAssignElectiveSubject();
+    serverRecords: assignmentData?.records,
+    isLocked,
+  });
 
-  /**
-   * Memoization Justification:
-   * Memoizes standard/elective subject assignment columns configuration
-   * to prevent re-creation of headers and cell render buttons.
-   * This preserves focus and selection state of buttons inside each row.
-   */
-  const columns = useMemo(() => {
-    const group = electiveGroups.find((g) => g.id === electiveSubject);
-    const subjects = group?.subjects || [];
+  // --------------------------------------------
+  // CONTEXT CHANGE GUARD (unsaved changes)
+  // --------------------------------------------
+  const guardedContextChange = (applyChange: () => void) => {
+    if (hasUnsavedChanges) {
+      pendingContextChange.current = applyChange;
+      unsavedDialog.onTrue();
+      return;
+    }
+    applyChange();
+  };
 
-    return [
-      {
-        id: 'name',
-        label: 'Student Name',
-        minWidth: '200px',
-        align: 'left' as const,
-        sticky: true,
-      },
-      { id: 'rollNo', label: 'Roll No.', minWidth: '120px', align: 'left' as const },
-      {
-        id: 'electiveSubject',
-        label: '',
-        minWidth: '500px',
-        align: 'left' as const,
-        isSort: false,
-        isFilter: false,
-        renderColumn: () => (
-          <Box display="flex" alignItems="center" gap={1}>
-            {subjects.map((subj) => {
-              const isSelected = selectedElectiveSubject === subj.id;
-              return (
-                <Button
-                  key={subj.id}
-                  variant={isSelected ? 'contained' : 'outlined'}
-                  size="small"
-                  color="primary"
-                  onClick={() => handleApplyElectiveToAll(subj.id)}
-                  sx={{
-                    color: isSelected ? '#fff' : theme.palette.mode === 'dark' ? '#fff' : '#000',
-                    borderColor: theme.palette.primary.main,
-                    backgroundColor: isSelected ? theme.palette.primary.main : 'transparent',
-                    '&:hover': {
-                      backgroundColor: isSelected
-                        ? theme.vars.palette.primary.dark
-                        : theme.vars.palette.action.hover,
-                    },
-                  }}
-                >
-                  {subj.name}
-                </Button>
-              );
-            })}
-          </Box>
-        ),
-        render: (_: any, row: any) => (
-          <Box display="flex" alignItems="center" gap={1}>
-            {subjects.map((subj) => {
-              const isSelected = studentSelections[row.grNo] === subj.id;
-              return (
-                <Button
-                  key={subj.id}
-                  variant={isSelected ? 'contained' : 'outlined'}
-                  size="small"
-                  color="primary"
-                  onClick={() => handleSelectElectiveForStudent(row.grNo, subj.id)}
-                  sx={{
-                    color: isSelected ? 'white' : 'primary',
-                    borderColor: isSelected ? 'primary' : 'primary',
-                  }}
-                >
-                  {subj.name}
-                </Button>
-              );
-            })}
-          </Box>
-        ),
-      },
-    ];
-  }, [
-    electiveSubject,
-    selectedElectiveSubject,
-    studentSelections,
-    handleApplyElectiveToAll,
-    handleSelectElectiveForStudent,
-    theme,
-  ]);
+  const handleDiscardAndContinue = () => {
+    pendingContextChange.current?.();
+    pendingContextChange.current = null;
+    unsavedDialog.onFalse();
+  };
+
+  // --------------------------------------------
+  // PUT API USING useQueryAndMutation
+  // --------------------------------------------
+  const [updateStudentElectiveAssignments, { isLoading: isSaving }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateStudentElectiveAssignmentsMutation,
+  });
+
+  const handleSave = async () => {
+    const payload = {
+      academicMediumId: medium?.id,
+      electiveGroupId,
+      assignments: Object.entries(studentSelections).map(([studentId, selectedSubjectId]) => ({
+        studentId,
+        selectedSubjectId,
+      })),
+    };
+
+    try {
+      await updateStudentElectiveAssignments(payload).unwrap();
+      shikshaMitraToast.success({ message: 'Elective assignments saved!' });
+      saveDialog.onFalse();
+      refetchElectives();
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to save assignments.' });
+    }
+  };
+
+  // --------------------------------------------
+  // DISCARD (RESET)
+  // --------------------------------------------
+  const handleReset = () => {
+    resetSelections();
+    resetDialog.onFalse();
+    shikshaMitraToast.success({ message: 'Changes discarded.' });
+  };
+
+  // --------------------------------------------
+  // LOCK API USING useQueryAndMutation
+  // --------------------------------------------
+  const [lockStudentElectiveAssignments, { isLoading: isLocking }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLockStudentElectiveAssignmentsMutation,
+  });
+
+  const handleLock = async () => {
+    const payload = {
+      academicMediumId: medium?.id,
+      classId: classes,
+      divisionId: division,
+      electiveGroupId,
+    };
+
+    try {
+      await lockStudentElectiveAssignments(payload).unwrap();
+      shikshaMitraToast.success({ message: 'Elective assignments locked successfully!' });
+      lockDialog.onFalse();
+      reviewDrawer.onFalse();
+      refetchElectives();
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to lock assignments.' });
+    }
+  };
+
+  const canLock = allStudentsAssigned && !hasUnsavedChanges && !isLocked;
+
+  const getLockTooltip = () => {
+    if (isLocked) return 'These elective assignments are locked and cannot be modified.';
+    if (hasUnsavedChanges) return 'Save your changes before locking.';
+    if (!allStudentsAssigned) return 'Assign elective subjects to all students before locking.';
+    return 'Review the allocation and lock it.';
+  };
+
+  const handleGoToStudent = (studentId: string) => {
+    const student = students.find((s) => s.studentId === studentId);
+    issuesDrawer.onFalse();
+    setStatusFilter('all');
+    if (student) setSearchTerm(student.rollNo);
+  };
+
+  const statusInfo = workflowStatusConfig[workflowStatus];
+  const availableSubjects = students[0]?.selectableSubjects ?? [];
+
+  // --------------------------------------------
+  // UI
+  // --------------------------------------------
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        sx={{ mb: 1 }}
         heading="Student Elective Assignment"
-        description="Assign elective subjects according to students preferences and academic needs. Also, manage selections through a centralized system. "
+        description="Assign and manage student elective subjects for the selected class and elective group."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
+          { name: 'Curriculum Management' },
           { name: 'Student Elective Assignment' },
         ]}
+        action={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {!isLocked && electiveGroupId && (
+              <Label color={statusInfo.color} variant="soft">
+                {statusInfo.label}
+              </Label>
+            )}
+
+            {electiveGroupId && (
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {!isLocked && (
+                  <>
+                    <Button
+                      variant="outlined"
+                      color="inherit"
+                      size="small"
+                      startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+                      disabled={!hasUnsavedChanges}
+                      onClick={resetDialog.onTrue}
+                    >
+                      Discard
+                    </Button>
+
+                    <LoadingButton
+                      variant="contained"
+                      size="small"
+                      startIcon={<Iconify icon={GlobalIcons.submit} />}
+                      disabled={!hasUnsavedChanges}
+                      onClick={saveDialog.onTrue}
+                      loading={isSaving}
+                    >
+                      Save Draft
+                    </LoadingButton>
+                  </>
+                )}
+
+                <Tooltip title={getLockTooltip()} arrow>
+                  <span>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      color={isLocked ? 'inherit' : 'error'}
+                      startIcon={<Iconify icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon} />}
+                      disabled={!canLock}
+                      onClick={reviewDrawer.onTrue}
+                    >
+                      {isLocked ? 'Locked' : 'Review & Lock'}
+                    </Button>
+                  </span>
+                </Tooltip>
+              </Box>
+            )}
+          </Box>
+        }
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <CustomSelect
-            options={allClass}
-            label="Class"
-            value={classes}
-            onChange={(val) => setClasses(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+
+      {/* CONTEXT BAR */}
+      <ElectiveContextBar
+        allClass={allClass}
+        classes={classes}
+        onClassChange={(v) => guardedContextChange(() => setClasses(v))}
+        allDivision={allDivision}
+        division={division}
+        onDivisionChange={(v) => guardedContextChange(() => setDivision(v))}
+        electiveGroups={electiveGroups}
+        electiveGroupId={electiveGroupId}
+        onElectiveGroupChange={(v) => guardedContextChange(() => setElectiveGroupId(v))}
+        isLoading={isLoading || isFetching}
+        students={students}
+      />
+
+      {electiveGroupId && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          {/* INSIGHTS */}
+          <AssignmentProgressSummary
+            total={summary.total}
+            assigned={summary.assigned}
+            unassigned={summary.unassigned}
+            issues={summary.issues}
+            preferenceMatchPct={summary.preferenceMatchPct}
+            activeFilter={statusFilter}
+            onFilterAssigned={() => setStatusFilter(statusFilter === 'assigned' ? 'all' : 'assigned')}
+            onFilterUnassigned={() =>
+              setStatusFilter(statusFilter === 'unassigned' ? 'all' : 'unassigned')
+            }
+            onFilterPreferenceMismatch={() =>
+              setStatusFilter(statusFilter === 'preferenceMismatch' ? 'all' : 'preferenceMismatch')
+            }
+            onOpenIssues={issuesDrawer.onTrue}
+            sx={{ width: 1 }}
           />
-          <CustomSelect
-            options={allDivision}
-            label="Division"
-            value={division}
-            onChange={(val) => setDivision(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-            disabled={!classes}
-          />
-          <CustomSelect
-            label="Elective Group"
-            labelKey="name"
-            valueKey="id"
-            options={electiveGroups}
-            value={electiveSubject}
-            onChange={(value) => setElectiveSubject(value as string)}
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+
+          {/* BULK ASSIGNMENT BAR */}
+          {!isLocked && (
+            <BulkAssignmentBar
+              selectedCount={selectedRowIds.size}
+              subjects={availableSubjects}
+              onAssign={(subjectId) => {
+                bulkAssignSubject(Array.from(selectedRowIds), subjectId);
+                clearRowSelection();
+              }}
+              onClearAssignments={() => {
+                clearSelections(Array.from(selectedRowIds));
+                clearRowSelection();
+              }}
+              onClearSelection={clearRowSelection}
+            />
+          )}
+
+          {/* TABLE */}
+          <CustomizableTable
+            tableId="elective-table"
+            data={filteredStudents}
+            isLoading={isElectiveLoading || isElectiveFetching}
+            isSearch={false}
+            noDataText={<>No Students Found</>}
+            wrapperProps={{
+              sx: {
+                flex: 1,
+                minHeight: { xs: 420, md: 0 },
+              },
+            }}
+            tableContainerProps={{
+              sx: {
+                minHeight: { xs: 340, md: 0 },
+              },
+            }}
+            columns={[
+              {
+                id: 'rowSelect',
+                label: (
+                  <Checkbox
+                    size="small"
+                    disabled={isLocked || filteredStudents.length === 0}
+                    checked={
+                      filteredStudents.length > 0 &&
+                      filteredStudents.every((s) => selectedRowIds.has(s.studentId))
+                    }
+                    indeterminate={
+                      filteredStudents.some((s) => selectedRowIds.has(s.studentId)) &&
+                      !filteredStudents.every((s) => selectedRowIds.has(s.studentId))
+                    }
+                    onChange={(e) =>
+                      toggleAllRowsSelected(
+                        filteredStudents.map((s) => s.studentId),
+                        e.target.checked
+                      )
+                    }
+                  />
+                ),
+                minWidth: '48px',
+                isFilter: false,
+                isSort: false,
+                sticky: true,
+                stickyPosition: 'left',
+                render: (_, row) => (
+                  <Checkbox
+                    size="small"
+                    disabled={isLocked}
+                    checked={selectedRowIds.has(row.studentId)}
+                    onChange={() => toggleRowSelected(row.studentId)}
+                  />
+                ),
+              },
+              {
+                id: 'studentName',
+                label: 'Student Name',
+                minWidth: '200px',
+                align: 'left',
+                sticky: true,
+                stickyPosition: 'left',
+                isFilter: true,
+                filterType: 'string',
+                isSort: true,
+                render: (_, row) => (
+                  <Box component="span">
+                    {row.studentName}
+                    {row.grNo ? ` (${row.grNo})` : ''}
+                  </Box>
+                ),
+              },
+              {
+                id: 'rollNo',
+                label: 'Roll No.',
+                minWidth: '110px',
+                align: 'left',
+                isFilter: true,
+                filterType: 'number',
+                isSort: true,
+              },
+              {
+                id: 'preference',
+                label: 'Preference Match',
+                minWidth: '160px',
+                align: 'left',
+                isFilter: true,
+                filterType: 'enum',
+                enumOptions: [
+                  { label: 'Matched', value: 'matched' },
+                  { label: 'Mismatch', value: 'mismatch' },
+                  { label: 'No preference', value: 'noPreference' },
+                ],
+                isSort: true,
+                render: (_, row) => {
+                  const match = preferenceMatch(row as any);
+                  if (match === 'noPreference') {
+                    return (
+                      <Box component="span" sx={{ color: 'text.disabled', fontSize: 13 }}>
+                        No preference
+                      </Box>
+                    );
+                  }
+                  return (
+                    <Label color={match === 'matched' ? 'success' : 'warning'} variant="soft">
+                      {match === 'matched' ? 'Matched' : 'Mismatch'}
+                    </Label>
+                  );
+                },
+              },
+              {
+                id: 'electiveSubjects',
+                label: 'Elective Subject',
+                minWidth: '260px',
+                isFilter: false,
+                isSort: false,
+                align: 'left',
+                render: (_, row) => (
+                  <SubjectSelectionControl
+                    subjects={row.selectableSubjects}
+                    selectedSubjectId={studentSelections[row.studentId]}
+                    onSelect={(subjectId) => assignSubject(row.studentId, subjectId)}
+                    disabled={isLocked}
+                    ariaLabelPrefix={row.studentName}
+                  />
+                ),
+              },
+              {
+                id: 'status',
+                label: 'Status',
+                minWidth: '120px',
+                sticky: true,
+                stickyPosition: 'right',
+                isFilter: true,
+                filterType: 'enum',
+                enumOptions: [
+                  { label: 'Assigned', value: 'assigned' },
+                  { label: 'Unassigned', value: 'unassigned' },
+                  { label: 'Changed', value: 'changed' },
+                  { label: 'Locked', value: 'locked' },
+                ],
+                isSort: true,
+                align: 'left',
+                render: (_, row) => {
+                  const status = isLocked ? 'locked' : rowStatus(row as any);
+                  const map: Record<string, { label: string; color: any }> = {
+                    assigned: { label: 'Assigned', color: 'success' },
+                    unassigned: { label: 'Unassigned', color: 'error' },
+                    changed: { label: 'Changed', color: 'info' },
+                    locked: { label: 'Locked', color: 'default' },
+                  };
+                  const s = map[status];
+                  return <Label color={s.color} variant="soft">{s.label}</Label>;
+                },
+              },
+            ]}
           />
         </Box>
+      )}
 
-        <Box display="flex" gap={1} justifyContent="flex-end">
-          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}} size="small">
-            Reset
+      {!electiveGroupId && (
+        <Alert severity="info" icon={<Iconify icon="solar:info-circle-bold-duotone" />}>
+          Select a class, division, and elective group to begin.
+        </Alert>
+      )}
+
+      {/* RESET / DISCARD DIALOG */}
+      <ConfirmDialog
+        open={resetDialog.value}
+        onClose={resetDialog.onFalse}
+        title="Discard Changes"
+        content="Are you sure you want to discard all unsaved elective subject changes?"
+        action={
+          <Button variant="contained" color="error" onClick={handleReset}>
+            Discard
           </Button>
-          <Button
-            startIcon={<Save />}
-            variant="contained"
-            disabled={!classes || !division || !electiveSubject || selectedElectiveSubject === ''}
-            size="small"
-          >
+        }
+      />
+
+      {/* SAVE DIALOG */}
+      <ConfirmDialog
+        open={saveDialog.value}
+        onClose={saveDialog.onFalse}
+        title="Save Draft"
+        content="Are you sure you want to save these elective assignments as a draft?"
+        action={
+          <LoadingButton variant="contained" onClick={handleSave} loading={isSaving}>
             Save
-          </Button>
-        </Box>
-      </Box>
+          </LoadingButton>
+        }
+      />
 
-      <CustomizableTable
-        tableId="elective-subject-table"
-        noDataText={<>No Students Found</>}
-        searchFieldProps={{
-          placeholder: 'Search by Sr. No, GR No, Student Name...',
-          label: 'Search by Sr. No, GR No, Student Name...',
-          sx: { maxWidth: '400px', width: '100%' },
+      {/* LOCK CONFIRM DIALOG (final confirmation, triggered from review drawer) */}
+      <ConfirmDialog
+        open={lockDialog.value}
+        onClose={lockDialog.onFalse}
+        title="Lock Elective Assignments"
+        content="Are you sure you want to lock these elective assignments? Once locked, you will not be able to edit or assign subjects to students for this class and division."
+        action={
+          <LoadingButton variant="contained" color="error" onClick={handleLock} loading={isLocking}>
+            Lock
+          </LoadingButton>
+        }
+      />
+
+      {/* VALIDATION ISSUES DRAWER */}
+      <ValidationIssuesDrawer
+        open={issuesDrawer.value}
+        onClose={issuesDrawer.onFalse}
+        issues={validationIssues}
+        onGoToStudent={handleGoToStudent}
+      />
+
+      {/* REVIEW AND LOCK DIALOG */}
+      <ReviewAndLockDialog
+        open={reviewDrawer.value}
+        onClose={reviewDrawer.onFalse}
+        total={summary.total}
+        assigned={summary.assigned}
+        unassigned={summary.unassigned}
+        subjectCapacity={subjectCapacity}
+        preferenceMatchPct={summary.preferenceMatchPct}
+        canLock={canLock}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isLocked={isLocked}
+        isLocking={isLocking}
+        onConfirmLock={() => {
+          reviewDrawer.onFalse();
+          lockDialog.onTrue();
         }}
-        columns={columns}
-        data={students}
+      />
+
+      {/* UNSAVED CHANGES GUARD */}
+      <UnsavedChangesDialog
+        open={unsavedDialog.value}
+        onClose={() => {
+          pendingContextChange.current = null;
+          unsavedDialog.onFalse();
+        }}
+        onDiscard={handleDiscardAndContinue}
       />
     </Box>
   );

@@ -11,7 +11,6 @@ import { Box, Stack, Avatar, Tooltip, IconButton, Typography } from '@mui/materi
 
 import AuditDiffViewer from './AuditDiffViewer';
 import AuditActionBadge from './badges/AuditActionBadge';
-import AuditSourceBadge from './badges/AuditSourceBadge';
 import { AuditImpactLevel } from '../types/auditLogs.types';
 import { IMPACT_LABELS, IMPACT_COLOR_KEYS } from '../constants/auditLogs.constants';
 import { getUserInitials, summarizeImpact, formatAuditTimestamp } from '../utils/auditFormatters';
@@ -31,7 +30,7 @@ interface Props {
   hasActiveFilters?: boolean;
 }
 
-/** Enhanced audit logs table with entity, user, impact, source columns. */
+/** Enhanced audit logs table with entity, user, impact columns. */
 const AuditLogsTable = ({
   logs,
   loading,
@@ -178,13 +177,6 @@ const AuditLogsTable = ({
             </Tooltip>
           );
         },
-      },
-      {
-        id: 'source',
-        label: 'Source',
-        align: 'left',
-        minWidth: 110,
-        render: (_v, row: any) => <AuditSourceBadge source={row.source} />,
       },
       {
         id: 'changes',

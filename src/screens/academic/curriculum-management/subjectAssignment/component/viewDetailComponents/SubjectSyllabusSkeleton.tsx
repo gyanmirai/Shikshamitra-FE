@@ -3,7 +3,7 @@ import { Box, Skeleton } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 
 export const SubjectSyllabusSkeleton = () => (
-  <Box sx={{ height: '100%' }}>
+  <Box sx={{ height: '100%', p: 1 }}>
     <Scrollbar sx={{ height: '100%', pb: 2 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {[...Array(5)].map((_, index) => (

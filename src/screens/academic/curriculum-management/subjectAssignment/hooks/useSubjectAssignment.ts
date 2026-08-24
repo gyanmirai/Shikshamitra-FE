@@ -2,12 +2,13 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { useState, useCallback } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
+import { useSearchParams, useRouter, usePathname } from 'src/routes/hooks';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetSubjectKpiQuery,
@@ -28,6 +29,12 @@ const TEACHER_SEARCH_DEBOUNCE_MS = 400;
 
 export function useSubjectAssignment() {
   const dispatch = useDispatch();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const urlAssignmentId = searchParams.get('assignmentId');
+  const urlSubjectId = searchParams.get('subjectId');
+
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -95,6 +102,18 @@ export function useSubjectAssignment() {
   const [selectedSubject, setSelectedSubject] = useState<ISubjectFormValues | null>(null);
   const [isEdit, setIsEdit] = useState(false);
 
+  // Deep linking guard: auto-open workspace ONLY ONCE on initial mount if assignmentId or subjectId is in URL
+  const hasCheckedDeepLinkRef = useRef(false);
+
+  useEffect(() => {
+    if (hasCheckedDeepLinkRef.current) return;
+
+    if (urlAssignmentId || urlSubjectId) {
+      hasCheckedDeepLinkRef.current = true;
+      showSubjectDialog.onTrue();
+    }
+  }, [urlAssignmentId, urlSubjectId, showSubjectDialog]);
+
   const handleCloseDialog = useCallback(() => {
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
@@ -123,9 +142,9 @@ export function useSubjectAssignment() {
       } catch (error: any) {
         shikshaMitraToast.error(
           error?.data?.detail ||
-            error?.data?.message ||
-            error?.message ||
-            'Failed to copy subject allocations.'
+          error?.data?.message ||
+          error?.message ||
+          'Failed to copy subject allocations.'
         );
       }
     },
@@ -172,12 +191,22 @@ export function useSubjectAssignment() {
   /**
    * Memoization Justification:
    * Passed to SubjectTable as `onView` prop.
-   * Prevents table re-renders on unrelated parent state changes.
+   * Opens the dedicated Subject Workspace.
    */
   const handleViewSubject = useCallback(
     (subject: ISubjectFormValues) => {
       setSelectedSubject(subject);
       showSubjectDialog.onTrue();
+      hasCheckedDeepLinkRef.current = true;
+
+      if (typeof window !== 'undefined' && subject?.id) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('assignmentId', String(subject.id));
+        if (subject.subjects?.[0]?.subjectId) {
+          url.searchParams.set('subjectId', subject.subjects[0].subjectId);
+        }
+        window.history.replaceState({}, '', url.toString());
+      }
     },
     [showSubjectDialog]
   );
@@ -281,7 +310,17 @@ export function useSubjectAssignment() {
   const handleBackFromView = useCallback(() => {
     showSubjectDialog.onFalse();
     setSelectedSubject(null);
-  }, [showSubjectDialog]);
+    hasCheckedDeepLinkRef.current = true;
+
+    // Clean up URL parameters and router state synchronously
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('assignmentId');
+      url.searchParams.delete('subjectId');
+      window.history.replaceState({}, '', url.pathname);
+    }
+    router.replace(pathname);
+  }, [showSubjectDialog, router, pathname]);
 
   return {
     allClass,

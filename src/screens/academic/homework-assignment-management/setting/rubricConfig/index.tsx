@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
-import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -18,19 +17,17 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
   Card,
-  Chip,
   Grid,
   Paper,
   Stack,
   Button,
-  Divider,
   Typography,
   DialogActions,
 } from '@mui/material';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   RubricStatus,
   useGetRubricsQuery,
@@ -132,6 +129,9 @@ const RubricConfigScreen = () => {
         criteria: rubric.criteria.map((criterion, index) => ({
           title: criterion.title,
           description: criterion.description,
+          studentDescription: criterion.studentDescription,
+          teacherGuidance: criterion.teacherGuidance,
+          isRequired: criterion.isRequired,
           maxMarks: criterion.maxMarks,
           displayOrder: index + 1,
         })),

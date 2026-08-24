@@ -29,11 +29,9 @@ import AuditRiskBadge from './badges/AuditRiskBadge';
 import AuditMetadataPanel from './AuditMetadataPanel';
 import AuditApprovalTrail from './AuditApprovalTrail';
 import AuditActionBadge from './badges/AuditActionBadge';
-import AuditSourceBadge from './badges/AuditSourceBadge';
 import { AuditApprovalStatus } from '../types/auditLogs.types';
 import { getUserInitials, formatAuditTimestamp } from '../utils/auditFormatters';
 import {
-  SOURCE_LABELS,
   APPROVAL_LABELS,
   APPROVAL_COLOR_KEYS,
 } from '../constants/auditLogs.constants';
@@ -159,12 +157,11 @@ const AuditLogDetailsDrawer = ({
 
   // Skip rows that would just repeat the header or show nothing.
   const showRecordRow = Boolean(log && log.entityName && log.entityName !== log.actionLabel);
-  const sourceLabel = log?.source != null ? SOURCE_LABELS[log.source] : undefined;
   const approvalStatus = log?.approvalStatus ?? AuditApprovalStatus.NotRequired;
   const approvalLabel = APPROVAL_LABELS[approvalStatus];
   const showApprovalChip =
     approvalStatus !== AuditApprovalStatus.NotRequired && Boolean(approvalLabel);
-  const hasStatusChips = Boolean(log && (log.riskLevel != null || sourceLabel || showApprovalChip));
+  const hasStatusChips = Boolean(log && (log.riskLevel != null || showApprovalChip));
 
   return (
     <Drawer
@@ -213,7 +210,6 @@ const AuditLogDetailsDrawer = ({
               <Box sx={{ minWidth: 0 }}>
                 <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
                   <AuditActionBadge action={log.action} variant="inline" />
-                  {sourceLabel && <AuditSourceBadge source={log.source} />}
                 </Stack>
                 <Stack direction="row" alignItems="center" gap={0.75} sx={{ mt: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.25 }} noWrap>
@@ -341,54 +337,12 @@ const AuditLogDetailsDrawer = ({
                   value={log.reason || 'No reason provided'}
                   muted={!log.reason}
                 />
-                {sourceLabel && (
-                  <DetailRow label="Source">
-                    <AuditSourceBadge source={log.source} />
-                  </DetailRow>
-                )}
-                <DetailRow label="Log ID" last>
-                  <Stack direction="row" alignItems="center" gap={1} sx={{ minWidth: 0 }}>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      sx={{ fontFamily: 'monospace', fontSize: 11, minWidth: 0 }}
-                      noWrap
-                    >
-                      {log.id}
-                    </Typography>
-                    <Tooltip title="Copy Log ID">
-                      <IconButton size="small" onClick={handleCopyId} sx={{ p: 0.25 }}>
-                        <Iconify icon="mdi:content-copy" width={13} />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                </DetailRow>
                 {log.correlationId && (
                   <DetailRow label="Correlation ID" value={log.correlationId} mono last />
                 )}
               </Stack>
             </Section>
 
-            {/* AI Explain */}
-            {canViewAIInsights && (
-              <Section
-                icon="mdi:robot-outline"
-                title="AI Assistant"
-                subtitle="Get a plain-language explanation of this change"
-                defaultExpanded={false}
-              >
-                <Button
-                  fullWidth
-                  size="small"
-                  variant="outlined"
-                  color="success"
-                  startIcon={<Iconify icon="mdi:lightbulb-on-outline" width={16} />}
-                  onClick={() => onAIExplain?.(log)}
-                >
-                  Explain This Change
-                </Button>
-              </Section>
-            )}
 
             {/* Diff */}
             <Section
@@ -491,19 +445,7 @@ const AuditLogDetailsDrawer = ({
             backgroundColor: 'background.paper',
           }}
         >
-          <Stack direction="row" gap={1} justifyContent="space-between" flexWrap="wrap">
-            <Stack direction="row" gap={1}>
-              <Button
-                size="small"
-                variant="text"
-                color="inherit"
-                startIcon={<Iconify icon="mdi:content-copy" width={15} />}
-                onClick={handleCopyId}
-                sx={{ color: 'text.secondary' }}
-              >
-                Copy ID
-              </Button>
-            </Stack>
+          <Stack direction="row" gap={1} justifyContent="flex-end" flexWrap="wrap">
             <Stack direction="row" gap={1}>
               {canRestore && log.isRollbackAvailable && (
                 <LoadingButton
@@ -516,14 +458,15 @@ const AuditLogDetailsDrawer = ({
                   Restore
                 </LoadingButton>
               )}
-              <Button size="small" variant="contained" onClick={onClose}>
+              <Button size="small" onClick={onClose} startIcon={<Iconify icon={GlobalIcons.cancel} />} variant="outlined">
                 Close
               </Button>
             </Stack>
           </Stack>
         </Box>
-      )}
-    </Drawer>
+      )
+      }
+    </Drawer >
   );
 };
 

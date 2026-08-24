@@ -68,6 +68,10 @@ export interface IExamFormValues {
   status?: number;
   startDate?: string;
   endDate?: string;
+  startDateTime?: string;
+  endDateTime?: string;
+  startTime?: string;
+  endTime?: string;
   creatorName?: string;
   standardName?: string;
   issueCount?: number;
@@ -99,6 +103,10 @@ export interface IScheduledExamTableProps {
   getExams: any;
   activeStatus?: number;
   onStatusChange?: (status: number) => void;
+  page?: number;
+  rowsPerPage?: number;
+  totalCount?: number;
+  onServerPagination?: (page: number, rowsPerPage: number) => void;
 }
 
 export interface INewExamFormProps {

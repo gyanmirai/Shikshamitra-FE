@@ -4,7 +4,6 @@ import { detectRiskLevel } from '../utils/auditRisk.utils';
 import { estimateImpact } from '../utils/auditImpact.utils';
 import { deriveImpactLevel } from '../utils/auditFormatters';
 import {
-  AuditSource,
   type AuditLog,
   AuditRiskLevel,
   type AuditLogDiff,
@@ -47,7 +46,6 @@ const build = (
     entityType: 'AcademicCalendar',
     changedByUserId: 'usr-unknown',
     approvalStatus: AuditApprovalStatus.NotRequired,
-    source: AuditSource.Web,
     reason: null,
     correlationId: `cor-${log.id}`,
     isRollbackAvailable: false,
@@ -96,7 +94,6 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
     changedByEmail: 'parth@shikshamitra.in',
     timestamp: today(6, 19),
     reason: 'Calendar initial creation for CBSE English medium.',
-    source: AuditSource.Web,
     metadata: {
       ipAddress: '192.168.1.24',
       device: 'Windows Desktop',
@@ -131,7 +128,6 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
     changedByUserId: 'usr-admin-001',
     timestamp: today(6, 45),
     reason: 'National holiday added per government calendar.',
-    source: AuditSource.Web,
     metadata: {
       ipAddress: '192.168.1.24',
       device: 'Windows Desktop',
@@ -166,7 +162,6 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
     changedByEmail: 'priya@shikshamitra.in',
     timestamp: today(7, 10),
     reason: 'Calendar reviewed and approved for publication.',
-    source: AuditSource.Web,
     approvalStatus: AuditApprovalStatus.Approved,
     riskLevel: AuditRiskLevel.High,
     metadata: {
@@ -217,7 +212,6 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
     changedByUserId: 'usr-admin-001',
     timestamp: today(9, 32, 1),
     reason: 'Updated Diwali dates after government confirmed local holidays.',
-    source: AuditSource.Web,
     riskLevel: AuditRiskLevel.Medium,
     metadata: {
       ipAddress: '192.168.1.24',
@@ -242,7 +236,6 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
     changedByUserId: 'usr-principal-001',
     timestamp: today(5, 45, 2),
     reason: 'Heavy rainfall and local flooding warning issued by municipality.',
-    source: AuditSource.Mobile,
     riskLevel: AuditRiskLevel.Critical,
     approvalStatus: AuditApprovalStatus.PendingApproval,
     metadata: {
@@ -279,7 +272,6 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
     changedByUserId: 'usr-admin-002',
     timestamp: today(11, 12, 3),
     reason: null,
-    source: AuditSource.API,
     riskLevel: AuditRiskLevel.High,
     metadata: {
       ipAddress: '172.16.0.8',
@@ -306,7 +298,6 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
     changedByUserId: 'usr-system',
     timestamp: today(2, 0, 4),
     reason: 'Auto override applied during weekend rule recalculation.',
-    source: AuditSource.SystemJob,
     riskLevel: AuditRiskLevel.Medium,
     metadata: {
       device: 'Background Worker',
@@ -326,7 +317,6 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
     changedByUserId: 'usr-teacher-005',
     timestamp: today(16, 30, 5),
     reason: 'Rescheduled lecture to compensate for missed session.',
-    source: AuditSource.Web,
     riskLevel: AuditRiskLevel.Low,
     metadata: {
       ipAddress: '192.168.1.55',

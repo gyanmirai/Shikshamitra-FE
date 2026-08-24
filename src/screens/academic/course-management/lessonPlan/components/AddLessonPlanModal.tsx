@@ -254,6 +254,20 @@ const hasDuplicateLessonTopic = (form: LessonFormState, lessonPlans: LessonPlanR
   });
 };
 
+const hasDuplicateLessonSlot = (form: LessonFormState, lessonPlans: LessonPlanRow[]) => {
+  const plannedDate = form.plannedDate?.format('YYYY-MM-DD');
+  if (!plannedDate || !form.timetableSlotId) return false;
+
+  return lessonPlans.some((plan) => {
+    const sameRecord = form.id && plan.id === form.id;
+    const sameTeacher = !form.teacherId || !plan.teacherId || plan.teacherId === form.teacherId;
+    const sameDate = dayjs(plan.plannedDate).format('YYYY-MM-DD') === plannedDate;
+    const sameSlot = plan.timetableSlotId === form.timetableSlotId;
+
+    return !sameRecord && sameTeacher && sameDate && sameSlot;
+  });
+};
+
 const AddLessonPlanModal = ({
   open,
   editData,
@@ -280,14 +294,16 @@ const AddLessonPlanModal = ({
   }, [currentTeacher]);
 
   const selectedTeacherId = form.teacherId;
-  const plannedDateStr = form.plannedDate ? dateConvertor(form.plannedDate.format(dateFormat)) : '';
+  const plannedDateStr = form.plannedDate
+    ? dateConvertor(form.plannedDate.startOf('day').format(dateFormat))
+    : '';
 
   const { data: timelineData } = useGetLessonPlanTimelineQuery(
     {
-      date: plannedDateStr || dateConvertor(dayjs(todayIso).format(dateFormat)),
+      date: plannedDateStr || dateConvertor(dayjs(todayIso).startOf('day').format(dateFormat)),
       teacherId: selectedTeacherId,
     },
-    { skip: isTimelinePrefill || !selectedTeacherId || !plannedDateStr }
+    { skip: isTimelinePrefill || !selectedTeacherId || !plannedDateStr, refetchOnMountOrArgChange: true }
   );
 
   const isLocked = !!editData;
@@ -466,7 +482,7 @@ const AddLessonPlanModal = ({
           academicYear: editData.academicYear || '2026-27',
           teacherName: editData.teacherName || '',
           teacherId: (editData as any).teacherId || '',
-          className: editData.className || '',
+          className: editData.className || (editData as any).standardName || '',
           divisionName: editData.divisionName || '',
           subjectName: editData.subjectName || '',
           chapterName: editData.chapterName || '',
@@ -482,7 +498,7 @@ const AddLessonPlanModal = ({
           template: '',
           source: editData.source || 'Manual',
           timetableSlotId: (editData as any).timetableSlotId || '',
-          standardId: (editData as any).standardId || '',
+          standardId: (editData as any).standardId || (editData as any).classId || '',
           divisionId: (editData as any).divisionId || '',
           subjectId: (editData as any).subjectId || '',
           chapterId: (editData as any).chapterId || '',
@@ -528,6 +544,8 @@ const AddLessonPlanModal = ({
       return 'Please select a valid timetable period with subject details.';
     if (!form.chapterId || !form.chapterName) return 'Chapter is required.';
     if (!form.topic.trim()) return 'Topic is required.';
+    if (hasDuplicateLessonSlot(form, lessonPlans))
+      return 'A lesson plan already exists for this teacher and timetable period on this date.';
     if (hasDuplicateLessonTopic(form, lessonPlans))
       return 'A lesson plan with the same topic already exists for this teacher on this date.';
     if (form.plannedCompletionPercentage < 0 || form.plannedCompletionPercentage > 100)
@@ -584,7 +602,6 @@ const AddLessonPlanModal = ({
     }),
     [form]
   );
-
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={currentValues}>
       <CustomDialog
@@ -788,9 +805,40 @@ const AddLessonPlanModal = ({
                     }}
                   >
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                        Planned Completion Target
-                      </Typography>
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                          Target Chapter Completion
+                        </Typography>
+                        <CustomTooltip
+                          placement="top"
+                          arrow
+                          title={
+                            <Box sx={{ p: 1, maxWidth: 280 }}>
+                              <Typography
+                                variant="caption"
+                                sx={{ lineHeight: 1.5, display: 'block' }}
+                              >
+                                <Box component="span" sx={{ fontWeight: 700 }}>
+                                  Chapter Completion Target
+                                </Box>{' '}
+                                indicates the percentage of the selected chapter that is planned to be completed by the end of this lesson. This helps track the intended progress through the chapter.
+                              </Typography>
+                            </Box>
+                          }
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              cursor: 'pointer',
+                              '&:hover': { color: 'text.primary' },
+                            }}
+                          >
+                            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                          </Box>
+                        </CustomTooltip>
+                      </Stack>
                       <Label color="primary" variant="soft">
                         {form.plannedCompletionPercentage}%
                       </Label>

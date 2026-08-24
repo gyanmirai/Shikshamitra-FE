@@ -18,19 +18,15 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetElectiveGroupUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 import {
   Box,
-  Chip,
   Alert,
-  Stack,
-  Drawer,
   Button,
-  Divider,
   TextField,
   Typography,
-  IconButton,
 } from '@mui/material';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
 import SettingElectiveSubjectForm from './components/electiveSubjectForm';
+import ElectiveGroupUsageDrawer from './components/ElectiveGroupUsageDrawer';
 import { useElectiveSubjectSetting } from './hooks/useElectiveSubjectSetting';
 
 const ElectiveSubjectSetting = () => {
@@ -148,128 +144,21 @@ const ElectiveSubjectSetting = () => {
         data={[]}
       />
 
-      <Drawer
-        anchor="right"
+      <ElectiveGroupUsageDrawer
         open={usageDrawer.value}
         onClose={() => {
           usageDrawer.onFalse();
           setSelected(null);
         }}
-        slotProps={{
-          backdrop: {
-            sx: {
-              bgcolor: 'rgba(15, 23, 42, 0.44)',
-              backdropFilter: 'blur(3px)',
-            },
-          },
+        selectedGroup={selected}
+        usageData={usageData}
+        isLoading={isUsageFetching}
+        canArchive={canAdd}
+        onArchive={(data) => {
+          setSelected(data);
+          archiveDialog.onTrue();
         }}
-        PaperProps={{
-          sx: {
-            width: { xs: '100%', sm: 480 },
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
-          },
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 1.5,
-            p: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                {selected?.name || 'Elective Subject Usage'}
-              </Typography>
-              <CustomTooltip title="Usage across the system" placement="right" arrow>
-                <Iconify
-                  icon={GlobalIcons.info}
-                  color="info.main"
-                  width={16}
-                  height={16}
-                  sx={{ cursor: 'pointer' }}
-                />
-              </CustomTooltip>
-            </Stack>
-            <Typography variant="caption" color="text.secondary">
-              Usage across the system
-            </Typography>
-          </Stack>
-          <IconButton
-            onClick={() => {
-              usageDrawer.onFalse();
-              setSelected(null);
-            }}
-            sx={{ p: 0.5, color: 'text.secondary' }}
-          >
-            <Iconify icon="mdi:close" />
-          </IconButton>
-        </Box>
-        <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
-          {isUsageFetching ? (
-            <Typography variant="body2">Loading usage...</Typography>
-          ) : (
-            <>
-              <Box
-                sx={{
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                }}
-              >
-                <UsageRow icon="lucide:book" title="Subjects" items={usageData?.subjects || []} />
-                <UsageRow
-                  icon="lucide:layout-grid"
-                  title="Used In Class Allocations"
-                  count={usageData?.usage?.classAllocationsCount}
-                  suffix="class allocation(s)"
-                />
-                <UsageRow
-                  icon="lucide:users"
-                  title="Student Selection"
-                  count={usageData?.usage?.studentSelectionsCount}
-                  suffix="student selection(s)"
-                />
-                <UsageRow
-                  icon="lucide:calendar-clock"
-                  title="Timetable"
-                  count={usageData?.usage?.timetablePeriodsCount}
-                  suffix="period(s)"
-                />
-                <UsageRow
-                  icon="lucide:file-check"
-                  title="Examination"
-                  count={usageData?.usage?.examSchedulesCount}
-                  suffix="exam schedule(s)"
-                />
-                <UsageRow
-                  icon="lucide:bar-chart-2"
-                  title="Subject Wise Student Count"
-                  items={
-                    usageData?.usage?.subjectWiseStudentCount?.map(
-                      (item: any) => `${item.subject}: ${item.count} student(s)`
-                    ) || []
-                  }
-                />
-              </Box>
-              <Alert severity={usageData?.canDelete ? 'success' : 'warning'} sx={{ mt: 2 }}>
-                {usageData?.canDelete
-                  ? 'This elective group is not currently used in any class allocation. Safe to edit or delete.'
-                  : 'This elective group is already used. Safe to edit color and description. Archive is recommended if no longer used.'}
-              </Alert>
-            </>
-          )}
-        </Box>
-      </Drawer>
+      />
 
       <CustomDialog
         open={addElectiveGroupDialog.value}
@@ -412,67 +301,3 @@ const ElectiveSubjectSetting = () => {
 };
 
 export default ElectiveSubjectSetting;
-
-const UsageRow = ({
-  icon,
-  title,
-  items,
-  count,
-  suffix,
-}: {
-  icon: string;
-  title: string;
-  items?: string[];
-  count?: number;
-  suffix?: string;
-}) => {
-  const hasItems = items !== undefined;
-  const value = hasItems ? items.length : count || 0;
-  const isEmpty = value === 0;
-
-  return (
-    <Box
-      sx={{
-        p: 1.5,
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        '&:last-of-type': { borderBottom: 'none' },
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            flexShrink: 0,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: isEmpty ? 'action.hover' : 'primary.lighter',
-          }}
-        >
-          <Iconify
-            icon={icon}
-            width={16}
-            height={16}
-            sx={{ color: isEmpty ? 'text.disabled' : 'primary.main' }}
-          />
-        </Box>
-        <Typography variant="body2" sx={{ flex: 1 }}>
-          {title}
-        </Typography>
-        <Typography variant="caption" fontWeight={600} color={isEmpty ? 'text.disabled' : 'text.primary'}>
-          {isEmpty ? 'Not used' : `${value} ${suffix || ''}`.trim()}
-        </Typography>
-      </Box>
-      {hasItems && value > 0 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1, ml: '44px' }}>
-          {items.map((item) => (
-            <Chip key={item} label={item} size="small" variant="outlined" sx={{ height: 22, fontSize: '11px' }} />
-          ))}
-        </Box>
-      )}
-    </Box>
-  );
-};

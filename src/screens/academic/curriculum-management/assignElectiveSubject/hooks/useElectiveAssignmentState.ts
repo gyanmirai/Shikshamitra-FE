@@ -1,0 +1,258 @@
+import { useMemo, useState, useEffect, useCallback } from 'react';
+
+import type {
+  StudentElectiveRow,
+  SubjectCapacityRow,
+  AssignmentFilterValue,
+  AssignmentWorkflowStatus,
+  AssignmentValidationIssue,
+} from '../types';
+
+interface UseElectiveAssignmentStateArgs {
+  students: StudentElectiveRow[];
+  serverRecords: StudentElectiveRow[] | undefined;
+  isLocked: boolean;
+}
+
+export default function useElectiveAssignmentState({
+  students,
+  serverRecords,
+  isLocked,
+}: UseElectiveAssignmentStateArgs) {
+  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<AssignmentFilterValue>('all');
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
+
+  // Reset selections whenever server data changes (new context loaded / refetch after save)
+  useEffect(() => {
+    if (!serverRecords) return;
+    const initial: Record<string, string> = {};
+    serverRecords.forEach((st) => {
+      if (st.selectedSubjectId) initial[st.studentId] = st.selectedSubjectId;
+    });
+    requestAnimationFrame(() => {
+      setStudentSelections(initial);
+      setSelectedRowIds(new Set());
+    });
+  }, [serverRecords]);
+
+  const assignSubject = useCallback(
+    (studentId: string, subjectId: string) => {
+      if (isLocked) return;
+      setStudentSelections((prev) => ({ ...prev, [studentId]: subjectId }));
+    },
+    [isLocked]
+  );
+
+  const bulkAssignSubject = useCallback(
+    (studentIds: string[], subjectId: string) => {
+      if (isLocked) return;
+      setStudentSelections((prev) => {
+        const next = { ...prev };
+        studentIds.forEach((id) => {
+          next[id] = subjectId;
+        });
+        return next;
+      });
+    },
+    [isLocked]
+  );
+
+  const clearSelections = useCallback((studentIds?: string[]) => {
+    if (!studentIds) {
+      setStudentSelections({});
+      return;
+    }
+    setStudentSelections((prev) => {
+      const next = { ...prev };
+      studentIds.forEach((id) => delete next[id]);
+      return next;
+    });
+  }, []);
+
+  const resetSelections = useCallback(() => {
+    if (!serverRecords) {
+      setStudentSelections({});
+      return;
+    }
+    const initial: Record<string, string> = {};
+    serverRecords.forEach((st) => {
+      if (st.selectedSubjectId) initial[st.studentId] = st.selectedSubjectId;
+    });
+    setStudentSelections(initial);
+  }, [serverRecords]);
+
+  const toggleRowSelected = useCallback((studentId: string) => {
+    setSelectedRowIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(studentId)) next.delete(studentId);
+      else next.add(studentId);
+      return next;
+    });
+  }, []);
+
+  const toggleAllRowsSelected = useCallback((studentIds: string[], checked: boolean) => {
+    setSelectedRowIds(checked ? new Set(studentIds) : new Set());
+  }, []);
+
+  const clearRowSelection = useCallback(() => setSelectedRowIds(new Set()), []);
+
+  const preferenceMatch = useCallback(
+    (row: StudentElectiveRow): 'matched' | 'mismatched' | 'noPreference' => {
+      const selectedId = studentSelections[row.studentId];
+      if (!row.studentPreference) return 'noPreference';
+      if (!selectedId) return 'mismatched';
+      const selectedSubject = row.selectableSubjects.find((s) => s.subjectId === selectedId);
+      if (!selectedSubject) return 'mismatched';
+      return selectedSubject.subjectName.trim().toLowerCase() ===
+        row.studentPreference.trim().toLowerCase()
+        ? 'matched'
+        : 'mismatched';
+    },
+    [studentSelections]
+  );
+
+  const rowStatus = useCallback(
+    (row: StudentElectiveRow) => {
+      const selectedId = studentSelections[row.studentId];
+      if (!selectedId) return 'unassigned' as const;
+      const original = serverRecords?.find((r) => r.studentId === row.studentId)?.selectedSubjectId;
+      if (original !== selectedId) return 'changed' as const;
+      return 'assigned' as const;
+    },
+    [studentSelections, serverRecords]
+  );
+
+  const filteredStudents = useMemo(() => {
+    let list = students;
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.trim().toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.studentName.toLowerCase().includes(term) ||
+          s.rollNo.toLowerCase().includes(term) ||
+          (s.grNo && s.grNo.toLowerCase().includes(term))
+      );
+    }
+
+    if (statusFilter === 'assigned') {
+      list = list.filter((s) => !!studentSelections[s.studentId]);
+    } else if (statusFilter === 'unassigned') {
+      list = list.filter((s) => !studentSelections[s.studentId]);
+    } else if (statusFilter === 'preferenceMismatch') {
+      list = list.filter((s) => preferenceMatch(s) === 'mismatched');
+    }
+
+    return list;
+  }, [students, searchTerm, statusFilter, studentSelections, preferenceMatch]);
+
+  const summary = useMemo(() => {
+    const total = students.length;
+    const assigned = students.filter((s) => !!studentSelections[s.studentId]).length;
+    const unassigned = total - assigned;
+    const withPreference = students.filter((s) => !!s.studentPreference);
+    const matched = withPreference.filter((s) => preferenceMatch(s) === 'matched').length;
+    const preferenceMatchPct =
+      withPreference.length > 0 ? Math.round((matched / withPreference.length) * 100) : null;
+    const issues = unassigned;
+
+    return { total, assigned, unassigned, issues, preferenceMatchPct, capacityUsed: assigned };
+  }, [students, studentSelections, preferenceMatch]);
+
+  const subjectCapacity: SubjectCapacityRow[] = useMemo(() => {
+    const subjectMap = new Map<string, SubjectCapacityRow>();
+    students.forEach((s) => {
+      s.selectableSubjects.forEach((opt) => {
+        if (!subjectMap.has(opt.subjectId)) {
+          subjectMap.set(opt.subjectId, {
+            subjectId: opt.subjectId,
+            subjectName: opt.subjectName,
+            subjectColor: opt.subjectColor,
+            assignedCount: 0,
+          });
+        }
+      });
+    });
+    Object.values(studentSelections).forEach((subjectId) => {
+      const entry = subjectMap.get(subjectId);
+      if (entry) entry.assignedCount += 1;
+    });
+    return Array.from(subjectMap.values());
+  }, [students, studentSelections]);
+
+  const validationIssues: AssignmentValidationIssue[] = useMemo(
+    () =>
+      students
+        .filter((s) => !studentSelections[s.studentId])
+        .map((s) => ({
+          id: s.studentId,
+          studentId: s.studentId,
+          studentName: s.studentName,
+          severity: 'error' as const,
+          title: 'No elective assigned',
+          description: `${s.studentName} (Roll No. ${s.rollNo}) has not been assigned an elective subject.`,
+        })),
+    [students, studentSelections]
+  );
+
+  const unsavedChangesCount = useMemo(() => {
+    if (!serverRecords) return 0;
+    return students.filter(
+      (st) =>
+        (studentSelections[st.studentId] ?? '') !==
+        (serverRecords.find((r) => r.studentId === st.studentId)?.selectedSubjectId ?? '')
+    ).length;
+  }, [studentSelections, serverRecords, students]);
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!serverRecords) return false;
+    if (students.length !== serverRecords.length) return true;
+    return unsavedChangesCount > 0;
+  }, [serverRecords, students, unsavedChangesCount]);
+
+  const allStudentsAssigned = useMemo(
+    () => students.length > 0 && students.every((st) => !!studentSelections[st.studentId]),
+    [studentSelections, students]
+  );
+
+  const hasSelections = Object.keys(studentSelections).length > 0;
+
+  const workflowStatus: AssignmentWorkflowStatus = useMemo(() => {
+    if (isLocked) return 'locked';
+    if (hasUnsavedChanges) {
+      return 'draft';
+    }
+    if (!hasSelections) return 'draft';
+    return allStudentsAssigned ? 'readyToLock' : 'partiallyAssigned';
+  }, [isLocked, hasUnsavedChanges, hasSelections, allStudentsAssigned]);
+
+  return {
+    studentSelections,
+    setStudentSelections,
+    assignSubject,
+    bulkAssignSubject,
+    clearSelections,
+    resetSelections,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    selectedRowIds,
+    toggleRowSelected,
+    toggleAllRowsSelected,
+    clearRowSelection,
+    filteredStudents,
+    summary,
+    subjectCapacity,
+    validationIssues,
+    preferenceMatch,
+    rowStatus,
+    hasUnsavedChanges,
+    unsavedChangesCount,
+    allStudentsAssigned,
+    hasSelections,
+    workflowStatus,
+  };
+}

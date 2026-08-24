@@ -15,10 +15,14 @@ export const chaptersApi = academicApi.injectEndpoints({
 
     // GET - Fetch all chapters by standardId and optional subjectId
     getChaptersByStandard: builder.query({
-      query: ({ standardId, subjectId }) => ({
+      query: ({ standardId, subjectId, divisionId }) => ({
         url: `/academic/curriculum/chapters`,
         method: 'GET',
-        params: { standardId, subjectId },
+        params: {
+          standardId,
+          subjectId,
+          ...(divisionId ? { divisionId } : {}),
+        },
       }),
       providesTags: [academicType.chapter],
     }),

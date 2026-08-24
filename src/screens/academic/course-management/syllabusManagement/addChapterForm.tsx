@@ -20,6 +20,7 @@ import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -438,7 +439,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   <ShakingTextField
                     error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
                   >
-                    <TextField
+                    <LanguageInputField
                       fullWidth
                       label="Chapter Name *"
                       name="chapterName"

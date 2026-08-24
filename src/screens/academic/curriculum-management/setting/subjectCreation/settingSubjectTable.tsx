@@ -4,15 +4,20 @@ import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { formatDateOnly } from 'src/utils/date-only';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Card, Chip, Stack, IconButton, Typography } from '@mui/material';
+import { Box, Stack, IconButton, Typography } from '@mui/material';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import {
+  TimetableSettingsSummaryCards,
+  type ITimetableSummaryCard,
+} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import SubjectNameCell from './subjectNameCell';
 
@@ -63,14 +68,50 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
     [subjects]
   );
 
+  const summaryCards: ITimetableSummaryCard[] = useMemo(
+    () => [
+      {
+        label: 'Total Subjects',
+        value: summary.total,
+        icon: 'solar:book-bookmark-bold-duotone',
+        color: 'primary',
+      },
+      {
+        label: 'Active Subjects',
+        value: summary.active,
+        icon: 'solar:check-circle-bold-duotone',
+        color: 'success',
+      },
+      {
+        label: 'Archived Subjects',
+        value: summary.archived,
+        icon: 'solar:archive-bold-duotone',
+        color: 'warning',
+      },
+      {
+        label: 'Used In Classes',
+        value: summary.usedInClasses,
+        icon: 'solar:buildings-3-bold-duotone',
+        color: 'info',
+      },
+      {
+        label: 'Unused Subjects',
+        value: summary.unused,
+        icon: 'solar:close-circle-bold-duotone',
+        color: 'error',
+      },
+    ],
+    [summary]
+  );
+
   const columns: IColumn[] = useMemo(
     () => [
       {
         id: 'name',
         label: 'Subject',
         align: 'left',
-        width: 320,
-        minWidth: 320,
+        width: 300,
+        minWidth: 300,
         sticky: true,
         stickyPosition: 'left',
         headerSx: {
@@ -87,12 +128,15 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         id: 'category',
         label: 'Category',
         align: 'left',
+        minWidth: 140,
         render: (value) => value || 'General',
       },
       {
         id: 'usedInClassesCount',
         label: 'Used In Classes',
         align: 'center',
+        minWidth: 160,
+        filterType: 'number',
         render: (value, row) => (
           <Box
             component="button"
@@ -106,7 +150,14 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
               font: 'inherit',
             }}
           >
-            <Typography variant="body2" color={value ? 'primary.main' : 'text.secondary'}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: value ? 'primary.main' : 'text.secondary',
+                fontWeight: value ? 600 : 400,
+                '&:hover': value ? { textDecoration: 'underline' } : {},
+              }}
+            >
               {value ? `Used in ${value} classes` : 'Unused'}
             </Typography>
           </Box>
@@ -116,39 +167,51 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         id: 'usedInElectiveGroupsCount',
         label: 'Used In Elective Groups',
         align: 'center',
-        render: (value) => value || 0,
+        minWidth: 180,
+        filterType: 'number',
+        render: (value) => (
+          <Typography variant="body2" sx={{ fontWeight: value ? 600 : 400 }}>
+            {value || 0}
+          </Typography>
+        ),
       },
       {
         id: 'lastUpdatedAt',
         label: 'Last Updated',
         align: 'left',
-        render: (value) => formatDateOnly(value),
+        minWidth: 140,
+        filterType: 'date',
+        render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
       },
       {
         id: 'status',
         label: 'Status',
-        align: 'center',
-        width: 150,
-        minWidth: 150,
+        width: 130,
+        minWidth: 130,
         sticky: true,
-        stickyPosition: 'right',
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Active', value: 'Active' },
+          { label: 'Inactive', value: 'Inactive' },
+          { label: 'Archived', value: 'Archived' },
+        ],
         render: (value) => {
           const label = getStatusLabel(value);
           return (
-            <Chip
-              size="small"
-              label={label}
-              color={label === 'Active' ? 'success' : label === 'Archived' ? 'default' : 'warning'}
+            <Label
+              color={label === 'Active' ? 'success' : label === 'Archived' ? 'warning' : 'default'}
               variant="soft"
-            />
+            >
+              {label}
+            </Label>
           );
         },
       },
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 152,
-        width: 152,
+        minWidth: 140,
+        width: 140,
         align: 'center',
         isSort: false,
         sticky: true,
@@ -158,12 +221,14 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
           const subject = row as ISubject;
           const isArchived = getStatusLabel(subject.status) === 'Archived';
           return (
-            <Stack direction="row" spacing={1} justifyContent="center">
-              <SubjectActionButton
-                title="View usage"
-                icon="solar:eye-bold"
-                onClick={() => onViewUsage(subject)}
-              />
+            <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
+              {canView && (
+                <SubjectActionButton
+                  title="View usage"
+                  icon="solar:eye-bold"
+                  onClick={() => onViewUsage(subject)}
+                />
+              )}
               {isArchived ? (
                 <SubjectActionButton
                   title="Restore subject"
@@ -208,34 +273,12 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         },
       },
     ],
-    [canAdd, canDelete, onArchive, onDelete, onEdit, onRestore, onViewUsage]
+    [canAdd, canDelete, canView, onArchive, onDelete, onEdit, onRestore, onViewUsage]
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minHeight: 0 }}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' },
-          gap: 1,
-          flexShrink: 0,
-        }}
-      >
-        {[
-          ['Total Subjects', summary.total],
-          ['Active Subjects', summary.active],
-          ['Archived Subjects', summary.archived],
-          ['Used In Classes', summary.usedInClasses],
-          ['Unused Subjects', summary.unused],
-        ].map(([label, count]) => (
-          <Card key={label} sx={{ p: 1.5, borderRadius: 1 }}>
-            <Typography variant="caption" color="text.secondary">
-              {label}
-            </Typography>
-            <Typography variant="h5">{count}</Typography>
-          </Card>
-        ))}
-      </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <TimetableSettingsSummaryCards cards={summaryCards} />
 
       <CustomizableTable
         tableId="subject-data-table"
@@ -300,9 +343,15 @@ const SubjectActionButton = ({
         disabled={disabled}
         aria-label={title}
         onClick={onClick}
-        sx={{ width: 18, height: 18, p: 0 }}
+        sx={{
+          width: 28,
+          height: 28,
+          '&:hover': {
+            bgcolor: 'action.hover',
+          },
+        }}
       >
-        <Iconify icon={icon} width={16} height={16} />
+        <Iconify icon={icon} width={17} height={17} />
       </IconButton>
     </span>
   </CustomTooltip>

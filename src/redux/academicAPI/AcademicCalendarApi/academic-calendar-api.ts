@@ -339,6 +339,15 @@ export const academicCalendarApi = academicApi.injectEndpoints({
       providesTags: [academicCalendarType.auditLog],
     }),
 
+    addAuditLogReviewNote: builder.mutation({
+      query: ({ auditLogId, note }: { auditLogId: string; note: string }) => ({
+        url: `/academic/calendar-audit-logs/${auditLogId}/review-notes`,
+        method: 'POST',
+        body: { note },
+      }),
+      invalidatesTags: [academicCalendarType.auditLog],
+    }),
+
     // ─── Settings ───────────────────────────────────────────────────────────
 
     getCalendarSettings: builder.query({
@@ -419,6 +428,7 @@ export const {
   useGetAuditLogsByCalendarQuery,
   useGetAuditLogsByDayQuery,
   useGetAuditLogsSummaryQuery,
+  useAddAuditLogReviewNoteMutation,
 
   useGetCalendarSettingsQuery,
   useCreateCalendarSettingsMutation,

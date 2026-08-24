@@ -18,20 +18,16 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetSubjectUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
   Box,
-  Chip,
   Alert,
-  Stack,
-  Drawer,
   Button,
-  Divider,
   TextField,
   Typography,
-  IconButton,
 } from '@mui/material';
 
 import SettingSubjectForm from './subjectForm';
 import SubjectAddDrawer from './subjectAddDrawer';
 import SettingSubjectTable from './settingSubjectTable';
+import SubjectUsageDrawer from './subjectUsageDrawer';
 import { useSubjectCreation } from './hooks/useSubjectCreation';
 
 const SubjectCreation = () => {
@@ -105,7 +101,11 @@ const SubjectCreation = () => {
               >
                 Subject
               </Button>
-              <Button variant="outlined" size="small" onClick={drawerOpen.onTrue} startIcon={<Iconify icon="mdi:cloud-upload-outline" width={18} />}
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={drawerOpen.onTrue}
+                startIcon={<Iconify icon="mdi:cloud-upload-outline" width={18} />}
               >
                 Bulk Add
               </Button>
@@ -185,144 +185,21 @@ const SubjectCreation = () => {
         />
       </CustomDialog>
 
-      <Drawer
-        anchor="right"
+      <SubjectUsageDrawer
         open={usageDrawer.value}
         onClose={() => {
           usageDrawer.onFalse();
           setSelectedSubject(null);
         }}
-        slotProps={{
-          backdrop: {
-            sx: {
-              bgcolor: 'rgba(15, 23, 42, 0.44)',
-              backdropFilter: 'blur(3px)',
-            },
-          },
+        selectedSubject={selectedSubject}
+        usageData={usageData}
+        isLoading={isUsageFetching}
+        canArchive={canAdd}
+        onArchive={(subject) => {
+          setSelectedSubject(subject);
+          archiveDialog.onTrue();
         }}
-        PaperProps={{
-          sx: {
-            width: { xs: '100%', sm: 460 },
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
-          },
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 1.5,
-            p: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                {selectedSubject?.name || 'Subject Usage'}
-              </Typography>
-              <CustomTooltip title="Usage across the system" placement="right" arrow>
-                <Iconify
-                  icon={GlobalIcons.info}
-                  color="info.main"
-                  width={16}
-                  height={16}
-                  sx={{ cursor: 'pointer' }}
-                />
-              </CustomTooltip>
-            </Stack>
-            <Typography variant="caption" color="text.secondary">
-              Usage across the system
-            </Typography>
-          </Stack>
-          <IconButton
-            onClick={() => {
-              usageDrawer.onFalse();
-              setSelectedSubject(null);
-            }}
-            sx={{ p: 0.5, color: 'text.secondary' }}
-          >
-            <Iconify icon="mdi:close" />
-          </IconButton>
-        </Box>
-        <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
-          {isUsageFetching ? (
-            <Typography variant="body2">Loading usage...</Typography>
-          ) : (
-            <>
-              <Box
-                sx={{
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                }}
-              >
-                <UsageRow
-                  icon="lucide:layout-grid"
-                  title="Subject Allocation"
-                  items={
-                    usageData?.usage?.subjectAllocations?.map(
-                      (item: any) => `${item.standard || 'Class'} - ${item.code || 'No code'}`
-                    ) || []
-                  }
-                />
-                <UsageRow
-                  icon="lucide:users"
-                  title="Elective Groups"
-                  items={usageData?.usage?.electiveGroups || []}
-                />
-                <UsageRow
-                  icon="lucide:book-open"
-                  title="Syllabus"
-                  count={usageData?.usage?.chaptersCount}
-                  suffix="chapters"
-                />
-                <UsageRow
-                  icon="lucide:calendar-clock"
-                  title="Timetable"
-                  count={usageData?.usage?.timetablePeriodsCount}
-                  suffix="periods"
-                />
-                <UsageRow
-                  icon="lucide:file-check"
-                  title="Examination"
-                  count={usageData?.usage?.examSchedulesCount}
-                  suffix="exam schedules"
-                />
-                <UsageRow
-                  icon="lucide:notebook-pen"
-                  title="Lesson Plan"
-                  count={usageData?.usage?.lessonPlansCount}
-                  suffix="lesson plans"
-                />
-                <UsageRow
-                  icon="lucide:clipboard-list"
-                  title="Homework"
-                  count={usageData?.usage?.homeworkCount}
-                  suffix="homework records"
-                />
-                <UsageRow
-                  icon="lucide:user-check"
-                  title="Teacher Mapping"
-                  count={usageData?.usage?.teacherMappingsCount}
-                  suffix="teachers assigned"
-                />
-              </Box>
-              <Alert severity={usageData?.canDelete ? 'success' : 'warning'} sx={{ mt: 2 }}>
-                {usageData?.canDelete
-                  ? 'Safe to delete because this subject is not used.'
-                  : 'Safe to edit display name, color, and icon. Not safe to delete. Archive is recommended if no longer used.'}
-              </Alert>
-            </>
-          )}
-        </Box>
-      </Drawer>
+      />
 
       <ConfirmDialog
         open={archiveDialog.value}
@@ -429,77 +306,3 @@ const SubjectCreation = () => {
 };
 
 export default SubjectCreation;
-
-const UsageRow = ({
-  icon,
-  title,
-  items,
-  count,
-  suffix,
-}: {
-  icon: string;
-  title: string;
-  items?: string[];
-  count?: number;
-  suffix?: string;
-}) => {
-  const hasItems = items !== undefined;
-  const value = hasItems ? items.length : count || 0;
-  const isEmpty = value === 0;
-
-  return (
-    <Box
-      sx={{
-        p: 1.5,
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        '&:last-of-type': { borderBottom: 'none' },
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            flexShrink: 0,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: isEmpty ? 'action.hover' : 'primary.lighter',
-          }}
-        >
-          <Iconify
-            icon={icon}
-            width={16}
-            height={16}
-            sx={{ color: isEmpty ? 'text.disabled' : 'primary.main' }}
-          />
-        </Box>
-        <Typography variant="body2" sx={{ flex: 1 }}>
-          {title}
-        </Typography>
-        <Typography
-          variant="caption"
-          fontWeight={600}
-          color={isEmpty ? 'text.disabled' : 'text.primary'}
-        >
-          {isEmpty ? 'Not used' : `${value} ${suffix || ''}`.trim()}
-        </Typography>
-      </Box>
-      {hasItems && value > 0 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1, ml: '44px' }}>
-          {items.map((item) => (
-            <Chip
-              key={item}
-              label={item}
-              size="small"
-              variant="outlined"
-              sx={{ height: 22, fontSize: '11px' }}
-            />
-          ))}
-        </Box>
-      )}
-    </Box>
-  );
-};

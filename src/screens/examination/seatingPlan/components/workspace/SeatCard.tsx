@@ -37,6 +37,7 @@ interface Props {
   rollNo?: number;
   divisionName?: string;
   isConflict?: boolean;
+  isExternalExamOccupied?: boolean;
   onClick?: () => void;
   onRemove?: () => void;
   onReserve?: () => void;
@@ -51,15 +52,21 @@ export default function SeatCard({
   rollNo,
   divisionName,
   isConflict,
+  isExternalExamOccupied: propIsExternalExam,
   onClick,
   onRemove,
   onReserve,
   isReadOnly,
 }: Props) {
+  const isExternalExam =
+    propIsExternalExam ||
+    !!assignment?.isExternalExamOccupied ||
+    !!seat.isExternalExamOccupied;
+
   const { setNodeRef: setDropNodeRef, isOver } = useDroppable({
     id: `seat:${seat.seatId}`,
     data: { type: 'seat', seat, roomId },
-    disabled: seat.isDisabled || isReadOnly,
+    disabled: seat.isDisabled || isReadOnly || isExternalExam,
   });
   const {
     attributes,
@@ -70,13 +77,13 @@ export default function SeatCard({
   } = useDraggable({
     id: `assigned-seat:${seat.seatId}`,
     data: { type: 'assigned-seat', assignment, seat, roomId },
-    disabled: !assignment || seat.isDisabled || isReadOnly,
+    disabled: !assignment || seat.isDisabled || isReadOnly || isExternalExam,
   });
   const popover = usePopover();
   const { active } = useDndContext();
 
   let state: SeatVisualState = 'available';
-  if (seat.isDisabled) state = 'disabled';
+  if (seat.isDisabled || isExternalExam) state = 'disabled';
   else if (isConflict) state = 'conflict';
   else if (assignment) state = 'allocated';
   else if (seat.isReserved) state = 'reserved';
@@ -86,23 +93,27 @@ export default function SeatCard({
 
   const draggedType = active?.data.current?.type as 'student' | 'assigned-seat' | undefined;
   const isSelfDrag = active?.id === `assigned-seat:${seat.seatId}`;
-  const isSwapTarget = !isReadOnly && isOver && !!assignment && !isSelfDrag && !!draggedType;
-  const isPlaceTarget = !isReadOnly && isOver && !assignment && !seat.isDisabled;
+  const isSwapTarget =
+    !isReadOnly && !isExternalExam && isOver && !!assignment && !isSelfDrag && !!draggedType;
+  const isPlaceTarget =
+    !isReadOnly && !isExternalExam && isOver && !assignment && !seat.isDisabled;
 
   return (
     <Tooltip
       title={
         popover.open
           ? ''
-          : assignment
-            ? `${studentName ?? 'Student'} - Seat ${seat.seatNumber}`
-            : seat.isReserved
-              ? `Reserved Seat #${seat.seatNumber} (Excluded from allocation)`
-              : seat.isDisabled
-                ? `Disabled Seat #${seat.seatNumber}`
-                : isReadOnly
-                  ? `Seat ${seat.seatNumber}`
-                  : `Drop a student on seat ${seat.seatNumber}`
+          : isExternalExam
+            ? 'Blocked (Other Exam)'
+            : assignment
+              ? `${studentName ?? 'Student'} - Seat ${seat.seatNumber}`
+              : seat.isReserved
+                ? `Reserved Seat #${seat.seatNumber} (Excluded from allocation)`
+                : seat.isDisabled
+                  ? `Disabled Seat #${seat.seatNumber}`
+                  : isReadOnly
+                    ? `Seat ${seat.seatNumber}`
+                    : `Drop a student on seat ${seat.seatNumber}`
       }
       arrow
       enterDelay={500}
@@ -112,13 +123,20 @@ export default function SeatCard({
           setDropNodeRef(node);
           setDragNodeRef(node);
         }}
-        {...(assignment && !isReadOnly ? listeners : {})}
-        {...(assignment && !isReadOnly ? attributes : {})}
-        onClick={onClick}
-        tabIndex={0}
+        {...(assignment && !isReadOnly && !isExternalExam ? listeners : {})}
+        {...(assignment && !isReadOnly && !isExternalExam ? attributes : {})}
+        onClick={isExternalExam ? undefined : onClick}
+        tabIndex={isExternalExam ? -1 : 0}
         data-seat-id={seat.seatId}
         role="button"
-        aria-label={`Seat ${seat.seatNumber}${assignment ? `, occupied by ${studentName}` : ', empty'}`}
+        aria-label={`Seat ${seat.seatNumber}${
+          isExternalExam
+            ? `, blocked by other exam`
+            : assignment
+              ? `, occupied by ${studentName}`
+              : ', empty'
+        }`}
+        aria-disabled={seat.isDisabled || isExternalExam}
         sx={{
           position: 'relative',
           minWidth: 0,
@@ -126,20 +144,29 @@ export default function SeatCard({
           p: 0.75,
           borderRadius: 1,
           border: '2px solid',
-          borderStyle: assignment || isOver || isConflict ? 'solid' : 'dashed',
+          borderStyle: (assignment && !isExternalExam) || isOver || isConflict ? 'solid' : 'dashed',
           borderColor: isSwapTarget ? 'warning.main' : isPlaceTarget ? 'primary.main' : styles.border,
           bgcolor: (t) =>
-            isSwapTarget ? alpha(t.palette.warning.main, 0.14) : isPlaceTarget ? alpha(t.palette.primary.main, 0.12) : styles.bg,
+            isSwapTarget
+              ? alpha(t.palette.warning.main, 0.14)
+              : isPlaceTarget
+                ? alpha(t.palette.primary.main, 0.12)
+                : styles.bg,
           boxShadow: (t) =>
             isSwapTarget
               ? `0 0 0 4px ${alpha(t.palette.warning.main, 0.22)}, 0 10px 20px rgba(0,0,0,0.12)`
               : isPlaceTarget
                 ? `0 0 0 4px ${alpha(t.palette.primary.main, 0.22)}, 0 10px 20px rgba(0,0,0,0.12)`
-                : assignment
+                : assignment && !isExternalExam
                   ? '0 6px 14px rgba(34, 197, 94, 0.14)'
                   : 'none',
           outline: 'none',
-          cursor: seat.isDisabled ? 'not-allowed' : assignment && !isReadOnly ? 'grab' : 'pointer',
+          cursor:
+            seat.isDisabled || isExternalExam
+              ? 'not-allowed'
+              : assignment && !isReadOnly
+                ? 'grab'
+                : 'pointer',
           opacity: isDragging ? 0.45 : 1,
           transform: [
             transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : '',
@@ -151,82 +178,101 @@ export default function SeatCard({
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          transition: 'border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease',
+          transition:
+            'border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease',
           '&:hover': {
-            borderColor: seat.isDisabled ? styles.border : assignment ? 'success.dark' : 'primary.main',
-            boxShadow: seat.isDisabled ? 'none' : '0 8px 18px rgba(15, 23, 42, 0.10)',
+            borderColor:
+              seat.isDisabled || isExternalExam
+                ? styles.border
+                : assignment
+                  ? 'success.dark'
+                  : 'primary.main',
+            boxShadow:
+              seat.isDisabled || isExternalExam ? 'none' : '0 8px 18px rgba(15, 23, 42, 0.10)',
           },
         }}
       >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Typography variant="caption" fontWeight={800} sx={{ color: styles.color, lineHeight: 1 }}>
-          #{seat.seatNumber}
-        </Typography>
-        <IconButton
-          size="small"
-          disabled={isReadOnly}
-          sx={{ p: 0.25 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (isReadOnly) return;
-            popover.onOpen(e);
-          }}
-        >
-          <Iconify icon="eva:more-vertical-fill" width={14} />
-        </IconButton>
-      </Box>
-      {assignment ? (
-        <Box sx={{ minWidth: 0, opacity: isSwapTarget ? 0.35 : 1, transition: 'opacity 150ms ease' }}>
-          <Typography variant="caption" fontWeight={800} noWrap display="block" sx={{ color: styles.color }}>
-            {studentName}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Typography variant="caption" fontWeight={800} sx={{ color: styles.color, lineHeight: 1 }}>
+            #{seat.seatNumber}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography variant="caption" color="text.secondary" noWrap sx={{ lineHeight: 1.2 }}>
-              Roll {rollNo}
+          <IconButton
+            size="small"
+            disabled={isReadOnly || isExternalExam}
+            sx={{ p: 0.25 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isReadOnly || isExternalExam) return;
+              popover.onOpen(e);
+            }}
+          >
+            <Iconify icon="eva:more-vertical-fill" width={14} />
+          </IconButton>
+        </Box>
+        {assignment ? (
+          <Box sx={{ minWidth: 0, opacity: isSwapTarget ? 0.35 : 1, transition: 'opacity 150ms ease' }}>
+            <Typography variant="caption" fontWeight={800} noWrap display="block" sx={{ color: styles.color }}>
+              {studentName || 'Student'}
             </Typography>
-            {divisionName && (
-              <Chip label={divisionName} size="small" sx={{ height: 14, fontSize: '0.55rem', px: 0.25 }} />
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              {rollNo != null && (
+                <Typography
+                  variant="caption"
+                  color={isExternalExam ? 'text.disabled' : 'text.secondary'}
+                  noWrap
+                  sx={{ lineHeight: 1.2 }}
+                >
+                  Roll {rollNo}
+                </Typography>
+              )}
+              {divisionName && (
+                <Chip label={divisionName} size="small" sx={{ height: 14, fontSize: '0.55rem', px: 0.25 }} />
+              )}
+              {isExternalExam && !divisionName && rollNo == null && (
+                <Typography variant="caption" sx={{ color: 'text.disabled', lineHeight: 1.2 }}>
+                  Other Exam
+                </Typography>
+              )}
+            </Box>
           </Box>
-        </Box>
-      ) : (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: styles.color, opacity: isPlaceTarget ? 0 : 1 }}>
-          <Iconify icon={seat.isReserved ? 'mdi:lock-outline' : 'mdi:plus-circle-outline'} width={14} />
-          <Typography variant="caption" fontWeight={700} sx={{ color: 'inherit' }}>
-            {seat.isDisabled ? 'Disabled' : seat.isReserved ? 'Reserved' : 'Empty'}
-          </Typography>
-        </Box>
-      )}
+        ) : (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: styles.color, opacity: isPlaceTarget ? 0 : 1 }}>
+            <Iconify icon={seat.isReserved ? 'mdi:lock-outline' : 'mdi:plus-circle-outline'} width={14} />
+            <Typography variant="caption" fontWeight={700} sx={{ color: 'inherit' }}>
+              {seat.isDisabled ? 'Disabled' : seat.isReserved ? 'Reserved' : 'Empty'}
+            </Typography>
+          </Box>
+        )}
 
-      {(isSwapTarget || isPlaceTarget) && (
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 0.25,
-            borderRadius: 0.75,
-            pointerEvents: 'none',
-            color: isSwapTarget ? 'warning.darker' : 'primary.dark',
-          }}
-        >
-          <Iconify icon={isSwapTarget ? 'mdi:swap-horizontal-bold' : 'mdi:tray-arrow-down'} width={22} />
-          <Typography variant="caption" fontWeight={800} sx={{ color: 'inherit', lineHeight: 1 }}>
-            {isSwapTarget ? 'Swap here' : 'Drop here'}
-          </Typography>
-        </Box>
-      )}
+        {(isSwapTarget || isPlaceTarget) && (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.25,
+              borderRadius: 0.75,
+              pointerEvents: 'none',
+              color: isSwapTarget ? 'warning.darker' : 'primary.dark',
+            }}
+          >
+            <Iconify icon={isSwapTarget ? 'mdi:swap-horizontal-bold' : 'mdi:tray-arrow-down'} width={22} />
+            <Typography variant="caption" fontWeight={800} sx={{ color: 'inherit', lineHeight: 1 }}>
+              {isSwapTarget ? 'Swap here' : 'Drop here'}
+            </Typography>
+          </Box>
+        )}
 
-      <SeatActionMenu
-        popover={popover}
-        hasStudent={!!assignment}
-        isReserved={seat.isReserved}
-        onRemove={() => !isReadOnly && onRemove?.()}
-        onReserve={() => !isReadOnly && onReserve?.()}
-      />
+        <SeatActionMenu
+          popover={popover}
+          hasStudent={!!assignment && !isExternalExam}
+          isReserved={seat.isReserved}
+          onRemove={() => !isReadOnly && !isExternalExam && onRemove?.()}
+          onReserve={() => !isReadOnly && !isExternalExam && onReserve?.()}
+        />
       </Box>
     </Tooltip>
   );

@@ -18,12 +18,15 @@ import { useMemo, useState, useCallback, useEffect } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { academicPermissions } from 'src/constants/academic-menu';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
+import { useUpdateHomeworkStatusMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 import {
   Box,
   Tab,
@@ -65,6 +68,7 @@ import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
 import LessonDiaryDetailsDrawer from './components/LessonDiaryDetailsDrawer';
+import { reconcileTimelineSlots } from './reconcileTimelineSlots';
 import {
   todayIso,
   weekStartIso,
@@ -173,15 +177,15 @@ const normalizeSlotTime = (value: unknown) => {
 const getPlannedSlotTime = (plan: any) => {
   const start = normalizeSlotTime(
     plan.startTime ||
-    plan.slotStartTime ||
-    plan.timetableSlot?.startTime ||
-    plan.timetableSlot?.slotStartTime
+      plan.slotStartTime ||
+      plan.timetableSlot?.startTime ||
+      plan.timetableSlot?.slotStartTime
   );
   const end = normalizeSlotTime(
     plan.endTime ||
-    plan.slotEndTime ||
-    plan.timetableSlot?.endTime ||
-    plan.timetableSlot?.slotEndTime
+      plan.slotEndTime ||
+      plan.timetableSlot?.endTime ||
+      plan.timetableSlot?.slotEndTime
   );
 
   return start && end ? `${start} - ${end}` : '';
@@ -421,7 +425,10 @@ const renderDiaryStatus = (status: DiaryStatus) => {
 const LessonPlanScreen = () => {
   const dispatch = useDispatch();
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
-  const { employee, user } = useSelector((state: RootState) => state.auth);
+  const { employee, user, permissions } = useSelector((state: RootState) => state.auth);
+  const lessonPlanPermission = academicPermissions.curriculum.lessonPlan;
+  const canView = hasGrantedPermission(permissions, `${lessonPlanPermission}.View`);
+  const canAdd = hasGrantedPermission(permissions, `${lessonPlanPermission}.Add`);
 
   useEffect(() => {
     dispatch(setIsChanges(false));
@@ -449,18 +456,32 @@ const LessonPlanScreen = () => {
   );
 
   // ─── Queries & Mutations via useQueryAndMutation ─────────────────────────────
-  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs().startOf('day'));
+
+  const timelineDateParam = useMemo(
+    () =>
+      selectedDate?.isValid() ? dateConvertor(selectedDate.startOf('day').format(dateFormat)) : '',
+    [selectedDate]
+  );
 
   const {
     data: timelineData,
     isLoading: isTimelineLoading,
     isFetching: isTimelineFetching,
     refetch: refetchTimeline,
-  } = useGetLessonPlanTimelineQuery({
-    date: dateConvertor(selectedDate.format(dateFormat)),
-    academicMediumId: currentMedium?.id,
-    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-  });
+  } = useGetLessonPlanTimelineQuery(
+    {
+      date: timelineDateParam,
+      academicMediumId: currentMedium?.id,
+      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+    },
+    {
+      skip: !timelineDateParam,
+      refetchOnMountOrArgChange: true,
+    }
+  );
+
+  const isTimelineBusy = isTimelineLoading || isTimelineFetching;
 
   const isTimelineOwner = useMemo(
     () => !timelineData?.teacherId || timelineData.teacherId === currentTeacherId,
@@ -501,14 +522,17 @@ const LessonPlanScreen = () => {
   const [createLessonPlan, { isLoading: isCreatingLesson }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateLessonPlanMutation,
+    popupConfig: { error: false },
   });
   const [updateLessonPlan, { isLoading: isUpdatingLesson }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateLessonPlanMutation,
+    popupConfig: { error: false },
   });
   const [submitLessonPlan, { isLoading: isSubmittingLesson }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useSubmitLessonPlanMutation,
+    popupConfig: { error: false },
   });
   const isSavingLesson = isCreatingLesson || isUpdatingLesson || isSubmittingLesson;
   const [approveLessonPlan, { isLoading: isApproving }] = useQueryAndMutation({
@@ -528,6 +552,10 @@ const LessonPlanScreen = () => {
       type: 'mutation',
       currentQueryAndMutation: useCreateHomeworkFromLessonPlanMutation,
     });
+  const [updateHomeworkStatus, { isLoading: isPublishingHomeworkFromPlan }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkStatusMutation,
+  });
   const [createTeacherDiary, { isLoading: isCreatingDiary }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateTeacherDiaryMutation,
@@ -550,9 +578,9 @@ const LessonPlanScreen = () => {
         academicYear: p.academicYear || '2026-27',
         teacherName: p.teacherName || '',
         teacherId: p.teacherId,
-        standardId: p.standardId,
-        classId: p.standardId,
-        className: p.standardName || '',
+        standardId: p.standardId || p.classId,
+        classId: p.standardId || p.classId,
+        className: p.standardName || p.className || '',
         divisionId: p.divisionId,
         divisionName: p.divisionName || '',
         subjectId: p.subjectId,
@@ -599,6 +627,24 @@ const LessonPlanScreen = () => {
       })) || []
     );
   }, [lessonPlanList]);
+
+  /**
+   * Memoization Justification:
+   * - Reconciles two API datasets and prevents repeated O(slots × plans) work during screen renders.
+   * - Keeps the timeline slot objects stable until their source data or selected date changes.
+   */
+  const reconciledTimelineSlots = useMemo(
+    () =>
+      reconcileTimelineSlots(
+        timelineData?.slots || [],
+        lessonPlans,
+        selectedDate.format('YYYY-MM-DD'),
+        timelineData?.teacherId
+      ),
+    [lessonPlans, selectedDate, timelineData]
+  );
+
+  const isReconciledTimelineBusy = isTimelineBusy || isPlansLoading || isPlansFetching;
 
   const diaryEntries = useMemo<TeacherDiaryRow[]>(() => {
     if (!teacherDiaryList) return [];
@@ -767,29 +813,25 @@ const LessonPlanScreen = () => {
 
     if (!homeworkForm.publishAt || !homeworkForm.publishAt.isValid()) {
       errors.publishAt = 'Publish Date is required.';
-    } else {
-      if (mediumMinDate && homeworkForm.publishAt.isBefore(mediumMinDate, 'day')) {
-        errors.publishAt = `Publish Date must be on or after ${mediumMinDate.format('DD/MM/YYYY')}`;
-      } else if (mediumMaxDate && homeworkForm.publishAt.isAfter(mediumMaxDate, 'day')) {
-        errors.publishAt = `Publish Date must be on or before ${mediumMaxDate.format('DD/MM/YYYY')}`;
-      }
+    } else if (mediumMinDate && homeworkForm.publishAt.isBefore(mediumMinDate, 'day')) {
+      errors.publishAt = `Publish Date must be on or after ${mediumMinDate.format('DD/MM/YYYY')}`;
+    } else if (mediumMaxDate && homeworkForm.publishAt.isAfter(mediumMaxDate, 'day')) {
+      errors.publishAt = `Publish Date must be on or before ${mediumMaxDate.format('DD/MM/YYYY')}`;
     }
 
     if (!homeworkForm.dueAt || !homeworkForm.dueAt.isValid()) {
       errors.dueAt = 'Due Date is required.';
-    } else {
-      if (mediumMinDate && homeworkForm.dueAt.isBefore(mediumMinDate, 'day')) {
-        errors.dueAt = `Due Date must be on or after ${mediumMinDate.format('DD/MM/YYYY')}`;
-      } else if (mediumMaxDate && homeworkForm.dueAt.isAfter(mediumMaxDate, 'day')) {
-        errors.dueAt = `Due Date must be on or before ${mediumMaxDate.format('DD/MM/YYYY')}`;
-      } else if (
-        homeworkForm.publishAt &&
-        homeworkForm.publishAt.isValid() &&
-        (homeworkForm.dueAt.isBefore(homeworkForm.publishAt) ||
-          homeworkForm.dueAt.isSame(homeworkForm.publishAt))
-      ) {
-        errors.dueAt = 'Due date/time must be after publish date/time.';
-      }
+    } else if (mediumMinDate && homeworkForm.dueAt.isBefore(mediumMinDate, 'day')) {
+      errors.dueAt = `Due Date must be on or after ${mediumMinDate.format('DD/MM/YYYY')}`;
+    } else if (mediumMaxDate && homeworkForm.dueAt.isAfter(mediumMaxDate, 'day')) {
+      errors.dueAt = `Due Date must be on or before ${mediumMaxDate.format('DD/MM/YYYY')}`;
+    } else if (
+      homeworkForm.publishAt &&
+      homeworkForm.publishAt.isValid() &&
+      (homeworkForm.dueAt.isBefore(homeworkForm.publishAt) ||
+        homeworkForm.dueAt.isSame(homeworkForm.publishAt))
+    ) {
+      errors.dueAt = 'Due date/time must be after publish date/time.';
     }
 
     return errors;
@@ -980,7 +1022,7 @@ const LessonPlanScreen = () => {
     setHomeworkTouched(false);
   };
 
-  const saveHomeworkFromPlan = async () => {
+  const saveHomeworkFromPlan = async (mode: 'draft' | 'publish' | 'schedule') => {
     if (!homeworkPlan) return;
     setHomeworkTouched(true);
 
@@ -994,7 +1036,7 @@ const LessonPlanScreen = () => {
     }
 
     try {
-      await createHomeworkFromLessonPlan({
+      const response = await createHomeworkFromLessonPlan({
         id: homeworkPlan.id,
         body: {
           academicMediumId: currentMedium.id,
@@ -1007,14 +1049,34 @@ const LessonPlanScreen = () => {
         },
       }).unwrap();
 
+      const createdHomeworkId = response?.data?.id || response?.id;
+      if (mode === 'publish') {
+        if (!createdHomeworkId) {
+          throw new Error('The created homework ID was not returned.');
+        }
+        await updateHomeworkStatus({ homeworkId: createdHomeworkId, status: 1 }).unwrap();
+      }
+
       closeHomeworkFromPlan();
-      shikshaMitraToast.success({ message: 'Homework created from lesson plan successfully.' });
+      shikshaMitraToast.success({
+        message:
+          mode === 'publish'
+            ? 'Homework created and published successfully.'
+            : mode === 'schedule'
+              ? 'Homework created and scheduled successfully.'
+              : 'Homework saved as draft successfully.',
+      });
     } catch (err: any) {
       shikshaMitraToast.error({
         message: err?.data?.error?.message || 'Failed to create homework from lesson plan.',
       });
     }
   };
+
+  const shouldScheduleHomework = Boolean(
+    homeworkForm.publishAt && homeworkForm.publishAt.isAfter(dayjs())
+  );
+  const isSavingHomeworkFromPlan = isCreatingHomeworkFromPlan || isPublishingHomeworkFromPlan;
 
   const handleSaveLesson = useCallback(
     async (form: LessonFormState, submitAfterSave: boolean) => {
@@ -1508,7 +1570,7 @@ const LessonPlanScreen = () => {
 
           return (
             <Stack direction="row" spacing={1} alignItems="center">
-              {isOwner && (
+              {canAdd && isOwner && (
                 <Tooltip title={diaryTooltipTitle}>
                   <span>
                     <IconButton
@@ -1522,21 +1584,23 @@ const LessonPlanScreen = () => {
                   </span>
                 </Tooltip>
               )}
-              <Tooltip title="View Details">
-                <IconButton
-                  size="small"
-                  onClick={() => openDetails(plan)}
-                  sx={{ color: 'text.secondary' }}
-                >
-                  <Iconify icon="carbon:view-filled" width={18} />
-                </IconButton>
-              </Tooltip>
+              {canView && (
+                <Tooltip title="View Details">
+                  <IconButton
+                    size="small"
+                    onClick={() => openDetails(plan)}
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    <Iconify icon="carbon:view-filled" width={18} />
+                  </IconButton>
+                </Tooltip>
+              )}
             </Stack>
           );
         },
       },
     ],
-    [openDiary, openDetails, getDiaryForLesson, currentTeacherId]
+    [openDiary, openDetails, getDiaryForLesson, currentTeacherId, canAdd, canView]
   );
 
   const diaryColumns = useMemo(
@@ -1659,7 +1723,7 @@ const LessonPlanScreen = () => {
 
           return (
             <Stack direction="row" spacing={1} alignItems="center">
-              {isOwner && (
+              {canAdd && isOwner && (
                 <Tooltip title={diaryTooltipTitle}>
                   <span>
                     <IconButton
@@ -1673,21 +1737,23 @@ const LessonPlanScreen = () => {
                   </span>
                 </Tooltip>
               )}
-              <Tooltip title="View Details">
-                <IconButton
-                  size="small"
-                  onClick={() => openDetails(plan)}
-                  sx={{ color: 'text.secondary' }}
-                >
-                  <Iconify icon="carbon:view-filled" width={18} />
-                </IconButton>
-              </Tooltip>
+              {canView && (
+                <Tooltip title="View Details">
+                  <IconButton
+                    size="small"
+                    onClick={() => openDetails(plan)}
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    <Iconify icon="carbon:view-filled" width={18} />
+                  </IconButton>
+                </Tooltip>
+              )}
             </Stack>
           );
         },
       },
     ],
-    [openDetails, openDiary, getDiaryForLesson, currentTeacherId]
+    [openDetails, openDiary, getDiaryForLesson, currentTeacherId, canAdd, canView]
   );
 
   const visibleLessonColumns = useMemo(
@@ -1840,9 +1906,13 @@ const LessonPlanScreen = () => {
           {activeTab === 'dailyTimeline' && (
             <DailyTimelineTab
               selectedDate={selectedDate}
-              onChangeDate={setSelectedDate}
-              slots={timelineData?.slots || []}
-              isLoading={isTimelineLoading || isTimelineFetching}
+              onChangeDate={(newDate) => {
+                if (newDate?.isValid()) {
+                  setSelectedDate(newDate.startOf('day'));
+                }
+              }}
+              slots={isReconciledTimelineBusy ? [] : reconciledTimelineSlots}
+              isLoading={isReconciledTimelineBusy}
               onAddLesson={(date, prefill) => {
                 setEditPlan(null);
                 setPrefillDate(date ?? null);
@@ -1861,8 +1931,8 @@ const LessonPlanScreen = () => {
                   academicYear: plan.academicYear || '2026-27',
                   teacherId: plan.teacherId || '',
                   teacherName: plan.teacherName || '',
-                  classId: plan.standardId || '',
-                  className: plan.standardName || '',
+                  classId: plan.classId || plan.standardId || '',
+                  className: plan.className || plan.standardName || '',
                   divisionId: plan.divisionId || '',
                   divisionName: plan.divisionName || '',
                   subjectId: plan.subjectId || '',
@@ -1872,15 +1942,15 @@ const LessonPlanScreen = () => {
                   plannedDate: plan.plannedDate || todayIso,
                   timetableSlotId: plan.timetableSlotId,
                   periodId: plan.timetableSlotId || 'Manual',
-                  period: plan.timetableSlotId ? 'Period 1' : 'Manual',
-                  plannedTime: getPlannedSlotTime(plan),
+                  period: plan.period || (plan.timetableSlotId ? 'Period 1' : 'Manual'),
+                  plannedTime: plan.plannedTime || getPlannedSlotTime(plan),
                   topic: plan.topic || '',
                   learningObjective: plan.learningObjective || '',
                   teachingMethod: plan.teachingMethod || 'ExplanationBoardWork',
                   resourcesRequired: plan.resourcesRequired || '',
                   plannedCompletionPercentage: plan.plannedCompletionPercentage || 0,
-                  planStatus: plan.status || 'Draft',
-                  status: plan.status || 'Draft',
+                  planStatus: plan.planStatus || plan.status || 'Draft',
+                  status: plan.status || plan.planStatus || 'Draft',
                   diaryStatus: plan.diaryStatus || 'NotSubmitted',
                   approvalStatus: plan.status === 'Approved' ? 'Approved' : 'Pending',
                   reviewStatus: plan.status === 'Approved' ? 'Plan Approved' : 'Draft',
@@ -1888,14 +1958,16 @@ const LessonPlanScreen = () => {
                   actualCompletionPercentage: plan.plannedCompletionPercentage || 0,
                   existingChapterProgress: 0,
                   source: plan.source || 'Manual',
-                  isAiGenerated: plan.source === 'AiGenerated',
+                  isAiGenerated: plan.source === 'AiGenerated' || Boolean(plan.isAiGenerated),
                   executionStatus: 'OnTrack',
-                  standardId: plan.standardId,
+                  standardId: plan.standardId || plan.classId || '',
                 });
               }}
               onSubmitDiary={openDiary}
               onSubmitPlan={submitPlan}
               onCreateHomework={openHomeworkFromPlan}
+              canView={canView}
+              canManage={canAdd}
             />
           )}
 
@@ -2024,7 +2096,9 @@ const LessonPlanScreen = () => {
                     Homework Guidance
                   </Typography>
                   <Typography variant="caption" display="block">
-                    Generate homework assignments directly from planned topics. Pre-fills topic and objectives, allowing you to configure submission type, deadlines, and publishing rules.
+                    Generate homework assignments directly from planned topics. Pre-fills topic and
+                    objectives, allowing you to configure submission type, deadlines, and publishing
+                    rules.
                   </Typography>
                 </Box>
               }
@@ -2053,7 +2127,11 @@ const LessonPlanScreen = () => {
               >
                 <Stack spacing={1}>
                   <Stack direction="row" alignItems="center" spacing={1}>
-                    <Iconify icon="solar:notebook-bold-duotone" width={20} sx={{ color: 'primary.main' }} />
+                    <Iconify
+                      icon="solar:notebook-bold-duotone"
+                      width={20}
+                      sx={{ color: 'primary.main' }}
+                    />
                     <Typography variant="subtitle2" fontWeight={700}>
                       {homeworkPlan.topic}
                     </Typography>
@@ -2211,18 +2289,24 @@ const LessonPlanScreen = () => {
           <LoadingButton
             size="small"
             variant="contained"
-            loading={isCreatingHomeworkFromPlan}
-            startIcon={<Iconify icon="mdi:book-plus-outline" />}
-            onClick={saveHomeworkFromPlan}
-            sx={{
-              bgcolor: 'text.primary',
-              color: 'background.paper',
-              borderRadius: 1,
-              px: 2,
-              '&:hover': { bgcolor: 'text.secondary' },
-            }}
+            loading={isSavingHomeworkFromPlan}
+            startIcon={<Iconify icon={GlobalIcons.submit} width={18} height={18} />}
+            onClick={() => saveHomeworkFromPlan('draft')}
           >
-            Create Homework
+            Save Draft
+          </LoadingButton>
+          <LoadingButton
+            size="small"
+            variant="contained"
+            loading={isSavingHomeworkFromPlan}
+            startIcon={
+              <Iconify
+                icon={shouldScheduleHomework ? 'solar:calendar-mark-bold' : GlobalIcons.publish}
+              />
+            }
+            onClick={() => saveHomeworkFromPlan(shouldScheduleHomework ? 'schedule' : 'publish')}
+          >
+            {shouldScheduleHomework ? 'Schedule Publish' : 'Publish Now'}
           </LoadingButton>
         </Stack>
       </CustomDialog>

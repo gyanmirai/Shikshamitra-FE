@@ -328,7 +328,7 @@ export const validationSchema = [
   yup.object().shape({
     roomDetails: yup
       .mixed()
-      .test('room-assignment-required', 'Room is required', function (roomDetails) {
+      .test('room-assignment-validation', 'Room is required', function (roomDetails) {
         const values = this.parent as any;
         if (!values?.isRoomAssign) return true;
         const roomDetailsMap = (roomDetails ?? {}) as any;
@@ -337,48 +337,58 @@ export const validationSchema = [
           (id: string) => id !== 'all'
         );
         const allSubjects: any[] = values?.subjects ?? [];
-        let firstMissingPath: string | null = null;
 
-        const hasMissingRoom = allSubjects.some((subject) => {
-          // Elective group: validate each nested subject separately (roomDetails keyed by subjectId)
+        // Flatten active scheduled subjects
+        const activeSubjects: Array<{
+          subjectId: string;
+          subjectName: string;
+          examDate: any;
+          startTime: any;
+          endTime: any;
+        }> = [];
+
+        allSubjects.forEach((subject) => {
           if (subject?.electiveGroupId && Array.isArray(subject?.subjects)) {
-            return subject.subjects.some((nested: any) => {
-              if (nested?.isExamSelectionDisabled) return false;
-              if (!hasCompleteSchedule(nested)) {
-                return false;
+            subject.subjects.forEach((nested: any) => {
+              if (!nested?.isExamSelectionDisabled && hasCompleteSchedule(nested) && nested?.subjectId) {
+                activeSubjects.push({
+                  subjectId: nested.subjectId,
+                  subjectName: nested.subjectName || nested.name || 'Elective Subject',
+                  examDate: nested.examDate,
+                  startTime: nested.startTime,
+                  endTime: nested.endTime,
+                });
               }
-              const nestedSubjectId = nested?.subjectId;
-              if (!nestedSubjectId) return false;
-
-              return selectedDivisionIds.some((divisionId) => {
-                const roomIds = roomDetailsMap?.[nestedSubjectId]?.[divisionId]?.roomIds ?? [];
-                const isMissing = !Array.isArray(roomIds) || roomIds.length === 0;
-                if (isMissing && !firstMissingPath) {
-                  firstMissingPath = `roomDetails.${nestedSubjectId}.${divisionId}.roomIds`;
-                }
-                return isMissing;
-              });
+            });
+          } else if (subject?.subjectId && hasCompleteSchedule(subject)) {
+            activeSubjects.push({
+              subjectId: subject.subjectId,
+              subjectName: subject.subjectName || 'Subject',
+              examDate: subject.examDate,
+              startTime: subject.startTime,
+              endTime: subject.endTime,
             });
           }
+        });
 
-          const subjectId = subject?.subjectId;
-          if (!subjectId) return false;
+        const validationErrors: yup.ValidationError[] = [];
 
-          return selectedDivisionIds.some((divisionId) => {
-            const roomIds = roomDetailsMap?.[subjectId]?.[divisionId]?.roomIds ?? [];
-            const isMissing = !Array.isArray(roomIds) || roomIds.length === 0;
-            if (isMissing && !firstMissingPath) {
-              firstMissingPath = `roomDetails.${subjectId}.${divisionId}.roomIds`;
+        // Required field validation for all divisions & subjects
+        activeSubjects.forEach((sub) => {
+          selectedDivisionIds.forEach((divisionId) => {
+            const roomIds = roomDetailsMap?.[sub.subjectId]?.[divisionId]?.roomIds;
+            const path = `roomDetails.${sub.subjectId}.${divisionId}.roomIds`;
+
+            if (!Array.isArray(roomIds) || roomIds.length === 0) {
+              validationErrors.push(
+                new yup.ValidationError('Room is required', roomIds, path)
+              );
             }
-            return isMissing;
           });
         });
 
-        if (hasMissingRoom && firstMissingPath) {
-          return this.createError({
-            path: firstMissingPath,
-            message: 'Room is required',
-          });
+        if (validationErrors.length > 0) {
+          throw new yup.ValidationError(validationErrors);
         }
 
         return true;

@@ -31,6 +31,7 @@ const SubLayout = ({ children }: any) => {
   const [isPinned, setIsPinned] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const enterTimeout = useRef<any>(null);
   const leaveTimeout = useRef<any>(null);
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
@@ -41,10 +42,14 @@ const SubLayout = ({ children }: any) => {
 
   const handleMouseEnter = useCallback(() => {
     if (leaveTimeout.current) clearTimeout(leaveTimeout.current);
-    setIsHovered(true);
+    if (enterTimeout.current) clearTimeout(enterTimeout.current);
+    enterTimeout.current = setTimeout(() => {
+      setIsHovered(true);
+    }, 500);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
+    if (enterTimeout.current) clearTimeout(enterTimeout.current);
     leaveTimeout.current = setTimeout(() => {
       setIsHovered(false);
     }, 200);
@@ -52,12 +57,15 @@ const SubLayout = ({ children }: any) => {
 
   useEffect(
     () => () => {
+      if (enterTimeout.current) clearTimeout(enterTimeout.current);
       if (leaveTimeout.current) clearTimeout(leaveTimeout.current);
     },
     []
   );
 
   const handleTogglePin = useCallback(() => {
+    if (enterTimeout.current) clearTimeout(enterTimeout.current);
+    if (leaveTimeout.current) clearTimeout(leaveTimeout.current);
     setIsPinned((prev) => !prev);
   }, []);
 

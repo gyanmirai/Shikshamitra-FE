@@ -22,6 +22,7 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import { mapBackendToFormik } from './initialValues';
+import { getExamStatusMeta } from '../scheduleExamStatus';
 import { getReadinessSummary, buildExamPlanningIssues } from './scheduleExamPlanningUtils';
 
 type ScheduleExamPreviewDrawerProps = {
@@ -29,15 +30,9 @@ type ScheduleExamPreviewDrawerProps = {
   exam: any;
   canEdit?: boolean;
   onClose: () => void;
-  onEdit: (exam: any) => void;
-  onViewTimetable: (exam: any) => void;
-  onPublish: (exam: any) => void;
-};
-
-const statusMeta: Record<number, { label: string; color: 'warning' | 'info' | 'success' }> = {
-  [examScheduledStatus.Pending]: { label: 'Draft', color: 'warning' },
-  [examScheduledStatus.Published]: { label: 'Published', color: 'info' },
-  [examScheduledStatus.Completed]: { label: 'Completed', color: 'success' },
+  onEdit?: (exam: any) => void;
+  onViewTimetable?: (exam: any) => void;
+  onPublish?: (exam: any) => void;
 };
 
 const getSubjectRows = (subjects: any[] = []) =>
@@ -63,8 +58,8 @@ const ScheduleExamPreviewDrawer = ({
 }: ScheduleExamPreviewDrawerProps) => {
   const theme = useTheme();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  const examId = exam?.examId;
-  const meta = statusMeta[Number(exam?.status)] || statusMeta[examScheduledStatus.Pending];
+  const examId = exam?.examId || exam?.id;
+  const meta = getExamStatusMeta(exam || {});
   const { data: examTypeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExaminationTypesQuery,
@@ -129,12 +124,12 @@ const ScheduleExamPreviewDrawer = ({
     subjectsFetching;
   const hydratedExam = basicDetails
     ? mapBackendToFormik(
-        basicDetails,
-        scheduleDetails ?? null,
-        roomAssignmentData ?? null,
-        examSubjectsData ?? null,
-        examTypeData?.items ?? []
-      )
+      basicDetails,
+      scheduleDetails ?? null,
+      roomAssignmentData ?? null,
+      examSubjectsData ?? null,
+      examTypeData?.items ?? []
+    )
     : null;
   const subjectRows = getSubjectRows(hydratedExam?.subjects ?? []);
 
@@ -142,19 +137,27 @@ const ScheduleExamPreviewDrawer = ({
     ? getReadinessSummary(buildExamPlanningIssues(hydratedExam))
     : null;
   const issueCount = readiness ? readiness.blocking.length : (exam?.issueCount ?? 0);
-  const warningCount = readiness ? readiness.warnings.length : (exam?.warningCount ?? 0);
+  const hasListWarningCount =
+    exam?.warningCount !== null &&
+    exam?.warningCount !== undefined &&
+    Number.isFinite(Number(exam.warningCount));
+  const warningCount = hasListWarningCount
+    ? Number(exam.warningCount)
+    : readiness
+      ? readiness.warnings.length
+      : 0;
   const previewExam = hydratedExam
     ? {
-        ...exam,
-        ...hydratedExam,
-        examId,
-        examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
-        standardName: exam?.standardName,
-        divisions: exam?.divisions,
-        subjectCount: subjectRows.length,
-        issueCount,
-        warningCount,
-      }
+      ...exam,
+      ...hydratedExam,
+      examId,
+      examTypeName: hydratedExam.examTypeName || exam?.examTypeName,
+      standardName: exam?.standardName,
+      divisions: exam?.divisions,
+      subjectCount: subjectRows.length,
+      issueCount,
+      warningCount,
+    }
     : exam;
   const startDateStr = previewExam?.startDate
     ? dayjs(previewExam.startDate).format('DD-MM-YYYY')
@@ -415,7 +418,7 @@ const ScheduleExamPreviewDrawer = ({
               </Grid>
             </Grid>
 
-            {readiness && (readiness.blocking.length > 0 || readiness.warnings.length > 0) && (
+            {readiness && (readiness.blocking.length > 0 || warningCount > 0) && (
               <Box
                 sx={{
                   p: 2,
@@ -434,65 +437,67 @@ const ScheduleExamPreviewDrawer = ({
                     size="small"
                     color="warning"
                     variant="soft"
-                    label={`${readiness.blocking.length + readiness.warnings.length} item${readiness.blocking.length + readiness.warnings.length === 1 ? '' : 's'}`}
+                    label={`${readiness.blocking.length + warningCount} item${readiness.blocking.length + warningCount === 1 ? '' : 's'}`}
                   />
                 </Stack>
                 <Stack spacing={1} component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
-                  {[...readiness.blocking, ...readiness.warnings].map((issue) => {
-                    const stepLabels = ['Basic Details', 'Subject Schedule', 'Room Allocation'];
-                    const isBlocking = issue.severity === 'blocking';
+                  {[...readiness.blocking, ...(warningCount > 0 ? readiness.warnings : [])].map(
+                    (issue) => {
+                      const stepLabels = ['Basic Details', 'Subject Schedule', 'Room Allocation'];
+                      const isBlocking = issue.severity === 'blocking';
 
-                    return (
-                      <Box
-                        component="li"
-                        key={issue.id}
-                        sx={{
-                          p: 1.25,
-                          borderRadius: 1,
-                          bgcolor: 'background.paper',
-                          border: '1px solid',
-                          borderColor: isBlocking
-                            ? alpha(theme.palette.error.main, 0.2)
-                            : alpha(theme.palette.warning.main, 0.2),
-                        }}
-                      >
-                        <Stack
-                          direction={{ xs: 'column', sm: 'row' }}
-                          justifyContent="space-between"
-                          alignItems={{ xs: 'flex-start', sm: 'center' }}
-                          gap={0.75}
+                      return (
+                        <Box
+                          component="li"
+                          key={issue.id}
+                          sx={{
+                            p: 1.25,
+                            borderRadius: 1,
+                            bgcolor: 'background.paper',
+                            border: '1px solid',
+                            borderColor: isBlocking
+                              ? alpha(theme.palette.error.main, 0.2)
+                              : alpha(theme.palette.warning.main, 0.2),
+                          }}
                         >
-                          <Typography variant="body2" fontWeight={700}>
-                            {issue.title}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            color={isBlocking ? 'error' : 'warning'}
-                            variant="soft"
-                            label={isBlocking ? 'Issue' : 'Warning'}
-                          />
-                        </Stack>
-                        {issue.description && (
+                          <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            justifyContent="space-between"
+                            alignItems={{ xs: 'flex-start', sm: 'center' }}
+                            gap={0.75}
+                          >
+                            <Typography variant="body2" fontWeight={700}>
+                              {issue.title}
+                            </Typography>
+                            <Chip
+                              size="small"
+                              color={isBlocking ? 'error' : 'warning'}
+                              variant="soft"
+                              label={isBlocking ? 'Issue' : 'Warning'}
+                            />
+                          </Stack>
+                          {issue.description && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                              sx={{ mt: 0.5 }}
+                            >
+                              {issue.description}
+                            </Typography>
+                          )}
                           <Typography
                             variant="caption"
-                            color="text.secondary"
+                            color="text.disabled"
                             display="block"
                             sx={{ mt: 0.5 }}
                           >
-                            {issue.description}
+                            Step: {stepLabels[issue.step] || 'Exam setup'}
                           </Typography>
-                        )}
-                        <Typography
-                          variant="caption"
-                          color="text.disabled"
-                          display="block"
-                          sx={{ mt: 0.5 }}
-                        >
-                          Step: {stepLabels[issue.step] || 'Exam setup'}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
+                        </Box>
+                      );
+                    }
+                  )}
                 </Stack>
               </Box>
             )}
@@ -650,13 +655,24 @@ const ScheduleExamPreviewDrawer = ({
       >
         <Button
           variant="outlined"
-          startIcon={<Iconify icon={GlobalIcons.eye} />}
-          onClick={() => onViewTimetable(previewExam)}
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
           size="small"
         >
-          View Timetable
+          Close
         </Button>
-        {canEdit && Number(previewExam?.status) === examScheduledStatus.Pending && (
+        {onViewTimetable && (
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.eye} />}
+            onClick={() => onViewTimetable(previewExam)}
+            size="small"
+          >
+            View Timetable
+          </Button>
+        )}
+        {canEdit && onEdit && Number(previewExam?.status) === examScheduledStatus.Pending && (
           <Button
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.edit} />}
@@ -666,7 +682,7 @@ const ScheduleExamPreviewDrawer = ({
             Edit
           </Button>
         )}
-        {Number(previewExam?.status) === examScheduledStatus.Pending && (
+        {onPublish && Number(previewExam?.status) === examScheduledStatus.Pending && (
           <Button
             color="primary"
             variant="contained"

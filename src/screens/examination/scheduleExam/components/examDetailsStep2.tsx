@@ -207,47 +207,63 @@ const SubjectScheduleRow = memo(
           left: 0,
           zIndex: 2,
           bgcolor: 'background.paper',
-          minWidth: 200,
-          py: 1.25,
+          minWidth: 230,
+          py: 1.5,
           px: 1.5,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Stack direction="row" alignItems="center" spacing={1.25}>
           <Box
             sx={{
               width: 5,
-              height: 24,
+              height: 34,
               borderRadius: '3px',
               flexShrink: 0,
               bgcolor: values.subjectColor || '#9E9E9E',
             }}
           />
-          <Box>
-            <Typography variant="caption" fontWeight={600} display="block" lineHeight={1.4}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography
+              variant="body2"
+              fontWeight={700}
+              display="block"
+              noWrap
+              title={values.subjectName}
+            >
               {values.subjectName}
             </Typography>
-            {values.subjectCode && (
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                {values.subjectCode}
-              </Typography>
-            )}
-            {typeof values.assignedStudentCount === 'number' && (
-              <Chip
-                label={
-                  values.assignedStudentCount === 0
-                    ? 'No students'
-                    : `${values.assignedStudentCount} student${
-                        values.assignedStudentCount === 1 ? '' : 's'
-                      }`
-                }
-                size="small"
-                color={values.assignedStudentCount === 0 ? 'default' : 'warning'}
-                variant="soft"
-                sx={{ mt: 0.5, height: 18, fontSize: '0.62rem', fontWeight: 600 }}
-              />
-            )}
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={0.75}
+              flexWrap="wrap"
+              useFlexGap
+              sx={{ mt: 0.5 }}
+            >
+              {values.subjectCode && (
+                <Chip
+                  label={values.subjectCode}
+                  size="small"
+                  variant="outlined"
+                  sx={{ height: 19, fontSize: '0.65rem', fontWeight: 600 }}
+                />
+              )}
+              {typeof values.assignedStudentCount === 'number' && (
+                <Chip
+                  label={
+                    values.assignedStudentCount === 0
+                      ? 'No students'
+                      : `${values.assignedStudentCount} student${values.assignedStudentCount === 1 ? '' : 's'}`
+                  }
+                  size="small"
+                  color={values.assignedStudentCount === 0 ? 'default' : 'warning'}
+                  variant="soft"
+                  sx={{ height: 19, fontSize: '0.65rem', fontWeight: 600 }}
+                />
+              )}
+            </Stack>
           </Box>
-        </Box>
+        </Stack>
       </TableCell>
 
       {/* Date */}
@@ -367,6 +383,10 @@ const SubjectScheduleRow = memo(
                 if (selectedOption?.totalMarks !== undefined) {
                   await onFieldChange('totalMarks', selectedOption.totalMarks ?? '');
                   onFieldBlur('totalMarks');
+                }
+                if (selectedOption?.passMarks !== undefined) {
+                  await onFieldChange('passingMarks', selectedOption.passMarks ?? '');
+                  onFieldBlur('passingMarks');
                 }
               }}
               renderInput={(params) => (
@@ -1090,7 +1110,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
 
           {electiveGroups.map(({ index }) => (
             <ElectiveGroupCard
-              key={formik.values.subjects[index]?.electiveGroupId || index}
+              key={`${formik.values.subjects[index]?.electiveGroupId || 'elective'}-${formik.values.subjects[index]?.subjectId || index}`}
               formik={formik}
               groupIndex={index}
               gradeScalings={gradeScalingsList}

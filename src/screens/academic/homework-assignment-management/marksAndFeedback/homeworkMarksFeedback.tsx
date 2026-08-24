@@ -77,6 +77,8 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
       .map((hw: any) => ({
         id: hw.id,
         label: `${hw.title} · ${submissionTypeLabels[Number(hw.submissionType)] || 'Submission'}`,
+        title: hw.title,
+        description: hw.description,
         submissionType: hw.submissionType,
         evaluationRequired: hw.evaluationRequired,
         defaultEvaluationMethod: hw.defaultEvaluationMethod,

@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 
+import { DEFAULT_ALLOCATION_RULES } from '../types';
 import type {
   SeatingSeat,
   SeatingStudent,
@@ -134,12 +135,12 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
         const next = d.assignments.map((a) =>
           a.studentId === studentId
             ? {
-                ...a,
-                roomId,
-                seatId: seatId(roomId, seat.seatNumber),
-                seatNumber: seat.seatNumber,
-                benchId: seat.benchId,
-              }
+              ...a,
+              roomId,
+              seatId: seatId(roomId, seat.seatNumber),
+              seatNumber: seat.seatNumber,
+              benchId: seat.benchId,
+            }
             : a
         );
         pushHistory('move', d.assignments, next);
@@ -182,6 +183,18 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
     [pushHistory]
   );
 
+  const resetAll = useCallback(() => {
+    setDraft((d) => ({
+      ...d,
+      assignments: [],
+      allocationRules: DEFAULT_ALLOCATION_RULES,
+      excludedStudentIds: [],
+      isDirty: false,
+    }));
+    setHistory([]);
+    setRedoStack([]);
+  }, []);
+
   const undo = useCallback(() => {
     setHistory((h) => {
       if (h.length === 0) return h;
@@ -202,6 +215,41 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
     });
   }, []);
 
+  const excludeStudents = useCallback(
+    (studentIds: string[]) => {
+      setDraft((d) => {
+        const idSet = new Set(studentIds);
+        const nextAssignments = d.assignments.filter((a) => !idSet.has(a.studentId));
+        const nextExcluded = [...new Set([...d.excludedStudentIds, ...studentIds])];
+        if (nextAssignments.length !== d.assignments.length) {
+          pushHistory('unassign', d.assignments, nextAssignments);
+        }
+        return {
+          ...d,
+          assignments: nextAssignments,
+          excludedStudentIds: nextExcluded,
+          isDirty: true,
+        };
+      });
+    },
+    [pushHistory]
+  );
+
+  const includeStudents = useCallback(
+    (studentIds: string[]) => {
+      setDraft((d) => {
+        const idSet = new Set(studentIds);
+        const nextExcluded = d.excludedStudentIds.filter((id) => !idSet.has(id));
+        return {
+          ...d,
+          excludedStudentIds: nextExcluded,
+          isDirty: true,
+        };
+      });
+    },
+    []
+  );
+
   return {
     draft,
     setDraft,
@@ -218,9 +266,12 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
       applyAssignments,
       assignStudent,
       unassignStudent,
+      excludeStudents,
+      includeStudents,
       moveStudent,
       swapSeats,
       resetRoom,
+      resetAll,
       undo,
       redo,
     },

@@ -114,6 +114,14 @@ export const seatAllocationApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.seatAllocation],
     }),
+    saveSeatingPlanBulk: builder.mutation({
+      query: ({ examId, body }) => ({
+        url: `/academics/exams/${examId}/seating-plan/bulk-save`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [academicType.seatAllocation],
+    }),
 
     // Validate Seating Plan (capacity/conflict blockers + warnings)
     // POST /api/academics/exams/{examId}/seating-plan/validate → SeatingValidationResponseDto
@@ -128,9 +136,10 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // Multi-room utilization summary
     // GET /api/academics/exams/{examId}/seating-plan/room-summary → SeatingRoomSummaryResponseDto
     getSeatingRoomSummary: builder.query({
-      query: ({ examId }) => ({
+      query: ({ examId, seatingPlanId }) => ({
         url: `/academics/exams/${examId}/seating-plan/room-summary`,
         method: 'GET',
+        params: seatingPlanId ? { seatingPlanId } : undefined,
       }),
       providesTags: [academicType.seatAllocation],
     }),
@@ -161,9 +170,10 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // Unlock a finalized seating plan (requires a reason)
     // POST /api/academics/exams/{examId}/seating-plan/unlock → SeatingPlanDraftResponseDto
     unlockSeatingPlan: builder.mutation({
-      query: ({ examId, body }) => ({
+      query: ({ examId, body, seatingPlanId }) => ({
         url: `/academics/exams/${examId}/seating-plan/unlock`,
         method: 'POST',
+        params: seatingPlanId ? { seatingPlanId } : undefined,
         body,
       }),
       invalidatesTags: [academicType.seatAllocation],
@@ -172,9 +182,10 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // Plan lifecycle audit history
     // GET /api/academics/exams/{examId}/seating-plan/audit-log → SeatingPlanAuditLogResponseDto
     getSeatingPlanAuditLog: builder.query({
-      query: ({ examId }) => ({
+      query: ({ examId, seatingPlanId }) => ({
         url: `/academics/exams/${examId}/seating-plan/audit-log`,
         method: 'GET',
+        params: seatingPlanId ? { seatingPlanId } : undefined,
       }),
       providesTags: [academicType.seatAllocation],
     }),
@@ -182,9 +193,10 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // Flat print rows (on-screen print view)
     // GET /api/academics/exams/{examId}/seating-plan/print-data → SeatingPrintDataResponseDto
     getSeatingPrintData: builder.query({
-      query: ({ examId }) => ({
+      query: ({ examId, seatingPlanId }) => ({
         url: `/academics/exams/${examId}/seating-plan/print-data`,
         method: 'GET',
+        params: seatingPlanId ? { seatingPlanId } : undefined,
       }),
       providesTags: [academicType.seatAllocation],
     }),
@@ -233,6 +245,7 @@ export const {
   useSaveSeatingPlanScopeMutation,
   useGetSeatingPlanDraftQuery,
   useSaveSeatingPlanDraftMutation,
+  useSaveSeatingPlanBulkMutation,
   useValidateSeatingPlanMutation,
   useGetSeatingRoomSummaryQuery,
   useFinalizeSeatingPlanMutation,

@@ -15,6 +15,7 @@ const SubmitButton: React.FC<SubmitButtonProps> = ({
   variant = 'contained',
   startIcon = <Iconify icon="material-symbols-light:save" />,
   size = 'small',
+  sx,
 }) => (
   <LoadingButton
     loading={loading}
@@ -24,6 +25,7 @@ const SubmitButton: React.FC<SubmitButtonProps> = ({
     startIcon={startIcon}
     disabled={disabled}
     size={size}
+    sx={sx}
   >
     {buttonText}
   </LoadingButton>

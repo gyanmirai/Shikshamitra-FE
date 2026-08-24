@@ -1,4 +1,5 @@
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
 import SubmitButton from 'src/components/submit-button';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
@@ -20,13 +21,19 @@ interface Props {
   standardName?: string;
   isDirty?: boolean;
   isSaving?: boolean;
+  isResetting?: boolean;
   isReadOnly?: boolean;
+  isPublished?: boolean;
   canAutoAllocate: boolean;
+  canReset?: boolean;
+  canExport?: boolean;
   canFinalize: boolean;
   onBack: () => void;
   onSaveDraft: () => void;
   onAutoAllocate: () => void;
+  onReset?: () => void;
   onReview: () => void;
+  onExport: () => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
@@ -39,13 +46,19 @@ export default function SeatingWorkspaceHeader({
   standardName,
   isDirty,
   isSaving,
+  isResetting,
   isReadOnly,
+  isPublished,
   canAutoAllocate,
+  canReset = true,
+  canExport = false,
   canFinalize,
   onBack,
   onSaveDraft,
   onAutoAllocate,
+  onReset,
   onReview,
+  onExport,
   onUndo,
   onRedo,
   canUndo,
@@ -97,24 +110,37 @@ export default function SeatingWorkspaceHeader({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Tooltip title="Undo (Ctrl+Z)">
           <span>
-            <IconButton size="small" disabled={!canUndo} onClick={onUndo}>
+            <IconButton size="small" disabled={!canUndo || isReadOnly || isPublished} onClick={onUndo}>
               <Iconify icon="mdi:undo" width={18} />
             </IconButton>
           </span>
         </Tooltip>
         <Tooltip title="Redo (Ctrl+Y)">
           <span>
-            <IconButton size="small" disabled={!canRedo} onClick={onRedo}>
+            <IconButton size="small" disabled={!canRedo || isReadOnly || isPublished} onClick={onRedo}>
               <Iconify icon="mdi:redo" width={18} />
             </IconButton>
           </span>
         </Tooltip>
         <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
+        {onReset && (
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
+            disabled={!canReset || isResetting || isReadOnly || isPublished}
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} width={16} />}
+            onClick={onReset}
+          >
+            {isResetting ? 'Resetting…' : 'Reset'}
+          </Button>
+        )}
+
         <Button
           size="small"
           variant="outlined"
-          disabled={!canAutoAllocate}
+          disabled={!canAutoAllocate || isReadOnly || isPublished}
           startIcon={<Iconify icon="mdi:auto-fix" width={16} />}
           onClick={onAutoAllocate}
         >
@@ -148,7 +174,13 @@ export default function SeatingWorkspaceHeader({
           onClose={morePopover.onClose}
         >
           <MenuList sx={{ minWidth: 200 }}>
-            <MenuItem disabled>
+            <MenuItem
+              disabled={!canExport}
+              onClick={() => {
+                morePopover.onClose();
+                onExport();
+              }}
+            >
               <Iconify icon="mdi:file-export-outline" width={16} style={{ marginRight: 8 }} />
               Export
             </MenuItem>

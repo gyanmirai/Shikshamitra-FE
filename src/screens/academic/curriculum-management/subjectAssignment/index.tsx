@@ -196,7 +196,7 @@ const Subject = () => {
       )}
 
       {showSubjectDialog.value && canView && (
-        <Box sx={{ height: '100%' }}>
+        <Box sx={{ height: '100%', flex: 1, minHeight: 0 }}>
           <ViewSubject subject={selectedSubject} classId={classId} classes={classes} />
         </Box>
       )}

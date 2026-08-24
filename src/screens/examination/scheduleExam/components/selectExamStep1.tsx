@@ -12,6 +12,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -33,6 +34,7 @@ import {
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
+import { pruneRoomDetails } from './initialValues';
 
 import type { IExamFormValues, IDivisionRoomDetail } from '../type';
 
@@ -163,9 +165,22 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
     () =>
       (subjectTableData || [])
         .filter((item: any) => item.status !== SubjectAssignmentStatus.Draft)
-        .map((item: any) => ({
-          ...item,
-        })),
+        .flatMap((item: any) => {
+          if (item.electiveGroupId && Array.isArray(item.subjects)) {
+            return item.subjects.map((subject: any) => ({
+              ...item,
+              ...subject,
+              id: subject.subjectId || subject.id,
+              subjectId: subject.subjectId || subject.id,
+              subjectName: subject.subjectName || subject.name || item.electiveGroupName,
+              selectedElectiveSubjectId: subject.subjectId || subject.id,
+              subjects: [subject],
+              optionGroup: item.electiveGroupName || 'Elective Group',
+            }));
+          }
+
+          return [{ ...item, optionGroup: 'Subjects' }];
+        }),
     [subjectTableData]
   );
 
@@ -220,8 +235,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   const handleSubjectsChange = useCallback(
     async (value: any[]) => {
       const selectedType = examTypeOptions.find((item: any) => item.id === formik.values.examType);
-      const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
-      const defaultGradeScaleId = selectedType?.defaultGradeScaleId ?? null;
+      const defaultGradeScaleId =
+        formik.values.gradingScaleId || selectedType?.defaultGradeScaleId || null;
+      const selectedGradeScale = gradeScalingOptions.find(
+        (item: any) => String(item.id) === String(defaultGradeScaleId)
+      );
+      const defaultTotalMarks =
+        selectedGradeScale?.totalMarks ?? selectedType?.defaultTotalMarks ?? '';
+      const defaultPassingMarks = selectedGradeScale?.passMarks ?? '';
       const nextReadiness = { ...electiveReadiness };
       const normalizedResults = await Promise.all(
         value.map(async (sub) => {
@@ -258,7 +279,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   startTime: subjectItem.startTime || null,
                   endTime: subjectItem.endTime || null,
                   totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                  passingMarks: subjectItem.passingMarks ?? '',
+                  passingMarks: subjectItem.passingMarks || defaultPassingMarks,
                   notes: subjectItem.notes || '',
                   gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
                 };
@@ -267,14 +288,21 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
           return {
             ...sub,
-            subjectId: sub.electiveGroupId || sub?.subjects?.[0]?.subjectId || sub.subjectId,
+            subjectId:
+              sub.selectedElectiveSubjectId ||
+              sub?.subjects?.[0]?.subjectId ||
+              sub.subjectId ||
+              sub.electiveGroupId,
             subjectName:
-              sub?.electiveGroupName || sub.subjects?.[0]?.subjectName || sub.subjectName || '',
+              sub?.subjects?.[0]?.subjectName ||
+              sub.subjectName ||
+              sub?.electiveGroupName ||
+              '',
             examDate: sub?.examDate || null,
             startTime: sub?.startTime || null,
             endTime: sub?.endTime || null,
             totalMarks: sub?.totalMarks || defaultTotalMarks,
-            passingMarks: sub?.passingMarks ?? '',
+            passingMarks: sub?.passingMarks || defaultPassingMarks,
             notes: sub?.notes || '',
             gradeScalingId: sub?.gradeScalingId || defaultGradeScaleId,
             subjectCode: isElective ? '' : sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
@@ -286,10 +314,17 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
       );
 
       setElectiveReadiness(nextReadiness);
-      formik.setFieldValue('subjects', normalizedResults.filter(Boolean));
+      const nextSubjects = normalizedResults.filter(Boolean);
+      const nextRoomDetails = pruneRoomDetails(
+        formik.values.roomDetails,
+        nextSubjects,
+        formik.values.divisions
+      );
+      formik.setFieldValue('subjects', nextSubjects);
+      formik.setFieldValue('roomDetails', nextRoomDetails);
       formik.setFieldTouched('subjects', false);
     },
-    [electiveReadiness, examTypeOptions, formik, getElectiveReadiness]
+    [electiveReadiness, examTypeOptions, formik, getElectiveReadiness, gradeScalingOptions]
   );
 
   return (
@@ -451,52 +486,28 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         const isAllClicked = value.includes('all');
                         const wasAllPreviouslySelected = formik.values.divisions.includes('all');
 
+                        let nextDivisions: string[] = [];
                         if (isAllClicked && !wasAllPreviouslySelected) {
-                          formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
+                          nextDivisions = ['all', ...allDivisionIds];
                         } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          formik.setFieldValue('divisions', []);
-                        } else if (isAllClicked && wasAllPreviouslySelected) {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          formik.setFieldValue(
-                            'divisions',
-                            selectedWithoutAll.length === allDivisionIds.length
-                              ? ['all', ...allDivisionIds]
-                              : selectedWithoutAll
-                          );
+                          nextDivisions = [];
                         } else {
                           const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          formik.setFieldValue(
-                            'divisions',
+                          nextDivisions =
                             selectedWithoutAll.length === allDivisionIds.length
                               ? ['all', ...allDivisionIds]
-                              : selectedWithoutAll
-                          );
+                              : selectedWithoutAll;
                         }
 
+                        formik.setFieldValue('divisions', nextDivisions);
                         formik.setFieldTouched(`divisions`, false);
 
-                        // Update room details
-                        const updatedRoomDetails = { ...(formik.values.roomDetails || {}) };
-                        formik.values.subjects.forEach((subject: any) => {
-                          const key =
-                            subject.subjectId ||
-                            subject.electiveGroupId ||
-                            subject?.subjects?.[0]?.subjectId;
-                          if (!key) return;
-                          const existing = updatedRoomDetails?.[key] ?? {};
-                          const divisionIds = value.filter((code: string) => code !== 'all');
-                          const divisionsObj = divisionIds.reduce(
-                            (acc: Record<string, IDivisionRoomDetail>, divisionId: string) => {
-                              acc[divisionId] = existing[divisionId] ?? {
-                                roomIds: [],
-                                capacity: 0,
-                              };
-                              return acc;
-                            },
-                            {} as Record<string, IDivisionRoomDetail>
-                          );
-                          updatedRoomDetails[key] = divisionsObj;
-                        });
+                        // Prune room details for deselected divisions and subjects
+                        const updatedRoomDetails = pruneRoomDetails(
+                          formik.values.roomDetails,
+                          formik.values.subjects,
+                          nextDivisions
+                        );
                         formik.setFieldValue('roomDetails', updatedRoomDetails);
                       }}
                       formControlProps={{ fullWidth: true }}
@@ -532,20 +543,21 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       disabled={!formik.values.className || selectedDivisionIds.length === 0}
                       loading={isTableLoading || isFetchingSubjects}
                       getOptionLabel={(option: any) =>
-                        option?.electiveGroupName ||
                         option?.subjectName ||
                         option?.subjects?.[0]?.subjectName ||
+                        option?.electiveGroupName ||
                         option?.name ||
                         ''
                       }
+                      groupBy={(option: any) => option.optionGroup || 'Subjects'}
                       getOptionDisabled={(option: any) => !!option.isDisabled}
                       isOptionEqualToValue={(option: any, val: any) => {
-                        const optId =
-                          option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
+                        const optId = option?.selectedElectiveSubjectId || option?.subjectId || option?.id;
                         const valId =
+                          val?.selectedElectiveSubjectId ||
                           val?.subjectId ||
-                          val?.electiveGroupId ||
                           val?.subjects?.[0]?.subjectId ||
+                          val?.electiveGroupId ||
                           val?.id;
                         return !!optId && optId === valId;
                       }}
@@ -554,13 +566,12 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       renderOption={(optionProps, option, { selected }) => {
                         const { key, ...restOptionProps } = optionProps as any;
                         const label =
-                          option?.electiveGroupName ||
                           option?.subjectName ||
                           option?.subjects?.[0]?.subjectName ||
+                          option?.electiveGroupName ||
                           option?.name ||
                           '';
-                        const optionKey =
-                          option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
+                        const optionKey = option?.selectedElectiveSubjectId || option?.subjectId || option?.id;
                         return (
                           <li key={key ?? optionKey} {...restOptionProps}>
                             <Checkbox
@@ -590,6 +601,17 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           </li>
                         );
                       }}
+                      renderGroup={(params) => (
+                        <li key={params.key}>
+                          <Typography
+                            variant="caption"
+                            sx={{ display: 'block', px: 1.5, py: 0.75, fontWeight: 700, color: 'text.secondary' }}
+                          >
+                            {params.group}
+                          </Typography>
+                          <ul style={{ padding: 0 }}>{params.children}</ul>
+                        </li>
+                      )}
                       value={formik.values.subjects}
                       onChange={(_event, value) => {
                         handleSubjectsChange(value);
@@ -632,7 +654,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   <ShakingTextField
                     error={Boolean(formik.touched.examName && formik.errors.examName)}
                   >
-                    <TextField
+                    <LanguageInputField
                       fullWidth
                       label="Exam Name *"
                       size="small"
@@ -640,7 +662,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       placeholder="e.g. First Terminal 2024"
                       value={formik.values.examName}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                        const value = e.target.value.replace(/[^\w\s\u0080-\uFFFF]/g, '');
                         formik.setFieldValue('examName', value);
                         formik.setFieldTouched('examName', false);
                       }}
@@ -675,6 +697,30 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       onChange={(val) => {
                         formik.setFieldValue('gradingScaleId', val);
                         formik.setFieldTouched('gradingScaleId', false);
+
+                        const selectedGradeScale = gradeScalingOptions.find(
+                          (item: any) => String(item.id) === String(val)
+                        );
+                        const normalizeScheduleFields = (subject: any) => ({
+                          ...subject,
+                          gradeScalingId: val || null,
+                          totalMarks: selectedGradeScale?.totalMarks ?? '',
+                          passingMarks: selectedGradeScale?.passMarks ?? '',
+                        });
+
+                        formik.setFieldValue(
+                          'subjects',
+                          formik.values.subjects.map((subject: any) => {
+                            const normalized = normalizeScheduleFields(subject);
+                            if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
+                              return {
+                                ...normalized,
+                                subjects: subject.subjects.map(normalizeScheduleFields),
+                              };
+                            }
+                            return normalized;
+                          })
+                        );
                       }}
                       labelKey="name"
                       valueKey="id"

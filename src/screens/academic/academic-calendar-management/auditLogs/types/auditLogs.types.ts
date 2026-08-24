@@ -18,15 +18,6 @@ export enum AuditImpactLevel {
   High = 3,
 }
 
-/** Source/channel that produced an audit event. */
-export enum AuditSource {
-  Web = 1,
-  Mobile = 2,
-  API = 3,
-  BulkUpload = 4,
-  SystemJob = 5,
-}
-
 /** Approval lifecycle state for sensitive changes. */
 export enum AuditApprovalStatus {
   NotRequired = 0,
@@ -122,7 +113,6 @@ export interface AuditLog {
   impactLevel?: AuditImpactLevel;
   impact?: AuditLogImpact;
   approvalStatus?: AuditApprovalStatus;
-  source?: AuditSource;
   changedByUserId: string;
   changedByName?: string | null;
   changedByRole?: string | null;
@@ -162,7 +152,6 @@ export interface AuditFilterState {
   changedByUserId: string;
   changedByRole: string;
   impactLevel: string;
-  source: string;
   entityType: string;
   entityId: string;
   hasDiff: string;

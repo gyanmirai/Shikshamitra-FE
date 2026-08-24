@@ -2,6 +2,8 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
@@ -12,6 +14,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { formatWallClockTime } from 'src/utils/time-of-day';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -19,16 +22,76 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
-import { Box, Tab, Chip, Tabs, Paper, Stack, Button, MenuList, MenuItem, Typography, Alert } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Chip,
+  Tabs,
+  Paper,
+  Stack,
+  Button,
+  MenuList,
+  MenuItem,
+  Typography,
+  Alert,
+} from '@mui/material';
 import {
   usePublishExamMutation,
+  useLazyGetExamScheduleQuery,
   useUpdateExamStatusMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import ScheduleExamKpiStrip from './ScheduleExamKpiStrip';
 import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
+import {
+  EXAM_STATUS_META,
+} from '../scheduleExamStatus';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
+
+function flattenScheduledSubjects(subjects: any[]): any[] {
+  return subjects.flatMap((subject) => {
+    if (
+      subject.electiveGroupId &&
+      Array.isArray(subject.electiveGroupSubjects) &&
+      subject.electiveGroupSubjects.length > 0
+    ) {
+      return subject.electiveGroupSubjects.map((electiveSubject: any) => ({
+        ...subject,
+        ...electiveSubject,
+        subjectName: electiveSubject.subjectName || '',
+        subjectCode: electiveSubject.subjectCode || electiveSubject.code || '',
+        examDate: electiveSubject.examDate ?? subject.examDate,
+        startTime: electiveSubject.startTime ?? subject.startTime,
+        endTime: electiveSubject.endTime ?? subject.endTime,
+        totalMarks: electiveSubject.totalMarks ?? subject.totalMarks,
+        passingMarks: electiveSubject.passingMarks ?? subject.passingMarks,
+        notes: electiveSubject.notes ?? subject.notes,
+      }));
+    }
+    return [subject];
+  });
+}
+
+function mergeTimetableSubjects(apiSubjects: any[], fallbackSubjects: any[]): any[] {
+  const fallbackById = new Map(
+    fallbackSubjects.map((subject) => [subject.subjectId || subject.subjectName, subject])
+  );
+
+  return apiSubjects.map((subject) => {
+    const fallback = fallbackById.get(subject.subjectId || subject.subjectName) || {};
+    return {
+      ...fallback,
+      ...subject,
+      examDate: subject.examDate ?? subject.date ?? subject.scheduleDate ?? fallback.examDate,
+      startTime: subject.startTime ?? subject.fromTime ?? subject.start ?? fallback.startTime,
+      endTime: subject.endTime ?? subject.toTime ?? subject.end ?? fallback.endTime,
+      totalMarks: subject.totalMarks ?? subject.marks ?? fallback.totalMarks,
+      passingMarks: subject.passingMarks ?? subject.passingMark ?? fallback.passingMarks,
+      notes: subject.notes ?? fallback.notes,
+    };
+  });
+}
 
 const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   openDialog,
@@ -42,9 +105,12 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   getExams,
   activeStatus,
   onStatusChange,
+  page,
+  rowsPerPage,
+  totalCount,
+  onServerPagination,
 }) => {
   const publishExamDialog = useBoolean();
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
 
   const canAdd = hasGrantedPermission(
@@ -75,7 +141,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   // const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [selectedTimetable, setSelectedTimetable] = useState<IExamFormValues | null>(null);
   const [previewExam, setPreviewExam] = useState<IExamFormValues | null>(null);
-
+  const [printingExamId, setPrintingExamId] = useState<string | null>(null);
+  const [getExamSchedule] = useLazyGetExamScheduleQuery();
   const handlePublishExam = async () => {
     try {
       if (selectedTimetable?.examId) {
@@ -98,7 +165,77 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     setSelectedTimetable(row);
   };
 
-  // Define tab configuration with labels, values, counts and colors
+  const handlePrintTimetable = async (row: IExamFormValues) => {
+    if (!row.examId) return;
+
+    setPrintingExamId(row.examId);
+    try {
+      const schedule = await getExamSchedule({ examId: row.examId }).unwrap();
+      const apiSubjects = flattenScheduledSubjects(
+        schedule?.subjects ?? schedule?.data?.subjects ?? []
+      );
+      const fallbackSubjects = flattenScheduledSubjects(row.subjects || []);
+      const subjects = apiSubjects.length
+        ? mergeTimetableSubjects(apiSubjects, fallbackSubjects)
+        : fallbackSubjects;
+      // eslint-disable-next-line new-cap
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const title = row.examName || 'Exam Timetable';
+      const filename = `${title.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'exam-timetable'}.pdf`;
+
+      doc.setFontSize(16);
+      doc.text(title, 14, 16);
+      doc.setFontSize(10);
+      doc.text(`${row.className || row.standardName || 'Class'} · Exam Timetable`, 14, 23);
+
+      autoTable(doc, {
+        startY: 30,
+        columns: [
+          { header: 'Subject', dataKey: 'subject' },
+          { header: 'Date', dataKey: 'date' },
+          { header: 'Start Time', dataKey: 'startTime' },
+          { header: 'End Time', dataKey: 'endTime' },
+          { header: 'Total Marks', dataKey: 'totalMarks' },
+          { header: 'Passing Marks', dataKey: 'passingMarks' },
+          { header: 'Notes', dataKey: 'notes' },
+        ],
+        head: [
+          ['Subject', 'Date', 'Start Time', 'End Time', 'Total Marks', 'Passing Marks', 'Notes'],
+        ],
+        body: subjects.map((subject: any) => [
+          `${subject.subjectName || '-'}${subject.subjectCode ? ` (${subject.subjectCode})` : ''}`,
+          (subject.examDate ?? subject.date ?? subject.scheduleDate) &&
+          dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
+            ? dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).format('DD-MM-YYYY')
+            : '-',
+          formatWallClockTime(subject.startTime ?? subject.fromTime ?? subject.start),
+          formatWallClockTime(subject.endTime ?? subject.toTime ?? subject.end),
+          subject.totalMarks ?? subject.marks ?? '-',
+          subject.passingMarks ?? subject.passingMark ?? '-',
+          subject.notes || '-',
+        ]),
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [35, 48, 61] },
+        margin: { left: 14, right: 14 },
+      });
+
+      doc.save(filename);
+      shikshaMitraToast.success({ message: 'Timetable downloaded successfully.' });
+    } catch (error) {
+      const parsed = parseApiProblemDetail(error);
+      shikshaMitraToast.error({ message: parsed.detail || 'Unable to download the timetable.' });
+    } finally {
+      setPrintingExamId(null);
+    }
+  };
+
+  // The API applies the effective schedule status before paging and returns
+  // its matching counters. Keeping that response authoritative prevents a
+  // client-side reclassification from hiding rows while totalCount still
+  // reports them.
+  const ongoingCount = Number(getExams?.data?.ongoingCount ?? 0);
+  const publishedCount = Number(getExams?.data?.publishedCount ?? 0);
+
   const TABS = useMemo(
     () => [
       {
@@ -110,28 +247,69 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       {
         label: 'Published',
         value: examScheduledStatus.Published,
-        count: getExams?.data?.publishedCount || 0,
+        count: publishedCount,
         color: 'info',
+      },
+      {
+        label: 'Ongoing',
+        value: examScheduledStatus.Ongoing,
+        count: ongoingCount,
+        color: 'primary',
       },
       {
         label: 'Completed',
         value: examScheduledStatus.Completed,
-        count: getExams?.data?.completedCount || 0,
+        // The active tab's totalCount comes from the same server-side
+        // status predicate as the rows shown in the grid. Prefer it while
+        // viewing Completed so a stale summary response cannot disagree with
+        // the current list response during a tab change/refetch.
+        count:
+          activeStatus === examScheduledStatus.Completed
+            ? totalCount
+            : getExams?.data?.completedCount || 0,
         color: 'success',
       },
     ],
-    [getExams?.data?.pendingCount, getExams?.data?.publishedCount, getExams?.data?.completedCount]
+    [
+      activeStatus,
+      getExams?.data?.pendingCount,
+      getExams?.data?.completedCount,
+      ongoingCount,
+      publishedCount,
+      totalCount,
+    ]
   );
 
   // Handle tab change event — update UI state, notify parent, and refetch with new Status
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(event, newValue);
     onStatusChange?.(newValue as number);
-    getExams?.refetch?.();
   };
 
-  // Table data comes pre-filtered from the backend via the Status query param
-  const tableData = useMemo(() => getExams?.data?.items || [], [getExams?.data?.items]);
+  const handleKpiClick = (label: string) => {
+    const statusByCard: Record<string, examScheduledStatus> = {
+      'Draft Exams': examScheduledStatus.Pending,
+      Published: examScheduledStatus.Published,
+      'Upcoming 7 Days': examScheduledStatus.Published,
+      'Unassigned Rooms': examScheduledStatus.Pending,
+      'Needs Attention': examScheduledStatus.Pending,
+      Completed: examScheduledStatus.Completed,
+    };
+    const status = statusByCard[label];
+    if (status === undefined) return;
+    tabs.setValue(status);
+    onStatusChange?.(status);
+  };
+
+  // The backend filters and paginates with the same effective status it
+  // returns in each row. Do not filter again on the current client clock.
+  const tableData = useMemo(() => {
+    const rows = getExams?.data?.items || [];
+    return rows.map((row: any) => ({
+      ...row,
+      effectiveStatus: row.status,
+    }));
+  }, [getExams?.data?.items]);
 
   // Actions component for the three dots menu
   // Renders menu items for printing and publishing timetables
@@ -164,8 +342,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           {/* Menu item for printing the timetable */}
           <MenuItem
             onClick={() => {
+              handlePrintTimetable(row as IExamFormValues);
               pop.onClose();
             }}
+            disabled={printingExamId === row.examId}
           >
             <Iconify icon="solar:printer-outline" />
             Print Timetable
@@ -191,7 +371,16 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
-        <ScheduleExamKpiStrip summary={getExams?.data} rows={tableData} />
+        <ScheduleExamKpiStrip
+          summary={
+            activeStatus === examScheduledStatus.Completed
+              ? { ...getExams?.data, completedCount: totalCount }
+              : getExams?.data
+          }
+          rows={tableData}
+          publishedCount={publishedCount}
+          onCardClick={handleKpiClick}
+        />
         <Paper
           elevation={0}
           sx={{
@@ -241,28 +430,44 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       {isAction ? (
         <CustomizableTable
           tableId="schedule-exam-table"
+          tableTitle="Scheduled Exams"
           isLoading={getExams?.isLoading || getExams?.isFetching}
+          serverSidePagination
+          totalCount={getExams?.data?.totalCount ?? tableData.length}
+          page={Math.max(0, (page ?? 1) - 1)}
+          rowsPerPage={rowsPerPage}
+          onServerPagination={onServerPagination}
           noDataText={
             <Stack alignItems="center" spacing={0.5}>
-              <Box component="span">Exam Data Not Found</Box>
-              <Box
-                component="span"
-                onClick={() => {
-                  setOpenDialog?.(true);
-                  setEditData?.(null);
-                }}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': {
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                Create Exam
+              <Box component="span">
+                {activeStatus === examScheduledStatus.Ongoing
+                  ? 'No exams are ongoing right now'
+                  : 'Exam Data Not Found'}
               </Box>
+              {activeStatus === examScheduledStatus.Ongoing ? (
+                <Typography variant="caption" color="text.secondary">
+                  Published exams appear here automatically during their scheduled time.
+                </Typography>
+              ) : (
+                <Box
+                  component="span"
+                  onClick={() => {
+                    setOpenDialog?.(true);
+                    setEditData?.(null);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Create Exam
+                </Box>
+              )}
             </Stack>
           }
           columns={[
@@ -308,7 +513,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               id: 'startDate',
               label: 'Date Range',
               align: 'left',
-              isFilter: false,
+              filterType: 'date',
               render: (_value, row) => {
                 if (!row.startDate) return 'Not scheduled';
                 const start = dayjs(row.startDate).format('DD-MM-YYYY');
@@ -342,7 +547,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             },
             { id: 'creatorName', label: 'Created By', align: 'left', isFilter: false },
             {
-              id: 'status',
+              id: 'effectiveStatus',
               label: 'Status',
               align: 'left',
               sticky: true,
@@ -350,17 +555,15 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               minWidth: 120,
               filterType: 'enum',
               enumOptions: [
-                { label: 'Pending', value: 'Pending' },
-                { label: 'Published', value: 'Published' },
-                { label: 'Completed', value: 'Completed' },
+                { label: 'Draft', value: examScheduledStatus.Pending },
+                { label: 'Published', value: examScheduledStatus.Published },
+                { label: 'Ongoing', value: examScheduledStatus.Ongoing },
+                { label: 'Completed', value: examScheduledStatus.Completed },
               ],
               render: (value) => {
                 const meta =
-                  value === examScheduledStatus.Published
-                    ? { label: 'Published', color: 'info' }
-                    : value === examScheduledStatus.Completed
-                      ? { label: 'Completed', color: 'success' }
-                      : { label: 'Draft', color: 'warning' };
+                  EXAM_STATUS_META[Number(value) as examScheduledStatus] ??
+                  EXAM_STATUS_META[examScheduledStatus.Pending];
                 return <Label color={meta.color as LabelColor}>{meta.label}</Label>;
               },
             },
@@ -404,24 +607,26 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           noDataText={
             <Stack alignItems="center" spacing={0.5}>
               <Box component="span">Exam Data Not Found</Box>
-              <Box
-                component="span"
-                onClick={() => {
-                  setOpenDialog?.(true);
-                  setEditData?.(null);
-                }}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': {
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                Create Exam
-              </Box>
+              {canAdd && (
+                <Box
+                  component="span"
+                  onClick={() => {
+                    setOpenDialog?.(true);
+                    setEditData?.(null);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Create Exam
+                </Box>
+              )}
             </Stack>
           }
           columns={[
@@ -439,6 +644,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             { id: 'createdBy', label: 'Created By', align: 'left', isFilter: false },
           ]}
           data={tableData || []}
+          serverSidePagination
+          page={Math.max(0, (page ?? 1) - 1)}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          onServerPagination={onServerPagination}
         />
       )}
 
@@ -461,10 +671,12 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             {(selectedTimetable?.issueCount ?? 0) > 0 && (
               <Alert severity="warning" sx={{ mt: 1 }}>
                 <Typography variant="subtitle2" fontWeight={700}>
-                  {selectedTimetable?.issueCount} blocking issue{(selectedTimetable?.issueCount ?? 0) > 1 ? 's' : ''} detected
+                  {selectedTimetable?.issueCount} blocking issue
+                  {(selectedTimetable?.issueCount ?? 0) > 1 ? 's' : ''} detected
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Publishing will fail. Open the exam schedule and fill in all required fields first.
+                  Publishing will fail. Open the exam schedule and fill in all required fields
+                  first.
                 </Typography>
               </Alert>
             )}

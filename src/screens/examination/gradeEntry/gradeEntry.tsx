@@ -159,7 +159,15 @@ const GradeEntry = (props: TabComponentType) => {
       setExamId(value);
     }
     setIsDirty(false);
+    setSaveState('idle');
   };
+
+  const handleDirtyChange = useCallback((dirty: boolean) => {
+    setIsDirty(dirty);
+    if (dirty) {
+      setSaveState('idle');
+    }
+  }, []);
 
   const {
     data: subjectData,
@@ -306,6 +314,27 @@ const GradeEntry = (props: TabComponentType) => {
   const auditLogsDialog = useBoolean();
   const requestChangesDialog = useBoolean();
   const unlockDialog = useBoolean();
+
+  // Controlled note inputs for Request Corrections / Unlock dialogs
+  const [reviewerNote, setReviewerNote] = useState('');
+  const [reviewerNoteError, setReviewerNoteError] = useState('');
+  const [unlockReason, setUnlockReason] = useState('');
+  const [unlockReasonError, setUnlockReasonError] = useState('');
+
+  // Reset note fields whenever the dialogs close so stale/autofilled text never persists
+  useEffect(() => {
+    if (!requestChangesDialog.value) {
+      setReviewerNote('');
+      setReviewerNoteError('');
+    }
+  }, [requestChangesDialog.value]);
+
+  useEffect(() => {
+    if (!unlockDialog.value) {
+      setUnlockReason('');
+      setUnlockReasonError('');
+    }
+  }, [unlockDialog.value]);
 
   // Audit Logs data query
   const { data: auditLogsData } = useQueryAndMutation({
@@ -498,6 +527,8 @@ const GradeEntry = (props: TabComponentType) => {
         body: { subjectId: subject, divisionId: division, rows: importedRows },
       }).unwrap();
       importMarksDialog.onFalse();
+      setIsDirty(false);
+      setSaveState('saved');
       shikshaMitraToast.success({
         message: `Successfully imported ${importedRows.length} student records.`,
       });
@@ -538,6 +569,7 @@ const GradeEntry = (props: TabComponentType) => {
       }).unwrap();
       reviewDialog.onFalse();
       setWorkflowStatus(GradeEntryWorkflowStatus.Submitted);
+      setIsDirty(false);
       shikshaMitraToast.success({ message: 'Marks successfully submitted for verification.' });
     } catch (e) {
       console.error(e);
@@ -550,6 +582,7 @@ const GradeEntry = (props: TabComponentType) => {
       await publishExamMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
       publishMarksDialog.onFalse();
       setWorkflowStatus(GradeEntryWorkflowStatus.Published);
+      setIsDirty(false);
       shikshaMitraToast.success({
         message: `Marks published successfully for ${examOptions.find((o) => o.examId === examId)?.examName ?? 'selected exam'}.`,
       });
@@ -607,7 +640,12 @@ const GradeEntry = (props: TabComponentType) => {
     }
   };
 
-  const handleRequestChanges = async (note: string) => {
+  const handleRequestChanges = async () => {
+    const note = reviewerNote.trim();
+    if (!note) {
+      setReviewerNoteError('Reviewer note is required. Describe what needs to be corrected.');
+      return;
+    }
     try {
       await requestChanges({
         examId,
@@ -621,7 +659,12 @@ const GradeEntry = (props: TabComponentType) => {
     }
   };
 
-  const handleUnlockMarks = async (reason: string) => {
+  const handleUnlockMarks = async () => {
+    const reason = unlockReason.trim();
+    if (!reason) {
+      setUnlockReasonError('Unlock reason is required for the audit trail.');
+      return;
+    }
     try {
       await unlockMarks({
         examId,
@@ -629,6 +672,7 @@ const GradeEntry = (props: TabComponentType) => {
       }).unwrap();
       unlockDialog.onFalse();
       setWorkflowStatus(GradeEntryWorkflowStatus.Draft);
+      setIsDirty(false);
       shikshaMitraToast.success({ message: 'Marks successfully unlocked back to Draft.' });
     } catch (e) {
       console.error(e);
@@ -1286,10 +1330,8 @@ const GradeEntry = (props: TabComponentType) => {
               subjectId={subject}
               examId={examId}
               isLocked={isGradeEntryLocked}
-              onAllAssignedChange={(val) => {
-                setAllMarksAssigned(val);
-                setIsDirty(true);
-              }}
+              onAllAssignedChange={setAllMarksAssigned}
+              onDirtyChange={handleDirtyChange}
               onStatsChange={setAnalyticsStats}
               onWorkflowFlagsChange={handleWorkflowFlagsChange}
               onRowsChange={setTableRows}
@@ -1371,6 +1413,7 @@ const GradeEntry = (props: TabComponentType) => {
               </CustomTooltip>
             </Box>
           }
+          maxWidth="sm"
         >
           <AssignGrade data={selectedStudent} onClose={handleClose} />
         </CustomDialog>
@@ -1600,28 +1643,45 @@ const GradeEntry = (props: TabComponentType) => {
           maxWidth="xs"
           hasForm={false}
         >
-          <DialogScrollContent>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, pt: 1 }}>
-              Provide reviewer notes indicating why corrections are required:
-            </Typography>
+          <DialogScrollContent onSubmit={handleRequestChanges}>
             <TextField
               id="reviewer-note-input"
+              name="reviewer-note"
               multiline
               rows={4}
               fullWidth
+              required
+              label="Reviewer Note"
               placeholder="e.g. Please verify Roll #4 obtained marks, looks lower than average..."
+              value={reviewerNote}
+              onChange={(e) => {
+                setReviewerNote(e.target.value);
+                if (reviewerNoteError) setReviewerNoteError('');
+              }}
+              error={Boolean(reviewerNoteError)}
+              helperText={
+                reviewerNoteError ||
+                'Mention the roll number and correction needed. This note is sent to the teacher.'
+              }
+              autoComplete="off"
+              slotProps={{
+                htmlInput: { maxLength: 500 },
+                formHelperText: { sx: { whiteSpace: 'normal' } },
+              }}
             />
           </DialogScrollContent>
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <CancelButton onClick={requestChangesDialog.onFalse} />
+            <CancelButton
+              onClick={() => {
+                setReviewerNoteError('');
+                requestChangesDialog.onFalse();
+              }}
+            />
             <SubmitButton
               buttonText="Request Changes"
               loading={isRequestChangesLoading}
               startIcon={<Iconify icon="solar:close-circle-bold" />}
-              onClick={() => {
-                const el = document.getElementById('reviewer-note-input') as HTMLTextAreaElement;
-                handleRequestChanges(el?.value || '');
-              }}
+              onClick={handleRequestChanges}
             />
           </DialogActions>
         </CustomDialog>
@@ -1660,29 +1720,46 @@ const GradeEntry = (props: TabComponentType) => {
           maxWidth="xs"
           hasForm={false}
         >
-          <DialogScrollContent>
+          <DialogScrollContent onSubmit={handleUnlockMarks}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2, pt: 1 }}>
               Are you sure you want to unlock published marks? Provide an unlock reason for audit
               trail:
             </Typography>
             <TextField
               id="unlock-reason-input"
+              name="unlock-reason"
               multiline
               rows={3}
               fullWidth
+              required
+              label="Unlock Reason"
               placeholder="e.g. Correcting clerical mistake in roll #8..."
+              value={unlockReason}
+              onChange={(e) => {
+                setUnlockReason(e.target.value);
+                if (unlockReasonError) setUnlockReasonError('');
+              }}
+              error={Boolean(unlockReasonError)}
+              helperText={unlockReasonError || 'This reason is recorded in the marks audit logs.'}
+              autoComplete="off"
+              slotProps={{
+                htmlInput: { maxLength: 500 },
+                formHelperText: { sx: { whiteSpace: 'normal' } },
+              }}
             />
           </DialogScrollContent>
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <CancelButton onClick={unlockDialog.onFalse} />
+            <CancelButton
+              onClick={() => {
+                setUnlockReasonError('');
+                unlockDialog.onFalse();
+              }}
+            />
             <SubmitButton
               buttonText="Confirm Unlock"
               loading={isUnlockLoading}
               startIcon={<Iconify icon="solar:lock-open-bold" />}
-              onClick={() => {
-                const el = document.getElementById('unlock-reason-input') as HTMLTextAreaElement;
-                handleUnlockMarks(el?.value || '');
-              }}
+              onClick={handleUnlockMarks}
             />
           </DialogActions>
         </CustomDialog>

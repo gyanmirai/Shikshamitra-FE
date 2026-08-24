@@ -15,6 +15,7 @@ export interface IGradingScale {
 }
 
 export interface IGrade {
+  usageCount: any;
   id: string;
   name: string;
   totalMarks: number | string;

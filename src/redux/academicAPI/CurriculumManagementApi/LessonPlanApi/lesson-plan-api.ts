@@ -146,7 +146,7 @@ export const lessonPlanApi = academicApi.injectEndpoints({
 
     createTeacherDiary: builder.mutation({
       query: (body) => ({ url: '/academic/curriculum/teacher-diaries', method: 'POST', body }),
-      invalidatesTags: [academicType.teacherDiary, academicType.lessonPlan],
+      invalidatesTags: [academicType.teacherDiary, academicType.lessonPlan, academicType.chapter],
     }),
 
     updateTeacherDiary: builder.mutation({
@@ -155,7 +155,7 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicType.teacherDiary],
+      invalidatesTags: [academicType.teacherDiary, academicType.lessonPlan, academicType.chapter],
     }),
 
     submitTeacherDiary: builder.mutation({
@@ -167,6 +167,7 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         academicType.teacherDiary,
         academicType.lessonPlan,
         academicType.lessonPlanReview,
+        academicType.chapter,
       ],
     }),
 

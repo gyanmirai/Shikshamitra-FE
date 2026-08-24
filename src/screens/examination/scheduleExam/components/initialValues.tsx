@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { parseWallClockTime } from 'src/utils/time-of-day';
 
-import type { IExamSubject, IRoomDetails, IExamFormValues } from '../type';
+import type { IExamSubject, IRoomDetails, IExamFormValues, IDivisionRoomDetail } from '../type';
 
 function combineDateAndTime(dateObj: any, timeObj: any): string | null {
   if (!dateObj || !timeObj) return null;
@@ -176,14 +176,14 @@ export function mapBackendToFormik(
   const rawEntrySubjectIds: string[] =
     scheduleSubjectIds.size > 0
       ? Array.from(
-          new Set([
-            ...(basicData?.subjectIds ?? []).filter((subjectId: string) =>
-              scheduleSubjectIds.has(subjectId)
-            ),
-            ...Array.from(scheduleSubjectIds),
-            ...examSubjectIds,
-          ])
-        )
+        new Set([
+          ...(basicData?.subjectIds ?? []).filter((subjectId: string) =>
+            scheduleSubjectIds.has(subjectId)
+          ),
+          ...Array.from(scheduleSubjectIds),
+          ...examSubjectIds,
+        ])
+      )
       : Array.from(new Set([...(basicData?.subjectIds ?? []), ...examSubjectIds]));
 
   const rawEntries: RawEntry[] = rawEntrySubjectIds.map((subjectId: string) => {
@@ -345,16 +345,18 @@ export function mapBackendToFormik(
   });
 
   // Build roomDetails keyed by subjectId (not subjectName — avoids name collisions)
-  const roomDetails: IRoomDetails = {};
+  const rawRoomDetails: IRoomDetails = {};
   (roomData?.subjects ?? []).forEach((sub: any) => {
-    roomDetails[sub.subjectId] = {};
+    rawRoomDetails[sub.subjectId] = {};
     (sub.divisions ?? []).forEach((div: any) => {
-      roomDetails[sub.subjectId][div.divisionId] = {
+      rawRoomDetails[sub.subjectId][div.divisionId] = {
         roomIds: div.roomIds ?? [],
         capacity: div.capacity ?? 0,
       };
     });
   });
+
+  const roomDetails = pruneRoomDetails(rawRoomDetails, subjects, basicData?.divisionIds ?? []);
 
   return {
     examId: basicData?.id ?? '',
@@ -374,6 +376,54 @@ export function mapBackendToFormik(
     syncToAcademicCalendar: false,
     roomDetails,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Room Allocation Purging Utility
+// Cascading delete for downstream room allocation when subjects or divisions are removed
+// ---------------------------------------------------------------------------
+export function pruneRoomDetails(
+  roomDetails: IRoomDetails = {},
+  subjects: IExamSubject[] = [],
+  divisions: string[] = []
+): IRoomDetails {
+  if (!roomDetails || typeof roomDetails !== 'object') return {};
+
+  const validDivisionIds = new Set((divisions || []).filter((id) => id !== 'all'));
+
+  // Collect all valid subject IDs (core subject IDs + nested elective subject IDs)
+  const validSubjectIds = new Set<string>();
+  (subjects || []).forEach((sub: any) => {
+    if (sub?.electiveGroupId && Array.isArray(sub?.subjects) && sub.subjects.length > 0) {
+      sub.subjects.forEach((nested: any) => {
+        const id = nested?.subjectId || nested?.id;
+        if (id) validSubjectIds.add(id);
+      });
+      if (sub.electiveGroupId) validSubjectIds.add(sub.electiveGroupId);
+      if (sub.subjectId) validSubjectIds.add(sub.subjectId);
+    } else if (sub?.subjectId || sub?.id) {
+      validSubjectIds.add(sub.subjectId || sub.id);
+    }
+  });
+
+  const nextRoomDetails: IRoomDetails = {};
+
+  validSubjectIds.forEach((subjId) => {
+    const existingSubjRoom = roomDetails[subjId];
+    if (existingSubjRoom && typeof existingSubjRoom === 'object') {
+      const prunedDivMap: Record<string, IDivisionRoomDetail> = {};
+      validDivisionIds.forEach((divId) => {
+        if (existingSubjRoom[divId]) {
+          prunedDivMap[divId] = existingSubjRoom[divId];
+        }
+      });
+      if (Object.keys(prunedDivMap).length > 0) {
+        nextRoomDetails[subjId] = prunedDivMap;
+      }
+    }
+  });
+
+  return nextRoomDetails;
 }
 
 // ---------------------------------------------------------------------------

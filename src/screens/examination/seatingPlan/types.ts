@@ -37,6 +37,7 @@ export interface SeatingStudent {
   hasSpecialRequirement?: boolean;
   specialRequirementLabel?: string; // discreet label only, e.g. "Special Seating" (§17)
   isExcluded?: boolean;
+  isExternalExamOccupied?: boolean;
 }
 
 export type SeatingPlanScopeType = 0 | 1 | 2;
@@ -73,6 +74,7 @@ export interface SeatingSeat {
   isDisabled?: boolean;
   isReserved?: boolean;
   isAccessible?: boolean;
+  isExternalExamOccupied?: boolean;
 }
 
 export interface SeatingRoomLayout {
@@ -97,6 +99,7 @@ export interface SeatingAssignment {
   seatNumber: number;
   benchId?: string | null;
   assignedBy: AssignedBy;
+  isExternalExamOccupied?: boolean;
 }
 
 export interface SeatingAllocationRules {
