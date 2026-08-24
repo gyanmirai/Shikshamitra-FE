@@ -87,7 +87,9 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
         position: 'relative',
         p: { xs: 1.5, sm: 2 },
         borderBottom: `1px solid ${theme.palette.divider}`,
-        bgcolor: varAlpha(theme.palette.background.defaultChannel, 0.4),
+        // Use the theme surface directly so dark mode does not blend the header
+        // with the default background into a washed-out gray overlay.
+        bgcolor: 'background.neutral',
       }}
     >
       {/* Loading Bar when switching subjects */}
