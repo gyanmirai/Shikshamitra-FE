@@ -18,10 +18,14 @@ import { formatWallClockTime } from 'src/utils/time-of-day';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomSelect from 'src/components/custom-select';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import type { Standards, Organization } from 'src/types/school';
 import {
   Box,
   Tab,
@@ -103,12 +107,17 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   getExams,
   activeStatus,
   onStatusChange,
+  selectedClass = 'all',
+  onClassChange,
+  dateRange = [dayjs().startOf('week'), dayjs().endOf('week')],
+  onDateRangeChange,
   page,
   rowsPerPage,
   totalCount,
   onServerPagination,
 }) => {
   const publishExamDialog = useBoolean();
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
 
   const canAdd = hasGrantedPermission(
@@ -123,6 +132,21 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     permissions,
     `${academicPermissions.examination.schedule}.Delete`
   );
+
+  const classOptions = useMemo(() => {
+    const rawClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    const uniqueMap = new Map<string, string>();
+    rawClasses.forEach((cls: Standards) => {
+      if (cls?.id && !uniqueMap.has(cls.id)) {
+        uniqueMap.set(cls.id, cls.name || (cls as any).standardName || 'Class');
+      }
+    });
+    return [
+      { label: 'All Classes', value: 'all' },
+      ...Array.from(uniqueMap.entries()).map(([value, label]) => ({ label, value })),
+    ];
+  }, [medium]);
 
   const [publishExam] = useQueryAndMutation({
     type: 'mutation',
@@ -204,7 +228,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         body: subjects.map((subject: any) => [
           `${subject.subjectName || '-'}${subject.subjectCode ? ` (${subject.subjectCode})` : ''}`,
           (subject.examDate ?? subject.date ?? subject.scheduleDate) &&
-          dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
+            dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
             ? dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).format('DD-MM-YYYY')
             : '-',
           formatWallClockTime(subject.startTime ?? subject.fromTime ?? subject.start),
@@ -395,18 +419,21 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           elevation={0}
           sx={{
             display: 'flex',
-            gap: 1,
+            gap: 1.5,
             alignItems: 'center',
+            justifyContent: 'space-between',
             px: 2,
+            py: 0.75,
             borderRadius: 1,
             border: '1px solid',
             borderColor: 'divider',
+            flexWrap: { xs: 'wrap', lg: 'nowrap' },
           }}
         >
           <Tabs
             value={tabs.value}
             onChange={handleTabChange}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, flexGrow: 1 }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, flexShrink: 0 }}
           >
             {TABS.map((tab) => (
               <Tab
@@ -422,19 +449,57 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               />
             ))}
           </Tabs>
-          {isScheduleExamButton && canAdd && (
-            <Button
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              onClick={() => {
-                setOpenDialog?.(true);
-              }}
-              sx={{ px: '32px' }}
-            >
-              Schedule Exam
-            </Button>
-          )}
+
+          <Stack
+            direction="row"
+            spacing={1.5}
+            alignItems="center"
+            sx={{
+              flexShrink: 0,
+              flexWrap: 'wrap',
+              gap: 1.5,
+              ml: 'auto',
+            }}
+          >
+            <Box sx={{ minWidth: { xs: 130, sm: 160 } }}>
+              <CustomSelect
+                label="Class"
+                options={classOptions}
+                labelKey="label"
+                valueKey="value"
+                value={selectedClass || 'all'}
+                onChange={(val) => {
+                  onClassChange?.(String(val));
+                }}
+                formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
+              />
+            </Box>
+
+            <Box sx={{ minWidth: { xs: 190, sm: 230 } }}>
+              <CustomDateRangePicker
+                label="Date Range"
+                value={dateRange}
+                dateFormat="DD-MM-YYYY"
+                onChange={(value) => {
+                  onDateRangeChange?.(value);
+                }}
+              />
+            </Box>
+
+            {isScheduleExamButton && canAdd && (
+              <Button
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                onClick={() => {
+                  setOpenDialog?.(true);
+                }}
+                sx={{ px: 3, whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                Schedule Exam
+              </Button>
+            )}
+          </Stack>
         </Paper>
       </Box>
       {isAction ? (

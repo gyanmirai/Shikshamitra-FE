@@ -114,29 +114,29 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
         fromSlotId: `${day}-${index}`,
       };
     },
-    canDrag: () => isFilled && !isBreak,
+    canDrag: () => !readOnly && isFilled && !isBreak,
     collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
+      isDragging: !readOnly && !!monitor.isDragging(),
     }),
   });
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ItemTypes.SUBJECT,
     canDrop: (item: DragItem) => {
-      if (isBreak) return false;
+      if (readOnly || isBreak) return false;
       if (isFilled) {
-        return !!item.fromSlotId && item.fromSlotId !== `${day}-${index}`;
+        return !readOnly && !!item.fromSlotId && item.fromSlotId !== `${day}-${index}`;
       }
-      return true;
+      return !readOnly;
     },
     drop: (item: DragItem) => {
-      if (item.subject) {
+      if (!readOnly && item.subject) {
         onDrop(String(index), item.subject, item.fromSlotId);
       }
     },
     collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
-      canDrop: !!monitor.canDrop(),
+      isOver: !readOnly && !!monitor.isOver(),
+      canDrop: !readOnly && !!monitor.canDrop(),
     }),
   });
 
@@ -197,7 +197,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
         alignItems: 'stretch',
         padding: '2px',
         boxShadow: theme.shadows[1],
-        cursor: 'grab',
+        cursor: readOnly ? 'default' : 'grab',
         transition: 'all 0.18s ease',
         '&:hover': {
           boxShadow: theme.shadows[4],
@@ -282,8 +282,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
       );
     }
 
-    const hasAnyTeacher = displaySubjects.some((s) => s.teacherName);
-    const hasAnyRoom = displaySubjects.some((s) => s.roomName);
+    const hasAnyTeacher = displaySubjects.some((s) => s.teacherName || (s as any).teacher);
+    const hasAnyRoom = displaySubjects.some((s) => s.roomName || (s as any).room);
 
     return (
       <Box sx={{ p: '2px 4px', minWidth: 160 }}>
@@ -333,7 +333,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.68rem' }}
               noWrap
             >
-              {displaySubjects.map((s) => s.teacherName || '—').join(' | ')}
+              {displaySubjects.map((s) => s.teacherName || (s as any).teacher || '—').join(' | ')}
             </Typography>
           </Box>
         )}
@@ -351,7 +351,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.68rem' }}
               noWrap
             >
-              {displaySubjects.map((s) => s.roomName || '—').join(' | ')}
+              {displaySubjects.map((s) => s.roomName || (s as any).room || '—').join(' | ')}
             </Typography>
           </Box>
         )}

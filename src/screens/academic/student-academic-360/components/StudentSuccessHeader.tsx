@@ -3,12 +3,14 @@
 import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Chip, Stack, Avatar, Tooltip, IconButton, Typography, Divider } from '@mui/material';
+import { Label } from 'src/components/label';
+import { Box, Stack, Avatar, Tooltip, IconButton, Typography, Divider } from '@mui/material';
 
 import { RegistrationStatusType, RegistrationStatusTypeColor } from 'src/enums/registration-status-type';
 import { readText, getStudentName, readOptionalText } from '../types';
 import { HealthScoreGauge } from './HealthScoreGauge';
 
+import type { LabelColor } from 'src/components/label';
 import type { Academic360Kpi, Academic360Health, Academic360StudentRow } from '../types';
 
 type StudentSuccessHeaderProps = {
@@ -27,15 +29,15 @@ type StudentSuccessHeaderProps = {
 const findKpi = (kpis: Academic360Kpi[] | undefined, key: string) =>
   kpis?.find((kpi) => kpi.key === key)?.displayValue || 'No data';
 
-const trendMeta = (trend?: string) => {
+const trendMeta = (trend?: string): { icon: string; color: LabelColor; label: string } => {
   const normalized = (trend || '').toLowerCase();
   if (normalized.includes('improv') || normalized.includes('up')) {
-    return { icon: 'mdi:trending-up', color: 'success.main' as const, label: 'Improving' };
+    return { icon: 'mdi:trending-up', color: 'success', label: 'Improving' };
   }
   if (normalized.includes('declin') || normalized.includes('down') || normalized.includes('drop')) {
-    return { icon: 'mdi:trending-down', color: 'error.main' as const, label: 'Declining' };
+    return { icon: 'mdi:trending-down', color: 'error', label: 'Declining' };
   }
-  return { icon: 'mdi:trending-neutral', color: 'text.secondary' as const, label: trend || 'Monitoring' };
+  return { icon: 'mdi:trending-neutral', color: 'default', label: trend || 'Monitoring' };
 };
 
 export function StudentSuccessHeader({
@@ -56,22 +58,22 @@ export function StudentSuccessHeader({
 
   const rawStatus = student.operationalStatus ?? student.status;
   let statusLabel = 'Active';
-  let statusColor: 'success' | 'warning' | 'error' | 'info' | 'default' = 'success';
+  let statusColor: LabelColor = 'success';
 
   if (rawStatus !== undefined && rawStatus !== null) {
     if (typeof rawStatus === 'number') {
       statusLabel = RegistrationStatusType[rawStatus] || 'Active';
-      statusColor = (RegistrationStatusTypeColor[rawStatus as RegistrationStatusType] as any) || 'success';
+      statusColor = (RegistrationStatusTypeColor[rawStatus as RegistrationStatusType] as LabelColor) || 'success';
     } else if (typeof rawStatus === 'string') {
       const parsed = Number(rawStatus);
       if (!Number.isNaN(parsed)) {
         statusLabel = RegistrationStatusType[parsed] || 'Active';
-        statusColor = (RegistrationStatusTypeColor[parsed as RegistrationStatusType] as any) || 'success';
+        statusColor = (RegistrationStatusTypeColor[parsed as RegistrationStatusType] as LabelColor) || 'success';
       } else {
         statusLabel = rawStatus;
         const found = Object.values(RegistrationStatusType).indexOf(rawStatus);
         if (found !== -1) {
-          statusColor = (RegistrationStatusTypeColor[found as RegistrationStatusType] as any) || 'success';
+          statusColor = (RegistrationStatusTypeColor[found as RegistrationStatusType] as LabelColor) || 'success';
         }
       }
     }
@@ -82,11 +84,17 @@ export function StudentSuccessHeader({
   const classDivisionLabel = divisionName ? `${standardName} - ${divisionName}` : standardName;
   const attendanceValue = findKpi(kpis, 'attendance');
 
+  const healthStatusColor: LabelColor =
+    health?.status?.toLowerCase().includes('support') || health?.status?.toLowerCase().includes('urgent')
+      ? 'warning'
+      : health?.score && health.score >= 75
+        ? 'success'
+        : 'info';
+
   return (
     <Box
       sx={{
-        px: { xs: 2, md: 3 },
-        py: 2,
+        p: 1.5,
         bgcolor: 'background.paper',
         borderBottom: 1,
         borderColor: 'divider',
@@ -94,19 +102,19 @@ export function StudentSuccessHeader({
     >
       <Stack
         direction={{ xs: 'column', md: 'row' }}
-        spacing={2}
+        spacing={1.5}
         alignItems={{ xs: 'flex-start', md: 'center' }}
         justifyContent="space-between"
       >
         {/* Left: Avatar & Identity Details */}
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
           <Avatar
             src={photoUrl || undefined}
             alt={name}
             sx={{
-              width: { xs: 52, md: 60 },
-              height: { xs: 52, md: 60 },
-              fontSize: { xs: 20, md: 24 },
+              width: { xs: 48, md: 52 },
+              height: { xs: 48, md: 52 },
+              fontSize: { xs: 18, md: 20 },
               fontWeight: 700,
               bgcolor: 'primary.main',
               color: 'primary.contrastText',
@@ -120,8 +128,8 @@ export function StudentSuccessHeader({
 
           <Box sx={{ flex: 1, minWidth: 0 }}>
             {/* Primary line: Name + Info + Status */}
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 0.5 }}>
-              <Typography variant="h6" fontWeight={700} noWrap sx={{ maxWidth: { xs: 200, sm: 340, md: 450 } }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 0.25 }}>
+              <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ maxWidth: { xs: 200, sm: 340, md: 450 }, fontSize: '1.05rem' }}>
                 {name || 'Student'}
               </Typography>
 
@@ -130,29 +138,25 @@ export function StudentSuccessHeader({
                 placement="top"
                 arrow
               >
-                <IconButton size="small" sx={{ p: 0.25, color: 'text.secondary' }}>
-                  <Iconify icon={GlobalIcons.info} width={16} />
+                <IconButton size="small" sx={{ p: 0.25, color: 'text.secondary', width: 22, height: 22 }}>
+                  <Iconify icon={GlobalIcons.info} width={15} />
                 </IconButton>
               </CustomTooltip>
 
-              <Chip
-                size="small"
-                color={statusColor}
-                variant="soft"
-                label={statusLabel}
-                sx={{ height: 22, fontWeight: 600, fontSize: 11 }}
-              />
+              <Label color={statusColor} variant="soft" sx={{ height: 20, fontWeight: 600, fontSize: 11 }}>
+                {statusLabel}
+              </Label>
             </Stack>
 
             {/* Secondary line: Academic metadata */}
-            <Stack direction="row" alignItems="center" flexWrap="wrap" gap={0.75} sx={{ color: 'text.secondary', fontSize: 13 }}>
-              <Typography variant="body2" color="text.secondary" fontWeight={500} noWrap>
+            <Stack direction="row" alignItems="center" flexWrap="wrap" gap={0.75} sx={{ color: 'text.secondary', fontSize: 12 }}>
+              <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: 12 }} noWrap>
                 {classDivisionLabel}
               </Typography>
               {student.rollNo && (
                 <>
                   <Typography variant="caption" color="text.disabled">•</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12 }}>
                     Roll No. <strong>{readText(student.rollNo)}</strong>
                   </Typography>
                 </>
@@ -160,7 +164,7 @@ export function StudentSuccessHeader({
               {student.grNo && (
                 <>
                   <Typography variant="caption" color="text.disabled">•</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12 }}>
                     GR No. <strong>{readText(student.grNo)}</strong>
                   </Typography>
                 </>
@@ -168,7 +172,7 @@ export function StudentSuccessHeader({
               {student.academicMediumName && (
                 <>
                   <Typography variant="caption" color="text.disabled">•</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12 }}>
                     {student.academicMediumName}
                   </Typography>
                 </>
@@ -176,44 +180,42 @@ export function StudentSuccessHeader({
               {student.academicYearName && (
                 <>
                   <Typography variant="caption" color="text.disabled">•</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12 }}>
                     {student.academicYearName}
                   </Typography>
                 </>
               )}
             </Stack>
 
-            {/* Tertiary line: Status badges */}
-            <Stack direction="row" flexWrap="wrap" gap={0.75} sx={{ mt: 1 }}>
-              <Chip
-                size="small"
+            {/* Tertiary line: Compact Status badges using common Label */}
+            <Stack direction="row" flexWrap="wrap" gap={0.75} sx={{ mt: 0.75 }}>
+              <Label
                 variant="outlined"
-                icon={<Iconify icon="mdi:calendar-check-outline" width={14} />}
-                label={`Attendance: ${attendanceValue}`}
-                sx={{ height: 24, fontSize: 12, borderRadius: 1 }}
-              />
-              <Chip
-                size="small"
+                color="default"
+                startIcon={<Iconify icon="mdi:calendar-check-outline" width={13} />}
+                sx={{ height: 22, fontSize: 11, borderRadius: 1 }}
+              >
+                {`Attendance: ${attendanceValue}`}
+              </Label>
+
+              <Label
                 variant="outlined"
-                icon={<Iconify icon={trend.icon} width={14} sx={{ color: trend.color }} />}
-                label={`Trend: ${health?.trend || trend.label}`}
-                sx={{ height: 24, fontSize: 12, borderRadius: 1 }}
-              />
+                color={trend.color}
+                startIcon={<Iconify icon={trend.icon} width={13} />}
+                sx={{ height: 22, fontSize: 11, borderRadius: 1 }}
+              >
+                {`Trend: ${health?.trend || trend.label}`}
+              </Label>
+
               {health?.status && (
-                <Chip
-                  size="small"
+                <Label
                   variant="soft"
-                  color={
-                    health.status.toLowerCase().includes('support') || health.status.toLowerCase().includes('urgent')
-                      ? 'warning'
-                      : health.score && health.score >= 75
-                        ? 'success'
-                        : 'info'
-                  }
-                  icon={<Iconify icon="mdi:heart-pulse" width={14} />}
-                  label={health.status}
-                  sx={{ height: 24, fontSize: 12, fontWeight: 600, borderRadius: 1 }}
-                />
+                  color={healthStatusColor}
+                  startIcon={<Iconify icon="mdi:heart-pulse" width={13} />}
+                  sx={{ height: 22, fontSize: 11, fontWeight: 600, borderRadius: 1 }}
+                >
+                  {health.status}
+                </Label>
               )}
             </Stack>
           </Box>
@@ -222,7 +224,7 @@ export function StudentSuccessHeader({
         {/* Right: Academic Health Gauge & Navigation Controls */}
         <Stack
           direction="row"
-          spacing={{ xs: 1.5, sm: 2 }}
+          spacing={1.5}
           alignItems="center"
           sx={{
             alignSelf: { xs: 'flex-end', md: 'center' },
@@ -232,20 +234,20 @@ export function StudentSuccessHeader({
           {/* Health Gauge */}
           <Stack
             direction="row"
-            spacing={1.25}
+            spacing={1}
             alignItems="center"
             sx={{
               p: 0.75,
-              pr: 1.5,
+              pr: 1.25,
               borderRadius: 1.5,
               bgcolor: (theme) => `${theme.palette.primary.main}08`,
               border: 1,
               borderColor: (theme) => `${theme.palette.primary.main}1A`,
             }}
           >
-            <HealthScoreGauge score={health?.score} size={48} thickness={4.5} showSubtext={false} />
+            <HealthScoreGauge score={health?.score} size={42} thickness={4.5} showSubtext={false} />
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600, fontSize: 11 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600, fontSize: 11, lineHeight: 1.2 }}>
                 Academic Health
               </Typography>
               <Typography variant="caption" color="text.disabled" sx={{ fontSize: 10 }}>
@@ -254,7 +256,7 @@ export function StudentSuccessHeader({
             </Box>
           </Stack>
 
-          <Divider orientation="vertical" flexItem sx={{ height: 32, my: 'auto', display: { xs: 'none', sm: 'block' } }} />
+          <Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto', display: { xs: 'none', sm: 'block' } }} />
 
           {/* Student Pagination / Quick Switch */}
           <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -270,6 +272,8 @@ export function StudentSuccessHeader({
                     borderColor: 'divider',
                     borderRadius: 1,
                     p: 0.75,
+                    width: 34,
+                    height: 34,
                   }}
                 >
                   <Iconify icon="mdi:chevron-left" width={18} />
@@ -277,7 +281,7 @@ export function StudentSuccessHeader({
               </span>
             </Tooltip>
 
-            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ px: 1, minWidth: 50, textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ px: 0.75, minWidth: 48, textAlign: 'center', fontSize: 12 }}>
               {totalStudents > 0 ? `${currentIndex + 1} of ${totalStudents}` : '-'}
             </Typography>
 
@@ -293,6 +297,8 @@ export function StudentSuccessHeader({
                     borderColor: 'divider',
                     borderRadius: 1,
                     p: 0.75,
+                    width: 34,
+                    height: 34,
                   }}
                 >
                   <Iconify icon="mdi:chevron-right" width={18} />
@@ -311,6 +317,8 @@ export function StudentSuccessHeader({
                 bgcolor: (theme) => `${theme.palette.grey[500]}10`,
                 borderRadius: 1,
                 p: 0.75,
+                width: 34,
+                height: 34,
                 '&:hover': {
                   bgcolor: (theme) => `${theme.palette.error.main}14`,
                   color: 'error.main',
@@ -325,4 +333,3 @@ export function StudentSuccessHeader({
     </Box>
   );
 }
-
