@@ -18,15 +18,7 @@ import { useGetPermissionsQuery } from 'src/redux/permission/permissionApi';
 
 import { extractGrantedPermissions } from '.';
 import PermissionNode from './permission-node';
-import {
-  setPermissionAction,
-  getPermissionActions,
-  setAllPermissionActions,
-  formatPermissionAction,
-  sortPermissionActions,
-  getAllChildrenData,
-  type PermissionType,
-} from './utils';
+import { getAllChildrenData, type PermissionType } from './utils';
 
 // ----------------------------------------------------------------------
 
@@ -86,39 +78,57 @@ export default function Permission({
     const targetItem = permissionData.find((item) => item.name === targetName);
     const newValue = targetItem ? !targetItem.isGranted : false;
 
-    setPermissionData(setPermissionAction(permissionData, key, type, newValue));
+    setPermissionData(
+      permissionData.map((item) => {
+        if (item.name === targetName) {
+          return { ...item, isGranted: newValue };
+        }
+
+        if (newValue) {
+          if (type === 'Add' && item.name === `${key}.View`) {
+            return { ...item, isGranted: true };
+          }
+          if (type === 'Delete' && (item.name === `${key}.View` || item.name === `${key}.Add`)) {
+            return { ...item, isGranted: true };
+          }
+        }
+        if (!newValue && type === 'View') {
+          if (item.name === `${key}.Add` || item.name === `${key}.Delete`) {
+            return { ...item, isGranted: false };
+          }
+        }
+        return item;
+      })
+    );
   };
 
   const handleNodeSelectAll = (node: any, value: boolean) => {
     if (!expandedSubModule) return;
 
-    const permissionNames = node?.children?.length
-      ? getAllChildrenData(node).map((child: any) => child.permissionName)
-      : [node.permissionName];
+    let key: string[] = [];
 
-    setPermissionData(setAllPermissionActions(permissionData, permissionNames, value));
+    if (node?.children?.length > 0) {
+      node.children.forEach((child: any) => {
+        key.push(`${child.permissionName}.View`);
+        key.push(`${child.permissionName}.Add`);
+        key.push(`${child.permissionName}.Delete`);
+      });
+    } else {
+      key = [
+        `${node.permissionName}.View`,
+        `${node.permissionName}.Add`,
+        `${node.permissionName}.Delete`,
+      ];
+    }
+
+    const newPermissions = permissionData.map((item) =>
+      key.includes(item.name) ? { ...item, isGranted: value } : item
+    );
+    setPermissionData(newPermissions);
   };
 
   const findVisibility = (name: string) =>
     permissionData?.find((item) => item.name === name)?.isGranted;
-
-  const activeSubModule = selectedModule.submodule?.find(
-    (submodule: any) => submodule.title === expandedSubModule
-  );
-  const selectedPermissionItems = activeSubModule?.children?.length
-    ? getAllChildrenData(activeSubModule)
-    : activeSubModule
-      ? [activeSubModule]
-      : [];
-  const selectedPermissionActions = sortPermissionActions(
-    Array.from(
-      new Set(
-        selectedPermissionItems.flatMap((item: any) =>
-          getPermissionActions(permissionData, item.permissionName)
-        )
-      )
-    )
-  );
 
   const renderModuleList = (
     <Card
@@ -291,13 +301,17 @@ export default function Permission({
           <Stack direction="row" spacing={1.5} alignItems="center">
             {expandedSubModule && (
               <Stack direction="row" spacing={2} alignItems="center">
-                {selectedPermissionActions.map((type) => {
-                  const actionableItems = selectedPermissionItems.filter((item: any) =>
-                    getPermissionActions(permissionData, item.permissionName).includes(type)
+                {['View', 'Add', 'Delete'].map((type) => {
+                  const activeSubModule = selectedModule.submodule?.find(
+                    (s: any) => s.title === expandedSubModule
                   );
+                  const itemsToShow =
+                    (activeSubModule as any)?.children?.length > 0
+                      ? getAllChildrenData(activeSubModule)
+                      : [activeSubModule];
 
                   // Check if all items have this permission enabled
-                  const isGlobalChecked = actionableItems.every((item: any) => {
+                  const isGlobalChecked = itemsToShow.every((item: any) => {
                     const key = `${item.permissionName}.${type}`;
                     return !!permissionData?.find((i) => i.name === key)?.isGranted;
                   });
@@ -305,29 +319,81 @@ export default function Permission({
                   return (
                     <Stack key={type} direction="row" spacing={1} alignItems="center">
                       <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
-                        {formatPermissionAction(type)}
+                        {type}
                       </Typography>
                       <Switch
                         size="small"
                         checked={isGlobalChecked}
-                        inputProps={{
-                          'aria-label': `${formatPermissionAction(type)} all ${expandedSubModule} permissions`,
-                        }}
                         onChange={(e) => {
                           const isChecked = e.target.checked;
-                          const newPermissions = actionableItems.reduce(
-                            (
-                              currentPermissions: { name: string; isGranted: boolean }[],
-                              item: any
-                            ) =>
-                              setPermissionAction(
-                                currentPermissions,
-                                item.permissionName,
-                                type,
-                                isChecked
-                              ),
-                            permissionData
-                          );
+                          const newPermissions: { name: string; isGranted: boolean }[] = [
+                            ...permissionData,
+                          ];
+
+                          itemsToShow.forEach((item: any) => {
+                            const key = `${item.permissionName}.${type}`;
+                            const index = newPermissions.findIndex((i) => i.name === key);
+                            if (index !== -1) {
+                              newPermissions[index] = {
+                                ...newPermissions[index],
+                                isGranted: isChecked,
+                              };
+
+                              if (isChecked) {
+                                if (type === 'Add') {
+                                  const viewIndex = newPermissions.findIndex(
+                                    (i) => i.name === `${item.permissionName}.View`
+                                  );
+                                  if (viewIndex !== -1) {
+                                    newPermissions[viewIndex] = {
+                                      ...newPermissions[viewIndex],
+                                      isGranted: true,
+                                    };
+                                  }
+                                }
+                                if (type === 'Delete') {
+                                  const viewIndex = newPermissions.findIndex(
+                                    (i) => i.name === `${item.permissionName}.View`
+                                  );
+                                  if (viewIndex !== -1) {
+                                    newPermissions[viewIndex] = {
+                                      ...newPermissions[viewIndex],
+                                      isGranted: true,
+                                    };
+                                  }
+                                  const addIndex = newPermissions.findIndex(
+                                    (i) => i.name === `${item.permissionName}.Add`
+                                  );
+                                  if (addIndex !== -1) {
+                                    newPermissions[addIndex] = {
+                                      ...newPermissions[addIndex],
+                                      isGranted: true,
+                                    };
+                                  }
+                                }
+                              } else if (type === 'View') {
+                                const addIndex = newPermissions.findIndex(
+                                  (i) => i.name === `${item.permissionName}.Add`
+                                );
+                                if (addIndex !== -1) {
+                                  newPermissions[addIndex] = {
+                                    ...newPermissions[addIndex],
+                                    isGranted: false,
+                                  };
+                                }
+
+                                const deleteIndex = newPermissions.findIndex(
+                                  (i) => i.name === `${item.permissionName}.Delete`
+                                );
+                                if (deleteIndex !== -1) {
+                                  newPermissions[deleteIndex] = {
+                                    ...newPermissions[deleteIndex],
+                                    isGranted: false,
+                                  };
+                                }
+                              }
+                            }
+                          });
 
                           setPermissionData(newPermissions);
                         }}
@@ -349,13 +415,13 @@ export default function Permission({
           <Stack spacing={1} sx={{ pb: 8 }}>
             {/* Find the selected submodule object */}
             {(() => {
-              const renderedSubModule = selectedModule.submodule?.find(
+              const activeSubModule = selectedModule.submodule?.find(
                 (s: any) => s.title === expandedSubModule
               );
               // If submodule has children, show them. If not, show the submodule itself as a row.
               const itemsToShow =
-                (renderedSubModule as any)?.children?.length > 0
-                  ? (renderedSubModule as any).children
+                (activeSubModule as any)?.children?.length > 0
+                  ? (activeSubModule as any).children
                   : [];
 
               return itemsToShow.length > 0 ? (
