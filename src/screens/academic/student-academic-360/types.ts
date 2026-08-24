@@ -65,8 +65,13 @@ export type Academic360LearningTask = {
   type?: string;
   title?: string;
   subjectName?: string;
+  assignedDate?: string;
   dueDate?: string;
   status?: string;
+  submissionStatus?: string;
+  evaluationStatus?: string;
+  submissionDate?: string | null;
+  evaluationDate?: string | null;
   marks?: number | null;
   totalMarks?: number | null;
   feedback?: string | null;
@@ -85,12 +90,20 @@ export type Academic360LearningTasks = {
   pendingEvaluation?: number;
   resubmissionRequired?: number;
   submittedOnTime?: number;
+  tasks?: Academic360LearningTask[];
   recentTasks?: Academic360LearningTask[];
 };
 
 export type Academic360ExamResult = {
   examId?: string;
   examName?: string;
+  examStatus?: string;
+  gradingStatus?: string;
+  examDate?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  resultAvailable?: boolean;
+  resultPublishedDate?: string | null;
   resultStatus?: string;
   rank?: number | null;
   totalMarks?: number;

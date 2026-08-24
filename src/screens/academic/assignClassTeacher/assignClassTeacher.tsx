@@ -70,10 +70,10 @@ import {
   useGetClassTeacherAssignmentsQuery,
   useGetClassTeacherAssignmentHistoryQuery,
   useGetClassTeacherAssignmentSummaryQuery,
-  useGetClassTeacherEligibleTeachersQuery,
   useValidateClassTeacherAssignmentsMutation,
   useUpdateClassTeacherAssignmentsMutation,
 } from 'src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 
 type AssignmentTableRow = ClassTeacherAssignmentRowDto & {
   classTeacher: string | null;
@@ -505,9 +505,31 @@ const ClassTeacherAssignment = () => {
     { skip: !organization }
   );
 
-  const { data: eligibleTeachers = [] } = useGetClassTeacherEligibleTeachersQuery(
-    { organizationId: organization },
+  const { data: employeeResponse } = useGetEmployeeQuery(
+    { page: 1, pageSize: 10, isTeaching: true },
     { skip: !organization }
+  );
+
+  const eligibleTeachers: ClassTeacherEligibleTeacher[] = (employeeResponse?.items ?? []).map(
+    (employee: any) => ({
+      teacherId: employee.id,
+      teacherName: employee.fullName || employee.firstName || employee.employeeIdentifier || '',
+      employeeCode: employee.employeeIdentifier,
+      department: employee.department,
+      currentWorkload: 0,
+      maximumWorkload: 30,
+      currentClassTeacherCount: 0,
+      maximumClassTeacherCount: 2,
+      isActive: employee.status === 1 || employee.status === 'Active',
+      isEligible: employee.status === 1 || employee.status === 'Active',
+      hasTimetableConflict: false,
+      isOnLeave: false,
+      availabilityStatus: 'Available',
+      workloadStatus: 'Normal',
+      conflictStatus: 'None',
+      recommendationScore: 0,
+      ineligibilityReasons: [],
+    })
   );
 
   const { data: history = [] } = useGetClassTeacherAssignmentHistoryQuery(

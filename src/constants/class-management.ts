@@ -18,7 +18,8 @@ export const classManagementPaths = {
 export const classManagementPermissions = {
   root: `${defaultModulePermissionName}ClassManagement`,
   dashboard: `${defaultModulePermissionName}${defaultClassPermissionName}Dashboard`,
-  electiveAssignment: `${defaultModulePermissionName}${defaultClassPermissionName}ElectiveAssignment`,
+  // Keep this key aligned with the backend permission definition.
+  // electiveAssignment: `${defaultModulePermissionName}${defaultClassPermissionName}StudentElectiveAssignment`,
   chapters: `${defaultModulePermissionName}${defaultClassPermissionName}Chapters`,
   teacherAssignment: `${defaultModulePermissionName}${defaultClassPermissionName}TeacherAssignment`,
   classTeacherAssignment: `${defaultModulePermissionName}${defaultClassPermissionName}ClassTeacherAssignment`,
@@ -46,7 +47,7 @@ const classManagementModule = {
           _action: 'assign-elective-subject',
           shortcutKey: 'Alt+A+C+1',
           shortcutKeyName: 'Alt+A+C+1',
-          permissionName: classManagementPermissions.electiveAssignment,
+          // permissionName: classManagementPermissions.electiveAssignment,
           icon: menuIconView('mdi:book-check-outline'),
         },
         {
