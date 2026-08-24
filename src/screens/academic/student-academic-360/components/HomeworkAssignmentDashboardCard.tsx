@@ -232,7 +232,10 @@ export function HomeworkAssignmentDashboardCard({
     }
   };
 
-  const tasks = useMemo(() => learningTasks?.recentTasks || [], [learningTasks]);
+  const tasks = useMemo(
+    () => learningTasks?.tasks || learningTasks?.recentTasks || [],
+    [learningTasks],
+  );
 
   const subjects = useMemo(() => {
     const set = new Set<string>();

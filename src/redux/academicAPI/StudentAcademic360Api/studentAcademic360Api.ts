@@ -12,9 +12,9 @@ export const studentAcademic360Api = academicApi.injectEndpoints({
         attendanceEndDate,
         includeHistorical = false,
         taskSkipCount = 0,
-        taskMaxResultCount = 10,
+        taskMaxResultCount = 0,
         examSkipCount = 0,
-        examMaxResultCount = 5,
+        examMaxResultCount = 0,
         recentTaskCount = 10,
         recentExamCount = 5,
       }: {

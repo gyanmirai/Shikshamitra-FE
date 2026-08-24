@@ -116,7 +116,7 @@ export const academicPermissions = {
   curriculum: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Curriculum`,
     subjectsAssignment: `${defaultAcademicPermissionName}CurriculumManagement.SubjectAssignment`,
-    electiveAssignment: classManagementPermissions.electiveAssignment,
+    electiveAssignment: `${defaultAcademicPermissionName}CurriculumManagement.ElectiveAssignment`,
     chaptersManagement: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
     lessonPlan: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
     resources: `${defaultAcademicPermissionName}CurriculumManagement.Resources`,

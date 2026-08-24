@@ -7,7 +7,7 @@ import autoTable from 'jspdf-autotable';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -37,7 +37,6 @@ import {
 } from '@mui/material';
 import {
   usePublishExamMutation,
-  useGetExamsQuery,
   useLazyGetExamScheduleQuery,
   useUpdateExamStatusMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
@@ -46,8 +45,6 @@ import ScheduleExamKpiStrip from './ScheduleExamKpiStrip';
 import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
 import {
   EXAM_STATUS_META,
-  getEffectiveExamStatus,
-  filterExamsByEffectiveStatus,
 } from '../scheduleExamStatus';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
@@ -114,7 +111,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   onServerPagination,
 }) => {
   const publishExamDialog = useBoolean();
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
 
   const canAdd = hasGrantedPermission(
@@ -147,17 +143,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   const [previewExam, setPreviewExam] = useState<IExamFormValues | null>(null);
   const [printingExamId, setPrintingExamId] = useState<string | null>(null);
   const [getExamSchedule] = useLazyGetExamScheduleQuery();
-  const [currentTime, setCurrentTime] = useState(() => dayjs());
-  const { data: publishedExamsData } = useGetExamsQuery(
-    { AcademicMediumId: medium?.id, Status: examScheduledStatus.Published },
-    { skip: !medium?.id }
-  );
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTime(dayjs()), 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
   const handlePublishExam = async () => {
     try {
       if (selectedTimetable?.examId) {
@@ -244,17 +229,12 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     }
   };
 
-  // Define tab configuration with labels, values, counts and colors
-  const publishedRows = useMemo(() => publishedExamsData?.items || [], [publishedExamsData?.items]);
-  const derivedOngoingCount = useMemo(
-    () =>
-      filterExamsByEffectiveStatus(publishedRows, examScheduledStatus.Ongoing, currentTime).length,
-    [currentTime, publishedRows]
-  );
-  const ongoingCount = Number(publishedExamsData?.ongoingCount ?? derivedOngoingCount);
-  // Counts come from the API's effective-status calculation, which keeps a
-  // started or completed exam out of the Published total.
-  const publishedCount = Number(publishedExamsData?.publishedCount ?? publishedRows.length);
+  // The API applies the effective schedule status before paging and returns
+  // its matching counters. Keeping that response authoritative prevents a
+  // client-side reclassification from hiding rows while totalCount still
+  // reports them.
+  const ongoingCount = Number(getExams?.data?.ongoingCount ?? 0);
+  const publishedCount = Number(getExams?.data?.publishedCount ?? 0);
 
   const TABS = useMemo(
     () => [
@@ -321,21 +301,15 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     onStatusChange?.(status);
   };
 
-  // Apply the same effective status used by the badge for every tab. This is a
-  // defensive client-side guard while the server response is refreshed at a
-  // schedule boundary, preventing a stale Published row from appearing here.
+  // The backend filters and paginates with the same effective status it
+  // returns in each row. Do not filter again on the current client clock.
   const tableData = useMemo(() => {
     const rows = getExams?.data?.items || [];
-    const requestedStatus = Number(
-      activeStatus ?? examScheduledStatus.Pending
-    ) as examScheduledStatus;
-    const visibleRows = filterExamsByEffectiveStatus(rows, requestedStatus, currentTime);
-
-    return visibleRows.map((row: any) => ({
+    return rows.map((row: any) => ({
       ...row,
-      effectiveStatus: getEffectiveExamStatus(row, currentTime),
+      effectiveStatus: row.status,
     }));
-  }, [activeStatus, currentTime, getExams?.data?.items]);
+  }, [getExams?.data?.items]);
 
   // Actions component for the three dots menu
   // Renders menu items for printing and publishing timetables

@@ -73,20 +73,23 @@ type ExamsResultsDashboardCardProps = {
  * Determines whether the exam belongs to 'PUBLISHED' (schedule/ongoing) or 'COMPLETED' (results available)
  */
 export function getExamStatusCategory(exam: ExamItem): ExamStatusCategory {
-  const rawStatus = (exam.status || exam.resultStatus || '').toUpperCase().trim();
+  const rawStatus = (exam.status || exam.examStatus || '').toUpperCase().trim();
   const resStatus = (exam.resultStatus || '').toLowerCase();
-
-  // If explicit completed status or result flags are active
-  if (
-    rawStatus === 'COMPLETED' ||
-    resStatus.includes('completed') ||
-    rawStatus === 'RESULT_PENDING' ||
-    rawStatus === 'RESULT_PUBLISHED' ||
-    resStatus.includes('published') ||
-    exam.resultPublished === true ||
+  const gradingStatus = (exam.gradingStatus || '').toLowerCase().trim();
+  const hasLegacyResultData = !exam.gradingStatus && (
     typeof exam.percentage === 'number' ||
     typeof exam.obtainedMarks === 'number' ||
     Boolean(exam.grade)
+  );
+
+  // If explicit completed status or result flags are active
+  if (
+    gradingStatus === 'completed' ||
+    (!exam.gradingStatus && rawStatus === 'COMPLETED') ||
+    exam.resultAvailable === true ||
+    resStatus.includes('published') ||
+    exam.resultPublished === true ||
+    hasLegacyResultData
   ) {
     return 'COMPLETED';
   }
@@ -101,7 +104,7 @@ function getStatusBadgeConfig(exam: ExamItem): {
   category: ExamStatusCategory;
 } {
   const category = getExamStatusCategory(exam);
-  const rawStatus = (exam.status || exam.resultStatus || '').toUpperCase().trim();
+  const rawStatus = (exam.status || exam.examStatus || '').toUpperCase().trim();
 
   if (category === 'COMPLETED') {
     if (rawStatus === 'ABSENT' || exam.resultStatus?.toLowerCase().includes('absent')) {
@@ -116,11 +119,18 @@ function getStatusBadgeConfig(exam: ExamItem): {
     return { label: 'Completed', color: 'success', category };
   }
 
-  // Published
+  if (rawStatus === 'COMPLETED' && exam.gradingStatus?.toLowerCase() === 'in progress') {
+    return { label: 'Grading Pending', color: 'warning', category };
+  }
+
+  // Exam lifecycle is displayed independently from result availability.
   if (rawStatus === 'ONGOING') {
     return { label: 'Ongoing', color: 'primary', category };
   }
-  return { label: 'Published', color: 'info', category };
+  if (rawStatus === 'CANCELLED') {
+    return { label: 'Cancelled', color: 'error', category };
+  }
+  return { label: rawStatus === 'SCHEDULED' ? 'Scheduled' : 'Published', color: 'info', category };
 }
 
 function formatExamDate(dateStr?: string): string {
