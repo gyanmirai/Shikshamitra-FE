@@ -365,14 +365,14 @@ const SubjectTable = ({
                   sx={{
                     p: 0.6,
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(0,0,0,0.06)',
+                    backgroundColor: 'action.hover',
                     transition: 'all 0.2s',
                     cursor: isInteractive ? 'pointer' : 'default',
                     '&:hover': {
                       transform: isInteractive ? 'scale(1.1)' : 'none',
-                      backgroundColor: 'rgba(0,0,0,0.08)',
+                      backgroundColor: 'action.selected',
                     },
-                    '&.Mui-disabled': { backgroundColor: 'rgba(0,0,0,0.06)' },
+                    '&.Mui-disabled': { backgroundColor: 'action.hover' },
                   }}
                 >
                   <Iconify

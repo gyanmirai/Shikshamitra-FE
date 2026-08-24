@@ -7,7 +7,7 @@ import autoTable from 'jspdf-autotable';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -43,9 +43,7 @@ import {
 
 import ScheduleExamKpiStrip from './ScheduleExamKpiStrip';
 import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
-import {
-  EXAM_STATUS_META,
-} from '../scheduleExamStatus';
+import { EXAM_STATUS_META } from '../scheduleExamStatus';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
 
@@ -142,6 +140,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   const [selectedTimetable, setSelectedTimetable] = useState<IExamFormValues | null>(null);
   const [previewExam, setPreviewExam] = useState<IExamFormValues | null>(null);
   const [printingExamId, setPrintingExamId] = useState<string | null>(null);
+  const [completedCountSnapshot, setCompletedCountSnapshot] = useState<number | null>(null);
   const [getExamSchedule] = useLazyGetExamScheduleQuery();
   const handlePublishExam = async () => {
     try {
@@ -235,6 +234,27 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   // reports them.
   const ongoingCount = Number(getExams?.data?.ongoingCount ?? 0);
   const publishedCount = Number(getExams?.data?.publishedCount ?? 0);
+  const completedSummaryCount = Number(getExams?.data?.completedCount ?? 0);
+
+  useEffect(() => {
+    if (completedSummaryCount > 0) {
+      setCompletedCountSnapshot(completedSummaryCount);
+    }
+    if (
+      activeStatus === examScheduledStatus.Completed &&
+      !getExams?.isFetching &&
+      typeof totalCount === 'number'
+    ) {
+      setCompletedCountSnapshot(totalCount);
+    }
+  }, [activeStatus, completedSummaryCount, getExams?.isFetching, totalCount]);
+
+  const completedTabCount =
+    activeStatus === examScheduledStatus.Completed && getExams?.isFetching
+      ? (completedCountSnapshot ?? completedSummaryCount)
+      : activeStatus === examScheduledStatus.Completed
+        ? (totalCount ?? completedSummaryCount)
+        : completedSummaryCount;
 
   const TABS = useMemo(
     () => [
@@ -263,21 +283,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         // status predicate as the rows shown in the grid. Prefer it while
         // viewing Completed so a stale summary response cannot disagree with
         // the current list response during a tab change/refetch.
-        count:
-          activeStatus === examScheduledStatus.Completed
-            ? totalCount
-            : getExams?.data?.completedCount || 0,
+        count: completedTabCount,
         color: 'success',
       },
     ],
-    [
-      activeStatus,
-      getExams?.data?.pendingCount,
-      getExams?.data?.completedCount,
-      ongoingCount,
-      publishedCount,
-      totalCount,
-    ]
+    [activeStatus, getExams?.data?.pendingCount, ongoingCount, publishedCount, completedTabCount]
   );
 
   // Handle tab change event — update UI state, notify parent, and refetch with new Status

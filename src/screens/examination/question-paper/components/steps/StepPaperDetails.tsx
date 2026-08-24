@@ -103,9 +103,12 @@ export default function StepPaperDetails({
                 value={formik.values.standardId}
                 disabled={readOnly}
                 onChange={(val) => {
-                  formik.setFieldValue('standardId', val);
-                  formik.setFieldValue('subjectId', '');
-                  formik.setFieldValue('examId', '');
+                  formik.setFieldValue('standardId', val, false);
+                  formik.setFieldValue('subjectId', '', false);
+                  formik.setFieldValue('examId', '', false);
+                  formik.setFieldError('standardId', undefined);
+                  formik.setFieldError('subjectId', undefined);
+                  formik.setFieldError('examId', undefined);
                 }}
                 error={showError('standardId')}
                 helperText={showError('standardId') ? String(formik.errors.standardId) : ''}
@@ -122,8 +125,10 @@ export default function StepPaperDetails({
                 disabled={readOnly || !formik.values.standardId || isSubjectLoading}
                 isLoading={isSubjectLoading}
                 onChange={(val) => {
-                  formik.setFieldValue('subjectId', val);
-                  formik.setFieldValue('examId', '');
+                  formik.setFieldValue('subjectId', val, false);
+                  formik.setFieldValue('examId', '', false);
+                  formik.setFieldError('subjectId', undefined);
+                  formik.setFieldError('examId', undefined);
                 }}
                 error={showError('subjectId')}
                 helperText={
