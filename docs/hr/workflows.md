@@ -25,7 +25,9 @@ Use this map to find the first screen and client:
 | Employee documents         | Employee profile documents tab                                              | `employeeApi.ts`                             |
 | I-card generation          | `/hr/i-card`                                                                | `employee-icard-template-api.ts`             |
 | Payroll component setup    | `/hr/payroll/setting/*`                                                     | `employee-payroll-api.ts`                    |
-| Salary structure           | `/hr/payroll/structure`                                                     | `employee-salary-structure-api.ts`           |
+| ESI statutory setup        | `/hr/payroll/setting/statutory-schemes`                                     | `statutory-scheme-api.ts`                    |
+| Compensation revisions     | `/hr/payroll/structure`                                                     | `compensation-revision-api.ts`                |
+| One-time salary components | `/hr/payroll/structure`                                                     | `employee-salary-structure-api.ts`            |
 | Payroll run                | `/hr/payroll/run-payroll`                                                   | `runPayrollApi.ts`                           |
 | Payslips                   | `/hr/payroll/payslip-generation`                                            | `runPayrollApi.ts`                           |
 | Manual attendance          | `/hr/manual-attendance`                                                     | `attendanceApi.ts`                           |
@@ -119,9 +121,20 @@ Frontend workflows must respect backend data ownership:
 
 Do not add a route to docs as active navigation until `src/constants/hr-menus.ts` exposes it.
 If a page exists but menu access is commented or unclear, mark the workflow as partial.
-The Payroll onboarding step and dedicated Payroll Structure screen reuse the same salary builder.
-Users select a template, choose Gross or Take-home, enter the quoted monthly amount, select PF applicability and rule, calculate, review the formula trace, and apply the generated lines.
-Applying preserves temporary components, replaces recurring lines, stores provenance, and distinguishes editable ordinary lines from rule-controlled PF and professional-tax lines.
+The Payroll onboarding step and dedicated Payroll Structure screen reuse the same compensation builder.
+Salary templates explain that ESI is system-managed and link to the statutory setup workflow.
+The ESI workflow keeps establishment, wage mapping, employee readiness, and impact approval in a four-step URL-addressable workspace.
+Authorized users can add dated, reasoned ESI exceptions from an employee impact row and review the immutable exception history before approval.
+PwD enrollment review can record a government-funded employer-share relief period only after the PwD category, start date, and disability evidence are supplied.
+The impact preview distinguishes employee, employer, and government ESI funding.
+Run Payroll shows ESI wages, coverage decision, rule version, insurance number, contribution period, employee deduction, employer contribution, and government contribution.
+Users select a template, choose Gross, Take-home, or Employer Cost, select the protection policy and effective month, enter the quoted monthly amount, select PF applicability and rule, calculate, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.
+Users can save or update a Draft compensation revision, then submit it for separate approval when ready.
+A failed submission leaves the saved Draft visible and recoverable from revision history.
+A different authorized user approves or rejects the recurring compensation revision from its history.
+Only approved revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
+System-managed statutory lines stay visible in the calculation but are never persisted as editable employee components.
+Run Payroll and payslips show revision provenance and protected-target drift without silently changing salary or blocking lock.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings creates a blank draft and then opens the dedicated editor route.
 The Salary Template list opens in the standard table view, with an optional URL-backed Card view.
@@ -130,3 +143,5 @@ Drafts remain editable only with Edit permission, while published and archived v
 The editor adds, removes, configures, and reorders active earning and deduction components in separate sections.
 Incomplete drafts can be saved, while publishing requires one Basic earning and one remainder earning and shows an actionable validation summary.
 Template formulas override component-master formulas only when the template generates an employee salary structure.
+Template versions define a default quote basis and default protection policy.
+Fixed and percentage formulas keep an editable empty numeric value, while remainder and statutory formulas explicitly show that their value is calculated automatically.
