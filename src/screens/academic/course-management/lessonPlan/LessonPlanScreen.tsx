@@ -450,9 +450,15 @@ const LessonPlanScreen = () => {
   const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
 
+  /**
+   * Memoization Justification:
+   * - Keeps the employee identifier stable for timeline and lesson-plan queries.
+   * - Prevents an authenticated user ID from being sent as a teacher/employee ID when
+   *   the employee profile has not loaded or the IDs differ.
+   */
   const currentTeacherId = useMemo(
-    () => employee?.id || employee?.employeeId || employee?.userId || user?.sub || user?.id || '',
-    [employee, user]
+    () => employee?.id || employee?.employeeId || '',
+    [employee]
   );
 
   // ─── Queries & Mutations via useQueryAndMutation ─────────────────────────────
@@ -476,7 +482,7 @@ const LessonPlanScreen = () => {
       teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
     },
     {
-      skip: !timelineDateParam,
+      skip: !timelineDateParam || activeTab !== 'dailyTimeline',
       refetchOnMountOrArgChange: true,
     }
   );
@@ -493,24 +499,37 @@ const LessonPlanScreen = () => {
     refetch: refetchLessonPlans,
     isLoading: isPlansLoading,
     isFetching: isPlansFetching,
-  } = useGetLessonPlansQuery({
-    academicYearId: currentYear?.id,
-    academicMediumId: currentMedium?.id,
-    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-    maxResultCount: 1000,
-  });
+  } = useGetLessonPlansQuery(
+    {
+      academicYearId: currentYear?.id,
+      academicMediumId: currentMedium?.id,
+      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+      maxResultCount: 1000,
+    },
+    {
+      skip:
+        !currentYear?.id ||
+        !currentMedium?.id ||
+        !['dailyTimeline', 'lessonList', 'teacherDiary', 'reviewQueue'].includes(activeTab),
+    }
+  );
 
   const {
     data: teacherDiaryList,
     refetch: refetchTeacherDiaries,
     isLoading: isDiariesLoading,
     isFetching: isDiariesFetching,
-  } = useGetTeacherDiariesQuery({
-    academicYearId: currentYear?.id,
-    academicMediumId: currentMedium?.id,
-    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-    maxResultCount: 1000,
-  });
+  } = useGetTeacherDiariesQuery(
+    {
+      academicYearId: currentYear?.id,
+      academicMediumId: currentMedium?.id,
+      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+      maxResultCount: 1000,
+    },
+    {
+      skip: activeTab !== 'teacherDiary' || !currentYear?.id || !currentMedium?.id,
+    }
+  );
 
   const { data: homeworkTypeData, isLoading: isHomeworkTypesLoading } = useQueryAndMutation({
     type: 'query',
@@ -844,8 +863,7 @@ const LessonPlanScreen = () => {
    * - The value depends on Redux auth objects that change independently of local form edits.
    */
   const currentTeacherOption = useMemo(() => {
-    const teacherId =
-      employee?.id || employee?.employeeId || employee?.userId || user?.sub || user?.id || '';
+    const teacherId = employee?.id || employee?.employeeId || '';
     const teacherName = getCurrentEmployeeName(employee, user);
 
     if (!teacherId || !teacherName) {
@@ -1144,9 +1162,8 @@ const LessonPlanScreen = () => {
           await submitLessonPlan({ id: resultId }).unwrap();
         }
 
+        await Promise.all([refetchTimeline(), refetchLessonPlans()]);
         setLessonModalOpen(false);
-        refetchTimeline();
-        refetchLessonPlans();
 
         shikshaMitraToast.success({
           message: submitAfterSave
