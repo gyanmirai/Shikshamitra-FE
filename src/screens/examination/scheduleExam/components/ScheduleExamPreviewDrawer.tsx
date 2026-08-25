@@ -24,6 +24,7 @@ import {
 import { mapBackendToFormik } from './initialValues';
 import { getExamStatusMeta } from '../scheduleExamStatus';
 import { getReadinessSummary, buildExamPlanningIssues } from './scheduleExamPlanningUtils';
+import { useMemo } from 'react';
 
 type ScheduleExamPreviewDrawerProps = {
   open: boolean;
@@ -170,6 +171,77 @@ const ScheduleExamPreviewDrawer = ({
       ? startDateStr
       : `${startDateStr} - ${endDateStr}`
     : '';
+
+  const allStandards: any[] = useMemo(
+    () => (medium as any)?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [],
+    [medium]
+  );
+
+  const allDivisionsInMedium = useMemo(() => {
+    const map = new Map<string, string>();
+    allStandards.forEach((std) => {
+      (std.divisions || []).forEach((div: any) => {
+        if (div.id && div.name) {
+          map.set(div.id, div.name);
+        }
+      });
+    });
+    return map;
+  }, [allStandards]);
+
+  const targetStandardId =
+    previewExam?.standardId ||
+    previewExam?.className ||
+    basicDetails?.standardId ||
+    exam?.standardId ||
+    exam?.className;
+
+  const matchedStandard = useMemo(
+    () => allStandards.find((s) => s.id === targetStandardId),
+    [allStandards, targetStandardId]
+  );
+
+  const resolvedStandardName =
+    previewExam?.standardName ||
+    exam?.standardName ||
+    previewExam?.standard ||
+    exam?.standard ||
+    matchedStandard?.name ||
+    '-';
+
+  const rawDivisions =
+    previewExam?.divisions ||
+    basicDetails?.divisionIds ||
+    exam?.divisions ||
+    exam?.divisionIds ||
+    [];
+
+  const resolvedDivisions: string[] = useMemo(() => {
+    const list = Array.isArray(rawDivisions) ? rawDivisions : rawDivisions ? [rawDivisions] : [];
+    return list
+      .map((item: any) => {
+        if (!item) return '';
+        if (typeof item === 'object' && item.name) return item.name;
+        const str = String(item);
+        if (allDivisionsInMedium.has(str)) {
+          return allDivisionsInMedium.get(str)!;
+        }
+        return str;
+      })
+      .filter((d: string) => Boolean(d) && d !== 'all');
+  }, [rawDivisions, allDivisionsInMedium]);
+
+  const resolvedCreatedBy =
+    previewExam?.creatorName ||
+    previewExam?.createdByName ||
+    basicDetails?.creatorName ||
+    basicDetails?.createdByName ||
+    basicDetails?.createdBy ||
+    basicDetails?.createdByUser ||
+    exam?.creatorName ||
+    exam?.createdByName ||
+    exam?.createdBy ||
+    '-';
 
   const gradingScaleId = previewExam?.gradingScaleId || exam?.gradingScaleId;
   const gradeScalingsList = gradeScalingsData?.items ?? gradeScalingsData?.data ?? [];
@@ -336,7 +408,7 @@ const ScheduleExamPreviewDrawer = ({
                       Class
                     </Typography>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                      {previewExam?.standardName || '-'}
+                      {resolvedStandardName}
                     </Typography>
                   </Box>
                 </Grid>
@@ -364,7 +436,7 @@ const ScheduleExamPreviewDrawer = ({
                       Created By
                     </Typography>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                      {previewExam?.creatorName || '-'}
+                      {resolvedCreatedBy}
                     </Typography>
                   </Box>
                 </Grid>
@@ -378,8 +450,8 @@ const ScheduleExamPreviewDrawer = ({
                       Divisions
                     </Typography>
                     <Stack direction="row" flexWrap="wrap" gap={0.5}>
-                      {(previewExam?.divisions || []).length ? (
-                        previewExam.divisions.map((division: string) => (
+                      {resolvedDivisions.length ? (
+                        resolvedDivisions.map((division: string) => (
                           <Chip key={division} label={division} size="small" variant="soft" />
                         ))
                       ) : (

@@ -33,6 +33,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
   onRoomSelect,
   handleDeleteSlot,
   showThreeDots,
+  showCreateSlots = true,
 }) => {
   // Local state to manage timetable data, initialized with prop data
   // Allows for local manipulation while keeping sync with parent component
@@ -98,6 +99,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
                         colIndex={ind}
                         slotData={dayItem}
                         isBreak={timeTableItem.isBreak}
+                        colSpan={timeTableItem.isBreak ? weekDays.length : 1}
                         onDrop={onDrop}
                         onTeacherSelect={onTeacherSelect}
                         onRoomSelect={onRoomSelect}
@@ -111,7 +113,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
             </Table>
           </TableContainer>
         </Paper>
-      ) : (
+      ) : showCreateSlots ? (
         <Box
           sx={{
             display: 'flex',
@@ -132,7 +134,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
             Create Slots
           </Button>
         </Box>
-      )}
+      ) : null}
       <CustomDialog
         open={createSlotsDialog.value}
         handleClose={(e, isSubmit) => {

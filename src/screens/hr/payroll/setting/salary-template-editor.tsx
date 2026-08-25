@@ -3,11 +3,14 @@
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type {
+  SalaryBasis,
+  ProtectionPolicy,
   SalaryTemplateRule,
   SalaryTemplateComponentCatalogItem,
 } from 'src/redux/hr/salary-template-api';
 
 import * as Yup from 'yup';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
@@ -33,6 +36,7 @@ import {
 } from 'src/redux/hr/salary-template-api';
 import {
   Box,
+  Chip,
   Grid,
   Card,
   Alert,
@@ -55,15 +59,20 @@ import {
   getRoleOptions,
   formatRuleLabel,
   getPublishIssues,
+  applyFormulaType,
   getFormulaOptions,
   applySemanticType,
   createTemplateRule,
   normalizeRuleOrder,
+  formulaAcceptsValue,
+  getAutomaticFormulaSemanticType,
 } from './salary-template-editor-utils';
 
 type EditorValues = {
   name: string;
   description: string;
+  defaultSalaryBasis: SalaryBasis;
+  defaultProtectionPolicy: ProtectionPolicy;
   rules: SalaryTemplateRule[];
 };
 
@@ -81,6 +90,8 @@ type RuleSectionProps = {
 const editorSchema = Yup.object({
   name: Yup.string().trim().required('Template name is required.').max(160),
   description: Yup.string().trim().max(500),
+  defaultSalaryBasis: Yup.string().required(),
+  defaultProtectionPolicy: Yup.string().required(),
   rules: Yup.array().required(),
 });
 
@@ -138,14 +149,7 @@ function SalaryTemplateRuleSection({
           <Box display="grid" gap={1.5}>
             {rules.map((rule, sectionIndex) => {
               const formulaOptions = getFormulaOptions(rule);
-              const acceptsValue = formulaOptions.some((formula) =>
-                [
-                  'PERCENTAGE_OF_GROSS',
-                  'PERCENTAGE_OF_BASIC',
-                  'PERCENTAGE_OF_COMPONENT',
-                  'FIXED_AMOUNT',
-                ].includes(formula)
-              );
+              const acceptsValue = formulaAcceptsValue(rule.formulaType);
               const basisOptions = formik.values.rules.filter(
                 (candidate) =>
                   candidate.componentId !== rule.componentId &&
@@ -171,9 +175,11 @@ function SalaryTemplateRuleSection({
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6, lg: 2 }}>
                         <FormControl fullWidth size="small" disabled={!canEdit}>
-                          <InputLabel>Role</InputLabel>
+                          <InputLabel id={`purpose-${rule.componentId}-label`}>Purpose</InputLabel>
                           <Select
-                            label="Role"
+                            id={`purpose-${rule.componentId}`}
+                            labelId={`purpose-${rule.componentId}-label`}
+                            label="Purpose"
                             value={rule.semanticType}
                             onChange={(event) => {
                               const updated = applySemanticType(rule, event.target.value);
@@ -198,30 +204,36 @@ function SalaryTemplateRuleSection({
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6, lg: 2.5 }}>
                         <FormControl fullWidth size="small" disabled={!canEdit}>
-                          <InputLabel>Formula</InputLabel>
+                          <InputLabel id={`calculation-${rule.componentId}-label`}>
+                            Calculation
+                          </InputLabel>
                           <Select
-                            label="Formula"
+                            id={`calculation-${rule.componentId}`}
+                            labelId={`calculation-${rule.componentId}-label`}
+                            label="Calculation"
                             value={rule.formulaType}
                             onChange={(event) => {
                               const formulaType = event.target.value;
-                              const needsValue =
-                                formulaType.startsWith('PERCENTAGE') ||
-                                formulaType === 'FIXED_AMOUNT';
-                              updateRule(rule.componentId, {
-                                formulaType,
-                                value: needsValue ? (rule.value ?? 0) : null,
-                                basisComponentId:
-                                  formulaType === 'PERCENTAGE_OF_COMPONENT'
-                                    ? rule.basisComponentId
-                                    : null,
-                              });
+                              updateRule(rule.componentId, applyFormulaType(rule, formulaType));
                             }}
                           >
-                            {formulaOptions.map((formula) => (
-                              <MenuItem key={formula} value={formula}>
-                                {formatRuleLabel(formula)}
-                              </MenuItem>
-                            ))}
+                            {formulaOptions.map((formula) => {
+                              const automaticSemanticType =
+                                getAutomaticFormulaSemanticType(formula);
+                              return (
+                                <MenuItem
+                                  key={formula}
+                                  value={formula}
+                                  disabled={
+                                    automaticSemanticType !== null &&
+                                    automaticSemanticType !== rule.semanticType &&
+                                    usedRoles.has(automaticSemanticType)
+                                  }
+                                >
+                                  {formatRuleLabel(formula)}
+                                </MenuItem>
+                              );
+                            })}
                           </Select>
                         </FormControl>
                       </Grid>
@@ -230,9 +242,21 @@ function SalaryTemplateRuleSection({
                           fullWidth
                           size="small"
                           type="number"
-                          label={rule.formulaType.startsWith('PERCENTAGE') ? 'Percent' : 'Amount'}
+                          label={
+                            acceptsValue
+                              ? rule.formulaType.startsWith('PERCENTAGE')
+                                ? 'Percent'
+                                : 'Amount'
+                              : 'Calculated automatically'
+                          }
                           disabled={!canEdit || !acceptsValue}
                           value={acceptsValue ? (rule.value ?? '') : ''}
+                          placeholder={acceptsValue ? undefined : 'Automatic'}
+                          helperText={
+                            canEdit && !acceptsValue
+                              ? 'This value is calculated by the selected formula.'
+                              : undefined
+                          }
                           onChange={(event) =>
                             updateRule(rule.componentId, {
                               value: event.target.value === '' ? null : Number(event.target.value),
@@ -347,6 +371,8 @@ export default function SalaryTemplateEditor({
     () => ({
       name: template?.name || '',
       description: template?.description || '',
+      defaultSalaryBasis: template?.latest.defaultSalaryBasis || 'EMPLOYER_COST',
+      defaultProtectionPolicy: template?.latest.defaultProtectionPolicy || 'PROTECT_EMPLOYER_COST',
       rules: template?.latest.rules || [],
     }),
     [template]
@@ -380,12 +406,16 @@ export default function SalaryTemplateEditor({
         versionId,
         name: values.name.trim(),
         description: values.description.trim() || null,
+        defaultSalaryBasis: values.defaultSalaryBasis,
+        defaultProtectionPolicy: values.defaultProtectionPolicy,
         rules: normalizeRuleOrder(values.rules),
       }).unwrap();
       formik.resetForm({
         values: {
           name: result.name,
           description: result.description || '',
+          defaultSalaryBasis: result.latest.defaultSalaryBasis,
+          defaultProtectionPolicy: result.latest.defaultProtectionPolicy,
           rules: result.latest.rules,
         },
       });
@@ -541,6 +571,29 @@ export default function SalaryTemplateEditor({
                 helperText={formik.touched.description && formik.errors.description}
               />
             </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormControl fullWidth disabled={readOnly}>
+                <InputLabel>Default quote basis</InputLabel>
+                <Select label="Default quote basis" {...formik.getFieldProps('defaultSalaryBasis')}>
+                  <MenuItem value="EMPLOYER_COST">Employer cost</MenuItem>
+                  <MenuItem value="GROSS">Gross salary</MenuItem>
+                  <MenuItem value="TAKE_HOME">Take-home salary</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormControl fullWidth disabled={readOnly}>
+                <InputLabel>Default protection</InputLabel>
+                <Select
+                  label="Default protection"
+                  {...formik.getFieldProps('defaultProtectionPolicy')}
+                >
+                  <MenuItem value="PROTECT_EMPLOYER_COST">Protect employer cost</MenuItem>
+                  <MenuItem value="PROTECT_GROSS">Protect gross salary</MenuItem>
+                  <MenuItem value="PROTECT_TAKE_HOME">Protect take-home salary</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
         </CardContent>
       </Card>
@@ -565,6 +618,37 @@ export default function SalaryTemplateEditor({
         onMove={moveRule}
         onRemove={removeRule}
       />
+
+      <Card variant="outlined">
+        <CardContent>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            gap={2}
+            flexWrap="wrap"
+          >
+            <Box>
+              <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                <Typography variant="h6">System-Managed Statutory Components</Typography>
+                <Chip size="small" color="info" label="Automatic" />
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 760 }}>
+                ESI is evaluated during payroll from statutory wages, employee coverage, and the
+                effective rule. It does not need to be copied into this template and cannot be
+                bypassed by removing a template row.
+              </Typography>
+            </Box>
+            <Button
+              component={Link}
+              href={hrPaths.payroll.settings.statutorySchemes}
+              variant="outlined"
+            >
+              Review ESI Setup
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
 
       <Divider />
       <Box display="flex" justifyContent="flex-end" gap={1} pb={2}>

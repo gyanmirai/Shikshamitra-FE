@@ -2,7 +2,7 @@ import type { SalaryTemplateRule } from 'src/redux/hr/salary-template-api';
 
 import userEvent from '@testing-library/user-event';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
-import { render, screen, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, within, waitFor, cleanup } from '@testing-library/react';
 
 import SalaryTemplateEditor from './salary-template-editor';
 
@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => ({
       id: 'version-1',
       versionNumber: 1,
       status: 'DRAFT',
+      defaultSalaryBasis: 'EMPLOYER_COST' as const,
+      defaultProtectionPolicy: 'PROTECT_EMPLOYER_COST' as const,
       rules: [] as SalaryTemplateRule[],
     },
   },
@@ -47,7 +49,9 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
     data: {
       items: [
         { componentId: 'earning-1', name: 'Basic Salary', lineKind: 'EARNING' },
+        { componentId: 'earning-2', name: 'Special Allowance', lineKind: 'EARNING' },
         { componentId: 'deduction-1', name: 'Loan Recovery', lineKind: 'DEDUCTION' },
+        { componentId: 'deduction-2', name: 'Professional Tax', lineKind: 'DEDUCTION' },
       ],
     },
     isLoading: false,
@@ -90,6 +94,8 @@ describe('SalaryTemplateEditor', () => {
         versionId: 'version-1',
         name: 'Flexible Salary',
         description: 'Tenant template',
+        defaultSalaryBasis: 'EMPLOYER_COST',
+        defaultProtectionPolicy: 'PROTECT_EMPLOYER_COST',
         rules: [],
       })
     );
@@ -136,6 +142,92 @@ describe('SalaryTemplateEditor', () => {
       })
     );
     expect(mocks.updateDraft).not.toHaveBeenCalled();
+  });
+
+  it('changes automatic earning and deduction rules to editable fixed values and preserves them after save', async () => {
+    const user = userEvent.setup();
+    mocks.template.latest.rules = [
+      {
+        code: 'SPECIAL_ALLOWANCE',
+        componentId: 'earning-2',
+        lineKind: 'EARNING',
+        semanticType: 'BALANCING_EARNING',
+        formulaType: 'REMAINDER_OF_GROSS',
+        value: null,
+        displayOrder: 0,
+      },
+      {
+        code: 'PROFESSIONAL_TAX',
+        componentId: 'deduction-2',
+        lineKind: 'DEDUCTION',
+        semanticType: 'PROFESSIONAL_TAX',
+        formulaType: 'PROFESSIONAL_TAX',
+        value: null,
+        displayOrder: 1,
+      },
+    ];
+    mocks.updateDraft.mockImplementation((request: { rules: SalaryTemplateRule[] }) => ({
+      unwrap: vi.fn().mockResolvedValue({
+        ...mocks.template,
+        latest: { ...mocks.template.latest, rules: request.rules },
+      }),
+    }));
+
+    render(<SalaryTemplateEditor templateId="template-1" versionId="version-1" />);
+
+    const specialAllowanceRow = screen
+      .getByRole('heading', { name: 'Special Allowance' })
+      .closest<HTMLElement>('.MuiCard-root');
+    const professionalTaxRow = screen
+      .getByRole('heading', { name: 'Professional Tax' })
+      .closest<HTMLElement>('.MuiCard-root');
+
+    expect(specialAllowanceRow).not.toBeNull();
+    expect(professionalTaxRow).not.toBeNull();
+    expect(
+      within(specialAllowanceRow!).getByRole('spinbutton', { name: 'Calculated automatically' })
+    ).toBeDisabled();
+    expect(
+      within(professionalTaxRow!).getByRole('spinbutton', { name: 'Calculated automatically' })
+    ).toBeDisabled();
+
+    await user.click(within(specialAllowanceRow!).getByRole('combobox', { name: 'Calculation' }));
+    await user.click(screen.getByRole('option', { name: 'Fixed Amount' }));
+    await user.clear(within(specialAllowanceRow!).getByRole('spinbutton', { name: 'Amount' }));
+    await user.type(
+      within(specialAllowanceRow!).getByRole('spinbutton', { name: 'Amount' }),
+      '12000'
+    );
+
+    await user.click(within(professionalTaxRow!).getByRole('combobox', { name: 'Calculation' }));
+    await user.click(screen.getByRole('option', { name: 'Fixed Amount' }));
+    await user.clear(within(professionalTaxRow!).getByRole('spinbutton', { name: 'Amount' }));
+    await user.type(within(professionalTaxRow!).getByRole('spinbutton', { name: 'Amount' }), '200');
+
+    await user.click(screen.getAllByRole('button', { name: 'Save draft' })[0]);
+
+    await waitFor(() =>
+      expect(mocks.updateDraft).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rules: [
+            expect.objectContaining({
+              componentId: 'earning-2',
+              semanticType: 'ORDINARY',
+              formulaType: 'FIXED_AMOUNT',
+              value: 12000,
+            }),
+            expect.objectContaining({
+              componentId: 'deduction-2',
+              semanticType: 'ORDINARY',
+              formulaType: 'FIXED_AMOUNT',
+              value: 200,
+            }),
+          ],
+        })
+      )
+    );
+    expect(within(specialAllowanceRow!).getByRole('spinbutton', { name: 'Amount' })).toBeEnabled();
+    expect(within(professionalTaxRow!).getByRole('spinbutton', { name: 'Amount' })).toBeEnabled();
   });
 
   it.each(['PUBLISHED', 'ARCHIVED'])('hides publish guidance for %s templates', (status) => {

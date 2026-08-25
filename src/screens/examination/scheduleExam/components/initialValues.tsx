@@ -296,18 +296,22 @@ export function mapBackendToFormik(
 
     let restoredSubjects: any[];
     if (electiveData?.subjects?.length) {
-      restoredSubjects = electiveData.subjects.map((s: any) => withSchedule(s, groupColor));
+      restoredSubjects = electiveData.subjects.map((s: any) => ({
+        ...withSchedule(s, groupColor),
+        electiveGroupName: groupName,
+      }));
     } else if (
       Array.isArray(groupSched.electiveGroupSubjects) &&
       groupSched.electiveGroupSubjects.length > 0
     ) {
-      restoredSubjects = groupSched.electiveGroupSubjects.map((s: any) =>
-        withSchedule({ ...s, subjectColor: s.color || s.subjectColor || groupColor }, groupColor)
-      );
+      restoredSubjects = groupSched.electiveGroupSubjects.map((s: any) => ({
+        ...withSchedule({ ...s, subjectColor: s.color || s.subjectColor || groupColor }, groupColor),
+        electiveGroupName: groupName,
+      }));
     } else {
       restoredSubjects = siblingEntries.map(
-        ({ subjectId: sid, sched: sSched, sub: sSub, resolvedSubjectColor: sColor }) =>
-          withSchedule(
+        ({ subjectId: sid, sched: sSched, sub: sSub, resolvedSubjectColor: sColor }) => ({
+          ...withSchedule(
             {
               ...sSub,
               ...sSched,
@@ -316,7 +320,9 @@ export function mapBackendToFormik(
               subjectColor: sColor,
             },
             sColor
-          )
+          ),
+          electiveGroupName: groupName,
+        })
       );
     }
 
@@ -331,6 +337,7 @@ export function mapBackendToFormik(
         subjectColor: groupColor,
         subjectCode: groupSched.subjectCode ?? '',
         electiveGroupId: resolvedElectiveGroupId,
+        electiveGroupName: groupName,
         subjects: restoredSubjects,
         schedulingMode,
         examDate: groupSched.examDate ? dayjs(groupSched.examDate) : null,

@@ -3,7 +3,8 @@
 import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
 
-import { useState } from 'react';
+import dayjs from 'dayjs';
+import { useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -18,6 +19,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import {
   scheduleExamApi,
   useGetExamsQuery,
@@ -38,11 +40,21 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   // Active status tab driving the API query
   const [activeStatus, setActiveStatus] = useState<number>(examScheduledStatus.Pending);
   const [examPagination, setExamPagination] = useState({ page: 1, pageSize: 10 });
+  const [selectedClass, setSelectedClass] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([
+    dayjs().startOf('week'),
+    dayjs().endOf('week'),
+  ]);
   const apiStatus = activeStatus;
 
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  // Reset selected class if medium changes
+  useEffect(() => {
+    setSelectedClass('all');
+  }, [medium?.id]);
 
   // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
@@ -51,16 +63,25 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   // Boolean hook to control time view dialog
   const viewTimeDialog = useBoolean(); // Dynamic breadcrumb navigation links based on current view (form or list)
 
+  const examQueryParams = {
+    AcademicMediumId: medium?.id,
+    Status: apiStatus,
+    StandardId: selectedClass !== 'all' && selectedClass ? selectedClass : undefined,
+    StartDate: dateRange[0]?.isValid()
+      ? dateConvertor(dateRange[0].format(dateFormat))
+      : undefined,
+    EndDate: dateRange[1]?.isValid()
+      ? dateConvertor(dateRange[1].format(dateFormat))
+      : undefined,
+    SkipCount: (examPagination.page - 1) * examPagination.pageSize,
+    MaxResultCount: examPagination.pageSize,
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getExams = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamsQuery,
-    params: {
-      AcademicMediumId: medium?.id,
-      Status: apiStatus,
-      SkipCount: (examPagination.page - 1) * examPagination.pageSize,
-      MaxResultCount: examPagination.pageSize,
-    },
+    params: examQueryParams,
   });
 
   const [deleteExam, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -77,12 +98,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
         dispatchFn(
           scheduleExamApi.util.updateQueryData(
             'getExams',
-            {
-              AcademicMediumId: medium?.id,
-              Status: apiStatus,
-              SkipCount: (examPagination.page - 1) * examPagination.pageSize,
-              MaxResultCount: examPagination.pageSize,
-            },
+            examQueryParams,
             (draft: any) => {
               const index = draft?.items?.findIndex(
                 (item: any) => item.examId === selectedExam?.examId
@@ -312,6 +328,16 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               activeStatus={activeStatus}
               onStatusChange={(status) => {
                 setActiveStatus(status);
+                setExamPagination((current) => ({ ...current, page: 1 }));
+              }}
+              selectedClass={selectedClass}
+              onClassChange={(cls) => {
+                setSelectedClass(cls);
+                setExamPagination((current) => ({ ...current, page: 1 }));
+              }}
+              dateRange={dateRange}
+              onDateRangeChange={(range) => {
+                setDateRange(range);
                 setExamPagination((current) => ({ ...current, page: 1 }));
               }}
               page={examPagination.page}

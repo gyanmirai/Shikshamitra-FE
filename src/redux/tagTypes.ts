@@ -452,6 +452,7 @@ export const financePolicyType = {
 export const payrollStructureType = {
   payrollStructure: 'PayrollStructure',
   salaryTemplate: 'SalaryTemplate',
+  statutoryScheme: 'StatutoryScheme',
 } as const;
 
 // ===== Professional Tax API (reducerPath: ProfessionalApi) =====
@@ -542,8 +543,8 @@ export const studentAdmissionsCrmType = {
   task: 'Student-Admissions-Crm-Task',
   timeline: 'Student-Admissions-Crm-Timeline',
   exam: 'Student-Admissions-Crm-Exam',
-    event: 'Student-Admissions-Crm-Event',
-	structuredReview: 'Student-Admissions-Crm-Structured-Review',
+  event: 'Student-Admissions-Crm-Event',
+  structuredReview: 'Student-Admissions-Crm-Structured-Review',
   analytics: 'Student-Admissions-Crm-Analytics',
   publicForm: 'Student-Admissions-Crm-Public-Form',
   communication: 'Student-Admissions-Crm-Communication',

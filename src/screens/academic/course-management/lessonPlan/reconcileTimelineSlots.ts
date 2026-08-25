@@ -21,6 +21,11 @@ const getPlanId = (lessonPlan: unknown): string | undefined => {
   return plan.id || plan.Id;
 };
 
+const getDateKey = (value?: string | null) => {
+  if (!value) return '';
+  return value.length >= 10 ? value.slice(0, 10) : value;
+};
+
 export const reconcileTimelineSlots = <TSlot extends TimelineSlot>(
   slots: readonly TSlot[],
   lessonPlans: readonly LessonPlanRow[],
@@ -29,7 +34,7 @@ export const reconcileTimelineSlots = <TSlot extends TimelineSlot>(
 ): TSlot[] => {
   const eligiblePlans = lessonPlans.filter(
     (plan) =>
-      plan.plannedDate === selectedDate &&
+      getDateKey(plan.plannedDate) === getDateKey(selectedDate) &&
       (!timelineTeacherId || plan.teacherId === timelineTeacherId)
   );
 

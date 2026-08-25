@@ -1,7 +1,8 @@
 import { api } from 'src/redux/service';
 import { payrollStructureType } from 'src/redux/tagTypes';
 
-export type SalaryBasis = 'GROSS' | 'TAKE_HOME';
+export type SalaryBasis = 'GROSS' | 'TAKE_HOME' | 'EMPLOYER_COST';
+export type ProtectionPolicy = 'PROTECT_GROSS' | 'PROTECT_TAKE_HOME' | 'PROTECT_EMPLOYER_COST';
 
 export type SalaryTemplateRule = {
   code: string;
@@ -39,6 +40,8 @@ export type SalaryTemplateVersion = {
   versionNumber: number;
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   publishedAt?: string | null;
+  defaultSalaryBasis: SalaryBasis;
+  defaultProtectionPolicy: ProtectionPolicy;
   rules: SalaryTemplateRule[];
 };
 
@@ -50,6 +53,30 @@ export type CalculatedSalaryLine = {
   semanticType: string;
   formulaType: string;
   isStatutory: boolean;
+  lineSource: 'TEMPLATE' | 'SYSTEM_STATUTORY';
+  persistable: boolean;
+};
+
+export type SalaryTemplateTargetResult = {
+  requested: number;
+  achieved: number;
+  difference: number;
+  isExact: boolean;
+};
+
+export type SalaryTemplateEsiPreview = {
+  isConfigured: boolean;
+  isCovered: boolean;
+  canCalculate: boolean;
+  coverageDecision?: string | null;
+  statutoryWages: number;
+  wageCeiling: number;
+  employeeContribution: number;
+  employerContribution: number;
+  governmentContribution: number;
+  ruleId?: string | null;
+  ruleVersion?: number | null;
+  issueCodes: string[];
 };
 
 export type SalaryTemplateCalculation = {
@@ -57,13 +84,18 @@ export type SalaryTemplateCalculation = {
   templateVersionId: string;
   templateVersion: number;
   salaryBasis: SalaryBasis;
+  protectionPolicy: ProtectionPolicy;
   quotedMonthlyAmount: number;
+  effectiveMonth: string;
   grossSalary: number;
   basicSalary: number;
   totalDeductions: number;
   netSalary: number;
   employerContributionTotal: number;
   employerCost: number;
+  protectedMonthlyAmount: number;
+  targetResult: SalaryTemplateTargetResult;
+  employeeStateInsurance: SalaryTemplateEsiPreview;
   earnings: CalculatedSalaryLine[];
   deductions: CalculatedSalaryLine[];
   employerContributions: CalculatedSalaryLine[];
@@ -91,16 +123,30 @@ export const buildSalaryTemplateCalculationRequest = ({
   templateVersionId,
   salaryBasis,
   monthlyAmount,
+  protectionPolicy,
+  effectiveMonth,
+  employeeId,
   pfRuleId,
 }: {
   templateVersionId: string;
   salaryBasis: SalaryBasis;
+  protectionPolicy: ProtectionPolicy;
   monthlyAmount: number;
+  effectiveMonth: string;
+  employeeId?: string | null;
   pfRuleId?: string | null;
 }) => ({
   url: `${salaryTemplateEndpoint}/versions/${templateVersionId}/calculate`,
   method: 'POST' as const,
-  body: { salaryBasis, monthlyAmount, pfRuleId, statutoryProfile: 'IN-GJ' },
+  body: {
+    salaryBasis,
+    protectionPolicy,
+    monthlyAmount,
+    effectiveMonth,
+    employeeId,
+    pfRuleId,
+    statutoryProfile: 'IN-GJ',
+  },
 });
 
 export const salaryTemplateApi = api.injectEndpoints({
@@ -129,7 +175,10 @@ export const salaryTemplateApi = api.injectEndpoints({
       {
         templateVersionId: string;
         salaryBasis: SalaryBasis;
+        protectionPolicy: ProtectionPolicy;
         monthlyAmount: number;
+        effectiveMonth: string;
+        employeeId?: string | null;
         pfRuleId?: string | null;
       }
     >({
@@ -185,6 +234,8 @@ export const salaryTemplateApi = api.injectEndpoints({
         versionId: string;
         name: string;
         description?: string | null;
+        defaultSalaryBasis: SalaryBasis;
+        defaultProtectionPolicy: ProtectionPolicy;
         rules: SalaryTemplateRule[];
       }
     >({

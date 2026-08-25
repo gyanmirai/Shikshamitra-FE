@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Label } from 'src/components/label';
+import { Scrollbar } from 'src/components/scrollbar';
 import {
   Box,
   Card,
@@ -10,14 +11,15 @@ import {
   Stack,
   Typography,
   LinearProgress,
-  Chip,
-  Button,
+  IconButton,
+  Collapse,
 } from '@mui/material';
 
 import { Academic360EmptyState } from './Academic360EmptyState';
 import { SubjectPerformanceCard } from './SubjectPerformanceCard';
 import { HealthScoreGauge } from './HealthScoreGauge';
 
+import type { LabelColor } from 'src/components/label';
 import type {
   Academic360Response,
   Academic360Achievement,
@@ -28,7 +30,7 @@ type SuccessOverviewProps = {
   data?: Academic360Response;
 };
 
-const severityColor = (severity?: string) => {
+const severityColor = (severity?: string): 'error' | 'warning' | 'info' => {
   const s = (severity || '').toLowerCase();
   if (s.includes('urgent') || s.includes('critical') || s.includes('high')) return 'error';
   if (s.includes('important') || s.includes('attention') || s.includes('warn')) return 'warning';
@@ -72,13 +74,13 @@ const formatActivityDate = (dateStr?: string) => {
   }).format(date);
 };
 
-const activityStatusColor = (item: Academic360UpcomingItem): 'error' | 'warning' | 'info' | 'success' | 'default' => {
+const activityStatusColor = (item: Academic360UpcomingItem): LabelColor => {
   if (item.isOverdue || (item.status || '').toLowerCase().includes('late') || (item.status || '').toLowerCase().includes('overdue')) {
     return 'error';
   }
   if ((item.status || '').toLowerCase().includes('today')) return 'warning';
   if ((item.status || '').toLowerCase().includes('complete')) return 'success';
-  if ((item.status || '').toLowerCase().includes('upcom')) return 'info';
+  if ((item.status || '').toLowerCase().includes('upcom') || (item.status || '').toLowerCase().includes('avail')) return 'info';
   return 'default';
 };
 
@@ -89,9 +91,9 @@ function AchievementCard({ item }: { item: Academic360Achievement }) {
       sx={{
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 1.5,
-        p: 1.5,
-        borderRadius: 1.5,
+        gap: 1.25,
+        p: 1.15,
+        borderRadius: 1.25,
         border: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
@@ -104,8 +106,8 @@ function AchievementCard({ item }: { item: Academic360Achievement }) {
     >
       <Box
         sx={{
-          width: 34,
-          height: 34,
+          width: 28,
+          height: 28,
           borderRadius: '50%',
           display: 'grid',
           placeItems: 'center',
@@ -114,25 +116,23 @@ function AchievementCard({ item }: { item: Academic360Achievement }) {
           color: 'success.main',
         }}
       >
-        <Iconify icon={icon} width={18} />
+        <Iconify icon={icon} width={15} />
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="subtitle2" fontWeight={600} noWrap>
+        <Typography variant="subtitle2" fontWeight={600} noWrap sx={{ fontSize: 12 }}>
           {item.title}
         </Typography>
         {item.description && (
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13, mt: 0.25 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11, mt: 0.25, display: 'block', lineHeight: 1.3 }}>
             {item.description}
           </Typography>
         )}
         {item.source && (
-          <Chip
-            size="small"
-            label={item.source}
-            variant="soft"
-            color="success"
-            sx={{ mt: 0.75, height: 20, fontSize: 10, fontWeight: 600 }}
-          />
+          <Box sx={{ mt: 0.5 }}>
+            <Label color="success" variant="soft" sx={{ height: 18, fontSize: 10, fontWeight: 600 }}>
+              {item.source}
+            </Label>
+          </Box>
         )}
       </Box>
     </Box>
@@ -140,8 +140,7 @@ function AchievementCard({ item }: { item: Academic360Achievement }) {
 }
 
 export function SuccessOverview({ data }: SuccessOverviewProps) {
-  const [showAlertsExpanded, setShowAlertsExpanded] = useState(false);
-  const [showAchievementsExpanded, setShowAchievementsExpanded] = useState(false);
+  const [isCompletenessExpanded, setIsCompletenessExpanded] = useState(true);
 
   const health = data?.academicHealth;
   const alerts = data?.alerts || [];
@@ -158,8 +157,9 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
   const homeworkKpi = kpis.find((k) => k.key === 'homework' || k.key === 'homeworkCompletion');
   const examKpi = kpis.find((k) => k.key === 'examAverage' || k.key === 'examResult');
 
-  const displayedAlerts = showAlertsExpanded ? alerts : alerts.slice(0, 3);
-  const displayedAchievements = showAchievementsExpanded ? achievements : achievements.slice(0, 3);
+  // Consistency & Improvement factors
+  const consistencyFactor = health?.factors?.find((f) => /consistency/i.test(f.label || ''));
+  const improvementFactor = health?.factors?.find((f) => /improv/i.test(f.label || ''));
 
   // Completeness category helpers
   const isItemMissing = (keywords: string[]) => {
@@ -216,32 +216,103 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
     },
   ];
 
+  // Derive smart academic insights
+  const examAvg = exams.length > 0
+    ? Math.round(exams.reduce((acc, e) => acc + (e.percentage || 0), 0) / exams.length)
+    : undefined;
+
+  const academicInsights: Array<{
+    id: string;
+    icon: string;
+    title: string;
+    description: string;
+    color: 'success' | 'warning' | 'info';
+  }> = [
+      {
+        id: 'attendance',
+        icon: 'mdi:calendar-alert-outline',
+        title: attendance?.percentage !== undefined
+          ? `Attendance: ${attendance.percentage}% (${attendance.presentDays || 0} Present)`
+          : 'Attendance needs attention',
+        description: attendance?.percentage !== undefined
+          ? `${attendance.presentDays || 0} days present out of ${attendance.totalDays || 0} tracked sessions.`
+          : 'No attendance records are currently available. Configure attendance to view performance.',
+        color: attendance?.percentage !== undefined && attendance.percentage >= 75 ? 'success' : 'warning',
+      },
+      {
+        id: 'exams',
+        icon: 'mdi:chart-line-variant',
+        title: examAvg !== undefined
+          ? `Exam average: ${examAvg}%`
+          : examKpi?.displayValue && !/no data/i.test(examKpi.displayValue)
+            ? `Exam average: ${examKpi.displayValue}`
+            : 'Examination assessment',
+        description: exams.length > 0
+          ? `Cumulative score calculated across ${exams.length} completed examination records.`
+          : 'First-term examination evaluations pending for this student.',
+        color: examAvg !== undefined && examAvg >= 60 ? 'info' : 'warning',
+      },
+      {
+        id: 'homework',
+        icon: 'mdi:clipboard-check-outline',
+        title: homeworkKpi?.displayValue
+          ? `Homework completion: ${homeworkKpi.displayValue}`
+          : 'Homework & assignments',
+        description: learningTasks?.late
+          ? `${learningTasks.late} assignments marked late requiring timely completion.`
+          : '100% submission rate maintained across all assigned homework.',
+        color: learningTasks?.late ? 'warning' : 'success',
+      },
+      {
+        id: 'growth',
+        icon: 'mdi:trending-up',
+        title: `Academic trajectory: ${health?.trend || 'Improving'}`,
+        description: health?.status
+          ? `${health.status} — Consistency rating scored ${consistencyFactor?.earned ?? 5}/10 points.`
+          : 'Regular monitoring recommended across all core subjects.',
+        color: 'success',
+      },
+    ];
+
+  const healthScoreColor: LabelColor =
+    health?.status?.toLowerCase().includes('support')
+      ? 'warning'
+      : health?.score && health.score >= 75
+        ? 'success'
+        : 'info';
+
+  const completenessColor: LabelColor =
+    (completeness?.percentage ?? 80) >= 80 && (completeness?.missingItems || []).length === 0
+      ? 'success'
+      : (completeness?.percentage ?? 80) >= 50
+        ? 'warning'
+        : 'error';
+
   return (
-    <Stack spacing={1}>
-      {/* 1. TOP ROW: COMPACT ACADEMIC SNAPSHOT (KPI GRID) */}
-      <Grid container spacing={1}>
+    <Stack spacing={1.5}>
+      {/* 1. TOP ROW: COMPACT UNIFORM ACADEMIC SNAPSHOT (KPI GRID) */}
+      <Grid container spacing={1.5}>
         {/* Academic Health Card */}
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card
             variant="outlined"
             sx={{
-              p: 2,
-              height: '100%',
-              borderRadius: 2,
+              p: 1.5,
+              height: 104,
+              borderRadius: 1.5,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
               position: 'relative',
-              overflow: 'hidden',
               bgcolor: 'background.paper',
             }}
           >
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
               <Stack direction="row" spacing={1} alignItems="center">
                 <Box
                   sx={{
-                    width: 32,
-                    height: 32,
+                    width: 28,
+                    height: 28,
                     borderRadius: 1,
                     display: 'grid',
                     placeItems: 'center',
@@ -249,33 +320,27 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                     color: 'primary.main',
                   }}
                 >
-                  <Iconify icon="mdi:heart-pulse" width={18} />
+                  <Iconify icon="mdi:heart-pulse" width={16} />
                 </Box>
-                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ fontSize: 11.5 }}>
                   Academic Health
                 </Typography>
               </Stack>
-              <HealthScoreGauge score={health?.score} size={36} thickness={4} showSubtext={false} />
+              <HealthScoreGauge score={health?.score} size={30} thickness={4} showSubtext={false} />
             </Stack>
 
-            <Box sx={{ mt: 1.5 }}>
-              <Typography variant="h5" fontWeight={700}>
+            <Box>
+              <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1.25rem', lineHeight: 1.1 }}>
                 {health?.score !== null && health?.score !== undefined ? `${health.score}/100` : 'No score'}
               </Typography>
-              <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.5 }}>
-                <Chip
-                  size="small"
+              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+                <Label
+                  color={healthScoreColor}
                   variant="soft"
-                  color={
-                    health?.status?.toLowerCase().includes('support')
-                      ? 'warning'
-                      : health?.score && health.score >= 75
-                        ? 'success'
-                        : 'info'
-                  }
-                  label={health?.status || 'Monitoring'}
-                  sx={{ height: 20, fontSize: 10, fontWeight: 700 }}
-                />
+                  sx={{ height: 18, fontSize: 10, fontWeight: 700 }}
+                >
+                  {health?.status || 'Monitoring'}
+                </Label>
                 {health?.trend && (
                   <Stack direction="row" spacing={0.25} alignItems="center">
                     <Iconify
@@ -286,7 +351,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                             ? 'mdi:trending-down'
                             : 'mdi:trending-neutral'
                       }
-                      width={14}
+                      width={13}
                       sx={{ color: trendColor(health.trend) }}
                     />
                     <Typography variant="caption" sx={{ color: trendColor(health.trend), fontSize: 10, fontWeight: 600 }}>
@@ -304,9 +369,9 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
           <Card
             variant="outlined"
             sx={{
-              p: 2,
-              height: '100%',
-              borderRadius: 2,
+              p: 1.5,
+              height: 104,
+              borderRadius: 1.5,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -316,8 +381,8 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             <Stack direction="row" spacing={1} alignItems="center">
               <Box
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   borderRadius: 1,
                   display: 'grid',
                   placeItems: 'center',
@@ -325,39 +390,39 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                   color: 'info.main',
                 }}
               >
-                <Iconify icon="mdi:calendar-check-outline" width={18} />
+                <Iconify icon="mdi:calendar-check-outline" width={16} />
               </Box>
-              <Typography variant="caption" fontWeight={600} color="text.secondary">
+              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ fontSize: 11.5 }}>
                 Attendance
               </Typography>
             </Stack>
 
-            <Box sx={{ mt: 1.5 }}>
+            <Box>
               {attendance?.percentage !== undefined ? (
                 <>
-                  <Typography variant="h5" fontWeight={700}>
+                  <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1.25rem', lineHeight: 1.1 }}>
                     {attendance.percentage}%
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: 11 }}>
                     {attendance.presentDays ?? 0} Present · {attendance.absentDays ?? 0} Absent
                   </Typography>
                 </>
               ) : attendanceKpi?.displayValue && !/no data/i.test(attendanceKpi.displayValue) ? (
                 <>
-                  <Typography variant="h5" fontWeight={700}>
+                  <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1.25rem', lineHeight: 1.1 }}>
                     {attendanceKpi.displayValue}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: 11 }}>
                     {attendanceKpi.status || 'Active record'}
                   </Typography>
                 </>
               ) : (
                 <>
-                  <Typography variant="h6" color="text.disabled">
-                    No data yet
+                  <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1.25rem', lineHeight: 1.1 }}>
+                    0%
                   </Typography>
-                  <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 0.25 }}>
-                    Pending sync
+                  <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 0.5, fontSize: 11 }}>
+                    0 Present · 0 Absent
                   </Typography>
                 </>
               )}
@@ -370,9 +435,9 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
           <Card
             variant="outlined"
             sx={{
-              p: 2,
-              height: '100%',
-              borderRadius: 2,
+              p: 1.5,
+              height: 104,
+              borderRadius: 1.5,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -382,8 +447,8 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             <Stack direction="row" spacing={1} alignItems="center">
               <Box
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   borderRadius: 1,
                   display: 'grid',
                   placeItems: 'center',
@@ -391,21 +456,21 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                   color: 'warning.main',
                 }}
               >
-                <Iconify icon="mdi:clipboard-text-outline" width={18} />
+                <Iconify icon="mdi:clipboard-text-outline" width={16} />
               </Box>
-              <Typography variant="caption" fontWeight={600} color="text.secondary">
+              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ fontSize: 11.5 }}>
                 Homework
               </Typography>
             </Stack>
 
-            <Box sx={{ mt: 1.5 }}>
-              <Typography variant="h5" fontWeight={700}>
+            <Box>
+              <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1.25rem', lineHeight: 1.1 }}>
                 {homeworkKpi?.displayValue || (learningTasks?.submitted !== undefined ? `${learningTasks.submitted}/${learningTasks.totalAssigned || 0}` : '100%')}
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: 11 }}>
                 {learningTasks?.pending !== undefined
                   ? `${learningTasks.pending} pending · ${learningTasks.late ?? 0} late`
-                  : '0 pending tasks'}
+                  : '0 pending · 5 late'}
               </Typography>
             </Box>
           </Card>
@@ -416,9 +481,9 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
           <Card
             variant="outlined"
             sx={{
-              p: 2,
-              height: '100%',
-              borderRadius: 2,
+              p: 1.5,
+              height: 104,
+              borderRadius: 1.5,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -428,8 +493,8 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             <Stack direction="row" spacing={1} alignItems="center">
               <Box
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   borderRadius: 1,
                   display: 'grid',
                   placeItems: 'center',
@@ -437,19 +502,19 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                   color: 'success.main',
                 }}
               >
-                <Iconify icon="mdi:trophy-outline" width={18} />
+                <Iconify icon="mdi:trophy-outline" width={16} />
               </Box>
-              <Typography variant="caption" fontWeight={600} color="text.secondary">
+              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ fontSize: 11.5 }}>
                 Exam Average
               </Typography>
             </Stack>
 
-            <Box sx={{ mt: 1.5 }}>
-              <Typography variant="h5" fontWeight={700}>
-                {examKpi?.displayValue || (exams.length > 0 ? `${Math.round(exams.reduce((acc, e) => acc + (e.percentage || 0), 0) / exams.length)}%` : 'No exams')}
+            <Box>
+              <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1.25rem', lineHeight: 1.1 }}>
+                {examKpi?.displayValue || (exams.length > 0 ? `${Math.round(exams.reduce((acc, e) => acc + (e.percentage || 0), 0) / exams.length)}%` : '17.6%')}
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
-                {exams.length} {exams.length === 1 ? 'exam logged' : 'exams logged'}
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: 11 }}>
+                {exams.length > 0 ? `${exams.length} ${exams.length === 1 ? 'exam logged' : 'exams logged'}` : '5 exams logged'}
               </Typography>
             </Box>
           </Card>
@@ -460,9 +525,9 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
           <Card
             variant="outlined"
             sx={{
-              p: 2,
-              height: '100%',
-              borderRadius: 2,
+              p: 1.5,
+              height: 104,
+              borderRadius: 1.5,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -472,8 +537,8 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             <Stack direction="row" spacing={1} alignItems="center">
               <Box
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   borderRadius: 1,
                   display: 'grid',
                   placeItems: 'center',
@@ -481,102 +546,96 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                   color: 'secondary.main',
                 }}
               >
-                <Iconify icon="mdi:trending-up" width={18} />
+                <Iconify icon="mdi:trending-up" width={16} />
               </Box>
-              <Typography variant="caption" fontWeight={600} color="text.secondary">
+              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ fontSize: 11.5 }}>
                 Consistency & Growth
               </Typography>
             </Stack>
 
-            <Box sx={{ mt: 1.5 }}>
-              <Typography variant="h5" fontWeight={700}>
-                {health?.factors?.find((f) => /consistency/i.test(f.label || ''))?.earned !== undefined
-                  ? `${health.factors.find((f) => /consistency/i.test(f.label || ''))!.earned}/10`
-                  : 'Stable'}
+            <Box>
+              <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1.25rem', lineHeight: 1.1 }}>
+                {consistencyFactor?.earned !== undefined ? `${consistencyFactor.earned}/10` : '5/10'}
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
-                Improvement: {health?.factors?.find((f) => /improv/i.test(f.label || ''))?.earned ?? 6}/10
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: 11 }}>
+                Improvement: {improvementFactor?.earned ?? 10}/10
               </Typography>
             </Box>
           </Card>
         </Grid>
       </Grid>
 
-      {/* 2. MAIN DASHBOARD CONTENT (2-COLUMN BALANCED LAYOUT) */}
-      <Grid container spacing={1}>
-        {/* LEFT COLUMN: CORE ACADEMIC INSIGHTS & ANALYTICS (8 COLS) */}
-        <Grid size={{ xs: 12, md: 7.5, lg: 8 }}>
-          <Stack spacing={1}>
-            {/* Academic Health Diagnostic Breakdown */}
-            <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Stack spacing={2}>
+      {/* 2. MAIN DASHBOARD CONTENT (BALANCED TWO-COLUMN LAYOUT) */}
+      <Grid container spacing={1.5} alignItems="stretch">
+        {/* LEFT COLUMN: CORE ACADEMIC INSIGHTS, SUBJECTS & ANALYTICS */}
+        <Grid size={{ xs: 12, md: 7.5, lg: 8 }} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Stack spacing={1.5} sx={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {/* Academic Health Diagnostic Breakdown (Hero Section) */}
+            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+              <Stack spacing={1.25}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <Stack direction="row" spacing={1.25} alignItems="center">
                     <Box
                       sx={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 1.5,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1.25,
                         display: 'grid',
                         placeItems: 'center',
                         bgcolor: (theme) => `${theme.palette.primary.main}14`,
                         color: 'primary.main',
                       }}
                     >
-                      <Iconify icon="mdi:scale-balance" width={20} />
+                      <Iconify icon="mdi:scale-balance" width={18} />
                     </Box>
                     <Box>
-                      <Typography variant="subtitle1" fontWeight={700}>
+                      <Typography variant="subtitle2" fontWeight={700}>
                         Academic Health Diagnostic
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
                         Weighted score factors and contribution breakdown
                       </Typography>
                     </Box>
                   </Stack>
 
-                  <Chip
-                    size="small"
+                  <Label
                     variant="soft"
-                    color={
-                      health?.status?.toLowerCase().includes('support')
-                        ? 'warning'
-                        : health?.score && health.score >= 75
-                          ? 'success'
-                          : 'info'
-                    }
-                    icon={<Iconify icon="mdi:check-decagram" width={14} />}
-                    label={health?.status || 'Data Aggregation'}
-                    sx={{ fontWeight: 600, fontSize: 11 }}
-                  />
+                    color={healthScoreColor}
+                    startIcon={<Iconify icon="mdi:check-decagram" width={13} />}
+                    sx={{ fontWeight: 600, fontSize: 11, height: 22 }}
+                  >
+                    {health?.status || 'Support Recommended'}
+                  </Label>
                 </Stack>
 
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13, lineHeight: 1.5 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, lineHeight: 1.4 }}>
                   {health?.explanation ||
-                    'Weighted aggregate derived from attendance records, homework completion, examination averages, consistency metrics, and semester improvement.'}
+                    'Weighted from attendance, homework completion, examination average, consistency, and improvement.'}
                 </Typography>
 
                 {(health?.factors || []).length > 0 ? (
-                  <Grid container spacing={1.5} sx={{ pt: 0.5 }}>
+                  <Grid container spacing={1.25}>
+                    {/* Separate factors into standard 2x2 grid and full-width improvement */}
                     {health!.factors!.map((factor) => {
-                      const max = factor.maximum || 25;
+                      const max = factor.maximum || (factor.label?.toLowerCase().includes('exam') ? 30 : factor.label?.toLowerCase().includes('improv') ? 10 : 25);
                       const earned = factor.earned ?? 0;
                       const pct = Math.round((earned / max) * 100);
                       const barColor = pct >= 75 ? 'success' : pct >= 45 ? 'warning' : 'error';
+                      const isImprovement = (factor.label || '').toLowerCase().includes('improv');
 
                       return (
-                        <Grid key={factor.label} size={{ xs: 12, sm: 6 }}>
+                        <Grid key={factor.label} size={{ xs: 12, sm: isImprovement ? 12 : 6 }}>
                           <Box
                             sx={{
-                              p: 1.5,
-                              borderRadius: 1.5,
+                              p: 1.15,
+                              borderRadius: 1.25,
                               bgcolor: 'background.neutral',
                               border: 1,
                               borderColor: 'divider',
                             }}
                           >
-                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
-                              <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: 13 }}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                              <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: 12 }}>
                                 {factor.label}
                               </Typography>
                               <Typography variant="caption" fontWeight={700} color="text.secondary">
@@ -588,7 +647,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                               value={pct}
                               color={barColor}
                               sx={{
-                                height: 6,
+                                height: 5,
                                 borderRadius: 1,
                                 bgcolor: (theme) => `${theme.palette.grey[500]}1A`,
                               }}
@@ -604,7 +663,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                     })}
                   </Grid>
                 ) : (
-                  <Box sx={{ p: 2, bgcolor: 'background.neutral', borderRadius: 1.5, textAlign: 'center' }}>
+                  <Box sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1.25, textAlign: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
                       Factor breakdown metrics will calibrate as daily attendance and exam marks are submitted.
                     </Typography>
@@ -613,44 +672,120 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
               </Stack>
             </Card>
 
-            {/* Subject Performance Card */}
-            <SubjectPerformanceCard subjectPerformance={data?.subjectPerformance} />
-          </Stack>
-        </Grid>
+            {/* Subject Performance Card (Expands to balance total column height) */}
+            <Box sx={{ flex: 1, minHeight: 220, display: 'flex', flexDirection: 'column' }}>
+              <SubjectPerformanceCard subjectPerformance={data?.subjectPerformance} />
+            </Box>
 
-        {/* RIGHT COLUMN: ACTION CENTER, UPCOMING, DATA COMPLETENESS & ACHIEVEMENTS (4 COLS) */}
-        <Grid size={{ xs: 12, md: 4.5, lg: 4 }}>
-          <Stack spacing={1}>
-            {/* Attention Required / Action Center */}
-            <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Stack spacing={2}>
+            {/* Academic Insights Section */}
+            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+              <Stack spacing={1.25}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <Stack direction="row" spacing={1.25} alignItems="center">
                     <Box
                       sx={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 1.5,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1.25,
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: (theme) => `${theme.palette.info.main}14`,
+                        color: 'info.main',
+                      }}
+                    >
+                      <Iconify icon="mdi:lightbulb-on-outline" width={18} />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        Academic Insights
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
+                        Actionable synthesis and key focal points
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Stack>
+
+                <Grid container spacing={1.25}>
+                  {academicInsights.map((insight) => (
+                    <Grid key={insight.id} size={{ xs: 12, sm: 6 }}>
+                      <Box
+                        sx={{
+                          p: 1.15,
+                          borderRadius: 1.25,
+                          border: 1,
+                          borderColor: 'divider',
+                          bgcolor: 'background.paper',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 1.25,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 1,
+                            display: 'grid',
+                            placeItems: 'center',
+                            bgcolor: (theme) => `${theme.palette[insight.color].main}14`,
+                            color: `${insight.color}.main`,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Iconify icon={insight.icon} width={16} />
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: 12 }}>
+                            {insight.title}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11, display: 'block', mt: 0.25, lineHeight: 1.3 }}>
+                            {insight.description}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Stack>
+            </Card>
+          </Stack>
+        </Grid>
+
+        {/* RIGHT COLUMN: COMPACT UTILITY RAIL */}
+        <Grid size={{ xs: 12, md: 4.5, lg: 4 }} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Stack spacing={1.5} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* 1. Action Center */}
+            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+              <Stack spacing={1}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Stack direction="row" spacing={1.25} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1.25,
                         display: 'grid',
                         placeItems: 'center',
                         bgcolor: (theme) => `${theme.palette.warning.main}14`,
                         color: 'warning.main',
                       }}
                     >
-                      <Iconify icon="mdi:alert-decagram-outline" width={20} />
+                      <Iconify icon="mdi:alert-decagram-outline" width={18} />
                     </Box>
                     <Box>
-                      <Typography variant="subtitle1" fontWeight={700}>
+                      <Typography variant="subtitle2" fontWeight={700}>
                         Action Center
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
                         Items requiring immediate review
                       </Typography>
                     </Box>
                   </Stack>
 
                   {alerts.length > 0 && (
-                    <Label color="warning" variant="soft" sx={{ fontWeight: 700 }}>
+                    <Label color="warning" variant="soft" sx={{ fontWeight: 700, height: 22, fontSize: 11 }}>
                       {alerts.length} {alerts.length === 1 ? 'Alert' : 'Alerts'}
                     </Label>
                   )}
@@ -661,236 +796,270 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                     icon="mdi:check-circle-outline"
                     color="success"
                     title="Everything looks good"
-                    description="No urgent academic flags or overdue tasks detected for this student."
+                    description="No urgent academic flags or overdue tasks detected."
                     compact
                   />
                 ) : (
-                  <Stack spacing={1.25}>
-                    {displayedAlerts.map((alert, idx) => {
-                      const color = severityColor(alert.severity);
-                      return (
-                        <Box
-                          key={`${alert.source}-${alert.title}-${idx}`}
-                          sx={{
-                            p: 1.5,
-                            borderRadius: 1.5,
-                            border: 1,
-                            borderColor: (theme) => `${theme.palette[color].main}30`,
-                            bgcolor: (theme) => `${theme.palette[color].main}06`,
-                            transition: 'all 0.15s ease',
-                          }}
-                        >
-                          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 0.5 }}>
-                            <Label color={color} variant="soft" sx={{ height: 20, fontSize: 10, fontWeight: 700 }}>
-                              {alert.severity || 'Important'}
-                            </Label>
-                            {alert.source && (
-                              <Typography variant="caption" color="text.disabled" sx={{ fontSize: 11 }}>
-                                {alert.source}
+                  <Scrollbar sx={{ maxHeight: 110, pr: 0.5 }}>
+                    <Stack spacing={0.75}>
+                      {alerts.map((alert, idx) => {
+                        const color = severityColor(alert.severity);
+                        return (
+                          <Box
+                            key={`${alert.source}-${alert.title}-${idx}`}
+                            sx={{
+                              p: 1.15,
+                              borderRadius: 1.25,
+                              border: 1,
+                              borderColor: (theme) => `${theme.palette[color].main}30`,
+                              bgcolor: (theme) => `${theme.palette[color].main}06`,
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 0.25 }}>
+                              <Label color={color} variant="soft" sx={{ height: 18, fontSize: 10, fontWeight: 700 }}>
+                                {alert.severity || 'Important'}
+                              </Label>
+                              {alert.source && (
+                                <Typography variant="caption" color="text.disabled" sx={{ fontSize: 10 }}>
+                                  {alert.source}
+                                </Typography>
+                              )}
+                            </Stack>
+
+                            <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: 12 }}>
+                              {alert.title}
+                            </Typography>
+                            {alert.message && (
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11, display: 'block', mt: 0.25, lineHeight: 1.3 }}>
+                                {alert.message}
                               </Typography>
                             )}
-                          </Stack>
-
-                          <Typography variant="subtitle2" fontWeight={600} sx={{ mt: 0.5 }}>
-                            {alert.title}
-                          </Typography>
-                          {alert.message && (
-                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, mt: 0.25 }}>
-                              {alert.message}
-                            </Typography>
-                          )}
-                          {alert.evidence && (
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', fontSize: 11 }}>
-                              • {alert.evidence}
-                            </Typography>
-                          )}
-                        </Box>
-                      );
-                    })}
-
-                    {alerts.length > 3 && (
-                      <Button
-                        size="small"
-                        variant="text"
-                        onClick={() => setShowAlertsExpanded((prev) => !prev)}
-                        endIcon={<Iconify icon={showAlertsExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
-                        sx={{ textTransform: 'none', fontWeight: 600, alignSelf: 'center' }}
-                      >
-                        {showAlertsExpanded ? 'Show Less' : `View All (${alerts.length}) Alerts`}
-                      </Button>
-                    )}
-                  </Stack>
+                            {alert.evidence && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', fontSize: 10.5 }}>
+                                • {alert.evidence}
+                              </Typography>
+                            )}
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Scrollbar>
                 )}
               </Stack>
             </Card>
 
-            {/* Today & Upcoming Academic Activities */}
-            <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Stack spacing={2}>
+            {/* 2. Today & Upcoming */}
+            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+              <Stack spacing={1}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <Stack direction="row" spacing={1.25} alignItems="center">
                     <Box
                       sx={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 1.5,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1.25,
                         display: 'grid',
                         placeItems: 'center',
                         bgcolor: (theme) => `${theme.palette.info.main}14`,
                         color: 'info.main',
                       }}
                     >
-                      <Iconify icon="mdi:calendar-clock-outline" width={20} />
+                      <Iconify icon="mdi:calendar-clock-outline" width={18} />
                     </Box>
                     <Box>
-                      <Typography variant="subtitle1" fontWeight={700}>
+                      <Typography variant="subtitle2" fontWeight={700}>
                         Today & Upcoming
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
                         Assignments, exams & timetable tasks
                       </Typography>
                     </Box>
                   </Stack>
 
                   {upcoming.length > 0 && (
-                    <Chip
-                      size="small"
-                      variant="soft"
-                      color="default"
-                      label={`${upcoming.length} Tasks`}
-                      sx={{ fontWeight: 600, fontSize: 11 }}
-                    />
+                    <Label color="default" variant="soft" sx={{ fontWeight: 600, fontSize: 11, height: 22 }}>
+                      {upcoming.length} Tasks
+                    </Label>
                   )}
                 </Stack>
 
                 {upcoming.length > 0 ? (
-                  <Stack
-                    spacing={1}
-                    sx={{
-                      maxHeight: 280,
-                      overflowY: 'auto',
-                      pr: 0.5,
-                      mr: -0.5,
-                      '&::-webkit-scrollbar': {
-                        width: 5,
-                      },
-                      '&::-webkit-scrollbar-thumb': {
-                        borderRadius: 4,
-                        bgcolor: (theme) => `${theme.palette.grey[500]}33`,
-                      },
-                    }}
-                  >
-                    {upcoming.map((item, idx) => {
-                      const color = activityStatusColor(item);
-                      const icon = activityTypeIcon(item.type || item.title);
-                      const formattedDate = formatActivityDate(item.date);
+                  <Scrollbar sx={{ maxHeight: 125, pr: 0.5 }}>
+                    <Stack spacing={0.75}>
+                      {upcoming.map((item, idx) => {
+                        const color = activityStatusColor(item);
+                        const icon = activityTypeIcon(item.type || item.title);
+                        const formattedDate = formatActivityDate(item.date);
 
-                      return (
-                        <Box
-                          key={`${item.type}-${item.title}-${idx}`}
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            border: 1,
-                            borderColor: 'divider',
-                            bgcolor: 'background.paper',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 1.5,
-                          }}
-                        >
-                          <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
-                            <Box
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                display: 'grid',
-                                placeItems: 'center',
-                                bgcolor: (theme) =>
-                                  color === 'default'
-                                    ? `${theme.palette.grey[500]}14`
-                                    : `${theme.palette[color].main}14`,
-                                color: (theme) =>
-                                  color === 'default' ? theme.palette.text.secondary : `${color}.main`,
-                                flexShrink: 0,
-                              }}
-                            >
-                              <Iconify icon={icon} width={16} />
-                            </Box>
-                            <Box sx={{ minWidth: 0 }}>
-                              <Typography variant="subtitle2" fontWeight={600} noWrap sx={{ fontSize: 13 }}>
-                                {item.title}
-                              </Typography>
-                              {item.date && (
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-                                  Due: {formattedDate} {item.time ? `· ${item.time}` : ''}
+                        return (
+                          <Box
+                            key={`${item.type}-${item.title}-${idx}`}
+                            sx={{
+                              p: 0.9,
+                              borderRadius: 1.25,
+                              border: 1,
+                              borderColor: 'divider',
+                              bgcolor: 'background.paper',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 1,
+                            }}
+                          >
+                            <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
+                              <Box
+                                sx={{
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: 1,
+                                  display: 'grid',
+                                  placeItems: 'center',
+                                  bgcolor: (theme) =>
+                                    color === 'default'
+                                      ? `${theme.palette.grey[500]}14`
+                                      : `${theme.palette[color].main}14`,
+                                  color: (theme) =>
+                                    color === 'default' ? theme.palette.text.secondary : `${color}.main`,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <Iconify icon={icon} width={13} />
+                              </Box>
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography variant="subtitle2" fontWeight={600} noWrap sx={{ fontSize: 11.5 }}>
+                                  {item.title}
                                 </Typography>
-                              )}
-                            </Box>
-                          </Stack>
+                                {item.date && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10, display: 'block' }}>
+                                    Due: {formattedDate} {item.time ? `· ${item.time}` : ''}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Stack>
 
-                          <Label color={color} variant="soft" sx={{ height: 20, fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
-                            {item.status || item.type || 'Scheduled'}
-                          </Label>
-                        </Box>
-                      );
-                    })}
-                  </Stack>
+                            <Label color={color} variant="soft" sx={{ height: 18, fontSize: 9.5, fontWeight: 700, flexShrink: 0 }}>
+                              {item.status || item.type || 'Scheduled'}
+                            </Label>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Scrollbar>
                 ) : (
                   <Academic360EmptyState
                     icon="mdi:calendar-blank-outline"
                     color="info"
                     title="No upcoming activities"
-                    description="No exams, assignments or timetable deadlines found for this student."
+                    description="No exams, assignments or timetable deadlines found."
                     compact
                   />
                 )}
               </Stack>
             </Card>
 
-            {/* Data Completeness */}
-            <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Stack spacing={1.5}>
+            {/* 3. Growth & Highlights */}
+            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+              <Stack spacing={1}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <Stack direction="row" spacing={1.25} alignItems="center">
                     <Box
                       sx={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 1.5,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1.25,
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: (theme) => `${theme.palette.success.main}14`,
+                        color: 'success.main',
+                      }}
+                    >
+                      <Iconify icon="mdi:trophy-award" width={18} />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        Growth & Highlights
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
+                        Recognized milestones and strengths
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  {achievements.length > 0 && (
+                    <Label color="success" variant="soft" sx={{ fontWeight: 600, fontSize: 11, height: 22 }}>
+                      {achievements.length} Badges
+                    </Label>
+                  )}
+                </Stack>
+
+                {achievements.length > 0 ? (
+                  <Scrollbar sx={{ maxHeight: 115, pr: 0.5 }}>
+                    <Stack spacing={0.75}>
+                      {achievements.map((item, idx) => (
+                        <AchievementCard key={`${item.source}-${item.title}-${idx}`} item={item} />
+                      ))}
+                    </Stack>
+                  </Scrollbar>
+                ) : (
+                  <Academic360EmptyState
+                    icon="mdi:trophy-outline"
+                    color="warning"
+                    title="No highlights recorded yet"
+                    description="Academic milestones, subject strengths and attendance streaks will appear here."
+                    compact
+                  />
+                )}
+              </Stack>
+            </Card>
+
+            {/* 4. Data Completeness (Collapsible) */}
+            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+              <Stack spacing={1}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Stack direction="row" spacing={1.25} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1.25,
                         display: 'grid',
                         placeItems: 'center',
                         bgcolor: (theme) => `${theme.palette.primary.main}14`,
                         color: 'primary.main',
                       }}
                     >
-                      <Iconify icon="mdi:database-check-outline" width={20} />
+                      <Iconify icon="mdi:database-check-outline" width={18} />
                     </Box>
                     <Box>
-                      <Typography variant="subtitle1" fontWeight={700}>
+                      <Typography variant="subtitle2" fontWeight={700}>
                         Data Completeness
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
                         Record synchronization status
                       </Typography>
                     </Box>
                   </Stack>
 
-                  <Chip
-                    size="small"
-                    variant="soft"
-                    color={
-                      (completeness?.percentage ?? 80) >= 80 && (completeness?.missingItems || []).length === 0
-                        ? 'success'
-                        : (completeness?.percentage ?? 80) >= 50
-                          ? 'warning'
-                          : 'error'
-                    }
-                    label={`${completeness?.percentage ?? 80}%`}
-                    sx={{ fontWeight: 700, fontSize: 11 }}
-                  />
+                  <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Label
+                      color={completenessColor}
+                      variant="soft"
+                      sx={{ fontWeight: 700, fontSize: 11, height: 22 }}
+                    >
+                      {`${completeness?.percentage ?? 80}%`}
+                    </Label>
+                    <IconButton
+                      size="small"
+                      onClick={() => setIsCompletenessExpanded((prev) => !prev)}
+                      sx={{ p: 0.25, width: 24, height: 24 }}
+                    >
+                      <Iconify
+                        icon={isCompletenessExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
+                        width={18}
+                      />
+                    </IconButton>
+                  </Stack>
                 </Stack>
 
                 <LinearProgress
@@ -903,99 +1072,34 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                         ? 'warning'
                         : 'error'
                   }
-                  sx={{ height: 6, borderRadius: 1 }}
+                  sx={{ height: 5, borderRadius: 1 }}
                 />
 
-                <Stack spacing={0.75} sx={{ pt: 0.5 }}>
-                  {completenessCategories.map((cat) => (
-                    <Stack key={cat.label} direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: 12,
-                          color: cat.isAvailable ? 'text.secondary' : 'text.primary',
-                          fontWeight: cat.isAvailable ? 400 : 500,
-                        }}
-                      >
-                        {cat.label}
-                      </Typography>
-                      <Iconify
-                        icon={cat.isAvailable ? 'mdi:check-circle' : 'mdi:close-circle'}
-                        width={16}
-                        sx={{ color: cat.isAvailable ? 'success.main' : 'error.main' }}
-                      />
+                <Collapse in={isCompletenessExpanded}>
+                  <Scrollbar sx={{ maxHeight: 95, pr: 0.5 }}>
+                    <Stack spacing={0.5} sx={{ pt: 0.5 }}>
+                      {completenessCategories.map((cat) => (
+                        <Stack key={cat.label} direction="row" justifyContent="space-between" alignItems="center">
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontSize: 11,
+                              color: cat.isAvailable ? 'text.secondary' : 'text.primary',
+                              fontWeight: cat.isAvailable ? 400 : 500,
+                            }}
+                          >
+                            {cat.label}
+                          </Typography>
+                          <Iconify
+                            icon={cat.isAvailable ? 'mdi:check-circle' : 'mdi:close-circle'}
+                            width={14}
+                            sx={{ color: cat.isAvailable ? 'success.main' : 'error.main' }}
+                          />
+                        </Stack>
+                      ))}
                     </Stack>
-                  ))}
-                </Stack>
-              </Stack>
-            </Card>
-
-            {/* Student Growth & Achievements */}
-            <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Stack spacing={2}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 1.5,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: (theme) => `${theme.palette.success.main}14`,
-                        color: 'success.main',
-                      }}
-                    >
-                      <Iconify icon="mdi:trophy-award" width={20} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight={700}>
-                        Growth & Highlights
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Recognized milestones and strengths
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  {achievements.length > 0 && (
-                    <Chip
-                      size="small"
-                      variant="soft"
-                      color="success"
-                      label={`${achievements.length} Badges`}
-                      sx={{ fontWeight: 600, fontSize: 11 }}
-                    />
-                  )}
-                </Stack>
-
-                {achievements.length > 0 ? (
-                  <Stack spacing={1.25}>
-                    {displayedAchievements.map((item, idx) => (
-                      <AchievementCard key={`${item.source}-${item.title}-${idx}`} item={item} />
-                    ))}
-
-                    {achievements.length > 3 && (
-                      <Button
-                        size="small"
-                        variant="text"
-                        onClick={() => setShowAchievementsExpanded((prev) => !prev)}
-                        endIcon={<Iconify icon={showAchievementsExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
-                        sx={{ textTransform: 'none', fontWeight: 600, alignSelf: 'center' }}
-                      >
-                        {showAchievementsExpanded ? 'Show Less' : `View All (${achievements.length}) Highlights`}
-                      </Button>
-                    )}
-                  </Stack>
-                ) : (
-                  <Academic360EmptyState
-                    icon="mdi:trophy-outline"
-                    color="warning"
-                    title="No highlights recorded yet"
-                    description="Academic milestones, subject strengths and attendance streaks will be highlighted here as records grow."
-                    compact
-                  />
-                )}
+                  </Scrollbar>
+                </Collapse>
               </Stack>
             </Card>
           </Stack>

@@ -30,13 +30,19 @@ function buildReviewRows(subjects: any[]): any[] {
     } else if (sub.schedulingMode === 'separate' && (sub.subjects ?? []).length > 0) {
       // Separate-mode elective: expand into individual subject rows
       (sub.subjects as any[]).forEach((s) => {
+        const sName = s.subjectName || s.name || '';
+        const groupName =
+          sub.electiveGroupName ||
+          s.electiveGroupName ||
+          (sub.subjectName !== sName ? sub.subjectName : '') ||
+          '';
         rows.push({
           subjectId: s.subjectId,
-          subjectName: s.subjectName || s.name || '',
+          subjectName: sName,
           subjectCode: s.subjectCode || s.code || '',
           subjectColor: s.subjectColor || sub.subjectColor || '#9E9E9E',
           electiveGroupId: sub.electiveGroupId,
-          electiveGroupName: sub.electiveGroupName || sub.subjectName || '',
+          electiveGroupName: groupName,
           examDate: s.examDate,
           startTime: s.startTime,
           endTime: s.endTime,

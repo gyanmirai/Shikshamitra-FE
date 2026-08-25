@@ -6,20 +6,29 @@ import type {
 export const earningRoles = ['ORDINARY', 'BASIC', 'DEARNESS_ALLOWANCE', 'BALANCING_EARNING'];
 export const deductionRoles = ['ORDINARY', 'EMPLOYEE_PROVIDENT_FUND', 'PROFESSIONAL_TAX'];
 
-const ordinaryFormulas = [
+const editableFormulas = [
   'PERCENTAGE_OF_GROSS',
   'PERCENTAGE_OF_BASIC',
   'PERCENTAGE_OF_COMPONENT',
   'FIXED_AMOUNT',
 ];
 
-export const getFormulaOptions = (rule: SalaryTemplateRule) => {
-  if (rule.semanticType === 'BASIC') return ['PERCENTAGE_OF_GROSS', 'FIXED_AMOUNT'];
-  if (rule.semanticType === 'BALANCING_EARNING') return ['REMAINDER_OF_GROSS'];
-  if (rule.semanticType === 'EMPLOYEE_PROVIDENT_FUND') return ['EMPLOYEE_PROVIDENT_FUND'];
-  if (rule.semanticType === 'PROFESSIONAL_TAX') return ['PROFESSIONAL_TAX'];
-  return ordinaryFormulas;
+const automaticFormulaSemanticTypes: Record<string, string> = {
+  REMAINDER_OF_GROSS: 'BALANCING_EARNING',
+  EMPLOYEE_PROVIDENT_FUND: 'EMPLOYEE_PROVIDENT_FUND',
+  PROFESSIONAL_TAX: 'PROFESSIONAL_TAX',
 };
+
+export const getFormulaOptions = (rule: SalaryTemplateRule) =>
+  rule.lineKind === 'EARNING'
+    ? [...editableFormulas, 'REMAINDER_OF_GROSS']
+    : [...editableFormulas, 'EMPLOYEE_PROVIDENT_FUND', 'PROFESSIONAL_TAX'];
+
+export const formulaAcceptsValue = (formulaType: string) =>
+  editableFormulas.includes(formulaType);
+
+export const getAutomaticFormulaSemanticType = (formulaType: string) =>
+  automaticFormulaSemanticTypes[formulaType] || null;
 
 export const getRoleOptions = (lineKind: SalaryTemplateRule['lineKind']) =>
   lineKind === 'EARNING' ? earningRoles : deductionRoles;
@@ -66,6 +75,39 @@ export const applySemanticType = (
     value: acceptsValue ? (semanticType === 'BASIC' ? 60 : 0) : null,
     basisCode: null,
     basisComponentId: null,
+  };
+};
+
+export const applyFormulaType = (
+  rule: SalaryTemplateRule,
+  formulaType: string
+): SalaryTemplateRule => {
+  const automaticSemanticType = getAutomaticFormulaSemanticType(formulaType);
+  const acceptsValue = formulaAcceptsValue(formulaType);
+  const currentSemanticRequiresAutomaticFormula = [
+    'BALANCING_EARNING',
+    'EMPLOYEE_PROVIDENT_FUND',
+    'PROFESSIONAL_TAX',
+  ].includes(rule.semanticType);
+  const basicSupportsFormula = ['PERCENTAGE_OF_GROSS', 'FIXED_AMOUNT'].includes(formulaType);
+  let {semanticType} = rule;
+  if (automaticSemanticType) {
+    semanticType = automaticSemanticType;
+  } else if (
+    currentSemanticRequiresAutomaticFormula ||
+    (rule.semanticType === 'BASIC' && !basicSupportsFormula)
+  ) {
+    semanticType = 'ORDINARY';
+  }
+
+  return {
+    ...rule,
+    semanticType,
+    formulaType,
+    value: acceptsValue ? (rule.value ?? 0) : null,
+    basisCode: null,
+    basisComponentId:
+      formulaType === 'PERCENTAGE_OF_COMPONENT' ? rule.basisComponentId : null,
   };
 };
 
