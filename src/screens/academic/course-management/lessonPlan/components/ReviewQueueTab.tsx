@@ -38,6 +38,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { useReviewSubmissionLock } from '../hooks/use-review-submission-lock';
 import StatusBadge from './review-queue/StatusBadge';
 import MetricCard from './review-queue/MetricCard';
 import ReviewCard, { type ReviewItem } from './review-queue/ReviewCard';
@@ -163,6 +164,7 @@ export const ReviewQueueTab = ({
     comment: '',
     updateProgress: true,
   });
+  const { isLocked: isReviewSubmissionLocked, runLocked } = useReviewSubmissionLock();
 
   const openReview = (target: ReviewTarget, defaultAction: ReviewState['action'] = 'approve') => {
     if (!canReviewSubmissions) return;
@@ -177,6 +179,7 @@ export const ReviewQueueTab = ({
   };
 
   const isSubmitLoading =
+    isReviewSubmissionLocked ||
     (review.action === 'approve' && isApproving) ||
     (review.action === 'reject' && isRejecting) ||
     (review.action === 'changes' && isRequesting);
@@ -186,22 +189,26 @@ export const ReviewQueueTab = ({
 
   const submitReview = async () => {
     if (!review.target) return;
+    const target = review.target;
     if (commentRequired && !review.comment.trim()) {
       setReviewCommentTouched(true);
       return;
     }
     try {
-      let success = false;
-      if (review.action === 'approve') {
-        success = await onApprove(review.target, review.comment, review.updateProgress);
-      } else if (review.action === 'reject') {
-        success = await onReject(review.target, review.comment);
-      } else {
-        success = await onRequestChanges(review.target, review.comment);
-      }
-      if (success) {
-        closeReview();
-      }
+      await runLocked(async () => {
+        let success = false;
+        if (review.action === 'approve') {
+          success = await onApprove(target, review.comment, review.updateProgress);
+        } else if (review.action === 'reject') {
+          success = await onReject(target, review.comment);
+        } else {
+          success = await onRequestChanges(target, review.comment);
+        }
+        if (success) {
+          closeReview();
+        }
+        return success;
+      });
     } catch (err: unknown) {
       const apiErr = err as { data?: { detail?: string; message?: string } };
       shikshaMitraToast.error({
@@ -847,6 +854,7 @@ export const ReviewQueueTab = ({
                     : 'Submit Request'
               }
               loading={isSubmitLoading}
+              disabled={isSubmitLoading}
               onClick={submitReview}
             />
           </DialogActions>

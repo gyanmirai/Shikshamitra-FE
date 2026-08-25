@@ -203,13 +203,14 @@ const Visibility = ({
                 (sub: any) => sub.permissionName
               );
               const totalSubmodules = submodulesWithPermission.length;
-              const visibleSubmodules =
-                visibility?.filter(
-                  (t) =>
-                    submodulesWithPermission
-                      .map((sub: any) => sub.permissionName)
-                      .includes(t.name) && t.isGranted
-                ).length || 0;
+              // Count rendered sub-module rows, not permission records. Some navigation
+              // entries intentionally share one permission key (for example Dashboard and
+              // Student Academic 360), so filtering the permission array under-counts them.
+              const visibleSubmodules = submodulesWithPermission.filter(
+                (submodule: any) =>
+                  visibility.find((permission) => permission.name === submodule.permissionName)
+                    ?.isGranted === true
+              ).length;
 
               const progress = !isUnlocked
                 ? 0

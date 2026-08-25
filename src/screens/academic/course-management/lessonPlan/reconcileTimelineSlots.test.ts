@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
-
-import type { LessonPlanRow } from './lessonPlanData';
+import { it, expect, describe } from 'vitest';
 
 import { reconcileTimelineSlots } from './reconcileTimelineSlots';
+
+import type { LessonPlanRow } from './lessonPlanData';
 
 const createPlan = (overrides: Partial<LessonPlanRow> = {}): LessonPlanRow =>
   ({
@@ -59,5 +59,94 @@ describe('reconcileTimelineSlots', () => {
     const result = reconcileTimelineSlots(slots, [plan], '2026-08-21', 'teacher-1');
 
     expect(result.every((slot) => slot.lessonPlan === null)).toBe(true);
+  });
+
+  it('maps multiple plans only to their exact class, division, subject, and slot', () => {
+    const socialSciencePlan = createPlan({
+      id: 'social-science-plan',
+      timetableSlotId: 'class-8-b-period-5',
+      standardId: 'class-8',
+      divisionId: 'division-b',
+      subjectId: 'social-science',
+    });
+    const chemistryPlan = createPlan({
+      id: 'chemistry-plan',
+      timetableSlotId: 'class-11-a-period-2',
+      standardId: 'class-11',
+      divisionId: 'division-a',
+      subjectId: 'chemistry',
+    });
+    const slots = [
+      {
+        timetableSlotId: 'class-11-a-period-2',
+        standardId: 'class-11',
+        divisionId: 'division-a',
+        subjectId: 'chemistry',
+        lessonPlan: null,
+      },
+      {
+        timetableSlotId: 'class-8-b-period-5',
+        standardId: 'class-8',
+        divisionId: 'division-b',
+        subjectId: 'social-science',
+        lessonPlan: null,
+      },
+    ];
+
+    const result = reconcileTimelineSlots(
+      slots,
+      [socialSciencePlan, chemistryPlan],
+      '2026-08-21',
+      'teacher-1'
+    );
+
+    expect(result[0].lessonPlan).toBe(chemistryPlan);
+    expect(result[1].lessonPlan).toBe(socialSciencePlan);
+  });
+
+  it('does not attach plans belonging to another date or teacher', () => {
+    const slots = [{ timetableSlotId: 'slot-1', lessonPlan: null }];
+    const nextDayPlan = createPlan({ plannedDate: '2026-08-22' });
+    const anotherTeacherPlan = createPlan({ id: 'plan-2', teacherId: 'teacher-2' });
+
+    const result = reconcileTimelineSlots(
+      slots,
+      [nextDayPlan, anotherTeacherPlan],
+      '2026-08-21T00:00:00+05:30',
+      'teacher-1'
+    );
+
+    expect(result[0].lessonPlan).toBeNull();
+  });
+
+  it('does not attach a slot-id match when its subject context is different', () => {
+    const plan = createPlan({ subjectId: 'chemistry' });
+    const slots = [
+      {
+        timetableSlotId: 'slot-1',
+        standardId: 'standard-1',
+        divisionId: 'division-1',
+        subjectId: 'social-science',
+        lessonPlan: null,
+      },
+    ];
+
+    const result = reconcileTimelineSlots(slots, [plan], '2026-08-21', 'teacher-1');
+
+    expect(result[0].lessonPlan).toBeNull();
+  });
+
+  it('normalizes ISO timestamps to the selected calendar date', () => {
+    const plan = createPlan({ plannedDate: '2026-08-21T00:00:00+00:00' });
+    const slots = [{ timetableSlotId: 'slot-1', lessonPlan: null }];
+
+    const result = reconcileTimelineSlots(
+      slots,
+      [plan],
+      '2026-08-21T00:00:00+05:30',
+      'teacher-1'
+    );
+
+    expect(result[0].lessonPlan).toBe(plan);
   });
 });

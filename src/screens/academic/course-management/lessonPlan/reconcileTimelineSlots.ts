@@ -14,6 +14,11 @@ const getContextKey = (value: {
   subjectId?: string;
 }) => `${value.standardId || ''}:${value.divisionId || ''}:${value.subjectId || ''}`;
 
+const hasMatchingContext = (slot: TimelineSlot, plan: LessonPlanRow) =>
+  (!slot.standardId || slot.standardId === plan.standardId) &&
+  (!slot.divisionId || slot.divisionId === plan.divisionId) &&
+  (!slot.subjectId || slot.subjectId === plan.subjectId);
+
 const getPlanId = (lessonPlan: unknown): string | undefined => {
   if (!lessonPlan || typeof lessonPlan !== 'object') return undefined;
 
@@ -52,7 +57,7 @@ export const reconcileTimelineSlots = <TSlot extends TimelineSlot>(
     if (slot.lessonPlan || !slot.timetableSlotId) return slot;
 
     const exactPlan = plansBySlotId.get(slot.timetableSlotId);
-    if (!exactPlan) return slot;
+    if (!exactPlan || !hasMatchingContext(slot, exactPlan)) return slot;
 
     assignedPlanIds.add(exactPlan.id);
     return { ...slot, lessonPlan: exactPlan };

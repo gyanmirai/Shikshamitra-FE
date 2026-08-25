@@ -27,10 +27,10 @@ import {
   LinearProgress,
 } from '@mui/material';
 
+import { getPrimaryTeacherNames } from '../utils/primaryTeacherNames';
 import { SubjectType, SubjectAssignmentStatus } from '../enum/subjectType';
 
 import type { ISubjectTableProps, ISubjectFormValues } from './type';
-import { getPrimaryTeacherNames } from '../utils/primaryTeacherNames';
 
 // ── Health score helpers ─────────────────────────────────────────────────────
 function healthColor(score: number) {
@@ -40,18 +40,52 @@ function healthColor(score: number) {
   return '#ef4444';
 }
 
-function healthLabel(score: number) {
-  if (score >= 90) return 'Ready';
-  if (score >= 70) return 'Almost Ready';
-  if (score >= 40) return 'Needs Setup';
-  return 'Incomplete';
+function getSetupHealthIssues(row: ISubjectFormValues): string[] {
+  const issues: string[] = [];
+
+  if (!getPrimaryTeacherNames(row).length) {
+    issues.push('Assign a primary teacher');
+  }
+
+  if ((row.chaptersCount ?? 0) === 0) {
+    issues.push('Add at least 3 syllabus chapters');
+  } else if ((row.chaptersCount ?? 0) < 3) {
+    issues.push('Add more syllabus chapters (3 recommended)');
+  }
+
+  if ((row.weeklyPeriods ?? 0) <= 0) {
+    issues.push('Set periods per week');
+  }
+
+  return issues;
 }
 
-function SetupHealthCell({ score }: { score?: number }) {
-  const value = score ?? 0;
+function SetupHealthCell({ score, row }: { score?: number; row: ISubjectFormValues }) {
+  const value = Math.max(0, Math.min(100, score ?? 0));
   const color = healthColor(value);
+  const missingItems = getSetupHealthIssues(row);
+  const tooltipTitle =
+    value >= 100 ? (
+      'Setup complete'
+    ) : (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+        <Typography variant="caption" fontWeight={700}>
+          Missing setup:
+        </Typography>
+        {missingItems.length > 0 ? (
+          missingItems.map((item) => (
+            <Typography key={item} variant="caption">
+              • {item}
+            </Typography>
+          ))
+        ) : (
+          <Typography variant="caption">Complete the remaining setup fields</Typography>
+        )}
+      </Box>
+    );
+
   return (
-    <CustomTooltip title={healthLabel(value)} arrow placement="top">
+    <CustomTooltip title={tooltipTitle} arrow placement="top">
       <Box sx={{ minWidth: 80 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.3 }}>
           <Typography variant="caption" fontWeight={600} sx={{ color }}>
@@ -323,7 +357,9 @@ const SubjectTable = ({
         width: 100,
         isSort: false,
         isFilter: false,
-        render: (value) => <SetupHealthCell score={value as number} />,
+        render: (value, row) => (
+          <SetupHealthCell score={value as number} row={row as ISubjectFormValues} />
+        ),
       },
       {
         id: 'lastUpdatedDisplay',
