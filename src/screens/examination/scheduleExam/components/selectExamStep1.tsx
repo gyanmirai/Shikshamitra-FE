@@ -53,6 +53,19 @@ type StudentElectiveAssignmentsResponse = {
 
 const normalizeSubjectId = (value?: string | null) => value?.trim().toLowerCase() ?? '';
 
+// Core lookup entries keep their subject identity in the nested subject record,
+// while elective options expose it as selectedElectiveSubjectId. Use the same
+// identity for Autocomplete equality and form normalization so MUI can keep the
+// checkbox state in sync with Formik's selected values.
+const getSubjectSelectionKey = (subject: any) =>
+  normalizeSubjectId(
+    subject?.selectedElectiveSubjectId ??
+    subject?.subjects?.[0]?.subjectId ??
+    subject?.subjectId ??
+    subject?.id ??
+    subject?.electiveGroupId
+  );
+
 const getStudentElectiveRecords = (response: StudentElectiveAssignmentsResponse) =>
   response.records ?? response.data?.records ?? [];
 
@@ -174,6 +187,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               subjectId: subject.subjectId || subject.id,
               subjectName: subject.subjectName || subject.name || item.electiveGroupName,
               selectedElectiveSubjectId: subject.subjectId || subject.id,
+              electiveGroupId: item.electiveGroupId,
+              electiveGroupName: item.electiveGroupName || item.name || '',
               subjects: [subject],
               optionGroup: item.electiveGroupName || 'Elective Group',
             }));
@@ -244,8 +259,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
         selectedGradeScale?.totalMarks ?? selectedType?.defaultTotalMarks ?? '';
       const defaultPassingMarks = selectedGradeScale?.passMarks ?? '';
       const nextReadiness = { ...electiveReadiness };
+      const uniqueValue = value.filter(
+        (subject, index, subjects) =>
+          getSubjectSelectionKey(subject) &&
+          subjects.findIndex(
+            (candidate) => getSubjectSelectionKey(candidate) === getSubjectSelectionKey(subject)
+          ) === index
+      );
       const normalizedResults = await Promise.all(
-        value.map(async (sub) => {
+        uniqueValue.map(async (sub) => {
           const isElective = !!sub.electiveGroupId;
           let readiness = sub.electiveGroupId ? nextReadiness[sub.electiveGroupId] : undefined;
 
@@ -260,6 +282,10 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               return null;
             }
           }
+
+          const electiveGroupName = isElective
+            ? sub.electiveGroupName || sub.optionGroup || undefined
+            : undefined;
 
           const assignedElectiveSubjects = isElective
             ? (sub.subjects ?? [])
@@ -282,6 +308,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   passingMarks: subjectItem.passingMarks || defaultPassingMarks,
                   notes: subjectItem.notes || '',
                   gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
+                  electiveGroupName,
                 };
               })
             : sub.subjects;
@@ -298,6 +325,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               sub.subjectName ||
               sub?.electiveGroupName ||
               '',
+            electiveGroupId: sub.electiveGroupId || undefined,
+            electiveGroupName,
             examDate: sub?.examDate || null,
             startTime: sub?.startTime || null,
             endTime: sub?.endTime || null,
@@ -552,14 +581,9 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       groupBy={(option: any) => option.optionGroup || 'Subjects'}
                       getOptionDisabled={(option: any) => !!option.isDisabled}
                       isOptionEqualToValue={(option: any, val: any) => {
-                        const optId = option?.selectedElectiveSubjectId || option?.subjectId || option?.id;
-                        const valId =
-                          val?.selectedElectiveSubjectId ||
-                          val?.subjectId ||
-                          val?.subjects?.[0]?.subjectId ||
-                          val?.electiveGroupId ||
-                          val?.id;
-                        return !!optId && optId === valId;
+                        const optionKey = getSubjectSelectionKey(option);
+                        const valueKey = getSubjectSelectionKey(val);
+                        return !!optionKey && optionKey === valueKey;
                       }}
                       size="small"
                       disableCloseOnSelect
@@ -571,7 +595,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           option?.electiveGroupName ||
                           option?.name ||
                           '';
-                        const optionKey = option?.selectedElectiveSubjectId || option?.subjectId || option?.id;
+                        const optionKey = getSubjectSelectionKey(option);
                         return (
                           <li key={key ?? optionKey} {...restOptionProps}>
                             <Checkbox

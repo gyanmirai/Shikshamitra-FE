@@ -10,6 +10,7 @@ export interface ITimeTableCellProps {
   rowIndex: any;
   colIndex: any;
   item: any;
+  colSpan?: number;
   onDrop: (
     e: React.DragEvent<HTMLDivElement>,
     item: DayData,
@@ -56,5 +57,6 @@ export interface ITimeTableView {
   ) => void;
   // isDraggable: boolean;
   handleDeleteSlot?: (rowIndex: number, colIndex: number) => void;
-  showThreeDots: boolean;
+  showThreeDots?: boolean;
+  showCreateSlots?: boolean;
 }

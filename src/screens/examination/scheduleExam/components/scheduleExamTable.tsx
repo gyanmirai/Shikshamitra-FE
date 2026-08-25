@@ -18,10 +18,14 @@ import { formatWallClockTime } from 'src/utils/time-of-day';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomSelect from 'src/components/custom-select';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import type { Standards, Organization } from 'src/types/school';
 import {
   Box,
   Tab,
@@ -37,18 +41,13 @@ import {
 } from '@mui/material';
 import {
   usePublishExamMutation,
-  useGetExamsQuery,
   useLazyGetExamScheduleQuery,
   useUpdateExamStatusMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import ScheduleExamKpiStrip from './ScheduleExamKpiStrip';
 import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
-import {
-  EXAM_STATUS_META,
-  getEffectiveExamStatus,
-  filterExamsByEffectiveStatus,
-} from '../scheduleExamStatus';
+import { EXAM_STATUS_META } from '../scheduleExamStatus';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
 
@@ -108,6 +107,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   getExams,
   activeStatus,
   onStatusChange,
+  selectedClass = 'all',
+  onClassChange,
+  dateRange = [dayjs().startOf('week'), dayjs().endOf('week')],
+  onDateRangeChange,
   page,
   rowsPerPage,
   totalCount,
@@ -130,6 +133,21 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     `${academicPermissions.examination.schedule}.Delete`
   );
 
+  const classOptions = useMemo(() => {
+    const rawClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    const uniqueMap = new Map<string, string>();
+    rawClasses.forEach((cls: Standards) => {
+      if (cls?.id && !uniqueMap.has(cls.id)) {
+        uniqueMap.set(cls.id, cls.name || (cls as any).standardName || 'Class');
+      }
+    });
+    return [
+      { label: 'All Classes', value: 'all' },
+      ...Array.from(uniqueMap.entries()).map(([value, label]) => ({ label, value })),
+    ];
+  }, [medium]);
+
   const [publishExam] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePublishExamMutation,
@@ -146,18 +164,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   const [selectedTimetable, setSelectedTimetable] = useState<IExamFormValues | null>(null);
   const [previewExam, setPreviewExam] = useState<IExamFormValues | null>(null);
   const [printingExamId, setPrintingExamId] = useState<string | null>(null);
+  const [completedCountSnapshot, setCompletedCountSnapshot] = useState<number | null>(null);
   const [getExamSchedule] = useLazyGetExamScheduleQuery();
-  const [currentTime, setCurrentTime] = useState(() => dayjs());
-  const { data: publishedExamsData } = useGetExamsQuery(
-    { AcademicMediumId: medium?.id, Status: examScheduledStatus.Published },
-    { skip: !medium?.id }
-  );
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTime(dayjs()), 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
   const handlePublishExam = async () => {
     try {
       if (selectedTimetable?.examId) {
@@ -220,7 +228,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         body: subjects.map((subject: any) => [
           `${subject.subjectName || '-'}${subject.subjectCode ? ` (${subject.subjectCode})` : ''}`,
           (subject.examDate ?? subject.date ?? subject.scheduleDate) &&
-          dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
+            dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
             ? dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).format('DD-MM-YYYY')
             : '-',
           formatWallClockTime(subject.startTime ?? subject.fromTime ?? subject.start),
@@ -244,17 +252,33 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     }
   };
 
-  // Define tab configuration with labels, values, counts and colors
-  const publishedRows = useMemo(() => publishedExamsData?.items || [], [publishedExamsData?.items]);
-  const derivedOngoingCount = useMemo(
-    () =>
-      filterExamsByEffectiveStatus(publishedRows, examScheduledStatus.Ongoing, currentTime).length,
-    [currentTime, publishedRows]
-  );
-  const ongoingCount = Number(publishedExamsData?.ongoingCount ?? derivedOngoingCount);
-  // Counts come from the API's effective-status calculation, which keeps a
-  // started or completed exam out of the Published total.
-  const publishedCount = Number(publishedExamsData?.publishedCount ?? publishedRows.length);
+  // The API applies the effective schedule status before paging and returns
+  // its matching counters. Keeping that response authoritative prevents a
+  // client-side reclassification from hiding rows while totalCount still
+  // reports them.
+  const ongoingCount = Number(getExams?.data?.ongoingCount ?? 0);
+  const publishedCount = Number(getExams?.data?.publishedCount ?? 0);
+  const completedSummaryCount = Number(getExams?.data?.completedCount ?? 0);
+
+  useEffect(() => {
+    if (completedSummaryCount > 0) {
+      setCompletedCountSnapshot(completedSummaryCount);
+    }
+    if (
+      activeStatus === examScheduledStatus.Completed &&
+      !getExams?.isFetching &&
+      typeof totalCount === 'number'
+    ) {
+      setCompletedCountSnapshot(totalCount);
+    }
+  }, [activeStatus, completedSummaryCount, getExams?.isFetching, totalCount]);
+
+  const completedTabCount =
+    activeStatus === examScheduledStatus.Completed && getExams?.isFetching
+      ? (completedCountSnapshot ?? completedSummaryCount)
+      : activeStatus === examScheduledStatus.Completed
+        ? (totalCount ?? completedSummaryCount)
+        : completedSummaryCount;
 
   const TABS = useMemo(
     () => [
@@ -283,21 +307,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         // status predicate as the rows shown in the grid. Prefer it while
         // viewing Completed so a stale summary response cannot disagree with
         // the current list response during a tab change/refetch.
-        count:
-          activeStatus === examScheduledStatus.Completed
-            ? totalCount
-            : getExams?.data?.completedCount || 0,
+        count: completedTabCount,
         color: 'success',
       },
     ],
-    [
-      activeStatus,
-      getExams?.data?.pendingCount,
-      getExams?.data?.completedCount,
-      ongoingCount,
-      publishedCount,
-      totalCount,
-    ]
+    [activeStatus, getExams?.data?.pendingCount, ongoingCount, publishedCount, completedTabCount]
   );
 
   // Handle tab change event — update UI state, notify parent, and refetch with new Status
@@ -321,21 +335,15 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     onStatusChange?.(status);
   };
 
-  // Apply the same effective status used by the badge for every tab. This is a
-  // defensive client-side guard while the server response is refreshed at a
-  // schedule boundary, preventing a stale Published row from appearing here.
+  // The backend filters and paginates with the same effective status it
+  // returns in each row. Do not filter again on the current client clock.
   const tableData = useMemo(() => {
     const rows = getExams?.data?.items || [];
-    const requestedStatus = Number(
-      activeStatus ?? examScheduledStatus.Pending
-    ) as examScheduledStatus;
-    const visibleRows = filterExamsByEffectiveStatus(rows, requestedStatus, currentTime);
-
-    return visibleRows.map((row: any) => ({
+    return rows.map((row: any) => ({
       ...row,
-      effectiveStatus: getEffectiveExamStatus(row, currentTime),
+      effectiveStatus: row.status,
     }));
-  }, [activeStatus, currentTime, getExams?.data?.items]);
+  }, [getExams?.data?.items]);
 
   // Actions component for the three dots menu
   // Renders menu items for printing and publishing timetables
@@ -411,18 +419,21 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           elevation={0}
           sx={{
             display: 'flex',
-            gap: 1,
+            gap: 1.5,
             alignItems: 'center',
+            justifyContent: 'space-between',
             px: 2,
+            py: 0.75,
             borderRadius: 1,
             border: '1px solid',
             borderColor: 'divider',
+            flexWrap: { xs: 'wrap', lg: 'nowrap' },
           }}
         >
           <Tabs
             value={tabs.value}
             onChange={handleTabChange}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, flexGrow: 1 }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, flexShrink: 0 }}
           >
             {TABS.map((tab) => (
               <Tab
@@ -438,19 +449,57 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               />
             ))}
           </Tabs>
-          {isScheduleExamButton && canAdd && (
-            <Button
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              onClick={() => {
-                setOpenDialog?.(true);
-              }}
-              sx={{ px: '32px' }}
-            >
-              Schedule Exam
-            </Button>
-          )}
+
+          <Stack
+            direction="row"
+            spacing={1.5}
+            alignItems="center"
+            sx={{
+              flexShrink: 0,
+              flexWrap: 'wrap',
+              gap: 1.5,
+              ml: 'auto',
+            }}
+          >
+            <Box sx={{ minWidth: { xs: 130, sm: 160 } }}>
+              <CustomSelect
+                label="Class"
+                options={classOptions}
+                labelKey="label"
+                valueKey="value"
+                value={selectedClass || 'all'}
+                onChange={(val) => {
+                  onClassChange?.(String(val));
+                }}
+                formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
+              />
+            </Box>
+
+            <Box sx={{ minWidth: { xs: 190, sm: 230 } }}>
+              <CustomDateRangePicker
+                label="Date Range"
+                value={dateRange}
+                dateFormat="DD-MM-YYYY"
+                onChange={(value) => {
+                  onDateRangeChange?.(value);
+                }}
+              />
+            </Box>
+
+            {isScheduleExamButton && canAdd && (
+              <Button
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                onClick={() => {
+                  setOpenDialog?.(true);
+                }}
+                sx={{ px: 3, whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                Schedule Exam
+              </Button>
+            )}
+          </Stack>
         </Paper>
       </Box>
       {isAction ? (

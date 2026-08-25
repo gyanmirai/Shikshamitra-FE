@@ -191,7 +191,7 @@ function ResultWorkflowPanel({
 
   return (
     <Accordion
-      defaultExpanded
+      defaultExpanded={false}
       disableGutters
       elevation={0}
       sx={{
@@ -770,10 +770,146 @@ export function StudentDetailsDialog({
           display: 'flex',
           flexDirection: 'column',
           gap: 1.5,
+          bgcolor: 'background.neutral',
         }}
       >
+        <Box
+          sx={{
+            bgcolor: '#D3FCD2',
+            color: '#173B2D',
+            px: { xs: 2, sm: 3 },
+            py: 2.25,
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              variant="overline"
+              sx={{ color: '#276749', letterSpacing: 1.2, lineHeight: 1.2 }}
+            >
+              Learner Passport · {examName || 'Result'}
+            </Typography>
+            <Typography variant="h4" fontWeight={700} noWrap sx={{ color: '#111827' }}>
+              {studentName || 'Student'}
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 1,
+                mt: 1,
+              }}
+            >
+              {[
+                {
+                  label: 'Class',
+                  value: [className, divisionName].filter(Boolean).join(' – ') || '—',
+                },
+                { label: 'Gr. No.', value: grNo || '—' },
+                { label: 'Roll No.', value: rollNo || '—' },
+              ].map((item) => (
+                <Box
+                  key={item.label}
+                  sx={{
+                    minWidth: 88,
+                    pr: 1.5,
+                    mr: 0.5,
+                    borderRight: '1px solid rgba(23, 59, 45, 0.22)',
+                    '&:last-child': { borderRight: 'none' },
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{ display: 'block', color: '#276749', fontSize: 9, fontWeight: 700, lineHeight: 1.2 }}
+                  >
+                    {item.label}
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700} sx={{ color: '#173B2D', lineHeight: 1.3 }}>
+                    {item.value}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              width: 66,
+              height: 66,
+              borderRadius: '50%',
+              border: '2px solid',
+              borderColor: isPassing ? 'success.main' : 'error.main',
+              color: isPassing ? 'success.main' : 'error.main',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Typography variant="h6" fontWeight={800} lineHeight={1}>
+              {pctNum}%
+            </Typography>
+            <Typography variant="caption" sx={{ fontSize: 9, letterSpacing: 0.5 }}>
+              {isPassing ? 'PASSED' : 'RESULT'}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Card
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+            bgcolor: 'background.paper',
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+            borderRadius: 1,
+            boxShadow: 'none',
+          }}
+        >
+          {[
+            ['MARKS', `${totalValueStr} / ${totalMaxMarksStr}`],
+            ['GRADE', gradeValue || '—'],
+            ['CLASS RANK', rank ? `${rank} of ${totalStudentsInClass}` : '—'],
+            ['ATTENDANCE', attendancePercentage || '—'],
+          ].map(([label, value], index) => (
+            <Box
+              key={label}
+              sx={{
+                px: 2,
+                py: 1.75,
+                minHeight: 90,
+                borderRight: {
+                  xs: index % 2 === 0 ? '1px solid' : 'none',
+                  sm: index < 3 ? '1px solid' : 'none',
+                },
+                borderBottom: { xs: index < 2 ? '1px solid' : 'none', sm: 'none' },
+                borderColor: 'divider',
+              }}
+            >
+              <Typography variant="caption" color="text.secondary" letterSpacing={0.6}>
+                {label}
+              </Typography>
+              <Typography
+                variant="body1"
+                fontWeight={700}
+                color={label === 'GRADE' ? 'success.main' : 'text.primary'}
+                mt={1.25}
+              >
+                {value}
+              </Typography>
+            </Box>
+          ))}
+        </Card>
+
         {/* Top Grid: Student Info, Result Summary */}
-        <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1.2fr 1.4fr' }} gap={1.5}>
+        <Box
+          display="none"
+          gridTemplateColumns={{ xs: '1fr', md: '1.2fr 1.4fr' }}
+          gap={1.5}
+        >
           {/* Student Info Card */}
           <Card
             sx={{
@@ -1265,7 +1401,7 @@ function AnalyticsCards({
       transition={{ duration: 0.35 }}
     >
       <Accordion
-        defaultExpanded
+        defaultExpanded={false}
         disableGutters
         elevation={0}
         sx={{

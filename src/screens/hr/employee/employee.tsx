@@ -59,6 +59,7 @@ import {
 } from '@mui/material';
 
 import EmployeeView from './employee-view';
+import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
 // eslint-disable-next-line import/no-named-as-default
 import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
@@ -717,24 +718,28 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
     }),
     onSubmit: async (values) => {
       const data = {
-        earningComponents: values.earningComponents.map((item: any) => ({
-          id: item?.id && item?.id !== item?.componentId ? item.id : null,
-          componentId: item?.componentId || null,
-          name: item?.earningComponentName || item?.name,
-          amount: getSalaryComponentPayloadAmount(item),
-          isFixed: isSalaryComponentFixed(item),
-          isTemp: !!item?.isTemp,
-          applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
-        })),
-        deductionComponents: values.deductionComponents.map((item: any) => ({
-          id: item?.id && item?.id !== item?.componentId ? item.id : null,
-          componentId: item?.componentId || null,
-          name: item?.deductionComponentName || item?.name,
-          amount: getSalaryComponentPayloadAmount(item),
-          isFixed: isSalaryComponentFixed(item),
-          isTemp: !!item?.isTemp,
-          applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
-        })),
+        earningComponents: values.earningComponents
+          .filter((item: any) => item.isTemp)
+          .map((item: any) => ({
+            id: item?.id && item?.id !== item?.componentId ? item.id : null,
+            componentId: item?.componentId || null,
+            name: item?.earningComponentName || item?.name,
+            amount: getSalaryComponentPayloadAmount(item),
+            isFixed: isSalaryComponentFixed(item),
+            isTemp: !!item?.isTemp,
+            applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
+          })),
+        deductionComponents: values.deductionComponents
+          .filter((item: any) => item.isTemp)
+          .map((item: any) => ({
+            id: item?.id && item?.id !== item?.componentId ? item.id : null,
+            componentId: item?.componentId || null,
+            name: item?.deductionComponentName || item?.name,
+            amount: getSalaryComponentPayloadAmount(item),
+            isFixed: isSalaryComponentFixed(item),
+            isTemp: !!item?.isTemp,
+            applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
+          })),
       };
 
       try {
@@ -758,8 +763,12 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
   useEffect(() => {
     if (salaryStructure) {
       formik.setValues({
-        earningComponents: salaryStructure?.earningComponents,
-        deductionComponents: salaryStructure?.deductionComponents,
+        earningComponents: (salaryStructure?.earningComponents || []).filter(
+          (item: any) => item.isTemp
+        ),
+        deductionComponents: (salaryStructure?.deductionComponents || []).filter(
+          (item: any) => item.isTemp
+        ),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -773,22 +782,25 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
         ) : (
           // <Paper elevation={0} sx={{ p: 2, border: (t: any) => `1px solid ${t.vars.palette.divider}`, borderRadius: 2 }}>
           <Grid container spacing={1}>
+            <SalaryStructureBuilder formik={formik} employeeId={editData?.id} />
             <Grid size={{ xs: 12, md: 6 }}>
               <RenderComponents
                 formik={formik}
                 name="earningComponents"
-                label="Earning Components"
+                label="One-time earning components"
                 type="earning"
                 showTempAdd
+                temporaryOnly
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <RenderComponents
                 formik={formik}
                 name="deductionComponents"
-                label="Deduction Components"
+                label="One-time deduction components"
                 type="deduction"
                 showTempAdd
+                temporaryOnly
               />
             </Grid>
           </Grid>
@@ -812,7 +824,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           variant="contained"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Submit
+          Save one-time components
         </LoadingButton>
       </DialogActions>
     </>
