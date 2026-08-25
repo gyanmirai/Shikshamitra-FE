@@ -24,7 +24,9 @@ Use this table before searching `src/redux`:
 | `employee-icard-template-api.ts`   | I-card templates, assets, and PDF download                                                    | HR employees and I-card         |
 | `employee-payroll-api.ts`          | Earning components, deduction components, provident fund, professional tax, pay elements      | HR payroll settings             |
 | `employee-salary-structure-api.ts` | Employee salary structure get and update                                                      | HR payroll salary structure     |
+| `compensation-revision-api.ts`     | Effective-dated recurring compensation create, submit, approve, reject, and history            | HR payroll compensation         |
 | `runPayrollApi.ts`                 | Payroll run, readiness, reviews, adjustments, salary slips, PDFs                              | HR payroll operations           |
+| `statutory-scheme-api.ts`          | ESI rule, establishment, wage mapping, enrollment, audited exceptions, preview, and activation | HR payroll statutory settings   |
 | `attendanceApi.ts`                 | Attendance tracking, employee attendance, import preview, confirm, template, register, adjust | HR attendance and leaves        |
 | `attendanceImportApi.ts`           | Automated attendance runs, rows, lock, unlock, save rows                                      | HR attendance imports           |
 | `leaveApi.ts`                      | Leave policies, leave requests, actions, balances                                             | HR attendance and leaves        |
@@ -40,7 +42,8 @@ Use these expectations when reviewing client behavior:
 | Mutation                                               | Expected invalidation                                                                        |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
 | Attendance save, import, lock, unlock, or adjust       | Attendance views and payroll preview assumptions                                             |
-| Salary structure or component update                   | Payroll components, salary structure, run payroll, and slips                                 |
+| Compensation revision create, submit, approve, or reject | Salary structure, run payroll, and slips                                                     |
+| One-time salary component update                         | Salary structure, run payroll, and slips                                                     |
 | Payroll review, adjustment, or lock                    | Run payroll rows and salary slips                                                            |
 | Leave create, approve, reject, or cancel               | Leave lists, balances, HR dashboard, and payroll impact                                      |
 | Policy create, update, assignment, restore, or archive | Policy workspace, impact, audit, effective preview, and dependent payroll or attendance data |
@@ -52,3 +55,5 @@ Do not infer backend behavior from a client helper alone.
 Confirm request and response behavior in `../../../Shikshamitra-BE/docs/modules/hr/api.md` and backend `Application.Contracts/HR/**`.
 The salary-template RTK Query client is `src/redux/hr/salary-template-api.ts`.
 It owns template listing, the active component catalog, blank draft creation, draft updates, calculation, version creation, publishing, default selection, cloning, and archiving through the shared authenticated API service.
+The calculation contract includes Gross, Take-home, and Employer Cost quote bases, protection policy, effective month, optional employee context, target variance, and ESI preview details.
+The compensation-revision client stores recurring results through the employee-scoped revision endpoints and never converts system statutory preview lines into editable salary rows.

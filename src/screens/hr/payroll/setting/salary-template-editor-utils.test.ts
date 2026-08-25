@@ -4,10 +4,12 @@ import { it, expect, describe } from 'vitest';
 
 import {
   getPublishIssues,
+  applyFormulaType,
   getFormulaOptions,
   applySemanticType,
   createTemplateRule,
   normalizeRuleOrder,
+  formulaAcceptsValue,
 } from './salary-template-editor-utils';
 
 const component = {
@@ -30,8 +32,22 @@ describe('salary template editor utilities', () => {
       value: 0,
     });
     expect(basic).toMatchObject({ formulaType: 'PERCENTAGE_OF_GROSS', value: 60 });
-    expect(getFormulaOptions(basic)).toEqual(['PERCENTAGE_OF_GROSS', 'FIXED_AMOUNT']);
+    expect(getFormulaOptions(basic)).toContain('FIXED_AMOUNT');
+    expect(getFormulaOptions(basic)).toContain('REMAINDER_OF_GROSS');
     expect(balance).toMatchObject({ formulaType: 'REMAINDER_OF_GROSS', value: null });
+  });
+
+  it('keeps automatic formulas derived and makes a manual formula editable', () => {
+    const balance = applySemanticType(createTemplateRule(component, 0), 'BALANCING_EARNING');
+    const fixed = applyFormulaType(balance, 'FIXED_AMOUNT');
+
+    expect(formulaAcceptsValue(balance.formulaType)).toBe(false);
+    expect(fixed).toMatchObject({
+      semanticType: 'ORDINARY',
+      formulaType: 'FIXED_AMOUNT',
+      value: 0,
+    });
+    expect(formulaAcceptsValue(fixed.formulaType)).toBe(true);
   });
 
   it('normalizes earnings before deductions and assigns stable display order', () => {

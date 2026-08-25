@@ -354,26 +354,30 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             wasModifiedAfterGeneration: Boolean(values.wasModifiedAfterGeneration),
           },
 
-          earningComponents: values.earningComponents.map((item: any) => ({
-            componentId: getPayrollComponentId(item),
-            name: item?.name || item?.earningComponentName || '',
-            amount: getSalaryComponentPayloadAmount(item),
-            isFixed: isSalaryComponentFixed(item),
-            isTemp: Boolean(item?.isTemp),
-            usesMasterValue: item?.usesMasterValue,
-            semanticType: item?.semanticType || 'Ordinary',
-            statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
-          })),
-          deductionComponents: values.deductionComponents.map((item: any) => ({
-            componentId: getPayrollComponentId(item),
-            name: item?.name || item?.deductionComponentName || '',
-            amount: getSalaryComponentPayloadAmount(item),
-            isFixed: isSalaryComponentFixed(item),
-            isTemp: Boolean(item?.isTemp),
-            usesMasterValue: item?.usesMasterValue,
-            semanticType: item?.semanticType || 'Ordinary',
-            statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
-          })),
+          earningComponents: values.earningComponents
+            .filter((item: any) => item.isTemp)
+            .map((item: any) => ({
+              componentId: getPayrollComponentId(item),
+              name: item?.name || item?.earningComponentName || '',
+              amount: getSalaryComponentPayloadAmount(item),
+              isFixed: isSalaryComponentFixed(item),
+              isTemp: Boolean(item?.isTemp),
+              usesMasterValue: item?.usesMasterValue,
+              semanticType: item?.semanticType || 'Ordinary',
+              statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
+            })),
+          deductionComponents: values.deductionComponents
+            .filter((item: any) => item.isTemp)
+            .map((item: any) => ({
+              componentId: getPayrollComponentId(item),
+              name: item?.name || item?.deductionComponentName || '',
+              amount: getSalaryComponentPayloadAmount(item),
+              isFixed: isSalaryComponentFixed(item),
+              isTemp: Boolean(item?.isTemp),
+              usesMasterValue: item?.usesMasterValue,
+              semanticType: item?.semanticType || 'Ordinary',
+              statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
+            })),
         },
       }).unwrap();
       return res;

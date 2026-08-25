@@ -22,6 +22,7 @@ import {
   Box,
   Card,
   Grid,
+  Alert,
   Stack,
   Button,
   Avatar,
@@ -501,6 +502,27 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
     ['IFSC', slip?.ifscCode || '-'],
     ['UAN', slip?.uanNumber || '-'],
     ['EPF No.', slip?.epfNumber || '-'],
+    ['ESI No.', slip?.employeeStateInsuranceNumber || '-'],
+    [
+      'ESI Wages',
+      slip?.employeeStateInsuranceRuleId
+        ? formatCurrency(slip?.employeeStateInsuranceWages || 0)
+        : '-',
+    ],
+    [
+      'Government ESI',
+      slip?.employeeStateInsuranceGovernmentContribution
+        ? formatCurrency(slip.employeeStateInsuranceGovernmentContribution)
+        : '-',
+    ],
+    [
+      'Compensation Revision',
+      slip?.compensationRevisionNumber ? `Revision ${slip.compensationRevisionNumber}` : '-',
+    ],
+    [
+      'Protected Compensation',
+      slip?.compensationProtectedAmount ? formatCurrency(slip.compensationProtectedAmount) : '-',
+    ],
   ];
 
   return (
@@ -591,6 +613,14 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
         </Grid>
       </Grid>
 
+      {slip?.compensationTargetDifference ? (
+        <Alert severity="warning">
+          The normalized {formatMode(slip?.compensationProtectionPolicy)} result differs from the
+          approved protected amount by {formatCurrency(slip.compensationTargetDifference)}. This
+          payslip preserves the approved revision and records the variance for review.
+        </Alert>
+      ) : null}
+
       <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 8 }}>
           <DashboardPanel
@@ -616,6 +646,15 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
           </DashboardPanel>
         </Grid>
       </Grid>
+
+      {slip?.employerContributions?.length ? (
+        <DashboardBreakdownCard
+          title="Employer Contributions"
+          rows={slip.employerContributions}
+          total={slip.employerContributionTotal || 0}
+          emptyText="No employer contributions"
+        />
+      ) : null}
 
       <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, md: 6 }}>
@@ -1036,6 +1075,27 @@ const PayslipDocumentPreview = ({ employee, monthYear, slip }: PayslipDocumentPr
     ['IFSC', slip?.ifscCode || '-'],
     ['UAN', slip?.uanNumber || '-'],
     ['EPF No.', slip?.epfNumber || '-'],
+    ['ESI No.', slip?.employeeStateInsuranceNumber || '-'],
+    [
+      'ESI Wages',
+      slip?.employeeStateInsuranceRuleId
+        ? formatCurrency(slip?.employeeStateInsuranceWages || 0)
+        : '-',
+    ],
+    [
+      'Government ESI',
+      slip?.employeeStateInsuranceGovernmentContribution
+        ? formatCurrency(slip.employeeStateInsuranceGovernmentContribution)
+        : '-',
+    ],
+    [
+      'Compensation Revision',
+      slip?.compensationRevisionNumber ? `Revision ${slip.compensationRevisionNumber}` : '-',
+    ],
+    [
+      'Protected Compensation',
+      slip?.compensationProtectedAmount ? formatCurrency(slip.compensationProtectedAmount) : '-',
+    ],
   ];
   const payBasisRows: Array<[string, string]> = [
     ['Payroll Basis Days', formatDays(slip?.payrollBasisDays)],
@@ -1100,6 +1160,15 @@ const PayslipDocumentPreview = ({ employee, monthYear, slip }: PayslipDocumentPr
           </Stack>
 
           <DocumentInfoSection title="Pay Basis" rows={payBasisRows} columns={4} />
+
+          {slip?.compensationTargetDifference ? (
+            <Box sx={{ border: documentBorder, bgcolor: documentHeaderBg, px: 1.25, py: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                Protected compensation variance: {formatCurrency(slip.compensationTargetDifference)}
+                . Review the payroll record for the approved revision and normalized comparison.
+              </Typography>
+            </Box>
+          ) : null}
 
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
             <PayslipAmountTable

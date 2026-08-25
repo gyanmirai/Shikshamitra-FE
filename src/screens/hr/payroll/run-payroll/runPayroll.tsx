@@ -95,9 +95,28 @@ type PayrollRow = {
   issueFilter: 'CLEAN' | 'HAS_ISSUES' | 'CRITICAL';
   earningComponents: any[];
   deductionComponents: any[];
+  employerContributions: any[];
+  employerContributionTotal: number;
+  employerCost: number;
+  compensationRevisionId?: string | null;
+  compensationRevisionNumber?: number | null;
+  compensationSalaryBasis?: string | null;
+  compensationProtectionPolicy?: string | null;
+  compensationQuotedAmount?: number | null;
+  compensationProtectedAmount?: number | null;
+  compensationNormalizedProtectedAmount?: number | null;
+  compensationTargetDifference?: number | null;
   payrollAdjustments: any[];
   prorationFactor: number;
   dayCalculationMode: string;
+  employeeStateInsuranceRuleId?: string | null;
+  employeeStateInsuranceRuleVersion?: number | null;
+  employeeStateInsuranceWages: number;
+  employeeStateInsuranceCoverageDecision?: string | null;
+  employeeStateInsuranceNumber?: string | null;
+  employeeStateInsuranceContributionPeriodStart?: string | null;
+  employeeStateInsuranceContributionPeriodEnd?: string | null;
+  employeeStateInsuranceGovernmentContribution: number;
 };
 
 type PayrollReadiness = {
@@ -145,6 +164,41 @@ const ISSUE_LABELS: Record<
     label: 'Payroll policy needs setup',
     severity: 'CRITICAL',
     color: 'error',
+  },
+  ESI_ESTABLISHMENT_INACTIVE: {
+    label: 'ESI establishment setup is inactive',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_WAGE_CLASSIFICATION_REQUIRED: {
+    label: 'ESI wage classification required',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_ENROLLMENT_REVIEW_REQUIRED: {
+    label: 'ESI enrollment review required',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_INSURANCE_NUMBER_REQUIRED: {
+    label: 'ESI insurance number required',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_PWD_RELIEF_EVIDENCE_REQUIRED: {
+    label: 'PwD employer-share relief evidence needs review',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  COMPENSATION_REVISION_REQUIRED: {
+    label: 'Approved compensation revision required',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  COMPENSATION_TARGET_VARIANCE: {
+    label: 'Protected compensation target differs after payroll calculation',
+    severity: 'WARNING',
+    color: 'warning',
   },
 };
 
@@ -350,9 +404,42 @@ const RunPayroll = () => {
                 : 'HAS_ISSUES',
           earningComponents: item.earningComponents || [],
           deductionComponents: item.deductionComponents || [],
+          employerContributions: item.employerContributions || [],
+          employerContributionTotal: Number(item.employerContributionTotal || 0),
+          employerCost: Number(item.employerCost || 0),
+          compensationRevisionId: item.compensationRevisionId,
+          compensationRevisionNumber: item.compensationRevisionNumber,
+          compensationSalaryBasis: item.compensationSalaryBasis,
+          compensationProtectionPolicy: item.compensationProtectionPolicy,
+          compensationQuotedAmount:
+            item.compensationQuotedAmount == null ? null : Number(item.compensationQuotedAmount),
+          compensationProtectedAmount:
+            item.compensationProtectedAmount == null
+              ? null
+              : Number(item.compensationProtectedAmount),
+          compensationNormalizedProtectedAmount:
+            item.compensationNormalizedProtectedAmount == null
+              ? null
+              : Number(item.compensationNormalizedProtectedAmount),
+          compensationTargetDifference:
+            item.compensationTargetDifference == null
+              ? null
+              : Number(item.compensationTargetDifference),
           payrollAdjustments: item.payrollAdjustments || [],
           prorationFactor: Number(item.prorationFactor || 0),
           dayCalculationMode: item.dayCalculationMode || '-',
+          employeeStateInsuranceRuleId: item.employeeStateInsuranceRuleId,
+          employeeStateInsuranceRuleVersion: item.employeeStateInsuranceRuleVersion,
+          employeeStateInsuranceWages: Number(item.employeeStateInsuranceWages || 0),
+          employeeStateInsuranceCoverageDecision: item.employeeStateInsuranceCoverageDecision,
+          employeeStateInsuranceNumber: item.employeeStateInsuranceNumber,
+          employeeStateInsuranceContributionPeriodStart:
+            item.employeeStateInsuranceContributionPeriodStart,
+          employeeStateInsuranceContributionPeriodEnd:
+            item.employeeStateInsuranceContributionPeriodEnd,
+          employeeStateInsuranceGovernmentContribution: Number(
+            item.employeeStateInsuranceGovernmentContribution || 0
+          ),
         };
       }),
     [sourceRows]
@@ -1628,6 +1715,176 @@ const RunPayroll = () => {
                         </Stack>
                       )}
                     </Card>
+                    {activeRow.compensationRevisionId ? (
+                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                          gap={1}
+                        >
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight={700}>
+                              Compensation Revision {activeRow.compensationRevisionNumber}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Approved recurring compensation source
+                            </Typography>
+                          </Box>
+                          <Chip
+                            size="small"
+                            color="info"
+                            label={
+                              activeRow.compensationProtectionPolicy
+                                ?.replaceAll('_', ' ')
+                                .toLowerCase() || 'Protected'
+                            }
+                            sx={{ textTransform: 'capitalize' }}
+                          />
+                        </Stack>
+                        <Grid container spacing={1.25} sx={{ mt: 0.75 }}>
+                          <Grid size={{ xs: 6, sm: 3 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Quote Basis
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              {activeRow.compensationSalaryBasis
+                                ?.replaceAll('_', ' ')
+                                .toLowerCase() || '-'}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs: 6, sm: 3 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Quoted
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              {formatCurrency(activeRow.compensationQuotedAmount || 0)}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs: 6, sm: 3 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Normalized Result
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              {formatCurrency(activeRow.compensationNormalizedProtectedAmount || 0)}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs: 6, sm: 3 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Difference
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={700}
+                              color={
+                                activeRow.compensationTargetDifference
+                                  ? 'warning.main'
+                                  : 'text.primary'
+                              }
+                            >
+                              {formatCurrency(activeRow.compensationTargetDifference || 0)}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                        {activeRow.compensationTargetDifference ? (
+                          <Alert severity="warning" sx={{ mt: 1.5 }}>
+                            Review this variance before locking. Payroll has not changed the
+                            employee&apos;s approved compensation automatically.
+                          </Alert>
+                        ) : null}
+                      </Card>
+                    ) : null}
+                    {activeRow.employeeStateInsuranceRuleId ? (
+                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                          gap={1}
+                        >
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight={700}>
+                              Employee State Insurance
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              System-calculated statutory component
+                            </Typography>
+                          </Box>
+                          <Chip
+                            size="small"
+                            color={
+                              activeRow.employeeStateInsuranceCoverageDecision ===
+                              'ABOVE_WAGE_CEILING'
+                                ? 'default'
+                                : 'info'
+                            }
+                            label={
+                              activeRow.employeeStateInsuranceCoverageDecision
+                                ?.replaceAll('_', ' ')
+                                .toLowerCase() || 'Evaluated'
+                            }
+                            sx={{ textTransform: 'capitalize' }}
+                          />
+                        </Stack>
+                        <Grid container spacing={1.25} sx={{ mt: 0.75 }}>
+                          <Grid size={{ xs: 6 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Statutory Wages
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={700}
+                              sx={{ fontVariantNumeric: 'tabular-nums' }}
+                            >
+                              {formatCurrency(activeRow.employeeStateInsuranceWages)}
+                            </Typography>
+                          </Grid>
+                          {activeRow.employeeStateInsuranceGovernmentContribution > 0 ? (
+                            <Grid size={{ xs: 6 }}>
+                              <Typography variant="caption" color="text.secondary">
+                                Government Contribution
+                              </Typography>
+                              <Typography variant="body2" fontWeight={700}>
+                                {formatCurrency(
+                                  activeRow.employeeStateInsuranceGovernmentContribution
+                                )}
+                              </Typography>
+                            </Grid>
+                          ) : null}
+                          <Grid size={{ xs: 6 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Rule Version
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              v{activeRow.employeeStateInsuranceRuleVersion}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Insurance Number
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={700}
+                              sx={{ overflowWrap: 'anywhere' }}
+                            >
+                              {activeRow.employeeStateInsuranceNumber || 'Registration pending'}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Contribution Period
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              {activeRow.employeeStateInsuranceContributionPeriodStart &&
+                              activeRow.employeeStateInsuranceContributionPeriodEnd
+                                ? `${dayjs(activeRow.employeeStateInsuranceContributionPeriodStart).format('MMM YYYY')} - ${dayjs(activeRow.employeeStateInsuranceContributionPeriodEnd).format('MMM YYYY')}`
+                                : 'Not applicable'}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                      </Card>
+                    ) : null}
                     <Card variant="outlined" sx={{ p: { xs: 1, sm: 1.25 } }}>
                       <Stack spacing={{ xs: 1, sm: 1.25 }}>
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -1882,6 +2139,18 @@ const RunPayroll = () => {
                       nameColumnLabel="Deduction"
                       noDataText="No deductions found"
                     />
+                    {activeRow.employerContributions.length ? (
+                      <SalaryDetailsTableCard
+                        title="Employer Contributions"
+                        subheader={`Additional employer cost: ${formatCurrency(activeRow.employerContributionTotal)}`}
+                        icon="solar:buildings-2-linear"
+                        iconColor={{ bg: 'info.lighter', color: 'info.main' }}
+                        data={activeRow.employerContributions}
+                        tableId="payroll-workbench-employer-contributions"
+                        nameColumnLabel="Contribution"
+                        noDataText="No employer contributions found"
+                      />
+                    ) : null}
                   </Stack>
                 </Box>
               </Stack>
