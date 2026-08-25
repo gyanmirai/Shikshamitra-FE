@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-08-15
+updated_on: 2026-08-23
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -20,6 +20,7 @@ Use this map to find the first screen and client:
 | Workflow                   | Screen entry                                                                | Main client                                  |
 | -------------------------- | --------------------------------------------------------------------------- | -------------------------------------------- |
 | Employee onboarding        | `/hr/employee/onboarding`                                                   | `employeeOnboardingApi.ts`                   |
+| HR leadership dashboard    | `/hr/dashboard`                                                             | `hrDashboardApi.ts`, `leaveApi.ts`           |
 | Employee profile update    | Employee list and profile tabs                                              | `employeeApi.ts`                             |
 | Employee profile dashboard | Employee profile Dashboard tab and self-service HR dashboard fallback       | `employeeApi.ts`                             |
 | Employee documents         | Employee profile documents tab                                              | `employeeApi.ts`                             |
@@ -101,6 +102,19 @@ An inverted custom export-history range pauses the query instead of loading unfi
 Changing export-history filters clears open details and delete confirmation state, hides prior-query rows, and disables row actions until the current response arrives.
 Queue, retry, regenerate, and schedule-run actions clear the history date filter before highlighting the new export.
 Custom report empty states render directly, so the reports center shows one icon and one message.
+
+## HR leadership dashboard behavior
+
+The permissioned `/hr/dashboard` keeps the standard HR Dashboard heading and stacked breadcrumb visible while its saved snapshot is loading, empty, stale, refreshing, or failed.
+The page presents one summary surface followed by Action Center and Workforce Overview, Attendance Overview and Payroll Readiness, and a full-width People Updates section.
+Summary metrics stay read-only when a user lacks the destination permission, while permitted metrics use normal links to employee, attendance, leave, and payroll workflows.
+The dashboard omits Onboard Employee and Reports shortcuts because those destinations remain available through HR navigation.
+Refresh is the only page-header control and freshness metadata appears below the title without a separate bordered surface.
+Action Center combines deterministic insights with recent leave approvals and keeps explicit approval or rejection confirmation, required rejection remarks, mutation feedback, and the permission-aware View All link.
+Attendance charts include a text summary of each plotted day, and long employee or insight text wraps without causing page-level horizontal overflow.
+The dashboard uses opaque neutral surfaces, low elevation, and spacing for structure, with separators reserved for repeated rows in dialogs.
+Semantic colors remain limited to statuses, icons, progress, chart series, and primary actions.
+Users without the permissioned HR dashboard continue to receive the employee self-service profile dashboard fallback.
 
 ## Integration rules
 
