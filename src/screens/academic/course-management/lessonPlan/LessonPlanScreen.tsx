@@ -578,14 +578,17 @@ const LessonPlanScreen = () => {
   const [createTeacherDiary, { isLoading: isCreatingDiary }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateTeacherDiaryMutation,
+    popupConfig: { error: false },
   });
   const [updateTeacherDiary, { isLoading: isUpdatingDiary }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateTeacherDiaryMutation,
+    popupConfig: { error: false },
   });
   const [submitTeacherDiary, { isLoading: isSubmittingDiary }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useSubmitTeacherDiaryMutation,
+    popupConfig: { error: false },
   });
   const isSavingDiary = isCreatingDiary || isUpdatingDiary || isSubmittingDiary;
 
@@ -1130,7 +1133,9 @@ const LessonPlanScreen = () => {
 
         const createPayload = {
           academicYearId: currentYear?.id,
-          teacherId: form.teacherId,
+          // Teachers must submit their HR employee ID, never the identity-user ID
+          // or a stale value retained by the modal form.
+          teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : form.teacherId,
           standardId: form.standardId,
           divisionId: form.divisionId,
           subjectId: form.subjectId,
@@ -1178,7 +1183,9 @@ const LessonPlanScreen = () => {
     },
     [
       createLessonPlan,
+      canReviewSubmissions,
       currentYear?.id,
+      currentTeacherId,
       updateLessonPlan,
       submitLessonPlan,
       refetchTimeline,

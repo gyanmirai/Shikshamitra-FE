@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -63,6 +62,7 @@ import {
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
+import { serializeHomeworkFormData } from './homework-serialization';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
 import HomeworkTypeForm from '../../setting/homeworkType/homeworkTypeForm';
 
@@ -293,104 +293,24 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           }
         }
 
-        const payload = {
-          classId: activeClassId,
-          standardId: values.standardId || activeClassId,
-          subjectId: values.subjectId || values.subject,
-          chapterId: values.chapterId,
-          title: values.title,
-          description: values.description,
-          homeworkTypeId: values.homeworkTypeId,
-          submissionType: values.submissionType,
-          attachment: values.attachments,
-          divisionSchedules: values.divisions.map((division: any) => ({
-            divisionId: division.divisionId,
-            publishAt: division.publishDate ? dateConvertor(dayjs(division.publishDate).format(dateFormat), false) : '',
-            dueAt: division.dueDate ? dateConvertor(dayjs(division.dueDate).format(dateFormat), false) : '',
-          })),
-        };
-
         if (editData) {
-          // For update, build FormData (PUT endpoint expects multipart/form-data)
-          const updateFormData = new FormData();
-          updateFormData.append('StandardId', values.standardId || activeClassId);
-          updateFormData.append('SubjectId', values.subjectId || values.subject);
-          if (values.chapterIds && values.chapterIds.length > 0) {
-            values.chapterIds.forEach((id: string) => {
-              updateFormData.append('ChapterIds', id);
-            });
-            updateFormData.append('ChapterId', values.chapterIds[0]);
-          } else if (values.chapterId) {
-            updateFormData.append('ChapterId', values.chapterId);
-            updateFormData.append('ChapterIds', values.chapterId);
-          }
-          updateFormData.append('Title', values.title);
-          if (values.description) updateFormData.append('Description', values.description);
-          updateFormData.append('HomeworkTypeId', values.homeworkTypeId);
-          updateFormData.append('SubmissionType', values.submissionType.toString());
-
-          if (values.attachments && values.attachments.length > 0) {
-            values.attachments.forEach((file: any) => {
-              const fileValue = file instanceof File ? null : file.url || file.filePath || file;
-              if (fileValue) updateFormData.append('attachment', fileValue);
-            });
-          }
-
-          values.divisions.forEach((division: any, index: number) => {
-            updateFormData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
-            updateFormData.append(
-              `DivisionSchedules[${index}].PublishAt`,
-              division.publishDate ? dateConvertor(dayjs(division.publishDate).format(dateFormat), false) : ''
-            );
-            updateFormData.append(
-              `DivisionSchedules[${index}].DueAt`,
-              division.dueDate ? dateConvertor(dayjs(division.dueDate).format(dateFormat), false) : ''
-            );
-          });
-
           const updatePayload = {
             id: editData.id,
-            body: updateFormData,
+            body: serializeHomeworkFormData({
+              ...values,
+              standardId: values.standardId || activeClassId,
+              subjectId: values.subjectId || values.subject,
+            }),
           };
           await updateHomework(updatePayload).unwrap();
           shikshaMitraToast.success({
             message: `Homework "${values.title}" has been updated successfully.`,
           });
         } else {
-          const formData = new FormData();
-          formData.append('StandardId', values.standardId || activeClassId);
-          formData.append('SubjectId', values.subjectId || values.subject);
-          if (values.chapterIds && values.chapterIds.length > 0) {
-            values.chapterIds.forEach((id: string) => {
-              formData.append('ChapterIds', id);
-            });
-            formData.append('ChapterId', values.chapterIds[0]);
-          } else if (values.chapterId) {
-            formData.append('ChapterId', values.chapterId);
-            formData.append('ChapterIds', values.chapterId);
-          }
-          formData.append('Title', values.title);
-          if (values.description) formData.append('Description', values.description);
-          formData.append('HomeworkTypeId', values.homeworkTypeId);
-          formData.append('SubmissionType', values.submissionType.toString());
-
-          if (values.attachments && values.attachments.length > 0) {
-            values.attachments.forEach((file: any) => {
-              const fileValue = file instanceof File ? null : file.url || file.filePath || file;
-              if (fileValue) formData.append('attachment', fileValue);
-            });
-          }
-
-          values.divisions.forEach((division: any, index: number) => {
-            formData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
-            formData.append(
-              `DivisionSchedules[${index}].PublishAt`,
-              division.publishDate ? dateConvertor(dayjs(division.publishDate).format(dateFormat), false) : ''
-            );
-            formData.append(
-              `DivisionSchedules[${index}].DueAt`,
-              division.dueDate ? dateConvertor(dayjs(division.dueDate).format(dateFormat), false) : ''
-            );
+          const formData = serializeHomeworkFormData({
+            ...values,
+            standardId: values.standardId || activeClassId,
+            subjectId: values.subjectId || values.subject,
           });
 
           const response = await addHomework({
