@@ -125,6 +125,19 @@ function getPaperSections(response: any): any[] {
   return response?.sections || response?.data?.sections || [];
 }
 
+function toSectionsPayload(sections: SectionPattern[]) {
+  return sections.map((section, index) => ({
+    ...(section.id && !section.id.startsWith('sec-') ? { id: section.id } : {}),
+    sectionName: section.sectionName,
+    instructions: section.instructions || '',
+    marks: Number(section.marks) || 0,
+    sortOrder: index + 1,
+    questionType: section.questionType ?? null,
+    questionCount: section.questionCount ?? null,
+    marksPerQuestion: section.marksPerQuestion ?? null,
+  }));
+}
+
 function getQuestionSectionId(question: any): string | undefined {
   return (
     question?.questionPaperSectionId ||
@@ -132,6 +145,10 @@ function getQuestionSectionId(question: any): string | undefined {
     question?.sectionId ||
     question?.section?.id
   );
+}
+
+function toSectionKey(sectionId: unknown): string | undefined {
+  return typeof sectionId === 'string' && sectionId ? sectionId.toLowerCase() : undefined;
 }
 
 function getApiErrorMessage(error: any, fallback: string): string {
@@ -257,6 +274,7 @@ export default function CreatePaperWizard({
     currentQueryAndMutation: useGetQuestionPaperByIdQuery,
     params: { id: selectedPaperId },
     options: { skip: !selectedPaperId || !open },
+    popupConfig: { error: false },
   });
 
   // Reset step position and pattern state on each fresh open of the wizard.
@@ -314,11 +332,16 @@ export default function CreatePaperWizard({
   // Populate sections from the paper when it loads
   useEffect(() => {
     if (!open || mode === 'create') return;
-    const persistedPaper = paperDetails || paper;
-    if (persistedPaper?.sections?.length) {
+    // Table rows are summaries and can omit questions. Hydrate editing state only
+    // from the detailed paper endpoint so saved questions are not overwritten.
+    const persistedPaper = paperDetails?.data || paperDetails;
+    if (!persistedPaper) return;
+    const persistedSections = getPaperSections(persistedPaper);
+    const persistedQuestions = persistedPaper?.questions || persistedPaper?.data?.questions || [];
+    if (persistedSections.length) {
       const questionsBySection = new Map<string, QuestionItem[]>();
-      (persistedPaper.questions || []).forEach((q: any, i: number) => {
-        const key = getQuestionSectionId(q) || '__default__';
+      persistedQuestions.forEach((q: any, i: number) => {
+        const key = toSectionKey(getQuestionSectionId(q)) || '__default__';
         const mapped: QuestionItem = {
           id: q.id || `pq-${i}`,
           questionNumber: q.questionNumber || i + 1,
@@ -338,22 +361,28 @@ export default function CreatePaperWizard({
         questionsBySection.set(key, list);
       });
 
-      setSections(
-        persistedPaper.sections.map((sec: any, idx: number) => ({
-          id: sec.id || `sec-${idx + 1}`,
-          sectionName: sec.sectionName || `Section ${String.fromCharCode(65 + idx)}`,
-          instructions: sec.instructions || '',
-          marks: sec.marks || 0,
-          sortOrder: sec.sortOrder || idx + 1,
-          questions:
-            questionsBySection.get(sec.id) ||
-            (idx === 0 ? questionsBySection.get('__default__') || [] : []),
-          questionType: sec.questionType ?? undefined,
-          questionCount: sec.questionCount ?? undefined,
-          marksPerQuestion: sec.marksPerQuestion ?? undefined,
-        }))
+      setSections((currentSections) =>
+        persistedSections.map((sec: any, idx: number) => {
+          const previous = currentSections.find((section) => section.id === sec.id);
+          const sectionKey = toSectionKey(sec.id);
+          const sectionQuestions =
+            (sectionKey ? questionsBySection.get(sectionKey) : undefined) ||
+            (idx === 0 ? questionsBySection.get('__default__') || [] : []);
+          return {
+            id: sec.id || `sec-${idx + 1}`,
+            sectionName: sec.sectionName || `Section ${String.fromCharCode(65 + idx)}`,
+            instructions: sec.instructions || '',
+            marks: sec.marks || 0,
+            sortOrder: sec.sortOrder || idx + 1,
+            questions: sectionQuestions,
+            questionType: sec.questionType ?? previous?.questionType ?? sectionQuestions[0]?.questionType,
+            questionCount: sec.questionCount ?? previous?.questionCount ?? sectionQuestions.length,
+            marksPerQuestion:
+              sec.marksPerQuestion ?? previous?.marksPerQuestion ?? sectionQuestions[0]?.marks,
+          };
+        })
       );
-    } else if (persistedPaper?.questions?.length) {
+    } else if (persistedQuestions.length) {
       setSections([
         {
           id: 'sec-1',
@@ -361,7 +390,7 @@ export default function CreatePaperWizard({
           instructions: persistedPaper.generalInstructions || '',
           marks: persistedPaper.totalMarks,
           sortOrder: 1,
-          questions: persistedPaper.questions.map((q: any, i: number) => ({
+          questions: persistedQuestions.map((q: any, i: number) => ({
             id: q.id || `pq-${i}`,
             questionNumber: q.questionNumber || i + 1,
             questionText: q.questionText || 'Question Item',
@@ -668,6 +697,7 @@ export default function CreatePaperWizard({
       try {
         const created = await createPaper({
           ...formik.values,
+          status: 1,
           examId: formik.values.examId || null,
           examScheduleId: null,
           totalMarks: Number(formik.values.totalMarks),
@@ -678,11 +708,31 @@ export default function CreatePaperWizard({
               instructions: '',
               marks: Number(formik.values.totalMarks),
               sortOrder: 1,
+              questionType: 1,
+              questionCount: 5,
+              marksPerQuestion: Math.max(1, Number(formik.values.totalMarks) / 5),
             },
           ],
         }).unwrap();
         markSaved();
         shikshaMitraToast.success({ message: 'Paper created. Continue with the paper pattern.' });
+        // Keep the initial pattern metadata available even when the create response
+        // does not echo section-level planning fields.
+        const createdSection = created?.sections?.[0];
+        setSections([
+          {
+            id: createdSection?.id || 'sec-1',
+            sectionName: createdSection?.sectionName || 'Section A',
+            instructions: createdSection?.instructions || '',
+            marks: createdSection?.marks ?? Number(formik.values.totalMarks),
+            sortOrder: createdSection?.sortOrder || 1,
+            questionType: createdSection?.questionType ?? 1,
+            questionCount: createdSection?.questionCount ?? 5,
+            marksPerQuestion:
+              createdSection?.marksPerQuestion ?? Math.max(1, Number(formik.values.totalMarks) / 5),
+            questions: [],
+          },
+        ]);
         // Switch the wizard into edit mode so later steps sync with the server.
         if (created?.id) {
           onPaperCreated?.(created as QuestionPaperMetadata);
@@ -702,6 +752,8 @@ export default function CreatePaperWizard({
     // Edit mode — persist details changes
     if (paper && selectedPaperId) {
       try {
+        const sectionsToPreserve =
+          sections.length > 0 ? sections : (getPaperSections(paper) as SectionPattern[]);
         await updatePaper({
           id: selectedPaperId,
           body: {
@@ -709,6 +761,9 @@ export default function CreatePaperWizard({
             examId: formik.values.examId || null,
             totalMarks: Number(formik.values.totalMarks),
             durationMinutes: Number(formik.values.durationMinutes),
+            ...(sectionsToPreserve.length
+              ? { sections: toSectionsPayload(sectionsToPreserve) }
+              : {}),
           },
         }).unwrap();
         markSaved();
@@ -736,15 +791,7 @@ export default function CreatePaperWizard({
   const handleStep1Continue = async (exitAfterSave = false): Promise<boolean> => {
     // Persist pattern + advanced rules
     if (selectedPaperId) {
-      const sectionsPayload = sections.map((sec, idx) => ({
-        sectionName: sec.sectionName,
-        instructions: sec.instructions || '',
-        marks: Number(sec.marks) || 0,
-        sortOrder: idx + 1,
-        questionType: sec.questionType || null,
-        questionCount: sec.questionCount ?? null,
-        marksPerQuestion: sec.marksPerQuestion ?? null,
-      }));
+      const sectionsPayload = toSectionsPayload(sections);
       const saveResults = await Promise.allSettled([
         // Send the full known body so a replace-style PUT does not drop fields.
         updatePaper({

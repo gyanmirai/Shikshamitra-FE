@@ -121,13 +121,13 @@ describe('AcademicTimetable', () => {
     expect(screen.getByTestId('timetable-view')).toBeInTheDocument();
   });
 
-  it('renders empty timetable (0 slots) when API returns null', () => {
+  it('renders empty timetable message when API returns null', () => {
     mockQuery.mockReturnValue({ data: null, isLoading: false });
 
     render(<AcademicTimetable standardId="s1" divisionId="d1" />);
 
-    const view = screen.getByTestId('timetable-view');
-    expect(view.dataset.slotCount).toBe('0');
+    expect(screen.getByText('No timetable found.')).toBeInTheDocument();
+    expect(screen.queryByTestId('timetable-view')).not.toBeInTheDocument();
   });
 
   // ── transformToSlots logic ────────────────────────────────────────────────────

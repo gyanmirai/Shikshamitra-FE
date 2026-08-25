@@ -14,7 +14,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -66,7 +66,7 @@ const Subjects = () => {
 
   const [classes, setClasses] = useState<string>('');
   const [classId, setClassId] = useState<string>('');
-  const [divisionId, setDivisionId] = useState<string>('');
+  const [divisionId, setDivisionId] = useState<string>('all');
   const [subjectId, setSubjectId] = useState<string>(''); // plain item.id — used for API
   const [subjectSelectValue, setSubjectSelectValue] = useState<string>(''); // composite key — used for dropdown display
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -167,7 +167,7 @@ const Subjects = () => {
     params: {
       standardId: classId,
       subjectId,
-      ...(divisionId ? { divisionId } : {}),
+      ...(divisionId && divisionId !== 'all' ? { divisionId } : {}),
     },
     options: {
       skip: !classId || !subjectId,
@@ -198,10 +198,13 @@ const Subjects = () => {
 
   const filteredChapters = (subjectId ? chapterResponse || [] : []) as IChapter[];
 
-  const divisionOptions = [
-    { id: '', name: 'All Divisions' },
-    ...(allClass.find((standard) => standard.id === classId)?.divisions || []),
-  ];
+  const divisionOptions = useMemo(
+    () => [
+      { id: 'all', name: 'All Divisions' },
+      ...(allClass.find((standard) => standard.id === classId)?.divisions || []),
+    ],
+    [allClass, classId]
+  );
 
   useEffect(() => {
     const allClasses =
@@ -210,6 +213,7 @@ const Subjects = () => {
     setAllClass(allClasses);
     setClasses(allClasses[0]?.name || '');
     setClassId(allClasses[0]?.id || '');
+    setDivisionId('all');
   }, [medium]);
 
   return (
@@ -310,7 +314,7 @@ const Subjects = () => {
                     setClasses(standard?.name || '');
                     setClassId(value as string);
                     // Reset subject selection when class changes
-                    setDivisionId('');
+                    setDivisionId('all');
                     setSubjectId('');
                     setSubjectSelectValue('');
                     setSubject('');
@@ -323,7 +327,7 @@ const Subjects = () => {
                   valueKey="id"
                   labelKey="name"
                   disabled={!classId}
-                  value={divisionId}
+                  value={divisionId || 'all'}
                   onChange={(value) => setDivisionId(value as string)}
                   formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
                 />

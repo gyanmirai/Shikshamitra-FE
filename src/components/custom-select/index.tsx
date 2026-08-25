@@ -86,10 +86,10 @@ const CustomSelect = <T extends string, J extends boolean>({
         (theme) => ({
           ...(error &&
             disabled && {
-              '& .MuiInputLabel-root.Mui-disabled': {
-                color: `${theme.palette.error.main} !important`,
-              },
-            }),
+            '& .MuiInputLabel-root.Mui-disabled': {
+              color: `${theme.palette.error.main} !important`,
+            },
+          }),
         }),
       ]}
       {...formControlProps}
@@ -109,31 +109,31 @@ const CustomSelect = <T extends string, J extends boolean>({
             renderValue={
               multiple
                 ? (selected: string | string[] | number | number[]) => (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                      {(Array.isArray(selected) ? selected : [selected]).map((val, index) => (
-                        <Chip
-                          key={index}
-                          size="small"
-                          disabled={disabled}
-                          variant="soft"
-                          label={options.find((option) => option[valueKey] === val)?.[labelKey]}
-                          onDelete={() => handleDelete(val)}
-                          onMouseDown={(event) => {
-                            event.stopPropagation();
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {(Array.isArray(selected) ? selected : [selected]).map((val, index) => (
+                      <Chip
+                        key={index}
+                        size="small"
+                        disabled={disabled}
+                        variant="soft"
+                        label={options.find((option) => option[valueKey] === val)?.[labelKey]}
+                        onDelete={() => handleDelete(val)}
+                        onMouseDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                      />
+                    ))}
+                  </div>
+                )
                 : undefined
             }
             sx={(theme) => ({
               ...(error &&
                 disabled && {
-                  '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
-                    borderColor: `${theme.palette.error.main} !important`,
-                  },
-                }),
+                '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                  borderColor: `${theme.palette.error.main} !important`,
+                },
+              }),
             })}
             {...props}
           >
@@ -150,11 +150,11 @@ const CustomSelect = <T extends string, J extends boolean>({
                   typeof noOptionsMessage === 'string'
                     ? undefined
                     : {
-                        whiteSpace: 'normal',
-                        alignItems: 'flex-start',
-                        cursor: 'default',
-                        '&:hover': { backgroundColor: 'transparent' },
-                      }
+                      whiteSpace: 'normal',
+                      alignItems: 'flex-start',
+                      cursor: 'default',
+                      '&:hover': { backgroundColor: 'transparent' },
+                    }
                 }
               >
                 {noOptionsMessage}
