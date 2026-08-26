@@ -46,6 +46,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     dayjs().endOf('week'),
   ]);
   const apiStatus = activeStatus;
+  const isPendingStatus = activeStatus === examScheduledStatus.Pending;
 
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -67,10 +68,10 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     AcademicMediumId: medium?.id,
     Status: apiStatus,
     StandardId: selectedClass !== 'all' && selectedClass ? selectedClass : undefined,
-    StartDate: dateRange[0]?.isValid()
+    StartDate: !isPendingStatus && dateRange[0]?.isValid()
       ? dateConvertor(dateRange[0].format(dateFormat))
       : undefined,
-    EndDate: dateRange[1]?.isValid()
+    EndDate: !isPendingStatus && dateRange[1]?.isValid()
       ? dateConvertor(dateRange[1].format(dateFormat))
       : undefined,
     SkipCount: (examPagination.page - 1) * examPagination.pageSize,

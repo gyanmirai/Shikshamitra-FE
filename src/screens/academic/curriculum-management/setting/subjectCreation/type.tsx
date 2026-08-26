@@ -1,5 +1,39 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+export const SUBJECT_CATEGORIES = [
+  'General',
+  'Language',
+  'Scholastic',
+  'Co-Scholastic',
+  'Activity',
+  'Practical',
+] as const;
+
+export const SUBJECT_ICONS = [
+  { value: 'book', label: 'Book', icon: 'lucide:book-open' },
+  { value: 'calculator', label: 'Calculator', icon: 'lucide:calculator' },
+  { value: 'flask', label: 'Flask', icon: 'lucide:flask-conical' },
+  { value: 'monitor', label: 'Monitor', icon: 'lucide:monitor' },
+  { value: 'music', label: 'Music', icon: 'lucide:music' },
+  { value: 'trophy', label: 'Trophy', icon: 'lucide:trophy' },
+  { value: 'palette', label: 'Palette', icon: 'lucide:palette' },
+] as const;
+
+export const SUBJECT_ICON_MAP: Record<string, string> = {
+  book: 'lucide:book-open',
+  calculator: 'lucide:calculator',
+  flask: 'lucide:flask-conical',
+  monitor: 'lucide:monitor',
+  music: 'lucide:music',
+  trophy: 'lucide:trophy',
+  palette: 'lucide:palette',
+};
+
+export const getSubjectIcon = (icon?: string): string => {
+  if (!icon) return 'lucide:book-open';
+  return SUBJECT_ICON_MAP[icon] || icon;
+};
+
 export interface ISubject {
   id: string;
   name: string;

@@ -13,11 +13,13 @@ import {
 export const STUDENT_RESULT_PRINT_PAGE_STYLE = `
   @page {
     size: A4 portrait;
-    margin: 12mm;
+    margin: 0;
   }
 
   @media print {
     html, body {
+      margin: 0 !important;
+      padding: 0 !important;
       background: #ffffff !important;
       print-color-adjust: exact;
       -webkit-print-color-adjust: exact;
@@ -108,7 +110,7 @@ const StudentResultPrintReport = React.forwardRef<HTMLDivElement, StudentResultP
         boxSizing: 'border-box',
         bgcolor: 'grey.50',
         color: 'common.black',
-        p: 0.5,
+        p: '12mm',
         fontFamily: 'Arial, sans-serif',
       }}
     >

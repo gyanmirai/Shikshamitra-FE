@@ -3,17 +3,7 @@ import { alpha } from '@mui/material/styles';
 
 import { Iconify } from 'src/components/iconify';
 
-import type { ISubject } from './type';
-
-const subjectIconMap: Record<string, string> = {
-  book: 'lucide:book-open',
-  calculator: 'lucide:calculator',
-  flask: 'lucide:flask-conical',
-  monitor: 'lucide:monitor',
-  music: 'lucide:music',
-  trophy: 'lucide:trophy',
-  palette: 'lucide:palette',
-};
+import { getSubjectIcon, type ISubject } from './type';
 
 const SubjectNameCell = ({ value, subject }: { value: string; subject: ISubject }) => {
   const displayName = subject.displayName || value;
@@ -47,7 +37,7 @@ const SubjectNameCell = ({ value, subject }: { value: string; subject: ISubject 
       >
         {subject.icon ? (
           <Iconify
-            icon={subjectIconMap[subject.icon] || 'lucide:book-open'}
+            icon={getSubjectIcon(subject.icon)}
             width={18}
             height={18}
           />
