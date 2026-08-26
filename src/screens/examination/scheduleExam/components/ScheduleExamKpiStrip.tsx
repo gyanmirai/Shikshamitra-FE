@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles';
 import { Box, Card, Stack, Typography } from '@mui/material';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 
@@ -10,15 +11,7 @@ type ScheduleExamKpiStripProps = {
   onCardClick?: (label: string) => void;
 };
 
-const kpiCardSx = {
-  minWidth: 180,
-  flex: '1 1 180px',
-  p: 1.5,
-  borderRadius: 1,
-  border: '1px solid',
-  borderColor: 'divider',
-  boxShadow: 'none',
-};
+type StatColor = 'primary' | 'success' | 'info' | 'warning' | 'error';
 
 const parseDate = (dateStr: any) => {
   if (!dateStr) return null;
@@ -76,7 +69,7 @@ const ScheduleExamKpiStrip = ({
         rows.filter((row) => row.status === examScheduledStatus.Pending).length
       ),
       icon: 'solar:document-text-bold-duotone',
-      color: 'warning.main',
+      color: 'warning' as StatColor,
     },
     {
       label: 'Published',
@@ -85,25 +78,25 @@ const ScheduleExamKpiStrip = ({
         rows.filter((row) => row.status === examScheduledStatus.Published).length
       ),
       icon: 'solar:cloud-upload-bold-duotone',
-      color: 'info.main',
+      color: 'info' as StatColor,
     },
     {
       label: 'Upcoming 7 Days',
       value: getMetricValue(summary?.upcomingCount, upcomingFallback),
       icon: 'solar:calendar-mark-bold-duotone',
-      color: 'primary.main',
+      color: 'primary' as StatColor,
     },
     {
       label: 'Unassigned Rooms',
       value: getMetricValue(summary?.unassignedRoomsCount, unassignedRoomsFallback),
       icon: 'fluent:conference-room-24-filled',
-      color: 'error.main',
+      color: 'error' as StatColor,
     },
     {
       label: 'Needs Attention',
       value: getMetricValue(summary?.needsAttentionCount, needsAttentionFallback),
       icon: 'solar:danger-triangle-bold-duotone',
-      color: 'error.main',
+      color: 'error' as StatColor,
     },
     {
       label: 'Completed',
@@ -112,7 +105,7 @@ const ScheduleExamKpiStrip = ({
         rows.filter((row) => row.status === examScheduledStatus.Completed).length
       ),
       icon: 'solar:verified-check-bold-duotone',
-      color: 'success.main',
+      color: 'success' as StatColor,
     },
   ];
 
@@ -125,14 +118,22 @@ const ScheduleExamKpiStrip = ({
           type={onCardClick ? 'button' : undefined}
           onClick={onCardClick ? () => onCardClick(card.label) : undefined}
           sx={{
-            ...kpiCardSx,
+            flex: '1 1 180px',
+            minWidth: { xs: 160, md: 0 },
+            p: 1.5,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1.5,
+            bgcolor: 'background.paper',
+            color: 'text.primary',
+            boxShadow: 'none',
             textAlign: 'left',
+            font: 'inherit',
             cursor: onCardClick ? 'pointer' : 'default',
-            transition: 'border-color 0.2s, background-color 0.2s, transform 0.2s',
+            transition: 'all 0.2s ease',
             ...(onCardClick && {
               '&:hover': {
-                borderColor: 'primary.main',
-                bgcolor: 'action.hover',
+                borderColor: `${card.color}.main`,
                 transform: 'translateY(-1px)',
               },
             }),
@@ -141,23 +142,23 @@ const ScheduleExamKpiStrip = ({
           <Stack direction="row" alignItems="center" spacing={1}>
             <Box
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: 1,
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: 'background.neutral',
-                color: card.color,
+              width: 36,
+              height: 36,
+              borderRadius: 1.25,
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: (theme) => varAlpha(theme.vars.palette[card.color].mainChannel, 0.12),
+              color: `${card.color}.main`,
                 flexShrink: 0,
               }}
             >
               <Iconify icon={card.icon} width={20} />
             </Box>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h5" sx={{ lineHeight: 1 }}>
+              <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1 }}>
                 {card.value}
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography variant="caption" color="text.secondary" noWrap display="block" mt={0.5}>
                 {card.label}
               </Typography>
             </Box>

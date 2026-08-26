@@ -1,6 +1,7 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles';
 import { Box, Card, Grid, Typography } from '@mui/material';
 
 export interface ITimetableSummaryCard {
@@ -25,47 +26,48 @@ export function TimetableSettingsSummaryCards({ cards, cardsPerRow }: TimetableS
           <Card
             onClick={card.onClick}
             sx={{
-              p: 1.75,
+              minHeight: 66,
+              p: 1.5,
               display: 'flex',
               alignItems: 'center',
-              gap: 1.5,
-              boxShadow: 'var(--shadows-3)',
+              gap: 1,
+              border: '1px solid',
+              borderColor: card.isActive ? `${card.color ?? 'primary'}.main` : 'divider',
+              borderRadius: 1.5,
+              bgcolor: 'background.paper',
+              boxShadow: card.isActive
+                ? (theme) => `0 0 0 1px ${theme.palette[card.color ?? 'primary'].main}`
+                : 'none',
               cursor: card.onClick ? 'pointer' : 'default',
-              transition: 'all 0.2s ease-in-out',
-              ...(card.isActive && {
-                border: (theme) => `2px solid ${theme.palette[card.color ?? 'primary'].main}`,
-                bgcolor: (theme) =>
-                  `color-mix(in srgb, ${theme.palette[card.color ?? 'primary'].main} 8%, transparent)`,
-              }),
+              transition: 'all 0.2s ease',
               ...(card.onClick && {
                 '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: 'var(--shadows-8)',
+                  borderColor: `${card.color ?? 'primary'}.main`,
+                  transform: 'translateY(-1px)',
                 },
               }),
             }}
           >
             <Box
               sx={{
-                width: 38,
-                height: 38,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                width: 36,
+                height: 36,
+                borderRadius: 1.25,
+                display: 'grid',
+                placeItems: 'center',
                 flexShrink: 0,
                 bgcolor: (theme) =>
-                  `color-mix(in srgb, ${theme.palette[card.color ?? 'primary'].main} 14%, transparent)`,
+                  varAlpha(theme.vars.palette[card.color ?? 'primary'].mainChannel, 0.12),
                 color: `${card.color ?? 'primary'}.main`,
               }}
             >
               <Iconify icon={card.icon} width={20} />
             </Box>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" fontWeight={700} noWrap>
+              <Typography variant="h5" fontWeight={700} lineHeight={1} noWrap>
                 {card.value}
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+              <Typography variant="caption" color="text.secondary" noWrap display="block" mt={0.5}>
                 {card.label}
               </Typography>
             </Box>
