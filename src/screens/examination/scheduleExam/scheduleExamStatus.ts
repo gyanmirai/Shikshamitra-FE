@@ -53,6 +53,15 @@ const resolveBoundary = (
       .millisecond(0);
   }
 
+  // If dateValue is a full ISO timestamp with a non-zero time (e.g. "2026-08-26T10:00:00"),
+  // preserve that exact time instead of overwriting it with endOf('day') or startOf('day').
+  const hasSpecificTime =
+    dateValue.includes('T') &&
+    (date.hour() !== 0 || date.minute() !== 0 || date.second() !== 0);
+  if (hasSpecificTime) {
+    return date;
+  }
+
   return isEnd ? date.endOf('day') : date.startOf('day');
 };
 
@@ -97,6 +106,25 @@ export const isExamOngoing = (exam: ExamStatusSource, now: Dayjs = dayjs()): boo
     return false;
   }
 
+  const scheduleEntries = getScheduleEntries(exam);
+  if (scheduleEntries.length > 0) {
+    const windows = scheduleEntries
+      .map(getScheduleWindow)
+      .filter((window): window is ExamScheduleWindow => window !== null);
+
+    if (windows.length > 0) {
+      const overallStart = windows.reduce(
+        (min, w) => (w.start.isBefore(min) ? w.start : min),
+        windows[0].start
+      );
+      const overallEnd = windows.reduce(
+        (max, w) => (w.end.isAfter(max) ? w.end : max),
+        windows[0].end
+      );
+      return !now.isBefore(overallStart) && !now.isAfter(overallEnd);
+    }
+  }
+
   const start = resolveBoundary(exam.startDateTime, exam.startDate, exam.startTime, false);
   const end = resolveBoundary(
     exam.endDateTime,
@@ -109,13 +137,25 @@ export const isExamOngoing = (exam: ExamStatusSource, now: Dayjs = dayjs()): boo
     return !now.isBefore(start) && !now.isAfter(end);
   }
 
-  return getScheduleEntries(exam).some((entry) => {
-    const window = getScheduleWindow(entry);
-    return Boolean(window && !now.isBefore(window.start) && !now.isAfter(window.end));
-  });
+  return false;
 };
 
-const hasExamEnded = (exam: ExamStatusSource, now: Dayjs): boolean => {
+export const hasExamEnded = (exam: ExamStatusSource, now: Dayjs = dayjs()): boolean => {
+  const scheduleEntries = getScheduleEntries(exam);
+  if (scheduleEntries.length > 0) {
+    const windows = scheduleEntries
+      .map(getScheduleWindow)
+      .filter((window): window is ExamScheduleWindow => window !== null);
+
+    if (windows.length > 0) {
+      const overallEnd = windows.reduce(
+        (max, w) => (w.end.isAfter(max) ? w.end : max),
+        windows[0].end
+      );
+      return now.isAfter(overallEnd);
+    }
+  }
+
   const end = resolveBoundary(
     exam.endDateTime,
     exam.endDate ?? exam.startDate,
@@ -124,11 +164,7 @@ const hasExamEnded = (exam: ExamStatusSource, now: Dayjs): boolean => {
   );
   if (end) return now.isAfter(end);
 
-  const scheduleWindows = getScheduleEntries(exam)
-    .map(getScheduleWindow)
-    .filter((window): window is ExamScheduleWindow => window !== null);
-
-  return scheduleWindows.length > 0 && scheduleWindows.every((window) => now.isAfter(window.end));
+  return false;
 };
 
 export const getEffectiveExamStatus = (

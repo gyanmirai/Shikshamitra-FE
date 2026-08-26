@@ -60,7 +60,7 @@ const ScheduleExamPreviewDrawer = ({
   const theme = useTheme();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const examId = exam?.examId || exam?.id;
-  const meta = getExamStatusMeta(exam || {});
+
   const { data: examTypeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExaminationTypesQuery,
@@ -160,6 +160,7 @@ const ScheduleExamPreviewDrawer = ({
       warningCount,
     }
     : exam;
+  const meta = getExamStatusMeta(previewExam || exam || {});
   const startDateStr = previewExam?.startDate
     ? dayjs(previewExam.startDate).format('DD-MM-YYYY')
     : '';
