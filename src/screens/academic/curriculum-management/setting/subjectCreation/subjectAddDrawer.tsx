@@ -19,8 +19,12 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useSubjectAddDrawer } from './hooks/useSubjectAddDrawer';
 import { GlobalIcons } from 'src/utils/icons';
+import { useSubjectAddDrawer } from './hooks/useSubjectAddDrawer';
+import {
+  SUBJECT_ICONS as subjectIcons,
+  SUBJECT_CATEGORIES as subjectCategories,
+} from './type';
 
 interface SubjectAddDrawerProps {
   open: boolean;
@@ -389,21 +393,3 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
 
 export default SubjectAddDrawer;
 
-const subjectCategories = [
-  'General',
-  'Language',
-  'Scholastic',
-  'Co-Scholastic',
-  'Activity',
-  'Practical',
-];
-
-const subjectIcons = [
-  { value: 'book', label: 'Book', icon: 'lucide:book-open' },
-  { value: 'calculator', label: 'Calculator', icon: 'lucide:calculator' },
-  { value: 'flask', label: 'Flask', icon: 'lucide:flask-conical' },
-  { value: 'monitor', label: 'Monitor', icon: 'lucide:monitor' },
-  { value: 'music', label: 'Music', icon: 'lucide:music' },
-  { value: 'trophy', label: 'Trophy', icon: 'lucide:trophy' },
-  { value: 'palette', label: 'Palette', icon: 'lucide:palette' },
-];

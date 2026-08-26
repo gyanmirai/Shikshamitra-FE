@@ -475,16 +475,18 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               />
             </Box>
 
-            <Box sx={{ minWidth: { xs: 190, sm: 230 } }}>
-              <CustomDateRangePicker
-                label="Date Range"
-                value={dateRange}
-                dateFormat="DD-MM-YYYY"
-                onChange={(value) => {
-                  onDateRangeChange?.(value);
-                }}
-              />
-            </Box>
+            {activeStatus !== examScheduledStatus.Pending && (
+              <Box sx={{ minWidth: { xs: 190, sm: 230 } }}>
+                <CustomDateRangePicker
+                  label="Date Range"
+                  value={dateRange}
+                  dateFormat="DD-MM-YYYY"
+                  onChange={(value) => {
+                    onDateRangeChange?.(value);
+                  }}
+                />
+              </Box>
+            )}
 
             {isScheduleExamButton && canAdd && (
               <Button

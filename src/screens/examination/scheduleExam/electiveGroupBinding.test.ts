@@ -77,21 +77,50 @@ describe('Elective group badge data binding in Schedule Exam wizard', () => {
 
       const coreSubject = result.subjects.find((s) => s.subjectId === gujaratiSubjectId);
       expect(coreSubject).toBeDefined();
-      expect(coreSubject?.electiveGroupId).toBeUndefined();
-      expect(coreSubject?.electiveGroupName).toBeUndefined();
+      const electiveSubjects = result.subjects.filter((s) => s.electiveGroupId === electiveGroupId);
+      expect(electiveSubjects).toHaveLength(2);
 
-      const electiveGroup = result.subjects.find((s) => s.electiveGroupId === electiveGroupId);
-      expect(electiveGroup).toBeDefined();
-      expect(electiveGroup?.electiveGroupName).toBe(electiveGroupName);
-      expect(electiveGroup?.subjects?.length).toBe(2);
+      const csSubject = electiveSubjects.find((s) => s.subjectId === csSubjectId);
+      expect(csSubject).toBeDefined();
+      expect(csSubject?.subjectName).toBe(csSubjectName);
+      expect(csSubject?.electiveGroupName).toBe(electiveGroupName);
+      expect(csSubject?.subjects?.[0]?.subjectName).toBe(csSubjectName);
+      expect(csSubject?.subjects?.[0]?.electiveGroupName).toBe(electiveGroupName);
 
-      const nestedCs = electiveGroup?.subjects?.find((s: any) => s.subjectId === csSubjectId);
-      expect(nestedCs?.subjectName).toBe(csSubjectName);
-      expect(nestedCs?.electiveGroupName).toBe(electiveGroupName);
+      const engSubject = electiveSubjects.find((s) => s.subjectId === engSubjectId);
+      expect(engSubject).toBeDefined();
+      expect(engSubject?.subjectName).toBe(engSubjectName);
+      expect(engSubject?.electiveGroupName).toBe(electiveGroupName);
+      expect(engSubject?.subjects?.[0]?.subjectName).toBe(engSubjectName);
+      expect(engSubject?.subjects?.[0]?.electiveGroupName).toBe(electiveGroupName);
+    });
 
-      const nestedEng = electiveGroup?.subjects?.find((s: any) => s.subjectId === engSubjectId);
-      expect(nestedEng?.subjectName).toBe(engSubjectName);
-      expect(nestedEng?.electiveGroupName).toBe(electiveGroupName);
+    it('maps only the single selected elective subject when basicData has one subjectId from an elective group', () => {
+      const basicData = {
+        id: 'exam-single',
+        examName: 'Single Elective Exam',
+        standardId: 'class-nursery',
+        divisionIds: ['div-a'],
+        subjectIds: [csSubjectId],
+      };
+
+      const examSubjectsData = [
+        {
+          electiveGroupId,
+          electiveGroupName,
+          subjects: [
+            { subjectId: csSubjectId, subjectName: csSubjectName },
+            { subjectId: engSubjectId, subjectName: engSubjectName },
+          ],
+        },
+      ];
+
+      const result = mapBackendToFormik(basicData, null, null, examSubjectsData);
+      expect(result.subjects).toHaveLength(1);
+      expect(result.subjects[0].subjectId).toBe(csSubjectId);
+      expect(result.subjects[0].subjectName).toBe(csSubjectName);
+      expect(result.subjects[0].electiveGroupId).toBe(electiveGroupId);
+      expect(result.subjects[0].electiveGroupName).toBe(electiveGroupName);
     });
   });
 

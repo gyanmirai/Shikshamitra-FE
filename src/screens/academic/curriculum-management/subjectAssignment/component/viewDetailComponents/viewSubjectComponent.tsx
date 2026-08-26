@@ -206,7 +206,6 @@ export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, cla
             boxShadow: 'var(--shadows-4)',
             borderRadius: 2,
             border: `1px solid ${theme.palette.divider}`,
-            bgcolor: 'background.paper',
             overflow: 'hidden',
             minHeight: 0,
           }}

@@ -23,7 +23,11 @@ import {
 
 import { useSubjectForm } from './hooks/useSubjectForm';
 
-import type { ISubjectFormProps } from './type';
+import {
+  SUBJECT_ICONS as subjectIcons,
+  SUBJECT_CATEGORIES as subjectCategories,
+  type ISubjectFormProps,
+} from './type';
 
 const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editData }) => {
   const { formik, isSaveLoading } = useSubjectForm({
@@ -258,21 +262,3 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
 
 export default SettingSubjectForm;
 
-const subjectCategories = [
-  'General',
-  'Language',
-  'Scholastic',
-  'Co-Scholastic',
-  'Activity',
-  'Practical',
-];
-
-const subjectIcons = [
-  { value: 'book', label: 'Book', icon: 'lucide:book-open' },
-  { value: 'calculator', label: 'Calculator', icon: 'lucide:calculator' },
-  { value: 'flask', label: 'Flask', icon: 'lucide:flask-conical' },
-  { value: 'monitor', label: 'Monitor', icon: 'lucide:monitor' },
-  { value: 'music', label: 'Music', icon: 'lucide:music' },
-  { value: 'trophy', label: 'Trophy', icon: 'lucide:trophy' },
-  { value: 'palette', label: 'Palette', icon: 'lucide:palette' },
-];
