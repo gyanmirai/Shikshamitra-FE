@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
@@ -10,13 +11,14 @@ import {
   Stack,
   Skeleton,
   Typography,
-  CardContent,
   LinearProgress,
 } from '@mui/material';
 
 import { useRoomUsageReport } from '../roomAvailability.hooks';
 
 import type { UsageReportData } from '../types';
+
+type KpiColor = 'primary' | 'success' | 'warning' | 'error' | 'info';
 
 const KPI_CARDS = (data: UsageReportData[]) => {
   const total = data.length;
@@ -36,50 +38,43 @@ const KPI_CARDS = (data: UsageReportData[]) => {
       label: 'Total Rooms',
       value: total,
       icon: 'mdi:door',
-      color: 'primary.main',
-      bg: 'primary.lighter',
+      color: 'primary' as KpiColor,
     },
     {
       label: 'Avg Utilization',
       value: `${avg}%`,
       icon: 'mdi:chart-bar',
-      color: 'info.main',
-      bg: 'info.lighter',
+      color: 'info' as KpiColor,
     },
     {
       label: 'Most Used',
       value: mostUsed?.roomName || '—',
       icon: 'mdi:fire',
-      color: 'error.main',
-      bg: 'error.lighter',
+      color: 'error' as KpiColor,
     },
     {
       label: 'Least Used',
       value: leastUsed?.roomName || '—',
       icon: 'mdi:leaf',
-      color: 'success.main',
-      bg: 'success.lighter',
+      color: 'success' as KpiColor,
     },
     {
       label: 'Total Conflicts',
       value: totalConflicts,
       icon: 'mdi:alert-circle',
-      color: 'warning.main',
-      bg: 'warning.lighter',
+      color: 'warning' as KpiColor,
     },
     {
       label: 'Cancellations',
       value: totalCancellations,
       icon: 'mdi:calendar-remove',
-      color: 'error.main',
-      bg: 'error.lighter',
+      color: 'error' as KpiColor,
     },
     {
       label: 'Maintenance Events',
       value: totalMaintenance,
       icon: 'mdi:wrench',
-      color: 'warning.main',
-      bg: 'warning.lighter',
+      color: 'warning' as KpiColor,
     },
   ];
 };
@@ -108,7 +103,7 @@ export const RoomUsageReport = () => {
         >
           {[1, 2, 3, 4, 5, 6, 7].map((i) => (
             <Box key={i}>
-              <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2 }} />
+              <Skeleton variant="rectangular" height={66} sx={{ borderRadius: 1.5 }} />
             </Box>
           ))}
         </Box>
@@ -140,33 +135,40 @@ export const RoomUsageReport = () => {
         >
           {kpis.map((kpi) => (
             <Box key={kpi.label}>
-              <Card sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Box
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 1.5,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: kpi.bg,
-                        color: kpi.color,
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Iconify icon={kpi.icon} width={22} />
-                    </Box>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="h6" sx={{ lineHeight: 1.2 }} noWrap>
-                        {kpi.value}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        {kpi.label}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
+              <Card
+                sx={{
+                  minHeight: 66,
+                  p: 1.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1.5,
+                  boxShadow: 'none',
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.25,
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: (theme) => varAlpha(theme.vars.palette[kpi.color].mainChannel, 0.12),
+                      color: `${kpi.color}.main`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Iconify icon={kpi.icon} width={20} />
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1 }} noWrap>
+                      {kpi.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap display="block" mt={0.5}>
+                      {kpi.label}
+                    </Typography>
+                  </Box>
+                </Stack>
               </Card>
             </Box>
           ))}

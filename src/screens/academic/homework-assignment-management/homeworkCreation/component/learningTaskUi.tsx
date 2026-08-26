@@ -1,6 +1,9 @@
 import dayjs from 'dayjs';
-import { alpha } from '@mui/material/styles';
-import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import {
+  TimetableSettingsSummaryCards,
+  type ITimetableSummaryCard,
+} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+import { Chip } from '@mui/material';
 
 type LearningTaskStatus = {
   label: string;
@@ -83,48 +86,19 @@ export const LearningTaskStatusChip = ({ task }: { task: any }) => {
 
 export const LearningTaskSummaryCards = ({ tasks }: { tasks: any[] }) => {
   const summary = getLearningTaskSummary(tasks);
-  const cards = [
-    { label: 'Total Tasks', value: summary.total, color: 'text.primary' },
-    { label: 'Published', value: summary.published, color: 'success.main' },
-    { label: 'Draft', value: summary.draft, color: 'text.secondary' },
-    { label: 'Due Today', value: summary.dueToday, color: 'info.main' },
-    { label: 'Overdue', value: summary.overdue, color: 'error.main' },
-    { label: 'Pending Evaluation', value: summary.pendingEvaluation, color: 'warning.main' },
+  const cards: ITimetableSummaryCard[] = [
+    { label: 'Total Tasks', value: summary.total, icon: 'mdi:clipboard-text-outline', color: 'primary' },
+    { label: 'Published', value: summary.published, icon: 'mdi:check-circle-outline', color: 'success' },
+    { label: 'Draft', value: summary.draft, icon: 'mdi:file-document-edit-outline', color: 'info' },
+    { label: 'Due Today', value: summary.dueToday, icon: 'mdi:calendar-today', color: 'info' },
+    { label: 'Overdue', value: summary.overdue, icon: 'mdi:alert-circle-outline', color: 'error' },
+    {
+      label: 'Pending Evaluation',
+      value: summary.pendingEvaluation,
+      icon: 'mdi:clipboard-text-clock-outline',
+      color: 'warning',
+    },
   ];
 
-  return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: 'repeat(2, minmax(0, 1fr))',
-          md: 'repeat(3, minmax(0, 1fr))',
-          lg: 'repeat(6, minmax(0, 1fr))',
-        },
-        gap: 1,
-        mb: 1,
-      }}
-    >
-      {cards.map((card) => (
-        <Paper
-          key={card.label}
-          variant="outlined"
-          sx={{
-            p: 1.25,
-            borderRadius: 1,
-            bgcolor: 'background.paper',
-          }}
-        >
-          <Stack spacing={1}>
-            <Typography variant="caption" color="text.secondary">
-              {card.label}
-            </Typography>
-            <Typography variant="h6" sx={{ color: card.color, lineHeight: 1.1 }}>
-              {card.value}
-            </Typography>
-          </Stack>
-        </Paper>
-      ))}
-    </Box>
-  );
+  return <TimetableSettingsSummaryCards cards={cards} />;
 };
