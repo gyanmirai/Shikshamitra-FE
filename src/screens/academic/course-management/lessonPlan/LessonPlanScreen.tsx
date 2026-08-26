@@ -474,6 +474,7 @@ const LessonPlanScreen = () => {
     data: timelineData,
     isLoading: isTimelineLoading,
     isFetching: isTimelineFetching,
+    isUninitialized: isTimelineUninitialized,
     refetch: refetchTimeline,
   } = useGetLessonPlanTimelineQuery(
     {
@@ -499,6 +500,7 @@ const LessonPlanScreen = () => {
     refetch: refetchLessonPlans,
     isLoading: isPlansLoading,
     isFetching: isPlansFetching,
+    isUninitialized: isLessonPlansUninitialized,
   } = useGetLessonPlansQuery(
     {
       academicYearId: currentYear?.id,
@@ -519,6 +521,7 @@ const LessonPlanScreen = () => {
     refetch: refetchTeacherDiaries,
     isLoading: isDiariesLoading,
     isFetching: isDiariesFetching,
+    isUninitialized: isTeacherDiariesUninitialized,
   } = useGetTeacherDiariesQuery(
     {
       academicYearId: currentYear?.id,
@@ -527,7 +530,10 @@ const LessonPlanScreen = () => {
       maxResultCount: 1000,
     },
     {
-      skip: activeTab !== 'teacherDiary' || !currentYear?.id || !currentMedium?.id,
+      skip:
+        !currentYear?.id ||
+        !currentMedium?.id ||
+        !['dailyTimeline', 'lessonList', 'teacherDiary'].includes(activeTab),
     }
   );
 
@@ -1264,9 +1270,11 @@ const LessonPlanScreen = () => {
         }
 
         setDiaryModalOpen(false);
-        await refetchTeacherDiaries();
-        await refetchLessonPlans();
-        await refetchTimeline();
+        await Promise.all([
+          ...(!isTeacherDiariesUninitialized ? [refetchTeacherDiaries()] : []),
+          ...(!isLessonPlansUninitialized ? [refetchLessonPlans()] : []),
+          ...(!isTimelineUninitialized ? [refetchTimeline()] : []),
+        ]);
         shikshaMitraToast.success({
           message: submit ? 'Teacher diary submitted successfully.' : 'Teacher diary notes saved.',
         });
@@ -1286,6 +1294,9 @@ const LessonPlanScreen = () => {
     [
       createTeacherDiary,
       getDiaryForLesson,
+      isLessonPlansUninitialized,
+      isTeacherDiariesUninitialized,
+      isTimelineUninitialized,
       refetchLessonPlans,
       refetchTeacherDiaries,
       refetchTimeline,
