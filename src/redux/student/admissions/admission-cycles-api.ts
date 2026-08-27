@@ -12,6 +12,7 @@ export type AdmissionCycle = {
   endDate: string;
   status: AdmissionCycleStatus;
   publishedAt?: string | null;
+  concurrencyStamp: string;
 };
 
 export type AdmissionCycleListInput = {
@@ -33,6 +34,7 @@ export type CreateUpdateAdmissionCycle = {
   academicYearId: string;
   startDate: string;
   endDate: string;
+  concurrencyStamp?: string | null;
 };
 
 type ResultEnvelope<T> = { data?: T };
@@ -73,25 +75,27 @@ export const admissionCyclesApi = api.injectEndpoints({
         unwrapResult(response),
       invalidatesTags: [studentAdmissionsCrmType.admissionCycle],
     }),
-    publishAdmissionCycle: builder.mutation<AdmissionCycle, string>({
-      query: (id) => ({
+    publishAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; concurrencyStamp: string }>({
+      query: ({ id, concurrencyStamp }) => ({
         url: `/student/enrollment/admissions/cycles/${id}/publish`,
         method: 'POST',
+        params: { concurrencyStamp },
       }),
       transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
         unwrapResult(response),
       invalidatesTags: [studentAdmissionsCrmType.admissionCycle],
     }),
-    closeAdmissionCycle: builder.mutation<AdmissionCycle, string>({
-      query: (id) => ({ url: `/student/enrollment/admissions/cycles/${id}/close`, method: 'POST' }),
+    closeAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; concurrencyStamp: string }>({
+      query: ({ id, concurrencyStamp }) => ({ url: `/student/enrollment/admissions/cycles/${id}/close`, method: 'POST', params: { concurrencyStamp } }),
       transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
         unwrapResult(response),
       invalidatesTags: [studentAdmissionsCrmType.admissionCycle],
     }),
-    archiveAdmissionCycle: builder.mutation<AdmissionCycle, string>({
-      query: (id) => ({
+    archiveAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; concurrencyStamp: string }>({
+      query: ({ id, concurrencyStamp }) => ({
         url: `/student/enrollment/admissions/cycles/${id}/archive`,
         method: 'POST',
+        params: { concurrencyStamp },
       }),
       transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
         unwrapResult(response),

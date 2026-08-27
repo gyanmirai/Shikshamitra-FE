@@ -13,6 +13,7 @@ import {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { AdmissionQueryError } from './admission-query-error';
+import { getAdmissionApplicationStatusLabel } from './application-status';
 
 type AdmissionApplicationsView = 'applications' | 'pipeline';
 
@@ -60,7 +61,7 @@ export default function AdmissionApplicationsScreen({
       id: 'status',
       label: 'Status',
       minWidth: 120,
-      render: (value) => ['Draft', 'Submitted', 'Withdrawn', 'Rejected'][Number(value)],
+      render: (value) => getAdmissionApplicationStatusLabel(Number(value)),
     },
     { id: 'lastSavedAt', label: 'Last saved', minWidth: 180 },
   ];
@@ -109,6 +110,13 @@ export default function AdmissionApplicationsScreen({
           <MenuItem value="1">Submitted</MenuItem>
           <MenuItem value="2">Withdrawn</MenuItem>
           <MenuItem value="3">Rejected</MenuItem>
+          <MenuItem value="4">In review</MenuItem>
+          <MenuItem value="5">Waitlisted</MenuItem>
+          <MenuItem value="6">Approved</MenuItem>
+          <MenuItem value="7">Offer issued</MenuItem>
+          <MenuItem value="8">Offer accepted</MenuItem>
+          <MenuItem value="9">Offer declined</MenuItem>
+          <MenuItem value="10">Enrolled</MenuItem>
         </TextField>
         <TextField
           size="small"

@@ -2,6 +2,7 @@
 
 import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetAdmissionFormsQuery } from 'src/redux/student/admissions/admission-forms-api';
@@ -21,9 +22,10 @@ export default function AdmissionFormsScreen() {
     onEdit: (form) => actions.edit(form.id),
     onClone: (form) => actions.clone(form.id),
     onValidate: (form) => actions.validate(form.id),
-    onPublish: (form) => actions.publish(form.id),
+    onPublish: (form) => actions.publish(form),
     onCreateVersion: (form) => actions.createVersion(form.id),
-    onArchive: (form) => actions.archive(form.id),
+    onArchive: (form) => actions.archive(form),
+    onDelete: actions.requestDelete,
   });
 
   return (
@@ -66,6 +68,14 @@ export default function AdmissionFormsScreen() {
         editing={actions.editing}
         saving={actions.saving}
         onSave={actions.save}
+      />
+      <ConfirmDialog
+        open={Boolean(actions.pendingDelete)}
+        onClose={actions.clearPendingDelete}
+        icon="error"
+        title="Delete form draft?"
+        content="This permanently removes the unused draft and its sections and fields."
+        action={<Button color="error" variant="contained" size="small" disabled={actions.deleting} onClick={actions.confirmDelete}>Delete draft</Button>}
       />
     </Box>
   );

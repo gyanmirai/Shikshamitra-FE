@@ -4,6 +4,22 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Admissions.Application.EnrollmentDivisionFull':
+    'The selected division has no seats available. Choose another division or assign one later.',
+  'Admissions.Application.EnrollmentDivisionInvalid':
+    'The selected division is not available for this class. Refresh the enrollment options and try again.',
+  'Admissions.Application.EnrollmentDuplicate':
+    'This student is already enrolled for the selected academic year.',
+  'Admissions.Application.EnrollmentNotReady':
+    'The application must have an accepted offer before enrollment can be completed.',
+  'Admissions.Application.EnrollmentDataMissing':
+    'Required applicant or guardian information is missing. Complete the application data before enrolling.',
+  'Admissions.Application.OfferExpiryInvalid':
+    'The admission offer has expired or the expiry time is invalid.',
+  'Admissions.Application.DecisionReasonRequired':
+    'A reason is required for this decision.',
+  'Admissions.Application.DecisionInvalidState':
+    'This application has changed and no longer allows that action. Refresh the application and try again.',
   'Academic:Timetable:020004':
     'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.',
   'ShikshaMitra.Submission:UseFeedbackToReview':

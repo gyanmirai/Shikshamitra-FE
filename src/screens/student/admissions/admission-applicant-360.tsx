@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 
 import AdmissionApplicantNotes from './admission-applicant-notes';
+import { getAdmissionApplicationStatusLabel } from './application-status';
 
 export default function AdmissionApplicant360Screen() {
   const { id } = useParams<{ id: string }>();
@@ -114,7 +115,7 @@ export default function AdmissionApplicant360Screen() {
                 <Box key={application.id} sx={{ mb: 2 }}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Typography variant="subtitle1">{application.applicationNumber}</Typography>
-                    <Chip size="small" label={application.status === 1 ? 'Submitted' : 'Draft'} />
+                    <Chip size="small" label={getAdmissionApplicationStatusLabel(application.status)} />
                   </Stack>
                   <Stack spacing={0.5} sx={{ mt: 1 }}>
                     {application.stages.map((stage) => (

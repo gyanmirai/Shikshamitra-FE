@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type { AdmissionForm, CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -14,11 +14,12 @@ import {
   useGetAdmissionFormQuery,
   useCloneAdmissionFormMutation,
   useCreateAdmissionFormMutation,
+  useDeleteAdmissionFormMutation,
   useUpdateAdmissionFormMutation,
   usePublishAdmissionFormMutation,
+  useArchiveAdmissionFormMutation,
   useValidateAdmissionFormMutation,
   useCreateAdmissionFormVersionMutation,
-  useArchiveAdmissionFormMutation,
 } from 'src/redux/student/admissions/admission-forms-api';
 
 export function useFormListActions() {
@@ -36,6 +37,8 @@ export function useFormListActions() {
   const [publish] = usePublishAdmissionFormMutation();
   const [createVersion] = useCreateAdmissionFormVersionMutation();
   const [archive] = useArchiveAdmissionFormMutation();
+  const [deleteForm, deleteState] = useDeleteAdmissionFormMutation();
+  const [pendingDelete, setPendingDelete] = useState<AdmissionForm | null>(null);
   const run = async (action: () => Promise<unknown>, message: string) => {
     try {
       await action();
@@ -66,8 +69,16 @@ export function useFormListActions() {
     preview: (id: string) => router.push(`/student/admissions/settings/forms/${id}/preview`),
     clone: (id: string) => run(() => clone({ id, body: { name: '', code: '' } }).unwrap(), 'Form cloned'),
     validate: (id: string) => run(async () => { const result = await validate(id).unwrap(); if (!result.isValid) throw new Error(result.errors.join(', ')); }, 'Form is valid'),
-    publish: (id: string) => run(() => publish(id).unwrap(), 'Form published'),
+    publish: (form: AdmissionForm) => run(() => publish({ id: form.id, concurrencyStamp: form.concurrencyStamp ?? '' }).unwrap(), 'Form published'),
     createVersion: (id: string) => run(() => createVersion(id).unwrap(), 'New form version created'),
-    archive: (id: string) => run(() => archive(id).unwrap(), 'Form archived'),
+    archive: (form: AdmissionForm) => run(() => archive({ id: form.id, concurrencyStamp: form.concurrencyStamp ?? '' }).unwrap(), 'Form archived'),
+    requestDelete: (form: AdmissionForm) => setPendingDelete(form),
+    pendingDelete,
+    clearPendingDelete: () => setPendingDelete(null),
+    confirmDelete: () => pendingDelete
+      ? run(() => deleteForm({ id: pendingDelete.id, concurrencyStamp: pendingDelete.concurrencyStamp ?? '' }).unwrap(), 'Form draft deleted')
+        .then((ok) => { if (ok) setPendingDelete(null); return ok; })
+      : Promise.resolve(false),
+    deleting: deleteState.isLoading,
   };
 }

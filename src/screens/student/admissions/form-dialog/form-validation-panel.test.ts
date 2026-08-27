@@ -10,6 +10,7 @@ describe('admission form builder validation', () => {
       name: 'Student admission form',
       code: 'STUDENT_ADMISSION',
       layoutType: 1,
+      fieldsPerRow: 1,
       sections: [
         {
           id: 'section-1',

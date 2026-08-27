@@ -1,7 +1,7 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
-export type AdmissionApplicationStatus = 0 | 1 | 2 | 3;
+export type AdmissionApplicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 export type AdmissionApplication = {
   id: string;
   concurrencyStamp?: string | null;
@@ -11,6 +11,15 @@ export type AdmissionApplication = {
   admissionCycleId: string;
   admissionOfferingId: string;
   status: AdmissionApplicationStatus;
+  offeringCode?: string | null;
+  currentStageName?: string | null;
+  decisionReason?: string | null;
+  decisionBy?: string | null;
+  decisionAt?: string | null;
+  offerExpiresAt?: string | null;
+  offerAcceptedAt?: string | null;
+  enrolledStudentId?: string | null;
+  studentEnrollmentId?: string | null;
   currentStageInstanceId?: string | null;
   lastSavedAt?: string | null;
   submittedAt?: string | null;
@@ -114,6 +123,38 @@ export type AdmissionFormChangeHistory = {
   changedFieldsJson?: string | null;
   changedBy?: string | null;
   occurredAt: string;
+};
+export type AdmissionApplicationDecisionInput = {
+  reason?: string | null;
+  offerExpiresAt?: string | null;
+  concurrencyStamp?: string | null;
+};
+export type AdmissionApplicationDecisionHistory = {
+  id: string;
+  status: AdmissionApplicationStatus;
+  reason?: string | null;
+  actorId?: string | null;
+  occurredAt: string;
+};
+export type AdmissionEnrollmentResult = {
+  application: AdmissionApplication;
+  studentId: string;
+  studentEnrollmentId: string;
+  academicYearId: string;
+  standardId: string;
+  divisionId?: string | null;
+};
+export type AdmissionEnrollmentDivisionOption = {
+  id: string;
+  name: string;
+  strength: number;
+  occupiedSeats: number;
+  availableSeats: number;
+  isAvailable: boolean;
+};
+export type AdmissionEnrollmentOptions = {
+  standardId: string;
+  divisions: AdmissionEnrollmentDivisionOption[];
 };
 type Result<T> = { data?: T };
 const unwrap = <T>(response: Result<T> | T): T =>
@@ -221,6 +262,132 @@ export const admissionApplicationsApi = api.injectEndpoints({
       ) => unwrap(response),
       providesTags: [studentAdmissionsCrmType.admissionApplication],
     }),
+    getAdmissionApplicationDecisionHistory: builder.query<
+      AdmissionApplicationDecisionHistory[],
+      string
+    >({
+      query: (id) => `/student/enrollment/admissions/applications/${id}/decision-history`,
+      transformResponse: (
+        response:
+          | Result<AdmissionApplicationDecisionHistory[]>
+          | AdmissionApplicationDecisionHistory[]
+      ) => unwrap(response),
+      providesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    markAdmissionApplicationInReview: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: AdmissionApplicationDecisionInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/decision/review`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    approveAdmissionApplication: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: AdmissionApplicationDecisionInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/decision/approve`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    rejectAdmissionApplication: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: AdmissionApplicationDecisionInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/decision/reject`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    waitlistAdmissionApplication: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: AdmissionApplicationDecisionInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/decision/waitlist`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    issueAdmissionOffer: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: AdmissionApplicationDecisionInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/offer`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    acceptAdmissionOffer: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: AdmissionApplicationDecisionInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/offer/accept`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    declineAdmissionOffer: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: AdmissionApplicationDecisionInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/offer/decline`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    enrollAdmissionApplication: builder.mutation<
+      AdmissionEnrollmentResult,
+      { id: string; concurrencyStamp?: string | null; divisionId?: string | null }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/enroll`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<AdmissionEnrollmentResult> | AdmissionEnrollmentResult) =>
+        unwrap(response),
+      invalidatesTags: [
+        studentAdmissionsCrmType.admissionApplication,
+        studentAdmissionsCrmType.admissionApplicant,
+      ],
+    }),
+    getAdmissionEnrollmentOptions: builder.query<AdmissionEnrollmentOptions, string>({
+      query: (id) => `/student/enrollment/admissions/applications/${id}/enrollment-options`,
+      transformResponse: (
+        response: Result<AdmissionEnrollmentOptions> | AdmissionEnrollmentOptions,
+      ) => unwrap(response),
+      providesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
     advanceAdmissionApplicationWorkflow: builder.mutation<
       AdmissionApplicationWorkflow,
       {
@@ -256,5 +423,15 @@ export const {
   useSubmitAdmissionApplicationMutation,
   useReopenAdmissionApplicationFormMutation,
   useGetAdmissionApplicationFormHistoryQuery,
+  useGetAdmissionApplicationDecisionHistoryQuery,
+  useMarkAdmissionApplicationInReviewMutation,
+  useApproveAdmissionApplicationMutation,
+  useRejectAdmissionApplicationMutation,
+  useWaitlistAdmissionApplicationMutation,
+  useIssueAdmissionOfferMutation,
+  useAcceptAdmissionOfferMutation,
+  useDeclineAdmissionOfferMutation,
+  useEnrollAdmissionApplicationMutation,
+  useGetAdmissionEnrollmentOptionsQuery,
   useAdvanceAdmissionApplicationWorkflowMutation,
 } = admissionApplicationsApi;

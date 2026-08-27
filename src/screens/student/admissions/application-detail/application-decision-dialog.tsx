@@ -1,0 +1,140 @@
+'use client';
+
+import type {
+  AdmissionApplication,
+  AdmissionApplicationDecisionInput,
+} from 'src/redux/student/admissions/admission-applications-api';
+
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
+import { Iconify } from 'src/components/iconify';
+import { LoadingButton } from 'src/components/loading-button';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+
+import type { AdmissionDecisionAction } from './use-admission-application-decisions';
+
+type Props = {
+  open: boolean;
+  action: AdmissionDecisionAction | null;
+  application: AdmissionApplication;
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (input: AdmissionApplicationDecisionInput) => Promise<boolean>;
+};
+
+const ACTION_LABELS: Record<AdmissionDecisionAction, string> = {
+  review: 'Move to review',
+  approve: 'Approve application',
+  reject: 'Reject application',
+  waitlist: 'Waitlist application',
+  offer: 'Issue admission offer',
+  accept: 'Accept offer',
+  decline: 'Decline offer',
+};
+
+export function ApplicationDecisionDialog({
+  open,
+  action,
+  application,
+  busy,
+  onClose,
+  onSubmit,
+}: Props) {
+  const requiresReason = action === 'reject' || action === 'waitlist' || action === 'decline';
+  const requiresExpiry = action === 'offer';
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: { reason: '', offerExpiresAt: '' },
+    validationSchema: Yup.object({
+      reason: Yup.string()
+        .trim()
+        .max(512, 'Use 512 characters or fewer')
+        .test('required-reason', 'Reason is required for this decision', (value) =>
+          !requiresReason || Boolean(value?.trim()),
+        ),
+      offerExpiresAt: Yup.string().test(
+        'future-offer-expiry',
+        'Offer expiry must be in the future',
+        (value) => !requiresExpiry || Boolean(value && new Date(value).getTime() > Date.now()),
+      ),
+    }),
+    onSubmit: async (values, helpers) => {
+      const success = await onSubmit({
+        reason: values.reason.trim() || undefined,
+        offerExpiresAt: values.offerExpiresAt
+          ? new Date(values.offerExpiresAt).toISOString()
+          : undefined,
+        concurrencyStamp: application.concurrencyStamp,
+      });
+      if (success) {
+        helpers.resetForm();
+        onClose();
+      }
+    },
+  });
+
+  if (!action) return null;
+  const isDangerous = action === 'reject' || action === 'decline';
+
+  return (
+    <CustomDialog open={open} handleClose={onClose} title={ACTION_LABELS[action]} maxWidth="sm">
+      <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
+        <Stack spacing={2}>
+          <Alert severity={isDangerous ? 'warning' : 'info'}>
+            <Typography variant="body2">
+              This decision is recorded in the application history for {application.applicationNumber}.
+            </Typography>
+          </Alert>
+          {requiresExpiry && (
+            <TextField
+              fullWidth
+              required
+              size="small"
+              type="datetime-local"
+              label="Offer expires at"
+              InputLabelProps={{ shrink: true }}
+              {...formik.getFieldProps('offerExpiresAt')}
+              error={Boolean(formik.touched.offerExpiresAt && formik.errors.offerExpiresAt)}
+              helperText={formik.touched.offerExpiresAt && formik.errors.offerExpiresAt}
+            />
+          )}
+          {action !== 'accept' && (
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              size="small"
+              label={requiresReason ? 'Reason *' : 'Reason (optional)'}
+              {...formik.getFieldProps('reason')}
+              error={Boolean(formik.touched.reason && formik.errors.reason)}
+              helperText={formik.touched.reason && formik.errors.reason}
+            />
+          )}
+        </Stack>
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          variant="outlined"
+          size="small"
+          disabled={busy}
+          startIcon={<Iconify icon="mdi:close" />}
+          onClick={onClose}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          variant="contained"
+          size="small"
+          disabled={busy}
+          color={isDangerous ? 'warning' : 'primary'}
+          startIcon={<Iconify icon="mdi:check-circle-outline" />}
+          onClick={() => formik.handleSubmit()}
+        >
+          {ACTION_LABELS[action]}
+        </LoadingButton>
+      </DialogActions>
+    </CustomDialog>
+  );
+}
+

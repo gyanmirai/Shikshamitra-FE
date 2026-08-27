@@ -73,7 +73,7 @@ function renderCheckbox({ field, value, disabled, onChange, onBlur }: RendererPr
           onChange={(event) => onChange(String(event.target.checked))}
         />
       }
-      label={labelWithRequired(field)}
+      label={`${field.label}${field.required ? ' *' : ''}`}
     />
   );
 }

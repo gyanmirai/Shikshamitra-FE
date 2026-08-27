@@ -16,6 +16,7 @@ type Handlers = {
   onPublish: (form: AdmissionForm) => void;
   onCreateVersion: (form: AdmissionForm) => void;
   onArchive: (form: AdmissionForm) => void;
+  onDelete: (form: AdmissionForm) => void;
 };
 
 const STATUS_LABELS = ['Draft', 'Published', 'Archived'] as const;
@@ -32,7 +33,7 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
       id: 'actions', label: 'Actions', width: 80, align: 'right', sticky: true, stickyPosition: 'right', isFilter: false, isSort: false, excludeFromExport: true,
       render: (_, row) => {
         const form = row as AdmissionForm;
-        return <FormRowActions form={form} canManage={handlers.canManage} canPublish={handlers.canPublish} onPreview={() => handlers.onPreview(form)} onEdit={() => handlers.onEdit(form)} onClone={() => handlers.onClone(form)} onValidate={() => handlers.onValidate(form)} onPublish={() => handlers.onPublish(form)} onCreateVersion={() => handlers.onCreateVersion(form)} onArchive={() => handlers.onArchive(form)} />;
+        return <FormRowActions form={form} canManage={handlers.canManage} canPublish={handlers.canPublish} onPreview={() => handlers.onPreview(form)} onEdit={() => handlers.onEdit(form)} onClone={() => handlers.onClone(form)} onValidate={() => handlers.onValidate(form)} onPublish={() => handlers.onPublish(form)} onCreateVersion={() => handlers.onCreateVersion(form)} onArchive={() => handlers.onArchive(form)} onDelete={() => handlers.onDelete(form)} />;
       },
     },
   ];

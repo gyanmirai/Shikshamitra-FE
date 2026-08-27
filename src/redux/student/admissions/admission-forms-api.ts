@@ -122,10 +122,11 @@ export const admissionFormsApi = api.injectEndpoints({
         r: Result<{ isValid: boolean; errors: string[] }> | { isValid: boolean; errors: string[] }
       ) => unwrap(r),
     }),
-    publishAdmissionForm: builder.mutation<AdmissionForm, string>({
-      query: (id) => ({
+    publishAdmissionForm: builder.mutation<AdmissionForm, { id: string; concurrencyStamp: string }>({
+      query: ({ id, concurrencyStamp }) => ({
         url: `/student/enrollment/admissions/forms/${id}/publish`,
         method: 'POST',
+        params: { concurrencyStamp },
       }),
       transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
       invalidatesTags: [studentAdmissionsCrmType.admissionForm],
@@ -135,13 +136,13 @@ export const admissionFormsApi = api.injectEndpoints({
       transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
       invalidatesTags: [studentAdmissionsCrmType.admissionForm],
     }),
-    archiveAdmissionForm: builder.mutation<AdmissionForm, string>({
-      query: (id) => ({ url: `/student/enrollment/admissions/forms/${id}/archive`, method: 'POST' }),
+    archiveAdmissionForm: builder.mutation<AdmissionForm, { id: string; concurrencyStamp: string }>({
+      query: ({ id, concurrencyStamp }) => ({ url: `/student/enrollment/admissions/forms/${id}/archive`, method: 'POST', params: { concurrencyStamp } }),
       transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
       invalidatesTags: [studentAdmissionsCrmType.admissionForm],
     }),
-    deleteAdmissionForm: builder.mutation<void, string>({
-      query: (id) => ({ url: `/student/enrollment/admissions/forms/${id}`, method: 'DELETE' }),
+    deleteAdmissionForm: builder.mutation<void, { id: string; concurrencyStamp: string }>({
+      query: ({ id, concurrencyStamp }) => ({ url: `/student/enrollment/admissions/forms/${id}`, method: 'DELETE', params: { concurrencyStamp } }),
       invalidatesTags: [studentAdmissionsCrmType.admissionForm],
     }),
     getAdmissionFormUsage: builder.query<{ formDefinitionId: string; offeringCount: number; applicationCount: number; canDelete: boolean }, string>({

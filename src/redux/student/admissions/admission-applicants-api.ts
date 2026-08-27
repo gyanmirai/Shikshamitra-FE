@@ -22,6 +22,9 @@ export type AdmissionApplicant360 = {
     id: string;
     applicationNumber: string;
     status: number;
+    decisionReason?: string | null;
+    offerExpiresAt?: string | null;
+    enrolledStudentId?: string | null;
     currentStageInstanceId?: string | null;
     stages: {
       code: string;

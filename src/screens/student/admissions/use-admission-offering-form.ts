@@ -87,12 +87,15 @@ export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }
     skip: !open || !formik.values.mediumId,
   });
   useAdmissionUnsavedChanges(open, formik.dirty);
+  const hierarchy = hierarchyQuery.data?.items ?? [];
 
   return {
     formik,
     readiness,
     clearReadiness: () => setReadiness(null),
-    hierarchy: hierarchyQuery.data?.items ?? [],
+    hierarchy,
+    hierarchyEmpty:
+      !hierarchyQuery.isFetching && !hierarchyQuery.isError && hierarchy.length === 0,
     standards: (standardsQuery.data ?? []) as Standards[],
     workflows: workflowsQuery.data?.items ?? [],
     forms: formsQuery.data?.items ?? [],

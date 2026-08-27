@@ -9,7 +9,7 @@ import type {
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Alert, Button, Divider, DialogActions } from '@mui/material';
+import { Box, Alert, Button, Divider, DialogActions, Link } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { useAdmissionOfferingForm } from './use-admission-offering-form';
@@ -80,6 +80,15 @@ export function AdmissionOfferingDialog({
             saving.
           </Alert>
         )}
+        {form.hierarchyEmpty && (
+          <Alert severity="warning">
+            No academic hierarchy is configured for this academic year. Configure the board,
+            medium, stage, and standards in Institute Setup before creating an offering.{' '}
+            <Link href="/setting/academic-setup/" underline="hover">
+              Open Institute Setup
+            </Link>
+          </Alert>
+        )}
         {offering && !offering.canEditIdentity && (
           <Alert severity="info">
             Academic identity is locked because applications already reference this offering.
@@ -132,7 +141,7 @@ export function AdmissionOfferingDialog({
           size="small"
           startIcon={<Iconify icon={mode === 'clone' ? GlobalIcons.copy : GlobalIcons.submit} />}
           loading={saving || form.validating || form.formik.isSubmitting}
-          disabled={form.queryFailed}
+          disabled={form.queryFailed || form.hierarchyEmpty}
           onClick={() => form.formik.handleSubmit()}
         >
           {mode === 'clone' ? 'Clone' : 'Save'}

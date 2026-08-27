@@ -7,6 +7,8 @@ import type {
 import { Iconify } from 'src/components/iconify';
 import { Card, Chip, Alert, Stack, Button, Typography, CardContent } from '@mui/material';
 
+import { getAdmissionApplicationStatusLabel } from '../application-status';
+
 const STAGE_STATUS: Record<number, string> = { 0: 'Pending', 1: 'Active', 2: 'Completed', 3: 'Skipped', 4: 'Failed', 5: 'Cancelled' };
 
 type Props = {
@@ -28,7 +30,7 @@ export function ApplicationProgressCard({ application, workflow, currentStage, c
     <Card><CardContent>
       <Stack direction="row" spacing={1} alignItems="center">
         <Typography variant="h6">Application progress</Typography>
-        <Chip size="small" label={['Draft', 'Submitted', 'Withdrawn', 'Rejected'][application.status]} />
+        <Chip size="small" label={getAdmissionApplicationStatusLabel(application.status)} />
       </Stack>
       {currentStage && workflow?.status === 0 && (
         <Alert severity="info" sx={{ mt: 2 }}>

@@ -153,12 +153,11 @@ export function getRegistrationFormTemplate(): CreateUpdateAdmissionForm {
       { code: 'CLASS', label: 'Class', fieldType: 6, required: true, optionsJson: classOptions },
     ], 0),
     section(general, 'STUDENT', 'Student', [
-      { code: 'STUDENT_PHOTO', label: 'Student photo', fieldType: 10, helpText: 'Upload a recent passport-size photograph.' },
       { code: 'Applicant.FirstName', label: 'First Name', system: true, bindingKey: 'Applicant.FirstName', required: true },
       { code: 'Applicant.MiddleName', label: 'Middle Name', system: true, bindingKey: 'Applicant.MiddleName' },
       { code: 'Applicant.LastName', label: 'Last Name', system: true, bindingKey: 'Applicant.LastName', required: true },
       { code: 'Applicant.DateOfBirth', label: 'Date of Birth', system: true, bindingKey: 'Applicant.DateOfBirth', fieldType: 5, required: true },
-      { code: 'Applicant.Gender', label: 'Gender', system: true, bindingKey: 'Applicant.Gender', fieldType: 8, optionsJson: gender, required: true },
+      { code: 'Applicant.Gender', label: 'Gender', system: true, bindingKey: 'Applicant.Gender', fieldType: 6, optionsJson: gender, required: true },
     ], 1),
     section(general, 'CONTACT_DETAILS', 'Contact Details', [
       { code: 'Guardian.Mobile', label: 'Primary Contact No.', system: true, bindingKey: 'Guardian.Mobile', fieldType: 4, validationJson: validation.phone, required: true },
@@ -188,11 +187,7 @@ export function getRegistrationFormTemplate(): CreateUpdateAdmissionForm {
       { code: 'Address.PostalCode', label: 'PIN Code', system: true, bindingKey: 'Address.PostalCode', validationJson: validation.pincode },
     ], 4),
     section(documents, 'DOCUMENTS', 'Documents', [
-      { code: 'STUDENT_PHOTO_DOCUMENT', label: 'Student photo', fieldType: 10, required: true },
-      { code: 'BIRTH_CERTIFICATE', label: 'Birth certificate', fieldType: 10, required: true },
-      { code: 'ADDRESS_PROOF', label: 'Address proof', fieldType: 10 },
-      { code: 'PREVIOUS_SCHOOL_CERTIFICATE', label: 'Previous school certificate', fieldType: 10 },
-      { code: 'AADHAAR_DOCUMENT', label: 'Aadhaar document', fieldType: 10 },
+      { code: 'DOCUMENT_NOTES', label: 'Document notes', fieldType: 1, helpText: 'Record document details until file uploads are enabled for admission forms.' },
     ], 5),
     section(family, 'FATHER_DETAILS', 'Father Details', familyFields('FATHER'), 6),
     section(family, 'MOTHER_DETAILS', 'Mother Details', familyFields('MOTHER'), 7),

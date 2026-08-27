@@ -10,6 +10,7 @@ import { useApplicationDetail } from './application-detail/use-application-detai
 import { TransitionHistoryCard } from './application-detail/transition-history-card';
 import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
 import { ApplicationProgressCard } from './application-detail/application-progress-card';
+import { ApplicationDecisionCard } from './application-detail/application-decision-card';
 import { AdmissionWorkflowRuntimeActionDialog } from './admission-workflow-runtime-action-dialog';
 
 export default function AdmissionApplicationDetailScreen() {
@@ -53,6 +54,7 @@ export default function AdmissionApplicationDetailScreen() {
         onSkip={() => detail.setRuntimeAction('skip')}
         onOverride={() => detail.setRuntimeAction('override')}
       />
+      <ApplicationDecisionCard application={application} />
       <TransitionHistoryCard workflow={workflow} />
       <FormHistoryCard history={detail.formHistoryQuery.data ?? []} />
       <ApplicationRuntimeForm

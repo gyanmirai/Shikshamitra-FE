@@ -43,9 +43,9 @@ export type ExamItem = Academic360ExamResult & {
   standardName?: string;
   divisionName?: string;
   classes?: string;
-  examDate?: string;
-  startDate?: string;
-  endDate?: string;
+  examDate?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   startTime?: string;
   endTime?: string;
   status?: string;
@@ -133,7 +133,7 @@ function getStatusBadgeConfig(exam: ExamItem): {
   return { label: rawStatus === 'SCHEDULED' ? 'Scheduled' : 'Published', color: 'info', category };
 }
 
-function formatExamDate(dateStr?: string): string {
+function formatExamDate(dateStr?: string | null): string {
   if (!dateStr) return 'Not specified';
   const parsed = dayjs(dateStr);
   if (parsed.isValid()) {

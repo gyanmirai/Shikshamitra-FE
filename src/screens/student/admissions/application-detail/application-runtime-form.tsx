@@ -66,7 +66,7 @@ export function ApplicationRuntimeForm({
 }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const fieldsPerRow = form.fieldsPerRow ?? 1;
+  const fieldsPerRow = form.definition.fieldsPerRow ?? 1;
   const [activeStep, setActiveStep] = useState(0);
   const [loadOptions] = useLazyGetAdmissionFormOptionsQuery();
   const [resolvedOptions, setResolvedOptions] = useState<Record<string, string>>({});

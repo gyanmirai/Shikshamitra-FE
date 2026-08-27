@@ -1,6 +1,7 @@
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { it, expect, describe } from 'vitest';
+import { normalizeAdmissionWorkflowStageType } from 'src/redux/student/admissions/admission-workflows-api';
 
 import {
   reorderStages,
@@ -8,6 +9,7 @@ import {
   parseSimpleCondition,
   serializeSimpleCondition,
 } from './workflow-builder-utils';
+import { getRegistrationFormTemplate } from './form-dialog/registration-form-template';
 
 const stage = (id: string, displayOrder: number): AdmissionWorkflowStage => ({
   id,
@@ -75,5 +77,22 @@ describe('workflow builder utilities', () => {
     expect(copy.isEntryStage).toBe(false);
     expect(copy.isTerminalStage).toBe(false);
     expect(result.map((item) => item.displayOrder)).toEqual([0, 1, 2]);
+  });
+
+  it('normalizes numeric and named stage types from the API', () => {
+    expect(normalizeAdmissionWorkflowStageType(10)).toBe(10);
+    expect(normalizeAdmissionWorkflowStageType('Enrollment')).toBe(10);
+    expect(normalizeAdmissionWorkflowStageType('document-verification')).toBe(5);
+  });
+
+  it('keeps the built-in registration template publishable with supported fields', () => {
+    const template = getRegistrationFormTemplate();
+    const fields = template.sections.flatMap((section) => section.fields);
+
+    expect(fields.find((field) => field.code === 'APPLICANT_GENDER')?.fieldType).toBe(6);
+    expect(fields.some((field) => field.fieldType === 10)).toBe(false);
+    expect(fields.find((field) => field.code === 'APPLICANT_GENDER')?.bindingKey).toBe(
+      'Applicant.Gender'
+    );
   });
 });

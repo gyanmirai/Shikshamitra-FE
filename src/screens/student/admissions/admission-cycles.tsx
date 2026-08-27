@@ -97,7 +97,7 @@ export default function AdmissionCyclesScreen() {
   }, [academicYearsData?.items, currentYear?.id]);
 
   const saveCycle = async (values: CreateUpdateAdmissionCycle) => {
-    if (editingCycle) await updateCycle({ id: editingCycle.id, body: values }).unwrap();
+    if (editingCycle) await updateCycle({ id: editingCycle.id, body: { ...values, concurrencyStamp: editingCycle.concurrencyStamp } }).unwrap();
     else await createCycle(values).unwrap();
     shikshaMitraToast.success({
       message: editingCycle ? 'Admission cycle updated' : 'Admission cycle created',
@@ -187,7 +187,7 @@ export default function AdmissionCyclesScreen() {
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
-                      runAction(() => publishCycle(cycle.id).unwrap(), 'Admission cycle published');
+                      runAction(() => publishCycle({ id: cycle.id, concurrencyStamp: cycle.concurrencyStamp }).unwrap(), 'Admission cycle published');
                     }}
                   >
                     <Iconify icon={GlobalIcons.publish} />
@@ -198,7 +198,7 @@ export default function AdmissionCyclesScreen() {
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
-                      runAction(() => closeCycle(cycle.id).unwrap(), 'Admission cycle closed');
+                      runAction(() => closeCycle({ id: cycle.id, concurrencyStamp: cycle.concurrencyStamp }).unwrap(), 'Admission cycle closed');
                     }}
                   >
                     <Iconify icon={GlobalIcons.lockIcon} />
@@ -209,7 +209,7 @@ export default function AdmissionCyclesScreen() {
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
-                      runAction(() => archiveCycle(cycle.id).unwrap(), 'Admission cycle archived');
+                      runAction(() => archiveCycle({ id: cycle.id, concurrencyStamp: cycle.concurrencyStamp }).unwrap(), 'Admission cycle archived');
                     }}
                   >
                     <Iconify icon={GlobalIcons.archive} />

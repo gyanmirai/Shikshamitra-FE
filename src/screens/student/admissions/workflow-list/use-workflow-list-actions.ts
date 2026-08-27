@@ -66,7 +66,7 @@ export function useWorkflowListActions() {
     if (!pendingConfirmation) return;
     const { workflow, action } = pendingConfirmation;
     await runAction(
-      () => action === 'delete' ? deleteWorkflow(workflow.id).unwrap() : archiveWorkflow(workflow.id).unwrap(),
+      () => action === 'delete' ? deleteWorkflow({ id: workflow.id, concurrencyStamp: workflow.concurrencyStamp }).unwrap() : archiveWorkflow({ id: workflow.id, concurrencyStamp: workflow.concurrencyStamp }).unwrap(),
       action === 'delete' ? 'Workflow draft deleted' : 'Workflow archived'
     );
     setPendingConfirmation(null);
