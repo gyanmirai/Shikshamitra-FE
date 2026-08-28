@@ -8,10 +8,10 @@ import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
-import LoadingButton from '@mui/lab/LoadingButton';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import LoadingButton from '@mui/lab/LoadingButton';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -19,11 +19,12 @@ import FileUploader from 'src/components/custom-upload';
 import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -41,29 +42,16 @@ import {
   Drawer,
   Divider,
   MenuItem,
-  Collapse,
   TextField,
   IconButton,
   Typography,
   DialogActions,
   InputAdornment,
-  FormControlLabel,
 } from '@mui/material';
-
-import CustomTooltip from 'src/components/custom-tooltip';
 
 import { getChapterInitialValues } from './initialValues';
 import { getChapterValidationSchema } from './validationSchema';
-import {
-  bloomOptions,
-  difficultyOptions,
-  visibilityOptions,
-  reviewStatusOptions,
-  mappingStatusOptions,
-  publishStatusOptions,
-  resourceStatusOptions,
-  coverageStatusOptions,
-} from './syllabusPlanningData';
+import { bloomOptions, difficultyOptions } from './syllabusPlanningData';
 
 import type { IChapterFormValues, IAddNewChapterProps } from './type';
 
@@ -481,7 +469,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           format="DD/MM/YYYY"
                           value={formik.values.startDate}
                           standardId={classId}
-                          disablePast
+                          disablePast={!initialValues}
                           onChange={(newValue) => {
                             formik.setFieldValue('startDate', newValue);
                           }}
@@ -535,7 +523,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         <DatePicker
                           label="Expected End Date for all Division"
                           format="DD/MM/YYYY"
-                          disablePast
+                          disablePast={!initialValues}
                           standardId={classId}
                           minDate={dayjs(currentYear?.startDate)}
                           maxDate={dayjs(currentYear?.endDate)}

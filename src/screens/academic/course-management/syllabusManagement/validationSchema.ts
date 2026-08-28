@@ -74,7 +74,8 @@ export const getChapterValidationSchema = (
       .test(
         'no-past-date',
         'Start Date cannot be in the past',
-        (value) => !value || !dayjs(value as any).isBefore(dayjs(), 'day')
+        (value) =>
+          Boolean(editingChapterId) || !value || !dayjs(value as any).isBefore(dayjs(), 'day')
       ),
 
     endDate: Yup.mixed()
@@ -93,7 +94,8 @@ export const getChapterValidationSchema = (
       .test(
         'no-past-date',
         'End Date cannot be in the past',
-        (value) => !value || !dayjs(value as any).isBefore(dayjs(), 'day')
+        (value) =>
+          Boolean(editingChapterId) || !value || !dayjs(value as any).isBefore(dayjs(), 'day')
       )
       .test(
         'min-date',

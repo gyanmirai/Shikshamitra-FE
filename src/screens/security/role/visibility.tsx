@@ -15,6 +15,8 @@ import {
   LinearProgress,
 } from '@mui/material';
 
+import { setPermissionGrants } from './permission-grants';
+
 // ----------------------------------------------------------------------
 
 // Recursive component to render submodules
@@ -134,29 +136,13 @@ const Visibility = ({
     const isAllVisible = validSubmodules.every(
       (submodule) => !!visibility.find((t) => t.name === submodule.permissionName)?.isGranted
     );
-    if (isAllVisible) {
-      const cloneData = [...visibility];
-
-      validSubmodules.forEach((submodule) => {
-        const index = cloneData.findIndex((t) => t.name === submodule.permissionName);
-        if (index !== -1) {
-          cloneData[index].isGranted = false;
-        }
-      });
-
-      setVisibility(cloneData);
-    } else {
-      const cloneData = [...visibility];
-
-      validSubmodules.forEach((submodule) => {
-        const index = cloneData.findIndex((t) => t.name === submodule.permissionName);
-        if (index !== -1) {
-          cloneData[index].isGranted = true;
-        }
-      });
-
-      setVisibility(cloneData);
-    }
+    setVisibility(
+      setPermissionGrants(
+        visibility,
+        validSubmodules.map((submodule) => submodule.permissionName),
+        !isAllVisible
+      )
+    );
   };
 
   return (

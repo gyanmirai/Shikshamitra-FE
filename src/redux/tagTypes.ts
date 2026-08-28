@@ -45,7 +45,16 @@ export const academicType = {
   weeklyLectureSlot: 'WeeklyLectureSlot',
   lectureSlot: 'LectureSlot',
   timetableManagement: 'TimetableManagement',
-  substitutionManagement: 'SubstitutionManagement',
+  substitutionList: 'SubstitutionList',
+  substitutionDashboard: 'SubstitutionDashboard',
+  substitutionDuties: 'SubstitutionDuties',
+  substitutionAvailability: 'SubstitutionAvailability',
+  substitutionCreateMetadata: 'SubstitutionCreateMetadata',
+  substitutionLectures: 'SubstitutionLectures',
+  substitutionAffectedLectures: 'SubstitutionAffectedLectures',
+  substitutionSuggestions: 'SubstitutionSuggestions',
+  substitutionDailySheet: 'SubstitutionDailySheet',
+  substitutionAnalytics: 'SubstitutionAnalytics',
   academicReport: 'AcademicReport',
   academicReportExport: 'AcademicReportExport',
   examResult: 'ExamResult',
@@ -645,6 +654,10 @@ export const yearType = {
   year: 'Year',
 } as const;
 
+export const permissionType = {
+  permission: 'Permission',
+} as const;
+
 export const allTagTypes = {
   ...academicCalendarType,
   ...academicType,
@@ -729,6 +742,7 @@ export const allTagTypes = {
   ...tenantType,
   ...transportType,
   ...yearType,
+  ...permissionType,
 } as const;
 
 export const tagTypes = Object.values(allTagTypes);

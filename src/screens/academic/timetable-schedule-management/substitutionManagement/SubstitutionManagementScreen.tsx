@@ -18,7 +18,6 @@ import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
-import { academicType } from 'src/redux/tagTypes';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -45,7 +44,10 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { substitutionManagementApi } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
+import {
+  substitutionManagementApi,
+  substitutionStatusInvalidationTags,
+} from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
 import {
   Add,
   Save,
@@ -139,6 +141,7 @@ import {
   useSuggestedTeachersByContextDataQuery,
   useAffectedLecturesDataQuery,
 } from './substitutionManagement.hooks';
+import { createSubstitutionSegments } from './services/create-substitution-action';
 
 import type {
   ConflictStatus,
@@ -824,7 +827,6 @@ const SubstitutionManagementScreen = () => {
   const {
     data: substitutionResult,
     isLoading: isSubstitutionsLoading,
-    isFetching: isSubstitutionsFetching,
   } = useSubstitutionsDataQuery({
     ...academicContextParams,
     fromDate: toDateTimeOffset(selectedFilterDate.startOf('day')),
@@ -852,7 +854,6 @@ const SubstitutionManagementScreen = () => {
   const {
     data: availabilityResult,
     isLoading: isAvailabilityLoading,
-    isFetching: isAvailabilityFetching,
   } = useTeacherAvailabilityDataQuery({
     ...academicContextParams,
     fromDate: toDateTimeOffset(availabilityDate.startOf('day')),
@@ -951,7 +952,10 @@ const SubstitutionManagementScreen = () => {
     date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
     maxResultCount: 500,
   });
-  const [createSubstitution, { isLoading: isCreatingSubstitution }] = useCreateSubstitutionAction();
+  const [
+    createSubstitution,
+    { isLoading: isCreatingSubstitution, reset: resetCreateSubstitution },
+  ] = useCreateSubstitutionAction();
   const [assignSubstitute, { isLoading: isAssigning }] = useAssignSubstituteAction();
   const [sendSubstitutionReminder, { isLoading: isSendingReminder }] =
     useSendSubstitutionReminderAction();
@@ -1589,8 +1593,10 @@ const SubstitutionManagementScreen = () => {
 
     try {
       const assignmentSegments = substitutionForm.selectedSubstitutes;
-      const createdRows = await Promise.all(
-        assignmentSegments.map((segment) =>
+      const createdRows = await createSubstitutionSegments({
+        segments: assignmentSegments,
+        resetMutation: resetCreateSubstitution,
+        create: (segment) =>
           createSubstitution({
             academicYearId: currentYear?.id || null,
             academicMediumId: medium?.id || null,
@@ -1624,9 +1630,8 @@ const SubstitutionManagementScreen = () => {
             remarks: segment.isPartialCoverage
               ? `${substitutionForm.remarks || ''} Partial coverage ${segment.startTime}-${segment.endTime}.`.trim()
               : substitutionForm.remarks,
-          }).unwrap()
-        )
-      );
+          }).unwrap(),
+      });
       setSubstitutions((current) => [...createdRows.map(mapApiSubstitution), ...current]);
       setCreateDialogOpen(false);
       if (cameFromAvailability) {
@@ -1644,6 +1649,7 @@ const SubstitutionManagementScreen = () => {
     }
   }, [
     createSubstitution,
+    resetCreateSubstitution,
     createFieldErrors,
     selectedCreateLecture,
     substitutionForm,
@@ -1997,10 +2003,11 @@ const SubstitutionManagementScreen = () => {
     if (dutyConfirmOpen || !shouldRefreshDuties) return;
 
     setShouldRefreshDuties(false);
-    // Invalidate only after the confirmation dialog has unmounted. RTK Query then
-    // refetches every active substitution-management query and exposes isFetching
-    // to the owning table instead of showing background loading behind the dialog.
-    dispatch(substitutionManagementApi.util.invalidateTags([academicType.substitutionManagement]));
+    // Invalidate only after the confirmation dialog has unmounted. The focused tags
+    // refresh status-dependent views without reopening unrelated form-data requests.
+    dispatch(
+      substitutionManagementApi.util.invalidateTags([...substitutionStatusInvalidationTags])
+    );
   }, [dispatch, dutyConfirmOpen, shouldRefreshDuties]);
 
   /**
@@ -3096,7 +3103,7 @@ const SubstitutionManagementScreen = () => {
         tableTitle="Substitution Board"
         data={filteredSubstitutions}
         columns={substitutionColumns}
-        isLoading={isSubstitutionsLoading || isSubstitutionsFetching}
+        isLoading={isSubstitutionsLoading}
       />
     );
   };
@@ -3357,7 +3364,7 @@ const SubstitutionManagementScreen = () => {
             <CustomizableTable
               tableId="teacher-availability-table"
               tableTitle="Teacher Availability"
-              isLoading={isAvailabilityLoading || isAvailabilityFetching}
+              isLoading={isAvailabilityLoading}
               data={teacherAvailability}
               columns={availabilityColumns}
             />

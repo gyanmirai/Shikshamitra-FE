@@ -1,6 +1,5 @@
 'use client';
 
-import _ from 'lodash';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
@@ -47,6 +46,7 @@ import {
 
 import Visibility from './visibility';
 import Permission from './permission';
+import { getChangedPermissionGrants } from './permission-grants';
 import {
   getEmployeeOnboardingAssignable,
   isReservedEmployeeOnboardingRoleName,
@@ -610,7 +610,7 @@ export const PermissionForm = ({
           loading={isUpdatePermissionLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={async () => {
-            const diff = _.differenceWith(permissioNData, initialData.current, _.isEqual);
+            const diff = getChangedPermissionGrants(permissioNData, initialData.current);
             await updatePermission({
               providerName,
               providerKey: providerName === 'R' ? editData?.name : editData?.id,
@@ -712,14 +712,14 @@ const VisibilityForm = ({ editData, handleClose }: any) => {
           loading={isUpdatePermissionLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={async () => {
-            const diff = _.differenceWith(visibilityData, initialData.current, _.isEqual);
+            const diff = getChangedPermissionGrants(visibilityData, initialData.current);
             await updatePermission({
               providerName: 'R',
               providerKey: editData?.name,
               data: {
                 permissions: diff,
               },
-            });
+            }).unwrap();
             shikshaMitraToast.success({
               message: 'Updated Visibility successfully',
             });
