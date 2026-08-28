@@ -5,6 +5,7 @@ import { useMemo, useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { MOCK_AI_PARSE_RESULT } from './roomAvailability.mock';
+import { buildRoomSuggestionRequest } from './services/roomSuggestionSearch';
 import {
   useGetReservationsQuery,
   useGetRoomScheduleQuery,
@@ -229,6 +230,7 @@ export function useRoomReservations(params?: GetReservationsParams) {
                 : 'none',
       createdAt: r.creationTime || '',
       creatorId: r.creatorId || undefined,
+      canReview: r.canReview === true,
       remarks: r.remarks,
       isRecurring: r.isRecurring,
       recurringUntilDate: r.recurringUntilDate ? r.recurringUntilDate.split('T')[0] : undefined,
@@ -300,21 +302,9 @@ export function useRoomSuggestions() {
 
   const suggest = useCallback(
     async (requirements: ReservationRequirements) => {
+      setLocalData([]);
       try {
-        const payload = {
-          date: requirements.date,
-          startTime: requirements.startTime,
-          endTime: requirements.endTime,
-          requiredCapacity: requirements.requiredCapacity || 0,
-          requiredFacilities: requirements.requiredFacilities,
-          preferredBuildingId:
-            requirements.preferredBuilding === 'all' || !requirements.preferredBuilding
-              ? undefined
-              : requirements.preferredBuilding,
-          standardId: undefined,
-          page: requirements.page,
-          limit: requirements.limit || 50,
-        };
+        const payload = buildRoomSuggestionRequest(requirements);
         const response = await suggestRooms(payload).unwrap();
 
         const mapped = response.map((r: any) => ({

@@ -177,7 +177,7 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.teacherDiary, academicType.coverageTracker],
+      invalidatesTags: [academicType.teacherDiary, academicType.coverageTracker, academicType.chapter],
     }),
 
     // ─── Evidence ────────────────────────────────────────────────────────────

@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -14,13 +15,13 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { academicPermissions } from 'src/constants/academic-menu';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -32,19 +33,18 @@ import {
   Tab,
   Stack,
   Alert,
+  Paper,
   Button,
   Divider,
+  Tooltip,
   TextField,
+  Accordion,
   Typography,
   IconButton,
   LinearProgress,
-  Paper,
-  Tooltip,
-  Accordion,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import {
   useGetLessonPlansQuery,
   useGetTeacherDiariesQuery,
@@ -66,9 +66,10 @@ import DailyTimelineTab from './components/DailyTimelineTab';
 import TeachingKpiCards from './components/TeachingKpiCards';
 import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
+import { reconcileTimelineSlots } from './reconcileTimelineSlots';
+import { getLessonPlanTabQueryState } from './lessonPlanTabQueries';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
 import LessonDiaryDetailsDrawer from './components/LessonDiaryDetailsDrawer';
-import { reconcileTimelineSlots } from './reconcileTimelineSlots';
 import {
   todayIso,
   weekStartIso,
@@ -448,6 +449,7 @@ const LessonPlanScreen = () => {
     return roleBasedCheck || Boolean(hasSubordinates);
   }, [employee, user, hasSubordinates]);
   const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
+  const activeTabQueries = getLessonPlanTabQueryState(activeTab);
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
 
   /**
@@ -456,10 +458,7 @@ const LessonPlanScreen = () => {
    * - Prevents an authenticated user ID from being sent as a teacher/employee ID when
    *   the employee profile has not loaded or the IDs differ.
    */
-  const currentTeacherId = useMemo(
-    () => employee?.id || employee?.employeeId || '',
-    [employee]
-  );
+  const currentTeacherId = useMemo(() => employee?.id || employee?.employeeId || '', [employee]);
 
   // ─── Queries & Mutations via useQueryAndMutation ─────────────────────────────
   const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs().startOf('day'));
@@ -483,7 +482,7 @@ const LessonPlanScreen = () => {
       teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
     },
     {
-      skip: !timelineDateParam || activeTab !== 'dailyTimeline',
+      skip: !timelineDateParam || !activeTabQueries.timeline,
       refetchOnMountOrArgChange: true,
     }
   );
@@ -509,10 +508,7 @@ const LessonPlanScreen = () => {
       maxResultCount: 1000,
     },
     {
-      skip:
-        !currentYear?.id ||
-        !currentMedium?.id ||
-        !['dailyTimeline', 'lessonList', 'teacherDiary', 'reviewQueue'].includes(activeTab),
+      skip: !currentYear?.id || !currentMedium?.id || !activeTabQueries.lessonPlans,
     }
   );
 
@@ -530,10 +526,7 @@ const LessonPlanScreen = () => {
       maxResultCount: 1000,
     },
     {
-      skip:
-        !currentYear?.id ||
-        !currentMedium?.id ||
-        !['dailyTimeline', 'lessonList', 'teacherDiary'].includes(activeTab),
+      skip: !currentYear?.id || !currentMedium?.id || !activeTabQueries.teacherDiaries,
     }
   );
 
@@ -719,6 +712,28 @@ const LessonPlanScreen = () => {
       }) || []
     );
   }, [teacherDiaryList]);
+
+  /**
+   * Refreshes only queries that have been started by a visited tab. RTK Query throws when
+   * refetch is called for a skipped, uninitialized query, and starting an inactive query here
+   * would defeat the tab-level lazy loading.
+   */
+  const refetchVisitedTabQueries = useCallback(
+    () =>
+      Promise.all([
+        ...(!isTimelineUninitialized ? [refetchTimeline()] : []),
+        ...(!isLessonPlansUninitialized ? [refetchLessonPlans()] : []),
+        ...(!isTeacherDiariesUninitialized ? [refetchTeacherDiaries()] : []),
+      ]),
+    [
+      isLessonPlansUninitialized,
+      isTeacherDiariesUninitialized,
+      isTimelineUninitialized,
+      refetchLessonPlans,
+      refetchTeacherDiaries,
+      refetchTimeline,
+    ]
+  );
 
   // Filter state
   const [academicYearFilter, setAcademicYearFilter] = useState('2026-27');
@@ -1173,7 +1188,7 @@ const LessonPlanScreen = () => {
           await submitLessonPlan({ id: resultId }).unwrap();
         }
 
-        await Promise.all([refetchTimeline(), refetchLessonPlans()]);
+        await refetchVisitedTabQueries();
         setLessonModalOpen(false);
 
         shikshaMitraToast.success({
@@ -1194,8 +1209,7 @@ const LessonPlanScreen = () => {
       currentTeacherId,
       updateLessonPlan,
       submitLessonPlan,
-      refetchTimeline,
-      refetchLessonPlans,
+      refetchVisitedTabQueries,
     ]
   );
 
@@ -1203,8 +1217,7 @@ const LessonPlanScreen = () => {
     async (planId: string) => {
       try {
         await submitLessonPlan({ id: planId }).unwrap();
-        refetchTimeline();
-        refetchLessonPlans();
+        refetchVisitedTabQueries();
         shikshaMitraToast.success({ message: 'Lesson plan submitted for review.' });
       } catch (err: any) {
         shikshaMitraToast.error({
@@ -1212,7 +1225,7 @@ const LessonPlanScreen = () => {
         });
       }
     },
-    [submitLessonPlan, refetchTimeline, refetchLessonPlans]
+    [submitLessonPlan, refetchVisitedTabQueries]
   );
 
   // ─── Diary Handlers ──────────────────────────────────────────────────────────
@@ -1270,11 +1283,7 @@ const LessonPlanScreen = () => {
         }
 
         setDiaryModalOpen(false);
-        await Promise.all([
-          ...(!isTeacherDiariesUninitialized ? [refetchTeacherDiaries()] : []),
-          ...(!isLessonPlansUninitialized ? [refetchLessonPlans()] : []),
-          ...(!isTimelineUninitialized ? [refetchTimeline()] : []),
-        ]);
+        await refetchVisitedTabQueries();
         shikshaMitraToast.success({
           message: submit ? 'Teacher diary submitted successfully.' : 'Teacher diary notes saved.',
         });
@@ -1294,12 +1303,7 @@ const LessonPlanScreen = () => {
     [
       createTeacherDiary,
       getDiaryForLesson,
-      isLessonPlansUninitialized,
-      isTeacherDiariesUninitialized,
-      isTimelineUninitialized,
-      refetchLessonPlans,
-      refetchTeacherDiaries,
-      refetchTimeline,
+      refetchVisitedTabQueries,
       submitTeacherDiary,
       updateTeacherDiary,
     ]
@@ -1319,8 +1323,7 @@ const LessonPlanScreen = () => {
           return false;
         }
         await approveLessonPlan({ id: target.id, body: { comment } }).unwrap();
-        refetchTimeline();
-        refetchLessonPlans();
+        refetchVisitedTabQueries();
         shikshaMitraToast.success({ message: 'Approved successfully.' });
         return true;
       } catch (err: any) {
@@ -1328,7 +1331,7 @@ const LessonPlanScreen = () => {
         return false;
       }
     },
-    [approveLessonPlan, refetchTimeline, refetchLessonPlans]
+    [approveLessonPlan, refetchVisitedTabQueries]
   );
 
   const handleReject = useCallback(
@@ -1343,8 +1346,7 @@ const LessonPlanScreen = () => {
           return false;
         }
         await rejectLessonPlan({ id: target.id, body: { comment } }).unwrap();
-        refetchTimeline();
-        refetchLessonPlans();
+        refetchVisitedTabQueries();
         shikshaMitraToast.success({ message: 'Rejected and returned for correction.' });
         return true;
       } catch (err: any) {
@@ -1352,7 +1354,7 @@ const LessonPlanScreen = () => {
         return false;
       }
     },
-    [rejectLessonPlan, refetchTimeline, refetchLessonPlans]
+    [rejectLessonPlan, refetchVisitedTabQueries]
   );
 
   const handleRequestChanges = useCallback(
@@ -1367,8 +1369,7 @@ const LessonPlanScreen = () => {
           return false;
         }
         await requestChanges({ id: target.id, body: { comment } }).unwrap();
-        refetchTimeline();
-        refetchLessonPlans();
+        refetchVisitedTabQueries();
         shikshaMitraToast.success({ message: 'Changes requested successfully.' });
         return true;
       } catch (err: any) {
@@ -1378,7 +1379,7 @@ const LessonPlanScreen = () => {
         return false;
       }
     },
-    [requestChanges, refetchTimeline, refetchLessonPlans]
+    [requestChanges, refetchVisitedTabQueries]
   );
 
   // ─── Status Descriptions & Rich Tooltips ───────────────────────────────────

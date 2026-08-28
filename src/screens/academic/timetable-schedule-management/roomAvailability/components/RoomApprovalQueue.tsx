@@ -2,13 +2,12 @@
 
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { LoadingButton } from '@mui/lab';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
-import { Box, IconButton } from '@mui/material';
-import { MenuItem } from '@mui/material';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -20,7 +19,6 @@ import { Label } from 'src/components/label';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import CancelButton from 'src/components/cancel-button';
 
@@ -45,8 +43,6 @@ export const RoomApprovalQueue = ({
   onApprove,
   onReject,
 }: RoomApprovalQueueProps) => {
-  const { data: session } = useSession() as any;
-  const currentUserId = session?.profile?.sub;
   const pending = reservations.filter((r) => r.approvalStatus === 'pending');
   const [approveId, setApproveId] = useState<string | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -91,38 +87,6 @@ export const RoomApprovalQueue = ({
       </Alert>
     );
   }
-
-  // Row action menu rendered inside the ThreeDotsActions popover.
-  const renderRowActions = ({ popover, row }: { popover: any; row: RoomReservation }) => {
-    const close = () => popover.onClose();
-    const actionDisabled = (type: 'approve' | 'reject') =>
-      isAnyActionPending && !isBusy(row.id, type);
-
-    return (
-      <Box sx={{ py: 0.5 }}>
-        <MenuItem
-          disabled={actionDisabled('approve')}
-          onClick={() => {
-            close();
-            setApproveId(row.id);
-          }}
-        >
-          <Iconify icon="mdi:check" color="success.main" />
-          Approve
-        </MenuItem>
-        <MenuItem
-          disabled={actionDisabled('reject')}
-          onClick={() => {
-            close();
-            handleOpenReject(row.id);
-          }}
-        >
-          <Iconify icon="mdi:close" color="error.main" />
-          Reject
-        </MenuItem>
-      </Box>
-    );
-  };
 
   return (
     <>
@@ -281,8 +245,7 @@ export const RoomApprovalQueue = ({
               sticky: true,
               stickyPosition: 'right',
               render: (_v, row) => {
-                const isRequester = currentUserId && row.creatorId && currentUserId === row.creatorId;
-                if (isRequester) {
+                if (!row.canReview) {
                   return <Typography variant="caption" color="text.disabled">—</Typography>;
                 }
                 return (
@@ -296,6 +259,7 @@ export const RoomApprovalQueue = ({
                           loading={isBusy(row.id, 'approve')}
                           disabled={isAnyActionPending && !isBusy(row.id, 'approve')}
                           onClick={() => setApproveId(row.id)}
+                          aria-label={`Approve ${row.roomName} reservation requested by ${row.requestedBy || 'requester'}`}
                           sx={{
                             minWidth: 32,
                             width: 32,
@@ -314,6 +278,7 @@ export const RoomApprovalQueue = ({
                           color="error"
                           disabled={isAnyActionPending}
                           onClick={() => handleOpenReject(row.id)}
+                          aria-label={`Reject ${row.roomName} reservation requested by ${row.requestedBy || 'requester'}`}
                         >
                           <Iconify icon="mdi:close" width={20} />
                         </IconButton>

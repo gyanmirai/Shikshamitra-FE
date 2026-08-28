@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 
-import _ from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -36,6 +35,7 @@ import {
 import Visibility from '../role/visibility';
 import { AccessControlForm } from '../accessControl';
 import { PermissionForm, extractGrantedPermissions } from '../role';
+import { getChangedPermissionGrants } from '../role/permission-grants';
 
 const UserManagementScreen = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -263,14 +263,14 @@ const VisibilityForm = ({ editData, handleClose }: any) => {
           loading={isUpdatePermissionLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={async () => {
-            const diff = _.differenceWith(visibilityData, initialData.current, _.isEqual);
+            const diff = getChangedPermissionGrants(visibilityData, initialData.current);
             await updatePermission({
               providerName: 'U',
               providerKey: editData?.id,
               data: {
                 permissions: diff,
               },
-            });
+            }).unwrap();
             shikshaMitraToast.success({
               message: 'Updated Visibility successfully',
             });
