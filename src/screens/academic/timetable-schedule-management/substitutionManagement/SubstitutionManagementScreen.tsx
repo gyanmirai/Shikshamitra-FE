@@ -93,6 +93,7 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { SubstitutionCreationOverlay } from './components/SubstitutionCreationOverlay';
 import {
   getActiveFilters,
   SubstitutionActiveFilters,
@@ -367,6 +368,7 @@ const mapApiSubstitution = (item: ApiSubstitutionRow): SubstitutionRow => ({
   isAiSuggested: item.isAiSuggested,
   workloadStatus: item.workloadStatus as SubstitutionRow['workloadStatus'],
   acknowledgementRequired: item.acknowledgementRequired,
+  isResponseWindowOpen: item.isResponseWindowOpen ?? true,
   createdAt: item.createdAt,
   acknowledgedAt: item.acknowledgedAt || undefined,
   completedAt: item.completedAt || undefined,
@@ -1714,7 +1716,7 @@ const SubstitutionManagementScreen = () => {
       reason: string;
       remarks?: string;
       sourceType: string;
-      closeAvailabilityDialog?: boolean;
+      openAsDrawer?: boolean;
     }
   ) => {
     setFormError('');
@@ -1751,8 +1753,7 @@ const SubstitutionManagementScreen = () => {
       substituteTeacherName: '',
       selectedSubstitutes: [],
     });
-    if (context.closeAvailabilityDialog) {
-      setAvailabilityDialogOpen(false);
+    if (context.openAsDrawer) {
       setCameFromAvailability(true);
     } else {
       setCameFromAvailability(false);
@@ -2243,6 +2244,7 @@ const SubstitutionManagementScreen = () => {
                 </MenuItem>
                 <MenuItem
                   disabled={
+                    !row.isResponseWindowOpen ||
                     !['Waiting Ack', 'Assigned'].includes(row.status) ||
                     (!canManageSubstitutions &&
                       row.substituteTeacherName !== currentEmployee?.employeeName)
@@ -2591,6 +2593,14 @@ const SubstitutionManagementScreen = () => {
           return (
             <Typography variant="caption" color="text.secondary">
               Duty {item.status.toLowerCase()}
+            </Typography>
+          );
+        }
+
+        if (!item.isResponseWindowOpen) {
+          return (
+            <Typography variant="caption" color="text.secondary">
+              Response window closed
             </Typography>
           );
         }
@@ -3407,6 +3417,7 @@ const SubstitutionManagementScreen = () => {
           <MenuItem
             disabled={
               !actionRow ||
+              !actionRow.isResponseWindowOpen ||
               !['Waiting Ack', 'Assigned'].includes(actionRow.status) ||
               (!canManageSubstitutions &&
                 actionRow.substituteTeacherName !== currentEmployee?.employeeName)
@@ -3482,8 +3493,9 @@ const SubstitutionManagementScreen = () => {
           </MenuItem>
         </Menu>
 
-        <CustomDialog
+        <SubstitutionCreationOverlay
           open={createDialogOpen}
+          displayAsDrawer={cameFromAvailability}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Create Substitution</Typography>
@@ -3497,8 +3509,7 @@ const SubstitutionManagementScreen = () => {
               </CustomTooltip>
             </Box>
           }
-          maxWidth="md"
-          handleClose={handleCloseCreateDialog}
+          onClose={handleCloseCreateDialog}
         >
           <DialogScrollContent>
             {isCreateDialogLoading && (
@@ -4185,11 +4196,12 @@ const SubstitutionManagementScreen = () => {
               Assign & Notify
             </LoadingButton>
           </Stack>
-        </CustomDialog>
+        </SubstitutionCreationOverlay>
 
         <ConfirmDialog
           open={createUnsavedConfirmOpen}
           onClose={() => setCreateUnsavedConfirmOpen(false)}
+          sx={cameFromAvailability ? { zIndex: (theme) => theme.zIndex.modal + 2 } : undefined}
           icon="warning"
           title="Unsaved Changes"
           content="You have unsaved substitution details. Closing now will discard them. Do you want to continue?"
@@ -4920,7 +4932,7 @@ const SubstitutionManagementScreen = () => {
                                       reason: availabilityForm.reason || 'Teacher Unavailable',
                                       remarks: availabilityForm.remarks,
                                       sourceType: availabilityForm.sourceType,
-                                      closeAvailabilityDialog: true,
+                                      openAsDrawer: true,
                                     })
                                   }
                                 >

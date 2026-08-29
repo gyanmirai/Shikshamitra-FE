@@ -30,23 +30,17 @@ import {
   Paper,
   Stack,
   Button,
-  Checkbox,
   Skeleton,
   TextField,
   Typography,
   DialogActions,
   CircularProgress,
-  FormControlLabel,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import { keyframes } from '@mui/system';
 import {
   useGetExamRoomsQuery,
   useGetSeatLayoutQuery,
@@ -69,6 +63,7 @@ import SeatInspectorPanel from '../components/workspace/SeatInspectorPanel';
 import AllocationRuleDrawer from '../components/workspace/AllocationRuleDrawer';
 import SeatingWorkspaceHeader from '../components/workspace/SeatingWorkspaceHeader';
 import AllocationProgressSummary from '../components/workspace/AllocationProgressSummary';
+import CreateSeatingPlanDialog from '../components/workspace/CreateSeatingPlanDialog';
 import {
   buildEmptyDraft,
   toSeatingStudents,
@@ -101,12 +96,6 @@ interface Props {
   /** Notifies the host (e.g. workspace drawer) whenever unsaved changes exist. */
   onDirtyStateChange?: (isDirty: boolean) => void;
 }
-
-const shakeAnimation = keyframes`
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
-`;
 
 export default function SeatingAllocationPage({
   examId,
@@ -368,16 +357,6 @@ export default function SeatingAllocationPage({
         (scope: SeatingPlanScope) => scope.scopeType === 0 && scope.allocatedStudents > 0
       ),
     [scopesData?.items]
-  );
-  const selectedDialogSubjectIds = scopeSubjectIds.length
-    ? scopeSubjectIds
-    : (scopesData?.availableSubjects || [])
-      .filter(
-        (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
-      )
-      .map((subject: SeatingPlanSubject) => subject.examSubjectId);
-  const selectedDialogHasOwnedSubject = selectedDialogSubjectIds.some((subjectId: string) =>
-    subjectWiseSubjectOwners.has(subjectId)
   );
 
   // Keep the host (workspace drawer) in sync so close actions can be intercepted
@@ -854,45 +833,53 @@ export default function SeatingAllocationPage({
     [setDraft, selectedPlanIsLocked]
   );
 
-  const handleCreateSelectedScope = async () => {
-    const subjects = scopesData?.availableSubjects || [];
-    const chosenIds = scopeSubjectIds.length
-      ? scopeSubjectIds
-      : subjects
-        .filter(
-          (subject: SeatingPlanSubject) => !subjectWiseSubjectOwners.has(subject.examSubjectId)
-        )
-        .map((subject: SeatingPlanSubject) => subject.examSubjectId);
-    if (!chosenIds.length) return;
-    const ownedSubject = chosenIds.find((subjectId: string) =>
-      subjectWiseSubjectOwners.has(subjectId)
-    );
-    if (ownedSubject) {
-      shikshaMitraToast.error({
-        message: 'One or more selected subjects already belong to another subject-wise plan.',
-      });
-      return;
-    }
-    try {
-      const response = await saveSeatingPlanScope({
-        examId,
-        body: {
-          name: scopeName || 'Selected Subject Plan',
-          scopeType: chosenIds.length === subjects.length ? 0 : chosenIds.length === 1 ? 2 : 1,
-          examSubjectIds: chosenIds,
-        },
-      }).unwrap();
-      setIsSubjectWiseMode(true);
-      window.localStorage.setItem(scopeModeStorageKey, 'subject-wise');
-      setSelectedPlanId(response.seatingPlanId);
-      setScopeDialogOpen(false);
-      setScopeName('');
-      setScopeSubjectIds([]);
-      shikshaMitraToast.success({ message: 'Seating plan scope created.' });
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to create seating plan scope.' });
-    }
-  };
+  const handleCreatePlanScope = useCallback(
+    async (values: { planName: string; subjectIds: string[] }) => {
+      const subjects = scopesData?.availableSubjects || [];
+      const chosenIds = values.subjectIds;
+      if (!chosenIds.length) {
+        shikshaMitraToast.error({ message: 'Please select at least one subject.' });
+        return;
+      }
+      const ownedSubject = chosenIds.find((subjectId: string) =>
+        subjectWiseSubjectOwners.has(subjectId)
+      );
+      if (ownedSubject) {
+        shikshaMitraToast.error({
+          message:
+            'One or more selected subjects already belong to another subject-wise plan.',
+        });
+        return;
+      }
+      try {
+        const response = await saveSeatingPlanScope({
+          examId,
+          body: {
+            name: values.planName.trim(),
+            scopeType:
+              chosenIds.length === subjects.length ? 0 : chosenIds.length === 1 ? 2 : 1,
+            examSubjectIds: chosenIds,
+          },
+        }).unwrap();
+        setIsSubjectWiseMode(true);
+        window.localStorage.setItem(scopeModeStorageKey, 'subject-wise');
+        setSelectedPlanId(response.seatingPlanId);
+        setScopeDialogOpen(false);
+        setScopeName('');
+        setScopeSubjectIds([]);
+        shikshaMitraToast.success({ message: 'Seating plan created successfully.' });
+      } catch {
+        shikshaMitraToast.error({ message: 'Failed to create seating plan.' });
+      }
+    },
+    [
+      scopesData?.availableSubjects,
+      subjectWiseSubjectOwners,
+      saveSeatingPlanScope,
+      examId,
+      scopeModeStorageKey,
+    ]
+  );
 
   const handleCreateIndividualScopes = async () => {
     if (isSubjectWiseMode) {
@@ -1367,192 +1354,17 @@ export default function SeatingAllocationPage({
         />
 
         {/* Scope Creation Dialog */}
-        {scopeDialogOpen && (
-          <Formik
-            initialValues={{ planName: scopeName, subjectIds: scopeSubjectIds }}
-            validationSchema={Yup.object().shape({
-              planName: Yup.string().trim().required('Plan name is required'),
-            })}
-            onSubmit={async (values, { setSubmitting }) => {
-              const subjects = scopesData?.availableSubjects || [];
-              const chosenIds = values.subjectIds.length
-                ? values.subjectIds
-                : subjects
-                  .filter(
-                    (subject: SeatingPlanSubject) =>
-                      !subjectWiseSubjectOwners.has(subject.examSubjectId)
-                  )
-                  .map((subject: SeatingPlanSubject) => subject.examSubjectId);
-              if (!chosenIds.length) {
-                setSubmitting(false);
-                return;
-              }
-              const ownedSubject = chosenIds.find((subjectId: string) =>
-                subjectWiseSubjectOwners.has(subjectId)
-              );
-              if (ownedSubject) {
-                shikshaMitraToast.error({
-                  message:
-                    'One or more selected subjects already belong to another subject-wise plan.',
-                });
-                setSubmitting(false);
-                return;
-              }
-              try {
-                const response = await saveSeatingPlanScope({
-                  examId,
-                  body: {
-                    name: values.planName,
-                    scopeType:
-                      chosenIds.length === subjects.length ? 0 : chosenIds.length === 1 ? 2 : 1,
-                    examSubjectIds: chosenIds,
-                  },
-                }).unwrap();
-                setIsSubjectWiseMode(true);
-                window.localStorage.setItem(scopeModeStorageKey, 'subject-wise');
-                setSelectedPlanId(response.seatingPlanId);
-                setScopeDialogOpen(false);
-                setScopeName('');
-                setScopeSubjectIds([]);
-                shikshaMitraToast.success({ message: 'Seating plan scope created.' });
-              } catch {
-                shikshaMitraToast.error({ message: 'Failed to create seating plan scope.' });
-              } finally {
-                setSubmitting(false);
-              }
-            }}
-          >
-            {({
-              values,
-              errors,
-              touched,
-              handleChange,
-              handleBlur,
-              setFieldValue,
-              handleSubmit,
-              isSubmitting,
-            }) => (
-              <CustomDialog
-                open={scopeDialogOpen}
-                handleClose={() => setScopeDialogOpen(false)}
-                title={
-                  <Box
-                    display="flex"
-                    flexDirection="row"
-                    gap={1}
-                    alignItems="center"
-                    component="span"
-                    sx={{ fontWeight: 'normal' }}
-                  >
-                    <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
-                      Create Seating Plan
-                    </Box>
-                    <CustomTooltip
-                      arrow
-                      placement="right"
-                      title="Define a new seating arrangement plan for specific subjects and classrooms."
-                    >
-                      <Iconify
-                        icon={GlobalIcons.info}
-                        sx={{ cursor: 'pointer' }}
-                        color="info.main"
-                        width={16}
-                        height={16}
-                      />
-                    </CustomTooltip>
-                  </Box>
-                }
-                maxWidth="sm"
-                hasForm={false}
-              >
-                <DialogScrollContent>
-                  <Stack spacing={2}>
-                    <Box sx={{ pt: 1 }}>
-                      <TextField
-                        name="planName"
-                        value={values.planName}
-                        label="Plan Name *"
-                        onChange={(e) => {
-                          handleChange(e);
-                          setScopeName(e.target.value);
-                        }}
-                        onBlur={handleBlur}
-                        placeholder="Enter plan name"
-                        fullWidth
-                        size="small"
-                        error={touched.planName && Boolean(errors.planName)}
-                        helperText={touched.planName && errors.planName}
-                        sx={{
-                          animation:
-                            touched.planName && errors.planName
-                              ? `${shakeAnimation} 0.5s ease-in-out`
-                              : 'none',
-                        }}
-                      />
-                    </Box>
-                    {allSubjectPlanWithAllocations && (
-                      <Alert severity="warning">
-                        The all-subject plan already has allocations. This new plan will be
-                        validated separately.
-                      </Alert>
-                    )}
-                    {selectedDialogHasOwnedSubject && (
-                      <Alert severity="error">
-                        Remove subjects already used in another subject-wise plan before creating
-                        this plan.
-                      </Alert>
-                    )}
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                        Select Subjects
-                      </Typography>
-                      <Grid container spacing={1}>
-                        {(scopesData?.availableSubjects || []).map((subject: any) => {
-                          const owner = subjectWiseSubjectOwners.get(subject.examSubjectId);
-                          const label =
-                            owner && owner.name !== subject.subjectName
-                              ? `${subject.subjectName} (${owner.name})`
-                              : subject.subjectName;
-                          return (
-                            <Grid key={subject.examSubjectId} size={{ xs: 12, sm: 6 }}>
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    checked={values.subjectIds.includes(subject.examSubjectId)}
-                                    disabled={!!owner}
-                                    onChange={(event) => {
-                                      const nextIds = event.target.checked
-                                        ? [...values.subjectIds, subject.examSubjectId]
-                                        : values.subjectIds.filter(
-                                          (id) => id !== subject.examSubjectId
-                                        );
-                                      setFieldValue('subjectIds', nextIds);
-                                      setScopeSubjectIds(nextIds);
-                                    }}
-                                  />
-                                }
-                                label={label}
-                              />
-                            </Grid>
-                          );
-                        })}
-                      </Grid>
-                    </Box>
-                  </Stack>
-                </DialogScrollContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                  <CancelButton onClick={() => setScopeDialogOpen(false)} />
-                  <SubmitButton
-                    buttonText="Create"
-                    type="button"
-                    loading={isSavingScope || isSubmitting}
-                    onClick={() => handleSubmit()}
-                  />
-                </DialogActions>
-              </CustomDialog>
-            )}
-          </Formik>
-        )}
+        <CreateSeatingPlanDialog
+          open={scopeDialogOpen}
+          onClose={() => setScopeDialogOpen(false)}
+          availableSubjects={scopesData?.availableSubjects || []}
+          subjectWiseSubjectOwners={subjectWiseSubjectOwners}
+          allSubjectPlanWithAllocations={allSubjectPlanWithAllocations}
+          isSaving={isSavingScope}
+          onSubmit={handleCreatePlanScope}
+          initialPlanName={scopeName}
+          initialSubjectIds={scopeSubjectIds}
+        />
 
         {/* Reset Confirmation Dialog */}
         <ConfirmDialog
