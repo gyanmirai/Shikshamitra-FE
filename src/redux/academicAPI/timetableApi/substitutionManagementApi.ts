@@ -32,6 +32,7 @@ export type ApiSubstitutionRow = {
   isAiSuggested: boolean;
   workloadStatus: string;
   acknowledgementRequired: boolean;
+  isResponseWindowOpen?: boolean;
   createdAt: string;
   acknowledgedAt?: string | null;
   completedAt?: string | null;

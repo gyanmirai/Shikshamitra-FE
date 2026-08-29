@@ -7,11 +7,11 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { useReactToPrint } from 'react-to-print';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
+import { useReactToPrint } from 'react-to-print';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
@@ -22,34 +22,21 @@ import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
-import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { ExamReportTitle, ExamReportApiTypeMap } from 'src/enums/examination-reports';
 import { usePreviewAcademicReportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import {
-  TimetableSettingsSummaryCards,
   ITimetableSummaryCard,
+  TimetableSettingsSummaryCards,
 } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
-import {
-  useGetResultHeaderQuery,
-  useFreezeResultMutation,
-  usePublishResultMutation,
-  useGenerateResultMutation,
-  useGetResultReadinessQuery,
-  useGetStudentResultDetailsQuery,
-} from 'src/redux/academicAPI/ExaminationApi/ResultApi/resultApi';
 import {
   Box,
   Card,
   Stack,
-  Table,
   Button,
-  Dialog,
   Tooltip,
-  TableBody,
-  TableCell,
-  TableHead,
   TextField,
   Accordion,
   IconButton,
@@ -60,11 +47,24 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
+import {
+  useGetResultHeaderQuery,
+  useFreezeResultMutation,
+  usePublishResultMutation,
+  useGenerateResultMutation,
+  useGetResultReadinessQuery,
+  useGetStudentResultDetailsQuery,
+} from 'src/redux/academicAPI/ExaminationApi/ResultApi/resultApi';
 
+import { buildStudentResultDocumentTitle } from './resultPrintUtils';
 import StudentResultPrintReport, {
   STUDENT_RESULT_PRINT_PAGE_STYLE,
 } from './StudentResultPrintReport';
-import { buildStudentResultDocumentTitle } from './resultPrintUtils';
+import {
+  getExamMonthRange,
+  getDefaultExamMonth,
+  buildExamMonthOptions,
+} from '../exam-month-filter';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -824,11 +824,21 @@ export function StudentDetailsDialog({
                 >
                   <Typography
                     variant="caption"
-                    sx={{ display: 'block', color: '#276749', fontSize: 9, fontWeight: 700, lineHeight: 1.2 }}
+                    sx={{
+                      display: 'block',
+                      color: '#276749',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      lineHeight: 1.2,
+                    }}
                   >
                     {item.label}
                   </Typography>
-                  <Typography variant="body2" fontWeight={700} sx={{ color: '#173B2D', lineHeight: 1.3 }}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    sx={{ color: '#173B2D', lineHeight: 1.3 }}
+                  >
                     {item.value}
                   </Typography>
                 </Box>
@@ -905,11 +915,7 @@ export function StudentDetailsDialog({
         </Card>
 
         {/* Top Grid: Student Info, Result Summary */}
-        <Box
-          display="none"
-          gridTemplateColumns={{ xs: '1fr', md: '1.2fr 1.4fr' }}
-          gap={1.5}
-        >
+        <Box display="none" gridTemplateColumns={{ xs: '1fr', md: '1.2fr 1.4fr' }} gap={1.5}>
           {/* Student Info Card */}
           <Card
             sx={{
@@ -1442,7 +1448,9 @@ function AnalyticsCards({
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 const ResultCreation = (_props: TabComponentType) => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   const session: any = useSession();
   const { data: user } = session;
@@ -1462,6 +1470,12 @@ const ResultCreation = (_props: TabComponentType) => {
   const [classes, setClass] = useState<string>('');
   const [division, setDivision] = useState<string>('');
   const [examId, setExamId] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const monthOptions = useMemo(() => buildExamMonthOptions(currentYear), [currentYear]);
+  const selectedMonthRange = useMemo(
+    () => getExamMonthRange(monthOptions, selectedMonth),
+    [monthOptions, selectedMonth]
+  );
 
   useEffect(() => {
     const allClasses: Standards[] =
@@ -1481,6 +1495,12 @@ const ResultCreation = (_props: TabComponentType) => {
     setExamId('');
     setPreviewResult(null);
   }, [division]);
+
+  useEffect(() => {
+    setSelectedMonth(getDefaultExamMonth(monthOptions));
+    setExamId('');
+    setPreviewResult(null);
+  }, [monthOptions]);
 
   // Auto-load results when all filters are selected
   useEffect(() => {
@@ -1504,8 +1524,11 @@ const ResultCreation = (_props: TabComponentType) => {
       DivisionId: division,
       Status: examScheduledStatus.Completed,
       GradeEntryPublishedOnly: true,
+      StartDate: selectedMonthRange?.startDate,
+      EndDate: selectedMonthRange?.endDate,
+      MaxResultCount: 1000,
     },
-    options: { skip: !(medium?.id && classes && division) },
+    options: { skip: !(medium?.id && classes && division && selectedMonthRange) },
   });
 
   const examOptions = useMemo<{ examId: string; examName: string }[]>(() => {
@@ -2012,8 +2035,22 @@ const ResultCreation = (_props: TabComponentType) => {
             formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
             disabled={!classes}
           />
+          <CustomSelect
+            options={monthOptions}
+            label="Month"
+            value={selectedMonth}
+            onChange={(val) => {
+              setSelectedMonth(val as string);
+              setExamId('');
+              setPreviewResult(null);
+            }}
+            labelKey="label"
+            valueKey="value"
+            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+            disabled={!division || monthOptions.length === 0}
+          />
           <Autocomplete
-            disabled={!division}
+            disabled={!division || !selectedMonth}
             loading={isExamLoading || isExamFetching}
             options={examOptions}
             getOptionLabel={(option: any) => option.examName || ''}

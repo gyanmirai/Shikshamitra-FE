@@ -326,6 +326,8 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                       status: 'Active',
                       designation: 'Subject Teacher',
                       department: 'Academics',
+                      email: subject.primaryTeacher.email,
+                      experience: subject.primaryTeacher.experience,
                     }}
                     avatarComp={
                       <Box
@@ -424,6 +426,8 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                           status: 'Active',
                           designation: 'Assistant Teacher',
                           department: 'Academics',
+                          email: teacher.email,
+                          experience: teacher.experience,
                         }}
                         avatarComp={
                           <Box
