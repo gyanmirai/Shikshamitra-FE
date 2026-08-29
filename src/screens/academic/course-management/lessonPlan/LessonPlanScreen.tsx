@@ -1188,14 +1188,14 @@ const LessonPlanScreen = () => {
           await submitLessonPlan({ id: resultId }).unwrap();
         }
 
-        await refetchVisitedTabQueries();
         setLessonModalOpen(false);
-
         shikshaMitraToast.success({
           message: submitAfterSave
             ? 'Lesson plan submitted for review.'
             : 'Lesson plan saved as draft.',
         });
+        // The mutations invalidate the lesson-plan tag, so active timeline/list queries refresh
+        // in the background without keeping this completed form open.
       } catch (err: any) {
         shikshaMitraToast.error({
           message: err?.data?.error?.message || 'Failed to save lesson plan.',
@@ -1209,7 +1209,6 @@ const LessonPlanScreen = () => {
       currentTeacherId,
       updateLessonPlan,
       submitLessonPlan,
-      refetchVisitedTabQueries,
     ]
   );
 
