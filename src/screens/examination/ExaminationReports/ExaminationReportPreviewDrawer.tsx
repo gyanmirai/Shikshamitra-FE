@@ -359,7 +359,7 @@ const ExaminationReportPreviewDrawer = ({
                   hover
                   sx={(theme) => ({
                     '&:nth-of-type(even)': {
-                      bgcolor: alpha(theme.palette.grey[100], 0.6),
+                      bgcolor: theme.palette.action.hover,
                     },
                   })}
                 >
@@ -410,15 +410,14 @@ const ExaminationReportPreviewDrawer = ({
       {/* Footer */}
       <Divider />
       <Box
-        sx={(theme) => ({
+        sx={{
           px: 3,
           py: 2,
           display: 'flex',
           gap: 1,
           justifyContent: 'flex-end',
-          bgcolor: alpha(theme.palette.grey[100], 0.6),
           flexShrink: 0,
-        })}
+        }}
       >
         <Button variant="outlined" color="inherit" size="small" onClick={onClose}>
           Close

@@ -42,7 +42,6 @@ export const getChapterInitialValues = (editData?: IChapter | null) => {
     publishStatus: editData?.publishStatus || 'Draft',
     reviewStatus: editData?.reviewStatus || 'Not Submitted',
     notifyOnPublish: Boolean(editData?.notifyOnPublish),
-    progressPercentage: editData?.progressPercentage ?? 0,
     coverageStatus: editData?.coverageStatus || 'Not Started',
     lessonPlanStatus: editData?.lessonPlanStatus || 'Not Linked',
     homeworkStatus: editData?.homeworkStatus || 'Not Mapped',

@@ -9,7 +9,7 @@ const pretty = (raw: unknown): string => {
     // try date
     if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
       const d = dayjs(raw);
-      if (d.isValid()) return d.format('DD MMM YYYY');
+      if (d.isValid()) return d.format('DD-MM-YYYY');
     }
     return raw;
   }
@@ -30,7 +30,7 @@ const describeValue = (raw: unknown) => {
   if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}/.test(raw)) {
     const d = dayjs(raw);
     return d.isValid()
-      ? { display: d.format('DD MMM YYYY'), dataType: 'date' as const }
+      ? { display: d.format('DD-MM-YYYY'), dataType: 'date' as const }
       : { display: raw, dataType: 'string' as const };
   }
   return { display: pretty(raw), dataType: 'string' as const };

@@ -293,31 +293,31 @@ const HomeworkReportPreviewDrawer = ({
             <TableRow>
               {isPreviewLoading
                 ? Array.from({ length: 5 }).map((_, i) => (
-                    <TableCell
-                      key={i}
-                      sx={(theme) => ({
-                        bgcolor: alpha(theme.palette.primary.light, 0.12),
-                        fontWeight: 700,
-                      })}
-                    >
-                      <Skeleton width={80} height={20} />
-                    </TableCell>
-                  ))
+                  <TableCell
+                    key={i}
+                    sx={(theme) => ({
+                      bgcolor: alpha(theme.palette.primary.light, 0.12),
+                      fontWeight: 700,
+                    })}
+                  >
+                    <Skeleton width={80} height={20} />
+                  </TableCell>
+                ))
                 : columns.map((col) => (
-                    <TableCell
-                      key={col.id}
-                      sx={(theme) => ({
-                        bgcolor: alpha(theme.palette.primary.light, 0.12),
-                        fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        color: theme.palette.primary.dark,
-                        borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                        fontSize: '0.78rem',
-                      })}
-                    >
-                      {col.label}
-                    </TableCell>
-                  ))}
+                  <TableCell
+                    key={col.id}
+                    sx={(theme) => ({
+                      bgcolor: alpha(theme.palette.primary.light, 0.12),
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      color: theme.palette.primary.dark,
+                      borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                      fontSize: '0.78rem',
+                    })}
+                  >
+                    {col.label}
+                  </TableCell>
+                ))}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -413,7 +413,6 @@ const HomeworkReportPreviewDrawer = ({
           display: 'flex',
           gap: 1,
           justifyContent: 'flex-end',
-          bgcolor: 'background.neutral',
           flexShrink: 0,
         })}
       >

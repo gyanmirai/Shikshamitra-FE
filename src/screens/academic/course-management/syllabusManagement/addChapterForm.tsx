@@ -128,7 +128,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     publishStatus: values.publishStatus,
     reviewStatus: values.reviewStatus,
     notifyOnPublish: values.notifyOnPublish,
-    progressPercentage: numberOrZero(values.progressPercentage),
     coverageStatus: values.coverageStatus,
     lessonPlanStatus: values.lessonPlanStatus,
     homeworkStatus: values.homeworkStatus,
@@ -496,7 +495,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                                   boxShadow: 'none',
                                   px: 0,
                                   py: 0,
-                                  mx: 1.75,
                                   mt: 0.5,
                                   fontSize: '0.75rem',
                                   fontWeight: 400,
@@ -552,7 +550,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                                   boxShadow: 'none',
                                   px: 0,
                                   py: 0,
-                                  mx: 1.75,
                                   mt: 0.5,
                                   fontSize: '0.75rem',
                                   fontWeight: 400,
@@ -1248,7 +1245,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           6. Assessment & Weightage Metrics
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Exam weightage, question counts, bloom coverage and progress metrics
+                          Exam weightage, question counts and bloom coverage
                         </Typography>
                       </Box>
                     </Stack>
@@ -1298,7 +1295,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           onChange={formik.handleChange}
                         />
                       </Grid>
-                      <Grid size={{ xs: 12, sm: 3 }}>
+                      <Grid size={{ xs: 12, sm: 4 }}>
                         <TextField
                           fullWidth
                           size="small"
@@ -1309,7 +1306,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           onChange={formik.handleChange}
                         />
                       </Grid>
-                      <Grid size={{ xs: 12, sm: 3 }}>
+                      <Grid size={{ xs: 12, sm: 4 }}>
                         <TextField
                           fullWidth
                           size="small"
@@ -1320,18 +1317,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           onChange={formik.handleChange}
                         />
                       </Grid>
-                      <Grid size={{ xs: 12, sm: 3 }}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="number"
-                          name="progressPercentage"
-                          label="Progress %"
-                          value={formik.values.progressPercentage ?? ''}
-                          onChange={formik.handleChange}
-                        />
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 3 }}>
+                      <Grid size={{ xs: 12, sm: 4 }}>
                         <TextField
                           fullWidth
                           size="small"

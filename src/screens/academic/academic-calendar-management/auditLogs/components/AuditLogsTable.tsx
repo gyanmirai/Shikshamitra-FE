@@ -209,8 +209,8 @@ const AuditLogsTable = ({
           );
         },
         children: (row: any) => (
-          <Box sx={{ p: 2 }}>
-            <AuditDiffViewer diff={row.diff} variant="compact" />
+          <Box sx={{ p: 2, width: '100%', minWidth: 0, overflow: 'hidden' }}>
+            <AuditDiffViewer diff={row.diff} variant="full" />
           </Box>
         ),
       },

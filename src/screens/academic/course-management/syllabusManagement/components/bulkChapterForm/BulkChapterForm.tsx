@@ -232,7 +232,6 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
             visibility: 'Teacher',
             difficultyLevel: 'Medium',
             bloomLevel: 'Understand',
-            progressPercentage: 0,
             healthScore: entry.documents?.length ? 35 : 20,
             questionCount: 0,
             versionLabel: 'v1',

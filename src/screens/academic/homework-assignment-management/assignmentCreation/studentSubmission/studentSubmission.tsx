@@ -8,7 +8,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -570,8 +570,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             </CustomTooltip>
           </Box>
         }
-        maxWidth="md"
-        paperProps={{ sx: { height: { sm: 'min(90vh, 900px)' } } }}
+        maxWidth={usesRubric ? 'lg' : 'md'}
+        paperProps={{ sx: { maxHeight: '90vh' } }}
         hasForm={false}
       >
         {usesRubric &&
@@ -579,7 +579,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           selectedClass &&
           selectedSubject &&
           selectedAssignment?.id && (
-            <Box sx={{ p: 2 }}>
+            <DialogScrollContent sx={{ p: { xs: 1, sm: 1.5 }, flex: 1, minHeight: 0 }}>
               <RubricEvaluationPanel
                 ref={rubricEvaluationRef}
                 mode="assignment"
@@ -591,7 +591,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
                 readOnly={!isEditMode}
               />
-            </Box>
+            </DialogScrollContent>
           )}
         {!usesRubric && (
           <AssignGrade
@@ -607,7 +607,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           />
         )}
         {usesRubric && (
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <DialogActions sx={{ p: 2, borderTop: (theme) => `1px solid ${theme.palette.divider}`, flexShrink: 0 }}>
             {isEditMode ? (
               <>
                 <Button variant="outlined" size="small" onClick={() => handleClose(null, false)} startIcon={<Iconify icon={GlobalIcons.cancel} />}>

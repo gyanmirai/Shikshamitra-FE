@@ -204,15 +204,15 @@ const DailyTimelineTab = ({
         onOpenQuickDiary={
           canManage
             ? () => {
-                const activeOrFirstSlot =
-                  slots.find((s) => s.lessonPlan && s.lessonPlan.status === 'Approved') ||
-                  slots.find((s) => s.lessonPlan);
-                if (activeOrFirstSlot?.lessonPlan) {
-                  onSubmitDiary(activeOrFirstSlot.lessonPlan);
-                } else {
-                  onAddLesson(selectedDate);
-                }
+              const activeOrFirstSlot =
+                slots.find((s) => s.lessonPlan && s.lessonPlan.status === 'Approved') ||
+                slots.find((s) => s.lessonPlan);
+              if (activeOrFirstSlot?.lessonPlan) {
+                onSubmitDiary(activeOrFirstSlot.lessonPlan);
+              } else {
+                onAddLesson(selectedDate);
               }
+            }
             : undefined
         }
         onViewTimetable={onViewTimetable}

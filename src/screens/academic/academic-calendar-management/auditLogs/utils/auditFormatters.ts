@@ -12,18 +12,18 @@ export const formatAuditTimestamp = (iso: string) => {
 
   let label: string;
   if (isToday) {
-    label = `Today, ${d.format('hh:mm A')}`;
+    label = `Today, ${d.format('DD-MM-YYYY, hh:mm A')}`;
   } else if (isYesterday) {
-    label = `Yesterday, ${d.format('hh:mm A')}`;
+    label = `Yesterday, ${d.format('DD-MM-YYYY, hh:mm A')}`;
   } else {
-    label = d.format('DD MMM YYYY, hh:mm A');
+    label = d.format('DD-MM-YYYY, hh:mm A');
   }
 
   return {
     label,
-    full: d.format('DD MMM YYYY, hh:mm:ss A'),
+    full: d.format('DD-MM-YYYY, hh:mm:ss A'),
     short: d.format('hh:mm A'),
-    date: d.format('DD MMM YYYY'),
+    date: d.format('DD-MM-YYYY'),
     relative: humanizeRelative(d),
   };
 };
@@ -38,7 +38,7 @@ export const humanizeRelative = (d: dayjs.Dayjs) => {
   if (diffHr < 24) return `${diffHr}h ago`;
   const diffDay = now.diff(d, 'day');
   if (diffDay < 30) return `${diffDay}d ago`;
-  return d.format('DD MMM YYYY');
+  return d.format('DD-MM-YYYY');
 };
 
 /** Initials for avatar chips. */
@@ -120,7 +120,7 @@ export const groupLogsByDate = (logs: AuditLog[]) => {
     .sort(([a], [b]) => (a < b ? 1 : -1))
     .map(([date, items]) => ({
       date,
-      label: dayjs(date).format('DD MMM YYYY'),
+      label: dayjs(date).format('DD-MM-YYYY'),
       items: items.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)),
     }));
 };

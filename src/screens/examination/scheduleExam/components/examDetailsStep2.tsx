@@ -192,6 +192,9 @@ const SubjectScheduleRow = memo(
   }: SubjectScheduleRowProps) => (
     <TableRow
       sx={{
+        // Keep every cell anchored to the same top edge. Helper text may make a
+        // cell taller, but must never change the vertical position of its control.
+        '& > .MuiTableCell-root': { verticalAlign: 'top' },
         '&:hover': {
           bgcolor: (theme: any) => varAlpha(theme.vars.palette.grey['500Channel'], 0.03),
         },
@@ -351,7 +354,15 @@ const SubjectScheduleRow = memo(
 
       {/* Duration */}
       <TableCell sx={{ minWidth: 90, py: 1, px: 1.5 }}>
-        <DurationCell startTime={values.startTime} endTime={values.endTime} />
+        <Box
+          sx={{
+            height: 40,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <DurationCell startTime={values.startTime} endTime={values.endTime} />
+        </Box>
       </TableCell>
 
       {/* Grade Scale */}
