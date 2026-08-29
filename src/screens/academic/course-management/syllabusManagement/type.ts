@@ -118,7 +118,6 @@ export interface IChapterFormValues {
   publishStatus: string;
   reviewStatus: string;
   notifyOnPublish: boolean;
-  progressPercentage: number | string;
   coverageStatus: string;
   lessonPlanStatus: string;
   homeworkStatus: string;

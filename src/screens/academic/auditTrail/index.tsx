@@ -113,7 +113,7 @@ const AcademicAuditTrail = () => {
           return (
             <Stack spacing={0.35}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                {item.summary}
+                {formatActionLabel(item.actionLabel)}: {item.entityName}
               </Typography>
               <Stack direction="row" spacing={0.75} flexWrap="wrap">
                 <Typography variant="caption" color="text.secondary">

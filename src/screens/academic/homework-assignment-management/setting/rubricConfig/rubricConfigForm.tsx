@@ -803,6 +803,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                         />
                       }
                       label="Required"
+                      sx={{ ml: 1 }}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 1 }}>

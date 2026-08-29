@@ -102,7 +102,7 @@ const AuditApprovalTrail = ({ steps }: Props) => {
                         color="text.disabled"
                       />
                       <Typography variant="caption" color="text.disabled">
-                        {dayjs(step.timestamp).format('DD MMM YYYY, hh:mm A')}
+                        {dayjs(step.timestamp).format('DD-MM-YYYY, hh:mm A')}
                       </Typography>
                     </Stack>
                   )}

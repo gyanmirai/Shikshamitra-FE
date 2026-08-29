@@ -1,6 +1,22 @@
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import type { IChapter } from './type';
+
+dayjs.extend(customParseFormat);
+
+export const parseChapterDate = (dateStr?: string) => {
+  if (!dateStr) return dayjs(null);
+  const trimmed = String(dateStr).trim();
+  if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}/.test(trimmed)) {
+    const format = trimmed.includes('/') ? 'DD/MM/YYYY' : 'DD-MM-YYYY';
+    const parsed = dayjs(trimmed, format);
+    if (parsed.isValid()) return parsed;
+  }
+  const parsed = dayjs(trimmed);
+  if (parsed.isValid()) return parsed;
+  return dayjs(null);
+};
 
 export const syllabusTabs = [
   { value: 'overview', label: 'Overview', icon: 'mdi:view-dashboard-outline' },
@@ -63,9 +79,8 @@ export const statusColor = (status?: string) => {
 };
 
 export const getChapterProgress = (chapter: IChapter) => {
-  if (typeof chapter.progressPercentage === 'number') return chapter.progressPercentage;
-  const start = dayjs(chapter.chapterStartTime);
-  const end = dayjs(chapter.chapterEndTime);
+  const start = parseChapterDate(chapter.chapterStartTime);
+  const end = parseChapterDate(chapter.chapterEndTime);
   if (!start.isValid() || !end.isValid()) return 0;
   const totalDays = Math.max(end.diff(start, 'day'), 1);
   const elapsedDays = dayjs().diff(start, 'day');
@@ -75,8 +90,9 @@ export const getChapterProgress = (chapter: IChapter) => {
 export const getCoverageStatus = (chapter: IChapter) => {
   if (chapter.coverageStatus) return chapter.coverageStatus;
   const progress = getChapterProgress(chapter);
+  const end = parseChapterDate(chapter.chapterEndTime);
   if (progress >= 100) return 'Completed';
-  if (dayjs().isAfter(dayjs(chapter.chapterEndTime)) && progress < 100) return 'Delayed';
+  if (end.isValid() && dayjs().isAfter(end) && progress < 100) return 'Delayed';
   if (progress > 0) return 'In Progress';
   return 'Not Started';
 };
@@ -85,8 +101,8 @@ export const getSyllabusMetrics = (chapters: IChapter[]) => {
   const totalChapters = chapters.length;
   const plannedDuration = chapters.reduce((sum, chapter) => {
     if (chapter.estimatedTeachingDays) return sum + Number(chapter.estimatedTeachingDays);
-    const start = dayjs(chapter.chapterStartTime);
-    const end = dayjs(chapter.chapterEndTime);
+    const start = parseChapterDate(chapter.chapterStartTime);
+    const end = parseChapterDate(chapter.chapterEndTime);
     return start.isValid() && end.isValid() ? sum + Math.max(end.diff(start, 'day') + 1, 0) : sum;
   }, 0);
   const completed = chapters.filter((chapter) => getCoverageStatus(chapter) === 'Completed').length;

@@ -289,31 +289,31 @@ const TimetableReportPreviewDrawer = ({
             <TableRow>
               {isPreviewLoading
                 ? Array.from({ length: 5 }).map((_, i) => (
-                    <TableCell
-                      key={i}
-                      sx={(theme) => ({
-                        bgcolor: alpha(theme.palette.primary.light, 0.12),
-                        fontWeight: 700,
-                      })}
-                    >
-                      <Skeleton width={80} height={20} />
-                    </TableCell>
-                  ))
+                  <TableCell
+                    key={i}
+                    sx={(theme) => ({
+                      bgcolor: alpha(theme.palette.primary.light, 0.12),
+                      fontWeight: 700,
+                    })}
+                  >
+                    <Skeleton width={80} height={20} />
+                  </TableCell>
+                ))
                 : columns.map((col) => (
-                    <TableCell
-                      key={col.id}
-                      sx={(theme) => ({
-                        bgcolor: alpha(theme.palette.primary.light, 0.12),
-                        fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        color: theme.palette.primary.dark,
-                        borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                        fontSize: '0.78rem',
-                      })}
-                    >
-                      {col.label}
-                    </TableCell>
-                  ))}
+                  <TableCell
+                    key={col.id}
+                    sx={(theme) => ({
+                      bgcolor: alpha(theme.palette.primary.light, 0.12),
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      color: theme.palette.primary.dark,
+                      borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                      fontSize: '0.78rem',
+                    })}
+                  >
+                    {col.label}
+                  </TableCell>
+                ))}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -352,7 +352,7 @@ const TimetableReportPreviewDrawer = ({
                   hover
                   sx={(theme) => ({
                     '&:nth-of-type(even)': {
-                      bgcolor: alpha(theme.palette.grey[100], 0.6),
+                      bgcolor: theme.palette.action.hover,
                     },
                   })}
                 >
@@ -403,15 +403,14 @@ const TimetableReportPreviewDrawer = ({
       {/* Footer */}
       <Divider />
       <Box
-        sx={(theme) => ({
+        sx={{
           px: 3,
           py: 2,
           display: 'flex',
           gap: 1,
           justifyContent: 'flex-end',
-          bgcolor: alpha(theme.palette.grey[100], 0.6),
           flexShrink: 0,
-        })}
+        }}
       >
         <Button variant="outlined" color="inherit" size="small" onClick={onClose}>
           Close

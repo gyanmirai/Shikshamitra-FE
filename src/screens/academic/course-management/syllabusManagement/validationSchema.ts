@@ -36,11 +36,6 @@ export const getChapterValidationSchema = (
       .nullable()
       .transform((value, originalValue) => (originalValue === '' ? null : value))
       .min(0, 'Buffer days cannot be negative'),
-    progressPercentage: Yup.number()
-      .nullable()
-      .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-      .min(0, 'Progress cannot be below 0')
-      .max(100, 'Progress cannot be above 100'),
     healthScore: Yup.number()
       .nullable()
       .transform((value, originalValue) => (originalValue === '' ? 0 : value))

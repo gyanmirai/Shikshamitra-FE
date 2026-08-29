@@ -467,7 +467,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           </Box>
         }
         maxWidth="md"
-        paperProps={{ sx: { height: { sm: 'min(90vh, 900px)' } } }}
+        paperProps={{ sx: { maxHeight: '90vh' } }}
       >
         <AssignGrade
           data={selectedStudent}

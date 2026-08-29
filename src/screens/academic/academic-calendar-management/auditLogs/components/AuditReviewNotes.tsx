@@ -78,7 +78,7 @@ const AuditReviewNotes = ({ notes = [], canAddNote = true, onAdd }: Props) => {
                   </Typography>
                 )}
                 <Typography variant="caption" color="text.disabled">
-                  · {dayjs(note.createdAt).format('DD MMM, hh:mm A')}
+                  · {dayjs(note.createdAt).format('DD-MM-YYYY, hh:mm A')}
                 </Typography>
               </Stack>
               <Typography variant="body2" sx={{ mt: 0.5 }}>

@@ -30,7 +30,7 @@ export function CustomBreadcrumbs({
   descriptionDisplay = 'tooltip',
   tooltipProps,
   isBack = false,
-  onBack = () => {},
+  onBack = () => { },
   showDivider = false,
   ...other
 }: CustomBreadcrumbsProps) {
@@ -79,8 +79,6 @@ export function CustomBreadcrumbs({
           size="small"
           onClick={onBack}
           sx={{
-            minWidth: 44,
-            minHeight: 44,
             color: 'text.secondary',
             bgcolor: 'action.hover',
             border: '1px solid',
