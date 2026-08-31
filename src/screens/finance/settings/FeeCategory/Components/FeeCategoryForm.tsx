@@ -134,7 +134,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
         feeHeads: values.feeHeads.map((fh: any) => ({
           id: fh.id || null,
           name: fh.name.trim(),
-          module: fh.module,
+          module: fh.module === '' ? null : fh.module,
           isConcessionApplied: fh.isConcessionApplied,
           description: fh.description || '',
         })),
@@ -372,9 +372,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                             >
                               <CustomSelect
                                 name={`feeHeads.${idx}.module`}
-                                label="Module *"
+                                label="Module"
                                 options={moduleOptions}
-                                value={fh.module || ''}
+                                value={fh.module ?? ''}
                                 labelKey="label"
                                 valueKey="value"
                                 onChange={(value) => {

@@ -14,6 +14,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
 import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import { getFeeHeadModuleDisplayName } from 'src/redux/feeHeadModule/feeHeadModuleApi';
 import {
   feeCategoryApi,
   useGetFeeCategoriesQuery,
@@ -121,7 +122,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
-            {value || '-'}
+            {getFeeHeadModuleDisplayName(value)}
           </Typography>
         ),
       },

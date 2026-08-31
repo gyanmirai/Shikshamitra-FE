@@ -1,3 +1,4 @@
+import type { FeeHeadModule } from 'src/redux/feeHeadModule/feeHeadModuleApi';
 import type { IFeeCategoryResponse } from 'src/redux/feeCategory/feeCategoryApi';
 
 export type IFeeCategory = IFeeCategoryResponse;
@@ -5,7 +6,7 @@ export type IFeeCategory = IFeeCategoryResponse;
 export interface IFeeCategoryFormHead {
   id?: string;
   name: string;
-  module: string;
+  module?: FeeHeadModule | null;
   isConcessionApplied: boolean;
   description: string;
 }

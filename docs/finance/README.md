@@ -19,10 +19,11 @@ Follow this order when changing Finance frontend behavior:
 
 | Step | File | Use it to |
 |---|---|---|
-| 1 | [routes.md](./routes.md) | Confirm visible routes, menu status, and partial surfaces |
-| 2 | [clients.md](./clients.md) | Find Redux Toolkit Query clients and backend contract ownership |
-| 3 | [workflows.md](./workflows.md) | Trace charge, collection, concession, adjustment, receipt, audit, and report flows |
-| 4 | [testing.md](./testing.md) | Pick frontend docs, unit, contract, type, and browser checks |
+| 1 | [Finance Engineering Constitution](../../../Shikshamitra-BE/docs/modules/finance/references/constitution.md) | Apply the mandatory cross-stack rules, permission parity, workflow gates, and definition of done |
+| 2 | [routes.md](./routes.md) | Confirm visible routes, menu status, and partial surfaces |
+| 3 | [clients.md](./clients.md) | Find Redux Toolkit Query clients and backend contract ownership |
+| 4 | [workflows.md](./workflows.md) | Trace charge, collection, concession, adjustment, receipt, audit, and report flows |
+| 5 | [testing.md](./testing.md) | Pick frontend docs, unit, contract, type, and browser checks |
 
 ## Ownership boundary
 
@@ -50,6 +51,7 @@ Use this table before code search:
 
 | Question | First file |
 |---|---|
+| What rules must every Finance change satisfy? | [Finance Engineering Constitution](../../../Shikshamitra-BE/docs/modules/finance/references/constitution.md) |
 | Which Finance route or menu item is active? | [routes.md](./routes.md) |
 | Which API client owns a call? | [clients.md](./clients.md) |
 | Which workflow should I test? | [workflows.md](./workflows.md) |

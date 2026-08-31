@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-08-31
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -32,6 +32,8 @@ Use this table to find the first integration file.
 | Invoice and receipt | `src/redux/invoiceAndReceipt/**` |
 | Fee structure | `src/redux/finance/financeFeeStructure.tsx` |
 | Categories and settings | `src/redux/finance/*Category*`, `src/redux/feeCategory/**`, and `src/redux/feeHeadManage/**` |
+
+Fee-head module options are defined by the numeric `FeeHeadModule` enum in `src/redux/feeHeadModule/feeHeadModuleApi.ts`. Fee-category and fee-head clients send the selected number, or `null` when no module is selected, so create and edit forms use the same value type as backend responses.
 
 ## Backend contract source
 
