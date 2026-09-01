@@ -25,6 +25,9 @@ export interface IRequiredDocument {
   documentName: string;
   url: string | null;
   isUploaded: boolean;
+  isRequired: boolean;
+  maxFileSizeBytes: number;
+  acceptedFormats: number[];
 }
 
 export interface IConcessionRequestItem {

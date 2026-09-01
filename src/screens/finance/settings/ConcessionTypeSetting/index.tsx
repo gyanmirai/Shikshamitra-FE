@@ -25,6 +25,7 @@ import {
 import ConcessionTypeTable from './Components/ConcessionTable';
 import ConcessionTypeForm from './Components/ConcessionTypeForm';
 import ConcessionDocumentTable from './Components/ConcessionDocuments';
+import ConcessionTypeVersionHistoryDrawer from './Components/ConcessionTypeVersionHistoryDrawer';
 
 import type { IConcessionTypeForm } from './type';
 
@@ -37,6 +38,9 @@ const ConcessionType = () => {
   const addConcessionTypeDialog = useBoolean();
   const deleteConcessionTypeDialog = useBoolean();
   const viewConcessionTypeDialog = useBoolean();
+  const [versionHistoryTarget, setVersionHistoryTarget] = useState<IConcessionTypeForm | null>(
+    null
+  );
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -55,6 +59,7 @@ const ConcessionType = () => {
     skipCount: (queryParams.page - 1) * queryParams.pageSize,
     maxResultCount: queryParams.pageSize,
     searchTerm: queryParams.search || undefined,
+    includeInactive: true,
   };
 
   // Fetch concession type data
@@ -176,6 +181,7 @@ const ConcessionType = () => {
             viewConcessionTypeDialog.onTrue();
             setSelectedConcessionType(data);
           }}
+          onVersionHistory={setVersionHistoryTarget}
           totalCount={concessionTypes?.data?.totalCount}
           onServerPagination={handleServerPagination}
           onServerSearch={handleServerSearch}
@@ -263,6 +269,13 @@ const ConcessionType = () => {
         >
           <ConcessionDocumentTable data={selectedConcessionType} />
         </CustomDialog>
+
+        <ConcessionTypeVersionHistoryDrawer
+          open={Boolean(versionHistoryTarget)}
+          concessionTypeId={versionHistoryTarget?.id ?? null}
+          concessionTypeName={versionHistoryTarget?.name}
+          onClose={() => setVersionHistoryTarget(null)}
+        />
       </>
     </Box>
   );

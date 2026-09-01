@@ -31,6 +31,7 @@ Use these commands as the first validation set.
 | Charge client and mapper behavior | `npm run test -- src/redux/finance/ChargeManagement` |
 | Finance audit client contract | `npm run test -- src/redux/finance/audit/financeAuditApi.contract.test.ts` |
 | Finance audit UI utilities | `npm run test -- src/screens/finance/AuditTrail` |
+| Concession document constraints | `npm run test -- src/screens/finance/Concession/Components/concessionDocumentUpload.test.ts` |
 | TypeScript impact | `npm run ts` |
 
 ## Add coverage when needed
