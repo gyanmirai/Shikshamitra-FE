@@ -1,3 +1,5 @@
+import type { FeeHeadModule } from 'src/redux/feeHeadModule/feeHeadModuleApi';
+
 import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../finance/financeModuleApi';
@@ -5,7 +7,7 @@ import { financeModuleApi } from '../finance/financeModuleApi';
 export interface IFeeHeadItemRequest {
   id?: string | null;
   name: string;
-  module: string;
+  module?: FeeHeadModule | null;
   isConcessionApplied: boolean;
   description?: string;
 }
@@ -16,7 +18,7 @@ export interface IFeeHeadResponse {
   feeCategoryId: string;
   feeCategoryName?: string;
   name: string;
-  module: string;
+  module: FeeHeadModule | null;
   isConcessionApplied: boolean;
   description?: string;
   isActive: boolean;

@@ -1,3 +1,5 @@
+import type { FeeHeadModule } from 'src/redux/feeHeadModule/feeHeadModuleApi';
+
 import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../finance/financeModuleApi';
@@ -15,7 +17,7 @@ export interface IFeeHeadListResponse {
 export interface IFeeHeadCreateOrUpdateBody {
   feeCategoryId: string;
   name: string;
-  module: string;
+  module?: FeeHeadModule | null;
   isConcessionApplied: boolean;
   description?: string;
 }

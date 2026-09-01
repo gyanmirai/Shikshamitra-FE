@@ -1,11 +1,13 @@
 import type { Dayjs } from 'dayjs';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { SyntheticEvent } from 'react';
+import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
 
 // ── Enums (aligned with backend PaymentTermEnums.cs) ──────────────────────────
 
-export type PaymentTermStatus = 'Active' | 'Archived';
+export type PaymentTermStatus = 'Draft' | 'Active' | 'Archived';
 export type PaymentTermVersionStatus = 'Draft' | 'Published' | 'Superseded' | 'Archived';
-export type DemandGenerationRule = 'Immediately' | 'XDaysBeforeDue' | 'OnDueDate' | 'Manual';
+export type DemandGenerationRule =
+  'OnInstallmentStartDate' | 'XDaysBeforeDue' | 'OnDueDate' | 'SpecificDate';
 export type InitialDemandStatus = 'Draft' | 'Published';
 export type HolidayShiftingMethod = 'None' | 'NextWorkingDay' | 'PreviousWorkingDay';
 export type ScheduleMode = 'Inherited' | 'Customized';
@@ -82,6 +84,8 @@ export interface IPaymentTerm {
   // Version-related fields
   currentVersionId?: string;
   currentVersionNumber?: number;
+  currentVersionStatus?: PaymentTermVersionStatus;
+  hasDraft?: boolean;
 
   // Audit fields
   createdBy?: string;
@@ -159,15 +163,32 @@ export interface IScheduleOverride {
 
 export interface IPaymentTermTableProps {
   loading: boolean;
-  data: IPaymentTerm[];
-  addPaymentTerm: UseBooleanReturn;
-  setEditData: (value: IPaymentTerm | null) => void;
-  onEdit: (row: IPaymentTerm) => void;
-  onDelete: (row: IPaymentTerm) => void;
+  data: PaymentTermListItem[];
+  totalCount: number;
+  page: number;
+  rowsPerPage: number;
+  searchTerm: string;
+  archived: boolean;
+  onPaginationChange: (page: number, pageSize: number) => void;
+  onSearchChange: (search: string) => void;
+  onView: (row: PaymentTermListItem) => void;
+  onVersionHistory: (row: PaymentTermListItem) => void;
+  onEdit: (row: PaymentTermListItem) => void;
+  onDelete: (row: PaymentTermListItem) => void;
+  onPublish: (row: PaymentTermListItem) => void;
+  onArchive: (row: PaymentTermListItem) => void;
+  onRestore: (row: PaymentTermListItem) => void;
+  canView: boolean;
+  canEdit: boolean;
+  canPublish: boolean;
+  canArchive: boolean;
+  canRestore: boolean;
+  canDelete: boolean;
+  actionLoading: boolean;
 }
 
 export interface IPaymentTermFormProps {
   open: boolean;
-  onClose: (e?: any, isSubmit?: boolean) => void;
+  onClose: (event?: SyntheticEvent | null, isSubmit?: boolean) => void;
   editData: IPaymentTerm | null;
 }

@@ -2,15 +2,9 @@
 
 import type { FormikProps } from 'formik';
 
-import {
-  Grid,
-  Select,
-  MenuItem,
-  TextField,
-  InputLabel,
-  Typography,
-  FormControl,
-} from '@mui/material';
+import { Grid, TextField } from '@mui/material';
+import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 
 import { SectionCard } from '../ui/SectionCard';
 
@@ -32,41 +26,44 @@ export function BillingScheduleSection({ formik }: BillingScheduleSectionProps) 
   return (
     <SectionCard
       title="Billing Schedule"
-      subtitle="Configure when payment demands are generated and their initial status."
+      subtitle="Choose how the bill generation date is calculated for every installment."
+      info="This rule calculates when each student bill is generated. It does not change the installment due date."
     >
       <Grid container spacing={2.5}>
-        {/* Generate Bills */}
-        <Grid size={{ xs: 12, sm: isXDays ? 5 : 6 }}>
-          <FormControl
-            fullWidth
-            size="small"
+        <Grid size={{ xs: 12, sm: isXDays ? 7 : 12 }}>
+          <ShakingTextField
             error={
               formik.touched.demandGenerationRule && Boolean(formik.errors.demandGenerationRule)
             }
           >
-            <InputLabel>Generate Bills *</InputLabel>
-            <Select
+            <CustomSelect
               label="Generate Bills *"
-              name="demandGenerationRule"
+              options={[
+                { value: 'OnInstallmentStartDate', label: 'On installment start date' },
+                { value: 'XDaysBeforeDue', label: 'X days before due date' },
+                { value: 'OnDueDate', label: 'On due date' },
+                { value: 'SpecificDate', label: 'On a specific date' },
+              ]}
               value={formik.values.demandGenerationRule}
-              onChange={formik.handleChange}
-            >
-              <MenuItem value="Immediately">Immediately on assignment</MenuItem>
-              <MenuItem value="XDaysBeforeDue">X Days before due date</MenuItem>
-              <MenuItem value="OnDueDate">On due date</MenuItem>
-              <MenuItem value="Manual">Manual only</MenuItem>
-            </Select>
-            {formik.touched.demandGenerationRule && formik.errors.demandGenerationRule && (
-              <Typography variant="caption" color="error.main" mt={0.5} display="block">
-                {formik.errors.demandGenerationRule}
-              </Typography>
-            )}
-          </FormControl>
+              onChange={(value) => {
+                formik.setFieldValue('demandGenerationRule', value);
+                if (value !== 'XDaysBeforeDue') formik.setFieldValue('demandOffsetDays', null);
+              }}
+              error={
+                formik.touched.demandGenerationRule && Boolean(formik.errors.demandGenerationRule)
+              }
+              helperText={
+                formik.touched.demandGenerationRule
+                  ? String(formik.errors.demandGenerationRule ?? '')
+                  : ''
+              }
+            />
+          </ShakingTextField>
         </Grid>
 
         {/* Offset Days — conditional */}
         {isXDays && (
-          <Grid size={{ xs: 12, sm: 3 }}>
+          <Grid size={{ xs: 12, sm: 5 }}>
             <TextField
               fullWidth
               size="small"
@@ -84,22 +81,6 @@ export function BillingScheduleSection({ formik }: BillingScheduleSectionProps) 
             />
           </Grid>
         )}
-
-        {/* Initial Demand Status */}
-        <Grid size={{ xs: 12, sm: isXDays ? 4 : 6 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Initial Demand Status</InputLabel>
-            <Select
-              label="Initial Demand Status"
-              name="initialDemandStatus"
-              value={formik.values.initialDemandStatus}
-              onChange={formik.handleChange}
-            >
-              <MenuItem value="Draft">Draft — Requires approval to go live</MenuItem>
-              <MenuItem value="Published">Published — Immediately visible to parents</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
       </Grid>
     </SectionCard>
   );

@@ -135,12 +135,9 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
   const masterInstallments: IInstallmentOverride[] = useMemo(() => {
     if (!paymentTermDetail) return [];
 
-    const draft = paymentTermDetail.versions?.find((v) => v.status === 'Draft');
     const current =
-      draft ??
-      paymentTermDetail.versions?.find((v) => v.id === paymentTermDetail.currentVersionId) ??
       paymentTermDetail.versions?.find((v) => v.status === 'Published') ??
-      paymentTermDetail.versions?.[0];
+      paymentTermDetail.versions?.find((v) => v.id === paymentTermDetail.currentVersionId);
 
     return (current?.installments ?? []).map((inst, idx) => ({
       id: inst.id ?? String(idx),
@@ -148,6 +145,7 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
       sequence: inst.sequence ?? idx + 1,
       startDate: inst.coverageStartDate ?? null,
       endDate: inst.coverageEndDate ?? null,
+      demandDate: inst.demandDate ?? null,
       dueDate: inst.dueDate ?? null,
       isModified: false,
     }));
@@ -558,6 +556,7 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
                     <Box sx={{ width: COL.start, flexShrink: 0 }}>
                       <DatePicker
                         label="Start Date *"
+                        format="DD/MM/YYYY"
                         value={inst.startDate ? dayjs(inst.startDate) : null}
                         disabled={isLocked}
                         onChange={(d) => updateRow(idx, 'startDate', d ? d.toISOString() : null)}
@@ -582,6 +581,7 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
                     <Box sx={{ width: COL.end, flexShrink: 0 }}>
                       <DatePicker
                         label="End Date *"
+                        format="DD/MM/YYYY"
                         value={inst.endDate ? dayjs(inst.endDate) : null}
                         disabled={isLocked}
                         minDate={inst.startDate ? dayjs(inst.startDate) : undefined}
@@ -607,6 +607,7 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
                     <Box sx={{ width: COL.due, flexShrink: 0 }}>
                       <DatePicker
                         label="Due Date *"
+                        format="DD/MM/YYYY"
                         value={inst.dueDate ? dayjs(inst.dueDate) : null}
                         disabled={isLocked}
                         onChange={(d) => updateRow(idx, 'dueDate', d ? d.toISOString() : null)}

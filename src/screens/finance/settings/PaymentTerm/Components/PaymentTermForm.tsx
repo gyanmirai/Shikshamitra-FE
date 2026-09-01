@@ -1,8 +1,11 @@
 'use client';
 
-import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Alert, Button, Typography } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Alert, Button, Divider, LinearProgress } from '@mui/material';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 
 import { FormFooter } from './FormFooter';
 import { SummaryPanel } from './panels/SummaryPanel';
@@ -14,12 +17,14 @@ import { BillingScheduleSection } from './sections/BillingScheduleSection';
 import type { IPaymentTermFormProps } from '../type';
 
 export default function PaymentTermForm({ open: _open, onClose, editData }: IPaymentTermFormProps) {
+  const discardDialog = useBoolean();
   const {
     formik,
     boards,
     checks,
     demandLabel,
     isSubmitting,
+    isLoadingDetail,
     codeManuallyEdited,
     setCodeManuallyEdited,
     handleSubmit,
@@ -28,89 +33,122 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
     duplicateInstallment,
   } = usePaymentTermForm(editData, onClose);
 
+  const requestClose = () => {
+    if (formik.dirty && !isSubmitting) {
+      discardDialog.onTrue();
+      return;
+    }
+    onClose();
+  };
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box
-        sx={{
-          px: 3,
-          py: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          flexShrink: 0,
-        }}
-      >
-        <Box>
-          <Typography variant="h6" fontWeight={700}>
-            {editData ? 'Edit Payment Term' : 'Create Payment Term'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {editData
-              ? 'Update installments, demand rules, and payment options.'
-              : 'Configure installment schedules, due dates, and payment rules.'}
-          </Typography>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Box sx={{ flexShrink: 0, bgcolor: 'background.paper' }}>
+          <DrawerHeader
+            title={editData ? 'Edit Payment Term' : 'Create Payment Term'}
+            subtitle={
+              editData
+                ? 'Update the schedule, billing rule, and lifecycle status.'
+                : 'Configure a reusable installment and billing schedule.'
+            }
+            helpText="Payment Terms define when student-fee installments are billed and due. Payment behaviour remains controlled by Finance policies."
+            onClose={requestClose}
+            closeDisabled={isSubmitting}
+          />
+          <Divider />
+          {(isLoadingDetail || isSubmitting) && (
+            <LinearProgress
+              aria-label={isSubmitting ? 'Saving payment term' : 'Loading payment term'}
+            />
+          )}
         </Box>
-        <Button
-          size="small"
-          onClick={() => onClose()}
-          startIcon={<Iconify icon="mdi:close" />}
-          color="inherit"
-        >
-          Close
-        </Button>
-      </Box>
 
-      {/* ── Downstream warning ─────────────────────────────────────────────── */}
-      {(editData?.isUsedInDownstream || editData?.canDirectEdit === false) && (
-        <Alert
-          severity="warning"
-          variant="filled"
-          sx={{ mx: 3, mt: 1.5, borderRadius: 1, flexShrink: 0, py: 0.75 }}
-        >
-          This term is mapped to active fee structures. Saving will create a new draft revision
-          automatically.
-        </Alert>
-      )}
+        {/* ── Downstream warning ─────────────────────────────────────────────── */}
+        {(editData?.isUsedInDownstream || editData?.canDirectEdit === false) && (
+          <Alert
+            severity="warning"
+            variant="filled"
+            sx={{ mx: 3, mt: 1.5, borderRadius: 1, flexShrink: 0, py: 0.75 }}
+          >
+            This term is mapped to active fee structures. Saving will create a new draft revision
+            automatically.
+          </Alert>
+        )}
 
-      {/* ── Body ───────────────────────────────────────────────────────────── */}
-      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        {/* Left: Scrollable form */}
-        <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ p: 3, pb: 5 }}>
-            <GeneralInfoSection
-              formik={formik}
-              boards={boards}
-              codeManuallyEdited={codeManuallyEdited}
-              setCodeManuallyEdited={setCodeManuallyEdited}
-            />
-            <InstallmentSection
-              formik={formik}
-              onAdd={addInstallment}
-              onRemove={removeInstallment}
-              onDuplicate={duplicateInstallment}
-            />
-            <BillingScheduleSection formik={formik} />
-          </Box>
-        </Scrollbar>
+        {/* ── Body ───────────────────────────────────────────────────────────── */}
+        <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {/* Left: Scrollable form */}
+          <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
+            <Box
+              sx={{
+                p: 3,
+                pb: 5,
+                opacity: isLoadingDetail ? 0.55 : 1,
+                pointerEvents: isLoadingDetail ? 'none' : 'auto',
+              }}
+            >
+              <Alert severity="info" variant="outlined" sx={{ mb: 2.5 }}>
+                Choose <strong>Draft</strong> to keep the schedule editable, or{' '}
+                <strong>Active</strong> to publish it. If this is selected as default, the previous
+                default for the same board is replaced automatically.
+              </Alert>
+              <GeneralInfoSection
+                formik={formik}
+                boards={boards}
+                codeManuallyEdited={codeManuallyEdited}
+                setCodeManuallyEdited={setCodeManuallyEdited}
+                isDefaultSelectionLocked={Boolean(
+                  formik.values.id && formik.initialValues.isDefaultTerm
+                )}
+              />
+              <InstallmentSection
+                formik={formik}
+                board={boards.find((board) => board.id === formik.values.boardId)}
+                onAdd={addInstallment}
+                onRemove={removeInstallment}
+                onDuplicate={duplicateInstallment}
+              />
+              <BillingScheduleSection formik={formik} />
+            </Box>
+          </Scrollbar>
 
-        {/* Right: Sticky summary panel */}
-        <SummaryPanel
-          values={formik.values}
-          boards={boards}
-          checks={checks}
-          demandLabel={demandLabel}
+          {/* Right: Sticky summary panel */}
+          <SummaryPanel
+            values={formik.values}
+            boards={boards}
+            checks={checks}
+            demandLabel={demandLabel}
+          />
+        </Box>
+
+        {/* ── Footer ─────────────────────────────────────────────────────────── */}
+        <FormFooter
+          isSubmitting={isSubmitting}
+          disabled={isLoadingDetail || !formik.dirty}
+          onCancel={requestClose}
+          onSubmit={handleSubmit}
+        />
+        <ConfirmDialog
+          open={discardDialog.value}
+          icon="warning"
+          title="Discard unsaved changes?"
+          content="Your Payment Term draft has not been saved. Closing now will discard these changes."
+          onClose={discardDialog.onFalse}
+          action={
+            <Button
+              color="error"
+              variant="contained"
+              onClick={() => {
+                discardDialog.onFalse();
+                onClose();
+              }}
+            >
+              Discard changes
+            </Button>
+          }
         />
       </Box>
-
-      {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <FormFooter
-        isSubmitting={isSubmitting}
-        isEdit={Boolean(editData)}
-        onCancel={() => onClose()}
-        onSubmit={handleSubmit}
-      />
-    </Box>
+    </BackPopUpChecked>
   );
 }

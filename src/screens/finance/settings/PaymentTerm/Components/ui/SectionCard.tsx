@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Card, Typography } from '@mui/material';
+import { Box, Card, Stack, Typography } from '@mui/material';
+import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 
 // ---------------------------------------------------------------------------
 // SectionCard — labelled card wrapper used throughout PaymentTermForm sections
@@ -7,12 +8,13 @@ import { Box, Card, Typography } from '@mui/material';
 interface SectionCardProps {
   title: string;
   subtitle?: string;
+  info?: string;
   /** Optional action element rendered in the card header (e.g. an "Add" button) */
   action?: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function SectionCard({ title, subtitle, action, children }: SectionCardProps) {
+export function SectionCard({ title, subtitle, info, action, children }: SectionCardProps) {
   const hasContent = React.Children.toArray(children).filter(Boolean).length > 0;
 
   return (
@@ -38,9 +40,12 @@ export function SectionCard({ title, subtitle, action, children }: SectionCardPr
         }}
       >
         <Box>
-          <Typography variant="h6" fontWeight={700} lineHeight={1.4}>
-            {title}
-          </Typography>
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Typography variant="h6" fontWeight={700} lineHeight={1.4}>
+              {title}
+            </Typography>
+            {info ? <InfoTooltipIcon title={info} /> : null}
+          </Stack>
           {subtitle && (
             <Typography variant="caption" color="text.secondary" display="block">
               {subtitle}

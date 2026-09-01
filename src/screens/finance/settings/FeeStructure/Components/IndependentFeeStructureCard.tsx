@@ -187,11 +187,13 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const paymentTermOptions = useMemo(
     () =>
-      (paymentTermsData?.items ?? []).map((t) => ({
-        label: t.name,
-        value: t.id,
-        currentVersionNumber: t.currentVersionNumber,
-      })),
+      (paymentTermsData?.items ?? [])
+        .filter((term) => term.hasPublishedVersion && term.status !== 'Archived')
+        .map((t) => ({
+          label: t.name,
+          value: t.id,
+          currentVersionNumber: t.currentVersionNumber,
+        })),
     [paymentTermsData?.items]
   );
 
@@ -1015,12 +1017,16 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                                     const published = detail.versions?.find(
                                       (v) => v.status === 'Published'
                                     );
-                                    versionId =
-                                      published?.id ??
-                                      detail.currentVersionId ??
-                                      detail.versions?.[0]?.id;
+                                    versionId = published?.id;
                                   } catch {
-                                    // Keep selection even if version lookup fails
+                                    versionId = undefined;
+                                  }
+                                  if (!versionId) {
+                                    shikshaMitraToast.error({
+                                      message:
+                                        'This Payment Term has no published version available for assignment.',
+                                    });
+                                    return;
                                   }
                                   updateFeeHeadFields(idx, {
                                     paymentTermId: String(selected.value),

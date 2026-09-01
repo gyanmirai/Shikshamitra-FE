@@ -15,6 +15,10 @@ Configure new module and feature paths in `src/constants/` first, then add the A
 Use the existing shared component or MUI component before creating a local primitive, use theme palette tokens instead of hardcoded colors, and serialize date-time payloads as `DateTimeOffset`-compatible ISO 8601 values.
 When no suitable project component exists, consult [Minimal UI components](https://minimals.cc/components) and adapt the pattern to this repository’s theme, accessibility, routing, and state rules.
 
+## Finance work (mandatory)
+
+Before planning, implementing, reviewing, or testing any Finance UI/client behavior—or any Student, Admission, Transport, Hostel, Library, HR/Payroll, Dashboard, Notification, or Report change that creates, changes, settles, reverses, exports, or displays money—read **[the Finance Engineering Constitution](../Shikshamitra-BE/docs/modules/finance/references/constitution.md)**. Backend permission constants and contracts are the security and behavior source of truth; frontend menu, route, page, action, and API guards must match them exactly. Existing aliases or mismatches are migration debt, not a precedent to copy.
+
 ## Repository layout
 
 | Area                    | Path                            |
