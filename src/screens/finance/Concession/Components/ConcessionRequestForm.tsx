@@ -245,7 +245,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const { data: concessionTypes = [] } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, includeInactive: isEditMode },
     options: { skip: !currentYear?.id },
   });
 

@@ -41,6 +41,18 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
 
+    uploadConcessionDocumentFile: builder.mutation({
+      query: ({ concessionTypeId, documentId, file }) => {
+        const body = new FormData();
+        body.append('File', file);
+        return {
+          url: `/concession-request/types/${concessionTypeId}/documents/${documentId}/file`,
+          method: 'POST',
+          body,
+        };
+      },
+    }),
+
     getStudentConcessionDetails: builder.query({
       query: ({ studentId, ...params }) => ({
         url: `/concession-requests/${studentId}`,
@@ -112,6 +124,7 @@ export const {
   useCreateConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
   useUploadConcessionDocumentsMutation,
+  useUploadConcessionDocumentFileMutation,
   useGetStudentConcessionDetailsQuery,
   useGetConcessionApprovalContextQuery,
   useApproveConcessionRequestMutation,

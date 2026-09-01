@@ -9,8 +9,9 @@ export const concessionTypeValidationSchema = (
   Yup.object().shape({
     name: Yup.string()
       .trim()
-      .required('Concession Name is required')
-      .test('unique-concession-type', 'This concession name already exists', (value) => {
+      .max(100, 'Concession Type Name cannot exceed 100 characters')
+      .required('Concession Type Name is required')
+      .test('unique-concession-type', 'This concession type name already exists', (value) => {
         if (!value?.trim()) return true;
         const trimmed = value.trim().toLowerCase();
         // Allow saving the same name when editing the current record
@@ -20,13 +21,21 @@ export const concessionTypeValidationSchema = (
 
     documents: Yup.array().of(
       Yup.object().shape({
-        documentName: Yup.string().trim().required('Name is required'),
-        documentSize: Yup.number().required('Size is required').max(20, 'Max 20 Size can be add'),
-        acceptedFormat: Yup.array()
+        documentName: Yup.string()
+          .trim()
+          .max(100, 'Document Name cannot exceed 100 characters')
+          .required('Document Name is required'),
+        maxFileSizeMb: Yup.number()
+          .typeError('Maximum file size is required')
+          .moreThan(0, 'Maximum file size must be greater than 0 MB')
+          .max(20, 'Maximum allowed file size is 20 MB')
+          .required('Maximum file size is required'),
+        acceptedFormats: Yup.array()
           .of(Yup.number())
           .min(1, 'At least one file format is required')
           .required('Accepted formats are required'),
+        isRequired: Yup.boolean().required(),
       })
     ),
-    description: Yup.string().trim(),
+    description: Yup.string().trim().max(500, 'Description cannot exceed 500 characters'),
   });

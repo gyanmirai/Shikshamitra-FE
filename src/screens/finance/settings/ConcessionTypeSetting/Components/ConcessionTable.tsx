@@ -2,14 +2,15 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
 import React, { useMemo, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
 import { usePatchConcessionTypeStatusMutation } from 'src/redux/finance/concessionType';
+import { Box, Chip, Stack, Switch, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
 import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
 
@@ -21,6 +22,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   onEdit,
   onDelete,
   onView,
+  onVersionHistory,
   totalCount,
   onServerPagination,
   onServerSearch,
@@ -54,7 +56,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
     () => [
       {
         id: 'name',
-        label: 'Name',
+        label: 'Concession Type Name',
         align: 'left',
         width: 150,
         minWidth: 150,
@@ -79,6 +81,14 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         maxWidth: 340,
         cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
         render: (value) => (value || []).map((doc: any) => doc.documentName).join(', '),
+      },
+      {
+        id: 'deactivationReason',
+        label: 'Deactivation Reason',
+        align: 'left',
+        width: 220,
+        minWidth: 180,
+        render: (value) => value || '-',
       },
       {
         id: 'isActive',
@@ -116,19 +126,38 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         sticky: true,
         width: 96,
         minWidth: 80,
-        render: (value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showViewIcon
-            handleViewClick={() => {
-              onView?.(row as IConcessionTypeForm);
-            }}
-            showEditIcon
-            showDeleteIcon={row.isUsedInDownstream}
-            handleEditClick={() => onEdit?.(row as IConcessionTypeForm)}
-            handleDeleteClick={() => onDelete?.(row as IConcessionTypeForm)}
-          />
-        ),
+        render: (value, row) => {
+          const concessionType = row as IConcessionTypeForm;
+          return (
+            <ThreeDotsActions
+              showViewIcon
+              viewLabel={`View ${concessionType.name}`}
+              handleViewClick={() => onView?.(concessionType)}
+              showEditIcon
+              editLabel={`Edit ${concessionType.name}`}
+              showDeleteIcon
+              disableDeleteIcon={!canDeleteConcessionType(concessionType)}
+              deleteLabel={`Delete ${concessionType.name}`}
+              handleEditClick={() => onEdit?.(concessionType)}
+              handleDeleteClick={() => onDelete?.(concessionType)}
+              showThreeDots
+              moreLabel={`More actions for ${concessionType.name}`}
+              actions={({ popover }) => (
+                <MenuList>
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      onVersionHistory?.(concessionType);
+                    }}
+                  >
+                    <Iconify icon="mdi:timeline-clock-outline" />
+                    Version History
+                  </MenuItem>
+                </MenuList>
+              )}
+            />
+          );
+        },
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -208,12 +237,17 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
             size="small"
             onClick={async () => {
               if (!statusData) return;
+              if (!nextStatus && !deactivationReason.trim()) {
+                shikshaMitraToast.error({ message: 'Deactivation reason is required' });
+                return;
+              }
               try {
                 await patchConcessionTypeStatus({
                   id: statusData.id,
                   body: {
                     isActive: nextStatus,
-                    deactivationReason: nextStatus ? null : deactivationReason || null,
+                    deactivationReason: nextStatus ? null : deactivationReason.trim(),
+                    concurrencyStamp: statusData.concurrencyStamp,
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
@@ -236,3 +270,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
 };
 
 export default ConcessionTypeTable;
+
+export const canDeleteConcessionType = (concessionType: IConcessionTypeForm) =>
+  concessionType.isActive === false &&
+  (concessionType.canDelete ?? !concessionType.isUsedInDownstream);

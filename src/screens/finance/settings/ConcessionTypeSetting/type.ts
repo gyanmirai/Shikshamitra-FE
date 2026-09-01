@@ -6,28 +6,37 @@ export enum ConcessionBasedOn {
 }
 
 export enum ConcessionDocumentFormat {
-  Pdf = 0,
+  Jpg = 0,
   Jpeg = 1,
   Png = 2,
-  Doc = 3,
-  Docx = 4,
-  Xls = 5,
+  Docx = 3,
+  Pdf = 4,
+  Xlsx = 5,
 }
 
 export const ConcessionDocumentFormatArray = [
-  { label: 'PDF', value: ConcessionDocumentFormat.Pdf },
+  { label: 'JPG', value: ConcessionDocumentFormat.Jpg },
   { label: 'JPEG', value: ConcessionDocumentFormat.Jpeg },
   { label: 'PNG', value: ConcessionDocumentFormat.Png },
-  { label: 'DOC', value: ConcessionDocumentFormat.Doc },
   { label: 'DOCX', value: ConcessionDocumentFormat.Docx },
-  { label: 'XLS', value: ConcessionDocumentFormat.Xls },
+  { label: 'PDF', value: ConcessionDocumentFormat.Pdf },
+  { label: 'XLSX', value: ConcessionDocumentFormat.Xlsx },
+];
+
+export const DEFAULT_CONCESSION_DOCUMENT_SIZE_MB = 5;
+export const DEFAULT_CONCESSION_DOCUMENT_FORMATS = [
+  ConcessionDocumentFormat.Pdf,
+  ConcessionDocumentFormat.Jpg,
+  ConcessionDocumentFormat.Jpeg,
+  ConcessionDocumentFormat.Png,
 ];
 
 export interface IConcessionDocument {
   id?: number | string; // optional (for editing / backend reference)
   documentName: string;
-  documentSize: number | string; // bytes
-  acceptedFormat: number[]; // e.g. [0, 1]
+  maxFileSizeMb: number | string;
+  acceptedFormats: number[];
+  isRequired: boolean;
 }
 
 export interface IConcessionTypeForm {
@@ -38,6 +47,9 @@ export interface IConcessionTypeForm {
   isUsedInDownstream?: boolean; // for downstream usage warning
   isActive?: boolean;
   deactivationReason?: string | null;
+  canDelete?: boolean;
+  usageCount?: number;
+  concurrencyStamp?: string;
 }
 
 export interface IConcessionTableProps {
@@ -47,6 +59,7 @@ export interface IConcessionTableProps {
   setEditData: (row: IConcessionTypeForm | null) => void;
   onEdit?: (row: IConcessionTypeForm) => void;
   onView?: (row: IConcessionTypeForm) => void;
+  onVersionHistory?: (row: IConcessionTypeForm) => void;
   onDelete?: (row: IConcessionTypeForm) => void;
   totalCount?: number;
   onServerPagination?: (page: number, rowsPerPage: number) => void;

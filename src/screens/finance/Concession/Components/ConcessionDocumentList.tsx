@@ -7,7 +7,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
-import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import { useUploadConcessionDocumentFileMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
   Card,
@@ -19,6 +19,12 @@ import {
   CardContent,
   CircularProgress,
 } from '@mui/material';
+
+import {
+  getFileAccept,
+  getDocumentConstraintText,
+  validateConcessionDocumentFile,
+} from './concessionDocumentUpload';
 
 import type { IConcessionSubmittedDocument } from './DocumentDialog';
 
@@ -42,9 +48,9 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
     options: { skip: !concessionId },
   }) as { data: any; isLoading: boolean };
 
-  const [uploadCurriculumFile, { isLoading: isUploading }] = useQueryAndMutation({
+  const [uploadConcessionDocumentFile, { isLoading: isUploading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUploadCurriculumFileMutation,
+    currentQueryAndMutation: useUploadConcessionDocumentFileMutation,
   });
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -98,13 +104,21 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
     const file = event.target.files?.[0];
     if (!file || !uploadingDocId) return;
 
-    const formData = new FormData();
-    formData.append('FileName', file.name);
-    formData.append('File', file);
+    const document = documents.find((item: any) => (item.id || item.documentId) === uploadingDocId);
+    const validationError = validateConcessionDocumentFile(file, document);
+    if (validationError) {
+      shikshaMitraToast.error({ message: validationError });
+      setUploadingDocId(null);
+      return;
+    }
 
     try {
-      const response = await uploadCurriculumFile(formData).unwrap();
-      const uploadedUrl = response.data || null;
+      const response = await uploadConcessionDocumentFile({
+        concessionTypeId: concessionId,
+        documentId: uploadingDocId,
+        file,
+      }).unwrap();
+      const uploadedUrl = response?.data?.url || response?.url || null;
 
       const updatedDocs = [...localDocs];
       const existingIndex = updatedDocs.findIndex((d) => d.documentId === uploadingDocId);
@@ -168,7 +182,9 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
               ref={fileInputRef}
               style={{ display: 'none' }}
               onChange={handleFileChange}
-              accept="image/*,.pdf"
+              accept={getFileAccept(
+                documents.find((doc: any) => (doc.id || doc.documentId) === uploadingDocId)
+              )}
             />
             <Stack spacing={1.5}>
               {(documents || []).map((doc: any) => {
@@ -191,6 +207,9 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                       <Box>
                         <Typography variant="body2" fontWeight={600}>
                           {doc.documentName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {getDocumentConstraintText(doc)}
                         </Typography>
                         {submitted?.url ? (
                           <Box display="flex" alignItems="center" gap={1} mt={0.5}>

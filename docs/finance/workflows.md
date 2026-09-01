@@ -43,6 +43,16 @@ Concession and adjustment workflows should preserve approval and audit behavior.
 | Adjustments | `src/screens/finance/adjustments/**` and `src/redux/finance/adjustments/adjustmentApi.ts`                                      |
 | Audit Trail | `src/screens/finance/AuditTrail/**` and `src/redux/finance/audit/financeAuditApi.ts`                                           |
 
+### Concession Type and evidence lifecycle
+
+1. Settings shows active and inactive types so historical configuration stays visible.
+2. The form collects a Concession Type Name and document definitions with mandatory/optional, maximum file size, and accepted formats. New document rows start with backend defaults.
+3. The server is authoritative for normalized-name uniqueness. Active types cannot be deleted. After deactivation, Delete is available only while the type is unused; used types remain undeletable and lock document-definition changes.
+4. A new concession request lists active types only. Editing an existing request may resolve its inactive historical type.
+5. Before upload, the UI filters extensions and checks size; the concession upload API repeats extension, MIME, signature, and size validation.
+6. Missing mandatory evidence blocks approval. Optional evidence is shown and uploadable but is not required.
+7. Version History is available from each row's action menu and shows the audited create, edit, and status changes with actor, timestamp, and changed fields.
+
 ## Trace settings changes
 
 Finance settings routes are split across fees and accounts.

@@ -21,7 +21,6 @@ import { Cancel, Visibility, CheckCircle } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
-import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
   Tab,
@@ -47,10 +46,16 @@ import {
   useGetStudentConcessionDetailsQuery,
   useUploadConcessionDocumentsMutation,
   useDeleteConcessionApplicationMutation,
+  useUploadConcessionDocumentFileMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import StudentInformationAccordion from './StucentConcessionCard';
 import ConcessionFeeHeadApprovalView from './ConcessionFeeHeadApprovalView';
+import {
+  getFileAccept,
+  getDocumentConstraintText,
+  validateConcessionDocumentFile,
+} from '../Concession/Components/concessionDocumentUpload';
 
 import type {
   IRequiredDocument,
@@ -219,7 +224,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
 
   const [uploadFile, { isLoading: isUploading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUploadCurriculumFileMutation,
+    currentQueryAndMutation: useUploadConcessionDocumentFileMutation,
   });
 
   const [saveDocuments, { isLoading: isSaving }] = useQueryAndMutation({
@@ -244,13 +249,21 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
     const file = event.target.files?.[0];
     if (!file || !uploadingDocId) return;
 
-    const formData = new FormData();
-    formData.append('FileName', file.name);
-    formData.append('File', file);
+    const requirement = localDocs.find((document) => document.documentId === uploadingDocId);
+    const validationError = validateConcessionDocumentFile(file, requirement);
+    if (validationError) {
+      shikshaMitraToast.error({ message: validationError });
+      setUploadingDocId(null);
+      return;
+    }
 
     try {
-      const response = await uploadFile(formData).unwrap();
-      const uploadedUrl = response.data;
+      const response = await uploadFile({
+        concessionTypeId: item.concessionTypeId,
+        documentId: uploadingDocId,
+        file,
+      }).unwrap();
+      const uploadedUrl = response?.data?.url || response?.url;
 
       // Only update local state — user must click Submit to persist
       setLocalDocs((prev) =>
@@ -270,11 +283,13 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
 
   const handleSubmit = async () => {
     try {
-      const payloadDocs = localDocs.map((d) => ({
-        documentId: d.documentId,
-        url: d.url || '',
-        status: d.isUploaded ? 1 : 0,
-      }));
+      const payloadDocs = localDocs
+        .filter((document) => document.isUploaded && document.url)
+        .map((document) => ({
+          documentId: document.documentId,
+          url: document.url,
+          status: 1,
+        }));
 
       await saveDocuments({
         concessionRequestId: studentConcessionTypeRequestId,
@@ -290,7 +305,8 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
     }
   };
 
-  const allUploaded = localDocs.length > 0 && localDocs.every((d) => d.isUploaded);
+  const mandatoryDocuments = localDocs.filter((document) => document.isRequired ?? true);
+  const allMandatoryUploaded = mandatoryDocuments.every((document) => document.isUploaded);
 
   return (
     <>
@@ -309,7 +325,9 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
           ref={fileInputRef}
           style={{ display: 'none' }}
           onChange={handleFileChange}
-          accept="image/*,.pdf"
+          accept={getFileAccept(
+            localDocs.find((document) => document.documentId === uploadingDocId)
+          )}
         />
         <Box sx={{ p: 2, minHeight: 150 }}>
           <Stack spacing={1.5}>
@@ -336,6 +354,9 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
                   <Box>
                     <Typography variant="subtitle2" fontWeight={700}>
                       {doc.documentName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {getDocumentConstraintText(doc)}
                     </Typography>
                     {doc.isUploaded ? (
                       <Box display="flex" alignItems="center" gap={1} mt={0.5}>
@@ -382,7 +403,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
             ))}
           </Stack>
 
-          {!allUploaded && localDocs.length > 0 && (
+          {!allMandatoryUploaded && mandatoryDocuments.length > 0 && (
             <Box
               mt={2}
               px={1.5}
@@ -395,7 +416,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
               }}
             >
               <Typography variant="caption" color="warning.dark" fontWeight={600}>
-                ⚠ Upload all pending documents before the application can be approved.
+                Upload all mandatory documents before the application can be approved.
               </Typography>
             </Box>
           )}
@@ -471,15 +492,16 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   // Use requiredDocuments if available, otherwise fall back to submittedDocuments
   const requiredDocs = item.requiredDocuments || [];
   const uploadedDocs = requiredDocs.filter((d) => d.isUploaded && d.url);
-  const allDocsUploaded = requiredDocs.length === 0 || requiredDocs.every((d) => d.isUploaded);
-  const pendingCount = requiredDocs.filter((d) => !d.isUploaded).length;
+  const mandatoryDocs = requiredDocs.filter((document) => document.isRequired ?? true);
+  const allMandatoryDocsUploaded = mandatoryDocs.every((document) => document.isUploaded);
+  const pendingCount = mandatoryDocs.filter((document) => !document.isUploaded).length;
 
   // For cards with no requiredDocuments, fall back to checking submittedDocuments
   const hasRequiredDocs = requiredDocs.length > 0;
   const displayDocs = hasRequiredDocs ? uploadedDocs : (item.submittedDocuments || []).slice(0, 1);
 
   // Approve should be disabled if any required document is not uploaded
-  const approveDisabled = isApproved || isRejected || isCancelled || !allDocsUploaded;
+  const approveDisabled = isApproved || isRejected || isCancelled || !allMandatoryDocsUploaded;
 
   return (
     <Card
@@ -553,7 +575,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
                 <Chip
                   size="small"
                   label={`${uploadedDocs.length}/${requiredDocs.length}`}
-                  color={allDocsUploaded ? 'success' : 'warning'}
+                  color={allMandatoryDocsUploaded ? 'success' : 'warning'}
                   sx={{ height: 18, fontSize: '10px' }}
                 />
               )}
@@ -721,8 +743,8 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         {/* Approve button with tooltip when docs are missing */}
         <Tooltip
           title={
-            !allDocsUploaded && !isApproved && !isRejected && !isCancelled
-              ? `Upload all documents first — click "See All" to upload pending documents`
+            !allMandatoryDocsUploaded && !isApproved && !isRejected && !isCancelled
+              ? `Upload all mandatory documents first — click "See All" to upload pending documents`
               : ''
           }
           placement="top"

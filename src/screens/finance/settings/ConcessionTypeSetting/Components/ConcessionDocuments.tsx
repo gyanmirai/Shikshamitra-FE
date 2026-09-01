@@ -27,16 +27,16 @@ const ConcessionDocumentTable: React.FC<ConcessionTableProps> = ({ data }) => {
     switch (value) {
       case ConcessionDocumentFormat.Pdf:
         return 'PDF';
+      case ConcessionDocumentFormat.Jpg:
+        return 'JPG';
       case ConcessionDocumentFormat.Jpeg:
         return 'JPEG';
       case ConcessionDocumentFormat.Png:
         return 'PNG';
-      case ConcessionDocumentFormat.Doc:
-        return 'DOC';
       case ConcessionDocumentFormat.Docx:
         return 'DOCX';
-      case ConcessionDocumentFormat.Xls:
-        return 'XLS';
+      case ConcessionDocumentFormat.Xlsx:
+        return 'XLSX';
       default:
         return value;
     }
@@ -50,15 +50,20 @@ const ConcessionDocumentTable: React.FC<ConcessionTableProps> = ({ data }) => {
       columns={[
         { id: 'documentName', label: 'Document Name', align: 'left' },
         {
-          id: 'documentSize',
-          label: 'Document Size',
+          id: 'maxFileSizeBytes',
+          label: 'Maximum File Size',
           render: (value: number) => (value ? `${(value / (1024 * 1024)).toFixed(2)} MB` : '-'),
         },
         {
-          id: 'acceptedFormat',
-          label: 'Accepted Format',
+          id: 'acceptedFormats',
+          label: 'Accepted Formats',
           align: 'left',
           render: (value: number[]) => (value || []).map(getFormatLabel).join(', '),
+        },
+        {
+          id: 'isRequired',
+          label: 'Requirement',
+          render: (value: boolean) => (value ? 'Mandatory' : 'Optional'),
         },
       ]}
       data={concessionTypeDetails?.data?.documents || []}
