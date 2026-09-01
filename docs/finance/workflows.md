@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-09-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -27,23 +27,38 @@ Charge changes start at `/finance/charge-management`.
 
 Fee collection and receipt flows span Finance and shared fee client folders.
 
-| Workflow | Inspect first |
-|---|---|
-| Fee collection | `src/app/(auth-route)/finance/fee-collection/**` and `src/redux/feeCollection/**` |
+| Workflow            | Inspect first                                                                          |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| Fee collection      | `src/app/(auth-route)/finance/fee-collection/**` and `src/redux/feeCollection/**`      |
 | Invoice and receipt | `src/app/(auth-route)/finance/invoice-receipt/**` and `src/redux/invoiceAndReceipt/**` |
-| Receipt rendering | `src/screens/finance/viewReceipt/**` |
+| Receipt rendering   | `src/screens/finance/viewReceipt/**`                                                   |
 
 ## Trace concession and adjustment changes
 
 Concession and adjustment workflows should preserve approval and audit behavior.
 
-| Workflow | Inspect first |
-|---|---|
+| Workflow    | Inspect first                                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Concessions | `src/screens/finance/Concession/**`, `src/screens/finance/ConcessionAdmin/**`, and `src/redux/finance/ConcessionManagement/**` |
-| Adjustments | `src/screens/finance/adjustments/**` and `src/redux/finance/adjustments/adjustmentApi.ts` |
-| Audit Trail | `src/screens/finance/AuditTrail/**` and `src/redux/finance/audit/financeAuditApi.ts` |
+| Adjustments | `src/screens/finance/adjustments/**` and `src/redux/finance/adjustments/adjustmentApi.ts`                                      |
+| Audit Trail | `src/screens/finance/AuditTrail/**` and `src/redux/finance/audit/financeAuditApi.ts`                                           |
 
 ## Trace settings changes
 
 Finance settings routes are split across fees and accounts.
 Use `src/constants/finance-menu.ts` to confirm active visibility before changing navigation.
+
+### Payment Term lifecycle
+
+1. The drawer exposes the same editable lifecycle as HR Attendance Policy: `Draft` or `Active`. Archive remains a separate guarded action.
+2. Saving as `Draft` keeps the schedule unassignable. Saving as `Active` atomically publishes an immutable version; the backend derives its activation date inside the selected board period.
+3. Every installment period and due date must be inside the selected board's own start/end dates, which may be narrower than the academic year. Dates are entered as `DD/MM/YYYY`.
+4. Fee Structure lists only active terms whose current version is `Published`, and stores that exact version id.
+5. Student fee assignment creates immutable DueFee schedule snapshots for the full year.
+6. Only one Payment Term may be selected as the default for a board in an academic year. The flag may be set while the term is a draft, but the term remains unavailable to Fee Structures until activation. Selecting a new default clears the previous default in the same transaction, and a filtered unique database index enforces the invariant.
+7. The list separates current and archived records and presents one user-facing status: `Draft`, `Active`, or `Archived`. Internal version lifecycle states remain available in version history and assignment checks.
+8. Activation is a one-way Draft-to-Published version action in the current API and is exposed through row actions, not a Status-column toggle. Archive and restore are separate master-record transitions; archiving requires a reason and is blocked while fee structures reference the term. Restoring preserves the version state and returns the term to Current as Draft or Active.
+9. Version History opens in the details drawer as a simple audit table showing version/status, action, creation date and user, and change reason. Its paged data is loaded only when the history tab opens.
+10. Collection shows an installment only when its server-calculated bill generation date has arrived. If a structure is assigned late, all dates already reached are available immediately.
+
+The four bill-generation rules are: installment start date, X days before due date, due date, and a specific per-installment date. The frontend previews calculated dates, but the backend remains authoritative.

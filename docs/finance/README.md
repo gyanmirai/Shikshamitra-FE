@@ -24,6 +24,7 @@ Follow this order when changing Finance frontend behavior:
 | 3 | [clients.md](./clients.md) | Find Redux Toolkit Query clients and backend contract ownership |
 | 4 | [workflows.md](./workflows.md) | Trace charge, collection, concession, adjustment, receipt, audit, and report flows |
 | 5 | [testing.md](./testing.md) | Pick frontend docs, unit, contract, type, and browser checks |
+| 6 | [Concession Policy frontend review](./references/concession-policy-frontend-review.md) | Compare the current partial UI with the target fee-structure, assignment, request, approval, and ledger flow |
 
 ## Ownership boundary
 
@@ -57,6 +58,7 @@ Use this table before code search:
 | Which workflow should I test? | [workflows.md](./workflows.md) |
 | Which command should I run? | [testing.md](./testing.md) |
 | Which backend API behavior is canonical? | `../../../Shikshamitra-BE/docs/modules/finance/api.md` |
+| What is missing from the current Concession Policy UI and how should it integrate? | [Concession Policy frontend review](./references/concession-policy-frontend-review.md) |
 
 ## Validation
 

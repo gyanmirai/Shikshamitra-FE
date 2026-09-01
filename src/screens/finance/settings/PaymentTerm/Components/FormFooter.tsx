@@ -1,14 +1,15 @@
 'use client';
 
 import { LoadingButton } from '@mui/lab';
-import { Box, Button } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import { Box, Button, Tooltip } from '@mui/material';
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 interface FormFooterProps {
   isSubmitting: boolean;
-  isEdit: boolean;
+  disabled: boolean;
   onCancel: () => void;
   onSubmit: () => Promise<void>;
 }
@@ -16,7 +17,7 @@ interface FormFooterProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function FormFooter({ isSubmitting, isEdit, onCancel, onSubmit }: FormFooterProps) {
+export function FormFooter({ isSubmitting, disabled, onCancel, onSubmit }: FormFooterProps) {
   return (
     <Box
       sx={{
@@ -26,7 +27,8 @@ export function FormFooter({ isSubmitting, isEdit, onCancel, onSubmit }: FormFoo
         borderColor: 'divider',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-end',
+        gap: 1.5,
         flexShrink: 0,
         bgcolor: 'background.paper',
         boxShadow: '0 -2px 8px 0 rgba(0,0,0,0.06)',
@@ -38,20 +40,27 @@ export function FormFooter({ isSubmitting, isEdit, onCancel, onSubmit }: FormFoo
         onClick={onCancel}
         size="small"
         disabled={isSubmitting}
+        startIcon={<Iconify icon="basil:cross-solid" />}
       >
         Cancel
       </Button>
 
-      <LoadingButton
-        variant="contained"
-        color="primary"
-        loading={isSubmitting}
-        onClick={onSubmit}
-        size="small"
-        sx={{ minWidth: 90 }}
-      >
-        {isEdit ? 'Update' : 'Submit'}
-      </LoadingButton>
+      <Tooltip title={disabled && !isSubmitting ? 'Make a change before submitting' : ''}>
+        <span>
+          <LoadingButton
+            variant="contained"
+            color="primary"
+            loading={isSubmitting}
+            disabled={disabled}
+            onClick={onSubmit}
+            size="small"
+            startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
+            sx={{ minWidth: 96 }}
+          >
+            Submit
+          </LoadingButton>
+        </span>
+      </Tooltip>
     </Box>
   );
 }

@@ -9,7 +9,7 @@ export const getInitialPaymentTermData = (
   paymentTermCode: editData?.paymentTermCode || '',
   boardId: editData?.boardId || '',
   description: editData?.description || '',
-  status: editData?.status || 'Active',
+  status: editData?.status || 'Draft',
   academicYearId: editData?.academicYearId || currentAcademicYearId || '',
   installments: (editData?.installments || []).map((inst) => ({
     ...inst,
@@ -29,7 +29,7 @@ export const getInitialPaymentTermData = (
 
   // Holiday Rules
   holidayShiftingMethod: editData?.holidayShiftingMethod || 'None',
-  demandGenerationRule: editData?.demandGenerationRule || 'Immediately',
+  demandGenerationRule: editData?.demandGenerationRule || 'OnInstallmentStartDate',
   demandOffsetDays: editData?.demandOffsetDays ?? null,
-  initialDemandStatus: editData?.initialDemandStatus || 'Draft',
+  initialDemandStatus: 'Published',
 });
