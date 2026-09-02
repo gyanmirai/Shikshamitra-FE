@@ -16,19 +16,40 @@ interface Props {
 
 export default function RoomSwitcher({ rooms, activeRoomId, onSwitch }: Props) {
   return (
-    <Box sx={{ display: 'flex', gap: 1, px: 2, py: 1, overflowX: 'auto', borderBottom: '1px dashed', borderColor: 'divider' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 1,
+        px: 2,
+        py: 1,
+        overflowX: 'auto',
+        borderBottom: '1px dashed',
+        borderColor: 'divider',
+      }}
+    >
       {rooms.map((room) => {
         const full = room.usable > 0 && room.occupied >= room.usable;
+        const isActive = activeRoomId === room.roomId;
         return (
-          <Tooltip key={room.roomId} title={`${room.occupied}/${room.usable} seats used`}>
+          <Tooltip
+            key={room.roomId}
+            title={`${room.occupied}/${room.usable} seats used`}
+            describeChild
+          >
             <Chip
               clickable
               onClick={() => onSwitch(room.roomId)}
               icon={<Iconify icon={full ? 'mdi:door-closed' : 'mdi:door-open'} width={14} />}
               label={`${room.roomName} — ${room.occupied}/${room.usable}`}
-              color={activeRoomId === room.roomId ? 'primary' : full ? 'success' : 'default'}
-              variant={activeRoomId === room.roomId ? 'filled' : 'soft'}
+              color={isActive ? 'primary' : full ? 'success' : 'default'}
+              variant="soft"
               size="small"
+              sx={{
+                minHeight: 44,
+                border: '1px solid',
+                borderColor: isActive ? 'primary.main' : 'transparent',
+                fontWeight: isActive ? 700 : 500,
+              }}
             />
           </Tooltip>
         );

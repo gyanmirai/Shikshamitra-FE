@@ -7,6 +7,9 @@ export const shouldValidateForwardStepClick = (
   validateForwardStepClick: boolean
 ) => validateForwardStepClick && targetStep > activeStep;
 
+export const shouldValidateCurrentStep = (isLastStep: boolean, validateFinalStep: boolean) =>
+  !isLastStep || validateFinalStep;
+
 export const getFirstFormikErrorPath = (errors: unknown, prefix = ''): string | null => {
   if (Array.isArray(errors)) {
     return errors.reduce<string | null>(

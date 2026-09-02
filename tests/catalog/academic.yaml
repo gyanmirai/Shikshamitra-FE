@@ -475,6 +475,90 @@ scenarios:
     automationFile: e2e/academic/academic-remaining-workflows-api.spec.ts
     status: automated
     tags: ['@module-academic', '@submodule-examination', '@critical', '@positive']
+  - id: ACM-EXM-SEAT-001
+    module: Academic
+    submodule: Examination
+    title: Guided seating prepares one session, previews before apply, validates, publishes, and shows a receipt
+    risk: critical
+    priority: P0
+    type: [functional, workflow, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/seatallocation/[examId]/setup]
+    automated: true
+    automationFile: e2e/academic/academic-seating-guided.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@critical', '@positive']
+  - id: ACM-EXM-SEAT-MANUAL-001
+    module: Academic
+    submodule: Examination
+    title: Manual classroom seating places, undoes, redoes, auto-completes, reviews, bulk-saves, and validates a real seat map
+    risk: critical
+    priority: P0
+    type: [functional, workflow, accessibility, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/seatallocation/[examId]/setup]
+    automated: true
+    automationFile: e2e/academic/academic-seating-guided.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@critical', '@positive']
+  - id: ACM-EXM-SEAT-MANUAL-002
+    module: Academic
+    submodule: Examination
+    title: Two-division manual seating preserves occupied students, blocks unavailable seats, alternates divisions, saves, validates, and reloads
+    risk: critical
+    priority: P0
+    type: [functional, workflow, accessibility, negative, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/seatallocation/[examId]/setup]
+    automated: true
+    automationFile: e2e/academic/academic-seating-guided.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@critical', '@positive', '@negative']
+  - id: ACM-EXM-SEAT-RESP-001
+    module: Academic
+    submodule: Examination
+    title: Guided seating remains usable without page overflow on mobile, tablet, and desktop
+    risk: high
+    priority: P1
+    type: [responsive, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/seatallocation/[examId]/setup]
+    automated: true
+    automationFile: e2e/academic/academic-seating-guided.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@high', '@responsive']
+  - id: ACM-EXM-SEAT-A11Y-001
+    module: Academic
+    submodule: Examination
+    title: Guided seating has no serious or critical WCAG 2 A or AA violations through all four phases
+    risk: high
+    priority: P1
+    type: [accessibility, workflow, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/seatallocation/[examId]/setup]
+    automated: true
+    automationFile: e2e/academic/academic-seating-guided.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@high', '@accessibility']
+  - id: ACM-EXM-SEAT-LIST-001
+    module: Academic
+    submodule: Examination
+    title: Seating plan list explains empty results, labels class and status selectors, and uses session cards on phones
+    risk: high
+    priority: P1
+    type: [functional, responsive, accessibility, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: [/academic/seatallocation]
+    automated: true
+    automationFile: e2e/academic/academic-seating-guided.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@high', '@responsive']
   - id: ACM-EXM-MARKS-001
     module: Academic
     submodule: Examination

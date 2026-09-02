@@ -1,7 +1,11 @@
 import { seatId } from '../hooks/useSeatingDraft';
 import { DEFAULT_ALLOCATION_RULES } from '../types';
 
-import type { ISeatAllocation, IExamAllocation, IStudentRoomAssignment } from '../../seatAllocation/type';
+import type {
+  ISeatAllocation,
+  IExamAllocation,
+  IStudentRoomAssignment,
+} from '../../seatAllocation/type';
 import type {
   SeatingSeat,
   SeatingStudent,
@@ -36,12 +40,14 @@ export function toSeatingPlanStatus(row: {
   return 'not-started';
 }
 
-export function toSeatingPlanListRow(exam: IExamAllocation): SeatingPlanListRow {
-  const totalStudents = exam.totalStudents ?? 0;
-  const allocatedStudents = exam.allocatedStudents ?? 0;
-  const pendingStudents = Math.max(0, totalStudents - allocatedStudents);
-  const progress = totalStudents === 0 ? 0 : Math.round((allocatedStudents / totalStudents) * 100);
-  const divisionProgress = (exam.divisionProgress ?? []).map((division) => {
+function capacityStatus(totalStudents: number, usableCapacity: number) {
+  if (usableCapacity <= 0) return 'unused' as const;
+  if (usableCapacity < totalStudents) return 'shortage' as const;
+  return 'ok' as const;
+}
+
+function mapDivisionProgress(divisions: IExamAllocation['divisionProgress'] = []) {
+  return divisions.map((division) => {
     const divisionTotal = division.totalStudents ?? 0;
     const divisionAllocated = division.allocatedStudents ?? 0;
 
@@ -54,21 +60,56 @@ export function toSeatingPlanListRow(exam: IExamAllocation): SeatingPlanListRow 
       progress: divisionTotal === 0 ? 0 : Math.round((divisionAllocated / divisionTotal) * 100),
     };
   });
+}
+
+/** Keeps the exam as the single top-level list record. Plans are managed inside its workspace. */
+export function toSeatingPlanListRows(exam: IExamAllocation): SeatingPlanListRow[] {
+  return [toSeatingPlanListRow(exam)];
+}
+
+/** Maps one exam envelope into one list row, regardless of its subject/session count. */
+export function toSeatingPlanListRow(exam: IExamAllocation): SeatingPlanListRow {
+  const totalStudents = exam.totalStudents ?? 0;
+  const allocatedStudents = exam.allocatedStudents ?? 0;
+  const pendingStudents = Math.max(0, totalStudents - allocatedStudents);
+  const progress = totalStudents === 0 ? 0 : Math.round((allocatedStudents / totalStudents) * 100);
+  const legacySubjectNames = [
+    ...new Set(exam.sessions?.flatMap((session) => session.subjectNames ?? []) ?? []),
+  ];
+  const subjectNames = exam.subjectNames?.length ? exam.subjectNames : legacySubjectNames;
+  const legacyPlannedSubjectNames = new Set(
+    exam.sessions
+      ?.filter((session) => session.seatingPlanId)
+      .flatMap((session) => session.subjectNames ?? []) ?? []
+  );
 
   return {
+    id: exam.examId,
     examId: exam.examId,
     examName: exam.examName,
     examTypeName: exam.examTypeName,
     standardName: exam.standardName,
     divisions: exam.divisions ?? [],
-    divisionProgress,
+    divisionProgress: mapDivisionProgress(exam.divisionProgress),
+    subjectNames,
+    subjectCount: exam.subjectCount ?? subjectNames.length,
+    plannedSubjectCount: exam.plannedSubjectCount ?? legacyPlannedSubjectNames.size,
+    seatingPlanCount: exam.seatingPlanCount ?? 0,
     totalStudents,
     allocatedStudents,
     pendingStudents,
-    roomsUsed: 0, // populated once BE returns room usage per exam (Phase 2 BE)
-    capacityStatus: 'ok',
+    roomsUsed: exam.roomsUsed ?? 0,
+    usableCapacity: 0,
+    emptySeats: 0,
+    utilization: 0,
+    capacityStatus: 'unused',
     progress,
     status: toSeatingPlanStatus({ totalStudents, allocatedStudents, status: exam.status }),
+    hasCompleteSchedule: exam.sessions?.every((session) => session.hasCompleteSchedule) ?? false,
+    canPrepare: (exam.plannedSubjectCount ?? 0) < (exam.subjectCount ?? 0),
+    requiresMigration: exam.sessions?.some((session) => session.requiresMigration) ?? false,
+    blockingIssueCount:
+      exam.sessions?.reduce((total, session) => total + (session.blockingIssueCount ?? 0), 0) ?? 0,
   };
 }
 
@@ -82,21 +123,27 @@ function parseIntCsv(csv?: string | null): Set<number> {
   );
 }
 
-export function toSeatingRoomLayout(room: {
-  roomId?: string;
-  room?: {
-    capacity?: number;
-    benchesPerRow?: number;
-    benchesPerColumn?: number;
-    benchCapacity?: number;
-    boardPosition?: string;
-    entrancePosition?: string;
-    disabledSeatNumbersCsv?: string;
-    reservedSeatNumbersCsv?: string;
-    accessibleSeatNumbersCsv?: string;
-    aisleAfterColumnsCsv?: string;
-  };
-} | undefined, roomId: string, roomName: string): SeatingRoomLayout {
+export function toSeatingRoomLayout(
+  room:
+    | {
+        roomId?: string;
+        room?: {
+          capacity?: number;
+          benchesPerRow?: number;
+          benchesPerColumn?: number;
+          benchCapacity?: number;
+          boardPosition?: string;
+          entrancePosition?: string;
+          disabledSeatNumbersCsv?: string;
+          reservedSeatNumbersCsv?: string;
+          accessibleSeatNumbersCsv?: string;
+          aisleAfterColumnsCsv?: string;
+        };
+      }
+    | undefined,
+  roomId: string,
+  roomName: string
+): SeatingRoomLayout {
   const capacity = room?.room?.capacity ?? 0;
   const rows = room?.room?.benchesPerRow ?? 0;
   const columns = room?.room?.benchesPerColumn ?? 0;
@@ -210,9 +257,7 @@ export function toSaveSeatingPlanPayload(draft: SeatingPlanDraft, roomId: string
         // Empty UUIDs can come from legacy seat-layout responses; they mean
         // "no bench" and must not be sent as a foreign-key identifier.
         benchId:
-          a.benchId && a.benchId !== '00000000-0000-0000-0000-000000000000'
-            ? a.benchId
-            : null,
+          a.benchId && a.benchId !== '00000000-0000-0000-0000-000000000000' ? a.benchId : null,
         isRoomAssign: true,
       })),
   };

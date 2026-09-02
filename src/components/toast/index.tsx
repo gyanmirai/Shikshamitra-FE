@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Alert } from '@mui/material';
 
 export const shikshaMitraToast = {
+  dismiss: (id?: string | number) => toast.dismiss(id),
   error: ({
     message,
     alertProps,

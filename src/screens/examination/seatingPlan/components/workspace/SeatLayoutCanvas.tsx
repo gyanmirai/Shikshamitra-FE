@@ -390,7 +390,7 @@ export default function SeatLayoutCanvas({
                         <Typography variant="caption" color="text.secondary" fontWeight={700}>
                           Bench {columnIndex + 1}
                         </Typography>
-                        <Typography variant="caption" color="text.disabled">
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
                           {seats.length || room.benchCapacity} seats
                         </Typography>
                       </Stack>
@@ -407,7 +407,7 @@ export default function SeatLayoutCanvas({
                             justifyContent: 'center',
                           }}
                         >
-                          <Typography variant="caption" color="text.disabled">
+                          <Typography variant="caption" color="text.secondary" fontWeight={600}>
                             No bench
                           </Typography>
                         </Box>

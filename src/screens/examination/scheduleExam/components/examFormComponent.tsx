@@ -6,6 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -320,10 +321,17 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
             return nextStep;
           });
         } else {
+          shikshaMitraToast.success({
+            message: 'Exam draft is ready. Use Publish exam in the list when you are ready.',
+          });
           onClose();
         }
       } catch (error) {
-        console.error('Error saving exam details:', error);
+        const parsed = parseApiProblemDetail(error);
+        shikshaMitraToast.error({
+          message:
+            parsed.detail || 'Unable to save the exam. Please review the details and try again.',
+        });
       } finally {
         setIsLoading(false);
       }
@@ -372,9 +380,12 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         handleBack={() => setActiveStep((prev) => prev - 1)}
         validateOnChange={false}
         validationSchema={stepValidationSchemas[activeStep]}
-        handleNext={(isLastStep, values, formik, setIsLoading) => {
-          handleSave(isLastStep, values, formik, setIsLoading, false);
-        }}
+        validateFinalStep={false}
+        showSaveButton={activeStep !== steps.length - 1}
+        finalButtonLabel="Finish setup"
+        handleNext={(isLastStep, values, formik, setIsLoading) =>
+          handleSave(isLastStep, values, formik, setIsLoading, false)
+        }
         onSave={(isLastStep, values, formik, setIsLoading) => {
           handleSave(isLastStep, values, formik, setIsLoading, true);
         }}
