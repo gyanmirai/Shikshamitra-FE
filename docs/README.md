@@ -20,6 +20,7 @@ Use this table before searching older docs.
 | Module    | Canonical index                                   |
 | --------- | ------------------------------------------------- |
 | Dashboard | [docs/dashboard/README.md](./dashboard/README.md) |
+| Examination | [docs/examination/README.md](./examination/README.md) |
 | Finance   | [docs/finance/README.md](./finance/README.md)     |
 | HR        | [docs/hr/README.md](./hr/README.md)               |
 | Library   | [docs/library/README.md](./library/README.md)     |

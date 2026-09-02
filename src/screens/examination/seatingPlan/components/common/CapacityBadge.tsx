@@ -3,9 +3,9 @@ import { Label } from 'src/components/label';
 export type CapacityStatus = 'ok' | 'shortage' | 'unused';
 
 const CONFIG: Record<CapacityStatus, { label: string; color: 'success' | 'error' | 'warning' }> = {
-  ok: { label: 'Capacity OK', color: 'success' },
-  shortage: { label: 'Shortage', color: 'error' },
-  unused: { label: 'Underused', color: 'warning' },
+  ok: { label: 'Capacity ready', color: 'success' },
+  shortage: { label: 'Capacity shortage', color: 'error' },
+  unused: { label: 'No rooms', color: 'warning' },
 };
 
 export default function CapacityBadge({ status }: { status: CapacityStatus }) {

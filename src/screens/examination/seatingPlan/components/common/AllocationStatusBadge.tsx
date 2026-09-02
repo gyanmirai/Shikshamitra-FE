@@ -3,10 +3,10 @@ import { Label } from 'src/components/label';
 import type { SeatingPlanStatus } from '../../types';
 
 const STATUS_CONFIG: Record<SeatingPlanStatus, { label: string; color: 'default' | 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' }> = {
-  'not-started': { label: 'Not Started', color: 'default' },
-  'in-progress': { label: 'In Progress', color: 'info' },
-  ready: { label: 'Ready for Review', color: 'warning' },
-  'needs-attention': { label: 'Needs Attention', color: 'error' },
+  'not-started': { label: 'Not started', color: 'default' },
+  'in-progress': { label: 'In progress', color: 'info' },
+  ready: { label: 'Ready for review', color: 'warning' },
+  'needs-attention': { label: 'Needs attention', color: 'error' },
   completed: { label: 'Completed', color: 'success' },
   published: { label: 'Published', color: 'success' },
 };

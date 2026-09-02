@@ -36,6 +36,7 @@ import { devices, defineConfig, type Project } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const browserExecutablePath = process.env.E2E_BROWSER_EXECUTABLE_PATH;
+const video = process.env.E2E_DISABLE_VIDEO === '1' ? ('off' as const) : ('retain-on-failure' as const);
 const fullBrowserMatrix = process.env.E2E_FULL_BROWSERS === '1';
 const isVivaldiExecutable =
   browserExecutablePath && path.basename(browserExecutablePath).toLowerCase() === 'vivaldi.exe';
@@ -132,7 +133,7 @@ export default defineConfig({
     navigationTimeout: 90_000,
     ignoreHTTPSErrors: true,
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    video,
     trace: 'on-first-retry',
     locale: 'en-IN',
     timezoneId: 'Asia/Kolkata',
@@ -141,6 +142,7 @@ export default defineConfig({
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
+      use: { launchOptions: browserLaunchOptions },
     },
     ...authenticatedProjects,
     {

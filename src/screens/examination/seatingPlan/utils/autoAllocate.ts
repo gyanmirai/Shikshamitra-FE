@@ -11,37 +11,56 @@ export interface AutoAllocateResult {
   unallocatedStudentIds: string[];
 }
 
-function orderStudents(students: SeatingStudent[], strategy: SeatingAllocationRules['strategy']) {
+function interleaveDivisions(students: SeatingStudent[]) {
+  const buckets = new Map<string, SeatingStudent[]>();
+  students.forEach((student) => {
+    const key = student.divisionId ?? student.divisionName ?? 'default';
+    buckets.set(key, [...(buckets.get(key) ?? []), student]);
+  });
+
+  const divisionBuckets = [...buckets.values()];
+  const ordered: SeatingStudent[] = [];
+  let hasStudent = true;
+  while (hasStudent) {
+    hasStudent = false;
+    for (let index = 0; index < divisionBuckets.length; index += 1) {
+      const bucket = divisionBuckets[index];
+      const student = bucket.shift();
+      if (student) {
+        ordered.push(student);
+        hasStudent = true;
+      }
+    }
+  }
+  return ordered;
+}
+
+function orderStudents(
+  students: SeatingStudent[],
+  strategy: SeatingAllocationRules['strategy'],
+  mixDivisions: boolean
+) {
   const list = [...students];
+  let ordered: SeatingStudent[];
   switch (strategy) {
     case 'alphabetical':
-      return list.sort((a, b) => a.studentName.localeCompare(b.studentName));
+      ordered = list.sort((a, b) => a.studentName.localeCompare(b.studentName));
+      break;
     case 'random':
-      return list.sort(() => Math.random() - 0.5);
+      ordered = list.sort(() => Math.random() - 0.5);
+      break;
     case 'alternate-division':
-    case 'alternate-class': {
-      const buckets = new Map<string, SeatingStudent[]>();
-      list.forEach((s) => {
-        const key = s.divisionId ?? s.divisionName ?? 'default';
-        buckets.set(key, [...(buckets.get(key) ?? []), s]);
-      });
-      const keys = [...buckets.keys()];
-      const ordered: SeatingStudent[] = [];
-      let index = 0;
-      while (ordered.length < list.length) {
-        const key = keys[index % keys.length];
-        const bucket = buckets.get(key)!;
-        if (bucket.length > 0) ordered.push(bucket.shift()!);
-        index += 1;
-        if (keys.every((k) => (buckets.get(k)?.length ?? 0) === 0)) break;
-      }
-      return ordered;
-    }
+    case 'alternate-class':
     case 'rank':
     case 'roll-number':
     default:
-      return list.sort((a, b) => a.rollNo - b.rollNo);
+      ordered = list.sort((a, b) => a.rollNo - b.rollNo);
+      break;
   }
+
+  const shouldInterleave =
+    mixDivisions || strategy === 'alternate-division' || strategy === 'alternate-class';
+  return shouldInterleave ? interleaveDivisions(ordered) : ordered;
 }
 
 function orderSeats(seats: SeatingSeat[], fillDirection: SeatingAllocationRules['fillDirection']) {
@@ -93,7 +112,7 @@ export function autoAllocate(
   });
 
   const eligible = students.filter((s) => !excludedStudentIds.includes(s.studentId));
-  const orderedStudents = orderStudents([...eligible], rules.strategy);
+  const orderedStudents = orderStudents([...eligible], rules.strategy, rules.mixDivisions);
 
   // Special-requirement students get first pick of accessible/front-row seats when priority is set.
   const priorityStudents = rules.specialRequirementPriority

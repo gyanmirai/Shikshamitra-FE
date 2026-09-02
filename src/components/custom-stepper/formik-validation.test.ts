@@ -1,6 +1,10 @@
 import { it, expect, describe } from 'vitest';
 
-import { getFirstFormikErrorPath, shouldValidateForwardStepClick } from './formik-validation';
+import {
+  getFirstFormikErrorPath,
+  shouldValidateCurrentStep,
+  shouldValidateForwardStepClick,
+} from './formik-validation';
 
 describe('custom stepper Formik validation', () => {
   it('returns the first nested field path in Formik order', () => {
@@ -30,5 +34,11 @@ describe('custom stepper Formik validation', () => {
     expect(shouldValidateForwardStepClick(0, 1, false)).toBe(false);
     expect(shouldValidateForwardStepClick(0, 1, true)).toBe(true);
     expect(shouldValidateForwardStepClick(1, 0, true)).toBe(false);
+  });
+
+  it('allows a read-only final review to finish without revalidating hidden steps', () => {
+    expect(shouldValidateCurrentStep(false, false)).toBe(true);
+    expect(shouldValidateCurrentStep(true, true)).toBe(true);
+    expect(shouldValidateCurrentStep(true, false)).toBe(false);
   });
 });

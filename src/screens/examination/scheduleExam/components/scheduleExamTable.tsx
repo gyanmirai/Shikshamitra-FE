@@ -1,5 +1,6 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { jsPDF } from 'jspdf';
@@ -7,25 +8,23 @@ import autoTable from 'jspdf-autotable';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { useEffect, useMemo, useState } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useMemo, useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { formatWallClockTime } from 'src/utils/time-of-day';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomSelect from 'src/components/custom-select';
-import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import type { Standards, Organization } from 'src/types/school';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import {
   Box,
   Tab,
@@ -33,11 +32,11 @@ import {
   Tabs,
   Paper,
   Stack,
+  Alert,
   Button,
   MenuList,
   MenuItem,
   Typography,
-  Alert,
 } from '@mui/material';
 import {
   usePublishExamMutation,
@@ -45,9 +44,10 @@ import {
   useUpdateExamStatusMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
+import { EXAM_STATUS_META } from '../scheduleExamStatus';
 import ScheduleExamKpiStrip from './ScheduleExamKpiStrip';
 import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
-import { EXAM_STATUS_META } from '../scheduleExamStatus';
+import { getScheduleExamPrimaryAction } from '../schedule-exam-primary-action';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
 
@@ -311,7 +311,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         color: 'success',
       },
     ],
-    [activeStatus, getExams?.data?.pendingCount, ongoingCount, publishedCount, completedTabCount]
+    [getExams?.data?.pendingCount, ongoingCount, publishedCount, completedTabCount]
   );
 
   // Handle tab change event — update UI state, notify parent, and refetch with new Status
@@ -384,20 +384,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             <Iconify icon="solar:printer-outline" />
             Print Timetable
           </MenuItem>
-
-          {/* Menu item for publishing the timetable 
-              Sets the selected timetable name and shows confirmation dialog */}
-          {canAdd && row.status === examScheduledStatus.Pending && (
-            <MenuItem
-              onClick={() => {
-                requestPublishExam(row);
-                pop.onClose();
-              }}
-            >
-              <Iconify icon="solar:cloud-upload-outline" />
-              Publish Exam
-            </MenuItem>
-          )}
         </MenuList>
       </>
     ) : null;
@@ -646,31 +632,56 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             },
             {
               id: 'action',
-              label: 'Actions',
-              minWidth: 50,
-              width: 50,
+              label: 'Action',
+              minWidth: 210,
               align: 'left',
               isSort: false,
               sticky: true,
               stickyPosition: 'right',
               isFilter: false,
               render(value, row) {
+                const primaryAction = getScheduleExamPrimaryAction(
+                  row.status,
+                  row.issueCount ?? 0
+                );
                 return (
-                  <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
-                    placement="right-top"
-                    showViewIcon={canView}
-                    showDeleteIcon={tabs.value === examScheduledStatus.Pending && canDelete}
-                    showEditIcon={tabs.value === examScheduledStatus.Pending && canAdd}
-                    handleViewClick={() => setPreviewExam(row as IExamFormValues)}
-                    handleDeleteClick={() => {
-                      onDelete?.(row as IExamFormValues);
-                    }}
-                    handleEditClick={() => {
-                      setOpenDialog?.(true);
-                      setEditData?.(row as IExamFormValues);
-                    }}
-                  />
+                  <Stack direction="row" spacing={0.5} alignItems="center">
+                    {canAdd && primaryAction && (
+                      <Button
+                        size="small"
+                        variant={primaryAction.kind === 'complete' ? 'outlined' : 'contained'}
+                        aria-label={`${primaryAction.label} for ${row.examName}`}
+                        startIcon={<Iconify icon={primaryAction.icon} width={18} />}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (primaryAction.kind === 'complete') {
+                            setOpenDialog?.(true);
+                            setEditData?.(row as IExamFormValues);
+                          } else {
+                            requestPublishExam(row);
+                          }
+                        }}
+                        sx={{ whiteSpace: 'nowrap' }}
+                      >
+                        {primaryAction.label}
+                      </Button>
+                    )}
+                    <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
+                      placement="right-top"
+                      showViewIcon={canView}
+                      showDeleteIcon={tabs.value === examScheduledStatus.Pending && canDelete}
+                      showEditIcon={tabs.value === examScheduledStatus.Pending && canAdd}
+                      handleViewClick={() => setPreviewExam(row as IExamFormValues)}
+                      handleDeleteClick={() => {
+                        onDelete?.(row as IExamFormValues);
+                      }}
+                      handleEditClick={() => {
+                        setOpenDialog?.(true);
+                        setEditData?.(row as IExamFormValues);
+                      }}
+                    />
+                  </Stack>
                 );
               },
             },

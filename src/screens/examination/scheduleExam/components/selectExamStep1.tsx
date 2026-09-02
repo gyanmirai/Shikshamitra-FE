@@ -12,31 +12,33 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
-import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
-import { useGetExamSubjectsLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
-import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   Box,
   Grid,
-  Paper,
-  Switch,
   Checkbox,
   TextField,
   Typography,
   Autocomplete,
 } from '@mui/material';
+import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
+import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
+import { useGetExamSubjectsLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
-import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 import { pruneRoomDetails } from './initialValues';
+import {
+  resolveDivisionSelection,
+  getDisplayedDivisionSelection,
+} from './division-selection';
+import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
-import type { IExamFormValues, IDivisionRoomDetail } from '../type';
+import type { IExamFormValues } from '../type';
 
 type ElectiveReadiness = {
   isReady: boolean;
@@ -505,28 +507,18 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         ...(allClass?.find((i: Standards) => i.id === formik.values.className)
                           ?.divisions || []),
                       ]}
-                      value={formik.values.divisions}
+                      value={getDisplayedDivisionSelection(formik.values.divisions)}
                       onChange={(val) => {
                         const value = val as string[];
                         const divisionOptions =
                           allClass?.find((i: Standards) => i.id === formik.values.className)
                             ?.divisions || [];
                         const allDivisionIds = divisionOptions.map((d) => d.id);
-                        const isAllClicked = value.includes('all');
-                        const wasAllPreviouslySelected = formik.values.divisions.includes('all');
-
-                        let nextDivisions: string[] = [];
-                        if (isAllClicked && !wasAllPreviouslySelected) {
-                          nextDivisions = ['all', ...allDivisionIds];
-                        } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          nextDivisions = [];
-                        } else {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          nextDivisions =
-                            selectedWithoutAll.length === allDivisionIds.length
-                              ? ['all', ...allDivisionIds]
-                              : selectedWithoutAll;
-                        }
+                        const nextDivisions = resolveDivisionSelection(
+                          value,
+                          formik.values.divisions,
+                          allDivisionIds
+                        );
 
                         formik.setFieldValue('divisions', nextDivisions);
                         formik.setFieldTouched(`divisions`, false);
@@ -683,19 +675,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       label="Exam Name *"
                       size="small"
                       name="examName"
-                      placeholder="e.g. First Terminal 2024"
+                      placeholder="e.g. First Terminal 2024-25"
                       value={formik.values.examName}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^\w\s\u0080-\uFFFF]/g, '');
-                        formik.setFieldValue('examName', value);
-                        formik.setFieldTouched('examName', false);
-                      }}
+                      onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       error={Boolean(formik.touched.examName && formik.errors.examName)}
                       helperText={
                         formik.touched.examName && formik.errors.examName
                           ? formik.errors.examName
-                          : 'A short, descriptive name for this exam'
+                          : 'Use a clear name; punctuation such as hyphens is allowed (maximum 100 characters)'
                       }
                       FormHelperTextProps={{
                         sx: {

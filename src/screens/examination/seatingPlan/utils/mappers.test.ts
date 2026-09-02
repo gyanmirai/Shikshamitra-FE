@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
-import { upsertSeatingRoomLayout, toSeatingStudentsFromAllocations } from './mappers';
+import {
+  toSeatingPlanListRows,
+  upsertSeatingRoomLayout,
+  toSeatingStudentsFromAllocations,
+} from './mappers';
 
 import type { SeatingRoomLayout } from '../types';
 
@@ -100,5 +104,97 @@ describe('upsertSeatingRoomLayout', () => {
       roomName: 'B102',
       capacity: 40,
     });
+  });
+});
+
+describe('toSeatingPlanListRows', () => {
+  it('keeps one exam row when the exam contains multiple subject sessions', () => {
+    const rows = toSeatingPlanListRows({
+      examId: 'exam-1',
+      examName: 'Term examination',
+      examTypeName: 'Written',
+      standardName: 'Standard 8',
+      divisions: ['A'],
+      totalStudents: 48,
+      allocatedStudents: 24,
+      pendingStudents: 24,
+      seatingPlanCount: 1,
+      subjectCount: 2,
+      plannedSubjectCount: 2,
+      subjectNames: ['Mathematics', 'Science'],
+      status: 1,
+      sessions: [
+        {
+          sessionKey: '2026-09-10|09:00:00|12:00:00',
+          seatingPlanId: 'plan-1',
+          examDate: '2026-09-10',
+          startTime: '09:00:00',
+          endTime: '12:00:00',
+          subjectNames: ['Mathematics'],
+          divisions: ['A'],
+          divisionProgress: [],
+          totalStudents: 24,
+          allocatedStudents: 24,
+          pendingStudents: 0,
+          roomsUsed: 1,
+          usableCapacity: 30,
+          emptySeats: 6,
+          utilization: 80,
+          status: 5,
+          hasCompleteSchedule: true,
+          canPrepare: true,
+          requiresMigration: false,
+          blockingIssueCount: 0,
+        },
+        {
+          sessionKey: '2026-09-11|09:00:00|12:00:00',
+          examDate: '2026-09-11',
+          startTime: '09:00:00',
+          endTime: '12:00:00',
+          subjectNames: ['Science'],
+          divisions: ['A'],
+          divisionProgress: [],
+          totalStudents: 24,
+          allocatedStudents: 0,
+          pendingStudents: 24,
+          roomsUsed: 0,
+          usableCapacity: 0,
+          emptySeats: 0,
+          utilization: 0,
+          status: 0,
+          hasCompleteSchedule: true,
+          canPrepare: true,
+          requiresMigration: false,
+          blockingIssueCount: 0,
+        },
+      ],
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      id: 'exam-1',
+      subjectNames: ['Mathematics', 'Science'],
+      subjectCount: 2,
+      plannedSubjectCount: 2,
+      seatingPlanCount: 1,
+      status: 'in-progress',
+      progress: 50,
+    });
+  });
+
+  it('reports missing and insufficient capacity truthfully', () => {
+    const base = {
+      examId: 'exam-2',
+      examName: 'Term examination',
+      examTypeName: 'Written',
+      standardName: 'Standard 8',
+      divisions: ['A'],
+      totalStudents: 24,
+      allocatedStudents: 0,
+      pendingStudents: 24,
+      status: 0,
+    };
+    const legacy = toSeatingPlanListRows(base)[0];
+    expect(legacy.capacityStatus).toBe('unused');
   });
 });

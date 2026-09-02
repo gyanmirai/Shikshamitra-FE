@@ -58,7 +58,37 @@ export interface IExamAllocation {
   totalStudents: number;
   allocatedStudents: number;
   pendingStudents: number;
-  status: number; // 0=pending, 1=partial, 2=allocated
+  roomsUsed?: number;
+  seatingPlanCount?: number;
+  subjectCount?: number;
+  plannedSubjectCount?: number;
+  subjectNames?: string[];
+  sessions?: IExamAllocationSession[];
+  status: number;
+}
+
+export interface IExamAllocationSession {
+  sessionKey: string;
+  seatingPlanId?: string | null;
+  seatingPlanName?: string | null;
+  examDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  subjectNames: string[];
+  divisions: string[];
+  divisionProgress: IExamAllocationDivisionProgress[];
+  totalStudents: number;
+  allocatedStudents: number;
+  pendingStudents: number;
+  roomsUsed: number;
+  usableCapacity: number;
+  emptySeats: number;
+  utilization: number;
+  status: number;
+  hasCompleteSchedule: boolean;
+  canPrepare: boolean;
+  requiresMigration: boolean;
+  blockingIssueCount: number;
 }
 
 export interface IExamAllocationDivisionProgress {

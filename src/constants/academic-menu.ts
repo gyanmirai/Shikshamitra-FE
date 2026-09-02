@@ -61,6 +61,7 @@ export const academicPaths = {
     root: '',
     schedule: '/academic/scheduleExam',
     seatAllocation: '/academic/seatallocation',
+    seatAllocationSetup: (examId: string) => `/academic/seatallocation/${examId}/setup`,
     recordMarks: '/academic/gradeEntry',
     resultCreation: '/academic/resultCreation',
     questionBank: '/academic/questionBank',

@@ -4,8 +4,8 @@ import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
 
 import dayjs from 'dayjs';
-import { useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Card, Typography } from '@mui/material';
@@ -16,10 +16,10 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import {
   scheduleExamApi,
   useGetExamsQuery,
@@ -193,8 +193,8 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           students are distributed correctly.
         </Typography>
         <Typography component="li" variant="caption" color="text.secondary">
-          <strong>Review &amp; Submit</strong> — Verify all details, resolve any readiness issues,
-          and submit to finalise the schedule.
+          <strong>Review &amp; Finish</strong> — Verify all details and finish the draft setup. Use
+          the visible <strong>Publish exam</strong> action in the list when the timetable is ready.
         </Typography>
       </Box>
 
@@ -226,7 +226,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           other steps.
         </Typography>
         <Typography component="li" variant="caption" color="text.secondary">
-          The <strong>Review</strong> step highlights any incomplete fields before final submission.
+          The <strong>Review</strong> step highlights incomplete fields before you finish the draft.
         </Typography>
         <Typography component="li" variant="caption" color="text.secondary">
           Only <strong>Pending</strong> exams can be fully edited. Scheduled exams allow limited

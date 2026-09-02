@@ -4,7 +4,13 @@ const disableTrailingSlashRedirects = process.env.E2E_DISABLE_TRAILING_SLASH ===
 const nextConfig = {
   productionBrowserSourceMaps: false,
 
+  // Local browser automation can resolve localhost through the loopback host.
+  // Allow that development origin so Auth.js session requests and HMR are not
+  // rejected by Next.js while testing the authenticated application locally.
+  allowedDevOrigins: ['127.0.0.1'],
+
   trailingSlash: !disableTrailingSlashRedirects,
+  skipTrailingSlashRedirect: true,
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
 
   env: {
