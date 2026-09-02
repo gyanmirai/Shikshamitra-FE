@@ -6,25 +6,25 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
 import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetQuestionsQuery } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import { useGetQuestionPaperExamLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import {
   Box,
+  Step,
   Stack,
   Alert,
   Button,
   Stepper,
-  Step,
   StepLabel,
   Typography,
   StepConnector,
@@ -33,9 +33,9 @@ import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumM
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   useGetBlueprintQuery,
-  useGetQuestionPaperByIdQuery,
   useGetPaperPreviewQuery,
   useSaveBlueprintMutation,
+  useGetQuestionPaperByIdQuery,
   useAddQuestionToPaperMutation,
   useCreateQuestionPaperMutation,
   useUpdateQuestionPaperMutation,
@@ -47,11 +47,11 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/QuestionPaperApi/question-paper-api';
 
 import StepPreview from './steps/StepPreview';
-import StepReviewAndSubmit from './steps/StepReviewAndSubmit';
 import AIAssistantDrawer from './AIAssistantDrawer';
 import StepPaperPattern from './steps/StepPaperPattern';
 import StepAddQuestions from './steps/StepAddQuestions';
 import ReviewApprovalPanel from './ReviewApprovalPanel';
+import StepReviewAndSubmit from './steps/StepReviewAndSubmit';
 import { buildCheckResults } from './steps/StepCheckValidate';
 import StepPaperDetails, { PaperDetailsFormValues } from './steps/StepPaperDetails';
 import {
@@ -375,7 +375,8 @@ export default function CreatePaperWizard({
             marks: sec.marks || 0,
             sortOrder: sec.sortOrder || idx + 1,
             questions: sectionQuestions,
-            questionType: sec.questionType ?? previous?.questionType ?? sectionQuestions[0]?.questionType,
+            questionType:
+              sec.questionType ?? previous?.questionType ?? sectionQuestions[0]?.questionType,
             questionCount: sec.questionCount ?? previous?.questionCount ?? sectionQuestions.length,
             marksPerQuestion:
               sec.marksPerQuestion ?? previous?.marksPerQuestion ?? sectionQuestions[0]?.marks,
@@ -539,14 +540,17 @@ export default function CreatePaperWizard({
   const [createPaper, createState] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateQuestionPaperMutation,
+    popupConfig: { error: false },
   });
   const [updatePaper, updateState] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateQuestionPaperMutation,
+    popupConfig: { error: false },
   });
   const [saveBlueprint, blueprintState] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useSaveBlueprintMutation,
+    popupConfig: { error: false },
   });
   const [addQuestionToPaper, addQuestionState] = useQueryAndMutation({
     type: 'mutation',
@@ -576,14 +580,12 @@ export default function CreatePaperWizard({
   const markSaved = () => setLastSavedLabel('just now');
 
   // ── Derived validation ───────────────────────────────────────────────
-  const totalMarks =
-    isReadOnly
-      ? paper?.totalMarks || Number(formik.values.totalMarks) || 0
-      : Number(formik.values.totalMarks) || paper?.totalMarks || 0;
-  const durationMinutes =
-    isReadOnly
-      ? paper?.durationMinutes || Number(formik.values.durationMinutes) || 0
-      : Number(formik.values.durationMinutes) || paper?.durationMinutes || 0;
+  const totalMarks = isReadOnly
+    ? paper?.totalMarks || Number(formik.values.totalMarks) || 0
+    : Number(formik.values.totalMarks) || paper?.totalMarks || 0;
+  const durationMinutes = isReadOnly
+    ? paper?.durationMinutes || Number(formik.values.durationMinutes) || 0
+    : Number(formik.values.durationMinutes) || paper?.durationMinutes || 0;
 
   const chapterMarksSum = Object.values(blueprintRules).reduce((sum, r) => sum + (r.marks || 0), 0);
   const difficultySum = Object.values(difficultyDist).reduce((s, v) => s + v, 0);
@@ -683,6 +685,7 @@ export default function CreatePaperWizard({
   const handleBack = () => goToStep(Math.max(0, activeStep - 1));
 
   const handleStep0Continue = async (exitAfterSave = false): Promise<boolean> => {
+    setLastSavedLabel(null);
     setPaperTitleValidationAttempted(true);
     const errors = await formik.validateForm();
     if (Object.keys(errors).length > 0) {
@@ -778,17 +781,16 @@ export default function CreatePaperWizard({
         });
         return false;
       }
-    } else {
-      if (exitAfterSave) {
+    } else if (exitAfterSave) {
         onClose();
       } else {
         goToStep(1);
       }
-    }
     return true;
   };
 
   const handleStep1Continue = async (exitAfterSave = false): Promise<boolean> => {
+    setLastSavedLabel(null);
     // Persist pattern + advanced rules
     if (selectedPaperId) {
       const sectionsPayload = toSectionsPayload(sections);
@@ -857,7 +859,6 @@ export default function CreatePaperWizard({
       goToStep(2);
     }
     return true;
-
   };
 
   const handleStep2Continue = () => goToStep(3);
@@ -940,6 +941,8 @@ export default function CreatePaperWizard({
     for (let index = 0; index < questionsToAdd.length; index += 1) {
       const question = questionsToAdd[index];
       try {
+        // Preserve deterministic question numbering for the order-sensitive paper API.
+        // eslint-disable-next-line no-await-in-loop
         const response = await addQuestionToPaper({
           paperId: selectedPaperId,
           body: {
@@ -972,12 +975,18 @@ export default function CreatePaperWizard({
           questions: (section.questions || [])
             .filter((question) => !failedOptimisticIds.has(question.id))
             .map((question) => {
-              const optimisticIndex = optimisticQuestions.findIndex((item) => item.id === question.id);
+              const optimisticIndex = optimisticQuestions.findIndex(
+                (item) => item.id === question.id
+              );
               if (optimisticIndex < 0 || failedIndexes.has(optimisticIndex)) return question;
               const result = results[optimisticIndex];
               if (result.status !== 'fulfilled') return question;
               const response = result.value as any;
-              const savedId = response?.id || response?.paperQuestionId || response?.data?.id || response?.data?.paperQuestionId;
+              const savedId =
+                response?.id ||
+                response?.paperQuestionId ||
+                response?.data?.id ||
+                response?.data?.paperQuestionId;
               return savedId ? { ...question, id: savedId } : question;
             }),
         };
@@ -1039,9 +1048,7 @@ export default function CreatePaperWizard({
           prev.map((section) => ({
             ...section,
             questions: (section.questions || []).map((question) =>
-              question.id === optimisticQuestionId
-                ? { ...question, id: savedQuestionId }
-                : question
+              question.id === optimisticQuestionId ? { ...question, id: savedQuestionId } : question
             ),
           }))
         );
@@ -1466,9 +1473,7 @@ export default function CreatePaperWizard({
           }}
         >
           {activeStep === 4 ? (
-            <Scrollbar sx={{ height: '100%', pr: 1 }}>
-              {stepContent()}
-            </Scrollbar>
+            <Scrollbar sx={{ height: '100%', pr: 1 }}>{stepContent()}</Scrollbar>
           ) : (
             <>
               {/* Smart suggestions */}
@@ -1583,7 +1588,6 @@ export default function CreatePaperWizard({
         }}
         onIgnoreSuggestion={() => setAiDrawerOpen(false)}
       />
-
     </CustomDialog>
   );
 }

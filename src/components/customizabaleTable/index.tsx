@@ -19,6 +19,8 @@ import {
 
 import { Scrollbar } from '../scrollbar';
 import CustomDialog from '../customDialog';
+import { exportTable } from './table-export';
+import { shikshaMitraToast } from '../toast';
 import { TableBody } from './components/TableBody';
 import { ComponentBlock } from '../component-block';
 import { useTableData } from './hooks/useTableData';
@@ -27,7 +29,6 @@ import { FilterChips } from './components/FilterChips';
 import { TableToolbar } from './components/TableToolbar';
 import { useStickyColumns } from './hooks/useStickyColumns';
 import { ColumnFilterMenu } from './components/ColumnFilterMenu';
-import { getExportableColumns, extractTextFromReactNode } from './utils';
 import {
   useTableConfig,
   getNextTableSorts,
@@ -390,124 +391,19 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={handleColumnVisibilityChange}
             onResetColumns={handleResetColumns}
-            onExport={(format) => {
-              if (format === 'print') {
-                window.print();
-                return;
-              }
-
-              const exportCols = getExportableColumns(memoizedColumns, columnVisibility);
-
-              const title = typeof tableTitle === 'string' ? tableTitle : 'Table_Export';
-
-              // Helper: format a raw cell value for display
-              const formatCellValue = (val: any): string => {
-                if (val === null || val === undefined) return '-';
-                const str = String(val);
-                // Detect ISO datetime strings and format them nicely
-                if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(str)) {
-                  try {
-                    const date = new Date(str);
-                    return date.toLocaleString('en-IN', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true,
-                    });
-                  } catch {
-                    return str;
-                  }
-                }
-                // Detect plain date strings (YYYY-MM-DD)
-                if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-                  try {
-                    const date = new Date(`${str}T00:00:00`);
-                    return date.toLocaleDateString('en-IN', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    });
-                  } catch {
-                    return str;
-                  }
-                }
-                return str || '-';
-              };
-
-              const getCellValueForExport = (row: any, col: any): string => {
-                const rawVal = _.get(row, col.id);
-                if (col.render) {
-                  try {
-                    const rendered = col.render(rawVal, row);
-                    const text = extractTextFromReactNode(rendered);
-                    if (text !== '') {
-                      return text;
-                    }
-                  } catch (e) {
-                    console.error('Error rendering cell for export:', col.id, e);
-                  }
-                }
-                return formatCellValue(rawVal);
-              };
-
-              if (format === 'excel') {
-                import('xlsx').then((XLSX) => {
-                  const dataObjects = sortedData.map((row) => {
-                    const obj: Record<string, any> = {};
-                    exportCols.forEach((col) => {
-                      const label = typeof col.label === 'string' ? col.label : col.id;
-                      obj[label] = getCellValueForExport(row, col);
-                    });
-                    return obj;
-                  });
-                  const worksheet = XLSX.utils.json_to_sheet(dataObjects);
-                  const workbook = XLSX.utils.book_new();
-                  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-                  XLSX.writeFile(workbook, `${title}.xlsx`);
+            onExport={async (format) => {
+              try {
+                await exportTable({
+                  format,
+                  columns: memoizedColumns,
+                  columnVisibility,
+                  rows: sortedData,
+                  tableTitle,
                 });
-              } else if (format === 'pdf') {
-                Promise.all([import('jspdf'), import('jspdf-autotable')]).then(
-                  ([jsPDFModule, autoTableModule]) => {
-                    const JsPDF = jsPDFModule.default;
-                    const autoTable = autoTableModule.default;
-                    // Use landscape for wide tables, giving each column more space
-                    const doc = new JsPDF({ orientation: 'landscape' });
-
-                    // Build flat header string array
-                    const pdfHead = exportCols.map((col) =>
-                      typeof col.label === 'string' ? col.label : col.id
-                    );
-
-                    // Build 2D body array — values are resolved directly, no key mapping
-                    const pdfBody = sortedData.map((row) =>
-                      exportCols.map((col) => getCellValueForExport(row, col))
-                    );
-
-                    autoTable(
-                      doc as any,
-                      {
-                        head: [pdfHead],
-                        body: pdfBody,
-                        styles: {
-                          fontSize: 8,
-                          cellPadding: 2,
-                          overflow: 'linebreak',
-                        },
-                        headStyles: {
-                          fillColor: [22, 119, 255],
-                          textColor: 255,
-                          fontStyle: 'bold',
-                          halign: 'left',
-                        },
-                        tableWidth: 'auto',
-                        margin: { top: 10, left: 10, right: 10 },
-                      } as any
-                    );
-                    doc.save(`${title}.pdf`);
-                  }
-                );
+              } catch {
+                shikshaMitraToast.error({
+                  message: 'The table could not be exported. Please try again.',
+                });
               }
             }}
             searchFieldProps={searchFieldProps}
