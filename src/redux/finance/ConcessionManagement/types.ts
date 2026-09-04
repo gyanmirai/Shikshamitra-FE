@@ -213,6 +213,9 @@ export interface ConcessionApplicationsResponse {
   pendingCount: number;
   approvedCount: number;
   rejectedCount: number;
+  cancelledCount: number;
+  partiallyReversedCount: number;
+  reversedCount: number;
   totalCount: number;
   currentPage: number;
   pageSize: number;

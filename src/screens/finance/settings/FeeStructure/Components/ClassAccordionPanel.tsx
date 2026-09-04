@@ -54,6 +54,9 @@ const mapToCardModel = (
   classId,
   feeStructureMetaDataId,
   collectionPolicyId: raw.collectionPolicyId ?? undefined,
+  concessionPolicyId: raw.concessionPolicyId ?? undefined,
+	concessionFeeHeadScope: raw.concessionFeeHeadScope ?? 'EntireFeeStructure',
+	concessionApplicableFeeHeadIds: raw.concessionApplicableFeeHeadIds ?? [],
 });
 
 // ---------------------------------------------------------------------------

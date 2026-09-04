@@ -51,9 +51,9 @@ export interface IFinancePolicyBase {
   status: FinancePolicyStatus;
   academicYearId: string;
   academicYearName?: string;
-  effectiveFrom: string | null;
-  effectiveTo: string | null;
-  isDefault: boolean;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  isDefault?: boolean;
   createdBy?: string;
   updatedBy?: string;
   createdAt?: string;
@@ -131,28 +131,16 @@ export interface ILateFeeEscalationRule {
 
 export interface IConcessionPolicy extends IFinancePolicyBase {
   policyType: 'concession';
-
-  // Card 1 – General Information
-  concessionType: string;
-
-  // Card 2 – Calculation Rules
+  valueSource: 'PolicyFixed' | 'RequestEnteredWithinLimits';
   calculationMethod: ConcessionCalculationMethod;
   percentageValue: number | null;
   fixedAmount: number | null;
-  calculationBase: ConcessionCalculationBase;
+  maximumPercentage: number | null;
+	maximumFixedAmount: number | null;
   roundOff: ConcessionRoundOff;
-  minimumConcession: number | null;
-
-  // Card 3 – Applicable Fee Heads
-  feeHeadScope: ConcessionApplyOn_FeeHeads;
-  applicableFeeHeads: string[];
-
-  // Card 4 – Application Behaviour
-  applyOn: ConcessionApplyOn;
-  paidFeeAdjustment: ConcessionPaidFeeAdjustment | null;
-  pendingFeeHandling: ConcessionPendingFeeHandling | null;
-  futureInstallmentStrategy: ConcessionFutureInstallmentStrategy | null;
-  walletHeadId?: string;
+  applyOn: 'AllOutstanding' | 'CurrentInstallment' | 'FutureInstallments';
+  version?: number;
+  isUsedInDownstream?: boolean;
 }
 
 export type IConcessionPolicyFormValues = Omit<

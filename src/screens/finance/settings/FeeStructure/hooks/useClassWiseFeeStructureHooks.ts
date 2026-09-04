@@ -38,6 +38,9 @@ export const useCreateClassWiseFeeStructure = () => {
       name: string;
       feeHeads: any[];
       collectionPolicyId?: string;
+      concessionPolicyId?: string;
+		concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads';
+		concessionApplicableFeeHeadIds?: string[];
     }) => create(args).unwrap(),
     [create]
   );
@@ -56,7 +59,7 @@ export const useUpdateClassWiseFeeStructure = () => {
     (args: {
       structureId: string;
       classId: string;
-      body: { name: string; feeHeads: any[]; collectionPolicyId?: string };
+		body: { name: string; feeHeads: any[]; collectionPolicyId?: string; concessionPolicyId?: string; concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads'; concessionApplicableFeeHeadIds?: string[] };
     }) => update(args).unwrap(),
     [update]
   );

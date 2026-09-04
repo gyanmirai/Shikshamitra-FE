@@ -24,13 +24,6 @@ const CALCULATION_METHOD_OPTIONS = [
   { value: 'Percentage', label: 'Percentage (%)' },
   { value: 'FixedAmount', label: 'Fixed Amount (₹)' },
   { value: 'FullWaiver', label: 'Full Waiver (100% concession)' },
-  { value: 'Manual', label: 'Manual (set per concession request)' },
-];
-
-const CALCULATION_BASE_OPTIONS = [
-  { value: 'OriginalFee', label: 'Original Fee' },
-  { value: 'OutstandingAmount', label: 'Outstanding Amount' },
-  { value: 'FeeHeadAmount', label: 'Fee Head Amount' },
 ];
 
 const ROUND_OFF_OPTIONS = [
@@ -48,12 +41,10 @@ export default function ConcessionCalculationSection({
   formik,
 }: ConcessionCalculationSectionProps) {
   const method = formik.values.calculationMethod;
+  const isRequestEntered = formik.values.valueSource === 'RequestEnteredWithinLimits';
   const isPercentage = method === 'Percentage';
   const isFixed = method === 'FixedAmount';
-  const isManual = method === 'Manual';
   const isFullWaiver = method === 'FullWaiver';
-  const showAmountFields = isPercentage || isFixed;
-  const showBaseAndRoundOff = !isManual && !isFullWaiver;
 
   return (
     <ConcessionSectionCard
@@ -61,6 +52,25 @@ export default function ConcessionCalculationSection({
       subtitle="Define how the concession amount is computed by the finance engine."
     >
       <Grid container spacing={3}>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Value Source *</InputLabel>
+            <Select
+              label="Value Source *"
+              name="valueSource"
+              value={formik.values.valueSource}
+              onChange={(event) => {
+                formik.handleChange(event);
+                if (event.target.value === 'RequestEnteredWithinLimits' && method === 'FullWaiver') {
+                  formik.setFieldValue('calculationMethod', 'Percentage');
+                }
+              }}
+            >
+              <MenuItem value="PolicyFixed">Fixed by policy</MenuItem>
+              <MenuItem value="RequestEnteredWithinLimits">Entered in request (within limits)</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
         {/* Calculation Method */}
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormControl
@@ -76,7 +86,7 @@ export default function ConcessionCalculationSection({
               onChange={formik.handleChange}
             >
               {CALCULATION_METHOD_OPTIONS.map((o) => (
-                <MenuItem key={o.value} value={o.value}>
+                <MenuItem key={o.value} value={o.value} disabled={isRequestEntered && o.value === 'FullWaiver'}>
                   {o.label}
                 </MenuItem>
               ))}
@@ -88,7 +98,7 @@ export default function ConcessionCalculationSection({
         </Grid>
 
         {/* Percentage Input */}
-        {isPercentage && (
+        {!isRequestEntered && isPercentage && (
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
@@ -113,7 +123,7 @@ export default function ConcessionCalculationSection({
         )}
 
         {/* Fixed Amount Input */}
-        {isFixed && (
+        {!isRequestEntered && isFixed && (
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
@@ -138,7 +148,7 @@ export default function ConcessionCalculationSection({
         )}
 
         {/* FullWaiver Info */}
-        {isFullWaiver && (
+        {!isRequestEntered && isFullWaiver && (
           <Grid size={{ xs: 12, sm: 6 }}>
             <Alert severity="info" variant="outlined" sx={{ fontSize: '0.8rem' }}>
               Full Waiver applies 100% concession on the selected fee heads. No additional value is
@@ -147,39 +157,35 @@ export default function ConcessionCalculationSection({
           </Grid>
         )}
 
-        {/* Manual Info */}
-        {isManual && (
-          <Grid size={{ xs: 12, sm: 6 }}>
+        {isRequestEntered && isPercentage && (
+          <Grid size={{ xs: 12 }}>
             <Alert severity="warning" variant="outlined" sx={{ fontSize: '0.8rem' }}>
-              Manual method requires the finance admin to enter the concession amount during the
-              Concession Request. No calculation fields are configured here.
+              Staff will enter the concession value in the request. The server will never allow a
+              concession above the eligible unpaid amount.
             </Alert>
           </Grid>
         )}
 
-        {/* Calculation Base (shown for Percentage / Fixed only) */}
-        {showBaseAndRoundOff && (
+        {isRequestEntered && isFixed && (
           <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Calculation Base</InputLabel>
-              <Select
-                label="Calculation Base"
-                name="calculationBase"
-                value={formik.values.calculationBase}
-                onChange={formik.handleChange}
-              >
-                {CALCULATION_BASE_OPTIONS.map((o) => (
-                  <MenuItem key={o.value} value={o.value}>
-                    {o.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <TextField fullWidth size="small" type="number" label="Maximum Fixed Amount *"
+              name="maximumFixedAmount" value={formik.values.maximumFixedAmount ?? ''}
+              onChange={formik.handleChange}
+              error={formik.touched.maximumFixedAmount && Boolean(formik.errors.maximumFixedAmount)}
+              helperText={formik.touched.maximumFixedAmount && formik.errors.maximumFixedAmount as string}
+              InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} />
           </Grid>
         )}
 
-        {/* Round Off */}
-        {showBaseAndRoundOff && (
+        {isRequestEntered && (
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField fullWidth size="small" type="number" label="Maximum Percentage *"
+              name="maximumPercentage" value={formik.values.maximumPercentage ?? ''}
+              onChange={formik.handleChange} InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }} />
+          </Grid>
+        )}
+
+        {!isFullWaiver && (
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Round Off</InputLabel>
@@ -196,26 +202,6 @@ export default function ConcessionCalculationSection({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
-        )}
-
-        {/* Minimum Concession */}
-        {showAmountFields && (
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              label="Minimum Concession (₹)"
-              name="minimumConcession"
-              value={formik.values.minimumConcession ?? ''}
-              onChange={formik.handleChange}
-              helperText="Leave blank for no minimum"
-              InputProps={{
-                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                inputProps: { min: 0 },
-              }}
-            />
           </Grid>
         )}
       </Grid>

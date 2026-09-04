@@ -264,7 +264,7 @@ export function useCollectionPolicyForm({
       !computeSlabIssues(v.escalationRules).hasIssues;
 
     const waiverHeadsValid = !v.enableWaiver || v.waiverApplyOnFeeHeads.length >= 1;
-    const isDefaultConflict = v.isDefault && Boolean(otherDefaultPolicyName);
+		const isDefaultConflict = Boolean(v.isDefault && otherDefaultPolicyName);
 
     // Phase 4b: Compound and Percentage can grow unbounded with days-late — warn (don't
     // block) when neither cap is set, since an uncapped Flat/PerDay/PerWeek/PerMonth policy

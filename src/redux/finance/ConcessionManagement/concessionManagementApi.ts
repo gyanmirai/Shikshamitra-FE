@@ -116,6 +116,19 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
+
+    reverseConcessionRequest: builder.mutation({
+      query: ({ concessionRequestId, body }) => ({
+        url: `/concession-requests/${concessionRequestId}/reverse`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        financeModuleType.concessionRequest,
+        financeModuleType.accountPosting,
+        financeModuleType.draftPosting,
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -133,4 +146,5 @@ export const {
   useDeleteConcessionApplicationMutation,
   useGetConcessionRequestByIdQuery,
   useCancelConcessionRequestMutation,
+  useReverseConcessionRequestMutation,
 } = concessionManagementApi;

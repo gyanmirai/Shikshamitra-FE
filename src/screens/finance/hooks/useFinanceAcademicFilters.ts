@@ -10,6 +10,7 @@ export const ALL_CLASS_OPTION = { id: 'All Classes', name: 'All Classes' };
 export const ALL_DIVISION_OPTION = { id: 'All Divisions', name: 'All Divisions' };
 
 export interface FinanceAcademicFilterPayload {
+	academicYearId: string;
   boardId: string;
   educationMediumId: string;
   standardId?: string;
@@ -60,7 +61,7 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     }
   );
 
-  const isReady = Boolean(selectedBoard && selectedMedium);
+	const isReady = Boolean(currentYear?.id && selectedBoard && selectedMedium);
 
   const divisions = useMemo(() => {
     if (!selectedStandardId || selectedStandardId === 'All Classes') return [];
@@ -127,8 +128,9 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   const filterPayload = useMemo<FinanceAcademicFilterPayload | null>(() => {
     if (!isReady) return null;
 
-    const payload: FinanceAcademicFilterPayload = {
-      boardId: selectedBoard,
+		const payload: FinanceAcademicFilterPayload = {
+			academicYearId: currentYear!.id,
+			boardId: selectedBoard,
       educationMediumId: selectedMedium,
     };
 
@@ -143,7 +145,7 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     }
 
     return payload;
-  }, [isReady, selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
+	}, [isReady, currentYear, selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
 
   return {
     boards,

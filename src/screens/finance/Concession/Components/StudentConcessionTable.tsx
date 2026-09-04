@@ -89,8 +89,9 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionApplicationsQuery,
-    params: {
-      boardId: filterPayload?.boardId,
+		params: {
+			academicYearId: filterPayload?.academicYearId,
+			boardId: filterPayload?.boardId,
       educationMediumId: filterPayload?.educationMediumId,
       standardId:
         filterPayload?.standardId === 'All Classes' ? undefined : filterPayload?.standardId,
@@ -116,6 +117,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
       approved: allConcessionData?.approvedCount ?? 0,
       rejected: allConcessionData?.rejectedCount ?? 0,
       cancelled: allConcessionData?.cancelledCount ?? 0,
+      partiallyReversed: allConcessionData?.partiallyReversedCount ?? 0,
+      reversed: allConcessionData?.reversedCount ?? 0,
     }),
     [allConcessionData]
   );
@@ -145,6 +148,18 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
         value: ConcessionStatusType.Cancelled,
         count: concessionCounts.cancelled,
         color: 'error',
+      },
+      {
+        label: 'Partially reversed',
+        value: ConcessionStatusType.PartiallyReversed,
+        count: concessionCounts.partiallyReversed,
+        color: 'warning',
+      },
+      {
+        label: 'Reversed',
+        value: ConcessionStatusType.Reversed,
+        count: concessionCounts.reversed,
+        color: 'default',
       },
     ],
     [concessionCounts]

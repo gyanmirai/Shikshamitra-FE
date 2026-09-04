@@ -7,24 +7,19 @@
 
 import React from 'react';
 import {
-  Box,
   Grid,
-  Card,
   Select,
-  Switch,
   MenuItem,
   TextField,
   InputLabel,
-  Typography,
   FormControl,
-  FormControlLabel,
 } from '@mui/material';
 
 import { ConcessionSectionCard } from './ConcessionCommon';
 
 const STATUS_OPTIONS = [
+  { value: 'Draft', label: 'Draft' },
   { value: 'Active', label: 'Active' },
-  { value: 'Archived', label: 'Archived' },
 ];
 
 interface ConcessionGeneralSectionProps {
@@ -99,40 +94,6 @@ export default function ConcessionGeneralSection({
             inputProps={{ maxLength: 500 }}
             placeholder="Describe the purpose and scope of this concession policy..."
           />
-        </Grid>
-
-        {/* Default Policy Toggle */}
-        <Grid size={{ xs: 12 }}>
-          <Card
-            variant="outlined"
-            sx={{
-              px: 2,
-              py: 1.25,
-              display: 'flex',
-              alignItems: 'center',
-              bgcolor: formik.values.isDefault ? 'primary.lighter' : 'transparent',
-              borderColor: formik.values.isDefault ? 'primary.main' : 'divider',
-              transition: 'all 0.2s ease',
-              cursor: 'pointer',
-            }}
-            onClick={() => formik.setFieldValue('isDefault', !formik.values.isDefault)}
-          >
-            <FormControlLabel
-              sx={{ m: 0, pointerEvents: 'none' }}
-              control={<Switch size="small" checked={formik.values.isDefault} />}
-              label={
-                <Box ml={0.5}>
-                  <Typography variant="body2" fontWeight={600}>
-                    Default Concession Policy
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    This policy will be pre-selected when a finance admin creates a new concession
-                    request.
-                  </Typography>
-                </Box>
-              }
-            />
-          </Card>
         </Grid>
       </Grid>
     </ConcessionSectionCard>

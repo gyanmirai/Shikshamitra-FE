@@ -111,8 +111,8 @@ const FeeLedgerFilterBar = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
-    params: { studentId },
-    options: { skip: !studentId },
+		params: { studentId, academicYearId: currentYear?.id },
+		options: { skip: !studentId || !currentYear?.id },
   });
 
   const {

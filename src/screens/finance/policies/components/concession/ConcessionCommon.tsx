@@ -81,7 +81,6 @@ interface ConcessionSummaryPanelProps {
   checks: {
     generalValid: boolean;
     calcValid: boolean;
-    feeHeadsValid: boolean;
     applicationValid: boolean;
     isReadyToPublish: boolean;
   };
@@ -170,22 +169,6 @@ export function ConcessionSummaryPanel({
                     ? ` (₹${values.fixedAmount})`
                     : ''}
                 </Typography>
-              }
-            />
-            <SummaryRow
-              label="Fee Heads"
-              value={
-                <Chip
-                  label={
-                    values.feeHeadScope === 'EntireFeeStructure'
-                      ? 'All'
-                      : `${values.applicableFeeHeads.length} selected`
-                  }
-                  size="small"
-                  color={values.feeHeadScope === 'EntireFeeStructure' ? 'default' : 'primary'}
-                  variant={values.feeHeadScope === 'EntireFeeStructure' ? 'outlined' : 'filled'}
-                  sx={{ height: 18, fontSize: '0.6rem' }}
-                />
               }
             />
             <SummaryRow
@@ -292,7 +275,6 @@ export function ConcessionSummaryPanel({
           <Stack spacing={0.5} mt={1}>
             <ValidationCheck label="General Information Complete" valid={checks.generalValid} />
             <ValidationCheck label="Calculation Valid" valid={checks.calcValid} />
-            <ValidationCheck label="Fee Heads Configured" valid={checks.feeHeadsValid} />
             <ValidationCheck label="Application Rules Valid" valid={checks.applicationValid} />
 
             {checks.isReadyToPublish ? (
