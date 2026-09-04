@@ -42,9 +42,10 @@ export const StudentAdmissionApi = api.injectEndpoints({
       providesTags: [studentAdmissionType.studentAdmission],
     }),
     getStudentFeeStructure: builder.query({
-      query: ({ studentId }) => ({
+		query: ({ studentId, academicYearId }) => ({
         url: `/student-fee-structure/student/${studentId}`,
         method: 'GET',
+		params: { academicYearId },
       }),
       providesTags: [studentAdmissionType.studentAdmission],
     }),

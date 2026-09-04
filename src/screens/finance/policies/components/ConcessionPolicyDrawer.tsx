@@ -4,7 +4,7 @@
  * ConcessionPolicyDrawer
  *
  * Full-featured concession policy create/edit drawer.
- * Cards: General · Calculation Rules · Applicable Fee Heads · Application Behaviour · Demand Behaviour
+ * Cards: General · Calculation Rules · Application Behaviour
  * Right panel: Live Summary + Impact Simulation + Validation
  * Footer: Cancel · Save Draft · Publish
  */
@@ -19,7 +19,6 @@ import { ConcessionSummaryPanel } from './concession/ConcessionCommon';
 import { useConcessionPolicyForm } from '../hooks/useConcessionPolicyForm';
 import ConcessionFooterActions from './concession/ConcessionFooterActions';
 import ConcessionGeneralSection from './concession/ConcessionGeneralSection';
-import ConcessionFeeHeadsSection from './concession/ConcessionFeeHeadsSection';
 import ConcessionCalculationSection from './concession/ConcessionCalculationSection';
 import ConcessionApplicationSection from './concession/ConcessionApplicationSection';
 
@@ -44,7 +43,6 @@ export default function ConcessionPolicyDrawer({
 }: ConcessionPolicyDrawerProps) {
   const {
     formik,
-    feeHeads,
     isSaving,
     unsavedChangesDialog,
     checks,
@@ -104,8 +102,8 @@ export default function ConcessionPolicyDrawer({
               {editData ? 'Edit Concession Policy' : 'Create Concession Policy'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Configure calculation rules, fee head scope, application behaviour, and demand
-              recalculation logic. This policy is reusable across concession requests.
+				Configure reusable calculation limits and application behaviour. Fee-head eligibility is
+				selected when this policy is attached to a fee structure.
             </Typography>
           </Box>
           <Button
@@ -129,10 +127,7 @@ export default function ConcessionPolicyDrawer({
               {/* Card 2 — Calculation Rules */}
               <ConcessionCalculationSection formik={formik} />
 
-              {/* Card 3 — Applicable Fee Heads */}
-              <ConcessionFeeHeadsSection formik={formik} feeHeads={feeHeads} />
-
-              {/* Card 4 — Application Behaviour */}
+				{/* Card 3 — Application Behaviour */}
               <ConcessionApplicationSection formik={formik} />
             </Box>
           </Scrollbar>

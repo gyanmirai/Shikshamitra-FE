@@ -9,11 +9,10 @@ import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
-  useCreateFinancePolicyMutation,
-  useUpdateFinancePolicyMutation,
-} from 'src/redux/finance/financePolicy';
+  useCreateConcessionPolicyMutation,
+  useUpdateConcessionPolicyMutation,
+} from 'src/redux/finance/concessionPolicy';
 
 import type { IFinancePolicyRow, IConcessionPolicyFormValues } from '../types/finance-policy.types';
 
@@ -35,32 +34,15 @@ const getInitialValues = (
     description: d?.description || '',
     status: d?.status || 'Active',
     academicYearId: d?.academicYearId || academicYearId || '',
-    effectiveFrom: d?.effectiveFrom || null,
-    effectiveTo: d?.effectiveTo || null,
-    isDefault: d?.isDefault || false,
     policyType: 'concession',
-
-    // Card 1 – General
-    concessionType: d?.concessionType || '',
-
-    // Card 2 – Calculation Rules
+    valueSource: d?.valueSource || 'RequestEnteredWithinLimits',
     calculationMethod: d?.calculationMethod || 'Percentage',
     percentageValue: d?.percentageValue ?? null,
     fixedAmount: d?.fixedAmount ?? null,
-    calculationBase: d?.calculationBase || 'OriginalFee',
-    roundOff: d?.roundOff || 'None',
-    minimumConcession: d?.minimumConcession ?? null,
-
-    // Card 3 – Fee Heads
-    feeHeadScope: d?.feeHeadScope || 'EntireFeeStructure',
-    applicableFeeHeads: d?.applicableFeeHeads || [],
-
-    // Card 4 – Application Behaviour
-    applyOn: d?.applyOn || 'PendingFeesOnly',
-    paidFeeAdjustment: d?.paidFeeAdjustment || null,
-    pendingFeeHandling: d?.pendingFeeHandling || null,
-    futureInstallmentStrategy: d?.futureInstallmentStrategy || null,
-    walletHeadId: d?.walletHeadId || '',
+    maximumPercentage: d?.maximumPercentage ?? null,
+		maximumFixedAmount: d?.maximumFixedAmount ?? null,
+    roundOff: d?.roundingMethod || d?.roundOff || 'None',
+    applyOn: d?.applyOn || 'AllOutstanding',
   };
 };
 
@@ -76,23 +58,28 @@ const validationSchema = Yup.object().shape({
   calculationMethod: Yup.string().required('Calculation method is required'),
   percentageValue: Yup.number()
     .nullable()
-    .when('calculationMethod', {
-      is: 'Percentage',
+    .when(['calculationMethod', 'valueSource'], {
+      is: (method: string, source: string) =>
+        method === 'Percentage' && source === 'PolicyFixed',
       then: (s) =>
         s.required('Percentage is required').min(0, 'Must be ≥ 0').max(100, 'Cannot exceed 100%'),
     }),
   fixedAmount: Yup.number()
     .nullable()
-    .when('calculationMethod', {
-      is: 'FixedAmount',
+    .when(['calculationMethod', 'valueSource'], {
+      is: (method: string, source: string) =>
+        method === 'FixedAmount' && source === 'PolicyFixed',
       then: (s) => s.required('Fixed amount is required').min(0, 'Must be ≥ 0'),
     }),
-  feeHeadScope: Yup.string().required(),
-  applicableFeeHeads: Yup.array().when('feeHeadScope', {
-    is: 'SelectedFeeHeads',
-    then: (s) => s.min(1, 'Select at least one fee head'),
-  }),
   applyOn: Yup.string().required('Apply on is required'),
+  maximumPercentage: Yup.number().nullable().min(0.01).max(100).when(['calculationMethod', 'valueSource'], {
+		is: (method: string, source: string) => method === 'Percentage' && source === 'RequestEnteredWithinLimits',
+		then: (schema) => schema.required('Maximum percentage is required'),
+	}),
+	maximumFixedAmount: Yup.number().nullable().min(0.01).when(['calculationMethod', 'valueSource'], {
+		is: (method: string, source: string) => method === 'FixedAmount' && source === 'RequestEnteredWithinLimits',
+		then: (schema) => schema.required('Maximum fixed amount is required'),
+	}),
 });
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -118,21 +105,14 @@ export function useConcessionPolicyForm({
   const [simAlreadyPaid, setSimAlreadyPaid] = useState(0);
   const [simLateFee, setSimLateFee] = useState(0);
 
-  // ─── Fee Heads ────────────────────────────────────────────────────────────
-  const { data: feeHeadsData } = useGetFeeHeadsQuery({});
-  const feeHeads: { id: string; name: string }[] = useMemo(
-    () => (feeHeadsData as any)?.data || [],
-    [feeHeadsData]
-  );
-
   // ─── API Mutations ────────────────────────────────────────────────────────
   const [createPolicy, { isLoading: isCreating }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useCreateFinancePolicyMutation,
+    currentQueryAndMutation: useCreateConcessionPolicyMutation,
   });
   const [updatePolicy, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateFinancePolicyMutation,
+    currentQueryAndMutation: useUpdateConcessionPolicyMutation,
   });
   const isSaving = isCreating || isUpdating;
 
@@ -143,7 +123,21 @@ export function useConcessionPolicyForm({
     enableReinitialize: true,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const payload = { ...values, policyType: 'concession' };
+        const payload = {
+          academicYearId: values.academicYearId,
+          policyName: values.policyName,
+          policyCode: values.policyCode || null,
+          description: values.description,
+          status: values.status,
+          valueSource: values.valueSource,
+          calculationMethod: values.calculationMethod,
+          percentageValue: values.valueSource === 'PolicyFixed' ? values.percentageValue : null,
+          fixedAmount: values.valueSource === 'PolicyFixed' ? values.fixedAmount : null,
+          maximumPercentage: values.maximumPercentage,
+			maximumFixedAmount: values.maximumFixedAmount,
+          applyOn: values.applyOn,
+          roundingMethod: values.roundOff,
+        };
         if (editData?.id) {
           await updatePolicy({ id: editData.id, body: payload });
           shikshaMitraToast.success({ message: `Policy "${values.policyName}" updated.` });
@@ -186,27 +180,24 @@ export function useConcessionPolicyForm({
   const checks = useMemo(() => {
     const { values, errors } = formik;
     const generalValid = !!values.policyName && values.policyName.length >= 3;
-    const calcValid =
-      !!values.calculationMethod &&
-      (values.calculationMethod === 'Manual' ||
-        values.calculationMethod === 'FullWaiver' ||
+    const calcValid = !!values.calculationMethod &&
+		(values.valueSource === 'RequestEnteredWithinLimits'
+			? (values.calculationMethod === 'Percentage' && (values.maximumPercentage ?? 0) > 0) ||
+			  (values.calculationMethod === 'FixedAmount' && (values.maximumFixedAmount ?? 0) > 0)
+			: values.calculationMethod === 'FullWaiver' ||
         (values.calculationMethod === 'Percentage' &&
           values.percentageValue !== null &&
           values.percentageValue > 0) ||
         (values.calculationMethod === 'FixedAmount' &&
           values.fixedAmount !== null &&
           values.fixedAmount > 0));
-    const feeHeadsValid =
-      values.feeHeadScope === 'EntireFeeStructure' ||
-      (values.feeHeadScope === 'SelectedFeeHeads' && values.applicableFeeHeads.length > 0);
     const applicationValid = !!values.applyOn;
 
-    const isReadyToPublish = generalValid && calcValid && feeHeadsValid && applicationValid;
+    const isReadyToPublish = generalValid && calcValid && applicationValid;
 
     return {
       generalValid,
       calcValid,
-      feeHeadsValid,
       applicationValid,
 
       isReadyToPublish,
@@ -219,35 +210,22 @@ export function useConcessionPolicyForm({
     const pending = Math.max(0, simFeeAmount - simAlreadyPaid);
 
     let concessionAmount = 0;
-    if (values.calculationMethod === 'Percentage' && values.percentageValue) {
-      const base =
-        values.calculationBase === 'OutstandingAmount'
-          ? pending
-          : values.calculationBase === 'FeeHeadAmount'
-            ? simFeeAmount
-            : simFeeAmount;
-      concessionAmount = (base * values.percentageValue) / 100;
-    } else if (values.calculationMethod === 'FixedAmount' && values.fixedAmount) {
-      concessionAmount = values.fixedAmount;
+		const simulatedValue = values.valueSource === 'PolicyFixed'
+			? values.calculationMethod === 'Percentage' ? values.percentageValue : values.fixedAmount
+			: values.calculationMethod === 'Percentage' ? values.maximumPercentage : values.maximumFixedAmount;
+		if (values.calculationMethod === 'Percentage' && simulatedValue) {
+			concessionAmount = (pending * simulatedValue) / 100;
+		} else if (values.calculationMethod === 'FixedAmount' && simulatedValue) {
+			concessionAmount = simulatedValue;
     } else if (values.calculationMethod === 'FullWaiver') {
       concessionAmount = pending + simAlreadyPaid;
     }
 
-    // Apply minimum concession
-    if (values.minimumConcession && concessionAmount < values.minimumConcession) {
-      concessionAmount = values.minimumConcession;
-    }
-
     const newOutstanding = Math.max(0, pending - concessionAmount);
-    const refundRequired =
-      simAlreadyPaid > 0 &&
-      (values.applyOn === 'PaidFeesOnly' || values.applyOn === 'PaidAndPending')
-        ? Math.min(simAlreadyPaid, concessionAmount)
-        : 0;
 
     return {
       concessionAmount: Math.round(concessionAmount),
-      refundRequired: Math.round(refundRequired),
+      refundRequired: 0,
       newOutstanding: Math.round(newOutstanding),
       lateFeeImpact: simLateFee,
     };
@@ -255,7 +233,6 @@ export function useConcessionPolicyForm({
 
   return {
     formik,
-    feeHeads,
     academicYears: academicYears || [],
     isSaving,
     unsavedChangesDialog,

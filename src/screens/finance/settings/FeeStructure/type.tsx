@@ -75,6 +75,9 @@ export interface IClassWiseFeeStructureCard {
   collectionPolicyId?: string;
   refundPolicyId?: string;
   prorationPolicyId?: string;
+  concessionPolicyId?: string;
+	concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads';
+	concessionApplicableFeeHeadIds?: string[];
 }
 
 export interface IFeeStructure {

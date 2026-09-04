@@ -187,7 +187,6 @@ Add a compact section:
 
 - Approval required: fixed to Yes for the first release.
 - Approval threshold amount.
-- Allow multiple approved concessions: default No.
 - Maximum per student/year.
 - Remarks required: default Yes.
 

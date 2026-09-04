@@ -35,8 +35,12 @@ export interface IConcessionRequestItem {
   studentConcessionTypeRequestId: string;
   concessionTypeId: string;
   concessionTypeName: string;
-  status: number; // 0 = Pending, 1 = Approved, 2 = Rejected
+  status: number; // Pending, approved, rejected, cancelled, partially reversed, or reversed
   totalAmount: number;
+  totalRequestedAmount: number;
+  totalApprovedAmount: number;
+  totalReversedAmount: number;
+  netApprovedAmount: number;
   feeHeads: IConcessionFeeHead[];
   submittedDocuments: IConcessionSubmittedDocument[];
   requiredDocuments?: IRequiredDocument[];
@@ -84,11 +88,15 @@ export interface IViewConcessionRequestProps {
 
 export interface IConcessionMonthItem {
   dueFeeId: string;
+  concessionDueFeeAllocationId?: string;
   month: string;
   total: number;
   paid: number;
   due: number;
   concessionAmount: number;
+  appliedConcessionAmount?: number;
+  reversedConcessionAmount?: number;
+  reversibleConcessionAmount?: number;
   status: FeeCollectionStatusType;
   isSelectable?: boolean;
   year: number;
@@ -110,6 +118,6 @@ export interface IConcessionFeeHeadWiseResponse {
 
 export interface IFeeHeadApprovalViewProps {
   selectedItem: IConcessionRequestItem;
-  mode: 'Approve' | 'Cancel';
+  mode: 'Approve' | 'Reverse';
   onBack: () => void;
 }

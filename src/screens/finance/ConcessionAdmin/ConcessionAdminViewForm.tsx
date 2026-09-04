@@ -3,6 +3,8 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
+import type { RootState } from 'src/redux/store';
+import { useSelector } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
@@ -484,6 +486,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
 }) => {
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const isApproved = item.status === ConcessionStatusType.Approved;
+  const isPartiallyReversed = item.status === ConcessionStatusType.PartiallyReversed;
   const isRejected = item.status === ConcessionStatusType.Rejected;
   const isCancelled = item.status === ConcessionStatusType.Cancelled;
   const statusLabel = ConcessionStatusType[item.status] as keyof typeof ConcessionStatusType;
@@ -501,7 +504,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const displayDocs = hasRequiredDocs ? uploadedDocs : (item.submittedDocuments || []).slice(0, 1);
 
   // Approve should be disabled if any required document is not uploaded
-  const approveDisabled = isApproved || isRejected || isCancelled || !allMandatoryDocsUploaded;
+  const approveDisabled = item.status !== ConcessionStatusType.Pending || !allMandatoryDocsUploaded;
 
   return (
     <Card
@@ -542,23 +545,32 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           </Label>
         </Box>
         <Divider />
-        {/* Concession Amount */}
-        <Box
-          mb={1}
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{
-            borderRadius: 1,
-          }}
-        >
-          <Typography variant="body2" fontWeight={700}>
-            Concession Amount
-          </Typography>
-          <Typography variant="h6" fontWeight={800}>
-            {formatNumber(item.totalAmount, 'INR')}
-          </Typography>
-        </Box>
+        {/* Requested and approved values remain separate throughout the lifecycle. */}
+        <Stack spacing={0.5} mb={1}>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Typography variant="body2" fontWeight={700}>
+              Requested
+            </Typography>
+            <Typography variant="subtitle1" fontWeight={800}>
+              {formatNumber(item.totalRequestedAmount ?? item.totalAmount, 'INR')}
+            </Typography>
+          </Box>
+          {item.status !== ConcessionStatusType.Pending && (
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography variant="body2" fontWeight={700}>
+                {item.totalReversedAmount > 0 ? 'Net approved' : 'Approved'}
+              </Typography>
+              <Typography variant="subtitle1" fontWeight={800} color="success.main">
+                {formatNumber(
+                  item.totalReversedAmount > 0
+                    ? item.netApprovedAmount
+                    : item.totalApprovedAmount,
+                  'INR'
+                )}
+              </Typography>
+            </Box>
+          )}
+        </Stack>
 
         {/* Documents section - only show uploaded docs + See All */}
         <Box mb={1.5}>
@@ -770,7 +782,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           size="small"
           variant="soft"
           color="error"
-          disabled={isApproved || isRejected || isCancelled}
+          disabled={item.status !== ConcessionStatusType.Pending}
           startIcon={<Cancel fontSize="small" />}
           onClick={() => onReject(item)}
         >
@@ -781,11 +793,11 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           size="small"
           variant="soft"
           color="warning"
-          disabled={!isApproved}
+          disabled={!isApproved && !isPartiallyReversed}
           startIcon={<Iconify icon="mdi:cancel" width={16} />}
           onClick={() => onCancel(item)}
         >
-          Cancel
+          Reverse
         </LoadingButton>
         <IconButton
           onClick={() => onDelete(item)}
@@ -804,6 +816,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
 
 const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student, onClose }) => {
   const theme = useTheme();
+	const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [activeTab, setActiveTab] = useState('all');
   const docDialog = useBoolean();
   const deleteDialog = useBoolean();
@@ -812,7 +825,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
   // approvalView drives the in-place fee-head-wise approval screen
   const [approvalView, setApprovalView] = useState<{
     item: IConcessionRequestItem;
-    mode: 'Approve' | 'Cancel';
+    mode: 'Approve' | 'Reverse';
   } | null>(null);
 
   const [deleteConcessionApplication, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -826,8 +839,8 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentConcessionDetailsQuery,
-    params: { studentId: student?.studentId },
-    options: { skip: !student?.studentId },
+		params: { studentId: student?.studentId, academicYearId: currentYear?.id },
+		options: { skip: !student?.studentId || !currentYear?.id },
   }) as { data: any; isLoading: boolean; isFetching: boolean };
 
   const allItems: IConcessionRequestItem[] = (data?.items || []).map((item: any) => ({
@@ -850,7 +863,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
   };
 
   const handleCancelClick = (item: IConcessionRequestItem) => {
-    setApprovalView({ item, mode: 'Cancel' });
+    setApprovalView({ item, mode: 'Reverse' });
   };
 
   const handleOpenDocs = (item: IConcessionRequestItem) => {
@@ -961,6 +974,20 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
                   value: ConcessionStatusType.Cancelled,
                   count: allItems.filter((i) => i.status === ConcessionStatusType.Cancelled).length,
                   color: 'error' as LabelColor,
+                },
+                {
+                  label: 'Partially reversed',
+                  value: ConcessionStatusType.PartiallyReversed,
+                  count: allItems.filter(
+                    (i) => i.status === ConcessionStatusType.PartiallyReversed
+                  ).length,
+                  color: 'warning' as LabelColor,
+                },
+                {
+                  label: 'Reversed',
+                  value: ConcessionStatusType.Reversed,
+                  count: allItems.filter((i) => i.status === ConcessionStatusType.Reversed).length,
+                  color: 'default' as LabelColor,
                 },
               ].map((tab) => (
                 <Tab

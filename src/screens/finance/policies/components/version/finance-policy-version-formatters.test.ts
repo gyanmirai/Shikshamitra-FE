@@ -1,0 +1,64 @@
+import { it, expect, describe } from 'vitest';
+
+import {
+  deserializeVersionValue,
+  formatFinancePolicyVersionField,
+  formatFinancePolicyVersionValue,
+} from './finance-policy-version-formatters';
+
+describe('finance policy version formatters', () => {
+  it('deserializes snapshot strings without leaving JSON quotes in the UI', () => {
+    expect(deserializeVersionValue('"concession policy 1"')).toBe('concession policy 1');
+    expect(formatFinancePolicyVersionValue('PolicyName', '"concession policy 1"')).toEqual({
+      kind: 'text',
+      text: 'concession policy 1',
+    });
+  });
+
+  it.each([
+    ['Status', 1, 'Active', 'status'],
+    ['ValueSource', 1, 'Request Entered Within Limits', 'text'],
+    ['CalculationMethod', 0, 'Percentage', 'text'],
+    ['FeeHeadScope', 0, 'Entire Fee Structure', 'text'],
+    ['ApplyOn', 0, 'All Outstanding Fees', 'text'],
+    ['RoundingMethod', 0, 'None', 'text'],
+  ])('formats the numeric %s enum', (field, value, text, kind) => {
+    expect(formatFinancePolicyVersionValue(field, value)).toEqual({ kind, text });
+  });
+
+  it('keeps valid zero and false values instead of treating them as empty', () => {
+    expect(formatFinancePolicyVersionValue('AllowMultipleConcessions', false)).toEqual({
+      kind: 'boolean',
+      text: 'No',
+    });
+    expect(formatFinancePolicyVersionValue('MaximumPercentage', 0)).toEqual({
+      kind: 'text',
+      text: '0%',
+    });
+  });
+
+  it('uses friendly names for known ids and arrays', () => {
+    const context = {
+      labelsById: {
+        'policy-id': 'Sibling concession policy',
+        'year-id': '2026-27',
+        'fee-head-id': 'Tuition Fee',
+      },
+    };
+
+    expect(formatFinancePolicyVersionField('PolicyId')).toBe('Policy');
+    expect(formatFinancePolicyVersionField('AcademicYearId')).toBe('Academic Year');
+    expect(formatFinancePolicyVersionValue('PolicyId', '"policy-id"', context).text).toBe(
+      'Sibling concession policy'
+    );
+    expect(formatFinancePolicyVersionValue('AcademicYearId', 'year-id', context).text).toBe(
+      '2026-27'
+    );
+    expect(
+      formatFinancePolicyVersionValue('ApplicableFeeHeadIds', '["fee-head-id"]', context).text
+    ).toBe('Tuition Fee');
+    expect(formatFinancePolicyVersionValue('ApplicableFeeHeadIds', '[]', context).text).toBe(
+      'None'
+    );
+  });
+});
