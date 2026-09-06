@@ -18,6 +18,7 @@ interface Args {
   examId: string;
   standardId: string;
   plan: SeatingPlanGroupDto;
+  roomId: string;
 }
 
 interface PublishedSeatingData extends GuidedManualEditorData {
@@ -29,7 +30,12 @@ interface PublishedSeatingData extends GuidedManualEditorData {
 
 const EMPTY_DATA: GuidedManualEditorData = { students: [], rooms: [], assignments: [] };
 
-export function usePublishedSeatingData({ examId, standardId, plan }: Args): PublishedSeatingData {
+export function usePublishedSeatingData({
+  examId,
+  standardId,
+  plan,
+  roomId,
+}: Args): PublishedSeatingData {
   const [loadStudents] = useLazyGetSeatAllocationStudentsQuery();
   const [loadLayout] = useLazyGetSeatLayoutQuery();
   const [attempt, setAttempt] = useState(0);
@@ -42,7 +48,7 @@ export function usePublishedSeatingData({ examId, standardId, plan }: Args): Pub
 
   useEffect(() => {
     let isCurrent = true;
-    const roomIds = [...new Set(plan.selectedRoomIds)];
+    const roomIds = [roomId];
 
     const loadPublishedSeating = async () => {
       setState({ ...EMPTY_DATA, isLoading: true, error: '', canRetry: false });
@@ -80,11 +86,11 @@ export function usePublishedSeatingData({ examId, standardId, plan }: Args): Pub
             )
           ) as Promise<ManualStudentResponseDto[]>,
           Promise.all(
-            roomIds.map((roomId) =>
+            roomIds.map((layoutRoomId) =>
               loadLayout({
                 examId,
                 divisionId: plan.divisions[0].id,
-                roomId,
+                roomId: layoutRoomId,
                 seatingPlanId: plan.seatingPlanId,
                 pageSize: 1000,
               }).unwrap()
@@ -95,7 +101,8 @@ export function usePublishedSeatingData({ examId, standardId, plan }: Args): Pub
         const data = mapGuidedManualEditorData(
           plan,
           studentResponses,
-          layoutResponses.map((layout, index) => ({ ...layout, roomId: roomIds[index] }))
+          layoutResponses.map((layout, index) => ({ ...layout, roomId: roomIds[index] })),
+          { showPlanContext: true }
         );
         setState({ ...data, isLoading: false, error: '', canRetry: false });
       } catch {
@@ -113,7 +120,7 @@ export function usePublishedSeatingData({ examId, standardId, plan }: Args): Pub
     return () => {
       isCurrent = false;
     };
-  }, [attempt, examId, loadLayout, loadStudents, plan, standardId]);
+  }, [attempt, examId, loadLayout, loadStudents, plan, roomId, standardId]);
 
   return { ...state, retry: () => setAttempt((current) => current + 1) };
 }

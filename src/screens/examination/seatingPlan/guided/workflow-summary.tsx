@@ -1,4 +1,5 @@
 import Stack from '@mui/material/Stack';
+import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 
@@ -79,15 +80,27 @@ export function WorkflowSummary({ workspace, workflow }: GuidedStepProps) {
   );
 }
 
-function SummaryRow({ label, value }: { label: string; value: string | number }) {
+export function SummaryRow({ label, value }: { label: string; value: string | number }) {
   return (
-    <Stack direction="row" justifyContent="space-between" spacing={1}>
-      <Typography variant="body2" color="text.secondary">
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: '88px minmax(0, 1fr)',
+        columnGap: 1,
+        alignItems: 'start',
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={600} textAlign="right">
+      <Typography
+        variant="body2"
+        fontWeight={600}
+        textAlign="right"
+        sx={{ minWidth: 0, lineHeight: 1.5, overflowWrap: 'anywhere' }}
+      >
         {value}
       </Typography>
-    </Stack>
+    </Box>
   );
 }

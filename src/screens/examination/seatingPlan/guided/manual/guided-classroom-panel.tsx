@@ -20,9 +20,11 @@ interface GuidedClassroomPanelProps {
   activeRoomId: string;
   selectedStudent?: SeatingStudent;
   isReadOnly: boolean;
+  includeProtectedAssignmentsInCount?: boolean;
   onSwitchRoom: (roomId: string) => void;
   onAssign: (student: SeatingStudent, roomId: string, seat: SeatingSeat) => void;
   onUnassign: (studentId: string) => void;
+  onToggleReserve?: (roomId: string, seat: SeatingSeat) => void;
 }
 
 export function GuidedClassroomPanel({
@@ -32,9 +34,11 @@ export function GuidedClassroomPanel({
   activeRoomId,
   selectedStudent,
   isReadOnly,
+  includeProtectedAssignmentsInCount = false,
   onSwitchRoom,
   onAssign,
   onUnassign,
+  onToggleReserve,
 }: GuidedClassroomPanelProps) {
   const activeRoom = rooms.find((room) => room.roomId === activeRoomId) ?? rooms[0];
   /**
@@ -50,7 +54,9 @@ export function GuidedClassroomPanel({
     roomId: room.roomId,
     roomName: room.roomName,
     occupied: assignments.filter(
-      (assignment) => assignment.roomId === room.roomId && !assignment.isExternalExamOccupied
+      (assignment) =>
+        assignment.roomId === room.roomId &&
+        (includeProtectedAssignmentsInCount || !assignment.isExternalExamOccupied)
     ).length,
     usable: room.seats.filter((seat) => !seat.isDisabled && !seat.isReserved).length,
   }));
@@ -93,13 +99,14 @@ export function GuidedClassroomPanel({
           conflictSeatIds={new Set()}
           onAssign={onAssign}
           onUnassign={onUnassign}
+          onToggleReserve={onToggleReserve}
           isReadOnly={isReadOnly}
         />
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.5, pb: 1.5 }}>
         {isReadOnly
-          ? 'Published seating is read-only. Switch rooms above to inspect each final seat assignment.'
-          : 'Drag occupied seats to move or swap students. Use the seat menu to remove an assignment.'}
+          ? 'Published seating is read-only. Seats from simultaneous plans are combined and labelled in this room view.'
+          : 'Drag occupied seats to move or swap students. Use the seat menu to remove an assignment or reserve an empty seat.'}
       </Typography>
     </Box>
   );

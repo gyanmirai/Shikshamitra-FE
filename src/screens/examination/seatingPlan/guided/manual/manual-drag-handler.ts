@@ -39,6 +39,7 @@ export function handleGuidedManualDrag(event: DragEndEvent, context: Context) {
   const occupant = context.assignments.find(
     (assignment) => assignment.roomId === roomId && assignment.seatId === seat.seatId
   );
+  if (occupant?.isExternalExamOccupied) return;
   if (activeData.type === 'assigned-seat' && activeData.assignment) {
     if (occupant && occupant.studentId !== activeData.assignment.studentId) {
       context.actions.swapSeats(activeData.assignment.studentId, occupant.studentId);

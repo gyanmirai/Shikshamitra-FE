@@ -6,13 +6,13 @@ import {
   Box,
   TableRow,
   Collapse,
-  Skeleton,
   TableCell,
   IconButton,
   TableBody as MuiTableBody,
 } from '@mui/material';
 
-import { EmptyContent } from '../../empty-content'; // Adjusted path
+import TableEmptyState from './TableEmptyState';
+import TableBodyLoadingRows from './TableBodyLoadingRows';
 import { getColumnSizeSx } from '../utils/columnSizing';
 
 import type { IData, IColumn } from '../types';
@@ -29,7 +29,7 @@ interface TableBodyProps {
   expandedRows: Record<number, boolean>;
   onExpandRow: (index: number) => void;
   noDataText?: React.ReactNode;
-  tableRef: any;
+  tableRef: number;
   rowsPerPage?: number;
 }
 
@@ -51,53 +51,22 @@ export const TableBody = ({
   const theme = useTheme();
 
   if (isLoading) {
-    const hasExpandColumn = columns.some((column) => column.children);
-
     return (
-      <MuiTableBody>
-        {[...Array(Math.min(rowsPerPage, 10))].map((_row, rowIndex) => (
-          <TableRow key={rowIndex}>
-            {hasExpandColumn && (
-              <TableCell>
-                <Skeleton variant="circular" width={24} height={24} />
-              </TableCell>
-            )}
-            {columns.map(
-              (column) =>
-                columnVisibility[column.id] && (
-                  <TableCell
-                    key={column.id}
-                    sx={{
-                      py: dense ? 1.5 : 2,
-                      px: 2,
-                      borderBottom: `1px dashed ${theme.vars.palette.divider}`,
-                    }}
-                  >
-                    <Skeleton variant="text" width="100%" />
-                  </TableCell>
-                )
-            )}
-          </TableRow>
-        ))}
-      </MuiTableBody>
+      <TableBodyLoadingRows
+        columns={columns}
+        columnVisibility={columnVisibility}
+        dense={dense}
+        rowsPerPage={rowsPerPage}
+      />
     );
   }
 
   if (data.length === 0) {
-    const isCustomEmptyState = React.isValidElement(noDataText);
     return (
       <MuiTableBody>
         <TableRow>
           <TableCell colSpan={columns.length} sx={{ p: 0 }}>
-            <EmptyContent
-              title={noDataText}
-              sx={{
-                width: tableRef,
-                position: 'sticky',
-                left: '0',
-                padding: '0',
-              }}
-            />
+            <TableEmptyState noDataText={noDataText} tableWidth={tableRef} />
           </TableCell>
         </TableRow>
       </MuiTableBody>

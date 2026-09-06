@@ -5,7 +5,13 @@ import type {
 
 import { it, expect, describe } from 'vitest';
 
-import { getNextLabel, getNextDisabled, getStepFromQuery } from './workflow-config';
+import {
+  getNextLabel,
+  getNextDisabled,
+  getStepFromQuery,
+  buildWorkflowUrl,
+  shouldConfirmAutomaticReallocation,
+} from './workflow-config';
 
 describe('guided seating workflow configuration', () => {
   it('keeps route-backed steps inside the supported workflow', () => {
@@ -16,13 +22,22 @@ describe('guided seating workflow configuration', () => {
     expect(getStepFromQuery('rooms')).toBe(0);
   });
 
+  it('removes a stale plan selection when returning to Plan subjects', () => {
+    expect(
+      buildWorkflowUrl(
+        '/academic/seatallocation/exam-1/setup',
+        'step=1&planId=deleted-plan',
+        0,
+        null
+      )
+    ).toBe('/academic/seatallocation/exam-1/setup?step=0');
+  });
+
   it('explains the preview, apply and validation phases', () => {
     expect(getNextLabel(0, false, false, false, false)).toBe('Create seating plan');
     expect(getNextLabel(0, false, false, true, false)).toBe('Edit selected plan');
     expect(getNextLabel(1, false, false, true, false)).toBe('Generate seating preview');
-    expect(getNextLabel(1, true, false, true, false, 'manual')).toBe(
-      'Review manual seating'
-    );
+    expect(getNextLabel(1, true, false, true, false, 'manual')).toBe('Review manual seating');
     expect(getNextLabel(2, false, false, true, false)).toBe('Generate preview');
     expect(getNextLabel(2, true, false, true, false)).toBe('Apply seating & validate');
     expect(getNextLabel(2, true, true, true, false)).toBe('Save plan & return to subjects');
@@ -70,12 +85,12 @@ describe('guided seating workflow configuration', () => {
       allocationMode: 'manual' as const,
     };
 
-    expect(
-      getNextDisabled({ ...common, hasPreview: true, hasUnallocatedPreview: true })
-    ).toBe(true);
-    expect(
-      getNextDisabled({ ...common, hasPreview: true, hasUnallocatedPreview: false })
-    ).toBe(false);
+    expect(getNextDisabled({ ...common, hasPreview: true, hasUnallocatedPreview: true })).toBe(
+      true
+    );
+    expect(getNextDisabled({ ...common, hasPreview: true, hasUnallocatedPreview: false })).toBe(
+      false
+    );
   });
 
   it('offers one global publish review only after examination readiness passes', () => {
@@ -151,5 +166,12 @@ describe('guided seating workflow configuration', () => {
         warningsAcknowledged: false,
       })
     ).toBe(true);
+  });
+
+  it('confirms before an automatic proposal replaces existing assignments', () => {
+    expect(shouldConfirmAutomaticReallocation(1, 'automatic', 3)).toBe(true);
+    expect(shouldConfirmAutomaticReallocation(1, 'automatic', 0)).toBe(false);
+    expect(shouldConfirmAutomaticReallocation(1, 'manual', 3)).toBe(false);
+    expect(shouldConfirmAutomaticReallocation(2, 'automatic', 3)).toBe(false);
   });
 });

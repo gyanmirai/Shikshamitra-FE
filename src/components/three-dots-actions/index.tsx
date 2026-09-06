@@ -7,6 +7,8 @@ import { usePopover, CustomPopover } from '../custom-popover';
 
 import type { ThreeDotsActionsProps, ThreeDotsActionContext } from './types';
 
+const COMPACT_ACTION_BUTTON_SX = { p: 0, width: 30, height: 30 } as const;
+
 const ThreeDotsActions = ({
   actions = (_context: ThreeDotsActionContext) => null,
   onClickThreeDots,
@@ -44,7 +46,7 @@ const ThreeDotsActions = ({
                 handleViewClick(e);
               }}
               disabled={disableViewIcon}
-              sx={{ p: 0 }}
+              sx={COMPACT_ACTION_BUTTON_SX}
             >
               <Iconify icon={viewIcon} sx={{ height: '16px', width: '16px', cursor: 'pointer' }} />
             </IconButton>
@@ -66,7 +68,7 @@ const ThreeDotsActions = ({
                 handleEditClick(e);
               }}
               disabled={disableEditIcon}
-              sx={{ p: 0 }}
+              sx={COMPACT_ACTION_BUTTON_SX}
             >
               <Iconify
                 icon="solar:pen-bold"
@@ -94,7 +96,7 @@ const ThreeDotsActions = ({
                 handleDeleteClick(e);
               }}
               disabled={disableDeleteIcon}
-              sx={{ p: 0 }}
+              sx={COMPACT_ACTION_BUTTON_SX}
             >
               <Iconify
                 icon="solar:trash-bin-trash-bold"
@@ -115,7 +117,7 @@ const ThreeDotsActions = ({
               popover.onOpen(e);
               onClickThreeDots?.(e);
             }}
-            sx={{ p: 0 }}
+            sx={COMPACT_ACTION_BUTTON_SX}
           >
             <Iconify
               icon="eva:more-vertical-fill"

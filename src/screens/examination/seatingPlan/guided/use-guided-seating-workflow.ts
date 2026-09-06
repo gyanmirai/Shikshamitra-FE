@@ -49,7 +49,7 @@ export function useGuidedSeatingWorkflow(workspace: SeatingPlanWorkspaceDto): Gu
     readiness === workspace.readiness ? workspace : { ...workspace, readiness };
   const isPublished = operations.isPublished || readiness.isPublished;
 
-  const navigate = (step: number, planId = seatingPlanId) => {
+  const navigate = (step: number, planId: string | null = seatingPlanId ?? null) => {
     router.replace(buildWorkflowUrl(pathname, searchParams.toString(), step, planId), {
       scroll: false,
     });
@@ -73,7 +73,7 @@ export function useGuidedSeatingWorkflow(workspace: SeatingPlanWorkspaceDto): Gu
     formik.setFieldValue('selectedRoomIds', []);
     formik.setFieldValue('acknowledgeWarnings', false);
     operations.resetPreview();
-    navigate(0, undefined);
+    navigate(0, null);
   };
 
   const updatePlanSubjects = async (
@@ -125,12 +125,12 @@ export function useGuidedSeatingWorkflow(workspace: SeatingPlanWorkspaceDto): Gu
     try {
       if (activeStep === 0) {
         if (isPublished) {
-          navigate(3, undefined);
+          navigate(3, null);
           return;
         }
         if (readiness.isReadyToPublish) {
           const latestReadiness = await operations.runExaminationValidation();
-          if (latestReadiness.isReadyToPublish) navigate(3, undefined);
+          if (latestReadiness.isReadyToPublish) navigate(3, null);
           else
             shikshaMitraToast.error({
               message: 'Review the new blocking issues before publishing the examination.',
@@ -192,7 +192,8 @@ export function useGuidedSeatingWorkflow(workspace: SeatingPlanWorkspaceDto): Gu
         const published = await operations.publish(formik.values);
         if (!published) {
           shikshaMitraToast.error({
-            message: 'Every subject and plan must be ready before the examination can be published.',
+            message:
+              'Every subject and plan must be ready before the examination can be published.',
           });
         } else {
           shikshaMitraToast.success({

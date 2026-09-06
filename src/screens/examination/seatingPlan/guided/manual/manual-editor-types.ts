@@ -1,8 +1,4 @@
-import type {
-  SeatingStudent,
-  SeatingAssignment,
-  SeatingRoomLayout,
-} from '../../types';
+import type { SeatingStudent, SeatingAssignment, SeatingRoomLayout } from '../../types';
 
 export interface ManualStudentItemDto {
   studentId: string;
@@ -25,6 +21,10 @@ export interface ManualSeatItemDto {
   seatNumber: number;
   benchId?: string | null;
   isExternalExamOccupied?: boolean;
+  isOtherPlanOccupied?: boolean;
+  seatingPlanId?: string | null;
+  seatingPlanName?: string | null;
+  subjectNames?: string[];
 }
 
 export interface ManualRoomDto {

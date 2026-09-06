@@ -1,5 +1,5 @@
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Typography } from '@mui/material';
+import { Box, Chip, Tooltip, Typography } from '@mui/material';
 
 import type { SeatStateStyle } from './seat-card-types';
 import type { SeatingSeat, SeatingAssignment } from '../../types';
@@ -63,15 +63,17 @@ export default function SeatCardContent({
               </Typography>
             )}
             {divisionName && (
-              <Chip
-                label={divisionName}
-                size="small"
-                sx={{ height: 14, fontSize: '0.55rem', px: 0.25 }}
-              />
+              <Tooltip title={divisionName} arrow>
+                <Chip
+                  label={divisionName}
+                  size="small"
+                  sx={{ height: 14, maxWidth: 132, fontSize: '0.55rem', px: 0.25 }}
+                />
+              </Tooltip>
             )}
             {isExternalExam && !divisionName && rollNo == null && (
               <Typography variant="caption" sx={{ color: 'text.disabled', lineHeight: 1.2 }}>
-                Other Exam
+                Other plan
               </Typography>
             )}
           </Box>
