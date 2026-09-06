@@ -1,6 +1,3 @@
-import type { SeatingPlanGroupDto } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
-
-import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
@@ -11,30 +8,33 @@ import { usePublishedSeatingData } from './use-published-seating-data';
 import { GuidedClassroomPanel } from '../manual/guided-classroom-panel';
 
 import type { SeatingSeat, SeatingStudent } from '../../types';
+import type { PublishedRoomGroup } from './published-room-groups';
 
 interface Props {
   examId: string;
   standardId: string;
-  plan: SeatingPlanGroupDto;
+  group: PublishedRoomGroup;
 }
 
 const ignoreSeatAssignment = (_student: SeatingStudent, _roomId: string, _seat: SeatingSeat) =>
   undefined;
 const ignoreSeatRemoval = (_studentId: string) => undefined;
+const ignoreRoomSwitch = (_roomId: string) => undefined;
 
-export function PublishedPlanRoomView({ examId, standardId, plan }: Props) {
-  const [activeRoomId, setActiveRoomId] = useState(plan.selectedRoomIds[0] ?? '');
-  const data = usePublishedSeatingData({ examId, standardId, plan });
-  const visibleRoomId = data.rooms.some((room) => room.roomId === activeRoomId)
-    ? activeRoomId
-    : (data.rooms[0]?.roomId ?? '');
+export function PublishedPlanRoomView({ examId, standardId, group }: Props) {
+  const data = usePublishedSeatingData({
+    examId,
+    standardId,
+    plan: group.anchorPlan,
+    roomId: group.roomId,
+  });
 
   if (data.isLoading) {
     return (
       <Skeleton
         variant="rounded"
         height={560}
-        aria-label={`Loading published seating for ${plan.name}`}
+        aria-label={`Loading published seating for room ${group.roomName}`}
       />
     );
   }
@@ -50,15 +50,16 @@ export function PublishedPlanRoomView({ examId, standardId, plan }: Props) {
   }
 
   return (
-    <Box aria-label={`Published seating for ${plan.name}`}>
+    <Box aria-label={`Combined published seating for room ${group.roomName}`}>
       <DndContext>
         <GuidedClassroomPanel
           rooms={data.rooms}
           assignments={data.assignments}
           students={data.students}
-          activeRoomId={visibleRoomId}
+          activeRoomId={group.roomId}
           isReadOnly
-          onSwitchRoom={setActiveRoomId}
+          includeProtectedAssignmentsInCount
+          onSwitchRoom={ignoreRoomSwitch}
           onAssign={ignoreSeatAssignment}
           onUnassign={ignoreSeatRemoval}
         />

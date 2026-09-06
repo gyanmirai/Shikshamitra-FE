@@ -37,6 +37,15 @@ describe('guided manual editor data mapping', () => {
               seatNumber: 3,
               isExternalExamOccupied: true,
             },
+            {
+              studentId: 'sibling-plan-1',
+              studentName: 'Chirag',
+              rollNo: 4,
+              seatNumber: 4,
+              isOtherPlanOccupied: true,
+              seatingPlanName: 'English seating plan',
+              subjectNames: ['English'],
+            },
           ],
         },
       ]
@@ -53,7 +62,50 @@ describe('guided manual editor data mapping', () => {
         expect.objectContaining({ studentId: 'a-1', roomId: 'room-1', seatNumber: 1 }),
         expect.objectContaining({ studentId: 'b-1', roomId: 'room-1', seatNumber: 2 }),
         expect.objectContaining({ studentId: 'external-1', isExternalExamOccupied: true }),
+        expect.objectContaining({ studentId: 'sibling-plan-1', isExternalExamOccupied: true }),
       ])
+    );
+    expect(result.students).toContainEqual(
+      expect.objectContaining({
+        studentId: 'sibling-plan-1',
+        divisionName: 'English · English seating plan',
+        isExternalExamOccupied: true,
+      })
+    );
+  });
+
+  it('labels every occupied seat by subject and plan in the published room view', () => {
+    const result = mapGuidedManualEditorData(
+      plan,
+      [
+        {
+          items: [{ studentId: 'a-1', studentName: 'Asha', rollNo: 1 }],
+        },
+      ],
+      [
+        {
+          roomId: 'room-1',
+          room: { capacity: 1, benchesPerRow: 1, benchesPerColumn: 1, benchCapacity: 1 },
+          items: [
+            {
+              studentId: 'a-1',
+              studentName: 'Asha',
+              rollNo: 1,
+              seatNumber: 1,
+              seatingPlanName: 'Computer Science seating plan',
+              subjectNames: ['Computer Science'],
+            },
+          ],
+        },
+      ],
+      { showPlanContext: true }
+    );
+
+    expect(result.students).toContainEqual(
+      expect.objectContaining({
+        studentId: 'a-1',
+        divisionName: 'Computer Science · Computer Science seating plan',
+      })
     );
   });
 });

@@ -27,7 +27,7 @@ export function buildWorkflowUrl(
   pathname: string,
   currentQuery: string,
   step: number,
-  planId?: string
+  planId?: string | null
 ): string {
   const params = new URLSearchParams(currentQuery);
   params.set('step', String(step));
@@ -55,6 +55,14 @@ export function getNextLabel(
   if (activeStep === 2 && !hasValidation) return 'Apply seating & validate';
   if (activeStep === 2) return 'Save plan & return to subjects';
   return isPublished ? 'Back to seating plans' : 'Publish examination seating';
+}
+
+export function shouldConfirmAutomaticReallocation(
+  activeStep: number,
+  allocationMode: GuidedSeatingValues['allocationMode'],
+  allocatedStudents: number
+): boolean {
+  return activeStep === 1 && allocationMode === 'automatic' && allocatedStudents > 0;
 }
 
 export function getInitialPlan(
@@ -124,8 +132,7 @@ export function getNextDisabled(args: {
       (!args.permissions.canAdd ||
         !args.seatingPlanId ||
         capacity < (args.plan?.totalStudents ?? 0) ||
-        (args.allocationMode === 'manual' &&
-          (!args.hasPreview || args.hasUnallocatedPreview)))) ||
+        (args.allocationMode === 'manual' && (!args.hasPreview || args.hasUnallocatedPreview)))) ||
     (args.activeStep === 2 &&
       args.allocationMode !== 'manual' &&
       !args.permissions.canAutoAllocate) ||

@@ -136,6 +136,7 @@ function GuidedManualEditorContent({
             onSwitchRoom={editor.setActiveRoomId}
             onAssign={assignStudent}
             onUnassign={editor.actions.unassignStudent}
+            onToggleReserve={editor.toggleSeatReservation}
           />
         </Box>
       </Box>

@@ -210,9 +210,9 @@ function twoDivisionWorkspace(saved = false) {
   return value;
 }
 
-async function mockGuidedSeating(page: Page, initialPublished = false) {
-  let prepared = initialPublished;
-  let applied = initialPublished;
+async function mockGuidedSeating(page: Page, initialPublished = false, initialApplied = false) {
+  let prepared = initialPublished || initialApplied;
+  let applied = initialPublished || initialApplied;
   let published = initialPublished;
   let includesAllSubjects = initialPublished;
   const state: {
@@ -354,6 +354,11 @@ async function mockGuidedSeating(page: Page, initialPublished = false) {
       applied = false;
       includesAllSubjects = false;
       await route.fulfill({ json: workspace(false, false) });
+    } else if (request.method() === 'DELETE' && path.includes('/seating-plan/scopes/')) {
+      prepared = false;
+      applied = false;
+      includesAllSubjects = false;
+      await route.fulfill({ status: 204 });
     } else if (path.endsWith('/v2/publish')) {
       published = true;
       await route.fulfill({ json: workspace(true, true, true, includesAllSubjects) });
@@ -691,7 +696,16 @@ test.describe('Guided examination seating', { tag: ['@module-academic', '@critic
     await page.goto(`/academic/seatallocation/${examId}/setup`);
     await page.getByRole('checkbox', { name: /Mathematics/ }).check();
     await page.getByRole('button', { name: 'Create seating plan' }).click();
-    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Configure capacity and seating rules' })
+    ).toBeVisible();
+    await page
+      .locator('button')
+      .filter({ hasText: /^Back$/ })
+      .click();
+    await expect(
+      page.getByRole('heading', { name: 'Plan every subject, then publish once' })
+    ).toBeVisible();
 
     await expect(page.getByRole('button', { name: 'Reset all draft seating' })).toBeVisible();
     await page.getByRole('button', { name: 'Reset all draft seating' }).click();
@@ -703,6 +717,54 @@ test.describe('Guided examination seating', { tag: ['@module-academic', '@critic
     ).toBeVisible();
     await expect(page.getByRole('checkbox', { name: /Mathematics/ })).toBeEnabled();
     await expect(page.getByRole('checkbox', { name: /Science/ })).toBeEnabled();
+  });
+
+  test('deletes an empty plan without leaving a stale plan route', async ({ page }) => {
+    await mockGuidedSeating(page);
+    await page.goto(`/academic/seatallocation/${examId}/setup`);
+    await page.getByRole('checkbox', { name: /Mathematics/ }).check();
+    await page.getByRole('button', { name: 'Create seating plan' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Configure capacity and seating rules' })
+    ).toBeVisible();
+    await page
+      .locator('button')
+      .filter({ hasText: /^Back$/ })
+      .click();
+    await expect(
+      page.getByRole('heading', { name: 'Plan every subject, then publish once' })
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Delete empty plan' }).click();
+    await expect(page.getByRole('dialog', { name: 'Delete empty seating plan?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Delete plan' }).click();
+
+    await expect(
+      page.getByText('No seating plan has been created for this examination yet.')
+    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/academic/seatallocation/${examId}/setup\\?step=0$`));
+    await expect(page.getByText('The seating workspace could not be loaded.')).toHaveCount(0);
+  });
+
+  test('rebuilds every saved assignment after switching a populated plan to automatic', async ({
+    page,
+  }) => {
+    const state = await mockGuidedSeating(page, false, true);
+    await page.goto(`/academic/seatallocation/${examId}/setup?step=1&planId=${planId}`);
+    await page.getByRole('button', { name: /Manual classroom/ }).click();
+    await expect(page.getByText('24 of 24 students assigned')).toBeVisible();
+
+    await page.getByRole('button', { name: /Automatic/ }).click();
+    await page.getByRole('button', { name: 'Generate seating preview' }).click();
+    await expect(
+      page.getByRole('dialog', { name: 'Generate a new automatic arrangement?' })
+    ).toBeVisible();
+    expect(state.autoAllocateRequests).toBe(0);
+    await page.getByRole('button', { name: 'Generate new preview' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Review the proposed seating' })).toBeVisible();
+    expect(state.autoAllocateRequests).toBe(1);
+    await expect(page.getByText('No seats were proposed.')).toHaveCount(0);
   });
 
   test('places students on the classroom map and saves the reviewed manual arrangement', async ({
@@ -717,6 +779,15 @@ test.describe('Guided examination seating', { tag: ['@module-academic', '@critic
     if (!(await roomCheckbox.isChecked())) await roomCheckbox.check();
     await page.getByRole('button', { name: /Manual classroom/ }).click();
     await expect(page.getByText('Classroom seating editor')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Seat 2 actions' }).click();
+    await page.getByRole('menuitem', { name: 'Reserve Seat' }).click();
+    await expect(page.getByRole('button', { name: 'Seat 2, reserved' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Room 101 — 0/29' })).toBeVisible();
+    await page.getByRole('button', { name: 'Seat 2 actions' }).click();
+    await page.getByRole('menuitem', { name: 'Unreserve Seat' }).click();
+    await expect(page.getByRole('button', { name: 'Seat 2, empty' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Room 101 — 0/30' })).toBeVisible();
 
     const firstStudent = page.getByRole('button', { name: /Student 1/ }).first();
     await firstStudent.click();
@@ -787,7 +858,9 @@ test.describe('Guided examination seating', { tag: ['@module-academic', '@critic
       page.getByRole('button', { name: 'Seat 2, occupied by Bilal South' })
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Seat 3, blocked by other exam' })
+      page.getByRole('button', {
+        name: 'Seat 3, unavailable, occupied by another simultaneous exam plan',
+      })
     ).toHaveAttribute('aria-disabled', 'true');
 
     const ashaBackground = await ashaCard.evaluate(
@@ -830,7 +903,11 @@ test.describe('Guided examination seating', { tag: ['@module-academic', '@critic
     await expect(
       page.getByRole('button', { name: 'Seat 2, occupied by Bilal South' })
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Seat 3, blocked by other exam' })).toBeVisible();
+    await expect(
+      page.getByRole('button', {
+        name: 'Seat 3, unavailable, occupied by another simultaneous exam plan',
+      })
+    ).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Seat 4, occupied by Aarav North' })
     ).toBeVisible();

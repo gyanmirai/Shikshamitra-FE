@@ -11,19 +11,21 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import CustomSelect from 'src/components/custom-select';
 
+import { buildPublishedRoomGroups } from './published-room-groups';
 import { PublishedPlanRoomView } from './published-plan-room-view';
 
 export function PublishedSeatingView({ workspace }: { workspace: SeatingPlanWorkspaceDto }) {
-  const initialPlanId =
-    workspace.plans.find((plan) => plan.seatingPlanId === workspace.selectedSeatingPlanId)
-      ?.seatingPlanId ??
-    workspace.plans[0]?.seatingPlanId ??
+  const roomGroups = buildPublishedRoomGroups(workspace.plans);
+  const initialGroupId =
+    roomGroups.find((group) =>
+      group.plans.some((plan) => plan.seatingPlanId === workspace.selectedSeatingPlanId)
+    )?.id ??
+    roomGroups[0]?.id ??
     '';
-  const [selectedPlanId, setSelectedPlanId] = useState(initialPlanId);
-  const selectedPlan =
-    workspace.plans.find((plan) => plan.seatingPlanId === selectedPlanId) ?? workspace.plans[0];
+  const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId);
+  const selectedGroup = roomGroups.find((group) => group.id === selectedGroupId) ?? roomGroups[0];
 
-  if (!selectedPlan) {
+  if (!selectedGroup) {
     return (
       <Alert severity="error">
         No published seating plans are available for this examination. Contact the school
@@ -32,9 +34,9 @@ export function PublishedSeatingView({ workspace }: { workspace: SeatingPlanWork
     );
   }
 
-  const planOptions = workspace.plans.map((plan) => ({
-    value: plan.seatingPlanId,
-    label: plan.name,
+  const roomOptions = roomGroups.map((group) => ({
+    value: group.id,
+    label: `${group.roomName} · ${group.subjectNames.join(', ')} · ${group.scheduleLabel}`,
   }));
 
   return (
@@ -54,26 +56,31 @@ export function PublishedSeatingView({ workspace }: { workspace: SeatingPlanWork
             <Chip label="Published" color="success" size="small" variant="soft" />
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {selectedPlan.subjects.map((subject) => subject.subjectName).join(', ')} ·{' '}
-            {selectedPlan.allocatedStudents} of {selectedPlan.totalStudents} students seated
+            {selectedGroup.roomName} · {selectedGroup.scheduleLabel} · {selectedGroup.plans.length}{' '}
+            simultaneous plan
+            {selectedGroup.plans.length === 1 ? '' : 's'} combined
+          </Typography>
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+            {selectedGroup.subjectNames.join(', ')} ·{' '}
+            {selectedGroup.plans.map((plan) => plan.name).join(' / ')}
           </Typography>
         </Box>
-        {workspace.plans.length > 1 && (
-          <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
+        {roomGroups.length > 1 && (
+          <Box sx={{ width: { xs: '100%', md: 440 }, flexShrink: 0 }}>
             <CustomSelect
-              label="Seating plan"
-              options={planOptions}
-              value={selectedPlan.seatingPlanId}
-              onChange={(value) => setSelectedPlanId(String(value))}
+              label="Room and examination time"
+              options={roomOptions}
+              value={selectedGroup.id}
+              onChange={(value) => setSelectedGroupId(String(value))}
             />
           </Box>
         )}
       </Stack>
       <PublishedPlanRoomView
-        key={selectedPlan.seatingPlanId}
+        key={selectedGroup.id}
         examId={workspace.examId}
         standardId={workspace.standardId}
-        plan={selectedPlan}
+        group={selectedGroup}
       />
     </Paper>
   );

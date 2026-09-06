@@ -28,7 +28,9 @@ export default function SeatCard({
   const tooltipTitle = popover.open
     ? ''
     : isExternalExam
-      ? 'Blocked (Other Exam)'
+      ? divisionName
+        ? `Unavailable — ${divisionName}`
+        : 'Unavailable — occupied by another simultaneous exam plan'
       : assignment
         ? `${studentName ?? 'Student'} - Seat ${seat.seatNumber}`
         : seat.isReserved

@@ -7,6 +7,10 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import ThreeDotsActions from './index';
 
+vi.mock('../iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
+
 describe('ThreeDotsActions', () => {
   const theme = createTheme(defaultSettings);
 
@@ -23,7 +27,9 @@ describe('ThreeDotsActions', () => {
       </ThemeProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    const moreActions = screen.getByRole('button', { name: 'More actions' });
+    expect(moreActions).toHaveStyle({ width: '30px', height: '30px' });
+    fireEvent.click(moreActions);
 
     expect(await screen.findByRole('menuitem', { name: 'Eligibility Handoff' })).toBeVisible();
   });

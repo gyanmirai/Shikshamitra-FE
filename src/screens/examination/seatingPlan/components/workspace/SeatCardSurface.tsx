@@ -24,9 +24,12 @@ function getSeatAriaLabel(
   seat: SeatingSeat,
   assignment: SeatingAssignment | undefined,
   studentName: string | undefined,
-  isExternalExam: boolean
+  isExternalExam: boolean,
+  occupancyContext: string | undefined
 ) {
-  if (isExternalExam) return `Seat ${seat.seatNumber}, blocked by other exam`;
+  if (isExternalExam) {
+    return `Seat ${seat.seatNumber}, unavailable, occupied by ${occupancyContext ?? 'another simultaneous exam plan'}`;
+  }
   if (assignment) return `Seat ${seat.seatNumber}, occupied by ${studentName ?? 'Student'}`;
   if (seat.isReserved) return `Seat ${seat.seatNumber}, reserved`;
   if (seat.isDisabled) return `Seat ${seat.seatNumber}, disabled`;
@@ -86,7 +89,7 @@ export default function SeatCardSurface({
       tabIndex={isReadOnly || isUnavailable ? -1 : 0}
       data-seat-id={seat.seatId}
       role={isReadOnly ? 'img' : 'button'}
-      aria-label={getSeatAriaLabel(seat, assignment, studentName, isExternalExam)}
+      aria-label={getSeatAriaLabel(seat, assignment, studentName, isExternalExam, divisionName)}
       aria-disabled={isReadOnly ? undefined : isUnavailable}
       sx={getSeatSurfaceSx({
         stateStyle,

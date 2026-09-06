@@ -58,4 +58,26 @@ describe('guided manual drag handler', () => {
 
     expect(swapSeats).toHaveBeenCalledWith('student-1', 'student-2');
   });
+
+  it('does not replace an occupant owned by another overlapping plan', () => {
+    const moveStudent = vi.fn();
+    const swapSeats = vi.fn();
+    const protectedOccupant: SeatingAssignment = {
+      ...source,
+      studentId: 'other-plan-student',
+      seatId: destination.seatId,
+      seatNumber: destination.seatNumber,
+      isExternalExamOccupied: true,
+    };
+
+    handleGuidedManualDrag(dragEvent(protectedOccupant), {
+      isReadOnly: false,
+      assignments: [source, protectedOccupant],
+      actions: { moveStudent, swapSeats } as never,
+      setSelectedStudentId: vi.fn() as never,
+    });
+
+    expect(moveStudent).not.toHaveBeenCalled();
+    expect(swapSeats).not.toHaveBeenCalled();
+  });
 });
