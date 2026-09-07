@@ -1,18 +1,22 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
 
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useCallback } from 'react';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
+  Card,
   Alert,
   Stack,
   Button,
@@ -20,6 +24,7 @@ import {
   Drawer,
   Select,
   MenuItem,
+  TextField,
   InputLabel,
   DialogTitle,
   FormControl,
@@ -28,20 +33,35 @@ import {
 } from '@mui/material';
 import {
   useGetPaymentTermsQuery,
-  type PaymentTermListItem,
+  usePublishVersionMutation,
   useLazyGetPaymentTermsQuery,
   useDeletePaymentTermMutation,
   useClonePaymentTermsMutation,
+  useArchivePaymentTermMutation,
+  useRestorePaymentTermMutation,
+  useLazyGetPaymentTermByIdQuery,
 } from 'src/redux/finance/paymentTerm';
 
 import PaymentTermForm from './Components/PaymentTermForm';
 import PaymentTermTable from './Components/PaymentTermTable';
+import PaymentTermDetailsDrawer from './Components/PaymentTermDetailsDrawer';
 
 import type { IPaymentTerm } from './type';
 
-// ---------------------------------------------------------------------------
-// Map list API item → table/form row shape
-// ---------------------------------------------------------------------------
+type PaymentTermArchiveView = 'current' | 'archived';
+type PaymentTermDetailsTab = 'details' | 'versions';
+
+interface PaymentTermTableQuery {
+  page: number;
+  pageSize: number;
+  search: string;
+}
+
+interface PaymentTermDetailsTarget {
+  id: string;
+  tab: PaymentTermDetailsTab;
+}
+
 const mapListItemToPaymentTerm = (item: PaymentTermListItem): IPaymentTerm => ({
   id: item.id,
   paymentTermName: item.name,
@@ -54,90 +74,105 @@ const mapListItemToPaymentTerm = (item: PaymentTermListItem): IPaymentTerm => ({
   installments: [],
   isDefaultTerm: item.isDefault,
   holidayShiftingMethod: 'None',
-  demandGenerationRule: 'Immediately',
+  demandGenerationRule: 'OnInstallmentStartDate',
   demandOffsetDays: null,
   initialDemandStatus: 'Draft',
   currentVersionNumber: item.currentVersionNumber,
+  currentVersionStatus: item.hasDraft
+    ? 'Draft'
+    : item.hasPublishedVersion
+      ? 'Published'
+      : undefined,
+  hasDraft: item.hasDraft,
   isUsedInDownstream: item.referencedStructureCount > 0,
   canDirectEdit: item.canDirectEdit,
 });
 
-// ---------------------------------------------------------------------------
-// PaymentTerm screen — orchestrates table, drawer, delete dialog, clone dialog
-// ---------------------------------------------------------------------------
 const PaymentTerm = () => {
+  const [archiveView, setArchiveView] = useState<PaymentTermArchiveView>('current');
+  const [tableQuery, setTableQuery] = useState<PaymentTermTableQuery>({
+    page: 1,
+    pageSize: 10,
+    search: '',
+  });
   const [selectedPaymentTerm, setSelectedPaymentTerm] = useState<IPaymentTerm | null>(null);
+  const [detailsTarget, setDetailsTarget] = useState<PaymentTermDetailsTarget | null>(null);
+  const [publishTarget, setPublishTarget] = useState<PaymentTermListItem | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<PaymentTermListItem | null>(null);
+  const [archiveReason, setArchiveReason] = useState('');
+  const [cloneSourceYearId, setCloneSourceYearId] = useState('');
 
   const addPaymentTermDrawer = useBoolean();
   const deletePaymentTermDialog = useBoolean();
   const cloneDialog = useBoolean();
 
-  const [cloneSourceYearId, setCloneSourceYearId] = useState('');
-
   const { currentYear, academicYears } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const paymentTermPermissions = financePermissions.fees.settings.paymentTermActions;
+  const canView = hasGrantedPermission(permissions, paymentTermPermissions.view);
+  const canCreate = hasGrantedPermission(permissions, paymentTermPermissions.create);
+  const canEdit = hasGrantedPermission(permissions, paymentTermPermissions.edit);
+  const canPublish = hasGrantedPermission(permissions, paymentTermPermissions.publish);
+  const canArchive = hasGrantedPermission(permissions, paymentTermPermissions.archive);
+  const canRestore = hasGrantedPermission(permissions, paymentTermPermissions.restore);
+  const canClone = hasGrantedPermission(permissions, paymentTermPermissions.clone);
+  const canDelete = hasGrantedPermission(permissions, paymentTermPermissions.delete);
   const targetAcademicYearId = currentYear?.id ?? '';
+  const isArchived = archiveView === 'archived';
 
-  // ── API ────────────────────────────────────────────────────────────────────
-  const {
-    data: paymentTerms,
-    isLoading: isPaymentTermLoading,
-    isFetching: isPaymentTermFetching,
-    refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPaymentTermsQuery,
-    params: { academicYearId: targetAcademicYearId, pageSize: 100 },
-  });
-
-  const [fetchSourceTerms] = useLazyGetPaymentTermsQuery();
-
-  const [deletePaymentTerm, { isLoading: isDeleting }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeletePaymentTermMutation,
-  });
-
-  const [clonePaymentTerms, { isLoading: isCloning }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useClonePaymentTermsMutation,
-  });
-
-  // ── Drawer close ──────────────────────────────────────────────────────────
-  /**
-   * Memoization Justification:
-   * handleClose is passed as onClose prop to PaymentTermForm inside the Drawer.
-   * A stable reference prevents PaymentTermForm from re-rendering when unrelated
-   * state in this parent (e.g. cloneSourceYearId) changes.
-   */
-  const handleClose = useCallback(
-    (_e?: React.SyntheticEvent | null, isSubmit?: boolean) => {
-      addPaymentTermDrawer.onFalse();
-      setSelectedPaymentTerm(null);
-      if (isSubmit) {
-        refetch();
-      }
+  const paymentTermPage = useGetPaymentTermsQuery(
+    {
+      academicYearId: targetAcademicYearId,
+      status: isArchived ? 'Archived' : 'Active',
+      includeArchived: isArchived,
+      search: tableQuery.search || undefined,
+      page: tableQuery.page,
+      pageSize: tableQuery.pageSize,
     },
-    [addPaymentTermDrawer, refetch]
+    { skip: !targetAcademicYearId || !canView }
+  );
+  const archivedSummary = useGetPaymentTermsQuery(
+    {
+      academicYearId: targetAcademicYearId,
+      status: 'Archived',
+      includeArchived: true,
+      page: 1,
+      pageSize: 1,
+    },
+    { skip: !targetAcademicYearId || !canView }
   );
 
-  // ── Clone submit ───────────────────────────────────────────────────────────
-  /**
-   * Memoization Justification:
-   * handleCloneSubmit is passed as onClick to the Clone Now button inside the
-   * Dialog. Stable reference avoids re-creating the handler on each render.
-   */
+  const [fetchSourceTerms] = useLazyGetPaymentTermsQuery();
+  const [fetchPaymentTermById] = useLazyGetPaymentTermByIdQuery();
+  const [deletePaymentTerm, deleteState] = useDeletePaymentTermMutation();
+  const [clonePaymentTerms, cloneState] = useClonePaymentTermsMutation();
+  const [publishVersion, publishState] = usePublishVersionMutation();
+  const [archivePaymentTerm, archiveState] = useArchivePaymentTermMutation();
+  const [restorePaymentTerm, restoreState] = useRestorePaymentTermMutation();
+
+  const handleClose = useCallback(
+    (_event?: React.SyntheticEvent | null, isSubmit?: boolean) => {
+      addPaymentTermDrawer.onFalse();
+      setSelectedPaymentTerm(null);
+      if (isSubmit) paymentTermPage.refetch();
+    },
+    [addPaymentTermDrawer, paymentTermPage]
+  );
+
   const handleCloneSubmit = useCallback(async () => {
     if (!cloneSourceYearId) {
       shikshaMitraToast.error({ message: 'Please select a source academic year.' });
       return;
     }
+
     try {
       const sourceList = await fetchSourceTerms({
         academicYearId: cloneSourceYearId,
         pageSize: 1000,
         includeArchived: false,
       }).unwrap();
+      const paymentTermIds = sourceList.items.map((term) => term.id);
 
-      const paymentTermIds = (sourceList.items ?? []).map((t) => t.id);
       if (paymentTermIds.length === 0) {
         shikshaMitraToast.error({ message: 'No payment terms found in the source year.' });
         return;
@@ -147,115 +182,222 @@ const PaymentTerm = () => {
         sourceAcademicYearId: cloneSourceYearId,
         targetAcademicYearId,
         paymentTermIds,
-      });
+      }).unwrap();
       shikshaMitraToast.success({ message: 'Payment terms cloned successfully.' });
       cloneDialog.onFalse();
       setCloneSourceYearId('');
-      refetch();
     } catch {
       shikshaMitraToast.error({ message: 'Failed to clone payment terms.' });
     }
-  }, [
-    cloneDialog,
-    clonePaymentTerms,
-    cloneSourceYearId,
-    fetchSourceTerms,
-    refetch,
-    targetAcademicYearId,
-  ]);
+  }, [cloneDialog, clonePaymentTerms, cloneSourceYearId, fetchSourceTerms, targetAcademicYearId]);
 
-  // ── Delete confirm ────────────────────────────────────────────────────────
-  /**
-   * Memoization Justification:
-   * handleDeleteConfirm is passed as onClick prop into ConfirmDialog's action
-   * button. Lifting it out of JSX into useCallback prevents the action element
-   * from being recreated on every render of this parent component.
-   */
   const handleDeleteConfirm = useCallback(async () => {
+    if (!selectedPaymentTerm?.id) return;
+
     try {
-      await deletePaymentTerm(selectedPaymentTerm?.id);
+      await deletePaymentTerm(selectedPaymentTerm.id).unwrap();
       shikshaMitraToast.success({
-        message: `Payment term "${selectedPaymentTerm?.paymentTermName}" deleted successfully.`,
+        message: `Payment term "${selectedPaymentTerm.paymentTermName}" deleted successfully.`,
       });
-      refetch();
+      deletePaymentTermDialog.onFalse();
+      setSelectedPaymentTerm(null);
     } catch {
       shikshaMitraToast.error({ message: 'Failed to delete payment term.' });
     }
-    deletePaymentTermDialog.onFalse();
-    setSelectedPaymentTerm(null);
-  }, [deletePaymentTerm, deletePaymentTermDialog, refetch, selectedPaymentTerm]);
+  }, [deletePaymentTerm, deletePaymentTermDialog, selectedPaymentTerm]);
 
-  // ── Derived data ──────────────────────────────────────────────────────────
-  const tableData: IPaymentTerm[] = useMemo(() => {
-    const items = paymentTerms?.items ?? (Array.isArray(paymentTerms) ? paymentTerms : []);
-    return items.map((item: PaymentTermListItem | IPaymentTerm) =>
-      'name' in item && !('paymentTermName' in item)
-        ? mapListItemToPaymentTerm(item as PaymentTermListItem)
-        : (item as IPaymentTerm)
-    );
-  }, [paymentTerms]);
+  const handlePublishConfirm = useCallback(async () => {
+    if (!publishTarget) return;
 
-  // ── Render ────────────────────────────────────────────────────────────────
+    try {
+      const detail = await fetchPaymentTermById(publishTarget.id).unwrap();
+      const draftVersion = detail.versions.find(
+        (version) =>
+          version.status === 'Draft' && version.versionNumber === publishTarget.currentVersionNumber
+      );
+
+      if (!draftVersion) {
+        shikshaMitraToast.error({ message: 'The draft version is no longer available.' });
+        setPublishTarget(null);
+        return;
+      }
+
+      await publishVersion({
+        paymentTermId: publishTarget.id,
+        versionId: draftVersion.id,
+      }).unwrap();
+      shikshaMitraToast.success({
+        message: `Version ${draftVersion.versionNumber} of "${publishTarget.name}" published successfully.`,
+      });
+      setPublishTarget(null);
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to publish the payment term version.' });
+    }
+  }, [fetchPaymentTermById, publishTarget, publishVersion]);
+
+  const handleArchiveConfirm = useCallback(async () => {
+    const reason = archiveReason.trim();
+    if (!archiveTarget || !reason) return;
+
+    try {
+      await archivePaymentTerm({
+        paymentTermId: archiveTarget.id,
+        body: { reason },
+      }).unwrap();
+      shikshaMitraToast.success({
+        message: `Payment term "${archiveTarget.name}" archived successfully.`,
+      });
+      setArchiveTarget(null);
+      setArchiveReason('');
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to archive the payment term.' });
+    }
+  }, [archivePaymentTerm, archiveReason, archiveTarget]);
+
+  const handleRestore = useCallback(
+    async (term: PaymentTermListItem) => {
+      try {
+        await restorePaymentTerm(term.id).unwrap();
+        shikshaMitraToast.success({
+          message: `Payment term "${term.name}" restored successfully.`,
+        });
+      } catch {
+        shikshaMitraToast.error({ message: 'Failed to restore the payment term.' });
+      }
+    },
+    [restorePaymentTerm]
+  );
+
+  const actionLoading =
+    deleteState.isLoading ||
+    publishState.isLoading ||
+    archiveState.isLoading ||
+    restoreState.isLoading;
+
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <CustomBreadcrumbs
         heading="Payment Terms"
-        description="Configure academic-year-based installment schedules, automatic due dates, reminder dates, and grace days."
+        description="Configure board-period installment schedules, billing dates, and versioned Draft/Active terms."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/fee-collection' },
           { name: 'Settings' },
           { name: 'Payment Terms' },
         ]}
-        action={
-          <Stack direction="row" spacing={1.5}>
-            <Button
-              onClick={cloneDialog.onTrue}
-              size="small"
-              startIcon={<Iconify icon="mdi:content-copy" />}
-              variant="outlined"
-            >
-              Clone Previous Year
-            </Button>
-            <Button
-              onClick={() => {
-                setSelectedPaymentTerm(null);
-                addPaymentTermDrawer.onTrue();
-              }}
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              sx={{ px: '24px' }}
-            >
-              Payment Term
-            </Button>
-          </Stack>
-        }
       />
 
-      {/* Main Table */}
+      <Card sx={{ p: 1 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1}>
+          <Stack direction="row" spacing={1}>
+            <Button
+              size="small"
+              variant={!isArchived ? 'contained' : 'outlined'}
+              onClick={() => {
+                setTableQuery((current) => ({ ...current, page: 1 }));
+                setArchiveView('current');
+              }}
+            >
+              Current
+            </Button>
+            <Button
+              size="small"
+              variant={isArchived ? 'contained' : 'outlined'}
+              onClick={() => {
+                setTableQuery((current) => ({ ...current, page: 1 }));
+                setArchiveView('archived');
+              }}
+            >
+              Archived ({archivedSummary.data?.totalCount ?? 0})
+            </Button>
+          </Stack>
+
+          {!isArchived ? (
+            <Stack direction="row" spacing={1}>
+              {canClone ? (
+                <Button
+                  onClick={cloneDialog.onTrue}
+                  size="small"
+                  startIcon={<Iconify icon="mdi:content-copy" />}
+                  variant="outlined"
+                >
+                  Clone Previous Year
+                </Button>
+              ) : null}
+              {canCreate ? (
+                <Button
+                  onClick={() => {
+                    setSelectedPaymentTerm(null);
+                    addPaymentTermDrawer.onTrue();
+                  }}
+                  size="small"
+                  startIcon={<Add />}
+                  variant="contained"
+                >
+                  New Payment Term
+                </Button>
+              ) : null}
+            </Stack>
+          ) : null}
+        </Stack>
+      </Card>
+
+      {paymentTermPage.isError ? (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={() => paymentTermPage.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Unable to load payment terms.
+        </Alert>
+      ) : null}
+
       <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <PaymentTermTable
-          data={tableData}
-          loading={isPaymentTermLoading || isPaymentTermFetching}
-          addPaymentTerm={addPaymentTermDrawer}
-          setEditData={setSelectedPaymentTerm}
-          onEdit={(data) => {
-            setSelectedPaymentTerm(data);
+          data={paymentTermPage.data?.items ?? []}
+          totalCount={paymentTermPage.data?.totalCount ?? 0}
+          loading={paymentTermPage.isLoading || paymentTermPage.isFetching}
+          page={tableQuery.page}
+          rowsPerPage={tableQuery.pageSize}
+          searchTerm={tableQuery.search}
+          archived={isArchived}
+          onPaginationChange={(page, pageSize) =>
+            setTableQuery((current) => ({ ...current, page, pageSize }))
+          }
+          onSearchChange={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
+          onView={(term) => setDetailsTarget({ id: term.id, tab: 'details' })}
+          onVersionHistory={(term) => setDetailsTarget({ id: term.id, tab: 'versions' })}
+          onEdit={(term) => {
+            setSelectedPaymentTerm(mapListItemToPaymentTerm(term));
             addPaymentTermDrawer.onTrue();
           }}
-          onDelete={(data) => {
-            setSelectedPaymentTerm(data);
+          onDelete={(term) => {
+            setSelectedPaymentTerm(mapListItemToPaymentTerm(term));
             deletePaymentTermDialog.onTrue();
           }}
+          onPublish={setPublishTarget}
+          onArchive={(term) => {
+            setArchiveTarget(term);
+            setArchiveReason('');
+          }}
+          onRestore={handleRestore}
+          canView={canView}
+          canEdit={canEdit}
+          canPublish={canPublish}
+          canArchive={canArchive}
+          canRestore={canRestore}
+          canDelete={canDelete}
+          actionLoading={actionLoading}
         />
       </Box>
 
-      {/* Add / Edit Drawer */}
       <Drawer
         anchor="right"
         open={addPaymentTermDrawer.value}
-        onClose={() => handleClose(null, false)}
+        onClose={() => {}}
         PaperProps={{
           sx: { width: { xs: '100%', sm: 'min(1180px, 92vw)' }, maxWidth: '100%' },
         }}
@@ -267,40 +409,105 @@ const PaymentTerm = () => {
         />
       </Drawer>
 
-      {/* Delete Confirmation */}
+      <PaymentTermDetailsDrawer
+        open={Boolean(detailsTarget)}
+        paymentTermId={detailsTarget?.id ?? null}
+        initialTab={detailsTarget?.tab ?? 'details'}
+        onClose={() => setDetailsTarget(null)}
+      />
+
       <ConfirmDialog
         open={deletePaymentTermDialog.value}
         icon="warning"
         onClose={() => {
           deletePaymentTermDialog.onFalse();
-          setTimeout(() => setSelectedPaymentTerm(null), 200);
+          setSelectedPaymentTerm(null);
         }}
         title="Delete Payment Term"
         content={
           <>
-            Are you sure you want to delete payment term{' '}
-            <strong>{selectedPaymentTerm?.paymentTermName}</strong>?
-            {selectedPaymentTerm?.isUsedInDownstream && (
-              <Box mt={1} color="error.main" fontSize="12px">
-                This payment term is currently assigned to fee structures and cannot be deleted.
-              </Box>
-            )}
+            Delete payment term <strong>{selectedPaymentTerm?.paymentTermName}</strong>? Only an
+            unused first draft can be deleted.
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
-            disabled={isDeleting || Boolean(selectedPaymentTerm?.isUsedInDownstream)}
+            loading={deleteState.isLoading}
             onClick={handleDeleteConfirm}
           >
-            Yes, Delete
-          </Button>
+            Delete
+          </LoadingButton>
         }
       />
 
-      {/* Clone Previous Academic Year */}
+      <ConfirmDialog
+        open={Boolean(publishTarget)}
+        icon="warning"
+        onClose={() => setPublishTarget(null)}
+        title="Activate Payment Term"
+        content={
+          <>
+            Activate <strong>{publishTarget?.name}</strong> using version{' '}
+            <strong>v{publishTarget?.currentVersionNumber}</strong>? Once active, this schedule is
+            available for fee structures.
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            size="small"
+            loading={publishState.isLoading}
+            onClick={handlePublishConfirm}
+          >
+            Activate
+          </LoadingButton>
+        }
+      />
+
+      <ConfirmDialog
+        open={Boolean(archiveTarget)}
+        icon="warning"
+        onClose={() => {
+          setArchiveTarget(null);
+          setArchiveReason('');
+        }}
+        title="Archive Payment Term"
+        content={
+          <Stack spacing={2}>
+            <Box>
+              Archive <strong>{archiveTarget?.name}</strong>? It will no longer be available for new
+              fee structures.
+            </Box>
+            <TextField
+              autoFocus
+              required
+              fullWidth
+              multiline
+              minRows={2}
+              label="Archive reason"
+              value={archiveReason}
+              inputProps={{ maxLength: 500 }}
+              onChange={(event) => setArchiveReason(event.target.value)}
+            />
+          </Stack>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            color="error"
+            size="small"
+            loading={archiveState.isLoading}
+            disabled={!archiveReason.trim()}
+            onClick={handleArchiveConfirm}
+          >
+            Archive
+          </LoadingButton>
+        }
+      />
+
       <Dialog open={cloneDialog.value} onClose={cloneDialog.onFalse} maxWidth="xs" fullWidth>
         <DialogTitle>Clone Previous Year Payment Terms</DialogTitle>
         <DialogContent sx={{ pt: 1.5 }}>
@@ -314,13 +521,13 @@ const PaymentTerm = () => {
               <Select
                 label="Source Academic Year"
                 value={cloneSourceYearId}
-                onChange={(e) => setCloneSourceYearId(e.target.value)}
+                onChange={(event) => setCloneSourceYearId(event.target.value)}
               >
                 {academicYears
-                  ?.filter((y: { id: string; name: string }) => y.id !== targetAcademicYearId)
-                  ?.map((y: { id: string; name: string }) => (
-                    <MenuItem key={y.id} value={y.id}>
-                      {y.name}
+                  ?.filter((year: { id: string; name: string }) => year.id !== targetAcademicYearId)
+                  ?.map((year: { id: string; name: string }) => (
+                    <MenuItem key={year.id} value={year.id}>
+                      {year.name}
                     </MenuItem>
                   ))}
               </Select>
@@ -331,14 +538,15 @@ const PaymentTerm = () => {
           <Button size="small" variant="outlined" onClick={cloneDialog.onFalse}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="small"
             variant="contained"
-            disabled={isCloning || !cloneSourceYearId}
+            loading={cloneState.isLoading}
+            disabled={!cloneSourceYearId}
             onClick={handleCloneSubmit}
           >
             Clone Now
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </Dialog>
     </Box>

@@ -109,7 +109,7 @@ export const ViewSubjectSkeleton = () => {
             sx={{
               p: 2,
               borderBottom: `1px solid ${theme.palette.divider}`,
-              bgcolor: varAlpha(theme.palette.background.defaultChannel, 0.4),
+              bgcolor: 'background.neutral',
             }}
           >
             <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.25 }}>

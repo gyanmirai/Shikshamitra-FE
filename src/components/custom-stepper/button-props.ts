@@ -1,12 +1,12 @@
-import type { LoadingButtonProps } from '@mui/lab';
+import type { ButtonProps } from '@mui/material';
 
-type ControlledLoadingButtonProps = Pick<LoadingButtonProps, 'disabled' | 'loading' | 'onClick'>;
+type ControlledButtonProps = Pick<ButtonProps, 'disabled' | 'loading' | 'onClick'>;
 
 export const mergeStepperButtonProps = (
-  defaults: LoadingButtonProps,
-  callerProps: LoadingButtonProps,
-  controlledProps: ControlledLoadingButtonProps
-): LoadingButtonProps => ({
+  defaults: ButtonProps,
+  callerProps: ButtonProps,
+  controlledProps: ControlledButtonProps
+): ButtonProps => ({
   ...defaults,
   ...callerProps,
   ...controlledProps,

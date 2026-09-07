@@ -10,8 +10,8 @@ interface TeacherProfile {
   designation?: string;
   department?: string;
   status?: string;
-  email?: string;
-  experience?: string;
+  email?: string | null;
+  experience?: string | null;
   division?: string;
   class?: string;
   dailyStatus?: string;
@@ -78,20 +78,25 @@ const TeacherHoverProfile: React.FC<{
         </Box>
 
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
             <Typography variant="caption" color="text.secondary">
               Email
             </Typography>
-            <Typography variant="caption" color="text.primary" fontWeight={600}>
-              {teacher.email}
+            <Typography
+              variant="caption"
+              color="text.primary"
+              fontWeight={600}
+              sx={{ textAlign: 'right', overflowWrap: 'anywhere' }}
+            >
+              {teacher.email || 'Not available'}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
             <Typography variant="caption" color="text.secondary">
               Experience
             </Typography>
             <Typography variant="caption" color="text.primary" fontWeight={600}>
-              {teacher.experience}
+              {teacher.experience || 'Not available'}
             </Typography>
           </Box>
         </Box>

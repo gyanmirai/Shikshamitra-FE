@@ -15,6 +15,7 @@ export type BreadcrumbsLinkProps = {
 export type CustomBreadcrumbsProps = BreadcrumbsProps & {
   heading?: string | React.ReactNode;
   headingComponent?: ElementType;
+  layout?: 'inline' | 'stacked';
   description?: React.ReactNode;
   descriptionDisplay?: 'tooltip' | 'visible';
   moreLink?: string[];
@@ -25,6 +26,7 @@ export type CustomBreadcrumbsProps = BreadcrumbsProps & {
   tooltipProps?: TooltipProps;
   isBack?: boolean;
   onBack?: () => void;
+  showDivider?: boolean;
   slotProps?: {
     action: SxProps<Theme>;
     heading: SxProps<Theme>;

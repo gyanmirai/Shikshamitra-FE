@@ -7,16 +7,19 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { toDateOnly } from 'src/utils/date-only';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import {
   useCreateRevisionMutation,
   useCreatePaymentTermMutation,
   type CreateInstallmentRequest,
+  useLazyGetPaymentTermByIdQuery,
   type PaymentTermDetailResponse,
   useUpdatePaymentTermDraftMutation,
   type UpdatePaymentTermDraftRequest,
@@ -26,7 +29,7 @@ import {
 import { getInitialPaymentTermData } from '../Components/PaymentTermInitialValues';
 import { paymentTermValidationSchema } from '../Components/PaymentTermValidationSchema';
 
-import type { IInstallment, IPaymentTerm } from '../type';
+import type { IInstallment, IPaymentTerm, DemandGenerationRule } from '../type';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -38,6 +41,8 @@ export interface IBoard {
   id: string;
   name: string;
   academicYearId: string;
+  startDate: string;
+  endDate: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -46,13 +51,19 @@ export interface IBoard {
 export interface IPaymentTermChecks {
   boardValid: boolean;
   nameValid: boolean;
+  codeValid: boolean;
   hasInstallments: boolean;
   allDueDates: boolean;
   allNames: boolean;
   uniqueNames: boolean;
+  allocationValid: boolean;
+  periodsValid: boolean;
+  periodsNonOverlapping: boolean;
+  periodsWithinBoard: boolean;
   datesSequential: boolean;
   demandSet: boolean;
   demandOffsetValid: boolean;
+  specificDatesValid: boolean;
   isReadyToPublish: boolean;
 }
 
@@ -65,6 +76,7 @@ export interface UsePaymentTermFormReturn {
   checks: IPaymentTermChecks;
   demandLabel: string;
   isSubmitting: boolean;
+  isLoadingDetail: boolean;
   codeManuallyEdited: boolean;
   setCodeManuallyEdited: (v: boolean) => void;
   handleSubmit: () => Promise<void>;
@@ -76,9 +88,9 @@ export interface UsePaymentTermFormReturn {
 // ---------------------------------------------------------------------------
 // API ↔ UI mappers
 // ---------------------------------------------------------------------------
-const toDateString = (value: string | null | Dayjs | undefined): string => {
-  if (!value) return '';
-  return dayjs(value as string).format('YYYY-MM-DD');
+const toDateTimeOffsetString = (value: string | null | Dayjs | undefined): string => {
+  const date = toDateOnly(value);
+  return date ? dateConvertor(dayjs(date).format(dateFormat)) : '';
 };
 
 const mapApiInstallmentToUi = (inst: PaymentTermInstallmentResponse): IInstallment => ({
@@ -101,6 +113,7 @@ const mapApiInstallmentToUi = (inst: PaymentTermInstallmentResponse): IInstallme
 const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
   const draft = detail.versions?.find((v) => v.status === 'Draft');
   const current =
+    draft ??
     detail.versions?.find((v) => v.id === detail.currentVersionId) ??
     detail.versions?.find((v) => v.status === 'Published') ??
     detail.versions?.[0];
@@ -116,28 +129,36 @@ const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
     totalInstallments: detail.totalInstallments,
     installments: (current?.installments ?? []).map(mapApiInstallmentToUi),
     isDefaultTerm: detail.isDefault,
-    holidayShiftingMethod: detail.holidayShiftingMethod,
-    demandGenerationRule: detail.demandGenerationRule,
-    demandOffsetDays: detail.demandOffsetDays ?? null,
+    holidayShiftingMethod: current?.holidayShiftingMethod ?? detail.holidayShiftingMethod,
+    demandGenerationRule: current?.demandGenerationRule ?? detail.demandGenerationRule,
+    demandOffsetDays: current?.demandOffsetDays ?? detail.demandOffsetDays ?? null,
     initialDemandStatus: detail.initialDemandStatus,
     currentVersionId: current?.id ?? detail.currentVersionId,
     currentVersionNumber: current?.versionNumber,
+    currentVersionStatus: current?.status,
     isUsedInDownstream: detail.isUsedInFeeStructures,
     canDirectEdit: detail.canDirectEdit,
   };
 };
 
-const mapUiInstallmentToApi = (inst: IInstallment, index: number): CreateInstallmentRequest => ({
+const mapUiInstallmentToApi = (
+  inst: IInstallment,
+  index: number,
+  demandGenerationRule: DemandGenerationRule
+): CreateInstallmentRequest => ({
   sequence: inst.sequence || index + 1,
   name: inst.installmentName,
-  coverageStartDate: toDateString(inst.startDate),
-  coverageEndDate: toDateString(inst.endDate),
-  demandDate: toDateString(inst.demandDate),
-  dueDate: toDateString(inst.dueDate),
+  coverageStartDate: toDateTimeOffsetString(inst.startDate),
+  coverageEndDate: toDateTimeOffsetString(inst.endDate),
+  demandDate:
+    demandGenerationRule === 'SpecificDate'
+      ? toDateTimeOffsetString(inst.demandDate)
+      : undefined,
+  dueDate: toDateTimeOffsetString(inst.dueDate),
   allocationPercentage: Number(inst.allocationPercentage) || 0,
   demandEnabled: inst.demandEnabled ?? true,
   reminderEnabled: inst.reminderEnabled ?? true,
-  reminderDate: inst.reminderDate ? toDateString(inst.reminderDate) : undefined,
+  reminderDate: inst.reminderDate ? toDateTimeOffsetString(inst.reminderDate) : undefined,
   allowPartialOverride: inst.allowPartialOverride ?? null,
   gracePeriodDaysOverride: inst.gracePeriod ?? null,
 });
@@ -183,14 +204,40 @@ export function usePaymentTermForm(
     type: 'mutation',
     currentQueryAndMutation: useCreateRevisionMutation,
   });
+  const [getPaymentTermDetail, { isFetching: isLoadingDetail }] = useLazyGetPaymentTermByIdQuery();
 
   // ── Formik ────────────────────────────────────────────────────────────────
+  const initialValues = useMemo(
+    () => getInitialPaymentTermData(editData, currentYear?.id),
+    [editData, currentYear?.id]
+  );
+
+  const validationSchema = useMemo(() => paymentTermValidationSchema(boards), [boards]);
+
   const formik = useFormik<IPaymentTerm>({
-    initialValues: getInitialPaymentTermData(editData, currentYear?.id),
-    validationSchema: paymentTermValidationSchema(currentYear),
+    initialValues,
+    validationSchema,
     enableReinitialize: true,
     onSubmit: async () => {},
   });
+
+  useEffect(() => {
+    if (!editData?.id) return undefined;
+    let active = true;
+    getPaymentTermDetail(editData.id)
+      .unwrap()
+      .then((detail) => {
+        if (active) formik.resetForm({ values: mapDetailToForm(detail) });
+      })
+      .catch(() => {
+        shikshaMitraToast.error({ message: 'Unable to load the payment term details.' });
+      });
+    return () => {
+      active = false;
+    };
+    // Run only when the selected record changes; Formik is intentionally excluded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editData?.id, getPaymentTermDetail]);
 
   // ── Reset manual-edit flag when switching create ↔ edit ──────────────────
   useEffect(() => {
@@ -217,11 +264,14 @@ export function usePaymentTermForm(
       name: values.paymentTermName,
       code: values.paymentTermCode,
       description: values.description || undefined,
+      isDefault: values.isDefaultTerm,
+      status: values.status === 'Active' ? 'Active' : 'Draft',
       holidayShiftingMethod: values.holidayShiftingMethod,
       demandGenerationRule: values.demandGenerationRule,
       demandOffsetDays: values.demandOffsetDays,
-      initialDemandStatus: values.initialDemandStatus,
-      installments: values.installments.map(mapUiInstallmentToApi),
+      installments: values.installments.map((item, index) =>
+        mapUiInstallmentToApi(item, index, values.demandGenerationRule)
+      ),
     }),
     []
   );
@@ -260,11 +310,13 @@ export function usePaymentTermForm(
         code: values.paymentTermCode,
         description: values.description || undefined,
         isDefault: values.isDefaultTerm,
+        status: values.status === 'Active' ? 'Active' : 'Draft',
         holidayShiftingMethod: values.holidayShiftingMethod,
         demandGenerationRule: values.demandGenerationRule,
         demandOffsetDays: values.demandOffsetDays,
-        initialDemandStatus: values.initialDemandStatus,
-        installments: values.installments.map(mapUiInstallmentToApi),
+        installments: values.installments.map((item, index) =>
+          mapUiInstallmentToApi(item, index, values.demandGenerationRule)
+        ),
       });
       shikshaMitraToast.success({
         message: `"${values.paymentTermName}" created successfully.`,
@@ -304,6 +356,7 @@ export function usePaymentTermForm(
       formik.setTouched({
         boardId: true,
         paymentTermName: true,
+        paymentTermCode: true,
         status: true,
         demandGenerationRule: true,
         demandOffsetDays: true,
@@ -342,8 +395,8 @@ export function usePaymentTermForm(
       description: '',
       allocationPercentage: 0,
       reminderDate: null,
-      gracePeriod: 0,
-      allowPartialOverride: false,
+      gracePeriod: null,
+      allowPartialOverride: null,
       demandEnabled: true,
       reminderEnabled: false,
     };
@@ -415,11 +468,59 @@ export function usePaymentTermForm(
     const v = formik.values;
     const boardValid = Boolean(v.boardId);
     const nameValid = v.paymentTermName.trim().length >= 3;
+    const codeValid = /^[A-Z0-9-]{3,24}$/.test(v.paymentTermCode.trim());
     const hasInstallments = v.installments.length >= 1;
-    const allDueDates = hasInstallments && v.installments.every((i) => Boolean(i.dueDate));
+    const allDueDates =
+      hasInstallments &&
+      v.installments.every((i) => Boolean(i.startDate && i.endDate && i.dueDate));
     const allNames = v.installments.every((i) => i.installmentName.trim().length > 0);
     const nameSet = new Set(v.installments.map((i) => i.installmentName.toLowerCase().trim()));
     const uniqueNames = v.installments.length === nameSet.size;
+    const allocationTotal = v.installments.reduce(
+      (total, item) => total + Number(item.allocationPercentage || 0),
+      0
+    );
+    const allocationValid =
+      v.installments.every((item) => Number(item.allocationPercentage) > 0) &&
+      Math.abs(allocationTotal - 100) < 0.01;
+    const periodsValid =
+      hasInstallments &&
+      v.installments.every((item) => {
+        if (!item.startDate || !item.endDate || !item.dueDate) return false;
+        const start = dayjs(item.startDate as string);
+        const end = dayjs(item.endDate as string);
+        const due = dayjs(item.dueDate as string);
+        return (
+          !end.isBefore(start, 'day') && !due.isBefore(start, 'day') && !due.isAfter(end, 'day')
+        );
+      });
+    const installmentsBySequence = [...v.installments].sort(
+      (a, b) => (a.sequence || 0) - (b.sequence || 0)
+    );
+    const periodsNonOverlapping = installmentsBySequence.every((item, index) => {
+      if (index === 0) return true;
+      const previousEnd = installmentsBySequence[index - 1].endDate;
+      return Boolean(
+        previousEnd &&
+        item.startDate &&
+        dayjs(item.startDate as string).isAfter(dayjs(previousEnd as string), 'day')
+      );
+    });
+    const selectedBoard = boards.find((board) => board.id === v.boardId);
+    const periodsWithinBoard = v.installments.every((item) => {
+      if (
+        !selectedBoard?.startDate ||
+        !selectedBoard?.endDate ||
+        !item.startDate ||
+        !item.endDate
+      ) {
+        return true;
+      }
+      return (
+        !dayjs(item.startDate as string).isBefore(dayjs(selectedBoard.startDate), 'day') &&
+        !dayjs(item.endDate as string).isAfter(dayjs(selectedBoard.endDate), 'day')
+      );
+    });
 
     let datesSequential = true;
     if (v.installments.length > 1) {
@@ -439,14 +540,25 @@ export function usePaymentTermForm(
     const demandOffsetValid =
       v.demandGenerationRule !== 'XDaysBeforeDue' ||
       (v.demandOffsetDays !== null && v.demandOffsetDays >= 1);
-
+    const specificDatesValid =
+      v.demandGenerationRule !== 'SpecificDate' ||
+      v.installments.every(
+        (item) =>
+          Boolean(item.demandDate && item.dueDate) &&
+          !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day')
+      );
     const isReadyToPublish =
       boardValid &&
       nameValid &&
+      codeValid &&
       hasInstallments &&
       allDueDates &&
       allNames &&
       uniqueNames &&
+      allocationValid &&
+      periodsValid &&
+      periodsNonOverlapping &&
+      periodsWithinBoard &&
       datesSequential &&
       demandSet &&
       demandOffsetValid;
@@ -454,16 +566,22 @@ export function usePaymentTermForm(
     return {
       boardValid,
       nameValid,
+      codeValid,
       hasInstallments,
       allDueDates,
       allNames,
       uniqueNames,
+      allocationValid,
+      periodsValid,
+      periodsNonOverlapping,
+      periodsWithinBoard,
       datesSequential,
       demandSet,
       demandOffsetValid,
-      isReadyToPublish,
+      specificDatesValid,
+      isReadyToPublish: isReadyToPublish && specificDatesValid,
     };
-  }, [formik.values]);
+  }, [boards, formik.values]);
 
   // ── Demand label for the summary sidebar ──────────────────────────────────
   /**
@@ -480,9 +598,9 @@ export function usePaymentTermForm(
       return `${formik.values.demandOffsetDays ?? '?'} days before due`;
     }
     const map: Record<string, string> = {
-      Immediately: 'Immediately',
+      OnInstallmentStartDate: 'On installment start date',
       OnDueDate: 'On due date',
-      Manual: 'Manual',
+      SpecificDate: 'On each specified date',
     };
     return map[r] ?? r;
   }, [formik.values.demandGenerationRule, formik.values.demandOffsetDays]);
@@ -493,6 +611,7 @@ export function usePaymentTermForm(
     checks,
     demandLabel,
     isSubmitting,
+    isLoadingDetail,
     codeManuallyEdited,
     setCodeManuallyEdited,
     handleSubmit,

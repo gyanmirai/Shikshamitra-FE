@@ -61,6 +61,7 @@ export const academicPaths = {
     root: '',
     schedule: '/academic/scheduleExam',
     seatAllocation: '/academic/seatallocation',
+    seatAllocationSetup: (examId: string) => `/academic/seatallocation/${examId}/setup`,
     recordMarks: '/academic/gradeEntry',
     resultCreation: '/academic/resultCreation',
     questionBank: '/academic/questionBank',
@@ -118,7 +119,7 @@ export const academicPermissions = {
     subjectsAssignment: `${defaultAcademicPermissionName}CurriculumManagement.SubjectAssignment`,
     electiveAssignment: `${defaultAcademicPermissionName}CurriculumManagement.ElectiveAssignment`,
     chaptersManagement: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
-    lessonPlan: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
+    lessonPlan: `${defaultAcademicPermissionName}CurriculumManagement.LessonPlan`,
     resources: `${defaultAcademicPermissionName}CurriculumManagement.Resources`,
     reports: `${defaultAcademicPermissionName}CurriculumManagement.Reports`,
     settings: {

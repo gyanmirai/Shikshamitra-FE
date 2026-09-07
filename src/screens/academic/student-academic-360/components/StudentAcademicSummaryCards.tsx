@@ -1,7 +1,9 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Grid, Tooltip, Typography } from '@mui/material';
+import { varAlpha } from 'src/theme/styles';
+import { forwardRef } from 'react';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 
 import { getMetricPercentage, matchesAcademicFilter } from '../listUtils';
 
@@ -26,6 +28,60 @@ const average = (values: number[]) => {
   if (!values.length) return undefined;
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 };
+
+const StudentAcademicStatCard = forwardRef<
+  HTMLButtonElement,
+  Omit<SummaryCard, 'key' | 'helper'> & { selected: boolean; onClick: () => void }
+>(function StudentAcademicStatCard({ label, value, icon, color, selected, onClick }, ref) {
+  return (
+    <Box
+      ref={ref}
+      component="button"
+      type="button"
+      onClick={onClick}
+      sx={{
+        flex: '1 1 180px',
+        minWidth: { xs: 160, md: 0 },
+        p: 1.5,
+        border: '1px solid',
+        borderColor: selected ? `${color}.main` : 'divider',
+        borderRadius: 1.5,
+        bgcolor: 'background.paper',
+        color: 'text.primary',
+        textAlign: 'left',
+        cursor: 'pointer',
+        boxShadow: selected ? (theme) => `0 0 0 1px ${theme.palette[color].main}` : 'none',
+        transition: 'all 0.2s ease',
+        '&:hover': { borderColor: `${color}.main`, transform: 'translateY(-1px)' },
+      }}
+    >
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Box
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: 1.25,
+            display: 'grid',
+            placeItems: 'center',
+            bgcolor: (theme) => varAlpha(theme.vars.palette[color].mainChannel, 0.12),
+            color: `${color}.main`,
+            flexShrink: 0,
+          }}
+        >
+          <Iconify icon={icon} width={20} />
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h5" fontWeight={700} lineHeight={1}>
+            {value}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" noWrap display="block" mt={0.5}>
+            {label}
+          </Typography>
+        </Box>
+      </Stack>
+    </Box>
+  );
+});
 
 export function StudentAcademicSummaryCards({
   items,
@@ -92,69 +148,23 @@ export function StudentAcademicSummaryCards({
   ];
 
   return (
-    <Grid container spacing={1} sx={{ mb: 1 }}>
+    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
       {cards.map((card) => {
         const active = activeFilter === card.key;
 
         return (
-          <Grid key={card.key} size={{ xs: 6, sm: 4, md: 'auto' }} sx={{ flex: { md: 1 } }}>
-            <Tooltip title={card.helper}>
-              <Card
-                role="button"
-                tabIndex={0}
-                onClick={() => onFilterChange(card.key)}
-                onKeyDown={(event) => event.key === 'Enter' && onFilterChange(card.key)}
-                sx={{
-                  p: 1.75,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  cursor: 'pointer',
-                  boxShadow: 'var(--shadows-3)',
-                  transition: 'all 0.2s ease-in-out',
-                  ...(active && {
-                    border: (theme) => `2px solid ${theme.palette[card.color].main}`,
-                    bgcolor: (theme) =>
-                      `color-mix(in srgb, ${theme.palette[card.color].main} 8%, transparent)`,
-                  }),
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: 'var(--shadows-8)',
-                  },
-                }}
-              >
-                {/* Colored icon badge */}
-                <Box
-                  sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    bgcolor: (theme) =>
-                      `color-mix(in srgb, ${theme.palette[card.color].main} 14%, transparent)`,
-                    color: `${card.color}.main`,
-                  }}
-                >
-                  <Iconify icon={card.icon} width={20} />
-                </Box>
-
-                {/* Value above label */}
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="h6" fontWeight={700} noWrap>
-                    {card.value}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-                    {card.label}
-                  </Typography>
-                </Box>
-              </Card>
-            </Tooltip>
-          </Grid>
+          <Tooltip key={card.key} title={card.helper}>
+            <StudentAcademicStatCard
+              label={card.label}
+              value={card.value}
+              icon={card.icon}
+              color={card.color}
+              selected={active}
+              onClick={() => onFilterChange(card.key)}
+            />
+          </Tooltip>
         );
       })}
-    </Grid>
+    </Stack>
   );
 }

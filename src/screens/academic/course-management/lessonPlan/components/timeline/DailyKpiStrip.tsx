@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import type { FC } from 'react';
+
 import { varAlpha } from 'src/theme/styles';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Box, Stack, Typography } from '@mui/material';
 
@@ -19,54 +19,42 @@ type Props = {
   onFilterClick?: (status: string) => void;
 };
 
-export const DailyKpiStrip: React.FC<Props> = ({ stats }) => {
-  const theme = useTheme();
-
+export const DailyKpiStrip: FC<Props> = ({ stats }) => {
   const items = [
     {
       key: 'total',
       label: 'Total Periods',
       value: stats.total,
       icon: 'solar:calendar-bold',
-      color: theme.palette.text.primary,
-      bg: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-      border: theme.palette.divider,
+      color: 'primary' as const,
     },
     {
       key: 'completed',
       label: 'Completed',
       value: stats.completed,
       icon: 'solar:verified-check-bold',
-      color: theme.palette.success.dark,
-      bg: varAlpha(theme.vars.palette.success.mainChannel, 0.1),
-      border: varAlpha(theme.vars.palette.success.mainChannel, 0.25),
+      color: 'success' as const,
     },
     {
       key: 'inProgress',
       label: 'In Progress',
       value: stats.inProgress,
       icon: 'solar:play-circle-bold',
-      color: theme.palette.info.dark,
-      bg: varAlpha(theme.vars.palette.info.mainChannel, 0.1),
-      border: varAlpha(theme.vars.palette.info.mainChannel, 0.25),
+      color: 'info' as const,
     },
     {
       key: 'needsAttention',
       label: 'Needs Attention',
       value: stats.needsAttention,
       icon: 'solar:danger-bold',
-      color: theme.palette.warning.dark,
-      bg: varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
-      border: varAlpha(theme.vars.palette.warning.mainChannel, 0.25),
+      color: 'warning' as const,
     },
     {
       key: 'upcoming',
       label: 'Upcoming',
       value: stats.upcoming,
       icon: 'solar:clock-circle-bold',
-      color: theme.palette.text.secondary,
-      bg: varAlpha(theme.vars.palette.grey['500Channel'], 0.06),
-      border: theme.palette.divider,
+      color: 'primary' as const,
     },
   ];
 
@@ -88,32 +76,26 @@ export const DailyKpiStrip: React.FC<Props> = ({ stats }) => {
           key={item.key}
           direction="row"
           alignItems="center"
-          spacing={1.25}
+          spacing={1}
           sx={{
-            py: 1,
-            px: 1.5,
-            borderRadius: 1.75,
-            bgcolor: item.bg,
-            border: `1px solid ${item.border}`,
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              transform: 'translateY(-1px)',
-              boxShadow: 'var(--shadows-2)',
-            },
+            minHeight: 66,
+            p: 1.5,
+            borderRadius: 1.5,
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
           }}
         >
           <Box
             sx={{
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               borderRadius: 1.25,
-              bgcolor: 'background.paper',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: item.color,
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: (theme) => varAlpha(theme.vars.palette[item.color].mainChannel, 0.12),
+              color: `${item.color}.main`,
               flexShrink: 0,
-              boxShadow: 'var(--shadows-1)',
             }}
           >
             <Iconify icon={item.icon} width={18} />
@@ -122,16 +104,15 @@ export const DailyKpiStrip: React.FC<Props> = ({ stats }) => {
           <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="h6"
-              fontWeight={800}
-              sx={{ color: item.color, lineHeight: 1.1, fontSize: 16 }}
+              fontWeight={700}
+              sx={{ lineHeight: 1 }}
             >
               {item.value}
             </Typography>
             <Typography
               variant="caption"
               color="text.secondary"
-              fontWeight={600}
-              sx={{ fontSize: 11, lineHeight: 1, display: 'block', mt: 0.25 }}
+              sx={{ lineHeight: 1, display: 'block', mt: 0.5 }}
               noWrap
             >
               {item.label}

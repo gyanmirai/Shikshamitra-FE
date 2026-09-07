@@ -32,8 +32,8 @@ import {
   GradeEntryWorkflowStatusLabel,
 } from 'src/enums/grade-entry-status';
 import {
-  TimetableSettingsSummaryCards,
   type ITimetableSummaryCard,
+  TimetableSettingsSummaryCards,
 } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
@@ -42,7 +42,6 @@ import {
   List,
   Chip,
   Stack,
-  Dialog,
   Button,
   Divider,
   Tooltip,
@@ -52,14 +51,11 @@ import {
   TextField,
   IconButton,
   Typography,
-  DialogTitle,
   Autocomplete,
   ListItemText,
-  DialogContent,
   DialogActions,
 } from '@mui/material';
 import {
-  useGetExamMarksAuditLogsQuery,
   useVerifyMarksMutation,
   useUnlockMarksMutation,
   useBulkSaveMarksMutation,
@@ -67,6 +63,7 @@ import {
   useSaveDraftMarksMutation,
   useRequestChangesMutation,
   useGetExamMarksSummaryQuery,
+  useGetExamMarksAuditLogsQuery,
   usePublishAndLockMarksMutation,
   useSubmitMarksForVerificationMutation,
 } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
@@ -76,6 +73,11 @@ import GradeEntryTable from './components/GradeEntryTable';
 import { BulkGradeEntryToolbar } from './components/BulkGradeEntryToolbar';
 import { GradeEntryReviewDialog } from './components/GradeEntryReviewDialog';
 import { ImportMarksPreviewDialog } from './components/ImportMarksPreviewDialog';
+import {
+  getExamMonthRange,
+  getDefaultExamMonth,
+  buildExamMonthOptions,
+} from '../exam-month-filter';
 
 import type { TabComponentType } from '../../hr/leave-request';
 import type {
@@ -98,13 +100,21 @@ const GradeEntry = (props: TabComponentType) => {
   const [classes, setClass] = useState<string>('');
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
+  const monthOptions = useMemo(() => buildExamMonthOptions(currentYear), [currentYear]);
+  const selectedMonthRange = useMemo(
+    () => getExamMonthRange(monthOptions, selectedMonth),
+    [monthOptions, selectedMonth]
+  );
 
   // States for changes protection
   const [isDirty, setIsDirty] = useState(false);
   const [pendingFilterSwitch, setPendingFilterSwitch] = useState<{
-    type: 'class' | 'division' | 'subject' | 'exam';
+    type: 'class' | 'division' | 'subject' | 'month' | 'exam';
     value: any;
   } | null>(null);
 
@@ -133,8 +143,16 @@ const GradeEntry = (props: TabComponentType) => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
+  useEffect(() => {
+    setSelectedMonth(getDefaultExamMonth(monthOptions));
+    setExamId('');
+  }, [monthOptions]);
+
   // Dependent dropdown loading
-  const handleFilterChange = (type: 'class' | 'division' | 'subject' | 'exam', value: any) => {
+  const handleFilterChange = (
+    type: 'class' | 'division' | 'subject' | 'month' | 'exam',
+    value: any
+  ) => {
     if (isDirty) {
       setPendingFilterSwitch({ type, value });
       return;
@@ -142,7 +160,7 @@ const GradeEntry = (props: TabComponentType) => {
     applyFilter(type, value);
   };
 
-  const applyFilter = (type: 'class' | 'division' | 'subject' | 'exam', value: any) => {
+  const applyFilter = (type: 'class' | 'division' | 'subject' | 'month' | 'exam', value: any) => {
     if (type === 'class') {
       setClass(value);
       setDivision('');
@@ -154,6 +172,9 @@ const GradeEntry = (props: TabComponentType) => {
       setExamId('');
     } else if (type === 'subject') {
       setSubject(value);
+      setExamId('');
+    } else if (type === 'month') {
+      setSelectedMonth(value);
       setExamId('');
     } else if (type === 'exam') {
       setExamId(value);
@@ -209,10 +230,13 @@ const GradeEntry = (props: TabComponentType) => {
       DivisionId: division,
       SubjectId: subject,
       Status: examScheduledStatus.Completed,
+      StartDate: selectedMonthRange?.startDate,
+      EndDate: selectedMonthRange?.endDate,
+      MaxResultCount: 1000,
       ...(assignmentType ? { ExamType: assignmentType } : {}),
     },
     options: {
-      skip: !(medium?.id && classes && division && subject),
+      skip: !(medium?.id && classes && division && subject && selectedMonthRange),
     },
   });
 
@@ -808,6 +832,7 @@ const GradeEntry = (props: TabComponentType) => {
         >
           <Box
             display="flex"
+            flexWrap="wrap"
             sx={{
               borderRadius: '8px',
               bgcolor: 'background.paper',
@@ -847,12 +872,22 @@ const GradeEntry = (props: TabComponentType) => {
               value={subject}
               formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
             />
+            <CustomSelect
+              label="Month"
+              disabled={!subject || monthOptions.length === 0}
+              options={monthOptions}
+              labelKey="label"
+              valueKey="value"
+              onChange={(val) => handleFilterChange('month', val as string)}
+              value={selectedMonth}
+              formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+            />
             <CustomTooltip
               placement="top"
               title={examId && examOptions.find((o) => o.examId === examId)?.examName}
             >
               <Autocomplete
-                disabled={!subject}
+                disabled={!subject || !selectedMonth}
                 loading={isExamsLoading || isExamsFetching}
                 options={examOptions}
                 getOptionLabel={(option: any) => option.examName || ''}

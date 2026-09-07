@@ -141,6 +141,7 @@ export interface RoomReservation {
   recurringUntilDate?: string;
   createdAt?: string;
   creatorId?: string;
+  canReview?: boolean;
   updatedAt?: string;
   approvedBy?: string;
   rejectionReason?: string;

@@ -1,75 +1,73 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
 
 import React, { useMemo } from 'react';
-import { shikshaMitraToast } from 'src/components/toast';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Switch, Typography } from '@mui/material';
-import {
-  useArchivePaymentTermMutation,
-  useRestorePaymentTermMutation,
-} from 'src/redux/finance/paymentTerm';
+import { Chip, Stack, MenuItem, MenuList, Typography } from '@mui/material';
 
-import type { IPaymentTerm, IPaymentTermTableProps } from '../type';
+import type { IPaymentTermTableProps } from '../type';
+
+export type PaymentTermDisplayStatus = PaymentTermListItem['status'];
+
+export const getPaymentTermDisplayStatus = (term: PaymentTermListItem): PaymentTermDisplayStatus =>
+  term.status;
+
+export const canDeletePaymentTerm = (term: PaymentTermListItem) =>
+  term.status !== 'Archived' &&
+  term.hasDraft &&
+  !term.hasPublishedVersion &&
+  term.currentVersionNumber === 1 &&
+  term.referencedStructureCount === 0;
+
+const statusColor = (status: PaymentTermDisplayStatus): LabelColor => {
+  if (status === 'Active') return 'success';
+  if (status === 'Draft') return 'warning';
+  return 'default';
+};
 
 const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   data,
   loading,
-  addPaymentTerm,
-  setEditData,
+  totalCount,
+  page,
+  rowsPerPage,
+  searchTerm,
+  archived,
+  onPaginationChange,
+  onSearchChange,
+  onView,
+  onVersionHistory,
   onEdit,
   onDelete,
+  onPublish,
+  onArchive,
+  onRestore,
+  canView,
+  canEdit,
+  canPublish,
+  canArchive,
+  canRestore,
+  canDelete,
+  actionLoading,
 }) => {
-  const [archivePaymentTerm] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useArchivePaymentTermMutation,
-  });
-  const [restorePaymentTerm] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useRestorePaymentTermMutation,
-  });
-
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'paymentTermName',
+        id: 'name',
         label: 'Name',
         align: 'left',
+        minWidth: 220,
+        sticky: true,
+        stickyPosition: 'left',
         render: (value) => (
           <Typography variant="subtitle2" fontWeight={600} fontSize="13px">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'totalInstallments',
-        label: 'Installments',
-        align: 'left',
-        render: (value, row) => {
-          const term = row as IPaymentTerm;
-          const count =
-            typeof value === 'number'
-              ? value
-              : Array.isArray(term.installments)
-                ? term.installments.length
-                : 0;
-          return (
-            <Typography variant="caption" fontSize="13px">
-              {count}
-            </Typography>
-          );
-        },
-      },
-      {
-        id: 'updatedBy',
-        label: 'Updated By',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '-'}
+            {String(value)}
           </Typography>
         ),
       },
@@ -77,105 +75,166 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         id: 'status',
         label: 'Status',
         align: 'left',
-        sticky: true,
-        minWidth: 80,
-        render: (value, row) => {
-          const term = row as IPaymentTerm;
-          const isActive = term.status === 'Active';
+        minWidth: 240,
+        render: (_, row) => {
+          const term = row as PaymentTermListItem;
+          const displayStatus = getPaymentTermDisplayStatus(term);
+
           return (
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                size="small"
-                label={isActive ? 'Active' : 'Archived'}
-                color={isActive ? 'success' : 'default'}
-                variant="soft"
-              />
-              <Switch
-                size="small"
-                checked={isActive}
-                onClick={(event) => event.stopPropagation()}
-                onChange={async () => {
-                  if (!term.id) return;
-                  try {
-                    if (isActive) {
-                      await archivePaymentTerm({
-                        paymentTermId: term.id,
-                        body: { reason: 'Archived from Payment Terms list' },
-                      });
-                      shikshaMitraToast.success({
-                        message: `Payment Term "${term.paymentTermName}" archived successfully.`,
-                      });
-                    } else {
-                      await restorePaymentTerm(term.id);
-                      shikshaMitraToast.success({
-                        message: `Payment Term "${term.paymentTermName}" restored successfully.`,
-                      });
-                    }
-                  } catch {
-                    shikshaMitraToast.error({ message: 'Failed to update status.' });
-                  }
-                }}
-              />
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Label color={statusColor(displayStatus)}>{displayStatus}</Label>
+              {term.isDefault ? (
+                <Chip size="small" label="Default" color="primary" variant="outlined" />
+              ) : null}
             </Stack>
           );
         },
       },
-
       {
-        id: 'action',
-        label: 'Actions',
+        id: 'currentVersionNumber',
+        label: 'Version',
         align: 'left',
+        minWidth: 100,
+        render: (value) => (
+          <Typography variant="body2">
+            {typeof value === 'number' && value > 0 ? `v${value}` : '-'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        align: 'right',
         isSort: false,
         isFilter: false,
         sticky: true,
-        minWidth: 80,
+        stickyPosition: 'right',
+        minWidth: 120,
         render: (_, row) => {
-          const term = row as IPaymentTerm;
+          const term = row as PaymentTermListItem;
+          const canActivate = !archived && term.hasDraft && canPublish;
+          const archiveDisabled = term.referencedStructureCount > 0 || actionLoading;
+          const deleteDisabled = !canDeletePaymentTerm(term) || actionLoading;
+          const hasMenuActions = canView || canActivate || canArchive || canRestore || canDelete;
+
           return (
             <ThreeDotsActions
-              showThreeDots={false}
-              showEditIcon
+              showViewIcon={canView}
+              viewLabel={`View ${term.name}`}
+              handleViewClick={() => onView(term)}
+              showEditIcon={canEdit && !archived}
+              editLabel={`Edit ${term.name}`}
+              disableEditIcon={actionLoading}
               handleEditClick={() => onEdit(term)}
-              showDeleteIcon
-              disableDeleteIcon={term.isUsedInDownstream}
-              handleDeleteClick={() => onDelete(term)}
+              showThreeDots={hasMenuActions}
+              moreLabel={`More actions for ${term.name}`}
+              actions={({ popover }) => (
+                <MenuList>
+                  {canActivate ? (
+                    <MenuItem
+                      disabled={actionLoading}
+                      onClick={() => {
+                        popover.onClose();
+                        onPublish(term);
+                      }}
+                    >
+                      <Iconify icon="mdi:check-decagram-outline" />
+                      Activate
+                    </MenuItem>
+                  ) : null}
+                  {canView ? (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        onVersionHistory(term);
+                      }}
+                    >
+                      <Iconify icon="mdi:timeline-clock-outline" />
+                      Version History
+                    </MenuItem>
+                  ) : null}
+                  {!archived && canArchive ? (
+                    <MenuItem
+                      disabled={archiveDisabled}
+                      onClick={() => {
+                        popover.onClose();
+                        onArchive(term);
+                      }}
+                    >
+                      <Iconify icon="mdi:archive-outline" />
+                      Archive
+                    </MenuItem>
+                  ) : null}
+                  {archived && canRestore ? (
+                    <MenuItem
+                      disabled={actionLoading}
+                      onClick={() => {
+                        popover.onClose();
+                        onRestore(term);
+                      }}
+                    >
+                      <Iconify icon="mdi:archive-arrow-up-outline" />
+                      Restore
+                    </MenuItem>
+                  ) : null}
+                  {canDelete ? (
+                    <MenuItem
+                      disabled={deleteDisabled}
+                      onClick={() => {
+                        popover.onClose();
+                        onDelete(term);
+                      }}
+                    >
+                      <Iconify icon="solar:trash-bin-trash-bold" />
+                      Delete
+                    </MenuItem>
+                  ) : null}
+                </MenuList>
+              )}
             />
           );
         },
       },
     ],
-    [onEdit, onDelete, archivePaymentTerm, restorePaymentTerm]
+    [
+      actionLoading,
+      archived,
+      canArchive,
+      canDelete,
+      canEdit,
+      canPublish,
+      canRestore,
+      canView,
+      onArchive,
+      onDelete,
+      onEdit,
+      onPublish,
+      onRestore,
+      onVersionHistory,
+      onView,
+    ]
   );
 
   return (
     <CustomizableTable
       tableId="payment-term-table"
-      isLoading={loading}
-      noDataText={
-        <>
-          No Payment Term data found.{' '}
-          <Box
-            component="span"
-            onClick={() => {
-              addPaymentTerm.onTrue();
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Add Payment Term
-          </Box>
-        </>
-      }
       columns={columns}
-      data={data || []}
+      data={data}
+      isLoading={loading}
+      isSearch
+      isFilter={false}
+      isPagination
+      serverSidePagination
+      serverSideSearch
+      totalCount={totalCount}
+      page={page - 1}
+      rowsPerPage={rowsPerPage}
+      searchTerm={searchTerm}
+      onServerPagination={onPaginationChange}
+      onServerSearch={onSearchChange}
+      noDataText={archived ? 'No archived payment terms.' : 'No current payment terms found.'}
+      wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+      tableContainerProps={{ sx: { height: '100%' } }}
     />
   );
 };

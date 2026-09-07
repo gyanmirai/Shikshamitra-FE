@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-import type { PaymentTermStatus, InitialDemandStatus, DemandGenerationRule } from '../type';
+import type { PaymentTermStatus, DemandGenerationRule } from '../type';
 
 // ---------------------------------------------------------------------------
 // Shared shape for a single installment
@@ -21,14 +21,14 @@ const installmentSchema = Yup.object().shape({
       if (!startDate || !endDate) return true;
       return !dayjs(endDate as string).isBefore(dayjs(startDate as string), 'day');
     }),
-  demandDate: Yup.mixed().nullable().required('Demand date is required'),
+  demandDate: Yup.mixed().nullable(),
   dueDate: Yup.mixed()
     .nullable()
     .required('Due date is required')
-    .test('demand-before-due', 'Demand date must be on or before due date', function (dueDate) {
-      const { demandDate } = this.parent;
-      if (!demandDate || !dueDate) return true;
-      return !dayjs(demandDate as string).isAfter(dayjs(dueDate as string), 'day');
+    .test('due-within-period', 'Due date must be on or after start date', function (dueDate) {
+      const { startDate } = this.parent;
+      if (!startDate || !dueDate) return true;
+      return !dayjs(dueDate as string).isBefore(dayjs(startDate as string), 'day');
     }),
   allocationPercentage: Yup.number()
     .moreThan(0, 'Allocation percentage must be greater than 0')
@@ -38,10 +38,11 @@ const installmentSchema = Yup.object().shape({
 });
 
 // ---------------------------------------------------------------------------
-// Root payment term schema — accepts the currentYear object so we can
-// reference academicYearId in cross-field rules if needed in future.
+// Root payment term schema — board dates are the authoritative schedule window.
 // ---------------------------------------------------------------------------
-export const paymentTermValidationSchema = (_currentYear?: { id?: string; name?: string } | null) =>
+export const paymentTermValidationSchema = (
+  boards: Array<{ id: string; startDate: string; endDate: string }> = []
+) =>
   Yup.object().shape({
     boardId: Yup.string().required('Board is required'),
 
@@ -53,13 +54,15 @@ export const paymentTermValidationSchema = (_currentYear?: { id?: string; name?:
 
     paymentTermCode: Yup.string()
       .trim()
+      .min(3, 'Code must be at least 3 characters')
       .max(24, 'Code must be at most 24 characters')
-      .matches(/^[A-Z0-9-]*$/, 'Code may only contain uppercase letters, digits, and hyphens'),
+      .matches(/^[A-Z0-9-]+$/, 'Code may only contain uppercase letters, digits, and hyphens')
+      .required('Payment term code is required'),
 
     description: Yup.string().max(500, 'Description must be at most 500 characters'),
 
     status: Yup.mixed<PaymentTermStatus>()
-      .oneOf(['Active', 'Archived'] as const, 'Invalid status')
+      .oneOf(['Draft', 'Active'] as const, 'Status must be Draft or Active')
       .required('Status is required'),
 
     installments: Yup.array()
@@ -79,11 +82,63 @@ export const paymentTermValidationSchema = (_currentYear?: { id?: string; name?:
           if (!dayjs(curr as string).isAfter(dayjs(prev as string), 'day')) return false;
         }
         return true;
-      }),
+      })
+      .test('unique-names', 'Installment names must be unique', (items) => {
+        if (!items?.length) return true;
+        const names = items.map((item) => item?.installmentName?.trim().toLowerCase());
+        return new Set(names).size === names.length;
+      })
+      .test('coverage-not-overlapping', 'Installment periods must not overlap', (items) => {
+        if (!items?.length) return true;
+        const sorted = [...items].sort((a, b) => (a?.sequence ?? 0) - (b?.sequence ?? 0));
+        for (let i = 1; i < sorted.length; i += 1) {
+          const previousEnd = sorted[i - 1]?.endDate;
+          const currentStart = sorted[i]?.startDate;
+          if (
+            previousEnd &&
+            currentStart &&
+            !dayjs(currentStart as string).isAfter(dayjs(previousEnd as string), 'day')
+          ) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .test(
+        'within-board-period',
+        'Installment periods must be within the selected board period',
+        function (items) {
+          if (!items?.length) return true;
+          const selectedBoard = boards.find((item) => item.id === this.parent.boardId);
+          if (!selectedBoard?.startDate || !selectedBoard?.endDate) return true;
+          const boardStart = dayjs(selectedBoard.startDate);
+          const boardEnd = dayjs(selectedBoard.endDate);
+          return items.every((item) => {
+            if (!item?.startDate || !item?.endDate || !item?.dueDate) return true;
+            return (
+              !dayjs(item.startDate as string).isBefore(boardStart, 'day') &&
+              !dayjs(item.endDate as string).isAfter(boardEnd, 'day') &&
+              !dayjs(item.dueDate as string).isBefore(boardStart, 'day') &&
+              !dayjs(item.dueDate as string).isAfter(boardEnd, 'day')
+            );
+          });
+        }
+      )
+      .test(
+        'specific-demand-dates',
+        'A bill generation date on or before the due date is required for every installment',
+        function (items) {
+          if (this.parent.demandGenerationRule !== 'SpecificDate') return true;
+          return items?.every((item) => {
+            if (!item?.demandDate || !item?.dueDate) return false;
+            return !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day');
+          });
+        }
+      ),
 
     demandGenerationRule: Yup.mixed<DemandGenerationRule>()
       .oneOf(
-        ['Immediately', 'XDaysBeforeDue', 'OnDueDate', 'Manual'] as const,
+        ['OnInstallmentStartDate', 'XDaysBeforeDue', 'OnDueDate', 'SpecificDate'] as const,
         'Invalid demand rule'
       )
       .required('Demand generation rule is required'),
@@ -98,9 +153,4 @@ export const paymentTermValidationSchema = (_currentYear?: { id?: string; name?:
             .required('Offset days is required for X Days before due'),
         otherwise: (schema) => schema.nullable(),
       }),
-
-    initialDemandStatus: Yup.mixed<InitialDemandStatus>().oneOf(
-      ['Draft', 'Published'] as const,
-      'Invalid demand status'
-    ),
   });

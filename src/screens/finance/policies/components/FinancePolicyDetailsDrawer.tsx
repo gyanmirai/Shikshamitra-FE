@@ -157,79 +157,35 @@ export default function FinancePolicyDetailsDrawer({
       case 'concession':
         return (
           <>
-            {renderSectionHeader('Concession Rules & Discount', 'mdi:percent-outline')}
+            {renderSectionHeader('Concession Calculation', 'mdi:percent-outline')}
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Eligibility Type', formatEnumValue(policyDetails.eligibilityType))}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Discount Type', formatEnumValue(policyDetails.discountType))}
+                {renderField('Value Source', formatEnumValue(policyDetails.valueSource))}
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 {renderField(
-                  'Discount Value',
-                  policyDetails.discountType === 'Percentage'
-                    ? `${policyDetails.discountValue}%`
-                    : `₹${policyDetails.discountValue}`
+                  'Calculation Method',
+                  formatEnumValue(policyDetails.calculationMethod)
                 )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 {renderField(
-                  'Max Discount Amount',
-                  policyDetails.maximumDiscountAmount
-                    ? `₹${policyDetails.maximumDiscountAmount}`
-                    : 'No Limit'
+                  policyDetails.valueSource === 'PolicyFixed' ? 'Configured Value' : 'Maximum Value',
+                  policyDetails.calculationMethod === 'FullWaiver'
+                    ? 'Full waiver'
+                    : policyDetails.calculationMethod === 'Percentage'
+                      ? `${policyDetails.valueSource === 'PolicyFixed' ? policyDetails.percentageValue : policyDetails.maximumPercentage}%`
+                      : `₹${policyDetails.valueSource === 'PolicyFixed' ? policyDetails.fixedAmount : policyDetails.maximumFixedAmount}`
                 )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Allow Stacking', policyDetails.allowStacking)}
+                {renderField('Apply On', formatEnumValue(policyDetails.applyOn))}
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Max Stacking Count', policyDetails.maximumStackingCount ?? '-')}
+                {renderField('Rounding', formatEnumValue(policyDetails.roundOff))}
               </Grid>
             </Grid>
 
-            {policyDetails.discountRules && policyDetails.discountRules.length > 0 && (
-              <>
-                <Divider sx={{ my: 2.5 }} />
-                {renderSectionHeader('Discount Breakdown per Fee Head', 'mdi:format-list-bulleted')}
-                <Stack spacing={1.5}>
-                  {policyDetails.discountRules.map((rule: any, index: number) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 1,
-                        bgcolor: 'background.neutral',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <Grid container spacing={1}>
-                        <Grid size={{ xs: 6 }}>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            Fee Head
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {rule.feeHeadName || rule.feeHeadId || '-'}
-                          </Typography>
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            Discount
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {rule.discountType === 'Percentage'
-                              ? `${rule.discountValue}%`
-                              : `₹${rule.discountValue}`}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  ))}
-                </Stack>
-              </>
-            )}
           </>
         );
 

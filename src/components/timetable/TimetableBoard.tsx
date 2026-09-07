@@ -740,7 +740,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
             ))}
           </Box>
         </Box>
-      ) : (
+      ) : !readOnly ? (
         <Box
           sx={{
             display: 'flex',
@@ -761,7 +761,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
             Create Slots
           </Button>
         </Box>
-      )}
+      ) : null}
 
       <AssignTeacherDialog
         open={teacherDialog}

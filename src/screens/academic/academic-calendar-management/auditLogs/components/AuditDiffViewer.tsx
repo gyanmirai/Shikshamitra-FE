@@ -1,6 +1,7 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
+import dayjs from 'dayjs';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
@@ -54,8 +55,22 @@ const STATUS_ENUM_MAP: Record<string, string> = {
 const DAY_TYPE_MAP: Record<string, string> = {
   '1': 'Working Day',
   '2': 'Holiday',
-  '3': 'Emergency Closure',
-  '4': 'Event / Activity',
+  '3': 'Vacation',
+  '4': 'Half Day',
+  '5': 'Event',
+  '6': 'Exam',
+  '7': 'PTM',
+  '8': 'Emergency Closure',
+};
+
+const HOLIDAY_CATEGORY_MAP: Record<string, string> = {
+  '1': 'National',
+  '2': 'Regional',
+  '3': 'Festival',
+  '4': 'Management',
+  '5': 'Weather Emergency',
+  '6': 'Government Order',
+  '7': 'Other',
 };
 
 const APPROVAL_STATUS_MAP: Record<string, string> = {
@@ -76,11 +91,18 @@ const formatDiffValue = (fieldName: string, rawVal: string | null | undefined): 
   if (key === 'daytype') {
     return DAY_TYPE_MAP[rawVal] || rawVal;
   }
+  if (key === 'holidaycategory') {
+    return HOLIDAY_CATEGORY_MAP[rawVal] || rawVal;
+  }
   if (key === 'approvalstatus') {
     return APPROVAL_STATUS_MAP[rawVal] || rawVal;
   }
   if (rawVal === 'true') return 'Yes';
   if (rawVal === 'false') return 'No';
+  if (/^\d{4}-\d{2}-\d{2}/.test(rawVal)) {
+    const date = dayjs(rawVal);
+    if (date.isValid()) return date.format('DD-MM-YYYY, hh:mm A');
+  }
 
   return rawVal;
 };
@@ -134,7 +156,16 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
             />
           </Stack>
         )}
-        <Table size="small" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <Table
+          size="small"
+          sx={{
+            width: '100%',
+            tableLayout: 'fixed',
+            borderRadius: 2,
+            overflow: 'hidden',
+            '& .MuiTableCell-root': { overflow: 'hidden' },
+          }}
+        >
           <TableHead>
             <TableRow sx={{ backgroundColor: 'action.hover' }}>
               <TableCell
@@ -157,8 +188,8 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
                   letterSpacing: 0.5,
                   py: 1,
                 }}
-              >
-                Field
+                >
+                  Field
               </TableCell>
               <TableCell
                 sx={{
@@ -168,8 +199,8 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
                   letterSpacing: 0.5,
                   py: 1,
                 }}
-              >
-                Before
+                >
+                  Before
               </TableCell>
               <TableCell
                 sx={{
@@ -179,8 +210,8 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
                   letterSpacing: 0.5,
                   py: 1,
                 }}
-              >
-                After
+                >
+                  After
               </TableCell>
             </TableRow>
           </TableHead>
@@ -214,6 +245,8 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
                         sx={{
                           fontWeight: 600,
                           fontSize: 11,
+                          maxWidth: '100%',
+                          '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
                           textDecoration: d.changeType === 'updated' ? 'line-through' : 'none',
                           bgcolor: alpha(theme.palette.error.main, 0.08),
                           color: theme.palette.error.dark,
@@ -235,6 +268,8 @@ const AuditDiffViewer = ({ diff, variant = 'full', title }: Props) => {
                         sx={{
                           fontWeight: 700,
                           fontSize: 11,
+                          maxWidth: '100%',
+                          '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
                           bgcolor: alpha(theme.palette.success.main, 0.12),
                           color: theme.palette.success.dark,
                         }}

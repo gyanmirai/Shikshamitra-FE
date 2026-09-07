@@ -100,15 +100,16 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
               }
             />
             <SummaryRow
-              label="Status"
+              label="Version"
               value={
                 <Chip
-                  label={values.status || 'Draft'}
+                  label={values.status === 'Active' ? 'Active' : 'Draft'}
                   size="small"
                   sx={{
                     height: 18,
                     fontSize: '0.6rem',
-                    bgcolor: STATUS_COLORS[values.status] ?? 'text.disabled',
+                    bgcolor:
+                      values.status === 'Active' ? STATUS_COLORS.Active : STATUS_COLORS.Draft,
                     color: 'white',
                     fontWeight: 700,
                   }}
@@ -209,21 +210,38 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
               color: 'text.secondary',
             }}
           >
-            Publish Checklist
+            Validation Checklist
           </Typography>
           <Stack spacing={0.4} mt={1}>
             <ValidationCheck label="Board selected" valid={checks.boardValid} />
             <ValidationCheck label="Term name (3+ characters)" valid={checks.nameValid} />
+            <ValidationCheck label="Valid payment term code" valid={checks.codeValid} />
             <ValidationCheck label="At least 1 installment" valid={checks.hasInstallments} />
             <ValidationCheck label="All installment names set" valid={checks.allNames} />
             <ValidationCheck label="All due dates configured" valid={checks.allDueDates} />
             <ValidationCheck label="Unique installment names" valid={checks.uniqueNames} />
+            <ValidationCheck label="Allocation totals 100%" valid={checks.allocationValid} />
+            <ValidationCheck label="Due dates are within each period" valid={checks.periodsValid} />
+            <ValidationCheck
+              label="Installment periods do not overlap"
+              valid={checks.periodsNonOverlapping}
+            />
+            <ValidationCheck
+              label="Periods are within the selected board dates"
+              valid={checks.periodsWithinBoard}
+            />
             <ValidationCheck label="Due dates in ascending order" valid={checks.datesSequential} />
             <ValidationCheck label="Demand rule selected" valid={checks.demandSet} />
             {values.demandGenerationRule === 'XDaysBeforeDue' && (
               <ValidationCheck
                 label="Offset days configured (≥1)"
                 valid={checks.demandOffsetValid}
+              />
+            )}
+            {values.demandGenerationRule === 'SpecificDate' && (
+              <ValidationCheck
+                label="All bill generation dates configured"
+                valid={checks.specificDatesValid}
               />
             )}
           </Stack>
@@ -238,7 +256,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
                 '& .MuiAlert-message': { fontSize: '0.7rem' },
               }}
             >
-              ✅ Ready to publish!
+              Ready to save as {values.status === 'Active' ? 'an active version' : 'a draft'}.
             </Alert>
           ) : (
             <Alert
@@ -250,7 +268,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
                 '& .MuiAlert-message': { fontSize: '0.7rem' },
               }}
             >
-              Complete the checklist above to enable Publish.
+              Complete the required fields before saving.
             </Alert>
           )}
         </Box>

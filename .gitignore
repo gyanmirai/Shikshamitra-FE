@@ -19,6 +19,10 @@ test-results-*/
 output/
 playwright/.auth/
 artifacts/
+.artifacts/
+# Local source fonts used to build the merged PDF font files.
+public/fonts/NotoSansGujarati-Regular.ttf
+public/fonts/NotoSansGujarati-Bold.ttf
 
 # production
 .next

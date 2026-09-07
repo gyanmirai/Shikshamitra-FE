@@ -26,6 +26,7 @@ export interface IExamSubject {
   subjectColor: string;
   subjectCode?: string;
   electiveGroupId?: string;
+  electiveGroupName?: string;
   /** For elective group entries: scheduling mode per-group (UI-only, not sent to backend) */
   schedulingMode?: 'combined' | 'separate';
   // Step 2 schedule fields — null until the user fills them
@@ -103,6 +104,10 @@ export interface IScheduledExamTableProps {
   getExams: any;
   activeStatus?: number;
   onStatusChange?: (status: number) => void;
+  selectedClass?: string;
+  onClassChange?: (classId: string) => void;
+  dateRange?: [Dayjs | null, Dayjs | null];
+  onDateRangeChange?: (range: [Dayjs | null, Dayjs | null]) => void;
   page?: number;
   rowsPerPage?: number;
   totalCount?: number;

@@ -12,31 +12,33 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
-import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
-import { useGetExamSubjectsLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
-import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   Box,
   Grid,
-  Paper,
-  Switch,
   Checkbox,
   TextField,
   Typography,
   Autocomplete,
 } from '@mui/material';
+import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
+import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
+import { useGetExamSubjectsLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
-import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 import { pruneRoomDetails } from './initialValues';
+import {
+  resolveDivisionSelection,
+  getDisplayedDivisionSelection,
+} from './division-selection';
+import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
-import type { IExamFormValues, IDivisionRoomDetail } from '../type';
+import type { IExamFormValues } from '../type';
 
 type ElectiveReadiness = {
   isReady: boolean;
@@ -52,6 +54,19 @@ type StudentElectiveAssignmentsResponse = {
 };
 
 const normalizeSubjectId = (value?: string | null) => value?.trim().toLowerCase() ?? '';
+
+// Core lookup entries keep their subject identity in the nested subject record,
+// while elective options expose it as selectedElectiveSubjectId. Use the same
+// identity for Autocomplete equality and form normalization so MUI can keep the
+// checkbox state in sync with Formik's selected values.
+const getSubjectSelectionKey = (subject: any) =>
+  normalizeSubjectId(
+    subject?.selectedElectiveSubjectId ??
+    subject?.subjects?.[0]?.subjectId ??
+    subject?.subjectId ??
+    subject?.id ??
+    subject?.electiveGroupId
+  );
 
 const getStudentElectiveRecords = (response: StudentElectiveAssignmentsResponse) =>
   response.records ?? response.data?.records ?? [];
@@ -174,6 +189,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               subjectId: subject.subjectId || subject.id,
               subjectName: subject.subjectName || subject.name || item.electiveGroupName,
               selectedElectiveSubjectId: subject.subjectId || subject.id,
+              electiveGroupId: item.electiveGroupId,
+              electiveGroupName: item.electiveGroupName || item.name || '',
               subjects: [subject],
               optionGroup: item.electiveGroupName || 'Elective Group',
             }));
@@ -244,8 +261,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
         selectedGradeScale?.totalMarks ?? selectedType?.defaultTotalMarks ?? '';
       const defaultPassingMarks = selectedGradeScale?.passMarks ?? '';
       const nextReadiness = { ...electiveReadiness };
+      const uniqueValue = value.filter(
+        (subject, index, subjects) =>
+          getSubjectSelectionKey(subject) &&
+          subjects.findIndex(
+            (candidate) => getSubjectSelectionKey(candidate) === getSubjectSelectionKey(subject)
+          ) === index
+      );
       const normalizedResults = await Promise.all(
-        value.map(async (sub) => {
+        uniqueValue.map(async (sub) => {
           const isElective = !!sub.electiveGroupId;
           let readiness = sub.electiveGroupId ? nextReadiness[sub.electiveGroupId] : undefined;
 
@@ -260,6 +284,10 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               return null;
             }
           }
+
+          const electiveGroupName = isElective
+            ? sub.electiveGroupName || sub.optionGroup || undefined
+            : undefined;
 
           const assignedElectiveSubjects = isElective
             ? (sub.subjects ?? [])
@@ -282,6 +310,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   passingMarks: subjectItem.passingMarks || defaultPassingMarks,
                   notes: subjectItem.notes || '',
                   gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
+                  electiveGroupName,
                 };
               })
             : sub.subjects;
@@ -298,6 +327,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               sub.subjectName ||
               sub?.electiveGroupName ||
               '',
+            electiveGroupId: sub.electiveGroupId || undefined,
+            electiveGroupName,
             examDate: sub?.examDate || null,
             startTime: sub?.startTime || null,
             endTime: sub?.endTime || null,
@@ -476,28 +507,18 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         ...(allClass?.find((i: Standards) => i.id === formik.values.className)
                           ?.divisions || []),
                       ]}
-                      value={formik.values.divisions}
+                      value={getDisplayedDivisionSelection(formik.values.divisions)}
                       onChange={(val) => {
                         const value = val as string[];
                         const divisionOptions =
                           allClass?.find((i: Standards) => i.id === formik.values.className)
                             ?.divisions || [];
                         const allDivisionIds = divisionOptions.map((d) => d.id);
-                        const isAllClicked = value.includes('all');
-                        const wasAllPreviouslySelected = formik.values.divisions.includes('all');
-
-                        let nextDivisions: string[] = [];
-                        if (isAllClicked && !wasAllPreviouslySelected) {
-                          nextDivisions = ['all', ...allDivisionIds];
-                        } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          nextDivisions = [];
-                        } else {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          nextDivisions =
-                            selectedWithoutAll.length === allDivisionIds.length
-                              ? ['all', ...allDivisionIds]
-                              : selectedWithoutAll;
-                        }
+                        const nextDivisions = resolveDivisionSelection(
+                          value,
+                          formik.values.divisions,
+                          allDivisionIds
+                        );
 
                         formik.setFieldValue('divisions', nextDivisions);
                         formik.setFieldTouched(`divisions`, false);
@@ -552,14 +573,9 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       groupBy={(option: any) => option.optionGroup || 'Subjects'}
                       getOptionDisabled={(option: any) => !!option.isDisabled}
                       isOptionEqualToValue={(option: any, val: any) => {
-                        const optId = option?.selectedElectiveSubjectId || option?.subjectId || option?.id;
-                        const valId =
-                          val?.selectedElectiveSubjectId ||
-                          val?.subjectId ||
-                          val?.subjects?.[0]?.subjectId ||
-                          val?.electiveGroupId ||
-                          val?.id;
-                        return !!optId && optId === valId;
+                        const optionKey = getSubjectSelectionKey(option);
+                        const valueKey = getSubjectSelectionKey(val);
+                        return !!optionKey && optionKey === valueKey;
                       }}
                       size="small"
                       disableCloseOnSelect
@@ -571,7 +587,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           option?.electiveGroupName ||
                           option?.name ||
                           '';
-                        const optionKey = option?.selectedElectiveSubjectId || option?.subjectId || option?.id;
+                        const optionKey = getSubjectSelectionKey(option);
                         return (
                           <li key={key ?? optionKey} {...restOptionProps}>
                             <Checkbox
@@ -659,19 +675,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       label="Exam Name *"
                       size="small"
                       name="examName"
-                      placeholder="e.g. First Terminal 2024"
+                      placeholder="e.g. First Terminal 2024-25"
                       value={formik.values.examName}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^\w\s\u0080-\uFFFF]/g, '');
-                        formik.setFieldValue('examName', value);
-                        formik.setFieldTouched('examName', false);
-                      }}
+                      onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       error={Boolean(formik.touched.examName && formik.errors.examName)}
                       helperText={
                         formik.touched.examName && formik.errors.examName
                           ? formik.errors.examName
-                          : 'A short, descriptive name for this exam'
+                          : 'Use a clear name; punctuation such as hyphens is allowed (maximum 100 characters)'
                       }
                       FormHelperTextProps={{
                         sx: {

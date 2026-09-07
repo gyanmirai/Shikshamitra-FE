@@ -1,56 +1,16 @@
-import type { IconButtonOwnProps } from '@mui/material';
-
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Box, Tooltip, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import CustomTooltip from '../custom-tooltip';
 import { usePopover, CustomPopover } from '../custom-popover';
 
-import type { UsePopoverReturn } from '../custom-popover';
+import type { ThreeDotsActionsProps, ThreeDotsActionContext } from './types';
 
-interface IThreeDotesActionsType {
-  actions?: (e: IActionType) => React.ReactNode;
-  onClickThreeDots?: (e: any) => void;
-  onClosePopover?: () => void;
-  handleViewClick?: (e: any) => void;
-  handleEditClick?: (e: any) => void;
-  onEditMouseDown?: React.MouseEventHandler<HTMLButtonElement>;
-  handleDeleteClick?: (e: any) => void;
-  showViewIcon?: boolean;
-  showEditIcon?: boolean;
-  showDeleteIcon?: boolean;
-  showThreeDots?: boolean;
-  viewIcon?: string;
-  viewLabel?: string;
-  editLabel?: string;
-  deleteLabel?: string;
-  moreLabel?: string;
-  disableDeleteIcon?: boolean;
-  disableEditIcon?: boolean;
-  disableViewIcon?: boolean;
-  placement?:
-    | 'top-left'
-    | 'top-center'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-center'
-    | 'bottom-right'
-    | 'left-top'
-    | 'left-center'
-    | 'left-bottom'
-    | 'right-top'
-    | 'right-center'
-    | 'right-bottom'
-    | undefined;
-}
-
-interface IActionType {
-  popover: UsePopoverReturn;
-}
+const COMPACT_ACTION_BUTTON_SX = { p: 0, width: 30, height: 30 } as const;
 
 const ThreeDotsActions = ({
-  actions = (e: IActionType) => null,
+  actions = (_context: ThreeDotsActionContext) => null,
   onClickThreeDots,
   onClosePopover,
   placement = 'left-top',
@@ -71,9 +31,8 @@ const ThreeDotsActions = ({
   onEditMouseDown,
   handleDeleteClick = () => {},
   ...props
-}: Omit<IconButtonOwnProps, 'onClick'> & IThreeDotesActionsType) => {
+}: ThreeDotsActionsProps) => {
   const popover = usePopover();
-  const ActionComponent = useMemo(() => actions, [actions]);
   return (
     <Box display="flex" gap={1} alignItems="center" {...props}>
       {showViewIcon && (
@@ -87,7 +46,7 @@ const ThreeDotsActions = ({
                 handleViewClick(e);
               }}
               disabled={disableViewIcon}
-              sx={{ p: 0 }}
+              sx={COMPACT_ACTION_BUTTON_SX}
             >
               <Iconify icon={viewIcon} sx={{ height: '16px', width: '16px', cursor: 'pointer' }} />
             </IconButton>
@@ -109,7 +68,7 @@ const ThreeDotsActions = ({
                 handleEditClick(e);
               }}
               disabled={disableEditIcon}
-              sx={{ p: 0 }}
+              sx={COMPACT_ACTION_BUTTON_SX}
             >
               <Iconify
                 icon="solar:pen-bold"
@@ -137,7 +96,7 @@ const ThreeDotsActions = ({
                 handleDeleteClick(e);
               }}
               disabled={disableDeleteIcon}
-              sx={{ p: 0 }}
+              sx={COMPACT_ACTION_BUTTON_SX}
             >
               <Iconify
                 icon="solar:trash-bin-trash-bold"
@@ -155,10 +114,10 @@ const ThreeDotsActions = ({
             data-testid="table-action-more"
             onClick={(e) => {
               e.stopPropagation();
-              popover.onOpen(e as any);
+              popover.onOpen(e);
               onClickThreeDots?.(e);
             }}
-            sx={{ p: 0 }}
+            sx={COMPACT_ACTION_BUTTON_SX}
           >
             <Iconify
               icon="eva:more-vertical-fill"
@@ -167,54 +126,21 @@ const ThreeDotsActions = ({
           </IconButton>
         </Tooltip>
       )}
-      {/* <IconButton
-        color={popover.open ? 'inherit' : 'default'}
-        onClick={(e) => {
-          e.stopPropagation();
-          popover.onOpen(e);
-          onClickThreeDots?.(e);
-        }}
-        {...props}
-      ></IconButton> */}
       <CustomPopover
         open={popover.open}
         anchorEl={popover.anchorEl}
+        onClick={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
         onClose={() => {
           popover.onClose();
           onClosePopover?.();
         }}
         slotProps={{
           arrow: { placement },
-          // sx: {
-          //   top: 8,
-          //   right: -4,
-          //   zIndex: 1000,
-          // },
         }}
       >
-        <ActionComponent popover={popover} />
+        {actions({ popover })}
       </CustomPopover>
-      {/* <CustomPopover
-        open={popover.open}
-        anchorEl={popover.anchorEl}
-        onClose={() => {
-          popover.onClose();
-          onClosePopover?.();
-        }}
-        anchorOrigin={{
-          vertical: 'center',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'center',
-          horizontal: 'left',
-        }}
-        PaperProps={{
-          sx: { mt: 0 }, // optional tweak
-        }}
-      >
-        {actions?.({ popover })}
-      </CustomPopover> */}
     </Box>
   );
 };

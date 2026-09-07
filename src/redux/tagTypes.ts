@@ -45,7 +45,16 @@ export const academicType = {
   weeklyLectureSlot: 'WeeklyLectureSlot',
   lectureSlot: 'LectureSlot',
   timetableManagement: 'TimetableManagement',
-  substitutionManagement: 'SubstitutionManagement',
+  substitutionList: 'SubstitutionList',
+  substitutionDashboard: 'SubstitutionDashboard',
+  substitutionDuties: 'SubstitutionDuties',
+  substitutionAvailability: 'SubstitutionAvailability',
+  substitutionCreateMetadata: 'SubstitutionCreateMetadata',
+  substitutionLectures: 'SubstitutionLectures',
+  substitutionAffectedLectures: 'SubstitutionAffectedLectures',
+  substitutionSuggestions: 'SubstitutionSuggestions',
+  substitutionDailySheet: 'SubstitutionDailySheet',
+  substitutionAnalytics: 'SubstitutionAnalytics',
   academicReport: 'AcademicReport',
   academicReportExport: 'AcademicReportExport',
   examResult: 'ExamResult',
@@ -452,6 +461,7 @@ export const financePolicyType = {
 export const payrollStructureType = {
   payrollStructure: 'PayrollStructure',
   salaryTemplate: 'SalaryTemplate',
+  statutoryScheme: 'StatutoryScheme',
 } as const;
 
 // ===== Professional Tax API (reducerPath: ProfessionalApi) =====
@@ -514,6 +524,16 @@ export const studentAdmissionsCrmType = {
   admissionForm: 'AdmissionForm',
   admissionApplication: 'AdmissionApplication',
   admissionApplicant: 'AdmissionApplicant',
+  lead: 'Student-Admissions-Crm-Lead',
+  configuration: 'Student-Admissions-Crm-Configuration',
+  task: 'Student-Admissions-Crm-Task',
+  timeline: 'Student-Admissions-Crm-Timeline',
+  exam: 'Student-Admissions-Crm-Exam',
+  event: 'Student-Admissions-Crm-Event',
+  structuredReview: 'Student-Admissions-Crm-Structured-Review',
+  analytics: 'Student-Admissions-Crm-Analytics',
+  publicForm: 'Student-Admissions-Crm-Public-Form',
+  communication: 'Student-Admissions-Crm-Communication',
 } as const;
 
 // ===== Student Attendance Rule API (reducerPath: StudentAttendanceRuleApi) =====
@@ -545,6 +565,7 @@ export const studentGrNumberType = {
 export const studentGroupType = {
   studentGroup: 'studentGroup',
 } as const;
+
 
 // ===== Student Invoice API (reducerPath: StudentInvoiceApi) =====
 export const studentInvoiceType = {
@@ -641,6 +662,10 @@ export const yearType = {
   year: 'Year',
 } as const;
 
+export const permissionType = {
+  permission: 'Permission',
+} as const;
+
 export const allTagTypes = {
   ...academicCalendarType,
   ...academicType,
@@ -725,6 +750,7 @@ export const allTagTypes = {
   ...tenantType,
   ...transportType,
   ...yearType,
+  ...permissionType,
 } as const;
 
 export const tagTypes = Object.values(allTagTypes);

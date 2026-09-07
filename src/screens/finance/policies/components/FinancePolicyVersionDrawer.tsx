@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useCallback } from 'react';
 import {
   Box,
   Stack,
@@ -31,7 +31,18 @@ export default function FinancePolicyVersionDrawer({
   policy,
 }: FinancePolicyVersionDrawerProps) {
   const { versions, selectedVersion, selectedVersionId, setSelectedVersionId, isLoading, isError } =
-    useFinancePolicyVersion({ open, policyId: policy?.id });
+    useFinancePolicyVersion({ open, policyId: policy?.id, policyType: policy?.policyType });
+
+  const valueContext = useMemo(() => {
+    const labelsById: Record<string, string> = {};
+
+    if (policy?.id) labelsById[policy.id.toLowerCase()] = policy.policyName;
+    if (policy?.academicYearId && policy.academicYearName) {
+      labelsById[policy.academicYearId.toLowerCase()] = policy.academicYearName;
+    }
+
+    return { labelsById };
+  }, [policy]);
 
   /**
    * Memoization Justification:
@@ -66,7 +77,7 @@ export default function FinancePolicyVersionDrawer({
               Policy Version History
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Compare changes between different versions of &quot;{policy.policyName}&quot;
+              Compare changes between different versions of {policy.policyName}
             </Typography>
           </Stack>
           <Button
@@ -115,7 +126,9 @@ export default function FinancePolicyVersionDrawer({
 
             {/* Version Changes Display */}
             <Box sx={{ flex: 1, overflowY: 'auto', pl: { sm: 0.5 } }}>
-              {selectedVersion && <VersionDiffTable selectedVersion={selectedVersion} />}
+              {selectedVersion && (
+                <VersionDiffTable selectedVersion={selectedVersion} valueContext={valueContext} />
+              )}
             </Box>
           </Stack>
         )}

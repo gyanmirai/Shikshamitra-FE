@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { useReactToPrint } from 'react-to-print';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -14,26 +15,25 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { GlobalIcons } from 'src/utils/icons';
 import { academicPaths } from 'src/constants/academic-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
   Alert,
   Stack,
   Button,
   Popover,
-  Tooltip,
   Typography,
-  IconButton,
   DialogActions,
-  Menu,
   MenuItem,
   MenuList,
-  ListItemIcon,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import {
   useGetPaperPreviewQuery,
@@ -58,10 +58,79 @@ interface RowAction {
   label: string;
   icon: string;
   color?: 'primary' | 'error' | 'warning' | 'success' | 'info' | 'inherit';
+  disabled?: boolean;
   onClick: (row: any) => void;
 }
 
+const ALL_FILTER_VALUE = '__all__';
+
 /** Status-based row actions (UX spec §5). */
+type StatColor = 'primary' | 'success' | 'info' | 'warning' | 'error';
+
+function PaperStatCard({
+  label,
+  value,
+  icon,
+  color,
+  selected,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  icon: string;
+  color: StatColor;
+  selected?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Box
+      component="button"
+      type="button"
+      onClick={onClick}
+      sx={{
+        flex: '1 1 180px',
+        minWidth: { xs: 160, md: 0 },
+        p: 1.5,
+        border: '1px solid',
+        borderColor: selected ? `${color}.main` : 'divider',
+        borderRadius: 1.5,
+        bgcolor: 'background.paper',
+        color: 'text.primary',
+        textAlign: 'left',
+        cursor: 'pointer',
+        boxShadow: selected ? (theme) => `0 0 0 1px ${theme.palette[color].main}` : 'none',
+        transition: 'all 0.2s ease',
+        '&:hover': { borderColor: `${color}.main`, transform: 'translateY(-1px)' },
+      }}
+    >
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Box
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: 1.25,
+            display: 'grid',
+            placeItems: 'center',
+            bgcolor: (theme) => varAlpha(theme.vars.palette[color].mainChannel, 0.12),
+            color: `${color}.main`,
+            flexShrink: 0,
+          }}
+        >
+          <Iconify icon={icon} width={20} />
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h5" fontWeight={700} lineHeight={1}>
+            {value}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" noWrap display="block" mt={0.5}>
+            {label}
+          </Typography>
+        </Box>
+      </Stack>
+    </Box>
+  );
+}
+
 function buildRowActions(
   handlers: {
     onContinueEditing: (row: any) => void;
@@ -86,7 +155,7 @@ function buildRowActions(
     onArchive,
   } = handlers;
 
-  const actions = {
+  const actions: Record<number, RowAction[]> = {
     // Draft
     1: [
       {
@@ -130,6 +199,22 @@ function buildRowActions(
     ],
     // Submitted
     3: [
+      {
+        key: 'edit',
+        label: 'Edit',
+        icon: GlobalIcons.edit,
+        color: 'primary',
+        disabled: true,
+        onClick: onContinueEditing,
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        icon: GlobalIcons.delete,
+        color: 'error',
+        disabled: true,
+        onClick: onDelete,
+      },
       {
         key: 'review',
         label: 'Review Status',
@@ -214,6 +299,10 @@ function buildRowActions(
     Object.entries(actions).map(([status, rowActions]) => [
       status,
       rowActions.filter((action) => {
+        // Draft papers remain editable from the list so authors can continue a saved paper.
+        if (status === '1' && action.key === 'edit') return true;
+        // Submitted papers keep Edit/Delete visible for consistent row layout, but disabled.
+        if (action.disabled) return true;
         if (action.key === 'delete') return permissions.canDelete;
         if (action.key === 'view' || action.key === 'preview' || action.key === 'print')
           return permissions.canView;
@@ -230,6 +319,15 @@ export default function QuestionPaperScreen() {
 
   // ── List state ───────────────────────────────────────────────────────
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
+  const [scopeFilters, setScopeFilters] = useState({
+    standardName: ALL_FILTER_VALUE,
+    subjectName: ALL_FILTER_VALUE,
+    examTitle: ALL_FILTER_VALUE,
+    creationMode: '',
+  });
+  // The list is intentionally table-only; card view controls were removed from this screen.
+  const viewMode = 'table';
+  const advancedFiltersOpen = false;
 
   // ── Wizard state ─────────────────────────────────────────────────────
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -334,8 +432,38 @@ export default function QuestionPaperScreen() {
   }, [allPapers]);
 
   const filteredPapers = useMemo(
-    () => (statusFilter == null ? allPapers : allPapers.filter((p) => p.status === statusFilter)),
-    [allPapers, statusFilter]
+    () =>
+      allPapers.filter((paper) => {
+        const matchesStatus = statusFilter == null || paper.status === statusFilter;
+        const matchesClass =
+          scopeFilters.standardName === ALL_FILTER_VALUE ||
+          paper.standardName === scopeFilters.standardName;
+        const matchesSubject =
+          scopeFilters.subjectName === ALL_FILTER_VALUE ||
+          paper.subjectName === scopeFilters.subjectName;
+        const matchesExam =
+          scopeFilters.examTitle === ALL_FILTER_VALUE || paper.examTitle === scopeFilters.examTitle;
+        const matchesMode =
+          !scopeFilters.creationMode || paper.creationMode === scopeFilters.creationMode;
+        return matchesStatus && matchesClass && matchesSubject && matchesExam && matchesMode;
+      }),
+    [allPapers, scopeFilters, statusFilter]
+  );
+
+  const paperScopeOptions = useMemo(
+    () => ({
+      standardName: Array.from(
+        new Set(allPapers.map((paper) => paper.standardName).filter(Boolean))
+      ).sort(),
+      subjectName: Array.from(
+        new Set(allPapers.map((paper) => paper.subjectName).filter(Boolean))
+      ).sort(),
+      examTitle: Array.from(
+        new Set(allPapers.map((paper) => paper.examTitle).filter(Boolean))
+      ).sort(),
+      creationMode: CREATION_MODE_OPTIONS.map((option) => option.value),
+    }),
+    [allPapers]
   );
 
   // ── Print ────────────────────────────────────────────────────────────
@@ -537,6 +665,8 @@ export default function QuestionPaperScreen() {
               handleViewClick={() => viewAction?.onClick(row)}
               handleEditClick={() => editAction?.onClick(row)}
               handleDeleteClick={() => deleteAction?.onClick(row)}
+              disableEditIcon={!!editAction?.disabled}
+              disableDeleteIcon={!!deleteAction?.disabled}
               showThreeDots={menuActions.length > 0}
               actions={({ popover }) => (
                 <MenuList>
@@ -570,50 +700,36 @@ export default function QuestionPaperScreen() {
         label: 'Total Papers',
         value: dashboard?.totalPapers ?? allPapers.length,
         icon: 'mdi:file-document-outline',
-        color: 'primary' as const,
-        onClick: () => setStatusFilter(null),
-      },
-      {
-        label: 'Draft',
-        value: dashboard?.draftPapers ?? statusCounts[1] ?? 0,
-        icon: 'mdi:file-outline',
-        color: 'info' as const,
-        onClick: () => setStatusFilter(1),
-      },
-      {
-        label: 'Generated',
-        value: dashboard?.generatedPapers ?? statusCounts[2] ?? 0,
-        icon: 'mdi:auto-fix',
-        color: 'primary' as const,
-        onClick: () => setStatusFilter(2),
-      },
-      {
-        label: 'Pending Review',
-        value: dashboard?.pendingApproval ?? (statusCounts[3] || 0) + (statusCounts[5] || 0),
-        icon: 'mdi:clock-outline',
-        color: 'warning' as const,
-        onClick: () => setStatusFilter(3),
+        color: 'primary' as StatColor,
+        status: null,
       },
       {
         label: 'Approved',
         value: dashboard?.approvedPapers ?? statusCounts[4] ?? 0,
         icon: 'mdi:check-circle-outline',
-        color: 'success' as const,
-        onClick: () => setStatusFilter(4),
+        color: 'success' as StatColor,
+        status: 4,
       },
       {
-        label: 'Published',
-        value: dashboard?.publishedPapers ?? statusCounts[6] ?? 0,
+        label: 'Draft',
+        value: dashboard?.draftPapers ?? statusCounts[1] ?? 0,
         icon: 'mdi:file-outline',
-        color: 'primary' as const,
-        onClick: () => setStatusFilter(6),
+        color: 'info' as StatColor,
+        status: 1,
       },
       {
-        label: 'Locked',
-        value: dashboard?.lockedPapers ?? statusCounts[7] ?? 0,
-        icon: 'mdi:lock-outline',
-        color: 'error' as const,
-        onClick: () => setStatusFilter(7),
+        label: 'Pending Review',
+        value: dashboard?.pendingApproval ?? statusCounts[3] ?? 0,
+        icon: 'mdi:clock-outline',
+        color: 'warning' as StatColor,
+        status: 3,
+      },
+      {
+        label: 'Rejected',
+        value: dashboard?.rejectedPapers ?? statusCounts[5] ?? 0,
+        icon: 'mdi:close-circle-outline',
+        color: 'error' as StatColor,
+        status: 5,
       },
     ],
     [dashboard, allPapers.length, statusCounts]
@@ -643,17 +759,15 @@ export default function QuestionPaperScreen() {
                 Settings
               </Button>
             )}
-            {canAdd && (
-              <Button
-                variant="contained"
-                size="small"
-                disabled={!academicYearId}
-                onClick={() => openWizard('create', null, 0)}
-                startIcon={<Iconify icon="mdi:add" />}
-              >
-                Create Question Paper
-              </Button>
-            )}
+            <Button
+              variant="contained"
+              size="small"
+              disabled={!academicYearId}
+              onClick={() => openWizard('create', null, 0)}
+              startIcon={<Iconify icon="mdi:add" />}
+            >
+              Create Question Paper
+            </Button>
           </Stack>
         }
       />
@@ -665,42 +779,176 @@ export default function QuestionPaperScreen() {
       )}
 
       {/* ── Status summary cards (clickable filters) ───────────────── */}
-      <TimetableSettingsSummaryCards cards={summaryCards} />
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        {summaryCards.map((card) => (
+          <PaperStatCard
+            key={card.label}
+            label={card.label}
+            value={card.value}
+            icon={card.icon}
+            color={card.color}
+            selected={statusFilter === card.status || (card.status === null && statusFilter === null)}
+            onClick={() => setStatusFilter(card.status)}
+          />
+        ))}
+      </Stack>
 
       {/* ── Active status filter ───────────────────────────────────── */}
-      {statusFilter != null && (
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Typography variant="body2" color="text.secondary">
-            Showing:
-          </Typography>
-          <Label
-            variant="soft"
-            color={STATUS_COLOR[statusFilter] || 'default'}
-            sx={{ fontWeight: 700 }}
-          >
-            {STATUS_LABEL[statusFilter]} ({filteredPapers.length})
-          </Label>
-          <Button
-            size="small"
-            onClick={() => setStatusFilter(null)}
-            startIcon={<Iconify icon="mdi:close" width={14} />}
-          >
-            Clear Filters
-          </Button>
+      <Box
+        sx={{
+          p: 1,
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1.5,
+          bgcolor: 'background.paper',
+          flexShrink: 0,
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          spacing={1}
+          alignItems={{ lg: 'center' }}
+          sx={{ flexWrap: { lg: 'nowrap' } }}
+        >
+          {([
+            ['standardName', 'Class'],
+            ['subjectName', 'Subject'],
+            ['examTitle', 'Exam'],
+          ] as const).map(([key, label]) => (
+            <FormControl key={key} size="small" fullWidth>
+              <InputLabel>{label}</InputLabel>
+              <Select
+                label={label}
+                value={scopeFilters[key]}
+                onChange={(event) =>
+                  setScopeFilters((current) => ({ ...current, [key]: event.target.value }))
+                }
+              >
+                <MenuItem value={ALL_FILTER_VALUE}>All {label}s</MenuItem>
+                {paperScopeOptions[key].map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ))}
+          {(statusFilter !== null ||
+            Object.entries(scopeFilters).some(([key, value]) =>
+              key === 'creationMode' ? Boolean(value) : value !== ALL_FILTER_VALUE
+            )) && (
+            <Button
+              size="small"
+              color="error"
+              onClick={() => {
+                setStatusFilter(null);
+                setScopeFilters({
+                  standardName: ALL_FILTER_VALUE,
+                  subjectName: ALL_FILTER_VALUE,
+                  examTitle: ALL_FILTER_VALUE,
+                  creationMode: '',
+                });
+              }}
+              startIcon={<Iconify icon="mdi:close" width={14} />}
+              sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+            >
+              Clear filters
+            </Button>
+          )}
         </Stack>
-      )}
+        {advancedFiltersOpen && (
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ pt: 1 }}>
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Creation mode</InputLabel>
+              <Select
+                label="Creation mode"
+                value={scopeFilters.creationMode}
+                onChange={(event) =>
+                  setScopeFilters((current) => ({ ...current, creationMode: event.target.value }))
+                }
+              >
+                <MenuItem value="">All modes</MenuItem>
+                {paperScopeOptions.creationMode.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Typography variant="caption" color="text.secondary" alignSelf="center">
+              Use the table column filters for additional paper fields.
+            </Typography>
+          </Stack>
+        )}
+      </Box>
 
       {/* ── Papers table ───────────────────────────────────────────── */}
-      <CustomizableTable
+      {viewMode === 'table' ? (
+        <CustomizableTable
         tableId="question-papers-list"
         tableTitle="School Question Papers"
         columns={paperColumns}
         data={filteredPapers}
         isLoading={isFetching}
-        rowProps={(row) => ({
-          selected: row.id === wizardPaper?.id,
-        })}
-      />
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: '100%' } }}
+        noDataText="No question papers found"
+          rowProps={(row) => ({
+            selected: row.id === wizardPaper?.id,
+          })}
+        />
+      ) : (
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+          {filteredPapers.length === 0 ? (
+            <EmptyContent title="No question papers found" sx={{ minHeight: 320 }} />
+          ) : (
+            <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1.5}>
+              {filteredPapers.map((paper) => (
+              <Box
+                key={paper.id}
+                component="button"
+                type="button"
+                onClick={() => {
+                  setPreviewPaperId(paper.id);
+                  setPreviewDrawerOpen(true);
+                }}
+                sx={{
+                  flex: '1 1 280px',
+                  maxWidth: { md: 'calc(50% - 12px)', xl: 'calc(33.333% - 12px)' },
+                  minWidth: 260,
+                  textAlign: 'left',
+                  p: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1.5,
+                  bgcolor: 'background.paper',
+                  color: 'text.primary',
+                  cursor: 'pointer',
+                  '&:hover': { borderColor: 'primary.main', boxShadow: 2 },
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" justifyContent="space-between" spacing={1}>
+                    <Typography variant="subtitle2" fontWeight={700} noWrap>
+                      {paper.paperTitle || 'Untitled question paper'}
+                    </Typography>
+                    <Label variant="soft" color={STATUS_COLOR[paper.status] || 'default'}>
+                      {STATUS_LABEL[paper.status] || '—'}
+                    </Label>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    {[paper.examTitle, paper.standardName, paper.subjectName].filter(Boolean).join(' · ') || '—'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {paper.totalMarks ?? '—'} marks · {paper.durationMinutes ?? '—'} minutes
+                  </Typography>
+                </Stack>
+              </Box>
+              ))}
+            </Stack>
+          )}
+        </Box>
+      )}
 
       {/* ── Guided creation / edit / review wizard ─────────────────── */}
       <CreatePaperWizard

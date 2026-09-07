@@ -48,7 +48,14 @@ export const useTableData = ({
             : filter.value;
           const isDateType = filter.valueType === 'date';
           const isDateTimeType = filter.valueType === 'dateTime';
+          const isEnumType = filter.valueType === 'enum';
           const isFormattedNumber = filter.valueType === 'formattedNumber';
+
+          // Enum options represent raw domain values. A rendered enum cell may show a label
+          // such as "Published", but it must still match the selected option value (for example 1).
+          if (isEnumType) {
+            return String(value) === String(filter.value);
+          }
 
           if (isDateType || isDateTimeType) {
             const rowDate = parseTableDate(value);

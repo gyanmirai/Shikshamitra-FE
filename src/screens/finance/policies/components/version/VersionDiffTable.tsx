@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Label } from 'src/components/label';
 import {
   Box,
   Chip,
@@ -15,35 +16,69 @@ import {
   TableContainer,
 } from '@mui/material';
 
+import {
+  formatFinancePolicyVersionField,
+  formatFinancePolicyVersionValue,
+} from './finance-policy-version-formatters';
+
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
+import type { VersionValueContext } from './finance-policy-version-formatters';
 
 interface VersionDiffTableProps {
   selectedVersion: PolicyVersion;
+  valueContext?: VersionValueContext;
 }
 
-const formatFieldName = (fieldName: string) => {
-  if (!fieldName) return '';
-  const spaced = fieldName
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/_/g, ' ')
-    .trim();
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-};
+const STATUS_COLORS = {
+  Active: 'success',
+  Archived: 'default',
+  Draft: 'warning',
+  Inactive: 'error',
+  Published: 'success',
+} as const;
 
-const renderValueCell = (val: string) => {
-  if (val === 'true') return <Chip label="Yes" size="small" color="success" variant="outlined" />;
-  if (val === 'false') return <Chip label="No" size="small" color="error" variant="outlined" />;
-  if (!val || val === 'null') {
+const renderValueCell = (
+  fieldName: string,
+  value: unknown,
+  valueContext?: VersionValueContext
+) => {
+  const formatted = formatFinancePolicyVersionValue(fieldName, value, valueContext);
+
+  if (formatted.kind === 'boolean') {
+    return (
+      <Chip
+        label={formatted.text}
+        size="small"
+        color={formatted.text === 'Yes' ? 'success' : 'error'}
+        variant="outlined"
+      />
+    );
+  }
+
+  if (formatted.kind === 'status') {
+    return (
+      <Label color={STATUS_COLORS[formatted.text as keyof typeof STATUS_COLORS] || 'default'}>
+        {formatted.text}
+      </Label>
+    );
+  }
+
+  if (formatted.kind === 'empty') {
     return (
       <Typography variant="caption" color="text.secondary">
-        Empty
+        {formatted.text}
       </Typography>
     );
   }
-  return val;
+
+  return (
+    <Typography variant="caption" color="inherit" sx={{ overflowWrap: 'anywhere' }}>
+      {formatted.text}
+    </Typography>
+  );
 };
 
-function VersionDiffTable({ selectedVersion }: VersionDiffTableProps) {
+function VersionDiffTable({ selectedVersion, valueContext }: VersionDiffTableProps) {
   return (
     <Stack spacing={2.5}>
       <Box>
@@ -99,12 +134,14 @@ function VersionDiffTable({ selectedVersion }: VersionDiffTableProps) {
               <TableBody>
                 {selectedVersion.changedFields.map((field, idx) => (
                   <TableRow key={idx} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                    <TableCell sx={{ fontWeight: 600 }}>{formatFieldName(field.field)}</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {formatFinancePolicyVersionField(field.field)}
+                    </TableCell>
                     <TableCell sx={{ color: 'error.main' }}>
-                      {renderValueCell(field.oldValue || '')}
+                      {renderValueCell(field.field, field.oldValue, valueContext)}
                     </TableCell>
                     <TableCell sx={{ color: 'success.main' }}>
-                      {renderValueCell(field.newValue || '')}
+                      {renderValueCell(field.field, field.newValue, valueContext)}
                     </TableCell>
                   </TableRow>
                 ))}

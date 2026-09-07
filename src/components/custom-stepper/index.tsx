@@ -1,15 +1,13 @@
 'use client';
 
-import type { StepIconProps } from '@mui/material';
-import type { LoadingButtonProps } from '@mui/lab';
+import type { ButtonProps, StepIconProps } from '@mui/material';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
+import { styled } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { alpha, styled } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
@@ -26,7 +24,11 @@ import {
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
 import { mergeStepperButtonProps } from './button-props';
-import { focusFirstFormikError, shouldValidateForwardStepClick } from './formik-validation';
+import {
+  focusFirstFormikError,
+  shouldValidateCurrentStep,
+  shouldValidateForwardStepClick,
+} from './formik-validation';
 
 // const steps = ['Personal Information', 'Contact Information', 'Review'];
 
@@ -88,8 +90,9 @@ interface CustomStepperWithFormikProps {
   isDisabledLabel?: boolean;
   showSaveButton?: boolean;
   disableSubmit?: boolean;
-  saveButtonProps?: LoadingButtonProps;
-  saveAndNextButtonProps?: LoadingButtonProps;
+  saveButtonProps?: ButtonProps;
+  saveAndNextButtonProps?: ButtonProps;
+  validateFinalStep?: boolean;
   validateForwardStepClick?: boolean;
   viewMode?: 'horizontal' | 'vertical'; // Add this line
 }
@@ -177,7 +180,7 @@ const ModernStepIcon = (props: StepIconProps) => {
         component={motion.div}
         animate={{
           scale: active ? 1.1 : 1,
-          backgroundColor: completed || active ? 'var(--palette-primary-main)' : 'transparent',
+          backgroundColor: completed || active ? 'var(--palette-primary-main)' : 'rgba(0, 0, 0, 0)',
           borderColor:
             completed || active ? 'var(--palette-primary-main)' : 'var(--palette-grey-400)',
         }}
@@ -190,7 +193,8 @@ const ModernStepIcon = (props: StepIconProps) => {
           justifyContent: 'center',
           borderRadius: '50%',
           border: '2px solid',
-          bgcolor: (theme) => (completed || active ? theme.palette.primary.main : 'transparent'),
+          bgcolor: (theme) =>
+            completed || active ? theme.palette.primary.main : 'rgba(0, 0, 0, 0)',
           color: (theme) => (completed || active ? '#fff' : theme.palette.text.secondary),
         }}
       >
@@ -279,6 +283,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   finalButtonLabel = 'Submit',
   saveButtonProps = {},
   saveAndNextButtonProps = {},
+  validateFinalStep = true,
   validateForwardStepClick = false,
   viewMode = 'horizontal', // Default to horizontal
 }) => {
@@ -305,6 +310,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
 
   React.useEffect(() => {
     formik.setTouched({});
+    formik.setErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep]);
 
@@ -315,16 +321,19 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
 
     setIsBackClick(false);
 
-    const validationErrors = await formik.validateForm();
-    const hasValidationErrors = Object.keys(validationErrors).length > 0;
+    const isLastStep = activeStep === steps.length - 1;
+    if (shouldValidateCurrentStep(isLastStep, validateFinalStep)) {
+      const validationErrors = await formik.validateForm();
+      const hasValidationErrors = Object.keys(validationErrors).length > 0;
 
-    if (hasValidationErrors) {
-      formik.setTouched(markTouchedFromErrors(validationErrors), true);
-      focusFirstFormikError(validationErrors);
-      return;
+      if (hasValidationErrors) {
+        formik.setTouched(markTouchedFromErrors(validationErrors), true);
+        focusFirstFormikError(validationErrors);
+        return;
+      }
     }
 
-    handleNext(activeStep === steps.length - 1, formik.values, formik, setIsLoading);
+    handleNext(isLastStep, formik.values, formik, setIsLoading);
   };
   const saveCurrentStep = async () => {
     if (isBusy) return;
@@ -381,70 +390,70 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       sx={
         isVertical
           ? {
-            minWidth: '250px', // Slightly wider for modern look
-            p: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            borderRight: (theme) => `1px dashed ${theme.palette.divider}`,
-            height: '100%',
-            // '& .MuiStep-root': {
-            //   mb: 2, // Spacing between steps
-            // },
-            '& .MuiStep-root': {
-              padding: 0,
-            },
-
-            // '& .MuiStepLabel-root': {
-            //   px: 1,
-            //   py: 1,
-            //   borderRadius: 1.5,
-            //   transition: 'background-color 0.2s',
-            // },
-
-            // '& .MuiStepLabel-label': {
-            //   ml: 1.5,
-            //   typography: 'subtitle2',
-            // },
-            '& .MuiStepLabel-root': {
-              px: 1,
-              borderRadius: 1.5,
-              transition: 'background-color 0.2s',
-              '&:hover': {
-                bgcolor: (theme) => theme.palette.action.hover,
+              minWidth: '250px', // Slightly wider for modern look
+              p: 1,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              borderRight: (theme) => `1px dashed ${theme.palette.divider}`,
+              height: '100%',
+              // '& .MuiStep-root': {
+              //   mb: 2, // Spacing between steps
+              // },
+              '& .MuiStep-root': {
+                padding: 0,
               },
-              '&.Mui-active': {
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+
+              // '& .MuiStepLabel-root': {
+              //   px: 1,
+              //   py: 1,
+              //   borderRadius: 1.5,
+              //   transition: 'background-color 0.2s',
+              // },
+
+              // '& .MuiStepLabel-label': {
+              //   ml: 1.5,
+              //   typography: 'subtitle2',
+              // },
+              '& .MuiStepLabel-root': {
+                px: 1,
+                borderRadius: 1.5,
+                transition: 'background-color 0.2s',
                 '&:hover': {
-                  bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.12),
+                  bgcolor: (theme) => theme.palette.action.hover,
+                },
+                '&.Mui-active': {
+                  bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+                  '&:hover': {
+                    bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.12),
+                  },
                 },
               },
-            },
-            '& .MuiStepLabel-label': {
-              typography: 'subtitle2',
-              ml: 1.5,
-              '&.Mui-active': {
-                color: 'primary.main',
-                fontWeight: 'bold',
+              '& .MuiStepLabel-label': {
+                typography: 'subtitle2',
+                ml: 1.5,
+                '&.Mui-active': {
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                },
+                '&.Mui-completed': {
+                  color: 'text.primary',
+                },
               },
-              '&.Mui-completed': {
-                color: 'text.primary',
-              },
-            },
-          }
+            }
           : {
-            p: isMobile ? 1 : 0,
-            '& .MuiStepLabel-label': {
-              display: 'block',
-              fontSize: isMobile ? '10px' : '12px',
-              mt: '4px !important',
-              textAlign: 'center',
-              lineHeight: 1.2,
-              wordBreak: 'break-word',
-            },
-            '& .MuiStepLabel-labelContainer': {
-              width: '100%',
-            },
-          }
+              p: isMobile ? 1 : 0,
+              '& .MuiStepLabel-label': {
+                display: 'block',
+                fontSize: isMobile ? '10px' : '12px',
+                mt: '4px !important',
+                textAlign: 'center',
+                lineHeight: 1.2,
+                wordBreak: 'break-word',
+              },
+              '& .MuiStepLabel-labelContainer': {
+                width: '100%',
+              },
+            }
       }
     >
       {/* <Scrollbar
@@ -560,10 +569,10 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           Back
         </Button>
         <Box display="flex" gap={1}>
-          {showSaveButton && <LoadingButton {...mergedSaveButtonProps}>Save</LoadingButton>}
-          <LoadingButton {...mergedSaveAndNextButtonProps}>
+          {showSaveButton && <Button {...mergedSaveButtonProps}>Save</Button>}
+          <Button {...mergedSaveAndNextButtonProps}>
             {activeStep === steps.length - 1 ? finalButtonLabel : nextButtonLabel}
-          </LoadingButton>
+          </Button>
         </Box>
       </Box>
     </Box>

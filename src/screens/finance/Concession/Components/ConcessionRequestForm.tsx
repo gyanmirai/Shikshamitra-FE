@@ -42,7 +42,6 @@ import {
   useGetConcessionRequestByIdQuery,
   useCreateConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
-  useUploadConcessionDocumentsMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
@@ -245,18 +244,13 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const { data: concessionTypes = [] } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, includeInactive: isEditMode },
     options: { skip: !currentYear?.id },
   });
 
   const [createConcessionRequest, { isLoading: createLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateConcessionRequestMutation,
-  });
-
-  const [uploadDocuments, { isLoading: uploadLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUploadConcessionDocumentsMutation,
   });
 
   // -- Derived lists ---------------------------------------------------------
@@ -327,50 +321,34 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           };
         });
 
-        const isEditing = !!(editData?.id && values.concessionRequestId);
-        let res: any;
+		const isEditing = !!(editData?.id && values.concessionRequestId);
+		const docBlock = values.concessionTypeDocuments?.find(
+			(d: any) => d.concessionTypeId === typeId
+		);
+		const documents = docBlock?.documents
+			?.filter((d: any) => d.url)
+			.map((d: any) => ({ documentId: d.documentId, url: d.url, status: 1 })) || [];
 
-        if (isEditing) {
-          res = await updateConcessionRequest({
+		if (isEditing) {
+		  await updateConcessionRequest({
             concessionRequestId: values.concessionRequestId,
             academicYearId: currentYear?.id,
             studentId: values.studentId,
             concessionTypeId: typeId,
             remarks: values.remarks,
-            feeHeadConcessions,
-          }).unwrap();
-        } else {
-          res = await createConcessionRequest({
+			feeHeadConcessions,
+			documents,
+		  }).unwrap();
+		} else {
+		  await createConcessionRequest({
             academicYearId: currentYear?.id,
             studentId: values.studentId,
             concessionTypeId: typeId,
             remarks: values.remarks,
-            feeHeadConcessions,
-          }).unwrap();
-        }
-
-        const reqId =
-          res?.data?.concessionRequestId ||
-          res?.concessionRequestId ||
-          res?.data?.id ||
-          res?.id ||
-          values.concessionRequestId;
-
-        if (!reqId) throw new Error('Failed to get concession request ID from response');
-
-        const docBlock = values.concessionTypeDocuments?.find(
-          (d: any) => d.concessionTypeId === typeId
-        );
-        const flatDocs =
-          docBlock?.documents?.map((d: any) => ({
-            documentId: d.documentId,
-            url: d.url,
-            status: d.status ?? 1,
-          })) || [];
-
-        if (flatDocs.length > 0) {
-          await uploadDocuments({ concessionRequestId: reqId, documents: flatDocs }).unwrap();
-        }
+			feeHeadConcessions,
+			documents,
+		  }).unwrap();
+		}
 
         shikshaMitraToast.success({
           message: `Concession request ${isEditing ? 'updated' : 'created'} successfully`,
@@ -405,14 +383,19 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
-    params: { studentId: values.studentId },
-    options: { skip: !values.studentId },
+		params: { studentId: values.studentId, academicYearId: currentYear?.id },
+		options: { skip: !values.studentId || !currentYear?.id },
     // Suppress automatic toast — we handle this error inline
     popupConfig: { error: false },
   }) as { data: any; isLoading: boolean; isError: boolean; error: any };
 
   const feeHeads: any[] = useMemo(
-    () => feeStructureData?.feeHeads?.filter((item: any) => item.isSelected) || [],
+    () => {
+      const selected = feeStructureData?.feeHeads?.filter((item: any) => item.isSelected) || [];
+      if (feeStructureData?.concessionFeeHeadScope !== 'SelectedFeeHeads') return selected;
+      const eligible = new Set(feeStructureData?.concessionApplicableFeeHeadIds || []);
+      return selected.filter((item: any) => eligible.has(item.feeHeadId));
+    },
     [feeStructureData]
   );
 
@@ -822,6 +805,20 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       </Stack>
                       <Divider sx={{ mb: 2 }} />
                       <Grid container spacing={2}>
+                        {feeStructureData?.concessionPolicyName && (
+                          <Grid size={{ xs: 12 }}>
+                            <Alert severity="info" variant="outlined">
+                              Policy: <strong>{feeStructureData.concessionPolicyName}</strong>{' '}
+                              ({feeStructureData.concessionPolicyCode}, version{' '}
+                              {feeStructureData.concessionPolicyVersion}). It applies to{' '}
+                              {feeStructureData.concessionApplyOn === 'AllOutstanding'
+                                ? 'all outstanding installments'
+                                : feeStructureData.concessionApplyOn === 'CurrentInstallment'
+                                  ? 'the current unpaid installment'
+                                  : 'future installments'}.
+                            </Alert>
+                          </Grid>
+                        )}
                         <Grid size={{ xs: 12, md: 6 }}>
                           <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
                         </Grid>
@@ -1399,10 +1396,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                   variant="contained"
                   size="small"
                   disabled={
-                    createLoading || updateLoading || uploadLoading || isAmountExceedingFees
+					createLoading || updateLoading || isAmountExceedingFees
                   }
                   startIcon={<Iconify icon={GlobalIcons.submit} />}
-                  loading={createLoading || updateLoading || uploadLoading}
+				  loading={createLoading || updateLoading}
                   onClick={handleSubmit}
                 >
                   {editData?.id ? 'Update' : 'Submit'}

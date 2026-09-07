@@ -12,6 +12,8 @@ interface Props {
   onToggleMultiSelect?: (studentId: string) => void;
   showCheckbox?: boolean;
   isReadOnly?: boolean;
+  isSelected?: boolean;
+  onSelect?: (studentId: string) => void;
 }
 
 export default function StudentCard({
@@ -22,6 +24,8 @@ export default function StudentCard({
   onToggleMultiSelect,
   showCheckbox,
   isReadOnly,
+  isSelected,
+  onSelect,
 }: Props) {
   const isAllocated = !!assignment;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -37,6 +41,11 @@ export default function StudentCard({
       {...(isAllocated || isReadOnly || isExcluded ? {} : attributes)}
       role="button"
       tabIndex={0}
+      aria-pressed={isSelected}
+      aria-disabled={isAllocated || isReadOnly || isExcluded}
+      onClick={() => {
+        if (!isAllocated && !isReadOnly && !isExcluded) onSelect?.(student.studentId);
+      }}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -44,8 +53,12 @@ export default function StudentCard({
         p: 1,
         borderRadius: 1,
         border: '1px solid',
-        borderColor: 'divider',
-        bgcolor: isAllocated || isExcluded ? 'action.hover' : 'background.paper',
+        borderColor: isSelected ? 'primary.main' : 'divider',
+        bgcolor: isSelected
+          ? 'action.selected'
+          : isAllocated || isExcluded
+            ? 'action.hover'
+            : 'background.paper',
         cursor: isAllocated || isReadOnly || isExcluded ? 'default' : 'grab',
         opacity: isDragging ? 0.4 : isAllocated ? 0.75 : isExcluded ? 0.6 : 1,
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,

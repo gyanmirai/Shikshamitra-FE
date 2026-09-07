@@ -35,6 +35,10 @@ import {
 import { RoomStatusChip } from './RoomStatusChip';
 import { useRoomSuggestions, useCreateRoomReservation } from '../roomAvailability.hooks';
 import {
+  validateRoomSearchRequirements,
+  validateRoomBookingRequirements,
+} from '../services/roomSuggestionSearch';
+import {
   resolveFacility,
   PRIORITY_OPTIONS,
   SUGGESTION_BADGE_LABELS,
@@ -192,40 +196,21 @@ export const SmartRoomReservationDrawer = ({
     }
   }, [open, prefilledRoom, prefillDate, suggest]);
 
-  const validateForm = (): boolean => {
-    const errs: Record<string, string> = {};
-    if (!requirements.reservationType) {
-      errs.reservationType = 'Reservation type is required.';
-    }
-    if (!requirements.purpose) {
-      errs.purpose = 'Purpose is required.';
-    }
-    if (!requirements.date) {
-      errs.date = 'Date is required.';
-    }
-    if (!requirements.startTime) {
-      errs.startTime = 'Start time is required.';
-    }
-    if (!requirements.endTime) {
-      errs.endTime = 'End time is required.';
-    } else if (requirements.startTime && requirements.endTime <= requirements.startTime) {
-      errs.endTime = 'End time must be after start time.';
-    }
-    if (requirements.isRecurring && !requirements.recurringConfig?.untilDate) {
-      errs.untilDate = 'Repeat until date is required.';
-    }
-    setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
   const handleSearch = async () => {
-    if (!validateForm()) return;
+    const errors = validateRoomSearchRequirements(requirements);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setFieldErrors({});
-    await suggestions.suggest(requirements);
     setSearched(true);
+    await suggestions.suggest(requirements);
   };
 
   const handleBookRoom = async (room: SuggestedRoom) => {
+    const errors = validateRoomBookingRequirements(requirements);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     try {
       // Only admins can bypass approval if the room doesn't strictly need it
       const isApprovalRequired =
@@ -823,8 +808,8 @@ export const SmartRoomReservationDrawer = ({
                     No Search Conducted Yet
                   </Typography>
                   <Typography variant="caption" color="text.disabled" sx={{ maxWidth: 320 }}>
-                    Select your booking requirements on the left, then click &ldquo;Find Available
-                    Rooms&rdquo; to view matching rooms here.
+                    Select your booking requirements on the left, then click &ldquo;Find Rooms&rdquo; to
+                    view matching rooms here.
                   </Typography>
                 </Box>
               )}

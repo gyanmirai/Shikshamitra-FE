@@ -3,12 +3,13 @@
 import type React from 'react';
 import type { HRDashboardPreview, HRDashboardPreviewStatus } from 'src/redux/hr/hrDashboardApi';
 
-import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 
 type Props = {
-  title: string;
+  title?: string;
   subtitle?: string;
   preview?: HRDashboardPreview;
   isFetching?: boolean;
@@ -20,11 +21,9 @@ type Props = {
 
 const isRefreshRunning = (status?: HRDashboardPreviewStatus) => status === 'Refreshing';
 
-const formatRefreshTime = (value?: string | null) =>
-  value ? dayjs(value).format('DD MMM YYYY, hh:mm A') : 'Not refreshed yet';
+const formatRefreshTime = (value?: string | null) => fDateTime(value) || 'Not refreshed yet';
 
-const formatScheduleTime = (value?: string | null) =>
-  value ? dayjs(value).format('DD MMM, hh:mm A') : 'tomorrow morning';
+const formatScheduleTime = (value?: string | null) => fDateTime(value) || 'tomorrow morning';
 
 export const HrDashboardPreviewShell = ({
   title,
@@ -38,61 +37,117 @@ export const HrDashboardPreviewShell = ({
 }: Props) => {
   const refreshing = isRefreshRunning(preview?.status) || isRefreshing;
   const hasError = Boolean(preview?.lastError);
+  const heading = title || 'HR Dashboard';
+  const description =
+    subtitle || 'Monitor workforce health, daily attendance, leave actions, and payroll readiness.';
+  const breadcrumbLinks = title
+    ? [{ name: 'HR/Staff', href: '/hr/dashboard' }, { name: title }]
+    : [{ name: 'Dashboard', href: '/dashboard' }, { name: 'HR/Staff' }];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 2 }}>
+    <Box
+      data-testid="hr-dashboard-shell"
+      sx={{ display: 'flex', minWidth: 0, flexDirection: 'column', gap: 2, pb: 2 }}
+    >
+      <CustomBreadcrumbs
+        heading={heading}
+        headingComponent="h1"
+        layout={title ? 'inline' : 'stacked'}
+        description={description}
+        descriptionDisplay="visible"
+        links={breadcrumbLinks}
+        action={
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
+            {actions}
+            <Button
+              variant="text"
+              color="inherit"
+              onClick={onRefresh}
+              disabled={refreshing || isFetching}
+              startIcon={<Iconify icon="solar:refresh-linear" aria-hidden />}
+              aria-label={refreshing ? 'Refreshing HR dashboard' : 'Refresh HR dashboard'}
+              sx={{ minHeight: 44, px: 1.25, flexShrink: 0 }}
+            >
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </Button>
+          </Stack>
+        }
+        sx={{
+          px: 0,
+          minHeight: 0,
+          overflow: 'visible',
+          '@media (prefers-reduced-motion: reduce)': {
+            '& *, & *::before, & *::after': { transitionDuration: '0.01ms !important' },
+          },
+          '& .MuiBreadcrumbs-root a': {
+            minHeight: 44,
+            display: 'inline-flex',
+            alignItems: 'center',
+            '&:focus-visible': {
+              outline: '3px solid',
+              outlineColor: 'primary.main',
+              outlineOffset: 2,
+            },
+          },
+        }}
+      />
+
       <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        alignItems={{ xs: 'stretch', md: 'flex-start' }}
-        justifyContent="space-between"
-        spacing={1.25}
+        component="section"
+        aria-label="Dashboard freshness"
+        direction="row"
+        spacing={{ xs: 1, sm: 2 }}
+        useFlexGap
+        flexWrap="wrap"
+        alignItems="center"
+        sx={{
+          minHeight: 24,
+          color: 'text.secondary',
+          fontVariantNumeric: 'tabular-nums',
+        }}
       >
-        <Box>
-          <Typography variant="h4">{title}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {subtitle || 'Stored HR operations snapshot'}
-          </Typography>
+        <Stack direction="row" spacing={0.75} alignItems="center" aria-live="polite">
+          <Box
+            aria-hidden
+            sx={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              bgcolor: refreshing ? 'info.main' : 'success.main',
+              flexShrink: 0,
+            }}
+          />
           <Typography variant="caption" color="text.secondary">
-            Last refreshed:{' '}
-            {formatRefreshTime(preview?.lastSuccessfulRefreshAt || preview?.lastRefreshedAt)}
-            {preview?.nextScheduledRefreshAt
-              ? ` | Next scheduled: ${formatScheduleTime(preview.nextScheduledRefreshAt)}`
-              : ''}
+            {refreshing ? 'Refresh in progress' : 'Saved snapshot'}
           </Typography>
-        </Box>
-        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" justifyContent="flex-end">
-          {actions}
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={onRefresh}
-            disabled={refreshing || isFetching}
-            startIcon={<Iconify icon="solar:refresh-linear" />}
-            sx={{ minHeight: 34 }}
-          >
-            {refreshing ? 'Refreshing' : 'Refresh'}
-          </Button>
         </Stack>
+        <Typography variant="caption" color="text.secondary">
+          Last refreshed:{' '}
+          {formatRefreshTime(preview?.lastSuccessfulRefreshAt || preview?.lastRefreshedAt)}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Next refresh: {formatScheduleTime(preview?.nextScheduledRefreshAt)}
+        </Typography>
       </Stack>
 
-      {refreshing ? <LinearProgress /> : null}
+      {refreshing ? <LinearProgress aria-label="Refreshing HR dashboard" /> : null}
       {hasError ? <Alert severity="warning">{preview?.lastError}</Alert> : null}
       {preview?.isStale && preview?.status === 'Ready' ? (
         <Alert severity="info">
-          This snapshot is older than 24 hours. A fresh view is being prepared automatically; you
+          This snapshot is older than 24 hours. A fresh view is being prepared automatically. You
           can keep working with the saved data meanwhile.
         </Alert>
       ) : null}
       {preview?.status === 'Empty' ? (
         <Alert severity="info">
-          The first saved HR dashboard snapshot is being prepared automatically. Next scheduled
+          The first saved HR dashboard snapshot is being prepared automatically. The next scheduled
           refresh is around {formatScheduleTime(preview.nextScheduledRefreshAt)}.
         </Alert>
       ) : null}
       {preview?.status === 'Failed' ? (
         <Alert severity="error">
-          The last dashboard refresh failed. Try Refresh again; page loading will continue to use
-          only saved snapshot data.
+          The last dashboard refresh failed. Try Refresh again. The page will continue to use only
+          saved snapshot data.
         </Alert>
       ) : null}
 

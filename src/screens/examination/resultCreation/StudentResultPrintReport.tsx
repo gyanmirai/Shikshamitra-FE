@@ -13,11 +13,13 @@ import {
 export const STUDENT_RESULT_PRINT_PAGE_STYLE = `
   @page {
     size: A4 portrait;
-    margin: 12mm;
+    margin: 0;
   }
 
   @media print {
     html, body {
+      margin: 0 !important;
+      padding: 0 !important;
       background: #ffffff !important;
       print-color-adjust: exact;
       -webkit-print-color-adjust: exact;
@@ -106,61 +108,113 @@ const StudentResultPrintReport = React.forwardRef<HTMLDivElement, StudentResultP
       sx={{
         width: '100%',
         boxSizing: 'border-box',
-        bgcolor: 'common.white',
+        bgcolor: 'grey.50',
         color: 'common.black',
-        p: 0.5,
+        p: '12mm',
         fontFamily: 'Arial, sans-serif',
       }}
     >
       <Box
         sx={{
-          textAlign: 'center',
-          pb: 2,
+          bgcolor: '#D3FCD2',
+          color: '#173B2D',
+          px: 2.5,
+          py: 2,
           mb: 2,
-          borderBottom: '2px solid',
-          borderColor: 'grey.800',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
         }}
       >
-        {schoolName && (
-          <Typography variant="h5" sx={{ color: 'common.black', fontWeight: 800 }}>
-            {schoolName}
+        <Box>
+          <Typography
+            variant="overline"
+            sx={{ color: '#276749', letterSpacing: 1.1, lineHeight: 1.2 }}
+          >
+            Learner Passport · {valueOrDash(examName)}
           </Typography>
-        )}
-        <Typography variant="h6" sx={{ color: 'common.black', fontWeight: 800 }}>
-          Student Result
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'grey.700', fontWeight: 600 }}>
-          {valueOrDash(examName)}
-        </Typography>
+          <Typography variant="h5" sx={{ color: '#111827', fontWeight: 800 }}>
+            {valueOrDash(studentName)}
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1 }}>
+            {[
+              {
+                label: 'Class',
+                value: [className, divisionName].filter(Boolean).join(' – ') || '—',
+              },
+              { label: 'Gr. No.', value: valueOrDash(grNo) },
+              { label: 'Roll No.', value: valueOrDash(rollNo) },
+            ].map((item) => (
+              <Box
+                key={item.label}
+                sx={{
+                  minWidth: 64,
+                  pr: 1,
+                  mr: 0.25,
+                  borderRight: '1px solid rgba(23, 59, 45, 0.22)',
+                  '&:last-child': { borderRight: 'none' },
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{ display: 'block', color: '#276749', fontSize: 7, fontWeight: 700, lineHeight: 1.2 }}
+                >
+                  {item.label}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#173B2D', fontWeight: 700, lineHeight: 1.3 }}>
+                  {item.value}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+        <Box
+          sx={{
+            width: 58,
+            height: 58,
+            borderRadius: '50%',
+            border: '2px solid',
+            borderColor: status?.toUpperCase() === 'PASS' ? 'success.main' : 'error.main',
+            color: status?.toUpperCase() === 'PASS' ? 'success.main' : 'error.main',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Typography variant="subtitle1" fontWeight={800} lineHeight={1}>
+            {valueOrDash(percentage)}
+          </Typography>
+          <Typography variant="caption" sx={{ fontSize: 8, letterSpacing: 0.4 }}>
+            {status?.toUpperCase() === 'PASS' ? 'PASSED' : 'RESULT'}
+          </Typography>
+        </Box>
       </Box>
 
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 1.5,
-          p: 1.5,
           mb: 2,
+          bgcolor: 'common.white',
           border: '1px solid',
           borderColor: 'grey.400',
-          borderRadius: 1,
           breakInside: 'avoid',
           pageBreakInside: 'avoid',
         }}
       >
-        <Box sx={{ gridColumn: 'span 2' }}>
-          <Detail label="Student Name" value={studentName} />
-        </Box>
-        <Detail label="GR No." value={grNo} />
-        <Detail label="Roll No." value={rollNo} />
-        <Box sx={{ gridColumn: 'span 2' }}>
-          <Detail
-            label="Class & Division"
-            value={[className, divisionName].filter(Boolean).join(' - ')}
-          />
-        </Box>
-        <Detail label="Date of Birth" value={dateOfBirth} />
-        <Detail label="Attendance" value={attendancePercentage} />
+        {[
+          ['Marks', `${valueOrDash(obtainedMarks)} / ${valueOrDash(totalMarks)}`],
+          ['Grade', valueOrDash(grade)],
+          ['Class Rank', rank ? `${rank} of ${valueOrDash(totalStudentsInClass)}` : '—'],
+          ['Attendance', valueOrDash(attendancePercentage)],
+        ].map(([label, value], index) => (
+          <Box key={label} sx={{ p: 1.5, borderRight: index < 3 ? '1px solid' : 'none', borderColor: 'grey.400' }}>
+            <Detail label={label} value={value} />
+          </Box>
+        ))}
       </Box>
 
       <Box

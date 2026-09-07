@@ -1,4 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
+import type { RootState } from 'src/redux/store';
+import { useSelector } from 'react-redux';
 import PercentIcon from '@mui/icons-material/Percent';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -102,14 +104,21 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
 };
 
 const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
+	const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: assignedStructureData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
-    params: { studentId: values.studentId },
-    options: { skip: !values.studentId },
+		params: { studentId: values.studentId, academicYearId: currentYear?.id },
+		options: { skip: !values.studentId || !currentYear?.id },
   });
 
   const selectedFeeHeadIds: string[] = values.selectedFeeHeads[concessionType.id] || [];
+  const isPolicyFixed = assignedStructureData?.concessionValueSource === 'PolicyFixed';
+	const calculationMethod = assignedStructureData?.concessionCalculationMethod;
+	const permittedBasedOn = calculationMethod === 'Percentage' ? 1 : 0;
+	const maximumValue = calculationMethod === 'Percentage'
+		? assignedStructureData?.maximumConcessionPercentage
+		: assignedStructureData?.maximumConcessionFixedAmount;
 
   // We need to match IDs to names and amounts
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,18 +132,34 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
     if (selectedFeeHeads.length > 0) {
       const updates: any = {};
       let hasUpdates = false;
+      const selectedBaseTotal = selectedFeeHeads.reduce(
+        (sum: number, feeHead: any) => sum + (feeHead.amount || 0), 0
+      );
 
       selectedFeeHeads.forEach((fh: any) => {
         const fhId = fh.feeHeadId;
         const existingEntry = values.valueEntries[concessionType.id]?.[fhId];
+        const baseAmount = fh.amount || 0;
 
         // If entry is missing OR netAmount is missing (for existing entries from prev steps that might be incomplete)
-        if (!existingEntry || existingEntry.netAmount === undefined) {
-          const baseAmount = fh.amount || 0;
+        if (isPolicyFixed) {
+          const method = assignedStructureData?.concessionCalculationMethod;
+          const basedOn = method === 'FixedAmount' ? 0 : 1;
+          const amount = method === 'Percentage'
+            ? assignedStructureData?.concessionPercentageValue || 0
+            : method === 'FullWaiver'
+              ? 100
+              : selectedBaseTotal > 0
+                ? ((assignedStructureData?.concessionFixedAmount || 0) * baseAmount) / selectedBaseTotal
+                : 0;
+          const discount = basedOn === 1 ? (baseAmount * amount) / 100 : amount;
+          updates[fhId] = { basedOn, amount, netAmount: Math.max(0, baseAmount - discount) };
+          hasUpdates ||= !existingEntry || existingEntry.basedOn !== basedOn || existingEntry.amount !== amount;
+		} else if (!existingEntry || existingEntry.netAmount === undefined || existingEntry.basedOn !== permittedBasedOn) {
           // Default: 0 discount, so netAmount = baseAmount
           // If existing entry has amount, calculate net based on it (though usually it's 0 if uninitialized)
-          const currentAmount = existingEntry?.amount || 0;
-          const isPercentage = existingEntry?.basedOn === 1;
+			const currentAmount = existingEntry?.basedOn === permittedBasedOn ? existingEntry?.amount || 0 : 0;
+			const isPercentage = permittedBasedOn === 1;
 
           let discount = 0;
           if (isPercentage) {
@@ -145,8 +170,8 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
           const netAmount = baseAmount - discount;
 
           updates[fhId] = {
-            basedOn: existingEntry?.basedOn ?? 0,
-            amount: existingEntry?.amount ?? 0,
+				basedOn: permittedBasedOn,
+				amount: currentAmount,
             netAmount: Number(netAmount.toFixed(2)),
           };
           hasUpdates = true;
@@ -157,7 +182,11 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
         setEntry(concessionType.id, 'BATCH_UPDATE', 'amount', updates);
       }
     }
-  }, [selectedFeeHeads, concessionType.id, values.valueEntries, setEntry]); // heavily dependent on values, might cause loops if not careful.
+  }, [selectedFeeHeads, concessionType.id, values.valueEntries, setEntry, isPolicyFixed,
+    permittedBasedOn,
+    assignedStructureData?.concessionCalculationMethod,
+    assignedStructureData?.concessionPercentageValue,
+    assignedStructureData?.concessionFixedAmount]);
   // Better to check if update is needed inside to avoid loop. The check `!existingEntry || existingEntry.netAmount === undefined` protects against loop if we set it correctly.
 
   if (selectedFeeHeads.length === 0) return null;
@@ -188,13 +217,21 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
       </Box>
 
       <CardContent sx={{ p: 1 }}>
+        {isPolicyFixed && (
+          <Box sx={{ px: 1, pb: 1 }}>
+            <Typography variant="caption" color="info.main">
+              Values are calculated automatically by {assignedStructureData?.concessionPolicyName}
+              {' '}v{assignedStructureData?.concessionPolicyVersion} and cannot be edited.
+            </Typography>
+          </Box>
+        )}
         {selectedFeeHeads.map((fh: any, index: number) => {
           const fhId = fh.feeHeadId;
           const entry = values.valueEntries[concessionType.id]?.[fhId] || {
             basedOn: 0,
             amount: 0,
           };
-          const isPercentage = entry.basedOn === 1;
+		  const isPercentage = permittedBasedOn === 1;
 
           // Calculations
           const baseAmount = fh.amount || 0;
@@ -232,6 +269,7 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
                     {isPercentage ? (
                       /* ---- Percentage mode: plain number 0-100 ---- */
                       <TextField
+                        disabled={isPolicyFixed}
                         size="small"
                         fullWidth
                         type="number"
@@ -243,7 +281,7 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
                             return;
                           }
                           const numVal = parseFloat(val);
-                          if (numVal < 0 || numVal > 100) return;
+						  if (numVal < 0 || numVal > Math.min(100, maximumValue ?? 100)) return;
                           const newDiscount = (baseAmount * numVal) / 100;
                           setEntry(
                             concessionType.id,
@@ -253,17 +291,12 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
                             baseAmount - newDiscount
                           );
                         }}
-                        inputProps={{ min: 0, max: 100, step: 'any' }}
+						inputProps={{ min: 0, max: Math.min(100, maximumValue ?? 100), step: 'any' }}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                              <Tooltip title="Switch to Amount (₹)">
-                                <IconButton
-                                  size="small"
-                                  onClick={() =>
-                                    setEntry(concessionType.id, fhId, 'basedOn', 0, baseAmount)
-                                  }
-                                >
+							<Tooltip title="Percentage is required by the assigned policy">
+							  <IconButton disabled size="small">
                                   <PercentIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
@@ -275,13 +308,14 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
                     ) : (
                       /* ---- Rupee mode: formatted with ₹ and commas ---- */
                       <NumericFormatCustom
+                        disabled={isPolicyFixed}
                         size="small"
                         fullWidth
                         placeholder="0"
                         value={entry.amount === 0 ? '' : entry.amount}
                         isAllowed={(vals) => {
                           const { floatValue } = vals;
-                          return floatValue === undefined || floatValue <= baseAmount;
+						  return floatValue === undefined || floatValue <= Math.min(baseAmount, maximumValue ?? baseAmount);
                         }}
                         onValueChange={(vals) => {
                           const numVal = vals.floatValue ?? 0;
@@ -293,13 +327,8 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                              <Tooltip title="Switch to Percentage (%)">
-                                <IconButton
-                                  size="small"
-                                  onClick={() =>
-                                    setEntry(concessionType.id, fhId, 'basedOn', 1, baseAmount)
-                                  }
-                                >
+							<Tooltip title="Fixed amount is required by the assigned policy">
+							  <IconButton disabled size="small">
                                   <CurrencyRupeeIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>

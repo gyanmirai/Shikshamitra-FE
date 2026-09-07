@@ -1,60 +1,11 @@
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Paper, Skeleton, Typography } from '@mui/material';
+import { Box, Grid, Paper, Stack, Skeleton, ButtonBase, Typography } from '@mui/material';
+
+import SeatingPlanSummaryChips from './SeatingPlanSummaryChips';
+import { SEATING_PLAN_SUMMARIES } from './seating-plan-summary-config';
 
 import type { SeatingPlanListRow } from '../../types';
-
-interface SummaryCardDef {
-  key: string;
-  label: string;
-  icon: string;
-  color: string;
-  count: (rows: SeatingPlanListRow[]) => number;
-}
-
-const CARD_DEFS: SummaryCardDef[] = [
-  {
-    key: 'requiring-seating',
-    label: 'Exams Requiring Seating',
-    icon: 'mdi:clipboard-list-outline',
-    color: 'text.primary',
-    count: (rows) => rows.filter((r) => r.status !== 'published').length,
-  },
-  {
-    key: 'in-progress',
-    label: 'Allocation In Progress',
-    icon: 'mdi:progress-clock',
-    color: 'info.main',
-    count: (rows) => rows.filter((r) => r.status === 'in-progress').length,
-  },
-  {
-    key: 'ready-for-review',
-    label: 'Ready for Review',
-    icon: 'mdi:clipboard-check-outline',
-    color: 'warning.main',
-    count: (rows) => rows.filter((r) => r.status === 'ready').length,
-  },
-  {
-    key: 'fully-allocated',
-    label: 'Fully Allocated',
-    icon: 'mdi:check-decagram-outline',
-    color: 'success.main',
-    count: (rows) => rows.filter((r) => r.status === 'completed' || r.status === 'published').length,
-  },
-  {
-    key: 'capacity-issues',
-    label: 'Capacity Issues',
-    icon: 'mdi:alert-octagon-outline',
-    color: 'error.main',
-    count: (rows) => rows.filter((r) => r.capacityStatus === 'shortage').length,
-  },
-  {
-    key: 'published',
-    label: 'Published Plans',
-    icon: 'mdi:send-check-outline',
-    color: 'success.dark',
-    count: (rows) => rows.filter((r) => r.status === 'published').length,
-  },
-];
 
 interface Props {
   rows: SeatingPlanListRow[];
@@ -63,44 +14,86 @@ interface Props {
   onFilterClick?: (key: string) => void;
 }
 
-export default function SeatingPlanSummaryCards({ rows, isLoading, activeFilter, onFilterClick }: Props) {
+export default function SeatingPlanSummaryCards({
+  rows,
+  isLoading,
+  activeFilter,
+  onFilterClick,
+}: Props) {
   return (
-    <Grid container spacing={1} sx={{ mb: 1.5 }}>
-      {CARD_DEFS.map((cardDef) => (
-        <Grid key={cardDef.key} size={{ xs: 6, sm: 4, md: 2 }}>
-          <Paper
-            onClick={() => onFilterClick?.(cardDef.key)}
-            elevation={0}
-            sx={{
-              p: 1.25,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: activeFilter === cardDef.key ? 'primary.main' : 'divider',
-              cursor: onFilterClick ? 'pointer' : 'default',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 0.5,
-              height: '100%',
-              transition: 'border-color 0.15s',
-              '&:hover': onFilterClick ? { borderColor: 'primary.main' } : undefined,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Iconify icon={cardDef.icon} width={16} sx={{ color: cardDef.color }} />
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {cardDef.label}
-              </Typography>
-            </Box>
-            {isLoading ? (
-              <Skeleton variant="text" width={36} height={28} />
-            ) : (
-              <Typography variant="h6" fontWeight={700} sx={{ color: cardDef.color }}>
-                {cardDef.count(rows)}
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-      ))}
-    </Grid>
+    <>
+      <SeatingPlanSummaryChips
+        rows={rows}
+        isLoading={isLoading}
+        activeFilter={activeFilter}
+        onFilterClick={onFilterClick}
+      />
+      <Grid container spacing={1} sx={{ mb: 1.5, display: { xs: 'none', sm: 'flex' } }}>
+        {SEATING_PLAN_SUMMARIES.map((cardDef) => (
+          <Grid key={cardDef.key} size={{ xs: 6, sm: 4, md: 2 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                minHeight: 66,
+                borderRadius: 1.5,
+                border: '1px solid',
+                borderColor: activeFilter === cardDef.key ? `${cardDef.color}.main` : 'divider',
+                boxShadow:
+                  activeFilter === cardDef.key
+                    ? (theme) => `0 0 0 1px ${theme.palette[cardDef.color].main}`
+                    : 'none',
+                transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
+                '&:hover': onFilterClick
+                  ? { borderColor: `${cardDef.color}.main`, transform: 'translateY(-1px)' }
+                  : undefined,
+              }}
+            >
+              <ButtonBase
+                disabled={!onFilterClick}
+                aria-pressed={activeFilter === cardDef.key}
+                onClick={() => onFilterClick?.(cardDef.key)}
+                sx={{ width: 1, minHeight: 66, p: 1.5, justifyContent: 'flex-start' }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.25,
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: (theme) =>
+                        varAlpha(theme.vars.palette[cardDef.color].mainChannel, 0.12),
+                      color: `${cardDef.color}.main`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Iconify icon={cardDef.icon} width={20} />
+                  </Box>
+                  <Box sx={{ minWidth: 0, textAlign: 'left' }}>
+                    {isLoading ? (
+                      <Skeleton variant="text" width={36} height={24} />
+                    ) : (
+                      <Typography variant="h5" fontWeight={700} lineHeight={1}>
+                        {cardDef.count(rows)}
+                      </Typography>
+                    )}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      display="block"
+                      mt={0.5}
+                    >
+                      {cardDef.label}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </ButtonBase>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+    </>
   );
 }

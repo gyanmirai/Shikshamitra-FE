@@ -113,7 +113,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
       const payload = {
         feeCategoryId: values.feeCategoryId,
         name: values.name,
-        module: values.module,
+        module: values.module === '' ? null : values.module,
         isConcessionApplied: values.isConcessionApplied,
         description: values.description || '',
         incomeHeadId: values.incomeHeadId || undefined,
@@ -212,9 +212,9 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
             <ShakingTextField error={!!(formik.touched.module && formik.errors.module) || false}>
               <CustomSelect
                 name="module"
-                label="Module *"
+                label="Module"
                 options={moduleOptions}
-                value={formik.values.module || ''}
+                value={formik.values.module ?? ''}
                 labelKey="label"
                 valueKey="value"
                 onChange={(value) => {

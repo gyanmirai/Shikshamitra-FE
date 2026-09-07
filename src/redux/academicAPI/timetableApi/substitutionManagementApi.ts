@@ -32,6 +32,7 @@ export type ApiSubstitutionRow = {
   isAiSuggested: boolean;
   workloadStatus: string;
   acknowledgementRequired: boolean;
+  isResponseWindowOpen?: boolean;
   createdAt: string;
   acknowledgedAt?: string | null;
   completedAt?: string | null;
@@ -270,6 +271,17 @@ export type CreateTeacherAvailabilityPayload = {
   remarks?: string;
 };
 
+export const substitutionCreateInvalidationTags = [
+  academicType.substitutionList,
+  academicType.substitutionDashboard,
+  academicType.substitutionDuties,
+  academicType.substitutionAvailability,
+  academicType.substitutionDailySheet,
+  academicType.substitutionAnalytics,
+] as const;
+
+export const substitutionStatusInvalidationTags = substitutionCreateInvalidationTags;
+
 export const substitutionManagementApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getSubstitutions: builder.query<ApiPagedResult<ApiSubstitutionRow>, QueryParams>({
@@ -278,7 +290,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionList],
     }),
     getMySubstitutionDuties: builder.query<ApiPagedResult<ApiSubstitutionRow>, QueryParams>({
       query: (params) => ({
@@ -286,7 +298,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionDuties],
     }),
     getSubstitutionDashboard: builder.query<ApiSubstitutionDashboard, QueryParams>({
       query: (params) => ({
@@ -294,7 +306,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionDashboard],
     }),
     getSubstitutionCreateMetadata: builder.query<ApiSubstitutionCreateMetadata, QueryParams | void>(
       {
@@ -303,7 +315,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
           method: 'GET',
           params: params ?? undefined,
         }),
-        providesTags: [academicType.substitutionManagement],
+        providesTags: [academicType.substitutionCreateMetadata],
       }
     ),
     getSubstitutionLectures: builder.query<ApiSubstitutionLecture[], QueryParams>({
@@ -312,7 +324,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionLectures],
     }),
     createSubstitution: builder.mutation<ApiSubstitutionRow, CreateSubstitutionPayload>({
       query: (body) => ({
@@ -320,7 +332,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.substitutionManagement],
+      invalidatesTags: substitutionCreateInvalidationTags,
     }),
     assignSubstitute: builder.mutation<ApiSubstitutionRow, AssignSubstitutePayload>({
       query: ({ id, ...body }) => ({
@@ -328,21 +340,21 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.substitutionManagement],
+      invalidatesTags: substitutionStatusInvalidationTags,
     }),
     sendSubstitutionReminder: builder.mutation<ApiSubstitutionRow, string>({
       query: (id) => ({
         url: `academics/timetable/substitutions/${id}/send-reminder`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.substitutionManagement],
+      invalidatesTags: [academicType.substitutionList, academicType.substitutionDuties],
     }),
     completeSubstitution: builder.mutation<ApiSubstitutionRow, string>({
       query: (id) => ({
         url: `academics/timetable/substitutions/${id}/complete`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.substitutionManagement],
+      invalidatesTags: substitutionStatusInvalidationTags,
     }),
     cancelSubstitution: builder.mutation<ApiSubstitutionRow, { id: string; reason?: string }>({
       query: ({ id, reason }) => ({
@@ -350,7 +362,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'POST',
         body: { reason },
       }),
-      invalidatesTags: [academicType.substitutionManagement],
+      invalidatesTags: substitutionStatusInvalidationTags,
     }),
     // Teacher duty mutations are invalidated deliberately by the owning dialog after it
     // closes. Endpoint-level invalidation would refetch subscribed tables while the dialog
@@ -383,7 +395,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         url: `academics/timetable/substitutions/${id}/suggested-teachers`,
         method: 'GET',
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionSuggestions],
     }),
     getSuggestedTeachersByContext: builder.query<ApiSuggestedTeacher[], QueryParams>({
       query: (params) => ({
@@ -391,7 +403,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionSuggestions],
     }),
     getTeacherAvailability: builder.query<ApiPagedResult<ApiTeacherAvailabilityRow>, QueryParams>({
       query: (params) => ({
@@ -399,7 +411,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionAvailability],
     }),
     createTeacherAvailability: builder.mutation<
       ApiTeacherAvailabilityRow,
@@ -410,7 +422,11 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.substitutionManagement],
+      invalidatesTags: [
+        academicType.substitutionAvailability,
+        academicType.substitutionDashboard,
+        academicType.substitutionAffectedLectures,
+      ],
     }),
     getAffectedLectures: builder.query<ApiAffectedLectureResult, QueryParams>({
       query: (params) => ({
@@ -418,7 +434,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionAffectedLectures],
     }),
     getDailySheet: builder.query<ApiDailySheet, QueryParams>({
       query: (params) => ({
@@ -426,7 +442,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionDailySheet],
     }),
     getDailySheetPdf: builder.query<Blob, QueryParams>({
       query: (params) => ({
@@ -450,7 +466,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [academicType.substitutionManagement],
+      providesTags: [academicType.substitutionAnalytics],
     }),
   }),
 });

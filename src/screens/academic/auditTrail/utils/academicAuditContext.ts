@@ -35,7 +35,11 @@ const formatLabel = (key: string): string => {
 const formatValue = (value: unknown): string => {
   if (value === null || value === undefined || value === '') return '-';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  if (isGuid(value)) return `ID: ${shortenGuid(value)}`;
+  if (isGuid(value)) return '-';
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+    const date = dayjs(value);
+    if (date.isValid()) return date.format('DD-MM-YYYY, hh:mm A');
+  }
   if (Array.isArray(value)) return value.map((item) => formatValue(item)).join(', ');
   if (typeof value === 'object') return '-';
   return String(value);
@@ -82,7 +86,15 @@ export const parseAcademicAuditContext = (
 
   try {
     const parsed: unknown = parseNestedJson(JSON.parse(contextJson));
-    const allEntries = flattenContext(parsed).filter(([key]) => Boolean(key));
+    // Calendar audit snapshots include the complete before/after entity JSON. Those values
+    // belong in Changed Fields; only request metadata belongs in this technical section.
+    const context =
+      typeof parsed === 'object' && parsed !== null && 'metadata' in parsed
+        ? (parsed as { metadata: unknown }).metadata
+        : parsed;
+    const allEntries = flattenContext(context).filter(([key, value]) =>
+      Boolean(key) && !/(^|\.)(tenant|id|.*id|concurrencystamp)$/i.test(key) && !isGuid(value)
+    );
     const entries = hasReadableEducationMediumName(allEntries)
       ? allEntries.filter(([key]) => !/educationMediumId$/i.test(key))
       : allEntries;
@@ -91,8 +103,9 @@ export const parseAcademicAuditContext = (
       key,
       label: formatLabel(key.split('.').at(-1) ?? key),
       value: formatValue(value),
-    }));
+    })).filter((entry) => entry.value !== '-');
   } catch {
     return [];
   }
 };
+import dayjs from 'dayjs';

@@ -22,7 +22,7 @@ import {
   DialogActions,
 } from '@mui/material';
 
-import type { ISubject } from './type';
+import { getSubjectIcon, type ISubject } from './type';
 
 // ----------------------------------------------------------------------
 
@@ -194,7 +194,8 @@ export default function SubjectUsageDrawer({
   const [showAllElectives, setShowAllElectives] = useState(false);
 
   const statusLabel = getStatusLabel(selectedSubject?.status);
-  const subjectColor = selectedSubject?.color || theme.palette.primary.main;
+  const subjectColor =
+    selectedSubject?.color || (selectedSubject as any)?.subjectColor || theme.palette.primary.main;
 
   const rawAllocations =
     usageData?.usage?.subjectAllocations ||
@@ -341,11 +342,17 @@ export default function SubjectUsageDrawer({
               fontWeight: 700,
             }}
           >
-            <Iconify
-              icon={selectedSubject?.icon || 'solar:book-bookmark-bold'}
-              width={22}
-              height={22}
-            />
+            {selectedSubject?.icon ? (
+              <Iconify
+                icon={getSubjectIcon(selectedSubject.icon)}
+                width={22}
+                height={22}
+              />
+            ) : selectedSubject?.name ? (
+              selectedSubject.name.slice(0, 2).toUpperCase()
+            ) : (
+              <Iconify icon="lucide:book-open" width={22} height={22} />
+            )}
           </Avatar>
 
           <Box sx={{ minWidth: 0, flex: 1 }}>

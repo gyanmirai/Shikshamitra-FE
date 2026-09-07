@@ -8,7 +8,6 @@ import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
-import { useUploadConcessionDocumentsMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
   Stack,
@@ -18,7 +17,16 @@ import {
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  useUploadConcessionDocumentsMutation,
+  useUploadConcessionDocumentFileMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
+
+import {
+  getFileAccept,
+  getDocumentConstraintText,
+  validateConcessionDocumentFile,
+} from './concessionDocumentUpload';
 
 export interface IConcessionSubmittedDocument {
   documentId: string;
@@ -54,9 +62,9 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
     { skip: !open || !concessionId }
   );
 
-  const [uploadCurriculumFile, { isLoading: isUploading }] = useQueryAndMutation({
+  const [uploadConcessionDocumentFile, { isLoading: isUploading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUploadCurriculumFileMutation,
+    currentQueryAndMutation: useUploadConcessionDocumentFileMutation,
   });
 
   const [saveDocuments, { isLoading: isSaving }] = useQueryAndMutation({
@@ -86,13 +94,24 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
     const file = event.target.files?.[0];
     if (!file || !uploadingDocId) return;
 
-    const formData = new FormData();
-    formData.append('FileName', file.name);
-    formData.append('File', file);
+    const documents = concessionDetails?.data?.documents || concessionDetails?.documents || [];
+    const document = documents.find(
+      (item: any) => (item.id || item.documentId) === uploadingDocId
+    );
+    const validationError = validateConcessionDocumentFile(file, document);
+    if (validationError) {
+      shikshaMitraToast.error({ message: validationError });
+      setUploadingDocId(null);
+      return;
+    }
 
     try {
-      const response = await uploadCurriculumFile(formData).unwrap();
-      const uploadedUrl = response.data;
+      const response = await uploadConcessionDocumentFile({
+        concessionTypeId: concessionId,
+        documentId: uploadingDocId,
+        file,
+      }).unwrap();
+      const uploadedUrl = response?.data?.url || response?.url;
 
       setLocalDocs((prev) => {
         const existing = prev.find((d) => d.documentId === uploadingDocId);
@@ -101,7 +120,7 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
             d.documentId === uploadingDocId ? { ...d, url: uploadedUrl, status: 1 } : d
           );
         }
-        const docInfo = concessionDetails?.documents?.find(
+        const docInfo = documents.find(
           (d: any) => (d.id || d.documentId) === uploadingDocId
         );
         return [
@@ -126,32 +145,30 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
 
   const handleSubmit = async () => {
     try {
-      const payloadDocs = (concessionDetails?.documents || []).map((d: any) => {
-        const docId = d.id || d.documentId;
-        const local = localDocs.find((ld) => ld.documentId === docId);
-        return {
-          documentId: docId,
-          url: local?.url || '',
-          status: local?.url ? (typeof local.status === 'number' ? local.status : 1) : 0,
-        };
-      });
+      const documents = concessionDetails?.data?.documents || concessionDetails?.documents || [];
+      const payloadDocs = documents
+        .map((d: any) => {
+          const docId = d.id || d.documentId;
+          const local = localDocs.find((ld) => ld.documentId === docId);
+          return {
+            documentId: docId,
+            url: local?.url || '',
+            status: 1,
+          };
+        })
+        .filter((document: any) => Boolean(document.url));
 
       if (studentConcessionRequestId) {
         await saveDocuments({
           concessionRequestId: studentConcessionRequestId,
-          concessionTypeDocuments: [
-            {
-              concessionTypeId: concessionId,
-              documents: payloadDocs,
-            },
-          ],
+          documents: payloadDocs,
         }).unwrap();
         shikshaMitraToast.success({ message: 'Documents submitted successfully' });
       }
 
       if (onSave) {
         // Prepare IConcessionSubmittedDocument[] for Formik
-        const nextSubmittedDocs = (concessionDetails?.documents || []).map((d: any) => {
+        const nextSubmittedDocs = documents.map((d: any) => {
           const docId = d.id || d.documentId;
           const local = localDocs.find((ld) => ld.documentId === docId);
           return {
@@ -188,7 +205,11 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
         ref={fileInputRef}
         style={{ display: 'none' }}
         onChange={handleFileChange}
-        accept="image/*,.pdf"
+        accept={getFileAccept(
+          (concessionDetails?.data?.documents || concessionDetails?.documents || []).find(
+            (doc: any) => (doc.id || doc.documentId) === uploadingDocId
+          )
+        )}
       />
       <Box sx={{ p: 2, minHeight: 150 }}>
         {isLoading ? (
@@ -197,10 +218,11 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
           </Box>
         ) : (
           <Stack spacing={1.5}>
-            {(concessionDetails?.documents || []).map((doc: any) => {
-              const docId = doc.id || doc.documentId;
-              const submitted = localDocs.find((d) => d.documentId === docId);
-              return (
+            {(concessionDetails?.data?.documents || concessionDetails?.documents || []).map(
+              (doc: any) => {
+                const docId = doc.id || doc.documentId;
+                const submitted = localDocs.find((d) => d.documentId === docId);
+                return (
                 <Box
                   key={docId}
                   sx={{
@@ -215,6 +237,9 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
                     <Box>
                       <Typography variant="subtitle2" fontWeight={700}>
                         {doc.documentName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        {getDocumentConstraintText(doc)}
                       </Typography>
                       {submitted?.url ? (
                         <Box display="flex" alignItems="center" gap={1} mt={0.5}>
@@ -262,9 +287,11 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
                     </Box>
                   </Box>
                 </Box>
-              );
-            })}
-            {(!concessionDetails?.documents || concessionDetails.documents.length === 0) && (
+                );
+              }
+            )}
+            {(concessionDetails?.data?.documents || concessionDetails?.documents || []).length ===
+              0 && (
               <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
                 No documents required for this concession.
               </Typography>

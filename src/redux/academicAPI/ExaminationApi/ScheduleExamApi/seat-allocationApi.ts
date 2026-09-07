@@ -7,12 +7,14 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // Get Seat Layout (Drag & Drop)
     // GET /api/academics/exams/{examId}/seat-layout
     getSeatLayout: builder.query({
-      query: ({ examId, divisionId, roomId, seatingPlanId }) => ({
+      query: ({ examId, divisionId, roomId, seatingPlanId, page = 1, pageSize = 1000 }) => ({
         url: `/academics/exams/${examId}/seat-layout`,
         method: 'GET',
         params: {
           DivisionId: divisionId,
           RoomId: roomId,
+          Page: page,
+          PageSize: pageSize,
           ...(seatingPlanId ? { SeatingPlanId: seatingPlanId } : {}),
         },
       }),
@@ -65,12 +67,21 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // Get Students for Seating Plan (per division)
     // GET /api/academics/exams/{examId}/seat-allocation/divisions/{divisionId}/students → SeatStudentPagedResponseDto
     getSeatAllocationStudents: builder.query({
-      query: ({ examId, divisionId, standardId, seatingPlanId }) => ({
+      query: ({
+        examId,
+        divisionId,
+        standardId,
+        seatingPlanId,
+        page = 1,
+        pageSize = 1000,
+      }) => ({
         url: `/academics/exams/${examId}/seat-allocation/divisions/${divisionId}/students`,
         method: 'GET',
         params: {
           ...(standardId ? { StandardId: standardId } : {}),
           ...(seatingPlanId ? { SeatingPlanId: seatingPlanId } : {}),
+          Page: page,
+          PageSize: pageSize,
         },
       }),
       providesTags: [academicType.seatAllocation],
@@ -236,11 +247,13 @@ export const seatAllocationApi = academicApi.injectEndpoints({
 
 export const {
   useGetSeatLayoutQuery,
+  useLazyGetSeatLayoutQuery,
   useSaveSeatAllocationMutation,
   useGetExamDivisionsQuery,
   useGetExamRoomsQuery,
   useGetSeatAllocationTableDataQuery,
   useGetSeatAllocationStudentsQuery,
+  useLazyGetSeatAllocationStudentsQuery,
   useGetSeatingPlanScopesQuery,
   useSaveSeatingPlanScopeMutation,
   useGetSeatingPlanDraftQuery,

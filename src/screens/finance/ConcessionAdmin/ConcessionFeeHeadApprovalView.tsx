@@ -32,8 +32,8 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  useCancelConcessionRequestMutation,
   useApproveConcessionRequestMutation,
+  useReverseConcessionRequestMutation,
   useGetConcessionApprovalContextQuery,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
@@ -84,7 +84,7 @@ const getValidationToastMessage = (errors: unknown): string => {
 const distributeMonthConcession = (totalConcession: number, selectedMonthCount: number): number =>
   calculatePerLineConcession(totalConcession, selectedMonthCount);
 
-const mapApprovalContextToGroups = (ctx: any): IConcessionFeeHeadWiseGroup[] => {
+const mapApprovalContextToGroups = (ctx: any, isReverse: boolean): IConcessionFeeHeadWiseGroup[] => {
   if (!ctx?.feeHeadGroups?.length) return [];
   return ctx.feeHeadGroups.map((g: any) => ({
     feeHeadId: g.feeHeadId,
@@ -92,16 +92,25 @@ const mapApprovalContextToGroups = (ctx: any): IConcessionFeeHeadWiseGroup[] => 
     months: g.dueFeeLines?.length ?? 0,
     totalDue:
       g.dueFeeLines?.reduce((sum: number, l: any) => sum + Number(l.outstandingAmount), 0) ?? 0,
-    concessionAmount: Number(g.requestedConcessionAmount),
+    concessionAmount: isReverse
+      ? (g.dueFeeLines ?? []).reduce(
+          (sum: number, line: any) => sum + Number(line.reversibleConcessionAmount ?? 0),
+          0
+        )
+      : Number(g.requestedConcessionAmount),
     isConcessionApply: g.dueFeeLines?.some((l: any) => l.isSelectable) ?? false,
     items: (g.dueFeeLines ?? []).map((l: any) => ({
       dueFeeId: l.dueFeeId,
+      concessionDueFeeAllocationId: l.concessionDueFeeAllocationId,
       month: l.monthLabel || String(l.month),
       year: Number(l.year),
       total: Number(l.originalAmount),
       paid: Number(l.paidAmount),
       due: Number(l.outstandingAmount),
       concessionAmount: 0,
+      appliedConcessionAmount: Number(l.appliedConcessionAmount ?? 0),
+      reversedConcessionAmount: Number(l.reversedConcessionAmount ?? 0),
+      reversibleConcessionAmount: Number(l.reversibleConcessionAmount ?? 0),
       status: FeeCollectionStatusType.Pending,
       isSelectable: l.isSelectable,
     })),
@@ -350,6 +359,7 @@ interface FeeHeadGroupProps {
   selectedDueFeeIds: string[];
   onToggleDueFee: (dueFeeId: string) => void;
   onToggleAll: () => void;
+  isReverse: boolean;
 }
 
 const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
@@ -357,13 +367,22 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   selectedDueFeeIds,
   onToggleDueFee,
   onToggleAll,
+  isReverse,
 }) => {
   const [open, setOpen] = useState(true);
   const theme = useTheme();
 
   const allocations = useMemo(
-    () => distributeConcessionAcrossDueFees(selectedDueFeeIds, group.concessionAmount),
-    [selectedDueFeeIds, group.concessionAmount]
+    () =>
+      isReverse
+        ? group.items
+            .filter((item) => selectedDueFeeIds.includes(item.dueFeeId))
+            .map((item) => ({
+              dueFeeId: item.dueFeeId,
+              concessionAmount: item.reversibleConcessionAmount ?? 0,
+            }))
+        : distributeConcessionAcrossDueFees(selectedDueFeeIds, group.concessionAmount),
+    [group.concessionAmount, group.items, isReverse, selectedDueFeeIds]
   );
 
   return (
@@ -478,9 +497,9 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
     currentQueryAndMutation: useApproveConcessionRequestMutation,
   });
 
-  const [cancelConcession, { isLoading: isCancelling }] = useQueryAndMutation({
+  const [reverseConcession, { isLoading: isReversing }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useCancelConcessionRequestMutation,
+    currentQueryAndMutation: useReverseConcessionRequestMutation,
   });
 
   const requestId = selectedItem.studentConcessionTypeRequestId || selectedItem.id || '';
@@ -497,8 +516,8 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
   }) as { data: any; isLoading: boolean; isFetching: boolean };
 
   const groups = useMemo(
-    () => mapApprovalContextToGroups(approvalContext?.data ?? approvalContext),
-    [approvalContext]
+    () => mapApprovalContextToGroups(approvalContext?.data ?? approvalContext, !isApprove),
+    [approvalContext, isApprove]
   );
 
   const isLoading = isFetchingFeeHeads || isFetching;
@@ -508,7 +527,12 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
   const validationSchema = useMemo(
     () =>
       Yup.object({
-        description: Yup.string().trim().required('Description / Reason is required'),
+        description: Yup.string()
+          .trim()
+          .required('Description / Reason is required')
+          .test('reversal-reason-length', 'Reversal reason must be at least 10 characters', (value) =>
+            isApprove || (value?.length ?? 0) >= 10
+          ),
         feeHeads: Yup.array()
           .of(
             Yup.object({
@@ -598,11 +622,28 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             body: { message: values.description, feeHeadApprovals },
           }).unwrap();
         } else {
-          await cancelConcession(requestId).unwrap();
+          const lines = selectedFeeHeads.flatMap((feeHead) => {
+            const group = groups.find((candidate) => candidate.feeHeadId === feeHead.feeHeadId);
+            return (group?.items ?? [])
+              .filter(
+                (item) =>
+                  feeHead.selectedDueFeeIds.includes(item.dueFeeId) &&
+                  item.concessionDueFeeAllocationId &&
+                  (item.reversibleConcessionAmount ?? 0) > 0
+              )
+              .map((item) => ({
+                concessionDueFeeAllocationId: item.concessionDueFeeAllocationId,
+                amount: item.reversibleConcessionAmount,
+              }));
+          });
+          await reverseConcession({
+            concessionRequestId: requestId,
+            body: { reason: values.description, lines },
+          }).unwrap();
         }
 
         shikshaMitraToast.success({
-          message: `Concession ${isApprove ? 'approved' : 'cancelled'} successfully.`,
+          message: `Concession ${isApprove ? 'approved' : 'reversed'} successfully.`,
         });
         onBack();
       } catch {
@@ -661,10 +702,17 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
 
   const totalSelectedConcession = groups.reduce((sum, group) => {
     const fh = formik.values.feeHeads.find((f) => f.feeHeadId === group.feeHeadId);
-    return sum + ((fh?.selectedDueFeeIds.length ?? 0) > 0 ? group.concessionAmount : 0);
+    if (isApprove)
+      return sum + ((fh?.selectedDueFeeIds.length ?? 0) > 0 ? group.concessionAmount : 0);
+    return (
+      sum +
+      group.items
+        .filter((item) => fh?.selectedDueFeeIds.includes(item.dueFeeId))
+        .reduce((lineSum, item) => lineSum + (item.reversibleConcessionAmount ?? 0), 0)
+    );
   }, 0);
 
-  const isSubmitting = isApproving || isCancelling;
+  const isSubmitting = isApproving || isReversing;
 
   const handleApprovalActionClick = async () => {
     formik.setTouched({
@@ -699,7 +747,7 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
 
         <Box flex={1} minWidth={0}>
           <Typography variant="subtitle1" fontWeight={700} noWrap>
-            {isApprove ? 'Approve' : 'Cancel'} Concession
+            {isApprove ? 'Approve' : 'Reverse'} Concession
           </Typography>
           <Typography variant="caption" color="text.secondary" noWrap>
             {selectedItem.concessionTypeName}
@@ -764,7 +812,7 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             sx={{ color: isApprove ? 'info.main' : 'warning.main', flexShrink: 0 }}
           />
           <Typography variant="caption" color="text.secondary">
-            Select due fee lines per fee head to {isApprove ? 'approve' : 'cancel'} the concession.
+            Select due fee lines per fee head to {isApprove ? 'approve' : 'reverse'} the concession.
             Lines with no outstanding balance cannot be selected.
           </Typography>
         </Box>
@@ -797,7 +845,8 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
               group={group}
               selectedDueFeeIds={getSelectedDueFeeIds(group.feeHeadId)}
               onToggleDueFee={(dueFeeId) => toggleDueFee(group.feeHeadId, dueFeeId)}
-              onToggleAll={() => toggleAllDueFees(group)}
+                onToggleAll={() => toggleAllDueFees(group)}
+                isReverse={!isApprove}
             />
           ))
         )}
@@ -839,7 +888,7 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             startIcon={isApprove ? <CheckCircle fontSize="small" /> : <Cancel fontSize="small" />}
             onClick={handleApprovalActionClick}
           >
-            {isApprove ? 'Approve' : 'Cancel'}
+            {isApprove ? 'Approve' : 'Reverse'}
           </LoadingButton>
         </Box>
       </Box>

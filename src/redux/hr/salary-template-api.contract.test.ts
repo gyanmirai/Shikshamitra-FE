@@ -25,12 +25,15 @@ describe('salary template API contract', () => {
     });
   });
 
-  it('sends the calculation basis, amount, PF rule, and Gujarat statutory profile', () => {
+  it('sends quote protection, effective month, employee context, and Gujarat statutory profile', () => {
     expect(
       buildSalaryTemplateCalculationRequest({
         templateVersionId: 'version-1',
         salaryBasis: 'TAKE_HOME',
+        protectionPolicy: 'PROTECT_TAKE_HOME',
         monthlyAmount: 25990,
+        effectiveMonth: '2026-08-01T00:00:00.000Z',
+        employeeId: 'employee-1',
         pfRuleId: 'pf-rule-1',
       })
     ).toEqual({
@@ -38,7 +41,10 @@ describe('salary template API contract', () => {
       method: 'POST',
       body: {
         salaryBasis: 'TAKE_HOME',
+        protectionPolicy: 'PROTECT_TAKE_HOME',
         monthlyAmount: 25990,
+        effectiveMonth: '2026-08-01T00:00:00.000Z',
+        employeeId: 'employee-1',
         pfRuleId: 'pf-rule-1',
         statutoryProfile: 'IN-GJ',
       },

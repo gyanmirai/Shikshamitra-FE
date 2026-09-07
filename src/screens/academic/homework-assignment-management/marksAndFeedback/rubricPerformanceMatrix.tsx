@@ -29,6 +29,7 @@ const RubricPerformanceMatrix = ({
         width: '26%',
         isSort: false,
         isFilter: false,
+        headerSx: { verticalAlign: 'bottom', pb: 1 },
         render: (_value, criterion) => (
           <Stack spacing={0.5}>
             <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap">
@@ -68,6 +69,7 @@ const RubricPerformanceMatrix = ({
         minWidth: 90,
         isSort: false,
         isFilter: false,
+        headerSx: { verticalAlign: 'bottom', pb: 1 },
         render: (_value, criterion) => {
           const available = level.score <= criterion.maxMarks;
           const selected = values[criterion.id]?.marks === String(level.score);
@@ -116,6 +118,7 @@ const RubricPerformanceMatrix = ({
         width: '30%',
         isSort: false,
         isFilter: false,
+        headerSx: { verticalAlign: 'bottom', pb: 1 },
         render: (_value, criterion) => (
           <TextField
             fullWidth

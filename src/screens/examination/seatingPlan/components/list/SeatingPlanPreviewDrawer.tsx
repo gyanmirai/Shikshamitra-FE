@@ -1,8 +1,16 @@
 import { Iconify } from 'src/components/iconify';
-import { Box, Drawer, Button, Divider, Typography, IconButton, LinearProgress } from '@mui/material';
+import {
+  Box,
+  Drawer,
+  Button,
+  Divider,
+  Typography,
+  IconButton,
+  LinearProgress,
+} from '@mui/material';
 
-import CapacityBadge from '../common/CapacityBadge';
 import AllocationStatusBadge from '../common/AllocationStatusBadge';
+import { getSeatingPlanPrimaryAction } from './seating-plan-actions';
 
 import type { SeatingPlanListRow } from '../../types';
 
@@ -14,7 +22,18 @@ interface Props {
 
 export default function SeatingPlanPreviewDrawer({ row, onClose, onPrimaryAction }: Props) {
   return (
-    <Drawer anchor="right" open={!!row} onClose={onClose} PaperProps={{ sx: { width: 380, p: 2.5 } }}>
+    <Drawer
+      anchor="right"
+      open={!!row}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 380 },
+          maxWidth: '100vw',
+          p: { xs: 2, sm: 2.5 },
+        },
+      }}
+    >
       {row && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -24,12 +43,16 @@ export default function SeatingPlanPreviewDrawer({ row, onClose, onPrimaryAction
                 {row.examTypeName} · {row.standardName}
               </Typography>
             </Box>
-            <IconButton size="small" onClick={onClose}>
+            <IconButton aria-label="Close seating plan preview" size="small" onClick={onClose}>
               <Iconify icon="mdi:close" width={18} />
             </IconButton>
           </Box>
 
           <AllocationStatusBadge status={row.status} />
+
+          <Typography variant="body2">
+            {row.subjectNames.join(', ') || 'No subjects are scheduled for this examination.'}
+          </Typography>
 
           <Divider />
 
@@ -69,12 +92,28 @@ export default function SeatingPlanPreviewDrawer({ row, onClose, onPrimaryAction
             </Box>
           </Box>
 
-          <CapacityBadge status={row.capacityStatus} />
+          <Typography variant="body2" color="text.secondary">
+            {row.plannedSubjectCount} of {row.subjectCount} subjects are assigned across{' '}
+            {row.seatingPlanCount} seating plan{row.seatingPlanCount === 1 ? '' : 's'}.
+          </Typography>
+
+          {row.blockingIssueCount > 0 && (
+            <Typography variant="body2" color="warning.dark">
+              {row.blockingIssueCount} readiness issue
+              {row.blockingIssueCount === 1 ? '' : 's'} need attention.
+            </Typography>
+          )}
 
           <Box sx={{ flex: 1 }} />
 
-          <Button variant="contained" fullWidth onClick={() => onPrimaryAction(row)}>
-            Open Seating Plan
+          <Button
+            variant="contained"
+            fullWidth
+            startIcon={<Iconify icon={getSeatingPlanPrimaryAction(row.status).icon} />}
+            onClick={() => onPrimaryAction(row)}
+            sx={{ minHeight: 44 }}
+          >
+            {getSeatingPlanPrimaryAction(row.status).label}
           </Button>
         </Box>
       )}

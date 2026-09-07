@@ -3,12 +3,7 @@
 // this shape via utils/mappers.ts so components never bind directly to API responses.
 
 export type SeatingPlanStatus =
-  | 'not-started'
-  | 'in-progress'
-  | 'ready'
-  | 'needs-attention'
-  | 'completed'
-  | 'published';
+  'not-started' | 'in-progress' | 'ready' | 'needs-attention' | 'completed' | 'published';
 
 export type AllocationStrategy =
   | 'roll-number'
@@ -20,11 +15,7 @@ export type AllocationStrategy =
   | 'ai-suggested'; // Phase 4 extension seam — disabled in UI, no backend implementation yet
 
 export type FillDirection =
-  | 'front-to-back'
-  | 'back-to-front'
-  | 'row-wise'
-  | 'column-wise'
-  | 'aisle-wise';
+  'front-to-back' | 'back-to-front' | 'row-wise' | 'column-wise' | 'aisle-wise';
 
 export interface SeatingStudent {
   studentId: string;
@@ -156,21 +147,36 @@ export const DEFAULT_ALLOCATION_RULES: SeatingAllocationRules = {
 
 // ── List page row (Screen 1) ────────────────────────────────────────────────
 export interface SeatingPlanListRow {
+  id: string;
   examId: string;
+  sessionKey?: string;
+  seatingPlanId?: string;
   examName: string;
   examTypeName: string;
-  examDate?: string;
+  examDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
   standardName: string;
   divisions: string[];
   divisionProgress: SeatingPlanDivisionProgress[];
-  subjectName?: string;
+  subjectNames: string[];
+  subjectCount: number;
+  plannedSubjectCount: number;
+  seatingPlanCount: number;
   totalStudents: number;
   allocatedStudents: number;
   pendingStudents: number;
   roomsUsed: number;
+  usableCapacity: number;
+  emptySeats: number;
+  utilization: number;
   capacityStatus: 'ok' | 'shortage' | 'unused';
   progress: number;
   status: SeatingPlanStatus;
+  hasCompleteSchedule: boolean;
+  canPrepare: boolean;
+  requiresMigration: boolean;
+  blockingIssueCount: number;
   createdBy?: string;
 }
 
@@ -185,13 +191,7 @@ export interface SeatingPlanDivisionProgress {
 
 // ── Undo/redo action history ────────────────────────────────────────────────
 export type SeatingHistoryActionType =
-  | 'assign'
-  | 'unassign'
-  | 'move'
-  | 'swap'
-  | 'bulk-allocate'
-  | 'auto-allocate'
-  | 'reset-room';
+  'assign' | 'unassign' | 'move' | 'swap' | 'bulk-allocate' | 'auto-allocate' | 'reset-room';
 
 export interface SeatingHistoryEntry {
   type: SeatingHistoryActionType;

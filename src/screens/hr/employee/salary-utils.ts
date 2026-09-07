@@ -78,3 +78,8 @@ export function formatApplicableMonthLabel(value: any): string {
   const payload = toApplicableMonthPayload(value);
   return payload ? dayjs(payload).format('MMM YYYY') : '-';
 }
+
+export function isApplicableToMonth(value: any, monthKey: string): boolean {
+  const yearMonth = getYearMonth(value);
+  return Boolean(yearMonth && `${yearMonth.year}-${yearMonth.month}` === monthKey);
+}

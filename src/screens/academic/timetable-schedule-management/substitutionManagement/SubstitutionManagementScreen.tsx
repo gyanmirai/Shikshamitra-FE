@@ -18,7 +18,6 @@ import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
-import { academicType } from 'src/redux/tagTypes';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -45,7 +44,10 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { substitutionManagementApi } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
+import {
+  substitutionManagementApi,
+  substitutionStatusInvalidationTags,
+} from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
 import {
   Add,
   Save,
@@ -91,6 +93,7 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { SubstitutionCreationOverlay } from './components/SubstitutionCreationOverlay';
 import {
   getActiveFilters,
   SubstitutionActiveFilters,
@@ -139,6 +142,7 @@ import {
   useSuggestedTeachersByContextDataQuery,
   useAffectedLecturesDataQuery,
 } from './substitutionManagement.hooks';
+import { createSubstitutionSegments } from './services/create-substitution-action';
 
 import type {
   ConflictStatus,
@@ -364,6 +368,7 @@ const mapApiSubstitution = (item: ApiSubstitutionRow): SubstitutionRow => ({
   isAiSuggested: item.isAiSuggested,
   workloadStatus: item.workloadStatus as SubstitutionRow['workloadStatus'],
   acknowledgementRequired: item.acknowledgementRequired,
+  isResponseWindowOpen: item.isResponseWindowOpen ?? true,
   createdAt: item.createdAt,
   acknowledgedAt: item.acknowledgedAt || undefined,
   completedAt: item.completedAt || undefined,
@@ -824,7 +829,6 @@ const SubstitutionManagementScreen = () => {
   const {
     data: substitutionResult,
     isLoading: isSubstitutionsLoading,
-    isFetching: isSubstitutionsFetching,
   } = useSubstitutionsDataQuery({
     ...academicContextParams,
     fromDate: toDateTimeOffset(selectedFilterDate.startOf('day')),
@@ -852,7 +856,6 @@ const SubstitutionManagementScreen = () => {
   const {
     data: availabilityResult,
     isLoading: isAvailabilityLoading,
-    isFetching: isAvailabilityFetching,
   } = useTeacherAvailabilityDataQuery({
     ...academicContextParams,
     fromDate: toDateTimeOffset(availabilityDate.startOf('day')),
@@ -951,7 +954,10 @@ const SubstitutionManagementScreen = () => {
     date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
     maxResultCount: 500,
   });
-  const [createSubstitution, { isLoading: isCreatingSubstitution }] = useCreateSubstitutionAction();
+  const [
+    createSubstitution,
+    { isLoading: isCreatingSubstitution, reset: resetCreateSubstitution },
+  ] = useCreateSubstitutionAction();
   const [assignSubstitute, { isLoading: isAssigning }] = useAssignSubstituteAction();
   const [sendSubstitutionReminder, { isLoading: isSendingReminder }] =
     useSendSubstitutionReminderAction();
@@ -1589,8 +1595,10 @@ const SubstitutionManagementScreen = () => {
 
     try {
       const assignmentSegments = substitutionForm.selectedSubstitutes;
-      const createdRows = await Promise.all(
-        assignmentSegments.map((segment) =>
+      const createdRows = await createSubstitutionSegments({
+        segments: assignmentSegments,
+        resetMutation: resetCreateSubstitution,
+        create: (segment) =>
           createSubstitution({
             academicYearId: currentYear?.id || null,
             academicMediumId: medium?.id || null,
@@ -1624,9 +1632,8 @@ const SubstitutionManagementScreen = () => {
             remarks: segment.isPartialCoverage
               ? `${substitutionForm.remarks || ''} Partial coverage ${segment.startTime}-${segment.endTime}.`.trim()
               : substitutionForm.remarks,
-          }).unwrap()
-        )
-      );
+          }).unwrap(),
+      });
       setSubstitutions((current) => [...createdRows.map(mapApiSubstitution), ...current]);
       setCreateDialogOpen(false);
       if (cameFromAvailability) {
@@ -1644,6 +1651,7 @@ const SubstitutionManagementScreen = () => {
     }
   }, [
     createSubstitution,
+    resetCreateSubstitution,
     createFieldErrors,
     selectedCreateLecture,
     substitutionForm,
@@ -1708,7 +1716,7 @@ const SubstitutionManagementScreen = () => {
       reason: string;
       remarks?: string;
       sourceType: string;
-      closeAvailabilityDialog?: boolean;
+      openAsDrawer?: boolean;
     }
   ) => {
     setFormError('');
@@ -1745,8 +1753,7 @@ const SubstitutionManagementScreen = () => {
       substituteTeacherName: '',
       selectedSubstitutes: [],
     });
-    if (context.closeAvailabilityDialog) {
-      setAvailabilityDialogOpen(false);
+    if (context.openAsDrawer) {
       setCameFromAvailability(true);
     } else {
       setCameFromAvailability(false);
@@ -1997,10 +2004,11 @@ const SubstitutionManagementScreen = () => {
     if (dutyConfirmOpen || !shouldRefreshDuties) return;
 
     setShouldRefreshDuties(false);
-    // Invalidate only after the confirmation dialog has unmounted. RTK Query then
-    // refetches every active substitution-management query and exposes isFetching
-    // to the owning table instead of showing background loading behind the dialog.
-    dispatch(substitutionManagementApi.util.invalidateTags([academicType.substitutionManagement]));
+    // Invalidate only after the confirmation dialog has unmounted. The focused tags
+    // refresh status-dependent views without reopening unrelated form-data requests.
+    dispatch(
+      substitutionManagementApi.util.invalidateTags([...substitutionStatusInvalidationTags])
+    );
   }, [dispatch, dutyConfirmOpen, shouldRefreshDuties]);
 
   /**
@@ -2236,6 +2244,7 @@ const SubstitutionManagementScreen = () => {
                 </MenuItem>
                 <MenuItem
                   disabled={
+                    !row.isResponseWindowOpen ||
                     !['Waiting Ack', 'Assigned'].includes(row.status) ||
                     (!canManageSubstitutions &&
                       row.substituteTeacherName !== currentEmployee?.employeeName)
@@ -2584,6 +2593,14 @@ const SubstitutionManagementScreen = () => {
           return (
             <Typography variant="caption" color="text.secondary">
               Duty {item.status.toLowerCase()}
+            </Typography>
+          );
+        }
+
+        if (!item.isResponseWindowOpen) {
+          return (
+            <Typography variant="caption" color="text.secondary">
+              Response window closed
             </Typography>
           );
         }
@@ -3096,7 +3113,7 @@ const SubstitutionManagementScreen = () => {
         tableTitle="Substitution Board"
         data={filteredSubstitutions}
         columns={substitutionColumns}
-        isLoading={isSubstitutionsLoading || isSubstitutionsFetching}
+        isLoading={isSubstitutionsLoading}
       />
     );
   };
@@ -3357,7 +3374,7 @@ const SubstitutionManagementScreen = () => {
             <CustomizableTable
               tableId="teacher-availability-table"
               tableTitle="Teacher Availability"
-              isLoading={isAvailabilityLoading || isAvailabilityFetching}
+              isLoading={isAvailabilityLoading}
               data={teacherAvailability}
               columns={availabilityColumns}
             />
@@ -3400,6 +3417,7 @@ const SubstitutionManagementScreen = () => {
           <MenuItem
             disabled={
               !actionRow ||
+              !actionRow.isResponseWindowOpen ||
               !['Waiting Ack', 'Assigned'].includes(actionRow.status) ||
               (!canManageSubstitutions &&
                 actionRow.substituteTeacherName !== currentEmployee?.employeeName)
@@ -3475,8 +3493,9 @@ const SubstitutionManagementScreen = () => {
           </MenuItem>
         </Menu>
 
-        <CustomDialog
+        <SubstitutionCreationOverlay
           open={createDialogOpen}
+          displayAsDrawer={cameFromAvailability}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Create Substitution</Typography>
@@ -3490,8 +3509,7 @@ const SubstitutionManagementScreen = () => {
               </CustomTooltip>
             </Box>
           }
-          maxWidth="md"
-          handleClose={handleCloseCreateDialog}
+          onClose={handleCloseCreateDialog}
         >
           <DialogScrollContent>
             {isCreateDialogLoading && (
@@ -4178,11 +4196,12 @@ const SubstitutionManagementScreen = () => {
               Assign & Notify
             </LoadingButton>
           </Stack>
-        </CustomDialog>
+        </SubstitutionCreationOverlay>
 
         <ConfirmDialog
           open={createUnsavedConfirmOpen}
           onClose={() => setCreateUnsavedConfirmOpen(false)}
+          sx={cameFromAvailability ? { zIndex: (theme) => theme.zIndex.modal + 2 } : undefined}
           icon="warning"
           title="Unsaved Changes"
           content="You have unsaved substitution details. Closing now will discard them. Do you want to continue?"
@@ -4913,7 +4932,7 @@ const SubstitutionManagementScreen = () => {
                                       reason: availabilityForm.reason || 'Teacher Unavailable',
                                       remarks: availabilityForm.remarks,
                                       sourceType: availabilityForm.sourceType,
-                                      closeAvailabilityDialog: true,
+                                      openAsDrawer: true,
                                     })
                                   }
                                 >

@@ -53,6 +53,7 @@ export type SubstitutionRow = {
   isAiSuggested: boolean;
   workloadStatus: 'Low' | 'Medium' | 'High' | 'Overloaded';
   acknowledgementRequired: boolean;
+  isResponseWindowOpen: boolean;
   createdAt: string;
   acknowledgedAt?: string;
   completedAt?: string;
@@ -350,6 +351,7 @@ export const initialSubstitutions: SubstitutionRow[] = [
     isAiSuggested: true,
     workloadStatus: 'Low',
     acknowledgementRequired: true,
+    isResponseWindowOpen: true,
     createdAt: dayjs().subtract(2, 'hour').toISOString(),
     remarks: 'Same subject teacher preferred.',
     auditLog: [
@@ -382,6 +384,7 @@ export const initialSubstitutions: SubstitutionRow[] = [
     isAiSuggested: true,
     workloadStatus: 'Medium',
     acknowledgementRequired: true,
+    isResponseWindowOpen: true,
     createdAt: dayjs().subtract(45, 'minute').toISOString(),
     remarks: 'Principal review requested.',
     auditLog: [
@@ -420,6 +423,7 @@ export const initialSubstitutions: SubstitutionRow[] = [
     isAiSuggested: false,
     workloadStatus: 'Medium',
     acknowledgementRequired: true,
+    isResponseWindowOpen: true,
     acknowledgedAt: dayjs().subtract(20, 'minute').format('HH:mm'),
     createdAt: dayjs().subtract(3, 'hour').toISOString(),
     auditLog: [
@@ -455,6 +459,7 @@ export const initialSubstitutions: SubstitutionRow[] = [
     isAiSuggested: false,
     workloadStatus: 'Overloaded',
     acknowledgementRequired: true,
+    isResponseWindowOpen: true,
     createdAt: dayjs().subtract(1, 'hour').toISOString(),
     auditLog: [
       { at: '10:15', actor: 'System', action: 'Conflict detected before final assignment.' },
@@ -488,6 +493,7 @@ export const initialSubstitutions: SubstitutionRow[] = [
     isAiSuggested: false,
     workloadStatus: 'Low',
     acknowledgementRequired: true,
+    isResponseWindowOpen: false,
     acknowledgedAt: '08:35',
     completedAt: '09:45',
     createdAt: dayjs().subtract(1, 'day').toISOString(),

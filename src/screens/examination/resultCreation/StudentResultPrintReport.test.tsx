@@ -1,9 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import StudentResultPrintReport from './StudentResultPrintReport';
+import StudentResultPrintReport, {
+  STUDENT_RESULT_PRINT_PAGE_STYLE,
+} from './StudentResultPrintReport';
 
 describe('StudentResultPrintReport', () => {
+  it('suppresses default browser print headers and footers with zero page margin style', () => {
+    expect(STUDENT_RESULT_PRINT_PAGE_STYLE).toContain('margin: 0;');
+    expect(STUDENT_RESULT_PRINT_PAGE_STYLE).toContain('size: A4 portrait;');
+    expect(STUDENT_RESULT_PRINT_PAGE_STYLE).toContain('print-color-adjust: exact;');
+  });
+
   it('renders a static result report without interactive table or modal controls', () => {
     render(
       <StudentResultPrintReport

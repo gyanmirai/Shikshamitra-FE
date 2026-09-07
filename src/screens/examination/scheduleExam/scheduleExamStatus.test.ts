@@ -105,4 +105,42 @@ describe('scheduleExamStatus', () => {
       examScheduledStatus.Completed
     );
   });
+
+  it('moves a published exam to Completed on the same day once all subject end times have passed', () => {
+    const exam = {
+      status: examScheduledStatus.Published,
+      startDate: '2026-08-25',
+      endDate: '2026-08-26',
+      subjects: [
+        { examDate: '2026-08-25', startTime: '09:00:00', endTime: '10:00:00' },
+        { examDate: '2026-08-26', startTime: '09:00:00', endTime: '10:00:00' },
+      ],
+    };
+
+    // At 9:30 AM on 26th Aug (during subject 2) -> Ongoing
+    expect(getEffectiveExamStatus(exam, dayjs('2026-08-26T09:30:00'))).toBe(
+      examScheduledStatus.Ongoing
+    );
+    // At 2:32 PM on 26th Aug (after subject 2 ended at 10:00 AM) -> Completed
+    expect(getEffectiveExamStatus(exam, dayjs('2026-08-26T14:32:00'))).toBe(
+      examScheduledStatus.Completed
+    );
+  });
+
+  it('moves a table row to Completed on the same day when endDate contains the finalEndAt timestamp', () => {
+    const exam = {
+      status: examScheduledStatus.Published,
+      startDate: '2026-08-25T00:00:00',
+      endDate: '2026-08-26T10:00:00',
+    };
+
+    // At 9:30 AM on 26th Aug -> Ongoing
+    expect(getEffectiveExamStatus(exam, dayjs('2026-08-26T09:30:00'))).toBe(
+      examScheduledStatus.Ongoing
+    );
+    // At 2:32 PM on 26th Aug (after 10:00 AM) -> Completed
+    expect(getEffectiveExamStatus(exam, dayjs('2026-08-26T14:32:00'))).toBe(
+      examScheduledStatus.Completed
+    );
+  });
 });

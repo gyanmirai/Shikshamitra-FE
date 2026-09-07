@@ -3,12 +3,13 @@
 import type { AcademicAuditEvent } from 'src/redux/academicAPI/AuditApi/academic-audit-api';
 
 import { GlobalIcons } from 'src/utils/icons';
+import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Chip, Stack, Button, Drawer, IconButton, Typography } from '@mui/material';
 
-import { isGuid, shortenGuid, parseAcademicAuditContext } from '../utils/academicAuditContext';
+import { parseAcademicAuditContext } from '../utils/academicAuditContext';
 
 type AcademicAuditDetailsDrawerProps = {
   event: AcademicAuditEvent | null;
@@ -39,6 +40,21 @@ const DetailRow = ({ label, value }: { label: string; value?: string | null }) =
     </Typography>
   </Box>
 );
+
+const HOLIDAY_CATEGORIES: Record<string, string> = {
+  '1': 'National', '2': 'Regional', '3': 'Festival', '4': 'Management',
+  '5': 'Weather Emergency', '6': 'Government Order', '7': 'Other',
+};
+
+const formatChangedValue = (field: { field: string; displayName: string }, value?: string | null) => {
+  if (value === null || value === undefined || value === '') return '—';
+  if (/holiday\s*category/i.test(field.field || field.displayName)) return HOLIDAY_CATEGORIES[value] ?? value;
+  if (/date/i.test(field.field || field.displayName) && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+    const date = dayjs(value);
+    if (date.isValid()) return date.format('DD-MM-YYYY');
+  }
+  return value;
+};
 
 export const AcademicAuditDetailsDrawer = ({
   event,
@@ -127,22 +143,10 @@ export const AcademicAuditDetailsDrawer = ({
               )}
             </Box>
 
-            <Stack spacing={1.25}>
+            <Stack spacing={1.25} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.paper' }}>
               <DetailRow label="Entity" value={`${event.entityName} (${event.entityType})`} />
-              <DetailRow
-                label="Entity ID"
-                value={isGuid(event.entityId) ? shortenGuid(event.entityId) : event.entityId}
-              />
               <DetailRow label="Performed By" value={event.actorDisplayName} />
               <DetailRow label="Role" value={event.actorRoleSnapshot} />
-              <DetailRow
-                label="Correlation ID"
-                value={
-                  isGuid(event.correlationId)
-                    ? shortenGuid(event.correlationId as string)
-                    : event.correlationId
-                }
-              />
               <DetailRow label="Source" value={event.source} />
             </Stack>
 
@@ -166,8 +170,8 @@ export const AcademicAuditDetailsDrawer = ({
                       <Typography variant="caption" color="text.secondary">
                         {field.displayName || field.field}
                       </Typography>
-                      <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                        {field.oldValue || '-'} {'->'} {field.newValue || '-'}
+                      <Typography variant="body2" sx={{ overflowWrap: 'anywhere', fontWeight: 600 }}>
+                        {formatChangedValue(field, field.oldValue)} {'→'} {formatChangedValue(field, field.newValue)}
                       </Typography>
                     </Box>
                   ))}
@@ -177,12 +181,15 @@ export const AcademicAuditDetailsDrawer = ({
 
             {contextEntries.length > 0 && (
               <Box>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Context
+                <Typography variant="subtitle2" sx={{ mb: 0.25 }}>
+                  Technical Metadata
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                  Device, network, and request details
                 </Typography>
                 <Stack
                   spacing={1.25}
-                  sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1 }}
+                  sx={{ p: 1.5, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
                 >
                   {contextEntries.map((entry) => (
                     <DetailRow key={entry.key} label={entry.label} value={entry.value} />

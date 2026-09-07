@@ -5,6 +5,7 @@ import type { FormikProps } from 'formik';
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Add, Delete, ContentCopy } from '@mui/icons-material';
+import { toDateOnly, parseDateOnly } from 'src/utils/date-only';
 import {
   Box,
   Card,
@@ -22,6 +23,7 @@ import {
 import { SectionCard } from '../ui/SectionCard';
 
 import type { IPaymentTerm } from '../../type';
+import type { IBoard } from '../../hooks/usePaymentTermForm';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -31,6 +33,7 @@ interface InstallmentSectionProps {
   onAdd: () => void;
   onRemove: (index: number) => void;
   onDuplicate: (index: number) => void;
+  board?: IBoard;
 }
 
 // ---------------------------------------------------------------------------
@@ -41,17 +44,36 @@ export function InstallmentSection({
   onAdd,
   onRemove,
   onDuplicate,
+  board,
 }: InstallmentSectionProps) {
   const allocationTotal = formik.values.installments.reduce(
     (sum, i) => sum + (Number(i.allocationPercentage) || 0),
     0
   );
   const allocationDelta = Math.round((100 - allocationTotal) * 100) / 100;
+  const usesSpecificDate = formik.values.demandGenerationRule === 'SpecificDate';
+
+  const getBillGenerationDate = (inst: IPaymentTerm['installments'][number]) => {
+    if (usesSpecificDate) return parseDateOnly(inst.demandDate);
+    if (formik.values.demandGenerationRule === 'OnInstallmentStartDate') {
+      return parseDateOnly(inst.startDate);
+    }
+    if (formik.values.demandGenerationRule === 'OnDueDate') {
+      return parseDateOnly(inst.dueDate);
+    }
+    if (formik.values.demandGenerationRule === 'XDaysBeforeDue' && inst.dueDate) {
+      return (
+        parseDateOnly(inst.dueDate)?.subtract(formik.values.demandOffsetDays ?? 0, 'day') ?? null
+      );
+    }
+    return null;
+  };
 
   return (
     <SectionCard
       title="Installment Schedule"
-      subtitle="Define payment installments with coverage windows, demand/due dates, and percentage allocation (must total 100%)."
+      subtitle="Define each installment period, due date, and percentage allocation (must total 100%)."
+      info="Every installment start, end, and due date must fall inside the selected board period. Periods cannot overlap and allocations must total 100%."
       action={
         <Button
           size="small"
@@ -64,6 +86,13 @@ export function InstallmentSection({
         </Button>
       }
     >
+      {board?.startDate && board?.endDate && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Installment periods must be between {dayjs(board.startDate).format('DD/MM/YYYY')} and{' '}
+          {dayjs(board.endDate).format('DD/MM/YYYY')} for {board.name}.
+        </Alert>
+      )}
+
       {/* Array-level error */}
       {formik.touched.installments && typeof formik.errors.installments === 'string' && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -98,7 +127,7 @@ export function InstallmentSection({
             No installments configured
           </Typography>
           <Typography variant="caption" color="text.disabled" display="block" mb={2}>
-            Add installments to define when payments are due across the academic year.
+            Add installments to define when payments are due within the selected board period.
           </Typography>
           <Button size="small" variant="outlined" startIcon={<Add />} onClick={onAdd}>
             Add First Installment
@@ -182,9 +211,12 @@ export function InstallmentSection({
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <DatePicker
                     label="Start Date *"
-                    value={inst.startDate ? dayjs(inst.startDate as string) : null}
+                    format="DD/MM/YYYY"
+                    value={parseDateOnly(inst.startDate)}
+                    minDate={parseDateOnly(board?.startDate) ?? undefined}
+                    maxDate={parseDateOnly(board?.endDate) ?? undefined}
                     onChange={(date) =>
-                      formik.setFieldValue(`${prefix}.startDate`, date ? date.toISOString() : null)
+                      formik.setFieldValue(`${prefix}.startDate`, toDateOnly(date) || null)
                     }
                     slotProps={{
                       textField: {
@@ -201,9 +233,12 @@ export function InstallmentSection({
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <DatePicker
                     label="End Date *"
-                    value={inst.endDate ? dayjs(inst.endDate as string) : null}
+                    format="DD/MM/YYYY"
+                    value={parseDateOnly(inst.endDate)}
+                    minDate={parseDateOnly(board?.startDate) ?? undefined}
+                    maxDate={parseDateOnly(board?.endDate) ?? undefined}
                     onChange={(date) =>
-                      formik.setFieldValue(`${prefix}.endDate`, date ? date.toISOString() : null)
+                      formik.setFieldValue(`${prefix}.endDate`, toDateOnly(date) || null)
                     }
                     slotProps={{
                       textField: {
@@ -216,20 +251,24 @@ export function InstallmentSection({
                   />
                 </Grid>
 
-                {/* Demand Date */}
+                {/* Bill generation date: entered only for the specific-date rule. */}
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <DatePicker
-                    label="Demand Date *"
-                    value={inst.demandDate ? dayjs(inst.demandDate as string) : null}
+                    label={usesSpecificDate ? 'Bill Generation Date *' : 'Bill Generation Date'}
+                    format="DD/MM/YYYY"
+                    value={getBillGenerationDate(inst)}
                     onChange={(date) =>
-                      formik.setFieldValue(`${prefix}.demandDate`, date ? date.toISOString() : null)
+                      formik.setFieldValue(`${prefix}.demandDate`, toDateOnly(date) || null)
                     }
+                    disabled={!usesSpecificDate}
                     slotProps={{
                       textField: {
                         fullWidth: true,
                         size: 'small',
                         error: Boolean(errObj?.demandDate),
-                        helperText: errObj?.demandDate,
+                        helperText:
+                          errObj?.demandDate ||
+                          (!usesSpecificDate ? 'Calculated from the billing schedule' : undefined),
                       },
                     }}
                   />
@@ -239,9 +278,12 @@ export function InstallmentSection({
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <DatePicker
                     label="Due Date *"
-                    value={inst.dueDate ? dayjs(inst.dueDate as string) : null}
+                    format="DD/MM/YYYY"
+                    value={parseDateOnly(inst.dueDate)}
+                    minDate={parseDateOnly(board?.startDate) ?? undefined}
+                    maxDate={parseDateOnly(board?.endDate) ?? undefined}
                     onChange={(date) =>
-                      formik.setFieldValue(`${prefix}.dueDate`, date ? date.toISOString() : null)
+                      formik.setFieldValue(`${prefix}.dueDate`, toDateOnly(date) || null)
                     }
                     slotProps={{
                       textField: {

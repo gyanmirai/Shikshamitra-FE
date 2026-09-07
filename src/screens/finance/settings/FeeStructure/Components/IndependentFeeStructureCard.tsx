@@ -65,6 +65,12 @@ import type {
 // ---------------------------------------------------------------------------
 const feeStructureSchema = Yup.object({
   name: Yup.string().trim().required('Fee Structure name is required'),
+  concessionPolicyId: Yup.string().required('Concession Policy is required'),
+	concessionFeeHeadScope: Yup.string().oneOf(['EntireFeeStructure', 'SelectedFeeHeads']).required(),
+	concessionApplicableFeeHeadIds: Yup.array(Yup.string()).when('concessionFeeHeadScope', {
+		is: 'SelectedFeeHeads',
+		then: (schema) => schema.min(1, 'Select at least one concession-enabled fee head'),
+	}),
   feeHeads: Yup.array(
     Yup.object({
       isOptional: Yup.boolean().optional(),
@@ -149,6 +155,9 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       collectionPolicyId: initialData.collectionPolicyId ?? '',
       refundPolicyId: initialData.refundPolicyId ?? '',
       prorationPolicyId: initialData.prorationPolicyId ?? '',
+      concessionPolicyId: initialData.concessionPolicyId ?? '',
+		concessionFeeHeadScope: initialData.concessionFeeHeadScope ?? 'EntireFeeStructure',
+		concessionApplicableFeeHeadIds: initialData.concessionApplicableFeeHeadIds ?? [],
     },
     validationSchema: feeStructureSchema,
     validateOnChange: true,
@@ -187,11 +196,13 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const paymentTermOptions = useMemo(
     () =>
-      (paymentTermsData?.items ?? []).map((t) => ({
-        label: t.name,
-        value: t.id,
-        currentVersionNumber: t.currentVersionNumber,
-      })),
+      (paymentTermsData?.items ?? [])
+        .filter((term) => term.hasPublishedVersion && term.status !== 'Archived')
+        .map((t) => ({
+          label: t.name,
+          value: t.id,
+          currentVersionNumber: t.currentVersionNumber,
+        })),
     [paymentTermsData?.items]
   );
 
@@ -271,7 +282,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     return touched?.[idx]?.[field] ? errors[idx][field] : undefined;
   };
 
-  const handlePolicyChange = (field: keyof PolicyValues, value: string) => {
+	const handlePolicyChange = (field: keyof PolicyValues, value: PolicyValues[keyof PolicyValues]) => {
     formik.setFieldValue(field, value);
   };
 
@@ -330,6 +341,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         ...(formik.values.prorationPolicyId && {
           prorationPolicyId: formik.values.prorationPolicyId,
         }),
+        ...(formik.values.concessionPolicyId && {
+          concessionPolicyId: formik.values.concessionPolicyId,
+			concessionFeeHeadScope: formik.values.concessionFeeHeadScope,
+			concessionApplicableFeeHeadIds:
+				formik.values.concessionFeeHeadScope === 'SelectedFeeHeads'
+					? formik.values.concessionApplicableFeeHeadIds
+					: [],
+        }),
       };
 
       if (isNew) {
@@ -353,6 +372,12 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             collectionPolicyId: saved.collectionPolicyId ?? formik.values.collectionPolicyId,
             refundPolicyId: saved.refundPolicyId ?? formik.values.refundPolicyId,
             prorationPolicyId: saved.prorationPolicyId ?? formik.values.prorationPolicyId,
+            concessionPolicyId: saved.concessionPolicyId ?? formik.values.concessionPolicyId,
+            concessionFeeHeadScope:
+              saved.concessionFeeHeadScope ?? formik.values.concessionFeeHeadScope,
+            concessionApplicableFeeHeadIds:
+              saved.concessionApplicableFeeHeadIds ??
+              formik.values.concessionApplicableFeeHeadIds,
           },
         });
         setCardId(newId);
@@ -383,6 +408,12 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             collectionPolicyId: saved?.collectionPolicyId ?? formik.values.collectionPolicyId,
             refundPolicyId: saved?.refundPolicyId ?? formik.values.refundPolicyId,
             prorationPolicyId: saved?.prorationPolicyId ?? formik.values.prorationPolicyId,
+            concessionPolicyId: saved?.concessionPolicyId ?? formik.values.concessionPolicyId,
+            concessionFeeHeadScope:
+              saved?.concessionFeeHeadScope ?? formik.values.concessionFeeHeadScope,
+            concessionApplicableFeeHeadIds:
+              saved?.concessionApplicableFeeHeadIds ??
+              formik.values.concessionApplicableFeeHeadIds,
           },
         });
         setIsEditing(false);
@@ -447,7 +478,8 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     formik.values.paymentPolicyId ||
     formik.values.collectionPolicyId ||
     formik.values.refundPolicyId ||
-    formik.values.prorationPolicyId;
+    formik.values.prorationPolicyId ||
+    formik.values.concessionPolicyId;
 
   return (
     <motion.div
@@ -1015,12 +1047,16 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                                     const published = detail.versions?.find(
                                       (v) => v.status === 'Published'
                                     );
-                                    versionId =
-                                      published?.id ??
-                                      detail.currentVersionId ??
-                                      detail.versions?.[0]?.id;
+                                    versionId = published?.id;
                                   } catch {
-                                    // Keep selection even if version lookup fails
+                                    versionId = undefined;
+                                  }
+                                  if (!versionId) {
+                                    shikshaMitraToast.error({
+                                      message:
+                                        'This Payment Term has no published version available for assignment.',
+                                    });
+                                    return;
                                   }
                                   updateFeeHeadFields(idx, {
                                     paymentTermId: String(selected.value),
@@ -1202,6 +1238,9 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 collectionPolicyId: formik.values.collectionPolicyId,
                 refundPolicyId: formik.values.refundPolicyId,
                 prorationPolicyId: formik.values.prorationPolicyId,
+                concessionPolicyId: formik.values.concessionPolicyId,
+				concessionFeeHeadScope: formik.values.concessionFeeHeadScope,
+				concessionApplicableFeeHeadIds: formik.values.concessionApplicableFeeHeadIds,
               }}
               onChange={handlePolicyChange}
               isEditing={isEditing}

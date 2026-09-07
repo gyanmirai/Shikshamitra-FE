@@ -27,6 +27,13 @@ import {
   useCloneFinancePolicyMutation,
   useDeleteFinancePolicyMutation,
 } from 'src/redux/finance/financePolicy';
+import {
+  useGetConcessionPoliciesQuery,
+  useGetConcessionPolicyByIdQuery,
+  useCloneConcessionPolicyMutation,
+  useArchiveConcessionPolicyMutation,
+  useUnarchiveConcessionPolicyMutation,
+} from 'src/redux/finance/concessionPolicy';
 
 import FinancePolicyAuditDrawer from './FinancePolicyAuditDrawer';
 import FinancePolicyDetailsDrawer from './FinancePolicyDetailsDrawer';
@@ -83,6 +90,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   // called unconditionally (React hooks can't branch) and gated with `skip` —
   // only the one matching `policyType` actually fires.
   const isCollectionKind = policyType === 'collection';
+  const isConcessionKind = policyType === 'concession';
 
   const {
     data: genericPolicyData,
@@ -92,7 +100,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
     type: 'query',
     currentQueryAndMutation: useGetFinancePoliciesQuery,
     params: { policyType, ...queryParams },
-    options: { skip: isCollectionKind },
+    options: { skip: isCollectionKind || isConcessionKind },
   });
 
   const {
@@ -110,22 +118,52 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
     { skip: !isCollectionKind || !academicYearId }
   );
 
+  const {
+    data: concessionPolicyData,
+    isLoading: isConcessionLoading,
+    isFetching: isConcessionFetching,
+  } = useGetConcessionPoliciesQuery(
+    {
+      academicYearId,
+      status: queryParams.status || undefined,
+      search: queryParams.search || undefined,
+      page: queryParams.page,
+      pageSize: queryParams.pageSize,
+    },
+    { skip: !isConcessionKind || !academicYearId }
+  );
+
   const policyData = isCollectionKind
     ? collectionPolicyData && {
         items: collectionPolicyData.items,
         totalCount: collectionPolicyData.totalCount,
       }
-    : genericPolicyData;
-  const isLoading = isCollectionKind ? isCollectionLoading : isGenericLoading;
-  const isFetching = isCollectionKind ? isCollectionFetching : isGenericFetching;
+    : isConcessionKind
+      ? concessionPolicyData
+      : genericPolicyData;
+  const isLoading = isCollectionKind
+    ? isCollectionLoading
+    : isConcessionKind ? isConcessionLoading : isGenericLoading;
+  const isFetching = isCollectionKind
+    ? isCollectionFetching
+    : isConcessionKind ? isConcessionFetching : isGenericFetching;
 
   const [archiveCollectionPolicy] = useArchiveCollectionPolicyMutation();
   const [unarchiveCollectionPolicy] = useUnarchiveCollectionPolicyMutation();
+  const [archiveConcessionPolicy] = useArchiveConcessionPolicyMutation();
+  const [unarchiveConcessionPolicy] = useUnarchiveConcessionPolicyMutation();
+  const [cloneConcessionPolicy] = useCloneConcessionPolicyMutation();
 
-  const { data: policyDetails, isLoading: isDetailsLoading } = useGetFinancePolicyByIdQuery(
+  const { data: genericPolicyDetails, isLoading: isGenericDetailsLoading } = useGetFinancePolicyByIdQuery(
     selected?.id || '',
-    { skip: !selected?.id || !detailsDialog.value }
+    { skip: !selected?.id || !detailsDialog.value || isConcessionKind }
   );
+  const { data: concessionPolicyDetails, isLoading: isConcessionDetailsLoading } =
+    useGetConcessionPolicyByIdQuery(selected?.id || '', {
+      skip: !selected?.id || !detailsDialog.value || !isConcessionKind,
+    });
+  const policyDetails = isConcessionKind ? concessionPolicyDetails : genericPolicyDetails;
+  const isDetailsLoading = isConcessionKind ? isConcessionDetailsLoading : isGenericDetailsLoading;
 
   const [deletePolicy, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
@@ -213,8 +251,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
       ...(policyType === 'concession'
         ? [
             {
-              id: 'eligibilityType',
-              label: 'Eligibility Type',
+              id: 'valueSource',
+              label: 'Value Source',
               align: 'left' as const,
               render: (value: any) => (
                 <Typography variant="caption" fontSize="13px">
@@ -227,8 +265,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
               ),
             },
             {
-              id: 'discountType',
-              label: 'Discount Type',
+				id: 'calculationMethod',
+				label: 'Calculation Method',
               align: 'left' as const,
               render: (value: any) => (
                 <Typography variant="caption" fontSize="13px">
@@ -237,17 +275,29 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
               ),
             },
             {
-              id: 'discountValue',
-              label: 'Discount Value',
+				id: 'policyLimit',
+				label: 'Value / Limit',
               align: 'right' as const,
               render: (_: any, row: any) => (
                 <Typography variant="caption" fontSize="13px" fontWeight="600">
-                  {row.discountType === 'Percentage'
-                    ? `${row.discountValue}%`
-                    : `₹${row.discountValue}`}
+					{row.calculationMethod === 'Percentage'
+						? `${row.valueSource === 'PolicyFixed' ? row.percentageValue : row.maximumPercentage}%`
+						: row.calculationMethod === 'FixedAmount'
+							? `₹${row.valueSource === 'PolicyFixed' ? row.fixedAmount : row.maximumFixedAmount}`
+							: '100%'}
                 </Typography>
               ),
             },
+			{
+				id: 'applyOn',
+				label: 'Apply On',
+				align: 'left' as const,
+				render: (value: any) => (
+					<Typography variant="caption" fontSize="13px">
+						{value ? String(value).replace(/([A-Z])/g, ' $1').trim() : '-'}
+					</Typography>
+				),
+			},
           ]
         : []),
       ...(policyType === 'refund'
@@ -412,10 +462,17 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
         align: 'left',
         filterType: 'enum',
         sticky: true,
-        enumOptions: [
-          { label: 'Active', value: 'Active' },
-          { label: 'Archived', value: 'Archived' },
-        ],
+			enumOptions:
+				policyType === 'collection'
+					? [
+							{ label: 'Active', value: 'Active' },
+							{ label: 'Archived', value: 'Archived' },
+						]
+					: [
+							{ label: 'Draft', value: 'Draft' },
+							{ label: 'Active', value: 'Active' },
+							{ label: 'Archived', value: 'Archived' },
+						],
         render: (value) => (
           <Label color={STATUS_COLOR[value as FinancePolicyStatus] ?? 'default'}>{value}</Label>
         ),
@@ -440,7 +497,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
               }}
               showEditIcon={policy.status !== 'Archived'}
               handleEditClick={() => onEdit(policy)}
-              showDeleteIcon={isPolicyDeletable(policyType, policy.status)}
+              showDeleteIcon={!isConcessionKind && isPolicyDeletable(policyType, policy.status)}
               disableDeleteIcon={policy.isUsedInDownstream}
               handleDeleteClick={() => {
                 setSelected(policy);
@@ -453,10 +510,17 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
                     onClick={async () => {
                       popover.onClose();
                       try {
-                        await clonePolicy({
-                          sourcePolicyId: policy.id,
-                          targetAcademicYearId: academicYearId || policy.academicYearId,
-                        }).unwrap();
+                        if (isConcessionKind) {
+                          await cloneConcessionPolicy({
+                            id: policy.id,
+                            body: { targetAcademicYearId: academicYearId || policy.academicYearId },
+                          }).unwrap();
+                        } else {
+                          await clonePolicy({
+                            sourcePolicyId: policy.id,
+                            targetAcademicYearId: academicYearId || policy.academicYearId,
+                          }).unwrap();
+                        }
                         shikshaMitraToast.success({
                           message: `Policy "${policy.policyName}" cloned successfully.`,
                         });
@@ -505,6 +569,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
                           } else {
                             await archiveCollectionPolicy(policy.id).unwrap();
                           }
+                        } else if (isConcessionKind) {
+                          if (isRestoring) await unarchiveConcessionPolicy(policy.id).unwrap();
+                          else await archiveConcessionPolicy(policy.id).unwrap();
                         } else {
                           const newStatus: FinancePolicyStatus = isRestoring
                             ? 'Active'
@@ -544,8 +611,12 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
       isCloning,
       academicYearId,
       isCollectionKind,
+      isConcessionKind,
       archiveCollectionPolicy,
       unarchiveCollectionPolicy,
+      archiveConcessionPolicy,
+      unarchiveConcessionPolicy,
+      cloneConcessionPolicy,
     ]
   );
 
@@ -619,7 +690,15 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           versionDialog.onFalse();
           setSelected(null);
         }}
-        policy={selected}
+        policy={
+          selected
+            ? {
+                ...selected,
+                policyType,
+                academicYearName: selected.academicYearName || currentYear?.name || '',
+              }
+            : null
+        }
       />
 
       {/* Delete confirmation */}

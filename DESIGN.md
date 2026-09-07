@@ -698,22 +698,23 @@ Use this component for page headers, list pages, detail views, create/edit views
 
 **Configuration**
 
-| Prop                 | Type                     | Required    | Default     | Rule                                                                                                                          |
-| -------------------- | ------------------------ | ----------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `heading`            | `string \| ReactNode`    | Recommended | —           | Use the current page or task name as the visible heading.                                                                     |
-| `description`        | `ReactNode`              | Yes         | —           | Always provide concise, real information about what the current screen or task does.                                          |
-| `links`              | `BreadcrumbsLinkProps[]` | Yes         | —           | Provide the real navigation hierarchy; ancestor items use their actual route path and the current item has no `href`.         |
-| `links[].name`       | `string`                 | Recommended | —           | Use the visible product term used by the destination page.                                                                    |
-| `links[].href`       | `string`                 | Conditional | —           | Use only for navigable ancestors and use the actual route, such as `/transport/dashboard`.                                    |
-| `links[].icon`       | `ReactElement`           | Optional    | —           | Add only when the icon improves recognition and is consistent with the surrounding navigation.                                |
-| `links[].onClick`    | `(event) => void`        | Optional    | —           | Use for an in-page or stateful transition when a normal route link is not the correct behavior.                               |
-| `isBack`             | `boolean`                | Conditional | `false`     | Set to `true` for contextual create, edit, detail, or dialog states that need an explicit return action.                      |
-| `onBack`             | `() => void`             | Conditional | no-op       | Pass the real close, cancel, or return handler whenever `isBack` is `true`.                                                   |
-| `descriptionDisplay` | `'tooltip' \| 'visible'` | Optional    | `'tooltip'` | Use the default tooltip for short supporting context; use `visible` when the explanation is important to completing the task. |
-| `action`             | `ReactNode`              | Optional    | —           | Place the page-level action here only when it belongs to the header context.                                                  |
-| `activeLast`         | `boolean`                | Optional    | —           | Use only when the final breadcrumb must retain link behavior; otherwise keep the current page non-navigable.                  |
-| `showDivider`        | `boolean`                | Optional    | `false`     | Use only when the owning design explicitly requires a divider; do not introduce it for spacing.                               |
-| `sx` / `slotProps`   | MUI styling props        | Optional    | —           | Do not use these to add margin, padding, gaps, or page spacing.                                                               |
+| Prop                 | Type                     | Required    | Default     | Rule                                                                                                                            |
+| -------------------- | ------------------------ | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `heading`            | `string \| ReactNode`    | Recommended | —           | Use the current page or task name as the visible heading.                                                                       |
+| `layout`             | `'inline' \| 'stacked'`  | Optional    | `'inline'`  | Use `stacked` when breadcrumb context must read above a visible title and description; keep existing screens inline by default. |
+| `description`        | `ReactNode`              | Yes         | —           | Always provide concise, real information about what the current screen or task does.                                            |
+| `links`              | `BreadcrumbsLinkProps[]` | Yes         | —           | Provide the real navigation hierarchy; ancestor items use their actual route path and the current item has no `href`.           |
+| `links[].name`       | `string`                 | Recommended | —           | Use the visible product term used by the destination page.                                                                      |
+| `links[].href`       | `string`                 | Conditional | —           | Use only for navigable ancestors and use the actual route, such as `/transport/dashboard`.                                      |
+| `links[].icon`       | `ReactElement`           | Optional    | —           | Add only when the icon improves recognition and is consistent with the surrounding navigation.                                  |
+| `links[].onClick`    | `(event) => void`        | Optional    | —           | Use for an in-page or stateful transition when a normal route link is not the correct behavior.                                 |
+| `isBack`             | `boolean`                | Conditional | `false`     | Set to `true` for contextual create, edit, detail, or dialog states that need an explicit return action.                        |
+| `onBack`             | `() => void`             | Conditional | no-op       | Pass the real close, cancel, or return handler whenever `isBack` is `true`.                                                     |
+| `descriptionDisplay` | `'tooltip' \| 'visible'` | Optional    | `'tooltip'` | Use the default tooltip for short supporting context; use `visible` when the explanation is important to completing the task.   |
+| `action`             | `ReactNode`              | Optional    | —           | Place the page-level action here only when it belongs to the header context.                                                    |
+| `activeLast`         | `boolean`                | Optional    | —           | Use only when the final breadcrumb must retain link behavior; otherwise keep the current page non-navigable.                    |
+| `showDivider`        | `boolean`                | Optional    | `false`     | Use only when the owning design explicitly requires a divider; do not introduce it for spacing.                                 |
+| `sx` / `slotProps`   | MUI styling props        | Optional    | —           | Do not use these to add margin, padding, gaps, or page spacing.                                                                 |
 
 **Preferred usage**
 
@@ -751,6 +752,7 @@ For a contextual detail or edit state, keep the hierarchy and add an explicit ba
 
 - Always use `CustomBreadcrumbs` from `src/components/custom-breadcrumbs`; do not recreate the breadcrumb header with MUI `Breadcrumbs` in a feature screen.
 - Always pass the `description` prop with concise, screen-specific information that explains the page, record, or task.
+- Use the opt-in `stacked` layout for dashboards or other pages where a visible description makes the inline title and breadcrumb hierarchy compete.
 - Build `links` from the real visible hierarchy and use actual application route paths for navigable ancestors.
 - Do not use placeholder routes, guessed paths, `'#'`, or an ancestor label without its route when that ancestor is a real destination.
 - Keep the current page, record, or task as the final breadcrumb item without `href` unless there is a deliberate reason to make it navigable.

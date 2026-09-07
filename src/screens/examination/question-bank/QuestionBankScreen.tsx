@@ -8,8 +8,6 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { academicPermissions } from 'src/constants/academic-menu';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import { fDate } from 'src/utils/format-time';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -21,15 +19,17 @@ import CancelButton from 'src/components/cancel-button';
 import { varAlpha, stylesMode } from 'src/theme/styles';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { LanguageInputField } from 'src/screens/academic/components/language-typing';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
@@ -44,7 +44,6 @@ import {
   Switch,
   Drawer,
   Popover,
-  Divider,
   Tooltip,
   Checkbox,
   Skeleton,
@@ -61,9 +60,9 @@ import {
   useGetQuestionsQuery,
   useUpdateQuestionMutation,
   useSubmitQuestionMutation,
-  useApproveQuestionMutation,
   useRejectQuestionMutation,
   useDeleteQuestionMutation,
+  useApproveQuestionMutation,
   useArchiveQuestionMutation,
   useDuplicateQuestionMutation,
   useGetQuestionBankSettingsQuery,
@@ -78,47 +77,17 @@ import {
   buildQuestionValidationSchema,
   normalizeSingleCorrectOptions,
 } from './components/questionFormModel';
+import {
+  BLOOM_OPTIONS,
+  STATUS_OPTIONS,
+  DIFFICULTY_OPTIONS,
+  QUESTION_TYPE_OPTIONS,
+  formatQuestionBankAdvancedFilterLabel,
+} from './question-bank-filter-labels';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const QUESTION_TYPE_OPTIONS = [
-  { value: 1, label: 'MCQ-Single Correct' },
-  { value: 2, label: 'MCQ-Multiple Correct' },
-  { value: 3, label: 'True/False' },
-  { value: 4, label: 'Fill in the Blank' },
-  { value: 5, label: 'Short Answer' },
-  { value: 6, label: 'Long Answer' },
-  { value: 7, label: 'Match the Following' },
-  { value: 8, label: 'Assertion & Reason' },
-  { value: 9, label: 'Case Study' },
-  { value: 10, label: 'Diagram Based' },
-  { value: 11, label: 'Practical' },
-];
-
-const DIFFICULTY_OPTIONS = [
-  { value: 1, label: 'Easy' },
-  { value: 2, label: 'Medium' },
-  { value: 3, label: 'Hard' },
-];
-
-const BLOOM_OPTIONS = [
-  { value: 1, label: 'Remembering' },
-  { value: 2, label: 'Understanding' },
-  { value: 3, label: 'Applying' },
-  { value: 4, label: 'Analyzing' },
-  { value: 5, label: 'Evaluating' },
-  { value: 6, label: 'Creating' },
-];
-
 // Visibility is now a hidden field — defaults to 2 (Internal / School)
-
-const STATUS_OPTIONS = [
-  { value: 1, label: 'Draft' },
-  { value: 2, label: 'Submitted' },
-  { value: 3, label: 'Approved' },
-  { value: 4, label: 'Rejected' },
-  { value: 5, label: 'Archived' },
-];
 
 const STATUS_COLOR: Record<number, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
   1: 'default',
@@ -130,19 +99,6 @@ const STATUS_COLOR: Record<number, 'default' | 'info' | 'success' | 'error' | 'w
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALL_SCOPE_VALUE = '__all__';
-const ADVANCED_FILTER_LABELS: Record<string, string> = {
-  questionType: 'Type',
-  topicName: 'Topic',
-  difficultyLevel: 'Difficulty',
-  bloomLevel: "Bloom's Level",
-  marks: 'Marks',
-  status: 'Status',
-  createdBy: 'Created By',
-  createdDate: 'Created Date',
-  updatedDate: 'Updated Date',
-  timesUsed: 'Times Used',
-};
-
 function displayNameOrPlaceholder(value?: string | null) {
   if (!value || UUID_PATTERN.test(value)) return '—';
   return value;
@@ -2853,9 +2809,7 @@ export default function QuestionBankScreen() {
                     : key === 'chapterId'
                       ? filterChapterOptions.find((item: any) => item.value === value)?.label ||
                         value
-                      : ADVANCED_FILTER_LABELS[key]
-                        ? `${ADVANCED_FILTER_LABELS[key]}: ${value}`
-                        : `${key}: ${value}`;
+                      : formatQuestionBankAdvancedFilterLabel(key, value);
               return (
                 <Chip
                   key={key}

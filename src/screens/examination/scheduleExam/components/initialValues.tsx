@@ -72,16 +72,16 @@ export function mapBackendToFormik(
   rawScheduleSubjects.forEach((s: any) => {
     if (s?.subjectId) {
       scheduleMap[s.subjectId] = s;
-      scheduleSubjectIds.add(s.subjectId);
       // Schedule API stores individual elective subjects in electiveGroupSubjects (not subjects).
       // Populate scheduleMap for each so per-subject schedule lookup works in separate mode.
-      if (s.electiveGroupId && Array.isArray(s.electiveGroupSubjects)) {
+      if (s.electiveGroupId && Array.isArray(s.electiveGroupSubjects) && s.electiveGroupSubjects.length > 0) {
         s.electiveGroupSubjects.forEach((sub: any) => {
           if (sub?.subjectId) {
             scheduleSubjectIds.add(sub.subjectId);
             scheduleMap[sub.subjectId] = {
               ...sub,
               electiveGroupId: s.electiveGroupId,
+              electiveGroupName: s.electiveGroupName,
               examDate: sub.examDate ?? s.examDate ?? null,
               startTime: sub.startTime ?? s.startTime ?? null,
               endTime: sub.endTime ?? s.endTime ?? null,
@@ -92,6 +92,8 @@ export function mapBackendToFormik(
             };
           }
         });
+      } else {
+        scheduleSubjectIds.add(s.subjectId);
       }
     }
   });
@@ -121,19 +123,34 @@ export function mapBackendToFormik(
     subjectsArr.forEach((item: any) => {
       if (item?.electiveGroupId) {
         // Elective group item: key by electiveGroupId
+        const groupColor = item.color ?? '#9E9E9E';
+        const groupName = item.electiveGroupName ?? '';
+        const groupSubjects = (item.subjects ?? []).map((s: any) => ({
+          ...s,
+          electiveGroupId: item.electiveGroupId,
+          electiveGroupName: groupName,
+          subjectColor: s.color ?? s.subjectColor ?? groupColor,
+        }));
+
         electiveGroupMap[item.electiveGroupId] = {
-          name: item.electiveGroupName ?? '',
-          color: item.color ?? '#9E9E9E',
-          subjects: (item.subjects ?? []).map((s: any) => ({
-            ...s,
-            subjectColor: s.color ?? s.subjectColor ?? item.color ?? '#9E9E9E',
-          })),
+          name: groupName,
+          color: groupColor,
+          subjects: groupSubjects,
         };
+
+        // Also index each individual elective subject by subjectId in examSubjectMap
+        groupSubjects.forEach((s: any) => {
+          const sid = s.subjectId || s.id;
+          if (sid) {
+            examSubjectMap[sid] = s;
+          }
+        });
       } else {
         // Core subject item: map each nested subject by its subjectId
         (item.subjects ?? []).forEach((s: any) => {
-          if (s?.subjectId) {
-            examSubjectMap[s.subjectId] = {
+          const sid = s.subjectId || s.id;
+          if (sid) {
+            examSubjectMap[sid] = {
               ...s,
               subjectColor: s.color ?? s.subjectColor ?? item.color ?? '#9E9E9E',
             };
@@ -144,9 +161,10 @@ export function mapBackendToFormik(
   } else {
     // Flat format — each item is an individual subject
     subjectsArr.forEach((s: any) => {
-      if (!s?.subjectId) return;
+      const sid = s.subjectId || s.id;
+      if (!sid) return;
       const subjectColor = s.color ?? s.subjectColor ?? '#9E9E9E';
-      examSubjectMap[s.subjectId] = { ...s, subjectColor };
+      examSubjectMap[sid] = { ...s, subjectColor };
 
       if (s.electiveGroupId) {
         if (!electiveGroupMap[s.electiveGroupId]) {
@@ -172,43 +190,37 @@ export function mapBackendToFormik(
     resolvedSubjectColor: string;
   }
 
-  const examSubjectIds = subjectsArr.map((subject: any) => subject?.subjectId).filter(Boolean);
   const rawEntrySubjectIds: string[] =
-    scheduleSubjectIds.size > 0
-      ? Array.from(
-        new Set([
-          ...(basicData?.subjectIds ?? []).filter((subjectId: string) =>
-            scheduleSubjectIds.has(subjectId)
-          ),
-          ...Array.from(scheduleSubjectIds),
-          ...examSubjectIds,
-        ])
-      )
-      : Array.from(new Set([...(basicData?.subjectIds ?? []), ...examSubjectIds]));
+    Array.isArray(basicData?.subjectIds) && basicData.subjectIds.length > 0
+      ? Array.from(new Set(basicData.subjectIds))
+      : scheduleSubjectIds.size > 0
+        ? Array.from(scheduleSubjectIds)
+        : subjectsArr.map((subject: any) => subject?.subjectId).filter(Boolean);
 
   const rawEntries: RawEntry[] = rawEntrySubjectIds.map((subjectId: string) => {
     const sched = scheduleMap[subjectId] ?? {};
     const sub = examSubjectMap[subjectId] ?? {};
-    // Look up by subjectId first; if basicData already uses group IDs this hits directly
-    const electiveData = electiveGroupMap[subjectId];
+    // Look up by electiveGroupId on sub, or subjectId if basicData uses group IDs
+    const electiveGroupId = sub.electiveGroupId ?? sched.electiveGroupId;
+    const electiveData = electiveGroupId ? electiveGroupMap[electiveGroupId] : electiveGroupMap[subjectId];
 
     const resolvedElectiveGroupId: string | undefined =
-      sched.electiveGroupId ?? sub.electiveGroupId ?? (electiveData ? subjectId : undefined);
+      electiveGroupId ?? (electiveData ? (sub.electiveGroupId || subjectId) : undefined);
 
     const resolvedSubjectName: string =
-      sched.electiveGroupName ??
-      sched.subjectName ??
       sub.subjectName ??
-      electiveData?.name ??
+      sched.subjectName ??
       sub.name ??
+      sched.electiveGroupName ??
+      electiveData?.name ??
       '';
 
     const resolvedSubjectColor: string =
+      sub.subjectColor ??
+      sub.color ??
       sched.subjectColor ??
       sched.electiveGroupColor ??
       sched.color ??
-      sub.subjectColor ??
-      sub.color ??
       electiveData?.color ??
       '#9E9E9E';
 
@@ -239,9 +251,7 @@ export function mapBackendToFormik(
     };
   };
 
-  // Step 3b — emit one entry per core subject; one consolidated entry per elective group
-  const emittedGroupIds = new Set<string>();
-
+  // Step 3b — emit one entry per core subject and one entry per elective subject
   const subjects: IExamSubject[] = rawEntries.flatMap((entry) => {
     const {
       subjectId,
@@ -275,71 +285,53 @@ export function mapBackendToFormik(
       ];
     }
 
-    // ── Elective subject — consolidate all siblings under one group entry ──
-    // Skip if we have already emitted this group
-    if (emittedGroupIds.has(resolvedElectiveGroupId)) return [];
-    emittedGroupIds.add(resolvedElectiveGroupId);
-
-    // All rawEntries that belong to this elective group
-    const siblingEntries = rawEntries.filter(
-      (e) => e.resolvedElectiveGroupId === resolvedElectiveGroupId
-    );
-
-    // Group-level metadata: prefer the schedule API's group entry (subjectId === electiveGroupId)
+    // ── Elective subject — emit individual subject entry matching Create mode structure ──
     const groupSched = scheduleMap[resolvedElectiveGroupId] ?? {};
-    const groupName = groupSched.electiveGroupName ?? electiveData?.name ?? resolvedSubjectName;
+    const groupName =
+      groupSched.electiveGroupName ??
+      sched.electiveGroupName ??
+      sub.electiveGroupName ??
+      electiveData?.name ??
+      resolvedSubjectName;
     const groupColor =
-      groupSched.electiveGroupColor ??
-      groupSched.color ??
+      sched.electiveGroupColor ??
+      sched.color ??
+      sub.subjectColor ??
       electiveData?.color ??
       resolvedSubjectColor;
 
-    let restoredSubjects: any[];
-    if (electiveData?.subjects?.length) {
-      restoredSubjects = electiveData.subjects.map((s: any) => withSchedule(s, groupColor));
-    } else if (
-      Array.isArray(groupSched.electiveGroupSubjects) &&
-      groupSched.electiveGroupSubjects.length > 0
-    ) {
-      restoredSubjects = groupSched.electiveGroupSubjects.map((s: any) =>
-        withSchedule({ ...s, subjectColor: s.color || s.subjectColor || groupColor }, groupColor)
-      );
-    } else {
-      restoredSubjects = siblingEntries.map(
-        ({ subjectId: sid, sched: sSched, sub: sSub, resolvedSubjectColor: sColor }) =>
-          withSchedule(
-            {
-              ...sSub,
-              ...sSched,
-              subjectId: sid,
-              subjectName: sSched.subjectName ?? sSub.subjectName ?? '',
-              subjectColor: sColor,
-            },
-            sColor
-          )
-      );
-    }
-
-    const hasGroupSchedule = !!groupSched.examDate;
-    const schedulingMode: 'combined' | 'separate' = hasGroupSchedule ? 'combined' : 'separate';
+    const individualSubject = withSchedule(
+      {
+        ...sub,
+        ...sched,
+        subjectId,
+        subjectName: sub.subjectName || sched.subjectName || resolvedSubjectName,
+        subjectColor: sub.subjectColor || groupColor,
+        electiveGroupId: resolvedElectiveGroupId,
+        electiveGroupName: groupName,
+      },
+      groupColor
+    );
 
     return [
       {
-        // Use the group ID as subjectId — mirrors how Create flow stores elective entries
-        subjectId: resolvedElectiveGroupId,
-        subjectName: groupName,
-        subjectColor: groupColor,
-        subjectCode: groupSched.subjectCode ?? '',
+        id: subjectId,
+        subjectId,
+        subjectName: individualSubject.subjectName,
+        subjectColor: individualSubject.subjectColor,
+        subjectCode: sched.subjectCode ?? sub.subjectCode ?? sub.code ?? '',
+        selectedElectiveSubjectId: subjectId,
         electiveGroupId: resolvedElectiveGroupId,
-        subjects: restoredSubjects,
-        schedulingMode,
-        examDate: groupSched.examDate ? dayjs(groupSched.examDate) : null,
-        startTime: parseWallClockTime(groupSched.startTime),
-        endTime: parseWallClockTime(groupSched.endTime),
-        totalMarks: groupSched.totalMarks ?? '',
-        passingMarks: groupSched.passingMarks ?? '',
-        notes: groupSched.notes ?? '',
-        gradeScalingId: groupSched.gradeScalingId ?? null,
+        electiveGroupName: groupName,
+        subjects: [individualSubject],
+        schedulingMode: 'separate',
+        examDate: individualSubject.examDate,
+        startTime: individualSubject.startTime,
+        endTime: individualSubject.endTime,
+        totalMarks: individualSubject.totalMarks,
+        passingMarks: individualSubject.passingMarks,
+        notes: individualSubject.notes,
+        gradeScalingId: individualSubject.gradeScalingId,
       } as IExamSubject,
     ];
   });

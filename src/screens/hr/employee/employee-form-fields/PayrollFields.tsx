@@ -55,12 +55,6 @@ import {
 
 import type { FieldsType } from './types';
 
-const getComponentAmount = (item: any) =>
-  isPercentageSalaryComponent(item) ? 0 : Number(item?.amount ?? 0);
-
-const getComponentTotal = (items: any[] = []) =>
-  items.reduce((total, item) => total + getComponentAmount(item), 0);
-
 const getLeavePolicyName = (item: any) => item?.policyTitle || item?.name || item?.title || '-';
 const isActiveLeavePolicy = (item: any) =>
   String(item?.status || '').toLowerCase() === 'active' || item?.isActive === true;
@@ -81,49 +75,21 @@ const ifscHelperTextSx = {
   overflowWrap: 'anywhere',
 };
 
-const SalarySummaryCard = ({
-  label,
-  value,
-  emphasis = false,
-}: {
-  label: string;
-  value: number;
-  emphasis?: boolean;
-}) => (
-  <Grid size={{ xs: 12, md: 4 }}>
-    <Paper
-      elevation={0}
-      sx={{
-        p: 1.5,
-        borderRadius: 1,
-        border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-        borderTop: (theme) =>
-          `3px solid ${emphasis ? theme.vars.palette.primary.main : theme.vars.palette.text.disabled
-          }`,
-        bgcolor: (theme) => theme.vars.palette.background.paper,
-      }}
-    >
-      <Typography variant="caption" color="text.secondary" fontWeight={600}>
-        {label}
-      </Typography>
-      <Typography variant="h6" fontWeight={800} color={emphasis ? 'primary.main' : 'text.primary'}>
-        {formatCurrency(value)}
-      </Typography>
-    </Paper>
-  </Grid>
-);
-
 export const RenderComponents = ({
   formik,
   name,
   label,
   type,
   showTempAdd = false,
+  temporaryOnly = false,
   emptyMessage,
   emptyActionLabel,
 }: any) => {
   const { values } = formik;
-  const components = values[name] || [];
+  const allComponents = values[name] || [];
+  const components = temporaryOnly
+    ? allComponents.filter((component: any) => component.isTemp)
+    : allComponents;
   const isDialogOpen = useBoolean();
   const isAddingTemp = useBoolean(false);
   const markGeneratedModified = () => {
@@ -154,21 +120,21 @@ export const RenderComponents = ({
   };
 
   const handleAddTemp = (selectedValues: any) => {
-    const updatedComponents = [...components, selectedValues];
+    const updatedComponents = [...allComponents, selectedValues];
     formik.setFieldValue(name, updatedComponents);
     markGeneratedModified();
     isAddingTemp.onFalse();
   };
 
   const handleRemove = (index: number) => {
-    const updatedComponents = components.filter((_: any, i: number) => i !== index);
+    const updatedComponents = allComponents.filter((_: any, i: number) => i !== index);
     formik.setFieldValue(name, updatedComponents);
     markGeneratedModified();
   };
 
   // Build table rows and attach original index for edit/delete.
-  const tableRows = components.map((c: any, idx: number) => ({
-    _idx: idx,
+  const tableRows = components.map((c: any) => ({
+    _idx: allComponents.indexOf(c),
     _raw: c,
     name: c?.earningComponentName || c?.deductionComponentName || c?.name || '-',
     amount: c?.amount ?? 0,
@@ -179,7 +145,9 @@ export const RenderComponents = ({
     isGeneratedOverride: c?.usesMasterValue === false && !c?.isTemp,
     applicableMonth: c?.applicableMonth,
     isStatutory: ['EMPLOYEEPROVIDENTFUND', 'PROFESSIONALTAX'].includes(
-      String(c?.semanticType || '').replaceAll('_', '').toUpperCase()
+      String(c?.semanticType || '')
+        .replaceAll('_', '')
+        .toUpperCase()
     ),
   }));
 
@@ -254,18 +222,20 @@ export const RenderComponents = ({
               Temp {type === 'earning' ? 'Earning' : 'Deduction'}
             </Button>
           )}
-          <Button
-            variant="soft"
-            color={componentAccentColor}
-            startIcon={<Add />}
-            onClick={() => {
-              isAddingTemp.onFalse();
-              isDialogOpen.onTrue();
-            }}
-            size="small"
-          >
-            {type === 'earning' ? 'Earning' : 'Deduction'}
-          </Button>
+          {!temporaryOnly && (
+            <Button
+              variant="soft"
+              color={componentAccentColor}
+              startIcon={<Add />}
+              onClick={() => {
+                isAddingTemp.onFalse();
+                isDialogOpen.onTrue();
+              }}
+              size="small"
+            >
+              {type === 'earning' ? 'Earning' : 'Deduction'}
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -298,8 +268,12 @@ export const RenderComponents = ({
                 startIcon={<Add />}
                 size="small"
                 onClick={() => {
-                  isAddingTemp.onFalse();
-                  isDialogOpen.onTrue();
+                  if (temporaryOnly) {
+                    isAddingTemp.onTrue();
+                  } else {
+                    isAddingTemp.onFalse();
+                    isDialogOpen.onTrue();
+                  }
                 }}
               >
                 {addActionLabel}
@@ -456,7 +430,7 @@ export const RenderComponents = ({
         />
       </Box>
 
-      {isDialogOpen.value && (
+      {!temporaryOnly && isDialogOpen.value && (
         <PayrollComponentDialog
           open={isDialogOpen.value}
           onClose={isDialogOpen.onFalse}
@@ -521,9 +495,6 @@ const RenderPayrollFields = (props: any) => {
     (item) => item.status === 'active'
   );
   const activeLeavePolicies = (leavePolicies?.items || []).filter(isActiveLeavePolicy);
-  const grossEarnings = getComponentTotal(values.earningComponents || []);
-  const totalDeductions = getComponentTotal(values.deductionComponents || []);
-  const netSalary = grossEarnings - totalDeductions;
   const policySourceLabel = isPreviewLoading
     ? 'Resolving...'
     : policyPreview?.policySource === 'employee'
@@ -824,7 +795,7 @@ const RenderPayrollFields = (props: any) => {
                         ))}
                       </Select>
                       {formik.touched.policyOverridePayrollPolicyId &&
-                        formik.errors.policyOverridePayrollPolicyId ? (
+                      formik.errors.policyOverridePayrollPolicyId ? (
                         <FormHelperText error>
                           {formik.errors.policyOverridePayrollPolicyId}
                         </FormHelperText>
@@ -863,7 +834,7 @@ const RenderPayrollFields = (props: any) => {
                         ))}
                       </Select>
                       {formik.touched.policyOverrideAttendancePolicyId &&
-                        formik.errors.policyOverrideAttendancePolicyId ? (
+                      formik.errors.policyOverrideAttendancePolicyId ? (
                         <FormHelperText error>
                           {formik.errors.policyOverrideAttendancePolicyId}
                         </FormHelperText>
@@ -901,7 +872,7 @@ const RenderPayrollFields = (props: any) => {
                         ))}
                       </Select>
                       {formik.touched.policyOverrideLeavePolicyId &&
-                        formik.errors.policyOverrideLeavePolicyId ? (
+                      formik.errors.policyOverrideLeavePolicyId ? (
                         <FormHelperText error>
                           {formik.errors.policyOverrideLeavePolicyId}
                         </FormHelperText>
@@ -1089,8 +1060,8 @@ const RenderPayrollFields = (props: any) => {
           <RenderPfRules
             disabled={!isEditable.value}
             formik={formik}
-          // value={values.pfRule || ''}
-          // onChange={(e) => setFormValues({ ...formValues, pfRule: e.target?.value ?? e })}
+            // value={values.pfRule || ''}
+            // onChange={(e) => setFormValues({ ...formValues, pfRule: e.target?.value ?? e })}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
@@ -1189,16 +1160,15 @@ const RenderPayrollFields = (props: any) => {
         </Grid>
       </SectionCard>
       <SectionCard title="Compensation Structure">
-        <SalaryStructureBuilder formik={formik} />
-        <SalarySummaryCard label="Gross Earnings" value={grossEarnings} />
-        <SalarySummaryCard label="Total Deductions" value={totalDeductions} />
-        <SalarySummaryCard label="Net Salary" value={netSalary} emphasis />
+        <SalaryStructureBuilder formik={formik} employeeId={values.employeeId || undefined} />
         <Grid size={{ xs: 12, md: 6 }}>
           <RenderComponents
             formik={formik}
             name="earningComponents"
-            label="Earnings"
+            label="One-time earnings"
             type="earning"
+            showTempAdd
+            temporaryOnly
             emptyMessage="No earning components added"
             emptyActionLabel="Add Earning"
           />
@@ -1207,8 +1177,10 @@ const RenderPayrollFields = (props: any) => {
           <RenderComponents
             formik={formik}
             name="deductionComponents"
-            label="Deductions"
+            label="One-time deductions"
             type="deduction"
+            showTempAdd
+            temporaryOnly
             emptyMessage="No deduction components added"
             emptyActionLabel="Add Deduction"
           />

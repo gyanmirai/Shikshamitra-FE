@@ -192,6 +192,11 @@ const SubjectScheduleRow = memo(
   }: SubjectScheduleRowProps) => (
     <TableRow
       sx={{
+        '& .MuiTableCell-root': {
+          verticalAlign: 'top',
+          py: 1,
+          px: 1.5,
+        },
         '&:hover': {
           bgcolor: (theme: any) => varAlpha(theme.vars.palette.grey['500Channel'], 0.03),
         },
@@ -208,11 +213,12 @@ const SubjectScheduleRow = memo(
           zIndex: 2,
           bgcolor: 'background.paper',
           minWidth: 230,
-          py: 1.5,
+          verticalAlign: 'top',
+          py: 1,
           px: 1.5,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.25}>
+        <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minHeight: 40 }}>
           <Box
             sx={{
               width: 5,
@@ -316,7 +322,7 @@ const SubjectScheduleRow = memo(
                 error: !!(touched.startTime && errors.startTime),
                 helperText: touched.startTime && errors.startTime ? errors.startTime : ' ',
                 FormHelperTextProps: HELPER_TEXT_PROPS,
-                InputLabelProps: { sx: { lineHeight: '1.2em', width: '80%' } },
+                InputLabelProps: LABEL_PROPS,
               },
             }}
           />
@@ -350,8 +356,10 @@ const SubjectScheduleRow = memo(
       </TableCell>
 
       {/* Duration */}
-      <TableCell sx={{ minWidth: 90, py: 1, px: 1.5 }}>
-        <DurationCell startTime={values.startTime} endTime={values.endTime} />
+      <TableCell sx={{ minWidth: 90, py: 1, px: 1.5, verticalAlign: 'top' }}>
+        <Box sx={{ minHeight: 40, display: 'flex', alignItems: 'center' }}>
+          <DurationCell startTime={values.startTime} endTime={values.endTime} />
+        </Box>
       </TableCell>
 
       {/* Grade Scale */}

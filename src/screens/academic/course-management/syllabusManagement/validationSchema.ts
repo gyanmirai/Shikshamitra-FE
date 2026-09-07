@@ -36,11 +36,6 @@ export const getChapterValidationSchema = (
       .nullable()
       .transform((value, originalValue) => (originalValue === '' ? null : value))
       .min(0, 'Buffer days cannot be negative'),
-    progressPercentage: Yup.number()
-      .nullable()
-      .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-      .min(0, 'Progress cannot be below 0')
-      .max(100, 'Progress cannot be above 100'),
     healthScore: Yup.number()
       .nullable()
       .transform((value, originalValue) => (originalValue === '' ? 0 : value))
@@ -74,7 +69,8 @@ export const getChapterValidationSchema = (
       .test(
         'no-past-date',
         'Start Date cannot be in the past',
-        (value) => !value || !dayjs(value as any).isBefore(dayjs(), 'day')
+        (value) =>
+          Boolean(editingChapterId) || !value || !dayjs(value as any).isBefore(dayjs(), 'day')
       ),
 
     endDate: Yup.mixed()
@@ -93,7 +89,8 @@ export const getChapterValidationSchema = (
       .test(
         'no-past-date',
         'End Date cannot be in the past',
-        (value) => !value || !dayjs(value as any).isBefore(dayjs(), 'day')
+        (value) =>
+          Boolean(editingChapterId) || !value || !dayjs(value as any).isBefore(dayjs(), 'day')
       )
       .test(
         'min-date',

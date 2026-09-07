@@ -41,6 +41,18 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
 
+    uploadConcessionDocumentFile: builder.mutation({
+      query: ({ concessionTypeId, documentId, file }) => {
+        const body = new FormData();
+        body.append('File', file);
+        return {
+          url: `/concession-request/types/${concessionTypeId}/documents/${documentId}/file`,
+          method: 'POST',
+          body,
+        };
+      },
+    }),
+
     getStudentConcessionDetails: builder.query({
       query: ({ studentId, ...params }) => ({
         url: `/concession-requests/${studentId}`,
@@ -104,6 +116,19 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
+
+    reverseConcessionRequest: builder.mutation({
+      query: ({ concessionRequestId, body }) => ({
+        url: `/concession-requests/${concessionRequestId}/reverse`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        financeModuleType.concessionRequest,
+        financeModuleType.accountPosting,
+        financeModuleType.draftPosting,
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -112,6 +137,7 @@ export const {
   useCreateConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
   useUploadConcessionDocumentsMutation,
+  useUploadConcessionDocumentFileMutation,
   useGetStudentConcessionDetailsQuery,
   useGetConcessionApprovalContextQuery,
   useApproveConcessionRequestMutation,
@@ -120,4 +146,5 @@ export const {
   useDeleteConcessionApplicationMutation,
   useGetConcessionRequestByIdQuery,
   useCancelConcessionRequestMutation,
+  useReverseConcessionRequestMutation,
 } = concessionManagementApi;

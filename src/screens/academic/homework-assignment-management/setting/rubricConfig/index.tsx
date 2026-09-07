@@ -385,7 +385,7 @@ const RubricConfigScreen = () => {
                 height={20}
               />
               <Stack spacing={0.5} width="100%">
-                <Typography variant="subtitle2" fontWeight={700} color="primary.darker">
+                <Typography variant="subtitle2" fontWeight={700} color="text.primary">
                   Instructions for Students & Evaluators
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>

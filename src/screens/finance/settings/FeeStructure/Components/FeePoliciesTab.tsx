@@ -8,6 +8,8 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Chip, Grid, Divider, Typography } from '@mui/material';
 import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
+import { useGetConcessionPoliciesQuery } from 'src/redux/finance/concessionPolicy';
+import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
   type FinancePolicyType,
   useGetFinancePoliciesQuery,
@@ -22,11 +24,16 @@ export interface PolicyValues {
   collectionPolicyId: string;
   refundPolicyId: string;
   prorationPolicyId: string;
+  concessionPolicyId: string;
+	concessionFeeHeadScope: 'EntireFeeStructure' | 'SelectedFeeHeads';
+	concessionApplicableFeeHeadIds: string[];
 }
+
+type PolicyIdKey = Exclude<keyof PolicyValues, 'concessionFeeHeadScope' | 'concessionApplicableFeeHeadIds'>;
 
 interface FeePoliciesTabProps {
   values: PolicyValues;
-  onChange: (field: keyof PolicyValues, value: string) => void;
+	onChange: (field: keyof PolicyValues, value: PolicyValues[keyof PolicyValues]) => void;
   isEditing: boolean;
   isLocked: boolean;
   feeHeads?: Array<{ feeHeadId: string; feeHeadName?: string }>;
@@ -35,7 +42,7 @@ interface FeePoliciesTabProps {
 // ── helper ───────────────────────────────────────────────────────────────────
 
 const POLICY_CONFIG: Array<{
-  key: keyof PolicyValues;
+	key: PolicyIdKey;
   type: FinancePolicyType;
   label: string;
   icon: string;
@@ -43,6 +50,15 @@ const POLICY_CONFIG: Array<{
   required: boolean;
   description: string;
 }> = [
+  {
+    key: 'concessionPolicyId',
+    type: 'concession',
+    label: 'Concession Policy',
+    icon: 'solar:ticket-sale-bold-duotone',
+    color: 'warning',
+    required: true,
+    description: 'Controls eligible unpaid fees, value limits, and request calculations',
+  },
   {
     key: 'paymentPolicyId',
     type: 'payment',
@@ -117,10 +133,11 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
   // Collection Policy has a real backend endpoint (Phase 1) unlike the other policy
   // types here, which still call the generic /finance-policies endpoint that doesn't exist.
   const isCollectionPolicy = policyType === 'collection';
+  const isConcessionPolicy = policyType === 'concession';
 
   const { data: genericPolicyData, isLoading: isGenericLoading } = useGetFinancePoliciesQuery(
     { policyType, academicYearId, status: 'Active' },
-    { skip: !academicYearId || isCollectionPolicy }
+    { skip: !academicYearId || isCollectionPolicy || isConcessionPolicy }
   );
 
   const { data: collectionPolicyData, isLoading: isCollectionLoading } =
@@ -128,9 +145,18 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
       { academicYearId: academicYearId as string, status: 'Active' },
       { skip: !academicYearId || !isCollectionPolicy }
     );
+  const { data: concessionPolicyData, isLoading: isConcessionLoading } =
+    useGetConcessionPoliciesQuery(
+      { academicYearId, status: 'Active', page: 1, pageSize: 100 },
+      { skip: !academicYearId || !isConcessionPolicy }
+    );
 
-  const isLoading = isCollectionPolicy ? isCollectionLoading : isGenericLoading;
-  const policyData = isCollectionPolicy ? collectionPolicyData : genericPolicyData;
+  const isLoading = isCollectionPolicy
+    ? isCollectionLoading
+    : isConcessionPolicy ? isConcessionLoading : isGenericLoading;
+  const policyData = isCollectionPolicy
+    ? collectionPolicyData
+    : isConcessionPolicy ? concessionPolicyData : genericPolicyData;
 
   const options = (policyData?.data ?? policyData?.items ?? policyData ?? []).map((p: any) => ({
     label: p.policyName,
@@ -244,6 +270,14 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   const selectedCollectionPolicy = (collectionPolicyData?.items ?? []).find(
     (p: any) => p.id === values.collectionPolicyId
   );
+	const { data: feeHeadData, isLoading: feeHeadsLoading } = useGetFeeHeadsQuery(
+		{ academicYearId: currentYear?.id },
+		{ skip: !currentYear?.id }
+	);
+	const structureFeeHeadIds = new Set(feeHeads.map((x) => x.feeHeadId));
+	const concessionFeeHeadOptions = (feeHeadData?.items ?? [])
+		.filter((x) => structureFeeHeadIds.has(x.id) && x.isActive && x.isConcessionApplied)
+		.map((x) => ({ label: x.name, value: x.id }));
 
   return (
     <Box sx={{ p: 2 }}>
@@ -293,6 +327,42 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
           </Grid>
         ))}
       </Grid>
+
+		{values.concessionPolicyId && (
+			<Box sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+				<Typography variant="body2" fontWeight={700} mb={0.5}>Concession Fee Heads</Typography>
+				<Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+					Only active fee heads enabled for concession can be selected. This scope is snapshotted for each student assignment.
+				</Typography>
+				<Grid container spacing={2}>
+					<Grid size={{ xs: 12, sm: 6 }}>
+						<CustomSelect label="Scope" options={[
+							{ label: 'All eligible fee heads', value: 'EntireFeeStructure' },
+							{ label: 'Selected eligible fee heads', value: 'SelectedFeeHeads' },
+						]} labelKey="label" valueKey="value" value={values.concessionFeeHeadScope}
+							disabled={!isEditing || isLocked}
+							onChange={(value) => {
+								onChange('concessionFeeHeadScope', value as PolicyValues['concessionFeeHeadScope']);
+								if (value === 'EntireFeeStructure') onChange('concessionApplicableFeeHeadIds', []);
+							}} />
+					</Grid>
+					{values.concessionFeeHeadScope === 'SelectedFeeHeads' && (
+						<Grid size={{ xs: 12, sm: 6 }}>
+							<CustomSelect multiple label="Eligible Fee Heads" options={concessionFeeHeadOptions}
+								isLoading={feeHeadsLoading} labelKey="label" valueKey="value"
+								value={values.concessionApplicableFeeHeadIds}
+								disabled={!isEditing || isLocked}
+								onChange={(value) => onChange('concessionApplicableFeeHeadIds', value as string[])} />
+						</Grid>
+					)}
+				</Grid>
+				{concessionFeeHeadOptions.length === 0 && !feeHeadsLoading && (
+					<Typography variant="caption" color="error.main" display="block" mt={1}>
+						No fee head in this structure is active and enabled for concession.
+					</Typography>
+				)}
+			</Box>
+		)}
 
       {/* ── Per-fee-head Collection Policy overrides ────────────────────── */}
       {values.collectionPolicyId && feeHeads.length > 0 && (

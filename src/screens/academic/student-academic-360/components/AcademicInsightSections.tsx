@@ -1,7 +1,8 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Label } from 'src/components/label';
+import { Box, Stack, Typography } from '@mui/material';
 
 import { SubjectPerformanceCard } from './SubjectPerformanceCard';
 import { ExamsResultsDashboardCard } from './ExamsResultsDashboardCard';
@@ -43,7 +44,7 @@ export function SectionHeader({ icon, title, badge }: { icon: string; title: str
         <Iconify icon={icon} width={19} />
       </Box>
       <Typography variant="subtitle1" sx={{ flex: 1 }}>{title}</Typography>
-      {badge && <Chip size="small" variant="soft" label={badge} />}
+      {badge && <Label variant="soft" color="default">{badge}</Label>}
     </Stack>
   );
 }
